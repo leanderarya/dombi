@@ -12,6 +12,9 @@ export default function Dashboard({ stats }: any) {
                     ['Produk aktif', stats.activeProducts],
                     ['Order hari ini', stats.todayOrders],
                     ['Stok rendah', stats.lowStocks],
+                    ['Pending', stats.pendingOrders],
+                    ['Preparing', stats.preparingOrders],
+                    ['Ready pickup', stats.readyForPickupOrders],
                 ].map(([label, value]) => (
                     <div key={label} className="rounded-lg border border-zinc-200 bg-white p-4">
                         <div className="text-sm text-zinc-500">{label}</div>

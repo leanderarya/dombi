@@ -31,7 +31,7 @@ class OrderController extends Controller
         abort_unless($order->customer_id === auth()->id(), 403);
 
         return Inertia::render('customer/orders/show', [
-            'order' => $order->load(['outlet', 'items.product']),
+            'order' => $order->load(['outlet', 'items.product', 'statusHistories.actor']),
         ]);
     }
 

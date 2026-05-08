@@ -6,6 +6,7 @@ const nav = [
     ['/owner/outlets', 'Outlet'],
     ['/owner/products', 'Produk'],
     ['/owner/inventories', 'Inventory'],
+    ['/owner/orders', 'Orders'],
 ];
 
 export default function OwnerLayout({ children }: PropsWithChildren) {

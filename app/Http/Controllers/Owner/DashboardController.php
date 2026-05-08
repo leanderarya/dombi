@@ -20,6 +20,9 @@ class DashboardController extends Controller
                 'activeProducts' => Product::where('is_active', true)->count(),
                 'todayOrders' => Order::whereDate('created_at', today())->count(),
                 'lowStocks' => OutletInventory::whereColumn('current_stock', '<=', 'minimum_stock')->count(),
+                'pendingOrders' => Order::where('status', 'pending')->count(),
+                'preparingOrders' => Order::where('status', 'preparing')->count(),
+                'readyForPickupOrders' => Order::where('status', 'ready_for_pickup')->count(),
             ],
         ]);
     }

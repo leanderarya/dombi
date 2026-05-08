@@ -87,6 +87,14 @@ class OrderService
 
             $this->inventoryService->reserveStock($outlet->id, $items, $order);
 
+            $order->statusHistories()->create([
+                'from_status' => null,
+                'to_status' => 'pending',
+                'notes' => 'Order dibuat customer.',
+                'changed_by' => $customer->id,
+                'created_at' => now(),
+            ]);
+
             return $order->load(['outlet', 'items.product']);
         });
     }

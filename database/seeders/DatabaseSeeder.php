@@ -2,13 +2,13 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use App\Models\CustomerAddress;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\StockMovement;
+use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             ['name' => 'Customer Dombi', 'password' => Hash::make('password'), 'role' => 'customer', 'phone' => '082222222222', 'is_active' => true]
         );
 
-        User::updateOrCreate(
+        $outletUser = User::updateOrCreate(
             ['email' => 'outlet@example.com'],
             ['name' => 'Outlet Dombi', 'password' => Hash::make('password'), 'role' => 'outlet', 'phone' => '083333333333', 'is_active' => true]
         );
@@ -77,6 +77,7 @@ class DatabaseSeeder extends Seeder
                 'kelurahan' => 'Banyumanik',
                 'kecamatan' => 'Banyumanik',
                 'address' => 'Jl. Banyumanik, Semarang',
+                'user_id' => $outletUser->id,
                 'latitude' => -7.0731000,
                 'longitude' => 110.4216000,
                 'phone' => '086666666666',
