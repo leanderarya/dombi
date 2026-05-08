@@ -48,6 +48,11 @@ class User extends Authenticatable
         return $this->hasMany(Delivery::class, 'courier_id');
     }
 
+    public function restockRequests(): HasMany
+    {
+        return $this->hasMany(RestockRequest::class, 'requested_by');
+    }
+
     public function outlet(): HasOne
     {
         return $this->hasOne(Outlet::class);

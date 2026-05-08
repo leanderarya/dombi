@@ -107,7 +107,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('outlet_id')->constrained()->cascadeOnDelete();
             $table->foreignId('product_id')->constrained()->cascadeOnDelete();
-            $table->enum('type', ['initial_stock', 'stock_adjustment', 'order_reserved', 'order_completed', 'order_cancelled']);
+            $table->enum('type', ['initial_stock', 'stock_adjustment', 'order_reserved', 'order_completed', 'order_cancelled', 'restock_in']);
             $table->integer('quantity');
             $table->integer('before_stock')->nullable();
             $table->integer('after_stock')->nullable();

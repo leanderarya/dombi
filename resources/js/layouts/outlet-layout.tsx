@@ -17,6 +17,7 @@ export default function OutletLayout({ children }: PropsWithChildren) {
                 <nav className="mx-auto flex max-w-6xl gap-4 px-4 pb-3 text-sm">
                     <Link href="/outlet/dashboard">Dashboard</Link>
                     <Link href="/outlet/orders">Orders</Link>
+                    <Link href="/outlet/restocks">Restocks</Link>
                 </nav>
             </header>
             <main className="mx-auto max-w-6xl p-5">

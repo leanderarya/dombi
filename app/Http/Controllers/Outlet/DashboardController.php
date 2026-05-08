@@ -22,7 +22,9 @@ class DashboardController extends Controller
                 'preparingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'preparing')->count(),
                 'readyForPickupOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'ready_for_pickup')->count(),
                 'todayOrders' => Order::where('outlet_id', $outlet->id)->whereDate('created_at', today())->count(),
-                'lowStocks' => OutletInventory::where('outlet_id', $outlet->id)->whereColumn('current_stock', '<=', 'minimum_stock')->count(),
+                'lowStocks' => OutletInventory::where('outlet_id', $outlet->id)
+                    ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
+                    ->count(),
             ],
         ]);
     }

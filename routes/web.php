@@ -9,12 +9,15 @@ use App\Http\Controllers\Customer\ProductController as CustomerProductController
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\Outlet\DashboardController;
 use App\Http\Controllers\Outlet\OrderController as OutletOrderController;
+use App\Http\Controllers\Outlet\RestockController as OutletRestockController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
 use App\Http\Controllers\Owner\InventoryController as OwnerInventoryController;
 use App\Http\Controllers\Owner\OrderController as OwnerOrderController;
 use App\Http\Controllers\Owner\OutletController as OwnerOutletController;
 use App\Http\Controllers\Owner\ProductController as OwnerProductController;
+use App\Http\Controllers\Owner\RestockController as OwnerRestockController;
+use App\Http\Controllers\Owner\StockDistributionController as OwnerStockDistributionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -50,6 +53,13 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
     Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
+    Route::get('restocks', [OwnerRestockController::class, 'index'])->name('restocks.index');
+    Route::get('restocks/{restockRequest}', [OwnerRestockController::class, 'show'])->name('restocks.show');
+    Route::post('restocks/{restockRequest}/approve', [OwnerRestockController::class, 'approve'])->name('restocks.approve');
+    Route::post('restocks/{restockRequest}/reject', [OwnerRestockController::class, 'reject'])->name('restocks.reject');
+    Route::get('distributions', [OwnerStockDistributionController::class, 'index'])->name('distributions.index');
+    Route::get('distributions/{distribution}', [OwnerStockDistributionController::class, 'show'])->name('distributions.show');
+    Route::post('distributions/{distribution}/mark-shipped', [OwnerStockDistributionController::class, 'markShipped'])->name('distributions.mark-shipped');
 });
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
@@ -69,6 +79,11 @@ Route::middleware(['auth', 'role:outlet'])->prefix('outlet')->name('outlet.')->g
     Route::get('/orders/{order}', [OutletOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/status', [OutletOrderController::class, 'updateStatus'])->name('orders.status');
     Route::post('/orders/{order}/assign-courier', [OutletOrderController::class, 'assignCourier'])->name('orders.assign-courier');
+    Route::get('/restocks', [OutletRestockController::class, 'index'])->name('restocks.index');
+    Route::get('/restocks/create', [OutletRestockController::class, 'create'])->name('restocks.create');
+    Route::post('/restocks', [OutletRestockController::class, 'store'])->name('restocks.store');
+    Route::get('/restocks/{restockRequest}', [OutletRestockController::class, 'show'])->name('restocks.show');
+    Route::post('/distributions/{distribution}/confirm-received', [OutletRestockController::class, 'confirmReceived'])->name('distributions.confirm-received');
 });
 
 Route::middleware(['auth', 'role:courier'])->prefix('courier')->name('courier.')->group(function (): void {
