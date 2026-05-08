@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OutletInventory;
+use App\Models\RestockRequest;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -25,6 +26,7 @@ class DashboardController extends Controller
                 'lowStocks' => OutletInventory::where('outlet_id', $outlet->id)
                     ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
                     ->count(),
+                'pendingRestocks' => RestockRequest::where('outlet_id', $outlet->id)->whereIn('status', ['requested', 'approved', 'preparing', 'shipped'])->count(),
             ],
         ]);
     }

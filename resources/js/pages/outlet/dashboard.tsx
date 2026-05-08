@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import DashboardCard from '../../components/dashboard-card';
 import OutletLayout from '../../layouts/outlet-layout';
 
 export default function OutletDashboard({ outlet, stats }: any) {
@@ -14,18 +15,14 @@ export default function OutletDashboard({ outlet, stats }: any) {
                     ['Pending', stats.pendingOrders],
                     ['Preparing', stats.preparingOrders],
                     ['Ready pickup', stats.readyForPickupOrders],
-                    ['Order hari ini', stats.todayOrders],
-                    ['Stok rendah', stats.lowStocks],
-                ].map(([label, value]) => (
-                    <div key={label} className="rounded-lg border bg-white p-4">
-                        <div className="text-sm text-zinc-500">{label}</div>
-                        <div className="mt-2 text-3xl font-semibold">{value}</div>
-                    </div>
-                ))}
+                    ['Low stock', stats.lowStocks],
+                    ['Pending restocks', stats.pendingRestocks],
+                ].map(([label, value]) => <DashboardCard key={label} label={String(label)} value={value} />)}
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/outlet/orders?status=pending" className="rounded-md bg-emerald-700 px-4 py-2 text-white">Lihat pending</Link>
-                <Link href="/outlet/orders?status=preparing" className="rounded-md border px-4 py-2">Lihat preparing</Link>
+                <Link href="/outlet/orders?status=pending" className="rounded-md bg-emerald-700 px-4 py-2 text-white">Orders</Link>
+                <Link href="/outlet/inventory" className="rounded-md border bg-white px-4 py-2">Inventory</Link>
+                <Link href="/outlet/restocks" className="rounded-md border bg-white px-4 py-2">Restocks</Link>
             </div>
         </OutletLayout>
     );

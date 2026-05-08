@@ -14,7 +14,13 @@ class HomeController extends Controller
     {
         return Inertia::render('customer/home', [
             'products' => Product::where('is_active', true)->latest()->limit(6)->get(),
+            'activeOrder' => Order::where('customer_id', auth()->id())
+                ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'])
+                ->with('outlet')
+                ->latest()
+                ->first(),
             'recentOrders' => Order::where('customer_id', auth()->id())->with('outlet')->latest()->limit(5)->get(),
+            'lastOrder' => Order::where('customer_id', auth()->id())->with('items')->latest()->first(),
         ]);
     }
 }

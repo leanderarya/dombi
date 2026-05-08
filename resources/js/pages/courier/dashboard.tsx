@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import DashboardCard from '../../components/dashboard-card';
 import CourierLayout from '../../layouts/courier-layout';
 
 export default function CourierDashboard({ stats }: any) {
@@ -13,12 +14,7 @@ export default function CourierDashboard({ stats }: any) {
                     ['Delivering', stats.delivering],
                     ['Completed today', stats.completedToday],
                     ['Failed today', stats.failedToday],
-                ].map(([label, value]) => (
-                    <div key={label} className="rounded-lg border bg-white p-4">
-                        <div className="text-sm text-zinc-500">{label}</div>
-                        <div className="mt-2 text-3xl font-semibold">{value}</div>
-                    </div>
-                ))}
+                ].map(([label, value]) => <DashboardCard key={label} label={String(label)} value={value} />)}
             </div>
             <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="/courier/deliveries?status=waiting_pickup" className="rounded-md bg-emerald-700 px-4 py-2 text-white">Waiting pickup</Link>

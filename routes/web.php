@@ -8,6 +8,7 @@ use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\Outlet\DashboardController;
+use App\Http\Controllers\Outlet\InventoryController as OutletInventoryController;
 use App\Http\Controllers\Outlet\OrderController as OutletOrderController;
 use App\Http\Controllers\Outlet\RestockController as OutletRestockController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
@@ -75,6 +76,7 @@ Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer
 
 Route::middleware(['auth', 'role:outlet'])->prefix('outlet')->name('outlet.')->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/inventory', OutletInventoryController::class)->name('inventory');
     Route::get('/orders', [OutletOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OutletOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/status', [OutletOrderController::class, 'updateStatus'])->name('orders.status');
