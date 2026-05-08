@@ -1,0 +1,6 @@
+import { Head, Link, router } from '@inertiajs/react';
+import CustomerLayout from '../../../layouts/customer-layout';
+
+export default function AddressesIndex({ addresses }: any) {
+    return <CustomerLayout><Head title="Alamat" /><div className="flex items-center justify-between"><h1 className="text-2xl font-semibold">Alamat</h1><Link href="/customer/addresses/create" className="rounded-md bg-emerald-700 px-4 py-2 text-white">Tambah</Link></div><div className="mt-5 space-y-3">{addresses.map((address: any) => <div key={address.id} className="rounded-lg border bg-white p-4"><div className="flex items-center justify-between"><div className="font-medium">{address.label || address.recipient_name}</div>{address.is_default && <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs text-emerald-800">Default</span>}</div><div className="mt-1 text-sm text-zinc-600">{address.address}</div><div className="mt-3 flex gap-3 text-sm"><Link href={`/customer/addresses/${address.id}/edit`} className="text-emerald-700">Edit</Link><button onClick={() => confirm('Hapus alamat?') && router.delete(`/customer/addresses/${address.id}`)} className="text-red-600">Hapus</button></div></div>)}</div></CustomerLayout>;
+}

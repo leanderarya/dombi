@@ -1,0 +1,6 @@
+import { Head, Link } from '@inertiajs/react';
+import CustomerLayout from '../../layouts/customer-layout';
+
+export default function Home({ products, recentOrders }: any) {
+    return <CustomerLayout><Head title="Customer Home" /><h1 className="text-2xl font-semibold">Home</h1><div className="mt-5 grid gap-4 sm:grid-cols-2">{products.map((product: any) => <div key={product.id} className="rounded-lg border bg-white p-4"><div className="font-medium">{product.name}</div><div className="text-sm text-zinc-500">{product.size} {product.unit}</div><div className="mt-3 font-semibold">Rp {Number(product.price).toLocaleString('id-ID')}</div></div>)}</div><div className="mt-6 flex gap-3"><Link href="/customer/checkout" className="rounded-md bg-emerald-700 px-4 py-2 text-white">Checkout</Link><Link href="/customer/orders" className="rounded-md border px-4 py-2">Riwayat Order</Link></div><h2 className="mt-8 font-semibold">Order terbaru</h2><div className="mt-3 space-y-3">{recentOrders.map((order: any) => <Link key={order.id} href={`/customer/orders/${order.id}`} className="block rounded-lg border bg-white p-4"><div className="font-medium">{order.order_code}</div><div className="text-sm text-zinc-500">{order.outlet?.name} - {order.status}</div></Link>)}</div></CustomerLayout>;
+}

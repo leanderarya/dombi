@@ -1,0 +1,6 @@
+import { Head, Link, router } from '@inertiajs/react';
+import OwnerLayout from '../../../layouts/owner-layout';
+
+export default function ProductsIndex({ products }: any) {
+    return <OwnerLayout><Head title="Produk" /><div className="flex items-center justify-between"><h1 className="text-2xl font-semibold">Produk</h1><Link href="/owner/products/create" className="rounded-md bg-emerald-700 px-4 py-2 text-white">Tambah</Link></div><div className="mt-5 overflow-x-auto rounded-lg border border-zinc-200 bg-white"><table className="w-full text-left text-sm"><thead className="bg-zinc-50"><tr><th className="p-3">Produk</th><th>Harga</th><th>Aktif</th><th></th></tr></thead><tbody>{products.data.map((product: any) => <tr key={product.id} className="border-t"><td className="p-3"><div className="font-medium">{product.name}</div><div className="text-xs text-zinc-500">{product.size} {product.unit}</div></td><td>Rp {Number(product.price).toLocaleString('id-ID')}</td><td>{product.is_active ? 'Ya' : 'Tidak'}</td><td className="space-x-3 p-3 text-right"><Link href={`/owner/products/${product.id}/edit`} className="text-emerald-700">Edit</Link><button onClick={() => confirm('Hapus produk?') && router.delete(`/owner/products/${product.id}`)} className="text-red-600">Hapus</button></td></tr>)}</tbody></table></div></OwnerLayout>;
+}
