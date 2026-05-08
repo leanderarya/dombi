@@ -1,8 +1,11 @@
-import { Head } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
+import DeliveryStatusBadge from '../../../components/delivery-status-badge';
 import OrderStatusBadge from '../../../components/order-status-badge';
 import OwnerLayout from '../../../layouts/owner-layout';
 
-export default function OwnerOrderShow({ order, reservedStocks }: any) {
+export default function OwnerOrderShow({ order, reservedStocks, couriers }: any) {
+    const form = useForm({ courier_id: couriers[0]?.id ?? '' });
+
     return (
         <OwnerLayout>
             <Head title={order.order_code} />
@@ -42,6 +45,28 @@ export default function OwnerOrderShow({ order, reservedStocks }: any) {
                         <div className="mt-3 space-y-2">
                             {reservedStocks.map((stock: any) => <div key={stock.id} className="flex justify-between"><span>{stock.product.name}</span><span>{stock.reserved_stock} reserved</span></div>)}
                         </div>
+                    </section>
+                    <section className="rounded-lg border bg-white p-5 text-sm">
+                        <h2 className="font-semibold">Delivery</h2>
+                        {order.delivery ? (
+                            <div className="mt-3 space-y-2">
+                                <DeliveryStatusBadge status={order.delivery.status} />
+                                <div>Courier: {order.delivery.courier?.name ?? '-'}</div>
+                                <div>Pickup: {order.delivery.pickup_time ? new Date(order.delivery.pickup_time).toLocaleString('id-ID') : '-'}</div>
+                                <div>Delivered: {order.delivery.delivered_time ? new Date(order.delivery.delivered_time).toLocaleString('id-ID') : '-'}</div>
+                                {order.delivery.failed_reason && <div className="rounded-md bg-red-50 p-3 text-red-700">{order.delivery.failed_reason}</div>}
+                            </div>
+                        ) : order.status === 'ready_for_pickup' ? (
+                            <form onSubmit={(e) => { e.preventDefault(); form.post(`/owner/orders/${order.id}/assign-courier`); }} className="mt-3 space-y-3">
+                                <select value={form.data.courier_id} onChange={(e) => form.setData('courier_id', e.target.value)} className="w-full rounded-md border px-3 py-2">
+                                    {couriers.map((courier: any) => <option key={courier.id} value={courier.id}>{courier.name}</option>)}
+                                </select>
+                                {form.errors.courier_id && <div className="text-red-600">{form.errors.courier_id}</div>}
+                                <button className="w-full rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">Assign Courier</button>
+                            </form>
+                        ) : (
+                            <div className="mt-3 text-zinc-500">Delivery bisa dibuat setelah order ready for pickup.</div>
+                        )}
                     </section>
                     <section className="rounded-lg border bg-white p-5 text-sm">
                         <h2 className="font-semibold">Timeline</h2>

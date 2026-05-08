@@ -1,4 +1,5 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, useForm, usePage } from '@inertiajs/react';
+import DeliveryStatusBadge from '../../../components/delivery-status-badge';
 import OrderStatusBadge from '../../../components/order-status-badge';
 import OutletLayout from '../../../layouts/outlet-layout';
 
@@ -8,8 +9,9 @@ const actions: Record<string, Array<[string, string, string]>> = {
     preparing: [['ready_for_pickup', 'Mark Ready for Pickup', 'bg-purple-700 text-white']],
 };
 
-export default function OutletOrderShow({ order }: any) {
+export default function OutletOrderShow({ order, couriers }: any) {
     const { errors } = usePage<any>().props;
+    const assignForm = useForm({ courier_id: couriers[0]?.id ?? '' });
     const updateStatus = (status: string) => {
         router.post(`/outlet/orders/${order.id}/status`, { status });
     };
@@ -45,10 +47,31 @@ export default function OutletOrderShow({ order }: any) {
                                 {label}
                             </button>
                         ))}
-                        {order.status === 'ready_for_pickup' && <span className="rounded-md bg-purple-50 px-4 py-2 text-sm font-medium text-purple-800">Waiting Courier</span>}
+                        {order.status === 'ready_for_pickup' && !order.delivery && <span className="rounded-md bg-purple-50 px-4 py-2 text-sm font-medium text-purple-800">Waiting Courier Assignment</span>}
                     </div>
                 </section>
                 <aside className="space-y-5">
+                    <section className="rounded-lg border bg-white p-5 text-sm">
+                        <h2 className="font-semibold">Delivery</h2>
+                        {order.delivery ? (
+                            <div className="mt-3 space-y-2">
+                                <DeliveryStatusBadge status={order.delivery.status} />
+                                <div>Courier: {order.delivery.courier?.name ?? '-'}</div>
+                                <div>Pickup: {order.delivery.pickup_time ? new Date(order.delivery.pickup_time).toLocaleString('id-ID') : '-'}</div>
+                                <div>Delivered: {order.delivery.delivered_time ? new Date(order.delivery.delivered_time).toLocaleString('id-ID') : '-'}</div>
+                            </div>
+                        ) : order.status === 'ready_for_pickup' ? (
+                            <form onSubmit={(e) => { e.preventDefault(); assignForm.post(`/outlet/orders/${order.id}/assign-courier`); }} className="mt-3 space-y-3">
+                                <select value={assignForm.data.courier_id} onChange={(e) => assignForm.setData('courier_id', e.target.value)} className="w-full rounded-md border px-3 py-2">
+                                    {couriers.map((courier: any) => <option key={courier.id} value={courier.id}>{courier.name}</option>)}
+                                </select>
+                                {assignForm.errors.courier_id && <div className="text-red-600">{assignForm.errors.courier_id}</div>}
+                                <button className="w-full rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">Assign Courier</button>
+                            </form>
+                        ) : (
+                            <div className="mt-3 text-zinc-500">Delivery tersedia setelah ready for pickup.</div>
+                        )}
+                    </section>
                     <section className="rounded-lg border bg-white p-5 text-sm">
                         <h2 className="font-semibold">Customer Info</h2>
                         <div className="mt-3 font-medium">{order.customer_name}</div>

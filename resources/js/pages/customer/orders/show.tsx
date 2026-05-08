@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import DeliveryStatusBadge from '../../../components/delivery-status-badge';
 import OrderStatusBadge from '../../../components/order-status-badge';
 import CustomerLayout from '../../../layouts/customer-layout';
 
@@ -34,6 +35,20 @@ export default function OrderShow({ order }: any) {
                     <div className="text-sm text-zinc-500">Total</div>
                     <div className="text-2xl font-semibold">Rp {Number(order.total).toLocaleString('id-ID')}</div>
                 </div>
+                <section className="mt-5 border-t pt-4 text-sm">
+                    <h2 className="font-semibold">Delivery</h2>
+                    {order.delivery ? (
+                        <div className="mt-3 rounded-md bg-zinc-50 p-3">
+                            <DeliveryStatusBadge status={order.delivery.status} />
+                            <div className="mt-2">Courier: {order.delivery.courier?.name ?? '-'}</div>
+                            <div>Pickup: {order.delivery.pickup_time ? new Date(order.delivery.pickup_time).toLocaleString('id-ID') : '-'}</div>
+                            <div>Delivered: {order.delivery.delivered_time ? new Date(order.delivery.delivered_time).toLocaleString('id-ID') : '-'}</div>
+                            {order.delivery.failed_reason && <div className="mt-2 text-red-700">{order.delivery.failed_reason}</div>}
+                        </div>
+                    ) : (
+                        <div className="mt-3 text-zinc-500">Delivery belum di-assign.</div>
+                    )}
+                </section>
                 <section className="mt-5 border-t pt-4 text-sm">
                     <h2 className="font-semibold">Timeline Status</h2>
                     <div className="mt-3 space-y-3">

@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AssignCourierRequest;
 use App\Http\Requests\Outlet\UpdateOrderStatusRequest;
 use App\Models\Order;
+use App\Models\User;
+use App\Services\DeliveryService;
 use App\Services\OrderStatusService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,7 +41,8 @@ class OrderController extends Controller
         abort_unless($outlet && $order->outlet_id === $outlet->id, 403);
 
         return Inertia::render('outlet/orders/show', [
-            'order' => $order->load(['items.product', 'statusHistories.actor']),
+            'order' => $order->load(['items.product', 'statusHistories.actor', 'delivery.courier']),
+            'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -47,5 +51,13 @@ class OrderController extends Controller
         $orderStatusService->updateStatus($order, $request->validated('status'), $request->user());
 
         return redirect()->route('outlet.orders.show', $order)->with('success', 'Status order berhasil diperbarui.');
+    }
+
+    public function assignCourier(AssignCourierRequest $request, Order $order, DeliveryService $deliveryService): RedirectResponse
+    {
+        $courier = User::findOrFail($request->integer('courier_id'));
+        $deliveryService->assignCourier($order, $courier, $request->user());
+
+        return redirect()->route('outlet.orders.show', $order)->with('success', 'Kurir berhasil di-assign.');
     }
 }

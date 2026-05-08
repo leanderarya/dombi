@@ -43,6 +43,11 @@ class User extends Authenticatable
         return $this->hasMany(CustomerAddress::class);
     }
 
+    public function courierDeliveries(): HasMany
+    {
+        return $this->hasMany(Delivery::class, 'courier_id');
+    }
+
     public function outlet(): HasOne
     {
         return $this->hasOne(Outlet::class);
