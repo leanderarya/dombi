@@ -1,183 +1,67 @@
-import OwnerLayout from '@/layouts/owner-layout';
-import { formatDate } from '@/lib/format';
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
+import EmptyState from '@/components/empty-state';
+import FilterSheet from '@/components/owner/filter-sheet';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-header';
 import Pagination from '@/components/pagination';
+import { formatDate } from '@/lib/format';
 
-interface StockMovement {
-    id: number;
-    outlet_id: number;
-    product_id: number;
-    type: string;
-    quantity: number;
-    before_stock: number | null;
-    after_stock: number | null;
-    before_reserved: number | null;
-    after_reserved: number | null;
-    reference_type: string | null;
-    reference_id: number | null;
-    notes: string | null;
-    created_at: string;
-    outlet?: { id: number; name: string };
-    product?: { id: number; name: string };
-    creator?: { id: number; name: string } | null;
-}
+const typeLabels: Record<string, string> = { initial_stock: 'Initial', stock_adjustment: 'Adjust', order_reserved: 'Reserved', order_completed: 'Completed', order_cancelled: 'Cancelled', restock_in: 'Restock In', delivery_returned: 'Returned' };
+const typeColors: Record<string, string> = { initial_stock: 'text-slate-600', stock_adjustment: 'text-amber-700', order_reserved: 'text-blue-700', order_completed: 'text-emerald-700', order_cancelled: 'text-red-700', restock_in: 'text-emerald-700', delivery_returned: 'text-purple-700' };
+const typeOptions = Object.entries(typeLabels).map(([k, v]) => ({ value: k, label: v }));
 
-interface Props {
-    movements: {
-        data: StockMovement[];
-        links: any[];
-        current_page: number;
-        last_page: number;
+export default function StockMovementsIndex({ movements, outlets, products, filters }: any) {
+    const [filterOpen, setFilterOpen] = useState(false);
+    const activeFilterCount = [filters.outlet_id, filters.product_id, filters.type].filter(Boolean).length;
+
+    const handleFilterApply = (f: Record<string, string>) => {
+        router.get('/owner/stock-movements', { outlet_id: f.outlet_id || undefined, product_id: f.product_id || undefined, type: f.type || undefined, date_from: filters.date_from, date_to: filters.date_to }, { preserveState: true, replace: true });
     };
-    outlets: { id: number; name: string }[];
-    products: { id: number; name: string }[];
-    filters: {
-        outlet_id?: string;
-        product_id?: string;
-        type?: string;
-        date_from?: string;
-        date_to?: string;
-    };
-}
-
-const typeLabels: Record<string, string> = {
-    initial_stock: 'Initial Stock',
-    stock_adjustment: 'Adjustment',
-    order_reserved: 'Order Reserved',
-    order_completed: 'Order Completed',
-    order_cancelled: 'Order Cancelled',
-    restock_in: 'Restock In',
-    delivery_returned: 'Delivery Returned',
-};
-
-const typeStyles: Record<string, string> = {
-    initial_stock: 'bg-zinc-100 text-zinc-700',
-    stock_adjustment: 'bg-amber-100 text-amber-800',
-    order_reserved: 'bg-blue-100 text-blue-800',
-    order_completed: 'bg-green-100 text-green-800',
-    order_cancelled: 'bg-red-100 text-red-800',
-    restock_in: 'bg-emerald-100 text-emerald-800',
-    delivery_returned: 'bg-purple-100 text-purple-800',
-};
-
-export default function StockMovementsIndex({ movements, outlets, products, filters }: Props) {
-    function handleFilter(key: string, value: string) {
-        router.get('/owner/stock-movements', { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
-    }
 
     return (
-        <OwnerLayout>
-            <h1 className="text-xl font-semibold text-slate-900">Inventory Audit Trail</h1>
-            <p className="mt-1 text-sm text-slate-500">Riwayat seluruh perubahan stok di semua outlet.</p>
-
-            <div className="mt-4 flex flex-wrap gap-3">
-                <select
-                    className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                    value={filters.outlet_id ?? ''}
-                    onChange={(e) => handleFilter('outlet_id', e.target.value)}
-                >
-                    <option value="">Semua Outlet</option>
-                    {outlets.map((o) => (
-                        <option key={o.id} value={o.id}>{o.name}</option>
+        <OwnerPageShell
+            title="Audit Trail"
+            headerRight={
+                <div className="relative">
+                    <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
+                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[9px] font-bold text-white">{activeFilterCount}</span>}
+                </div>
+            }
+        >
+            {movements.data.length === 0 ? (
+                <EmptyState icon="📋" title="Belum ada movement" description="Perubahan stok akan tercatat di sini." />
+            ) : (
+                <div className="space-y-1.5">
+                    {movements.data.map((m: any) => (
+                        <div key={m.id} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+                            <div className={`shrink-0 text-xs font-bold tabular-nums ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                                {m.quantity >= 0 ? '+' : ''}{m.quantity}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="truncate text-xs font-semibold text-slate-900">{m.product?.name ?? '-'}</div>
+                                <div className="mt-0.5 text-[10px] text-slate-400">{m.outlet?.name} · <span className={typeColors[m.type] ?? 'text-slate-500'}>{typeLabels[m.type] ?? m.type}</span></div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                                <div className="text-[10px] tabular-nums text-slate-500">{m.before_stock}→{m.after_stock}</div>
+                                <div className="text-[9px] tabular-nums text-slate-400">{formatDate(m.created_at)}</div>
+                            </div>
+                        </div>
                     ))}
-                </select>
-
-                <select
-                    className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                    value={filters.product_id ?? ''}
-                    onChange={(e) => handleFilter('product_id', e.target.value)}
-                >
-                    <option value="">Semua Produk</option>
-                    {products.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                </select>
-
-                <select
-                    className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                    value={filters.type ?? ''}
-                    onChange={(e) => handleFilter('type', e.target.value)}
-                >
-                    <option value="">Semua Tipe</option>
-                    {Object.entries(typeLabels).map(([key, label]) => (
-                        <option key={key} value={key}>{label}</option>
-                    ))}
-                </select>
-
-                <input
-                    type="date"
-                    className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                    value={filters.date_from ?? ''}
-                    onChange={(e) => handleFilter('date_from', e.target.value)}
-                    placeholder="Dari"
-                />
-                <input
-                    type="date"
-                    className="rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                    value={filters.date_to ?? ''}
-                    onChange={(e) => handleFilter('date_to', e.target.value)}
-                    placeholder="Sampai"
-                />
-            </div>
-
-            <div className="mt-4 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
-                {movements.data.length === 0 ? (
-                    <EmptyState />
-                ) : (
-                    <table className="w-full text-left text-sm">
-                        <thead className="border-b border-zinc-100 bg-zinc-50">
-                            <tr>
-                                <th className="px-4 py-3 font-medium text-slate-600">Waktu</th>
-                                <th className="px-4 py-3 font-medium text-slate-600">Outlet</th>
-                                <th className="px-4 py-3 font-medium text-slate-600">Produk</th>
-                                <th className="px-4 py-3 font-medium text-slate-600">Tipe</th>
-                                <th className="px-4 py-3 font-medium text-slate-600 text-right">Qty</th>
-                                <th className="px-4 py-3 font-medium text-slate-600 text-right">Stok</th>
-                                <th className="px-4 py-3 font-medium text-slate-600 text-right">Reserved</th>
-                                <th className="px-4 py-3 font-medium text-slate-600">Aktor</th>
-                                <th className="px-4 py-3 font-medium text-slate-600">Catatan</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-50">
-                            {movements.data.map((m) => (
-                                <tr key={m.id} className="hover:bg-zinc-50/50">
-                                    <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500">{formatDate(m.created_at)}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap">{m.outlet?.name ?? '-'}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap">{m.product?.name ?? '-'}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap">
-                                        <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${typeStyles[m.type] ?? 'bg-zinc-100 text-zinc-700'}`}>
-                                            {typeLabels[m.type] ?? m.type}
-                                        </span>
-                                    </td>
-                                    <td className={`px-4 py-3 text-right font-mono text-xs ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                                        {m.quantity >= 0 ? '+' : ''}{m.quantity}
-                                    </td>
-                                    <td className="px-4 py-3 text-right font-mono text-xs text-slate-600">
-                                        {m.before_stock ?? '?'} → {m.after_stock ?? '?'}
-                                    </td>
-                                    <td className="px-4 py-3 text-right font-mono text-xs text-slate-600">
-                                        {m.before_reserved ?? '-'} → {m.after_reserved ?? '-'}
-                                    </td>
-                                    <td className="px-4 py-3 whitespace-nowrap text-xs text-slate-500">{m.creator?.name ?? '-'}</td>
-                                    <td className="px-4 py-3 text-xs text-slate-500 max-w-[200px] truncate">{m.notes ?? '-'}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-
+                </div>
+            )}
             <Pagination links={movements.links} />
-        </OwnerLayout>
-    );
-}
 
-function EmptyState() {
-    return (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="text-4xl">📋</div>
-            <p className="mt-2 text-sm font-medium text-slate-600">Belum ada stock movement</p>
-            <p className="text-xs text-slate-400">Perubahan stok akan tercatat di sini.</p>
-        </div>
+            <FilterSheet
+                open={filterOpen}
+                onClose={() => setFilterOpen(false)}
+                sections={[
+                    { key: 'outlet_id', label: 'Outlet', options: outlets.map((o: any) => ({ value: String(o.id), label: o.name })), value: filters.outlet_id ? String(filters.outlet_id) : '' },
+                    { key: 'product_id', label: 'Product', options: products.map((p: any) => ({ value: String(p.id), label: p.name })), value: filters.product_id ? String(filters.product_id) : '' },
+                    { key: 'type', label: 'Type', options: typeOptions, value: filters.type ?? '' },
+                ]}
+                onApply={handleFilterApply}
+            />
+        </OwnerPageShell>
     );
 }

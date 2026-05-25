@@ -64,6 +64,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
     Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
+    Route::get('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'showResolve'])->name('deliveries.resolve-page');
     Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
     Route::get('stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');

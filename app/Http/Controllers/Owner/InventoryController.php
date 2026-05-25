@@ -20,19 +20,38 @@ class InventoryController extends Controller
 {
     public function index(Request $request): Response
     {
-        $inventories = OutletInventory::query()
-            ->with(['outlet', 'product'])
-            ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
-            ->when($request->filled('product_id'), fn ($query) => $query->where('product_id', $request->integer('product_id')))
-            ->latest()
-            ->paginate(20)
-            ->withQueryString();
+        $outlets = Outlet::where('status', 'active')
+            ->with(['inventories' => fn ($q) => $q->with('product')->orderBy('product_id')])
+            ->orderBy('name')
+            ->get();
+
+        $outletSections = $outlets->map(function ($outlet) {
+            $inventories = $outlet->inventories;
+            $totalSku = $inventories->count();
+            $lowStock = $inventories->filter(fn ($i) => ($i->current_stock - $i->reserved_stock) <= $i->minimum_stock)->count();
+            $critical = $inventories->filter(fn ($i) => ($i->current_stock - $i->reserved_stock) <= 0)->count();
+            $totalReserved = $inventories->sum('reserved_stock');
+            $health = $critical > 0 ? 'critical' : ($lowStock > 0 ? 'low_stock' : 'healthy');
+
+            return [
+                'outlet' => ['id' => $outlet->id, 'name' => $outlet->name],
+                'health' => $health,
+                'totalSku' => $totalSku,
+                'lowStock' => $lowStock,
+                'critical' => $critical,
+                'totalReserved' => $totalReserved,
+                'inventories' => $inventories,
+            ];
+        });
 
         return Inertia::render('owner/inventories/index', [
-            'inventories' => $inventories,
-            'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
-            'products' => Product::orderBy('name')->get(['id', 'name']),
-            'filters' => $request->only(['outlet_id', 'product_id']),
+            'outletSections' => $outletSections,
+            'stats' => [
+                'totalSku' => OutletInventory::count(),
+                'lowStock' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= minimum_stock')->count(),
+                'totalReserved' => (int) OutletInventory::sum('reserved_stock'),
+                'critical' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= 0')->count(),
+            ],
         ]);
     }
 

@@ -1,51 +1,68 @@
-import { Head, Link, router } from '@inertiajs/react';
-import DistributionStatusBadge from '@/components/distribution-status-badge';
+import { Link, router } from '@inertiajs/react';
+import { useState } from 'react';
 import EmptyState from '@/components/empty-state';
+import FilterSheet from '@/components/owner/filter-sheet';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-header';
 import Pagination from '@/components/pagination';
-import OwnerLayout from '@/layouts/owner-layout';
 import { formatDate } from '@/lib/format';
 
-const statuses = ['preparing', 'shipped', 'received', 'completed'];
+const statusOptions = [
+    { value: 'preparing', label: 'Preparing' },
+    { value: 'shipped', label: 'Shipped' },
+    { value: 'completed', label: 'Completed' },
+];
+const statusStyles: Record<string, string> = {
+    preparing: 'bg-orange-50 text-orange-700 border-orange-200',
+    shipped: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+};
 
 export default function OwnerDistributionsIndex({ distributions, outlets, filters }: any) {
-    const setFilter = (key: string, value: string) => router.get('/owner/distributions', { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
+    const [filterOpen, setFilterOpen] = useState(false);
+    const activeFilterCount = [filters.status, filters.outlet_id].filter(Boolean).length;
+
+    const handleFilterApply = (f: Record<string, string>) => {
+        router.get('/owner/distributions', { status: f.status || undefined, outlet_id: f.outlet_id || undefined }, { preserveState: true, replace: true });
+    };
 
     return (
-        <OwnerLayout>
-            <Head title="Stock Distributions" />
-            <h1 className="text-2xl font-semibold">Stock Distributions</h1>
-            <div className="mt-5 flex flex-wrap gap-3 rounded-lg border bg-white p-4">
-                <select value={filters.status ?? ''} onChange={(e) => setFilter('status', e.target.value)} className="rounded-md border px-3 py-2 text-sm">
-                    <option value="">Semua status</option>
-                    {statuses.map((status) => <option key={status} value={status}>{status}</option>)}
-                </select>
-                <select value={filters.outlet_id ?? ''} onChange={(e) => setFilter('outlet_id', e.target.value)} className="rounded-md border px-3 py-2 text-sm">
-                    <option value="">Semua outlet</option>
-                    {outlets.map((outlet: any) => <option key={outlet.id} value={outlet.id}>{outlet.name}</option>)}
-                </select>
-            </div>
-            <div className="mt-5 overflow-x-auto rounded-lg border bg-white">
-                {distributions.data.length === 0 ? (
-                    <EmptyState icon="📦" title="Belum ada distribution" description="Distribution dibuat setelah restock request disetujui." />
-                ) : (
-                    <table className="w-full text-left text-sm">
-                        <thead className="bg-zinc-50">
-                            <tr><th className="p-3">Distribution</th><th className="p-3">Outlet</th><th className="p-3">Status</th><th className="p-3">Sent</th></tr>
-                        </thead>
-                        <tbody>
-                            {distributions.data.map((distribution: any) => (
-                                <tr key={distribution.id} className="border-t hover:bg-zinc-50/50">
-                                    <td className="p-3 font-medium"><Link href={`/owner/distributions/${distribution.id}`} className="text-emerald-700">#{distribution.id}</Link></td>
-                                    <td className="p-3">{distribution.outlet.name}</td>
-                                    <td className="p-3"><DistributionStatusBadge status={distribution.status} /></td>
-                                    <td className="p-3 text-xs text-slate-500">{formatDate(distribution.sent_at)}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
+        <OwnerPageShell
+            title="Distributions"
+            headerRight={
+                <div className="relative">
+                    <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
+                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[9px] font-bold text-white">{activeFilterCount}</span>}
+                </div>
+            }
+        >
+            {distributions.data.length === 0 ? (
+                <EmptyState icon="📦" title="Tidak ada distribution" description="Distribution dibuat setelah restock disetujui." />
+            ) : (
+                <div className="space-y-2">
+                    {distributions.data.map((d: any) => (
+                        <Link key={d.id} href={`/owner/distributions/${d.id}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
+                            <div>
+                                <div className="text-sm font-bold text-slate-900">#{d.id}</div>
+                                <div className="mt-0.5 text-xs text-slate-500">{d.outlet.name}</div>
+                                <div className="mt-1 text-[10px] tabular-nums text-slate-400">{d.sent_at ? formatDate(d.sent_at) : 'Belum dikirim'}</div>
+                            </div>
+                            <span className={`rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${statusStyles[d.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>{d.status}</span>
+                        </Link>
+                    ))}
+                </div>
+            )}
             <Pagination links={distributions.links} />
-        </OwnerLayout>
+
+            <FilterSheet
+                open={filterOpen}
+                onClose={() => setFilterOpen(false)}
+                sections={[
+                    { key: 'status', label: 'Status', options: statusOptions, value: filters.status ?? '' },
+                    { key: 'outlet_id', label: 'Outlet', options: outlets.map((o: any) => ({ value: String(o.id), label: o.name })), value: filters.outlet_id ? String(filters.outlet_id) : '' },
+                ]}
+                onApply={handleFilterApply}
+            />
+        </OwnerPageShell>
     );
 }

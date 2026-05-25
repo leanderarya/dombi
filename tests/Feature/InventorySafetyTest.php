@@ -224,6 +224,7 @@ class InventorySafetyTest extends TestCase
         $this->actingAs($context['owner'])
             ->post(route('owner.deliveries.resolve', $delivery), [
                 'resolution' => 'retry_delivery',
+                'resolution_notes' => 'Trying to resolve completed delivery',
             ])
             ->assertSessionHasErrors('resolution');
     }

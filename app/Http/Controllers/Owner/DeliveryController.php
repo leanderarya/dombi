@@ -41,6 +41,18 @@ class DeliveryController extends Controller
         ]);
     }
 
+    public function showResolve(Delivery $delivery): Response
+    {
+        $delivery->load(['order.outlet', 'order.items.product', 'courier']);
+
+        $retryCount = \App\Models\DeliveryResolutionLog::where('order_id', $delivery->order_id)->count();
+
+        return Inertia::render('owner/deliveries/resolve', [
+            'delivery' => $delivery,
+            'retryCount' => $retryCount,
+        ]);
+    }
+
     public function assignCourier(AssignCourierRequest $request, Order $order, DeliveryService $deliveryService): RedirectResponse
     {
         $courier = User::findOrFail($request->integer('courier_id'));

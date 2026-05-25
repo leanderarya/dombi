@@ -22,7 +22,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
     const url = page.url;
 
     return (
-        <div className="min-h-screen bg-[#f8f7f2] text-slate-900">
+        <div className="min-h-screen bg-slate-50 text-slate-900">
             <OfflineBanner />
             <UpdateBanner />
             {/* Desktop sidebar */}

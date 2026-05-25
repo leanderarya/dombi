@@ -1,162 +1,233 @@
-import { Head, Link } from '@inertiajs/react';
-import DeliveryStatusBadge from '@/components/delivery-status-badge';
+import { Head, Link, usePage } from '@inertiajs/react';
+import ActivityFeed from '@/components/owner/activity-feed-card';
+import KpiCard from '@/components/owner/kpi-card';
+import OperationalAlertCard, { AlertTruckIcon, AlertInventoryIcon, AlertRestockIcon } from '@/components/owner/operational-alert-card';
+import OutletHealthCard from '@/components/owner/outlet-health-card';
+import OwnerBottomNav from '@/components/owner/owner-bottom-nav';
+import QuickActionCard from '@/components/owner/quick-action-card';
+import OfflineBanner from '@/components/offline-banner';
 import OwnerLayout from '@/layouts/owner-layout';
-import { formatDate } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
 
 export default function Dashboard({ stats, alerts, recentActivity }: any) {
-    usePolling(30000); // Refresh every 30s
+    usePolling(30000);
+
     return (
-        <OwnerLayout>
+        <>
+            {/* Desktop: use existing sidebar layout */}
+            <div className="hidden lg:block">
+                <OwnerLayout>
+                    <DesktopDashboard stats={stats} alerts={alerts} recentActivity={recentActivity} />
+                </OwnerLayout>
+            </div>
+
+            {/* Mobile: dedicated operational mobile UI */}
+            <div className="lg:hidden">
+                <MobileDashboard stats={stats} alerts={alerts} recentActivity={recentActivity} />
+            </div>
+        </>
+    );
+}
+
+function MobileDashboard({ stats, alerts, recentActivity }: any) {
+    const hasAlerts = alerts.failedDeliveries.length > 0 || alerts.lowStockItems.length > 0 || alerts.pendingRestocks.length > 0;
+
+    // Build activity feed items
+    const activityItems = recentActivity.slice(0, 5).map((m: any) => ({
+        id: m.id,
+        title: `${m.product?.name ?? 'Produk'} ${activityVerb(m.type)}`,
+        subtitle: `${timeAgo(m.created_at)} · ${m.outlet?.name ?? ''}`,
+        color: activityColor(m.type),
+    }));
+
+    // Build outlet health from low stock data
+    const outletHealth = buildOutletHealth(alerts.lowStockItems, stats.activeOutlets);
+
+    return (
+        <div className="min-h-dvh bg-slate-50 text-slate-900">
             <Head title="Owner Dashboard" />
-            <h1 className="text-xl font-semibold sm:text-2xl">Dashboard</h1>
+            <OfflineBanner />
 
-            {/* Operational Alerts */}
-            {(alerts.failedDeliveries.length > 0 || alerts.lowStockItems.length > 0) && (
-                <section className="mt-4 space-y-3">
-                    {alerts.failedDeliveries.length > 0 && (
-                        <Link href="/owner/deliveries?status=failed" className="block rounded-xl border border-red-200 bg-red-50 p-4">
-                            <div className="flex items-center gap-2">
-                                <span className="text-lg">⚠️</span>
-                                <span className="text-sm font-semibold text-red-800">{alerts.failedDeliveries.length} delivery gagal perlu ditindak</span>
-                            </div>
-                            <div className="mt-2 space-y-1">
-                                {alerts.failedDeliveries.slice(0, 3).map((d: any) => (
-                                    <div key={d.id} className="text-xs text-red-700">{d.order?.order_code} — {d.failed_reason?.slice(0, 40)}</div>
-                                ))}
-                            </div>
-                        </Link>
-                    )}
-                    {alerts.lowStockItems.length > 0 && (
-                        <Link href="/owner/inventories" className="block rounded-xl border border-amber-200 bg-amber-50 p-4">
-                            <div className="flex items-center gap-2">
-                                <span className="text-lg">📉</span>
-                                <span className="text-sm font-semibold text-amber-800">{alerts.lowStockItems.length} produk stok rendah</span>
-                            </div>
-                            <div className="mt-2 flex flex-wrap gap-1">
-                                {alerts.lowStockItems.slice(0, 4).map((item: any) => (
-                                    <span key={item.id} className="rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
-                                        {item.outlet?.name}: {item.product?.name}
-                                    </span>
-                                ))}
-                                {alerts.lowStockItems.length > 4 && <span className="text-xs text-amber-600">+{alerts.lowStockItems.length - 4} lainnya</span>}
-                            </div>
-                        </Link>
-                    )}
+            <DashboardGreeting />
+
+            <main className="px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">
+                {/* Operational Alerts */}
+                {hasAlerts && (
+                    <section>
+                        <SectionLabel>Operational Alerts</SectionLabel>
+                        <div className="mt-2 space-y-2">
+                            {alerts.failedDeliveries.length > 0 && (
+                                <OperationalAlertCard
+                                    href="/owner/deliveries?status=failed"
+                                    icon={<AlertTruckIcon />}
+                                    title={`${alerts.failedDeliveries.length} Failed Deliveries`}
+                                    subtitle="Immediate operational action required"
+                                    count={alerts.failedDeliveries.length}
+                                    severity="critical"
+                                />
+                            )}
+                            {alerts.lowStockItems.length > 0 && (
+                                <OperationalAlertCard
+                                    href="/owner/inventories"
+                                    icon={<AlertInventoryIcon />}
+                                    title={`${alerts.lowStockItems.length} Low Stock Outlets`}
+                                    subtitle="Available stock below minimum threshold"
+                                    count={alerts.lowStockItems.length}
+                                    severity="warning"
+                                />
+                            )}
+                            {alerts.pendingRestocks.length > 0 && (
+                                <OperationalAlertCard
+                                    href="/owner/restocks?status=requested"
+                                    icon={<AlertRestockIcon />}
+                                    title={`${alerts.pendingRestocks.length} Restock Pending`}
+                                    subtitle="Awaiting approval"
+                                    count={alerts.pendingRestocks.length}
+                                    severity="info"
+                                />
+                            )}
+                        </div>
+                    </section>
+                )}
+
+                {/* KPI Grid */}
+                <section className={hasAlerts ? 'mt-6' : ''}>
+                    <SectionLabel>Performance Overview</SectionLabel>
+                    <div className="mt-2 grid grid-cols-2 gap-3">
+                        <KpiCard label="Total Order" value={stats.todayOrders + stats.activeOrders} href="/owner/orders" color="emerald" progress={70} />
+                        <KpiCard label="Aktif Delivery" value={stats.activeDeliveries} href="/owner/deliveries" color="blue" progress={stats.activeDeliveries > 0 ? 50 : 0} />
+                        <KpiCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="amber" progress={stats.pendingRestocks > 0 ? 30 : 0} />
+                        <KpiCard label="Stok Rendah" value={stats.lowStocks} href="/owner/inventories" color="red" progress={stats.lowStocks > 0 ? Math.min(100, stats.lowStocks * 15) : 0} />
+                    </div>
                 </section>
-            )}
 
-            {/* Stats Grid - mobile 2 cols */}
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                <StatCard label="Pending" value={stats.pendingOrders} href="/owner/orders?status=pending" color="yellow" />
-                <StatCard label="Ready Pickup" value={stats.readyPickupOrders} href="/owner/orders?status=ready_for_pickup" color="purple" />
-                <StatCard label="Active Delivery" value={stats.activeDeliveries} href="/owner/deliveries?status=delivering" color="blue" />
-                <StatCard label="Failed" value={stats.failedDeliveries} href="/owner/deliveries?status=failed" color="red" />
-                <StatCard label="Low Stock" value={stats.lowStocks} href="/owner/inventories" color="amber" />
-                <StatCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="orange" />
-                <StatCard label="Order Hari Ini" value={stats.todayOrders} href="/owner/orders" />
-                <StatCard label="Outlet Aktif" value={stats.activeOutlets} href="/owner/outlets" />
-                <StatCard label="Produk Aktif" value={stats.activeProducts} href="/owner/products" />
-                <StatCard label="Total Active" value={stats.activeOrders} href="/owner/orders" />
-            </div>
+                {/* Recent Activity */}
+                {activityItems.length > 0 && (
+                    <section className="mt-6">
+                        <div className="flex items-center justify-between">
+                            <SectionLabel>Recent Activity</SectionLabel>
+                            <Link href="/owner/stock-movements" className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Lihat Semua</Link>
+                        </div>
+                        <div className="mt-3">
+                            <ActivityFeed items={activityItems} />
+                        </div>
+                    </section>
+                )}
 
-            {/* Quick Actions */}
-            <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-                <Link href="/owner/orders?status=pending" className="shrink-0 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white active:bg-emerald-800">Orders</Link>
-                <Link href="/owner/deliveries" className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium active:bg-zinc-50">Deliveries</Link>
-                <Link href="/owner/inventories" className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium active:bg-zinc-50">Inventory</Link>
-                <Link href="/owner/restocks?status=requested" className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium active:bg-zinc-50">Restocks</Link>
-                <Link href="/owner/reports" className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium active:bg-zinc-50">Reports</Link>
-            </div>
+                {/* Outlet Health */}
+                {outletHealth.length > 0 && (
+                    <section className="mt-6">
+                        <SectionLabel>Outlet Health</SectionLabel>
+                        <div className="mt-2 flex gap-3 overflow-x-auto scrollbar-none pb-1">
+                            {outletHealth.map((outlet) => (
+                                <OutletHealthCard key={outlet.id} outlet={outlet} />
+                            ))}
+                        </div>
+                    </section>
+                )}
 
-            {/* Recent Activity */}
-            {recentActivity.length > 0 && (
+                {/* Quick Actions */}
                 <section className="mt-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-semibold text-slate-700">Aktivitas Terbaru</h2>
-                        <Link href="/owner/stock-movements" className="text-xs text-emerald-700">Lihat semua</Link>
-                    </div>
-                    <div className="mt-2 space-y-2">
-                        {recentActivity.slice(0, 6).map((m: any) => (
-                            <div key={m.id} className="flex items-center gap-3 rounded-lg border border-zinc-100 bg-white px-3 py-2.5">
-                                <MovementIcon type={m.type} />
-                                <div className="min-w-0 flex-1">
-                                    <div className="truncate text-sm font-medium">{m.product?.name ?? '-'}</div>
-                                    <div className="text-xs text-zinc-500">{m.outlet?.name} · {typeLabel(m.type)}</div>
-                                </div>
-                                <div className={`shrink-0 text-sm font-mono font-medium ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                                    {m.quantity >= 0 ? '+' : ''}{m.quantity}
-                                </div>
-                            </div>
-                        ))}
+                    <SectionLabel>Quick Actions</SectionLabel>
+                    <div className="mt-2 grid grid-cols-3 gap-3">
+                        <QuickActionCard href="/owner/orders" label="Manage Orders" icon={<OrdersIcon />} />
+                        <QuickActionCard href="/owner/stock-movements" label="Inventory Audit" icon={<AuditIcon />} />
+                        <QuickActionCard href="/owner/restocks?status=requested" label="Restock Requests" icon={<RestockIcon />} />
                     </div>
                 </section>
-            )}
+            </main>
 
-            {/* Pending Restocks */}
-            {alerts.pendingRestocks.length > 0 && (
-                <section className="mt-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-semibold text-slate-700">Restock Menunggu Approval</h2>
-                        <Link href="/owner/restocks?status=requested" className="text-xs text-emerald-700">Lihat semua</Link>
-                    </div>
-                    <div className="mt-2 space-y-2">
-                        {alerts.pendingRestocks.map((r: any) => (
-                            <Link key={r.id} href={`/owner/restocks/${r.id}`} className="flex items-center justify-between rounded-lg border border-zinc-100 bg-white px-3 py-2.5">
-                                <div>
-                                    <div className="text-sm font-medium">Request #{r.id}</div>
-                                    <div className="text-xs text-zinc-500">{r.outlet?.name}</div>
-                                </div>
-                                <div className="text-xs text-zinc-400">{formatDate(r.created_at)}</div>
-                            </Link>
-                        ))}
-                    </div>
-                </section>
-            )}
-        </OwnerLayout>
+            <OwnerBottomNav />
+        </div>
     );
 }
 
-function StatCard({ label, value, href, color }: { label: string; value: number; href?: string; color?: string }) {
-    const colorClasses: Record<string, string> = {
-        red: 'border-red-100 bg-red-50',
-        amber: 'border-amber-100 bg-amber-50',
-        yellow: 'border-yellow-100 bg-yellow-50',
-        orange: 'border-orange-100 bg-orange-50',
-        blue: 'border-blue-100 bg-blue-50',
-        purple: 'border-purple-100 bg-purple-50',
-    };
-    const base = colorClasses[color ?? ''] ?? 'border-zinc-100 bg-white';
-    const Wrapper = href ? Link : 'div';
+function DesktopDashboard({ stats, alerts, recentActivity }: any) {
+    return (
+        <>
+            <Head title="Owner Dashboard" />
+            <h1 className="text-xl font-semibold">Dashboard</h1>
+            <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <KpiCard label="Order Hari Ini" value={stats.todayOrders} href="/owner/orders" color="emerald" />
+                <KpiCard label="Active Delivery" value={stats.activeDeliveries} href="/owner/deliveries" color="blue" />
+                <KpiCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="amber" />
+                <KpiCard label="Stok Rendah" value={stats.lowStocks} href="/owner/inventories" color="red" />
+            </div>
+            {alerts.failedDeliveries.length > 0 && (
+                <Link href="/owner/deliveries?status=failed" className="mt-4 block rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
+                    ⚠️ {alerts.failedDeliveries.length} delivery gagal perlu ditindak
+                </Link>
+            )}
+        </>
+    );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+    return <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{children}</h2>;
+}
+
+// Helpers
+function activityVerb(type: string): string {
+    const verbs: Record<string, string> = { order_completed: 'Selesai', order_reserved: 'Reserved', order_cancelled: 'Dibatalkan', restock_in: 'Diterima', stock_adjustment: 'Diupdate', initial_stock: 'Diinisialisasi' };
+    return verbs[type] ?? 'Diproses';
+}
+
+function activityColor(type: string): 'emerald' | 'blue' | 'red' | 'amber' | 'slate' {
+    const colors: Record<string, any> = { order_completed: 'emerald', order_reserved: 'blue', order_cancelled: 'red', restock_in: 'emerald', stock_adjustment: 'amber', initial_stock: 'slate' };
+    return colors[type] ?? 'slate';
+}
+
+function timeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Baru saja';
+    if (mins < 60) return `${mins} menit lalu`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} jam lalu`;
+    return `${Math.floor(hours / 24)} hari lalu`;
+}
+
+function buildOutletHealth(lowStockItems: any[], totalOutlets: number) {
+    const outletMap = new Map<number, { id: number; name: string; lowCount: number }>();
+    for (const item of lowStockItems) {
+        if (!item.outlet) continue;
+        const existing = outletMap.get(item.outlet.id);
+        if (existing) { existing.lowCount++; } else { outletMap.set(item.outlet.id, { id: item.outlet.id, name: item.outlet.name, lowCount: 1 }); }
+    }
+    return Array.from(outletMap.values()).map((o) => ({
+        id: o.id,
+        name: o.name,
+        status: (o.lowCount >= 3 ? 'critical' : o.lowCount >= 1 ? 'low_stock' : 'stable') as 'stable' | 'low_stock' | 'critical',
+        stockPercent: Math.max(10, 100 - o.lowCount * 25),
+        updatedAgo: 'Baru saja',
+    }));
+}
+
+function OrdersIcon() { return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>; }
+function AuditIcon() { return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>; }
+function RestockIcon() { return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>; }
+
+
+function DashboardGreeting() {
+    const { auth } = usePage<any>().props;
+    const today = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
     return (
-        <Wrapper {...(href ? { href } : {})} className={`rounded-xl border p-3 ${base} active:scale-[0.97] transition-transform`}>
-            <div className="text-xs font-medium text-slate-500">{label}</div>
-            <div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
-        </Wrapper>
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white pt-[env(safe-area-inset-top)]">
+            <div className="flex min-h-14 items-center justify-between px-4">
+                <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-800 text-sm font-bold text-white">
+                        {auth?.user?.name?.charAt(0)?.toUpperCase() ?? 'O'}
+                    </div>
+                    <div>
+                        <div className="text-sm font-semibold text-slate-900">Halo, {auth?.user?.name?.split(' ')[0] ?? 'Owner'}</div>
+                        <div className="text-[11px] text-slate-500">{today}</div>
+                    </div>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                </div>
+            </div>
+        </header>
     );
-}
-
-function MovementIcon({ type }: { type: string }) {
-    const icons: Record<string, string> = {
-        order_reserved: '🔒',
-        order_completed: '✅',
-        order_cancelled: '↩️',
-        restock_in: '📦',
-        stock_adjustment: '✏️',
-        initial_stock: '🏁',
-    };
-    return <span className="text-base">{icons[type] ?? '📋'}</span>;
-}
-
-function typeLabel(type: string): string {
-    const labels: Record<string, string> = {
-        order_reserved: 'Reserved',
-        order_completed: 'Completed',
-        order_cancelled: 'Cancelled',
-        restock_in: 'Restock In',
-        stock_adjustment: 'Adjustment',
-        initial_stock: 'Initial',
-    };
-    return labels[type] ?? type;
 }

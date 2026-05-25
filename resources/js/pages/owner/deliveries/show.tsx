@@ -1,28 +1,15 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import OrderStatusBadge from '@/components/order-status-badge';
+import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import OwnerLayout from '@/layouts/owner-layout';
 import { formatDate } from '@/lib/format';
-
-const resolutionOptions = [
-    { value: 'retry_delivery', label: 'Retry Delivery', description: 'Jadwalkan ulang pengiriman. Reserved stock tetap.' },
-    { value: 'returned_to_outlet', label: 'Return to Outlet', description: 'Barang dikembalikan ke outlet. Order bisa diproses ulang.' },
-    { value: 'cancelled_and_released', label: 'Cancel & Release Stock', description: 'Batalkan order dan lepas reserved stock.' },
-];
 
 export default function OwnerDeliveryShow({ delivery }: any) {
     const order = delivery.order;
     const canResolve = ['failed', 'retry_delivery', 'returned_to_outlet'].includes(delivery.status);
-
-    const form = useForm({
-        resolution: '',
-        resolution_notes: '',
-    });
-
-    function handleResolve(e: React.FormEvent) {
-        e.preventDefault();
-        form.post(`/owner/deliveries/${delivery.id}/resolve`);
-    }
+    const [resolveOpen, setResolveOpen] = useState(false);
 
     return (
         <OwnerLayout>
@@ -50,48 +37,11 @@ export default function OwnerDeliveryShow({ delivery }: any) {
 
                     {canResolve && (
                         <section className="rounded-lg border border-amber-200 bg-amber-50 p-5">
-                            <h2 className="font-semibold text-amber-900">Resolve Failed Delivery</h2>
-                            <p className="mt-1 text-sm text-amber-700">Pilih tindakan untuk delivery yang gagal ini.</p>
-                            <form onSubmit={handleResolve} className="mt-4 space-y-4">
-                                <div className="space-y-2">
-                                    {resolutionOptions.map((opt) => (
-                                        <label key={opt.value} className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors ${form.data.resolution === opt.value ? 'border-amber-400 bg-white' : 'border-transparent hover:bg-white/50'}`}>
-                                            <input
-                                                type="radio"
-                                                name="resolution"
-                                                value={opt.value}
-                                                checked={form.data.resolution === opt.value}
-                                                onChange={(e) => form.setData('resolution', e.target.value)}
-                                                className="mt-0.5"
-                                            />
-                                            <div>
-                                                <div className="text-sm font-medium text-slate-800">{opt.label}</div>
-                                                <div className="text-xs text-slate-500">{opt.description}</div>
-                                            </div>
-                                        </label>
-                                    ))}
-                                </div>
-                                {form.errors.resolution && <p className="text-xs text-red-600">{form.errors.resolution}</p>}
-
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700">Catatan (opsional)</label>
-                                    <textarea
-                                        className="mt-1 w-full rounded-md border border-zinc-200 px-3 py-2 text-sm"
-                                        rows={2}
-                                        value={form.data.resolution_notes}
-                                        onChange={(e) => form.setData('resolution_notes', e.target.value)}
-                                        placeholder="Alasan atau catatan resolusi..."
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={!form.data.resolution || form.processing}
-                                    className="rounded-md bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700 disabled:opacity-50"
-                                >
-                                    {form.processing ? 'Processing...' : 'Resolve Delivery'}
-                                </button>
-                            </form>
+                            <h2 className="font-semibold text-amber-900">Unresolved Incident</h2>
+                            <p className="mt-1 text-sm text-amber-700">Delivery ini gagal dan membutuhkan tindakan operasional.</p>
+                            <button onClick={() => setResolveOpen(true)} className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-md bg-amber-600 text-sm font-semibold text-white active:bg-amber-700">
+                                Resolve Incident →
+                            </button>
                         </section>
                     )}
                 </div>
@@ -127,6 +77,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     </section>
                 </aside>
             </div>
+            <ResolveDeliverySheet delivery={delivery} open={resolveOpen} onClose={() => setResolveOpen(false)} />
         </OwnerLayout>
     );
 }

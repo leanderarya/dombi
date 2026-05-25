@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Delivery;
+use App\Models\DeliveryResolutionLog;
 use App\Models\Order;
 use App\Models\User;
 use App\Support\OperationalLog;
@@ -118,6 +119,27 @@ class DeliveryService
             };
 
             OperationalLog::deliveryResolved($delivery->id, $resolution, $resolver->id);
+
+            // Write resolution audit log
+            $retryCount = DeliveryResolutionLog::where('order_id', $order->id)->count();
+            $inventoryEffect = match ($resolution) {
+                'retry_delivery' => 'Reserved stock preserved — delivery will be retried',
+                'returned_to_outlet' => 'Reserved stock preserved — goods returned to outlet',
+                'cancelled_and_released' => 'Reserved stock released — inventory restored',
+            };
+
+            DeliveryResolutionLog::create([
+                'order_id' => $order->id,
+                'delivery_id' => $delivery->id,
+                'resolution_type' => $resolution,
+                'resolved_by' => $resolver->id,
+                'resolution_notes' => $notes ?? '',
+                'retry_attempt' => $retryCount + 1,
+                'previous_status' => 'failed',
+                'new_status' => $resolution,
+                'inventory_effect' => $inventoryEffect,
+                'created_at' => now(),
+            ]);
 
             // For retry_delivery, the delivery is deleted so we can't fresh() it
             if ($resolution === 'retry_delivery') {

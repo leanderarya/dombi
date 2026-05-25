@@ -16,7 +16,7 @@ class OrderController extends Controller
     public function index(Request $request): Response
     {
         $orders = Order::query()
-            ->with(['outlet', 'customer'])
+            ->with(['outlet', 'items', 'delivery.courier'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
             ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
             ->when($request->filled('date'), fn ($query) => $query->whereDate('created_at', $request->date('date')))
@@ -29,6 +29,11 @@ class OrderController extends Controller
             'orders' => $orders,
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['status', 'outlet_id', 'date', 'search']),
+            'stats' => [
+                'pendingOrders' => Order::where('status', 'pending')->count(),
+                'activeDeliveries' => Order::whereIn('status', ['picked_up', 'delivering'])->count(),
+                'failedDeliveries' => Order::where('status', 'failed')->count(),
+            ],
         ]);
     }
 
