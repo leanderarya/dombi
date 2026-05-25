@@ -26,8 +26,19 @@ class DashboardController extends Controller
                 'lowStocks' => OutletInventory::where('outlet_id', $outlet->id)
                     ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
                     ->count(),
-                'pendingRestocks' => RestockRequest::where('outlet_id', $outlet->id)->whereIn('status', ['requested', 'approved', 'preparing', 'shipped'])->count(),
+                'pendingRestocks' => RestockRequest::where('outlet_id', $outlet->id)
+                    ->whereIn('status', ['requested', 'approved', 'preparing', 'shipped'])
+                    ->count(),
             ],
+            'lowStockItems' => OutletInventory::with('product:id,name,unit')
+                ->where('outlet_id', $outlet->id)
+                ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
+                ->get(['id', 'product_id', 'current_stock', 'reserved_stock', 'minimum_stock']),
+            'recentOrders' => Order::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready_for_pickup'])
+                ->latest()
+                ->limit(5)
+                ->get(['id', 'order_code', 'status', 'customer_name', 'total', 'created_at']),
         ]);
     }
 }

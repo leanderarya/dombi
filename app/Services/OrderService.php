@@ -12,6 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 class OrderService
 {
+    private const ORDER_CODE_MAX_RETRIES = 5;
+
     public function __construct(
         private readonly OutletAssignmentService $outletAssignmentService,
         private readonly InventoryService $inventoryService,
@@ -67,7 +69,7 @@ class OrderService
             $order = Order::create([
                 'customer_id' => $customer->id,
                 'outlet_id' => $outlet->id,
-                'order_code' => $this->generateOrderCode(),
+                'order_code' => $this->generateOrderCodeWithRetry(),
                 'status' => 'pending',
                 'subtotal' => $subtotal,
                 'delivery_fee' => $deliveryFee,
@@ -127,5 +129,29 @@ class OrderService
             ->count() + 1;
 
         return sprintf('DOMBI-%s-%04d', $date, $count);
+    }
+
+    /**
+     * Generate order code with retry to handle duplicate race conditions.
+     */
+    private function generateOrderCodeWithRetry(): string
+    {
+        $date = Carbon::now()->format('Ymd');
+
+        for ($attempt = 0; $attempt < self::ORDER_CODE_MAX_RETRIES; $attempt++) {
+            $count = Order::query()
+                ->whereDate('created_at', Carbon::today())
+                ->lockForUpdate()
+                ->count() + 1 + $attempt;
+
+            $code = sprintf('DOMBI-%s-%04d', $date, $count);
+
+            if (! Order::where('order_code', $code)->exists()) {
+                return $code;
+            }
+        }
+
+        // Fallback: append random suffix
+        return sprintf('DOMBI-%s-%04d-%s', $date, $count ?? 1, substr(uniqid(), -4));
     }
 }

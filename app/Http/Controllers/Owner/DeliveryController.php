@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignCourierRequest;
+use App\Http\Requests\Owner\ResolveDeliveryRequest;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\User;
@@ -36,7 +37,7 @@ class DeliveryController extends Controller
     public function show(Delivery $delivery): Response
     {
         return Inertia::render('owner/deliveries/show', [
-            'delivery' => $delivery->load(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier', 'assignedBy']),
+            'delivery' => $delivery->load(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier', 'assignedBy', 'resolvedBy']),
         ]);
     }
 
@@ -46,5 +47,22 @@ class DeliveryController extends Controller
         $delivery = $deliveryService->assignCourier($order, $courier, $request->user());
 
         return redirect()->route('owner.deliveries.show', $delivery)->with('success', 'Kurir berhasil di-assign.');
+    }
+
+    public function resolve(ResolveDeliveryRequest $request, Delivery $delivery, DeliveryService $deliveryService): RedirectResponse
+    {
+        $result = $deliveryService->resolveFailedDelivery(
+            $delivery,
+            $request->user(),
+            $request->validated('resolution'),
+            $request->validated('resolution_notes'),
+        );
+
+        // If delivery was deleted (retry_delivery), redirect to index
+        if ($request->validated('resolution') === 'retry_delivery') {
+            return redirect()->route('owner.deliveries.index')->with('success', 'Delivery di-resolve, order siap di-assign ulang.');
+        }
+
+        return redirect()->route('owner.deliveries.show', $delivery)->with('success', 'Delivery berhasil di-resolve.');
     }
 }

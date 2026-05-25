@@ -6,16 +6,22 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\StoreCustomerAddressRequest;
 use App\Http\Requests\Customer\UpdateCustomerAddressRequest;
 use App\Models\CustomerAddress;
+use App\Services\CustomerAddressService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class AddressController extends Controller
 {
+    public function __construct(private readonly CustomerAddressService $addressService) {}
+
     public function index(): Response
     {
         return Inertia::render('customer/addresses/index', [
-            'addresses' => CustomerAddress::where('user_id', auth()->id())->latest()->get(),
+            'addresses' => CustomerAddress::where('user_id', auth()->id())
+                ->orderByDesc('is_default')
+                ->latest()
+                ->get(),
         ]);
     }
 
@@ -26,13 +32,7 @@ class AddressController extends Controller
 
     public function store(StoreCustomerAddressRequest $request): RedirectResponse
     {
-        $data = $request->validated();
-
-        if ($data['is_default'] ?? false) {
-            CustomerAddress::where('user_id', $request->user()->id)->update(['is_default' => false]);
-        }
-
-        $request->user()->customerAddresses()->create($data);
+        $this->addressService->create($request->user(), $request->validated());
 
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat berhasil dibuat.');
     }
@@ -47,13 +47,8 @@ class AddressController extends Controller
     public function update(UpdateCustomerAddressRequest $request, CustomerAddress $address): RedirectResponse
     {
         abort_unless($address->user_id === $request->user()->id, 403);
-        $data = $request->validated();
 
-        if ($data['is_default'] ?? false) {
-            CustomerAddress::where('user_id', $request->user()->id)->whereKeyNot($address->id)->update(['is_default' => false]);
-        }
-
-        $address->update($data);
+        $this->addressService->update($address, $request->validated());
 
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat berhasil diperbarui.');
     }
@@ -61,8 +56,18 @@ class AddressController extends Controller
     public function destroy(CustomerAddress $address): RedirectResponse
     {
         abort_unless($address->user_id === auth()->id(), 403);
-        $address->delete();
+
+        $this->addressService->delete($address);
 
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat berhasil dihapus.');
+    }
+
+    public function setDefault(CustomerAddress $address): RedirectResponse
+    {
+        abort_unless($address->user_id === auth()->id(), 403);
+
+        $this->addressService->setDefault($address);
+
+        return redirect()->route('customer.addresses.index')->with('success', 'Alamat default diperbarui.');
     }
 }

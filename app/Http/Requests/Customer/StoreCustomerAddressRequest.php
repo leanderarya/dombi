@@ -14,15 +14,23 @@ class StoreCustomerAddressRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'label' => ['nullable', 'string', 'max:255'],
+            'label' => ['nullable', 'string', 'max:100'],
             'recipient_name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:50'],
-            'address' => ['required', 'string'],
+            'phone' => ['required', 'string', 'min:8', 'max:20'],
+            'address' => ['required', 'string', 'max:500'],
             'kelurahan' => ['nullable', 'string', 'max:255'],
             'kecamatan' => ['nullable', 'string', 'max:255'],
-            'latitude' => ['nullable', 'numeric'],
-            'longitude' => ['nullable', 'numeric'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
             'is_default' => ['boolean'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'latitude.required' => 'Pilih lokasi di peta untuk menentukan titik pengiriman.',
+            'longitude.required' => 'Pilih lokasi di peta untuk menentukan titik pengiriman.',
         ];
     }
 }

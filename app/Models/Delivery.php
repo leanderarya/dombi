@@ -10,6 +10,18 @@ class Delivery extends Model
 {
     use HasFactory;
 
+    public const RESOLUTION_STATUSES = [
+        'retry_delivery',
+        'returned_to_outlet',
+        'cancelled_and_released',
+    ];
+
+    public const RESOLUTION_TRANSITIONS = [
+        'failed' => ['retry_delivery', 'returned_to_outlet', 'cancelled_and_released'],
+        'retry_delivery' => ['returned_to_outlet', 'cancelled_and_released'],
+        'returned_to_outlet' => ['cancelled_and_released'],
+    ];
+
     protected $fillable = [
         'order_id',
         'courier_id',
@@ -17,6 +29,10 @@ class Delivery extends Model
         'pickup_time',
         'delivered_time',
         'failed_reason',
+        'resolution_status',
+        'resolution_notes',
+        'resolved_by',
+        'resolved_at',
         'notes',
         'proof_image',
         'assigned_by',
@@ -29,6 +45,7 @@ class Delivery extends Model
             'pickup_time' => 'datetime',
             'delivered_time' => 'datetime',
             'assigned_at' => 'datetime',
+            'resolved_at' => 'datetime',
         ];
     }
 
@@ -45,5 +62,18 @@ class Delivery extends Model
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    public function resolvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'resolved_by');
+    }
+
+    public function canResolveTo(string $status): bool
+    {
+        $currentStatus = $this->status;
+        $allowed = self::RESOLUTION_TRANSITIONS[$currentStatus] ?? [];
+
+        return in_array($status, $allowed, true);
     }
 }

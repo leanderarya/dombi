@@ -14,8 +14,19 @@ class OrderController extends Controller
 {
     public function index(): Response
     {
+        $customerId = auth()->id();
+
         return Inertia::render('customer/orders/index', [
-            'orders' => Order::where('customer_id', auth()->id())->with('outlet')->latest()->paginate(12),
+            'activeOrders' => Order::where('customer_id', $customerId)
+                ->whereIn('status', Order::ACTIVE_STATUSES)
+                ->with(['outlet', 'items', 'delivery:id,order_id,status,courier_id', 'delivery.courier:id,name'])
+                ->latest()
+                ->get(),
+            'historyOrders' => Order::where('customer_id', $customerId)
+                ->whereIn('status', Order::HISTORY_STATUSES)
+                ->with(['outlet', 'items'])
+                ->latest()
+                ->paginate(12),
         ]);
     }
 

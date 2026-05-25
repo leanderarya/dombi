@@ -45,7 +45,25 @@ class RestockService
                 throw ValidationException::withMessages(['status' => 'Request hanya bisa di-approve saat status requested.']);
             }
 
+            // Validate all restock_request_item_ids belong to this request
+            $validItemIds = $request->items->pluck('id')->all();
             $approvedByItemId = collect($items)->keyBy('restock_request_item_id');
+
+            foreach ($approvedByItemId as $itemId => $data) {
+                if (! in_array((int) $itemId, $validItemIds, true)) {
+                    throw ValidationException::withMessages([
+                        'items' => "Item ID {$itemId} bukan milik restock request ini.",
+                    ]);
+                }
+            }
+
+            // Validate at least one item has approved_quantity > 0
+            $hasApproved = $approvedByItemId->contains(fn ($item) => (int) ($item['approved_quantity'] ?? 0) > 0);
+            if (! $hasApproved) {
+                throw ValidationException::withMessages([
+                    'items' => 'Minimal satu item harus memiliki approved quantity > 0.',
+                ]);
+            }
 
             foreach ($request->items as $requestItem) {
                 $approvedQuantity = (int) ($approvedByItemId->get($requestItem->id)['approved_quantity'] ?? 0);
@@ -94,6 +112,7 @@ class RestockService
                 throw ValidationException::withMessages(['status' => 'Distribution hanya bisa dibuat dari request approved.']);
             }
 
+            // Idempotency: if distribution already exists, return it
             if ($request->distribution) {
                 return $request->distribution->load('items.product');
             }
@@ -106,6 +125,7 @@ class RestockService
                 'notes' => $request->owner_notes,
             ]);
 
+            $hasItems = false;
             foreach ($request->items as $item) {
                 if ((int) $item->approved_quantity <= 0) {
                     continue;
@@ -114,6 +134,13 @@ class RestockService
                 $distribution->items()->create([
                     'product_id' => $item->product_id,
                     'quantity' => $item->approved_quantity,
+                ]);
+                $hasItems = true;
+            }
+
+            if (! $hasItems) {
+                throw ValidationException::withMessages([
+                    'items' => 'Distribution tidak boleh kosong, minimal satu item harus memiliki quantity > 0.',
                 ]);
             }
 
@@ -154,6 +181,7 @@ class RestockService
 
             abort_unless($outletUser->outlet?->id === $distribution->outlet_id, 403);
 
+            // Idempotency: if already completed, return without error
             if (in_array($distribution->status, ['received', 'completed'], true)) {
                 return $distribution->fresh(['outlet', 'items.product', 'restockRequest']);
             }
@@ -163,14 +191,26 @@ class RestockService
             }
 
             foreach ($distribution->items as $item) {
-                $inventory = OutletInventory::firstOrCreate(
-                    ['outlet_id' => $distribution->outlet_id, 'product_id' => $item->product_id],
-                    ['current_stock' => 0, 'reserved_stock' => 0, 'minimum_stock' => 0]
-                );
+                $inventory = OutletInventory::query()
+                    ->where('outlet_id', $distribution->outlet_id)
+                    ->where('product_id', $item->product_id)
+                    ->lockForUpdate()
+                    ->first();
 
-                $inventory->lockForUpdate();
+                if (! $inventory) {
+                    $inventory = OutletInventory::create([
+                        'outlet_id' => $distribution->outlet_id,
+                        'product_id' => $item->product_id,
+                        'current_stock' => 0,
+                        'reserved_stock' => 0,
+                        'minimum_stock' => 0,
+                    ]);
+                }
+
                 $beforeStock = $inventory->current_stock;
+                $beforeReserved = $inventory->reserved_stock;
                 $inventory->current_stock += $item->quantity;
+                $inventory->last_restock_at = now();
                 $inventory->save();
 
                 StockMovement::create([
@@ -180,6 +220,8 @@ class RestockService
                     'quantity' => $item->quantity,
                     'before_stock' => $beforeStock,
                     'after_stock' => $inventory->current_stock,
+                    'before_reserved' => $beforeReserved,
+                    'after_reserved' => $inventory->reserved_stock,
                     'reference_type' => StockDistribution::class,
                     'reference_id' => $distribution->id,
                     'notes' => 'Restock diterima outlet.',

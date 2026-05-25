@@ -1,68 +1,87 @@
-import { Head, router } from '@inertiajs/react';
-import DeliveryStatusBadge from '../../../components/delivery-status-badge';
-import OrderStatusBadge from '../../../components/order-status-badge';
-import CustomerLayout from '../../../layouts/customer-layout';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import CourierCard from '@/components/customer/courier-card';
+import OrderSummaryCard from '@/components/customer/order-summary-card';
+import OutletFulfillmentCard from '@/components/customer/outlet-fulfillment-card';
+import StatusTimeline from '@/components/customer/status-timeline';
+import StickyOrderActions from '@/components/customer/sticky-order-actions';
+import OfflineBanner from '@/components/offline-banner';
+import { activeOrderStatuses } from '@/lib/customer-status';
 
 export default function OrderShow({ order }: any) {
+    const isActive = activeOrderStatuses.includes(order.status);
+    const isTerminal = ['completed', 'cancelled', 'failed'].includes(order.status);
+
     return (
-        <CustomerLayout>
-            <Head title={order.order_code} />
-            <div className="rounded-lg border bg-white p-5">
-                <div className="flex items-start justify-between gap-4">
-                    <div>
-                        <h1 className="text-xl font-semibold">{order.order_code}</h1>
-                        <div className="mt-1 text-sm text-zinc-500">Outlet: {order.outlet?.name ?? '-'}</div>
+        <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
+            <OfflineBanner />
+
+            {/* Sticky Header */}
+            <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur">
+                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+                    <Link href="/customer/orders" className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </Link>
+                    <div className="text-sm font-semibold text-slate-900">{order.order_code}</div>
+                    <div className="h-10 w-10" /> {/* Spacer for centering */}
+                </div>
+            </header>
+
+            {/* Content */}
+            <main className={`mx-auto max-w-lg px-4 pt-4 ${isTerminal ? 'pb-[calc(7rem+env(safe-area-inset-bottom))]' : 'pb-[calc(7rem+env(safe-area-inset-bottom))]'}`}>
+                <Head title={order.order_code} />
+
+                {/* Status Hero Card */}
+                <OutletFulfillmentCard
+                    status={order.status}
+                    outletName={order.outlet?.name}
+                />
+
+                {/* Courier Card */}
+                {order.delivery?.courier && (
+                    <div className="mt-3">
+                        <CourierCard courier={order.delivery.courier} />
                     </div>
-                    <OrderStatusBadge status={order.status} />
-                </div>
-                <div className="mt-5 border-t pt-4 text-sm">
-                    <div className="font-medium">{order.customer_name}</div>
-                    <div>{order.customer_phone}</div>
-                    <div className="text-zinc-600">{order.customer_address}</div>
-                </div>
-                <div className="mt-5 space-y-3">
-                    {order.items.map((item: any) => (
-                        <div key={item.id} className="flex justify-between border-t pt-3 text-sm">
-                            <div>
-                                <div className="font-medium">{item.product_name}</div>
-                                <div className="text-zinc-500">Qty {item.quantity} x Rp {Number(item.price).toLocaleString('id-ID')}</div>
-                            </div>
-                            <div className="font-medium">Rp {Number(item.subtotal).toLocaleString('id-ID')}</div>
-                        </div>
-                    ))}
-                </div>
-                <div className="mt-5 border-t pt-4 text-right">
-                    <div className="text-sm text-zinc-500">Total</div>
-                    <div className="text-2xl font-semibold">Rp {Number(order.total).toLocaleString('id-ID')}</div>
-                </div>
-                <section className="mt-5 border-t pt-4 text-sm">
-                    <h2 className="font-semibold">Delivery</h2>
-                    {order.delivery ? (
-                        <div className="mt-3 rounded-md bg-zinc-50 p-3">
-                            <DeliveryStatusBadge status={order.delivery.status} />
-                            <div className="mt-2">Courier: {order.delivery.courier?.name ?? '-'}</div>
-                            <div>Pickup: {order.delivery.pickup_time ? new Date(order.delivery.pickup_time).toLocaleString('id-ID') : '-'}</div>
-                            <div>Delivered: {order.delivery.delivered_time ? new Date(order.delivery.delivered_time).toLocaleString('id-ID') : '-'}</div>
-                            {order.delivery.failed_reason && <div className="mt-2 text-red-700">{order.delivery.failed_reason}</div>}
-                        </div>
-                    ) : (
-                        <div className="mt-3 text-zinc-500">Delivery belum di-assign.</div>
-                    )}
-                </section>
-                <section className="mt-5 border-t pt-4 text-sm">
-                    <h2 className="font-semibold">Timeline Status</h2>
-                    <div className="mt-3 space-y-3">
-                        {order.status_histories.map((history: any) => (
-                            <div key={history.id} className="border-l-2 border-emerald-200 pl-3">
-                                <div className="font-medium">{history.to_status.replaceAll('_', ' ')}</div>
-                                <div className="text-zinc-500">{history.notes}</div>
-                                <div className="text-xs text-zinc-400">{new Date(history.created_at).toLocaleString('id-ID')}</div>
-                            </div>
-                        ))}
+                )}
+
+                {/* Failed Delivery Reason */}
+                {order.delivery?.failed_reason && (
+                    <div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-4">
+                        <div className="text-xs font-bold uppercase tracking-wider text-red-600">Alasan gagal</div>
+                        <div className="mt-1 text-sm text-red-800">{order.delivery.failed_reason}</div>
                     </div>
-                </section>
-                <button onClick={() => router.post(`/customer/orders/${order.id}/repeat`)} className="mt-5 w-full rounded-md border px-4 py-2">Order ulang</button>
-            </div>
-        </CustomerLayout>
+                )}
+
+                {/* Timeline */}
+                <div className="mt-4">
+                    <StatusTimeline
+                        histories={order.status_histories}
+                        currentStatus={order.status}
+                    />
+                </div>
+
+                {/* Order Summary */}
+                <div className="mt-4">
+                    <OrderSummaryCard
+                        items={order.items}
+                        subtotal={order.subtotal}
+                        deliveryFee={order.delivery_fee}
+                        total={order.total}
+                    />
+                </div>
+
+                {/* Delivery Address */}
+                <div className="mt-4 rounded-lg border border-zinc-100 bg-white p-4">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Alamat Pengiriman</div>
+                    <div className="mt-2 text-sm font-medium text-slate-900">{order.customer_name}</div>
+                    <div className="mt-0.5 text-xs text-slate-500">{order.customer_phone}</div>
+                    <div className="mt-1.5 text-xs leading-relaxed text-slate-600">{order.customer_address}</div>
+                </div>
+            </main>
+
+            {/* Sticky Bottom Actions */}
+            <StickyOrderActions orderId={order.id} showReorder={isTerminal} />
+        </div>
     );
 }

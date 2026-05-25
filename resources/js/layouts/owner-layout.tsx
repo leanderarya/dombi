@@ -1,5 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
+import OfflineBanner from '@/components/offline-banner';
+import UpdateBanner from '@/components/update-banner';
 
 const nav = [
     ['/owner/dashboard', 'Dashboard'],
@@ -9,7 +11,9 @@ const nav = [
     ['/owner/orders', 'Orders'],
     ['/owner/deliveries', 'Deliveries'],
     ['/owner/restocks', 'Restocks'],
-    ['/owner/distributions', 'Stock Distribution'],
+    ['/owner/distributions', 'Distribution'],
+    ['/owner/stock-movements', 'Audit Trail'],
+    ['/owner/reports', 'Reports'],
 ];
 
 export default function OwnerLayout({ children }: PropsWithChildren) {
@@ -19,28 +23,44 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
 
     return (
         <div className="min-h-screen bg-[#f8f7f2] text-slate-900">
-            <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-zinc-200 bg-white p-5 md:block">
-                <div className="rounded-lg bg-emerald-700 px-3 py-2 text-xl font-semibold text-white">Dombi</div>
+            <OfflineBanner />
+            <UpdateBanner />
+            {/* Desktop sidebar */}
+            <aside className="fixed inset-y-0 left-0 hidden w-60 border-r border-zinc-200 bg-white p-4 lg:block">
+                <div className="rounded-lg bg-emerald-700 px-3 py-2 text-lg font-semibold text-white">Dombi</div>
                 <div className="mt-3 text-sm font-medium text-slate-800">{auth?.user?.name}</div>
                 <div className="text-xs uppercase tracking-wide text-zinc-500">Owner</div>
-                <nav className="mt-8 space-y-1">
+                <nav className="mt-6 space-y-0.5">
                     {nav.map(([href, label]) => (
                         <Link key={href} href={href} className={`block rounded-md px-3 py-2 text-sm font-medium ${url?.startsWith(href) ? 'bg-emerald-50 text-emerald-800' : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'}`}>
                             {label}
                         </Link>
                     ))}
                 </nav>
-                <button onClick={() => router.post('/logout')} className="mt-8 rounded-md border border-zinc-200 px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900">Logout</button>
+                <button onClick={() => router.post('/logout')} className="mt-6 w-full rounded-md border border-zinc-200 px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900">Logout</button>
+                <div className="mt-4 text-xs text-zinc-400">v{page.props.appVersion ?? '1.0.0'}</div>
             </aside>
-            <main className="md:pl-64">
-                <div className="border-b border-zinc-200 bg-white p-4 md:hidden">
-                    <div className="font-semibold text-emerald-800">Dombi Owner</div>
-                    <div className="mt-3 flex gap-2 overflow-x-auto text-sm">
-                        {nav.map(([href, label]) => <Link key={href} href={href} className={`shrink-0 rounded-md px-3 py-1 ${url?.startsWith(href) ? 'bg-emerald-50 text-emerald-800' : 'text-slate-600'}`}>{label}</Link>)}
-                    </div>
+
+            {/* Mobile top bar */}
+            <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur-sm lg:hidden">
+                <div className="flex items-center justify-between px-4 py-3">
+                    <div className="font-semibold text-emerald-800">Dombi</div>
+                    <div className="text-xs text-zinc-500">{auth?.user?.name}</div>
+                    <button onClick={() => router.post('/logout')} className="rounded-md border border-zinc-200 px-2.5 py-1.5 text-xs text-zinc-600">Logout</button>
                 </div>
-                <div className="mx-auto max-w-6xl p-5">
-                    {flash?.success && <div className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{flash.success}</div>}
+                <nav className="flex gap-1 overflow-x-auto px-3 pb-2 scrollbar-none">
+                    {nav.map(([href, label]) => (
+                        <Link key={href} href={href} className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium ${url?.startsWith(href) ? 'bg-emerald-50 text-emerald-800' : 'text-slate-500'}`}>
+                            {label}
+                        </Link>
+                    ))}
+                </nav>
+            </header>
+
+            {/* Main content */}
+            <main className="lg:pl-60">
+                <div className="mx-auto max-w-6xl px-4 py-5 sm:px-5">
+                    {flash?.success && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{flash.success}</div>}
                     {children}
                 </div>
             </main>

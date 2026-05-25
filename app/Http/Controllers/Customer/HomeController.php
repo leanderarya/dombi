@@ -12,15 +12,21 @@ class HomeController extends Controller
 {
     public function __invoke(): Response
     {
+        $customerId = auth()->id();
+
         return Inertia::render('customer/home', [
             'products' => Product::where('is_active', true)->latest()->limit(6)->get(),
-            'activeOrder' => Order::where('customer_id', auth()->id())
-                ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'])
-                ->with('outlet')
+            'activeOrders' => Order::where('customer_id', $customerId)
+                ->whereIn('status', Order::ACTIVE_STATUSES)
+                ->with(['outlet:id,name', 'delivery:id,order_id,status,courier_id', 'delivery.courier:id,name'])
+                ->latest()
+                ->limit(3)
+                ->get(),
+            'lastOrder' => Order::where('customer_id', $customerId)
+                ->whereIn('status', Order::HISTORY_STATUSES)
+                ->with('items')
                 ->latest()
                 ->first(),
-            'recentOrders' => Order::where('customer_id', auth()->id())->with('outlet')->latest()->limit(5)->get(),
-            'lastOrder' => Order::where('customer_id', auth()->id())->with('items')->latest()->first(),
         ]);
     }
 }

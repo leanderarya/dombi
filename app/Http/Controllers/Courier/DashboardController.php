@@ -21,6 +21,11 @@ class DashboardController extends Controller
                 'completedToday' => Delivery::where('courier_id', $courierId)->where('status', 'completed')->whereDate('updated_at', today())->count(),
                 'failedToday' => Delivery::where('courier_id', $courierId)->where('status', 'failed')->whereDate('updated_at', today())->count(),
             ],
+            'activeDeliveries' => Delivery::where('courier_id', $courierId)
+                ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
+                ->with(['order:id,order_code,customer_name,customer_address,outlet_id', 'order.outlet:id,name'])
+                ->latest()
+                ->get(['id', 'order_id', 'status', 'assigned_at']),
         ]);
     }
 }

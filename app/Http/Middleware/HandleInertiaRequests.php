@@ -35,11 +35,17 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $user = $request->user();
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'appVersion' => config('app.version', '1.0.0'),
             'auth' => [
-                'user' => $request->user(),
+                'user' => $user,
+                'defaultAddress' => fn () => $user && $user->role === 'customer'
+                    ? $user->customerAddresses()->where('is_default', true)->first(['id', 'label', 'recipient_name', 'address', 'kecamatan', 'latitude', 'longitude'])
+                    : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

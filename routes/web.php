@@ -17,8 +17,11 @@ use App\Http\Controllers\Owner\InventoryController as OwnerInventoryController;
 use App\Http\Controllers\Owner\OrderController as OwnerOrderController;
 use App\Http\Controllers\Owner\OutletController as OwnerOutletController;
 use App\Http\Controllers\Owner\ProductController as OwnerProductController;
+use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\RestockController as OwnerRestockController;
 use App\Http\Controllers\Owner\StockDistributionController as OwnerStockDistributionController;
+use App\Http\Controllers\Owner\StockMovementController;
+use App\Http\Controllers\SystemController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -27,9 +30,16 @@ Route::get('/', function () {
         : redirect()->route('login');
 })->name('home');
 
+// System endpoints
+Route::get('/api/health', [SystemController::class, 'health'])->name('health');
+Route::get('/api/version', [SystemController::class, 'version'])->name('version');
+Route::get('/api/status', [SystemController::class, 'status'])
+    ->middleware(['auth', 'role:owner'])
+    ->name('system.status');
+
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store']);
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
 });
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
@@ -54,6 +64,10 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
     Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
+    Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
+    Route::get('stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
+    Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
+    Route::get('reports/export-csv', [ReportController::class, 'exportCsv'])->middleware('throttle:export')->name('reports.export-csv');
     Route::get('restocks', [OwnerRestockController::class, 'index'])->name('restocks.index');
     Route::get('restocks/{restockRequest}', [OwnerRestockController::class, 'show'])->name('restocks.show');
     Route::post('restocks/{restockRequest}/approve', [OwnerRestockController::class, 'approve'])->name('restocks.approve');
@@ -65,10 +79,14 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
     Route::get('/home', CustomerHomeController::class)->name('home');
+    Route::get('/profile', [\App\Http\Controllers\Customer\ProfileController::class, 'index'])->name('profile');
+    Route::get('/help', fn () => \Inertia\Inertia::render('customer/help'))->name('help');
+    Route::get('/about', fn () => \Inertia\Inertia::render('customer/about'))->name('about');
     Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
     Route::resource('addresses', CustomerAddressController::class)->except(['show']);
+    Route::post('/addresses/{address}/set-default', [CustomerAddressController::class, 'setDefault'])->name('addresses.set-default');
     Route::get('/checkout', [CustomerProductController::class, 'checkout'])->name('checkout');
-    Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
+    Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/repeat', [CustomerOrderController::class, 'repeat'])->name('orders.repeat');

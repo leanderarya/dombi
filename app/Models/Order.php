@@ -12,6 +12,10 @@ class Order extends Model
 {
     use HasFactory;
 
+    public const ACTIVE_STATUSES = ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'];
+
+    public const HISTORY_STATUSES = ['completed', 'cancelled', 'failed'];
+
     protected $fillable = [
         'customer_id', 'outlet_id', 'order_code', 'status', 'subtotal',
         'delivery_fee', 'total', 'customer_name', 'customer_phone',
@@ -53,5 +57,15 @@ class Order extends Model
     public function delivery(): HasOne
     {
         return $this->hasOne(Delivery::class);
+    }
+
+    public function isActive(): bool
+    {
+        return in_array($this->status, self::ACTIVE_STATUSES, true);
+    }
+
+    public function isFinalized(): bool
+    {
+        return in_array($this->status, self::HISTORY_STATUSES, true);
     }
 }

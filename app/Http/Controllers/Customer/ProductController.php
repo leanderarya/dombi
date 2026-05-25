@@ -22,6 +22,7 @@ class ProductController extends Controller
         return Inertia::render('customer/checkout', [
             'products' => Product::where('is_active', true)->orderBy('name')->get(),
             'addresses' => CustomerAddress::where('user_id', auth()->id())->latest()->get(),
+            'selectedProductId' => request()->integer('product_id') ?: null,
         ]);
     }
 }
