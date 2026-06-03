@@ -1,4 +1,3 @@
-import { Link } from '@inertiajs/react';
 import OrderStatusChip from './order-status-chip';
 import { formatCurrency } from '@/lib/format';
 
@@ -14,19 +13,21 @@ interface Props {
         items?: { id: number }[];
         delivery?: { courier?: { name: string } | null; status?: string; failed_reason?: string } | null;
     };
-    /** Called when "Resolve Case" or "Detail" is tapped — opens contextual sheet */
     onSelect?: () => void;
+    onAssign?: () => void;
 }
 
-export default function OwnerOrderCard({ order, onSelect }: Props) {
+export default function OwnerOrderCard({ order, onSelect, onAssign }: Props) {
     const isFailed = order.status === 'failed';
-    const isPending = order.status === 'pending';
-    const isDelivering = order.status === 'delivering';
+    const isReadyForPickup = order.status === 'ready_for_pickup';
+    const canAssign = isReadyForPickup && !order.delivery;
+    const isDelivering = order.status === 'delivering' || order.status === 'picked_up';
+    const hasCourier = !!order.delivery?.courier;
     const itemCount = order.items?.length ?? 0;
 
     return (
         <div className={`rounded-lg border bg-white p-4 ${isFailed ? 'border-l-[3px] border-l-red-500 border-t-slate-200 border-r-slate-200 border-b-slate-200' : 'border-slate-200'}`}>
-            {/* Header: code + status */}
+            {/* Header */}
             <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-bold tabular-nums text-slate-900">{order.order_code}</span>
                 <OrderStatusChip status={order.status} />
@@ -41,27 +42,28 @@ export default function OwnerOrderCard({ order, onSelect }: Props) {
                 </div>
             </div>
 
-            {/* Metadata grid */}
+            {/* Metadata */}
             <div className="mt-3 grid grid-cols-2 gap-y-1 border-t border-slate-100 pt-3 text-xs">
-                {isPending && (
+                {hasCourier && (isDelivering || isFailed) ? (
                     <>
-                        <div><span className="text-slate-400">Items</span><br /><span className="font-medium text-slate-700">{itemCount} Items</span></div>
+                        <div><span className="text-slate-400">Courier</span><br /><span className="font-medium text-slate-700">{order.delivery?.courier?.name}</span></div>
                         <div className="text-right"><span className="text-slate-400">Payment</span><br /><span className="font-semibold tabular-nums text-slate-900">{formatCurrency(order.total)}</span></div>
                     </>
-                )}
-                {isDelivering && (
-                    <>
-                        <div><span className="text-slate-400">Courier</span><br /><span className="font-medium text-slate-700">{order.delivery?.courier?.name ?? '-'}</span></div>
-                        <div className="text-right"><span className="text-slate-400">Payment</span><br /><span className="font-semibold tabular-nums text-slate-900">{formatCurrency(order.total)}</span></div>
-                    </>
-                )}
-                {!isPending && !isDelivering && (
+                ) : (
                     <>
                         <div><span className="text-slate-400">Items</span><br /><span className="font-medium text-slate-700">{itemCount} Items</span></div>
                         <div className="text-right"><span className="text-slate-400">Total</span><br /><span className="font-semibold tabular-nums text-slate-900">{formatCurrency(order.total)}</span></div>
                     </>
                 )}
             </div>
+
+            {/* Courier waiting state */}
+            {canAssign && (
+                <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-700">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    No courier assigned
+                </div>
+            )}
 
             {/* Failed alert */}
             {isFailed && (
@@ -76,15 +78,16 @@ export default function OwnerOrderCard({ order, onSelect }: Props) {
                 <button onClick={onSelect} className="flex min-h-[44px] flex-1 items-center justify-center rounded-md border border-slate-200 text-xs font-semibold text-slate-700 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
                     Detail
                 </button>
+                {canAssign && onAssign && (
+                    <button onClick={onAssign} className="flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-md bg-emerald-700 text-xs font-semibold text-white transition-all duration-150 active:scale-[0.98] active:bg-emerald-800">
+                        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                        Assign Courier
+                    </button>
+                )}
                 {isFailed && (
                     <button onClick={onSelect} className="flex min-h-[44px] flex-1 items-center justify-center rounded-md border border-red-200 text-xs font-semibold text-red-700 transition-all duration-150 active:scale-[0.98] active:bg-red-50">
                         Resolve Case
                     </button>
-                )}
-                {isPending && (
-                    <Link href={`/owner/orders/${order.id}`} className="flex min-h-[44px] flex-1 items-center justify-center rounded-md bg-emerald-700 text-xs font-semibold text-white transition-all duration-150 active:scale-[0.98] active:bg-emerald-800">
-                        Assign Courier
-                    </Link>
                 )}
             </div>
         </div>

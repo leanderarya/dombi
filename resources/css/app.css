@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap');
 @import 'tailwindcss';
 
 @source '../views';
@@ -5,7 +6,7 @@
 
 @theme {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Public Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
 }
@@ -26,4 +27,77 @@
 @keyframes slideUp {
     from { transform: translateY(100%); }
     to { transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.95); }
+}
+
+/* SweetAlert2 Dombi operational theme */
+.dombi-swal-popup {
+    border-radius: 1rem !important;
+    padding: 1.5rem !important;
+    max-width: 320px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08) !important;
+}
+
+.dombi-swal-title {
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    padding: 0 !important;
+    margin-bottom: 0.5rem !important;
+}
+
+.dombi-swal-text {
+    font-size: 0.8125rem !important;
+    color: #64748b !important;
+    line-height: 1.5 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.dombi-swal-actions {
+    margin-top: 1.25rem !important;
+    gap: 0.5rem !important;
+}
+
+.dombi-swal-confirm {
+    background: #dc2626 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 0.75rem !important;
+    padding: 0.625rem 1.25rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    min-height: 44px !important;
+    transition: all 150ms !important;
+}
+
+.dombi-swal-confirm:active {
+    transform: scale(0.97) !important;
+}
+
+.dombi-swal-cancel {
+    background: white !important;
+    color: #475569 !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 0.75rem !important;
+    padding: 0.625rem 1.25rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 600 !important;
+    min-height: 44px !important;
+    transition: all 150ms !important;
+}
+
+.dombi-swal-cancel:active {
+    transform: scale(0.97) !important;
+    background: #f8fafc !important;
 }

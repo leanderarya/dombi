@@ -7,6 +7,7 @@ use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,7 +33,11 @@ class OrderController extends Controller
 
     public function store(StoreOrderRequest $request, OrderService $orderService): RedirectResponse
     {
-        $order = $orderService->createCustomerOrder($request->user(), $request->validated());
+        $order = $orderService->createCheckoutOrder($request->user(), $request->validated());
+
+        if (! $request->user()) {
+            Auth::login($order->customer);
+        }
 
         return redirect()->route('customer.orders.show', $order)->with('success', 'Order berhasil dibuat.');
     }

@@ -11,8 +11,10 @@ class CustomerAddress extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'label', 'recipient_name', 'phone', 'address', 'kelurahan',
-        'kecamatan', 'latitude', 'longitude', 'is_default',
+        'user_id', 'label', 'recipient_name', 'phone', 'address', 'address_line',
+        'kelurahan', 'kecamatan', 'province', 'city', 'district', 'village',
+        'postal_code', 'latitude', 'longitude', 'landmark', 'delivery_notes',
+        'is_default',
     ];
 
     protected function casts(): array

@@ -13,9 +13,9 @@ class DemoReadinessTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guest_is_redirected_to_login_and_roles_redirect_to_own_dashboard(): void
+    public function test_guest_opens_storefront_and_roles_redirect_to_own_dashboard(): void
     {
-        $this->get('/')->assertRedirect('/login');
+        $this->get('/')->assertOk();
 
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);

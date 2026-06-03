@@ -1,31 +1,43 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import OwnerMoreSheet from './owner-more-sheet';
 
 const navItems = [
     { href: '/owner/dashboard', label: 'Dashboard', icon: DashIcon },
     { href: '/owner/orders', label: 'Orders', icon: OrderIcon },
     { href: '/owner/inventories', label: 'Inventory', icon: InvIcon },
     { href: '/owner/restocks', label: 'Restocks', icon: RestockIcon },
-    { href: '/owner/deliveries', label: 'Delivery', icon: DeliveryIcon },
 ];
+
+const moreRoutes = ['/owner/products', '/owner/outlets', '/owner/reports', '/owner/stock-movements', '/owner/deliveries', '/owner/profile'];
 
 export default function OwnerBottomNav() {
     const { url } = usePage();
+    const [moreOpen, setMoreOpen] = useState(false);
+    const moreActive = moreRoutes.some((route) => url === route || url.startsWith(`${route}/`));
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
-            <div className="mx-auto grid h-14 max-w-lg grid-cols-5">
-                {navItems.map((item) => {
-                    const active = url === item.href || url.startsWith(`${item.href}/`) || (item.href === '/owner/dashboard' && url === '/owner/dashboard');
-                    const Icon = item.icon;
-                    return (
-                        <Link key={item.href} href={item.href} className={`flex flex-col items-center justify-center gap-0.5 text-[9px] font-semibold ${active ? 'text-emerald-700' : 'text-slate-400'}`}>
-                            <Icon active={active} />
-                            <span>{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </div>
-        </nav>
+        <>
+            <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white pb-[env(safe-area-inset-bottom)]">
+                <div className="mx-auto grid h-14 max-w-lg grid-cols-5">
+                    {navItems.map((item) => {
+                        const active = url === item.href || url.startsWith(`${item.href}/`) || (item.href === '/owner/dashboard' && url === '/owner/dashboard');
+                        const Icon = item.icon;
+                        return (
+                            <Link key={item.href} href={item.href} className={`flex flex-col items-center justify-center gap-0.5 text-[9px] font-semibold ${active ? 'text-emerald-700' : 'text-slate-400'}`}>
+                                <Icon active={active} />
+                                <span>{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                    <button type="button" onClick={() => setMoreOpen(true)} className={`flex flex-col items-center justify-center gap-0.5 text-[9px] font-semibold ${moreActive || moreOpen ? 'text-emerald-700' : 'text-slate-400'}`} aria-label="Open operational menu">
+                        <MoreIcon active={moreActive || moreOpen} />
+                        <span>More</span>
+                    </button>
+                </div>
+            </nav>
+            <OwnerMoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
+        </>
     );
 }
 
@@ -41,6 +53,6 @@ function InvIcon({ active }: { active: boolean }) {
 function RestockIcon({ active }: { active: boolean }) {
     return <svg className="h-5 w-5" fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 0 : 1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>;
 }
-function DeliveryIcon({ active }: { active: boolean }) {
-    return <svg className="h-5 w-5" fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 0 : 1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>;
+function MoreIcon({ active }: { active: boolean }) {
+    return <svg className="h-5 w-5" fill={active ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={active ? 0 : 1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4 7h16M4 12h16M4 17h16" /></svg>;
 }

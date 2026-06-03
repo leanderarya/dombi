@@ -34,12 +34,28 @@ class RestockController extends Controller
                 ->withQueryString(),
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['status', 'outlet_id', 'search']),
+            'statusOptions' => [
+                ['value' => 'requested', 'label' => 'Requested'],
+                ['value' => 'preparing', 'label' => 'Preparing'],
+                ['value' => 'shipped', 'label' => 'Shipped'],
+                ['value' => 'completed', 'label' => 'Completed'],
+                ['value' => 'rejected', 'label' => 'Rejected'],
+            ],
         ]);
     }
 
     public function show(RestockRequest $restockRequest): Response
     {
-        $restockRequest->load(['outlet', 'items.product', 'distribution.items.product']);
+        $restockRequest->load([
+            'outlet',
+            'requester',
+            'approver',
+            'rejecter',
+            'items.product',
+            'distribution.items.product',
+            'distribution.sender',
+            'distribution.receiver',
+        ]);
 
         return Inertia::render('owner/restocks/show', [
             'restock' => $restockRequest,

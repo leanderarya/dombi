@@ -19,6 +19,8 @@ class StockDistribution extends Model
         'received_by',
         'sent_at',
         'received_at',
+        'received_notes',
+        'damage_notes',
         'notes',
     ];
 

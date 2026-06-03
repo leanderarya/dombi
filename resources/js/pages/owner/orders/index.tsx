@@ -1,8 +1,8 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import EmptyState from '@/components/empty-state';
 import OperationalKpiCard from '@/components/owner/operational-kpi-card';
-import OrderDetailSheet from '@/components/owner/order-detail-sheet';
 import OwnerBottomNav from '@/components/owner/owner-bottom-nav';
 import OwnerMobileHeader, { HeaderIconButton, SearchIcon, FilterIcon } from '@/components/owner/owner-mobile-header';
 import OwnerOrderCard from '@/components/owner/owner-order-card';
@@ -20,7 +20,7 @@ const statusFilters = [
     { key: 'failed', label: 'Failed' },
 ];
 
-export default function OwnerOrdersIndex({ orders, outlets, filters, stats }: any) {
+export default function OwnerOrdersIndex({ orders, outlets, filters, stats, couriers }: any) {
     const setFilter = (key: string, value: string) => {
         router.get('/owner/orders', { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
     };
@@ -36,17 +36,17 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats }: an
 
             {/* Mobile */}
             <div className="lg:hidden">
-                <MobileView orders={orders} filters={filters} setFilter={setFilter} stats={stats} />
+                <MobileView orders={orders} filters={filters} setFilter={setFilter} stats={stats} couriers={couriers} />
             </div>
         </>
     );
 }
 
-function MobileView({ orders, filters, setFilter, stats }: any) {
+function MobileView({ orders, filters, setFilter, stats, couriers }: any) {
     const pendingCount = stats?.pendingOrders ?? 0;
     const activeCount = stats?.activeDeliveries ?? 0;
     const failedCount = stats?.failedDeliveries ?? 0;
-    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+    const [assignOrder, setAssignOrder] = useState<any>(null);
 
     return (
         <div className="min-h-dvh bg-slate-50 text-slate-900">
@@ -93,7 +93,7 @@ function MobileView({ orders, filters, setFilter, stats }: any) {
                 ) : (
                     <div className="mt-3 space-y-3">
                         {orders.data.map((order: any) => (
-                            <OwnerOrderCard key={order.id} order={order} onSelect={() => setSelectedOrder(order)} />
+                            <OwnerOrderCard key={order.id} order={order} onSelect={() => router.visit(`/owner/orders/${order.id}`)} onAssign={() => setAssignOrder(order)} />
                         ))}
                     </div>
                 )}
@@ -101,9 +101,7 @@ function MobileView({ orders, filters, setFilter, stats }: any) {
                 <Pagination links={orders.links} />
             </main>
 
-            {/* Order Detail Sheet — contextual, no navigation */}
-            <OrderDetailSheet order={selectedOrder} open={!!selectedOrder} onClose={() => setSelectedOrder(null)} />
-
+            <AssignCourierSheet order={assignOrder} couriers={couriers ?? []} open={!!assignOrder} onClose={() => setAssignOrder(null)} />
             <OwnerBottomNav />
         </div>
     );

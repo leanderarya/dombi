@@ -1,20 +1,52 @@
 import { Head, useForm } from '@inertiajs/react';
-import OwnerLayout from '../../../layouts/owner-layout';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
 
 export default function CreateProduct({ categories }: any) {
     const form = useForm({ product_category_id: '', name: '', description: '', size: '', unit: 'botol', price: '', is_active: true as any });
-    return <OwnerLayout><Head title="Tambah Produk" /><h1 className="text-2xl font-semibold">Tambah Produk</h1><ProductForm form={form} categories={categories} submit={(e: any) => { e.preventDefault(); form.post('/owner/products'); }} /></OwnerLayout>;
+    return (
+        <OwnerPageShell title="Tambah Produk" backHref="/owner/products">
+            <ProductForm form={form} categories={categories} submit={(e: any) => { e.preventDefault(); form.post('/owner/products'); }} />
+        </OwnerPageShell>
+    );
 }
 
 export function ProductForm({ form, categories, submit }: any) {
-    return <form onSubmit={submit} className="mt-5 grid gap-4 rounded-lg border border-zinc-200 bg-white p-5 sm:grid-cols-2">
-        <label className="text-sm">Kategori<select value={form.data.product_category_id ?? ''} onChange={(e) => form.setData('product_category_id', e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2"><option value="">Tanpa kategori</option>{categories.map((category: any) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
-        <label className="text-sm">Nama<input value={form.data.name} onChange={(e) => form.setData('name', e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2" />{form.errors.name && <span className="text-red-600">{form.errors.name}</span>}</label>
-        <label className="text-sm">Size<input value={form.data.size ?? ''} onChange={(e) => form.setData('size', e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2" /></label>
-        <label className="text-sm">Unit<input value={form.data.unit} onChange={(e) => form.setData('unit', e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2" /></label>
-        <label className="text-sm">Harga<input type="number" min="0" value={form.data.price} onChange={(e) => form.setData('price', e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2" />{form.errors.price && <span className="text-red-600">{form.errors.price}</span>}</label>
-        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={Boolean(form.data.is_active)} onChange={(e) => form.setData('is_active', e.target.checked)} /> Produk aktif</label>
-        <label className="text-sm sm:col-span-2">Deskripsi<textarea value={form.data.description ?? ''} onChange={(e) => form.setData('description', e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2" /></label>
-        <div className="sm:col-span-2"><button className="rounded-md bg-emerald-700 px-4 py-2 text-white">Simpan</button></div>
-    </form>;
+    return (
+        <form onSubmit={submit} className="space-y-4">
+            <Field label="Nama Produk" value={form.data.name} onChange={(v: string) => form.setData('name', v)} error={form.errors.name} required />
+            <Field label="Harga" value={form.data.price} onChange={(v: string) => form.setData('price', v)} error={form.errors.price} type="number" required />
+            <div className="grid grid-cols-2 gap-3">
+                <Field label="Size" value={form.data.size ?? ''} onChange={(v: string) => form.setData('size', v)} placeholder="250ml" />
+                <Field label="Unit" value={form.data.unit} onChange={(v: string) => form.setData('unit', v)} />
+            </div>
+            <div>
+                <label className="text-xs font-semibold text-slate-700">Kategori</label>
+                <select value={form.data.product_category_id ?? ''} onChange={(e) => form.setData('product_category_id', e.target.value)} className="mt-1.5 min-h-11 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200">
+                    <option value="">Tanpa kategori</option>
+                    {categories?.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+            </div>
+            <div>
+                <label className="text-xs font-semibold text-slate-700">Deskripsi</label>
+                <textarea value={form.data.description ?? ''} onChange={(e) => form.setData('description', e.target.value)} className="mt-1.5 min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200" placeholder="Opsional" />
+            </div>
+            <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3">
+                <input type="checkbox" checked={Boolean(form.data.is_active)} onChange={(e) => form.setData('is_active', e.target.checked)} className="h-4 w-4 rounded border-slate-300 text-emerald-600" />
+                <span className="text-sm text-slate-700">Produk aktif</span>
+            </label>
+            <button type="submit" disabled={form.processing} className="flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white transition-all duration-150 active:scale-[0.98] active:bg-emerald-800 disabled:bg-slate-300">
+                {form.processing ? 'Menyimpan...' : 'Simpan Produk'}
+            </button>
+        </form>
+    );
+}
+
+function Field({ label, value, onChange, error, type = 'text', placeholder, required }: any) {
+    return (
+        <div>
+            <label className="text-xs font-semibold text-slate-700">{label} {required && <span className="text-red-500">*</span>}</label>
+            <input type={type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="mt-1.5 min-h-11 w-full rounded-lg border border-slate-200 px-3 text-sm focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200" required={required} />
+            {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        </div>
+    );
 }

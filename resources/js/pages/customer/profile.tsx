@@ -2,6 +2,7 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import AccountMenuItem from '@/components/customer/account-menu-item';
 import ProfileCard from '@/components/customer/profile-card';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { confirmLogout } from '@/lib/confirm-logout';
 
 export default function Profile({ defaultAddress }: any) {
     const { auth, appVersion } = usePage<any>().props;
@@ -68,7 +69,7 @@ export default function Profile({ defaultAddress }: any) {
             {/* Logout */}
             <section className="mt-6">
                 <button
-                    onClick={() => router.post('/logout')}
+                    onClick={() => confirmLogout()}
                     className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-red-200 text-sm font-semibold text-red-600 active:bg-red-50"
                 >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

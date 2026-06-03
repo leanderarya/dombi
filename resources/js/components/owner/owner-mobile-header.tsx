@@ -1,31 +1,35 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import type { ReactNode } from 'react';
+import { confirmLogout } from '@/lib/confirm-logout';
 
 interface Props {
     title: string;
     subtitle?: string;
     /** Show back button — provide href for navigation */
     backHref?: string;
-    /** Right-side action buttons */
+    /** Right-side action buttons (rendered before logout) */
     actions?: ReactNode;
+    /** Hide the logout button (default: shown) */
+    hideLogout?: boolean;
 }
 
 /**
  * Unified operational mobile header for all Owner pages.
  * Compact 56px height, sticky, safe-area aware.
+ * Includes logout by default for session accessibility.
  */
-export default function OwnerMobileHeader({ title, subtitle, backHref, actions }: Props) {
+export default function OwnerMobileHeader({ title, subtitle, backHref, actions, hideLogout = false }: Props) {
     return (
         <header className="sticky top-0 z-40 border-b border-slate-200 bg-white pt-[env(safe-area-inset-top)]">
             <div className="flex min-h-14 items-center gap-2 px-4">
-                {/* Left: back button or spacer */}
-                {backHref ? (
+                {/* Left: back button */}
+                {backHref && (
                     <Link href={backHref} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
                         <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
                     </Link>
-                ) : null}
+                )}
 
                 {/* Center: title + subtitle */}
                 <div className="min-w-0 flex-1">
@@ -33,16 +37,35 @@ export default function OwnerMobileHeader({ title, subtitle, backHref, actions }
                     {subtitle && <p className="truncate text-[11px] text-slate-500">{subtitle}</p>}
                 </div>
 
-                {/* Right: action buttons */}
-                {actions && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
+                {/* Right: action buttons + logout */}
+                <div className="flex shrink-0 items-center gap-1.5">
+                    {actions}
+                    {!hideLogout && <LogoutButton />}
+                </div>
             </div>
         </header>
     );
 }
 
 /**
+ * Compact logout icon button — matches customer top bar pattern.
+ */
+function LogoutButton() {
+    return (
+        <button
+            onClick={() => confirmLogout()}
+            aria-label="Logout"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 transition-all duration-150 active:scale-[0.98] active:bg-slate-50 active:text-red-600"
+        >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+        </button>
+    );
+}
+
+/**
  * Standard header icon button.
- * 40x40, rounded-xl, border, consistent interaction.
  */
 export function HeaderIconButton({ onClick, children, label }: { onClick?: () => void; children: ReactNode; label: string }) {
     return (

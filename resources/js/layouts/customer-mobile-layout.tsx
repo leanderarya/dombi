@@ -3,6 +3,7 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import OfflineBanner from '@/components/offline-banner';
 import ActiveOrderBar from '@/components/customer/active-order-bar';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
+import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import CustomerTopBar from '@/components/customer/customer-top-bar';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import { useCart } from '@/lib/use-cart';
@@ -15,9 +16,10 @@ interface Props extends PropsWithChildren {
     hideTopBar?: boolean;
     products?: { id: number; price: number | string }[];
     hideCartBar?: boolean;
+    hideBottomNav?: boolean;
 }
 
-export default function CustomerMobileLayout({ children, activeOrder, topAddress, footerSlot, hideTopBar = false, products, hideCartBar = false }: Props) {
+export default function CustomerMobileLayout({ children, activeOrder, topAddress, footerSlot, hideTopBar = false, products, hideCartBar = false, hideBottomNav = false }: Props) {
     const { flash } = usePage<any>().props;
     const { totalItems } = useCart();
 
@@ -26,6 +28,7 @@ export default function CustomerMobileLayout({ children, activeOrder, topAddress
 
     return (
         <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
+            <CustomerLocationBootstrap />
             <OfflineBanner />
             {!hideTopBar && <CustomerTopBar addressOverride={topAddress} />}
 
@@ -39,7 +42,7 @@ export default function CustomerMobileLayout({ children, activeOrder, topAddress
             </main>
 
             {footerSlot ?? (activeOrder ? <ActiveOrderBar order={activeOrder} /> : showCartBar ? <FloatingCartBar products={products} /> : null)}
-            <CustomerBottomNav />
+            {!hideBottomNav && <CustomerBottomNav />}
         </div>
     );
 }

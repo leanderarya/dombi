@@ -1,17 +1,57 @@
-import { Head, Link, router } from '@inertiajs/react';
-import OwnerLayout from '../../../layouts/owner-layout';
+import { Link, usePage } from '@inertiajs/react';
+import EmptyState from '@/components/empty-state';
+import OwnerOutletCard from '@/components/owner/owner-outlet-card';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
+import Pagination from '@/components/pagination';
 
 export default function OutletsIndex({ outlets }: any) {
+    const { flash } = usePage<any>().props;
+    const activeOutlets = outlets.data.filter((outlet: any) => outlet.status === 'active').length;
+    const lowStockOutlets = outlets.data.filter((outlet: any) => Number(outlet.low_stock_count) > 0).length;
+    const busyOutlets = outlets.data.filter((outlet: any) => Number(outlet.active_orders_count) >= 3).length;
+
     return (
-        <OwnerLayout>
-            <Head title="Outlet" />
-            <div className="flex items-center justify-between"><h1 className="text-2xl font-semibold">Outlet</h1><Link href="/owner/outlets/create" className="rounded-md bg-emerald-700 px-4 py-2 text-white">Tambah</Link></div>
-            <div className="mt-5 overflow-x-auto rounded-lg border border-zinc-200 bg-white">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-zinc-50"><tr><th className="p-3">Nama</th><th>Kecamatan</th><th>Status</th><th></th></tr></thead>
-                    <tbody>{outlets.data.map((outlet: any) => <tr key={outlet.id} className="border-t"><td className="p-3 font-medium">{outlet.name}</td><td>{outlet.kecamatan}</td><td>{outlet.status}</td><td className="space-x-3 p-3 text-right"><Link href={`/owner/outlets/${outlet.id}/edit`} className="text-emerald-700">Edit</Link><button onClick={() => confirm('Hapus outlet?') && router.delete(`/owner/outlets/${outlet.id}`)} className="text-red-600">Hapus</button></td></tr>)}</tbody>
-                </table>
+        <OwnerPageShell
+            title="Outlet"
+            subtitle="Branch operations setup"
+            headerRight={
+                <Link href="/owner/outlets/create" className="flex min-h-10 items-center rounded-lg bg-emerald-500 px-3 text-[11px] font-semibold text-white transition-colors duration-150 active:bg-emerald-600">
+                    Tambah
+                </Link>
+            }
+        >
+            <div className="space-y-4">
+                <section className="rounded-xl border border-slate-200 bg-white p-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Outlet Board</p>
+                    <h1 className="mt-1 text-2xl font-semibold text-slate-900">Branch Operations</h1>
+                    <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+                        <Metric label="Active" value={activeOutlets} />
+                        <Metric label="Low Stock" value={lowStockOutlets} warn />
+                        <Metric label="Busy" value={busyOutlets} />
+                    </div>
+                </section>
+
+                {outlets.data.length === 0 ? (
+                    <EmptyState icon="🏬" title="Belum ada outlet" description="Tambah outlet pertama dengan memilih titik lokasi di peta." />
+                ) : (
+                    <div className="space-y-3">
+                        {outlets.data.map((outlet: any) => <OwnerOutletCard key={outlet.id} outlet={outlet} />)}
+                    </div>
+                )}
+
+                <Pagination links={outlets.links} />
             </div>
-        </OwnerLayout>
+            <OutletProvisioningSummary provisioning={flash?.outlet_provisioning} />
+        </OwnerPageShell>
+    );
+}
+
+function Metric({ label, value, warn = false }: { label: string; value: number; warn?: boolean }) {
+    return (
+        <div className={`rounded-lg border p-3 ${warn && value > 0 ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-slate-200 bg-[#F8FAFC] text-slate-700'}`}>
+            <div className="text-lg font-semibold tabular-nums">{value}</div>
+            <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide opacity-70">{label}</div>
+        </div>
     );
 }

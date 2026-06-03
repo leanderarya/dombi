@@ -1,0 +1,150 @@
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
+
+export type CustomerLocation = {
+    address_line?: string;
+    province?: string;
+    city?: string;
+    district?: string;
+    village?: string;
+    postal_code?: string;
+    latitude: number;
+    longitude: number;
+    accuracy?: number | null;
+    timestamp: number;
+    landmark?: string;
+    delivery_notes?: string;
+};
+
+type Listener = () => void;
+
+const STORAGE_KEYS = ['customer.location', 'dombi_customer_location'] as const;
+
+class CustomerLocationStore {
+    private location: CustomerLocation | null = null;
+    private listeners: Set<Listener> = new Set();
+
+    constructor() {
+        this.load();
+    }
+
+    getSnapshot(): CustomerLocation | null {
+        return this.location;
+    }
+
+    subscribe(listener: Listener): () => void {
+        this.listeners.add(listener);
+        return () => this.listeners.delete(listener);
+    }
+
+    save(location: CustomerLocation): void {
+        this.location = location;
+        this.persist();
+        this.notify();
+    }
+
+    clear(): void {
+        this.location = null;
+        this.persist();
+        this.notify();
+    }
+
+    private notify(): void {
+        for (const listener of this.listeners) {
+            listener();
+        }
+    }
+
+    private persist(): void {
+        try {
+            if (! this.location) {
+                for (const key of STORAGE_KEYS) {
+                    localStorage.removeItem(key);
+                }
+                return;
+            }
+
+            for (const key of STORAGE_KEYS) {
+                localStorage.setItem(key, JSON.stringify(this.location));
+            }
+        } catch {
+            // Non-critical
+        }
+    }
+
+    private load(): void {
+        try {
+            for (const key of STORAGE_KEYS) {
+                const stored = localStorage.getItem(key);
+
+                if (! stored) {
+                    continue;
+                }
+
+                const parsed = JSON.parse(stored) as CustomerLocation | null;
+
+                if (
+                    parsed
+                    && typeof parsed.latitude === 'number'
+                    && typeof parsed.longitude === 'number'
+                    && typeof parsed.timestamp === 'number'
+                ) {
+                    this.location = parsed;
+                    return;
+                }
+            }
+        } catch {
+            // Ignore invalid storage
+        }
+
+        this.location = null;
+    }
+}
+
+const store = new CustomerLocationStore();
+
+export function useCustomerLocation() {
+    const location = useSyncExternalStore(
+        (listener) => store.subscribe(listener),
+        () => store.getSnapshot(),
+        () => null,
+    );
+
+    const saveLocation = useCallback((nextLocation: CustomerLocation) => {
+        store.save(nextLocation);
+    }, []);
+
+    const clearLocation = useCallback(() => {
+        store.clear();
+    }, []);
+
+    const summary = useMemo(() => {
+        if (! location) {
+            return null;
+        }
+
+        return [location.village, location.district].filter(Boolean).join(', ') || location.address_line || null;
+    }, [location]);
+
+    return {
+        location,
+        summary,
+        saveLocation,
+        clearLocation,
+    };
+}
+
+export async function syncCustomerLocationDraft(location: CustomerLocation): Promise<void> {
+    const token = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content');
+
+    await fetch('/customer/location', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+        },
+        body: JSON.stringify(location),
+        credentials: 'same-origin',
+    }).catch(() => null);
+}

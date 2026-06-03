@@ -41,40 +41,24 @@ class DeliveryController extends Controller
         ]);
     }
 
-    public function showResolve(Delivery $delivery): Response
-    {
-        $delivery->load(['order.outlet', 'order.items.product', 'courier']);
-
-        $retryCount = \App\Models\DeliveryResolutionLog::where('order_id', $delivery->order_id)->count();
-
-        return Inertia::render('owner/deliveries/resolve', [
-            'delivery' => $delivery,
-            'retryCount' => $retryCount,
-        ]);
-    }
-
     public function assignCourier(AssignCourierRequest $request, Order $order, DeliveryService $deliveryService): RedirectResponse
     {
         $courier = User::findOrFail($request->integer('courier_id'));
-        $delivery = $deliveryService->assignCourier($order, $courier, $request->user());
+        $deliveryService->assignCourier($order, $courier, $request->user());
 
-        return redirect()->route('owner.deliveries.show', $delivery)->with('success', 'Kurir berhasil di-assign.');
+        return redirect()->route('owner.orders.show', $order)->with('success', 'Kurir berhasil di-assign.');
     }
 
     public function resolve(ResolveDeliveryRequest $request, Delivery $delivery, DeliveryService $deliveryService): RedirectResponse
     {
-        $result = $deliveryService->resolveFailedDelivery(
+        $deliveryService->resolveFailedDelivery(
             $delivery,
             $request->user(),
             $request->validated('resolution'),
             $request->validated('resolution_notes'),
         );
 
-        // If delivery was deleted (retry_delivery), redirect to index
-        if ($request->validated('resolution') === 'retry_delivery') {
-            return redirect()->route('owner.deliveries.index')->with('success', 'Delivery di-resolve, order siap di-assign ulang.');
-        }
-
-        return redirect()->route('owner.deliveries.show', $delivery)->with('success', 'Delivery berhasil di-resolve.');
+        // Always redirect back to the order — resolution is part of order lifecycle
+        return redirect()->route('owner.orders.show', $delivery->order_id)->with('success', 'Delivery berhasil di-resolve.');
     }
 }

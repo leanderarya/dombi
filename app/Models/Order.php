@@ -17,9 +17,9 @@ class Order extends Model
     public const HISTORY_STATUSES = ['completed', 'cancelled', 'failed'];
 
     protected $fillable = [
-        'customer_id', 'outlet_id', 'order_code', 'status', 'subtotal',
-        'delivery_fee', 'total', 'customer_name', 'customer_phone',
-        'customer_address', 'latitude', 'longitude', 'notes', 'ordered_at',
+        'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'status', 'fulfillment_type',
+        'subtotal', 'delivery_fee', 'payment_method', 'payment_fee', 'total', 'customer_name', 'customer_phone',
+        'customer_address', 'latitude', 'longitude', 'delivery_distance_km', 'notes', 'ordered_at',
     ];
 
     protected function casts(): array
@@ -27,6 +27,8 @@ class Order extends Model
         return [
             'subtotal' => 'decimal:2',
             'delivery_fee' => 'decimal:2',
+            'delivery_distance_km' => 'decimal:2',
+            'payment_fee' => 'decimal:2',
             'total' => 'decimal:2',
             'ordered_at' => 'datetime',
             'latitude' => 'decimal:7',
@@ -42,6 +44,11 @@ class Order extends Model
     public function outlet(): BelongsTo
     {
         return $this->belongsTo(Outlet::class);
+    }
+
+    public function recommendedOutlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class, 'recommended_outlet_id');
     }
 
     public function items(): HasMany

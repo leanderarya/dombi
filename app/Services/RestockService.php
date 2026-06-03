@@ -71,7 +71,7 @@ class RestockService
             }
 
             $request->update([
-                'status' => 'approved',
+                'status' => 'preparing',
                 'owner_notes' => $notes,
                 'approved_by' => $owner->id,
                 'approved_at' => now(),
@@ -108,8 +108,8 @@ class RestockService
         return DB::transaction(function () use ($request, $owner): StockDistribution {
             $request = RestockRequest::query()->lockForUpdate()->with(['items', 'distribution'])->findOrFail($request->id);
 
-            if ($request->status !== 'approved') {
-                throw ValidationException::withMessages(['status' => 'Distribution hanya bisa dibuat dari request approved.']);
+            if ($request->status !== 'preparing') {
+                throw ValidationException::withMessages(['status' => 'Distribution hanya bisa dibuat dari request preparing.']);
             }
 
             // Idempotency: if distribution already exists, return it
@@ -121,7 +121,6 @@ class RestockService
                 'restock_request_id' => $request->id,
                 'outlet_id' => $request->outlet_id,
                 'status' => 'preparing',
-                'sent_by' => $owner->id,
                 'notes' => $request->owner_notes,
             ]);
 
@@ -143,8 +142,6 @@ class RestockService
                     'items' => 'Distribution tidak boleh kosong, minimal satu item harus memiliki quantity > 0.',
                 ]);
             }
-
-            $request->update(['status' => 'preparing']);
 
             return $distribution->load(['outlet', 'items.product']);
         });

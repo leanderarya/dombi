@@ -10,6 +10,7 @@ use App\Models\StockDistribution;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Services\RestockService;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -46,7 +47,7 @@ class MilestoneFourthTest extends TestCase
 
         $this->assertDatabaseHas('restock_request_items', ['id' => $restock->items->first()->id, 'approved_quantity' => 4]);
         $this->assertDatabaseHas('restock_requests', ['id' => $restock->id, 'status' => 'preparing']);
-        $this->assertDatabaseHas('stock_distributions', ['restock_request_id' => $restock->id, 'status' => 'preparing']);
+        $this->assertDatabaseHas('stock_distributions', ['restock_request_id' => $restock->id, 'status' => 'preparing', 'sent_by' => null, 'sent_at' => null]);
         $this->assertDatabaseHas('stock_distribution_items', ['product_id' => $context['product']->id, 'quantity' => 4]);
     }
 
@@ -73,6 +74,7 @@ class MilestoneFourthTest extends TestCase
 
         $this->assertDatabaseHas('stock_distributions', ['id' => $distribution->id, 'status' => 'shipped']);
         $this->assertNotNull($distribution->fresh()->sent_at);
+        $this->assertSame($context['owner']->id, $distribution->fresh()->sent_by);
     }
 
     public function test_outlet_confirm_received_adds_stock_once_and_records_movement(): void
@@ -122,6 +124,71 @@ class MilestoneFourthTest extends TestCase
             ->assertSessionHasErrors('items');
 
         $this->assertSame(0, StockDistribution::count());
+    }
+
+    public function test_duplicate_distribution_creation_is_prevented_safely(): void
+    {
+        $context = $this->makeContext();
+        $distribution = $this->makeDistribution($context);
+        $restock = $distribution->restockRequest()->with('items')->firstOrFail();
+
+        $sameDistribution = app(RestockService::class)->createDistribution($restock, $context['owner']);
+
+        $this->assertSame($distribution->id, $sameDistribution->id);
+        $this->assertSame(1, StockDistribution::where('restock_request_id', $restock->id)->count());
+    }
+
+    public function test_database_rejects_duplicate_distribution_for_same_restock_request(): void
+    {
+        $context = $this->makeContext();
+        $distribution = $this->makeDistribution($context);
+
+        $this->expectException(QueryException::class);
+
+        StockDistribution::create([
+            'restock_request_id' => $distribution->restock_request_id,
+            'outlet_id' => $context['outlet']->id,
+            'status' => 'preparing',
+        ]);
+    }
+
+    public function test_owner_restock_detail_exposes_operational_distribution_context(): void
+    {
+        $context = $this->makeContext();
+        $distribution = $this->makeDistribution($context);
+
+        $this->actingAs($context['owner'])
+            ->get(route('owner.restocks.show', $distribution->restock_request_id))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('owner/restocks/show')
+                ->has('restock.requester')
+                ->has('restock.approver')
+                ->has('restock.distribution')
+                ->has('restock.distribution.items', 1)
+                ->has('restock.distribution.sender')
+                ->where('restock.status', 'preparing')
+                ->where('restock.distribution.status', 'preparing')
+                ->where('restock.distribution.sent_by', null)
+            );
+    }
+
+    public function test_owner_restock_filters_hide_redundant_approved_and_received_statuses(): void
+    {
+        $context = $this->makeContext();
+
+        $this->actingAs($context['owner'])
+            ->get(route('owner.restocks.index'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('owner/restocks/index')
+                ->where('statusOptions.0.value', 'requested')
+                ->where('statusOptions.1.value', 'preparing')
+                ->where('statusOptions.2.value', 'shipped')
+                ->where('statusOptions.3.value', 'completed')
+                ->where('statusOptions.4.value', 'rejected')
+                ->missing('statusOptions.5')
+            );
     }
 
     private function makeDistribution(array $context): StockDistribution

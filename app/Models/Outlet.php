@@ -13,8 +13,10 @@ class Outlet extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id', 'name', 'kelurahan', 'kecamatan', 'address',
-        'latitude', 'longitude', 'phone', 'status',
+        'user_id', 'name', 'kelurahan', 'kecamatan', 'city', 'province',
+        'postal_code', 'address', 'latitude', 'longitude', 'phone',
+        'operational_notes', 'delivery_radius_km', 'prep_estimate_minutes',
+        'status',
     ];
 
     protected function casts(): array

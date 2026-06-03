@@ -1,5 +1,9 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import LocationSheet from '@/components/customer/location-sheet';
 import { useCart } from '@/lib/use-cart';
+import { useCustomerLocation } from '@/lib/customer-location';
+import { confirmLogout } from '@/lib/confirm-logout';
 
 interface Props {
     /** Override address text (optional — falls back to shared defaultAddress) */
@@ -9,26 +13,27 @@ interface Props {
 export default function CustomerTopBar({ addressOverride }: Props) {
     const { auth } = usePage<any>().props;
     const { totalItems } = useCart();
+    const { summary } = useCustomerLocation();
+    const user = auth?.user;
+    const [sheetOpen, setSheetOpen] = useState(false);
 
-    // Derive address display from shared Inertia data
-    const defaultAddress = auth?.defaultAddress;
-    const addressText = addressOverride
-        ?? (defaultAddress ? `${defaultAddress.label || defaultAddress.recipient_name} · ${defaultAddress.kecamatan ?? ''}` : null);
+    const addressText = addressOverride ?? summary;
 
     return (
+        <>
         <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur">
             <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-3">
-                <Link href="/customer/addresses" className="min-w-0 flex-1 active:opacity-80">
+                <button type="button" onClick={() => setSheetOpen(true)} className="min-w-0 flex-1 text-left active:opacity-80">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kirim ke</div>
                     <div className="mt-0.5 flex items-center gap-1">
                         <span className="truncate text-sm font-semibold text-slate-900">
-                            {addressText || 'Tambah alamat'}
+                            {addressText || 'Tentukan Lokasi Anda'}
                         </span>
                         <svg className="h-3.5 w-3.5 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                         </svg>
                     </div>
-                </Link>
+                </button>
                 <div className="flex items-center gap-2">
                     <Link href="/customer/checkout" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
@@ -40,13 +45,21 @@ export default function CustomerTopBar({ addressOverride }: Props) {
                             </span>
                         )}
                     </Link>
-                    <button onClick={() => router.post('/logout')} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 active:bg-zinc-100">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                    </button>
+                    {user ? (
+                        <button onClick={() => confirmLogout()} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 active:bg-zinc-100">
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                            </svg>
+                        </button>
+                    ) : (
+                        <Link href="/login" className="flex h-10 min-w-10 items-center justify-center rounded-lg px-2 text-xs font-bold text-emerald-700 active:bg-zinc-100">
+                            Login
+                        </Link>
+                    )}
                 </div>
             </div>
         </header>
+        <LocationSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
+        </>
     );
 }

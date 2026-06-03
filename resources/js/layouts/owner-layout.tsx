@@ -1,6 +1,7 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 import OfflineBanner from '@/components/offline-banner';
+import OwnerBottomNav from '@/components/owner/owner-bottom-nav';
 import UpdateBanner from '@/components/update-banner';
 
 const nav = [
@@ -48,22 +49,18 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                     <div className="text-xs text-zinc-500">{auth?.user?.name}</div>
                     <button onClick={() => router.post('/logout')} className="rounded-md border border-zinc-200 px-2.5 py-1.5 text-xs text-zinc-600">Logout</button>
                 </div>
-                <nav className="flex gap-1 overflow-x-auto px-3 pb-2 scrollbar-none">
-                    {nav.map(([href, label]) => (
-                        <Link key={href} href={href} className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium ${url?.startsWith(href) ? 'bg-emerald-50 text-emerald-800' : 'text-slate-500'}`}>
-                            {label}
-                        </Link>
-                    ))}
-                </nav>
             </header>
 
             {/* Main content */}
-            <main className="lg:pl-60">
+            <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-60">
                 <div className="mx-auto max-w-6xl px-4 py-5 sm:px-5">
                     {flash?.success && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{flash.success}</div>}
                     {children}
                 </div>
             </main>
+            <div className="lg:hidden">
+                <OwnerBottomNav />
+            </div>
         </div>
     );
 }

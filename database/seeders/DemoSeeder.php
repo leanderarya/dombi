@@ -22,12 +22,12 @@ class DemoSeeder extends Seeder
     {
         $password = Hash::make('password');
 
-        $owner = User::updateOrCreate(['email' => 'owner@example.com'], ['name' => 'Owner Dombi', 'password' => $password, 'role' => 'owner', 'phone' => '081111111111', 'is_active' => true]);
-        $outletTembalangUser = User::updateOrCreate(['email' => 'outlet.tembalang@example.com'], ['name' => 'Outlet Tembalang', 'password' => $password, 'role' => 'outlet', 'phone' => '082100000001', 'is_active' => true]);
-        $outletBanyumanikUser = User::updateOrCreate(['email' => 'outlet.banyumanik@example.com'], ['name' => 'Outlet Banyumanik', 'password' => $password, 'role' => 'outlet', 'phone' => '082100000002', 'is_active' => true]);
-        $courierAndi = User::updateOrCreate(['email' => 'courier.andi@example.com'], ['name' => 'Andi Courier', 'password' => $password, 'role' => 'courier', 'phone' => '083100000001', 'is_active' => true]);
-        $courierBudi = User::updateOrCreate(['email' => 'courier.budi@example.com'], ['name' => 'Budi Courier', 'password' => $password, 'role' => 'courier', 'phone' => '083100000002', 'is_active' => true]);
-        $customer = User::updateOrCreate(['email' => 'customer@example.com'], ['name' => 'Customer Demo', 'password' => $password, 'role' => 'customer', 'phone' => '084100000001', 'is_active' => true]);
+        $owner = User::updateOrCreate(['email' => 'owner@example.com'], ['name' => 'Owner Dombi', 'password' => $password, 'role' => 'owner', 'phone' => '081111111111', 'is_active' => true, 'must_change_password' => false]);
+        $outletTembalangUser = User::updateOrCreate(['email' => 'outlet.tembalang@example.com'], ['name' => 'Outlet Tembalang', 'password' => $password, 'role' => 'outlet', 'phone' => '082100000001', 'is_active' => true, 'must_change_password' => false]);
+        $outletBanyumanikUser = User::updateOrCreate(['email' => 'outlet.banyumanik@example.com'], ['name' => 'Outlet Banyumanik', 'password' => $password, 'role' => 'outlet', 'phone' => '082100000002', 'is_active' => true, 'must_change_password' => false]);
+        $courierAndi = User::updateOrCreate(['email' => 'courier.andi@example.com'], ['name' => 'Andi Courier', 'password' => $password, 'role' => 'courier', 'phone' => '083100000001', 'is_active' => true, 'must_change_password' => false]);
+        $courierBudi = User::updateOrCreate(['email' => 'courier.budi@example.com'], ['name' => 'Budi Courier', 'password' => $password, 'role' => 'courier', 'phone' => '083100000002', 'is_active' => true, 'must_change_password' => false]);
+        $customer = User::updateOrCreate(['email' => 'customer@example.com'], ['name' => 'Customer Demo', 'password' => $password, 'role' => 'customer', 'phone' => '084100000001', 'is_active' => true, 'must_change_password' => false]);
 
         $category = ProductCategory::updateOrCreate(['slug' => 'susu-kambing'], ['name' => 'Susu Kambing', 'is_active' => true]);
 
@@ -37,9 +37,12 @@ class DemoSeeder extends Seeder
             '1l' => Product::updateOrCreate(['slug' => 'susu-kambing-1l'], ['product_category_id' => $category->id, 'name' => 'Susu Kambing 1L', 'description' => 'Ukuran keluarga.', 'size' => '1L', 'unit' => 'botol', 'price' => 45000, 'is_active' => true]),
         ];
 
-        $tembalang = Outlet::updateOrCreate(['name' => 'Outlet Tembalang'], ['user_id' => $outletTembalangUser->id, 'kelurahan' => 'Tembalang', 'kecamatan' => 'Tembalang', 'address' => 'Jl. Tembalang Raya No. 12, Semarang', 'latitude' => -7.0568000, 'longitude' => 110.4381000, 'phone' => '085555555555', 'status' => 'active']);
-        $banyumanik = Outlet::updateOrCreate(['name' => 'Outlet Banyumanik'], ['user_id' => $outletBanyumanikUser->id, 'kelurahan' => 'Banyumanik', 'kecamatan' => 'Banyumanik', 'address' => 'Jl. Banyumanik No. 8, Semarang', 'latitude' => -7.0731000, 'longitude' => 110.4216000, 'phone' => '086666666666', 'status' => 'active']);
-        $pedurungan = Outlet::updateOrCreate(['name' => 'Outlet Pedurungan'], ['user_id' => null, 'kelurahan' => 'Pedurungan', 'kecamatan' => 'Pedurungan', 'address' => 'Jl. Pedurungan Tengah No. 3, Semarang', 'latitude' => -7.0011000, 'longitude' => 110.4789000, 'phone' => '087777777777', 'status' => 'active']);
+        $tembalang = Outlet::updateOrCreate(['name' => 'Outlet Tembalang'], ['user_id' => $outletTembalangUser->id, 'kelurahan' => 'Tembalang', 'kecamatan' => 'Tembalang', 'city' => 'Semarang', 'province' => 'Jawa Tengah', 'postal_code' => '50275', 'address' => 'Jl. Tembalang Raya No. 12, Semarang', 'latitude' => -7.0568000, 'longitude' => 110.4381000, 'phone' => '085555555555', 'status' => 'active']);
+        $banyumanik = Outlet::updateOrCreate(['name' => 'Outlet Banyumanik'], ['user_id' => $outletBanyumanikUser->id, 'kelurahan' => 'Banyumanik', 'kecamatan' => 'Banyumanik', 'city' => 'Semarang', 'province' => 'Jawa Tengah', 'postal_code' => '50263', 'address' => 'Jl. Banyumanik No. 8, Semarang', 'latitude' => -7.0731000, 'longitude' => 110.4216000, 'phone' => '086666666666', 'status' => 'active']);
+        $pedurungan = Outlet::updateOrCreate(['name' => 'Outlet Pedurungan'], ['user_id' => null, 'kelurahan' => 'Pedurungan', 'kecamatan' => 'Pedurungan', 'city' => 'Semarang', 'province' => 'Jawa Tengah', 'postal_code' => '50192', 'address' => 'Jl. Pedurungan Tengah No. 3, Semarang', 'latitude' => -7.0011000, 'longitude' => 110.4789000, 'phone' => '087777777777', 'status' => 'active']);
+
+        $outletTembalangUser->update(['outlet_id' => $tembalang->id]);
+        $outletBanyumanikUser->update(['outlet_id' => $banyumanik->id]);
 
         $inventoryRows = [
             [$tembalang, $products['250ml'], 3, 0, 3],

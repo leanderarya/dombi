@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\PasswordChangeController;
 use App\Http\Controllers\Courier\DeliveryController as CourierDeliveryController;
 use App\Http\Controllers\Customer\AddressController as CustomerAddressController;
+use App\Http\Controllers\Customer\CheckoutController as CustomerCheckoutController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
 use App\Http\Controllers\Owner\InventoryController as OwnerInventoryController;
 use App\Http\Controllers\Owner\OrderController as OwnerOrderController;
 use App\Http\Controllers\Owner\OutletController as OwnerOutletController;
+use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
 use App\Http\Controllers\Owner\ProductController as OwnerProductController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\RestockController as OwnerRestockController;
@@ -27,7 +30,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return auth()->check()
         ? redirect()->route('dashboard')
-        : redirect()->route('login');
+        : app(CustomerHomeController::class)();
 })->name('home');
 
 // System endpoints
@@ -46,13 +49,19 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
+Route::middleware('auth')->group(function (): void {
+    Route::get('/password/change', [PasswordChangeController::class, 'edit'])->name('password.change');
+    Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.update');
+});
+
 Route::get('/dashboard', DashboardRedirectController::class)
-    ->middleware('auth')
+    ->middleware(['auth', 'password.changed'])
     ->name('dashboard');
 
 Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->group(function (): void {
     Route::get('/dashboard', OwnerDashboardController::class)->name('dashboard');
-    Route::resource('outlets', OwnerOutletController::class)->except(['show']);
+    Route::get('/profile', OwnerProfileController::class)->name('profile');
+    Route::resource('outlets', OwnerOutletController::class);
     Route::resource('products', OwnerProductController::class)->except(['show']);
     Route::get('inventories', [OwnerInventoryController::class, 'index'])->name('inventories.index');
     Route::get('inventories/create', [OwnerInventoryController::class, 'create'])->name('inventories.create');
@@ -64,7 +73,6 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
     Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
-    Route::get('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'showResolve'])->name('deliveries.resolve-page');
     Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
     Route::get('stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
@@ -78,22 +86,33 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::post('distributions/{distribution}/mark-shipped', [OwnerStockDistributionController::class, 'markShipped'])->name('distributions.mark-shipped');
 });
 
-Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
+Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->group(function (): void {
     Route::get('/home', CustomerHomeController::class)->name('home');
-    Route::get('/profile', [\App\Http\Controllers\Customer\ProfileController::class, 'index'])->name('profile');
+    Route::post('/location', [CustomerCheckoutController::class, 'storeLocationDraft'])->name('location.store');
     Route::get('/help', fn () => \Inertia\Inertia::render('customer/help'))->name('help');
     Route::get('/about', fn () => \Inertia\Inertia::render('customer/about'))->name('about');
     Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
+    Route::get('/checkout', [CustomerCheckoutController::class, 'index'])->name('checkout');
+    Route::post('/checkout', [CustomerCheckoutController::class, 'storeIndex'])->name('checkout.store');
+    Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
+    Route::get('/checkout/customer', [CustomerCheckoutController::class, 'customer'])->name('checkout.customer');
+    Route::post('/checkout/customer', [CustomerCheckoutController::class, 'storeCustomer'])->name('checkout.customer.store');
+    Route::get('/checkout/customer-lookup', [CustomerCheckoutController::class, 'lookupCustomer'])->name('checkout.customer.lookup');
+    Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
+    Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->name('checkout.submit');
+    Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
+});
+
+Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
+    Route::get('/profile', [\App\Http\Controllers\Customer\ProfileController::class, 'index'])->name('profile');
     Route::resource('addresses', CustomerAddressController::class)->except(['show']);
     Route::post('/addresses/{address}/set-default', [CustomerAddressController::class, 'setDefault'])->name('addresses.set-default');
-    Route::get('/checkout', [CustomerProductController::class, 'checkout'])->name('checkout');
-    Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/repeat', [CustomerOrderController::class, 'repeat'])->name('orders.repeat');
 });
 
-Route::middleware(['auth', 'role:outlet'])->prefix('outlet')->name('outlet.')->group(function (): void {
+Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')->name('outlet.')->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/inventory', OutletInventoryController::class)->name('inventory');
     Route::get('/orders', [OutletOrderController::class, 'index'])->name('orders.index');

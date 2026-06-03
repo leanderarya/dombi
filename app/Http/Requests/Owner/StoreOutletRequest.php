@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Owner;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreOutletRequest extends FormRequest
 {
@@ -14,13 +15,19 @@ class StoreOutletRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['required', 'string', 'max:255', Rule::unique('outlets', 'name')->ignore($this->route('outlet'))],
             'kelurahan' => ['required', 'string', 'max:255'],
             'kecamatan' => ['required', 'string', 'max:255'],
+            'city' => ['nullable', 'string', 'max:255'],
+            'province' => ['nullable', 'string', 'max:255'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
             'address' => ['required', 'string'],
-            'latitude' => ['nullable', 'numeric'],
-            'longitude' => ['nullable', 'numeric'],
+            'latitude' => ['required', 'numeric', 'between:-90,90'],
+            'longitude' => ['required', 'numeric', 'between:-180,180'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'operational_notes' => ['nullable', 'string'],
+            'delivery_radius_km' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'prep_estimate_minutes' => ['nullable', 'integer', 'min:1', 'max:240'],
             'status' => ['required', 'in:active,inactive'],
         ];
     }

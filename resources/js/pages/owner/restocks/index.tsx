@@ -7,25 +7,15 @@ import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-he
 import Pagination from '@/components/pagination';
 import { formatDate } from '@/lib/format';
 
-const statusOptions = [
-    { value: 'requested', label: 'Requested' },
-    { value: 'approved', label: 'Approved' },
-    { value: 'preparing', label: 'Preparing' },
-    { value: 'shipped', label: 'Shipped' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'rejected', label: 'Rejected' },
-];
-
 const statusStyles: Record<string, string> = {
     requested: 'bg-amber-50 text-amber-700 border-amber-200',
-    approved: 'bg-blue-50 text-blue-700 border-blue-200',
     preparing: 'bg-orange-50 text-orange-700 border-orange-200',
     shipped: 'bg-indigo-50 text-indigo-700 border-indigo-200',
     completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     rejected: 'bg-red-50 text-red-700 border-red-200',
 };
 
-export default function OwnerRestocksIndex({ restocks, outlets, filters }: any) {
+export default function OwnerRestocksIndex({ restocks, outlets, filters, statusOptions }: any) {
     const [filterOpen, setFilterOpen] = useState(false);
 
     const handleFilterApply = (f: Record<string, string>) => {

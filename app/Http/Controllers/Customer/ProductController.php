@@ -19,9 +19,13 @@ class ProductController extends Controller
 
     public function checkout(): Response
     {
+        $customer = auth()->user();
+
         return Inertia::render('customer/checkout', [
             'products' => Product::where('is_active', true)->orderBy('name')->get(),
-            'addresses' => CustomerAddress::where('user_id', auth()->id())->latest()->get(),
+            'addresses' => $customer?->isCustomer()
+                ? CustomerAddress::where('user_id', $customer->id)->latest()->get()
+                : collect(),
             'selectedProductId' => request()->integer('product_id') ?: null,
         ]);
     }
