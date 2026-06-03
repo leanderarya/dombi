@@ -1,5 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { useEffect, useMemo, useRef } from 'react';
+import type { ReactNode } from 'react';
+import { Store, Truck } from 'lucide-react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { formatCurrency } from '@/lib/format';
@@ -14,7 +16,7 @@ type CheckoutItem = {
     image?: string | null;
 };
 
-export default function CheckoutIndex({ products, selectedProductId, draft, summary }: any) {
+export default function CheckoutIndex({ products, selectedProductId, draft, summary, nearestOutlet, deliveryPreview }: any) {
     const cart = useCart();
     const seeded = useRef(false);
 
@@ -128,16 +130,24 @@ export default function CheckoutIndex({ products, selectedProductId, draft, summ
                     <FulfillmentCard
                         active={form.data.fulfillment_type === 'pickup'}
                         title="Ambil di Outlet"
-                        icon="🏪"
+                        icon={<Store className="h-5 w-5 text-slate-600" />}
                         description="Ambil langsung di outlet yang melayani pesanan Anda."
                         onClick={() => form.setData('fulfillment_type', 'pickup')}
+                        detail={nearestOutlet ? {
+                            outletName: nearestOutlet.name,
+                            distanceKm: nearestOutlet.distance_km,
+                            stockAvailable: nearestOutlet.stock_available,
+                        } : undefined}
                     />
                     <FulfillmentCard
                         active={form.data.fulfillment_type === 'delivery_dombi'}
                         title="Kurir Dombi"
-                        icon="🚚"
+                        icon={<Truck className="h-5 w-5 text-slate-600" />}
                         description="Diantar oleh kurir internal Dombi."
                         onClick={() => form.setData('fulfillment_type', 'delivery_dombi')}
+                        detail={deliveryPreview?.is_serviceable ? {
+                            deliveryFee: deliveryPreview.delivery_fee,
+                        } : undefined}
                     />
                 </div>
 
@@ -148,7 +158,14 @@ export default function CheckoutIndex({ products, selectedProductId, draft, summ
     );
 }
 
-function FulfillmentCard({ active, title, icon, description, onClick }: { active: boolean; title: string; icon: string; description: string; onClick: () => void }) {
+type FulfillmentDetail = {
+    outletName?: string;
+    distanceKm?: number;
+    stockAvailable?: boolean;
+    deliveryFee?: number;
+};
+
+function FulfillmentCard({ active, title, icon, description, onClick, detail }: { active: boolean; title: string; icon: ReactNode; description: string; onClick: () => void; detail?: FulfillmentDetail }) {
     return (
         <button
             type="button"
@@ -158,10 +175,33 @@ function FulfillmentCard({ active, title, icon, description, onClick }: { active
             }`}
         >
             <div className="flex items-start gap-3">
-                <div className="text-2xl">{icon}</div>
-                <div className="min-w-0">
+                <div className="mt-0.5 shrink-0">{icon}</div>
+                <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-slate-900">{title}</div>
                     <div className="mt-1 text-xs leading-relaxed text-slate-500">{description}</div>
+                    {detail?.outletName && (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+                            <span className="font-semibold text-slate-700">{detail.outletName}</span>
+                            {detail.distanceKm !== undefined && (
+                                <>
+                                    <span className="text-slate-400">·</span>
+                                    <span className="text-slate-600">{detail.distanceKm.toFixed(1)} km</span>
+                                </>
+                            )}
+                            {detail.stockAvailable && (
+                                <>
+                                    <span className="text-slate-400">·</span>
+                                    <span className="font-semibold text-emerald-700">✓ Stok tersedia</span>
+                                </>
+                            )}
+                        </div>
+                    )}
+                    {detail?.deliveryFee !== undefined && (
+                        <div className="mt-2 text-xs">
+                            <span className="text-slate-500">Estimasi Ongkir: </span>
+                            <span className="font-bold text-slate-900">Rp {detail.deliveryFee.toLocaleString('id-ID')}</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </button>

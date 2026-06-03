@@ -1,5 +1,7 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { MapPin } from 'lucide-react';
+import DeliveryQuoteCard from '@/components/customer/delivery-quote-card';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
 import LocationSheet from '@/components/customer/location-sheet';
 import PickupOutletSelector from '@/components/customer/pickup-outlet-selector';
@@ -10,6 +12,7 @@ type CustomerForm = {
     customer_name: string;
     phone_number: string;
     address_line: string;
+    address_detail: string;
     province: string;
     city: string;
     district: string;
@@ -26,13 +29,13 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
     const fulfillmentType = draft?.fulfillment?.fulfillment_type ?? '';
     const isDelivery = fulfillmentType === 'delivery_dombi' || fulfillmentType === 'delivery_ojol';
     const { location: savedLocation } = useCustomerLocation();
-    const [lookupState, setLookupState] = useState<'idle' | 'checking' | 'found' | 'empty'>('idle');
     const [locationSheetOpen, setLocationSheetOpen] = useState(false);
 
     const form = useForm<CustomerForm>({
         customer_name: draft?.customer?.customer_name ?? '',
         phone_number: draft?.customer?.phone_number ?? '',
         address_line: draft?.location?.address_line ?? '',
+        address_detail: draft?.location?.address_detail ?? '',
         province: draft?.location?.province ?? '',
         city: draft?.location?.city ?? '',
         district: draft?.location?.district ?? '',
@@ -53,6 +56,7 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
         form.setData({
             ...form.data,
             address_line: form.data.address_line || savedLocation.address_line || '',
+            address_detail: form.data.address_detail || savedLocation.address_detail || '',
             province: form.data.province || savedLocation.province || '',
             city: form.data.city || savedLocation.city || '',
             district: form.data.district || savedLocation.district || '',
@@ -70,32 +74,23 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
         const phone = form.data.phone_number.trim();
 
         if (phone.length < 9) {
-            setLookupState('idle');
             return;
         }
 
         const controller = new AbortController();
         const timeout = window.setTimeout(async () => {
-            setLookupState('checking');
             const response = await fetch(`/customer/checkout/customer-lookup?phone_number=${encodeURIComponent(phone)}`, {
                 signal: controller.signal,
             }).catch(() => null);
 
             if (!response?.ok) {
-                setLookupState('empty');
                 return;
             }
 
             const payload = await response.json();
 
-            if (payload.found) {
-                setLookupState('found');
-
-                if (!form.data.customer_name.trim()) {
-                    form.setData('customer_name', payload.customer.name);
-                }
-            } else {
-                setLookupState('empty');
+            if (payload.found && !form.data.customer_name.trim()) {
+                form.setData('customer_name', payload.customer.name);
             }
         }, 500);
 
@@ -113,26 +108,25 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
             && !!form.data.longitude
             && (!!deliveryQuote?.is_serviceable || !hasKnownLocation)
         : form.data.customer_name.trim().length >= 3 && form.data.phone_number.trim().length >= 9 && !!form.data.selected_outlet_id;
-    const knownLocationTimestamp = savedLocation?.timestamp ? new Date(savedLocation.timestamp).toLocaleString('id-ID') : null;
 
     const submit = () => {
         form.post('/customer/checkout/customer');
     };
+
+    const notServiceable = isDelivery && hasKnownLocation && deliveryQuote && !deliveryQuote.is_serviceable;
+    const buttonLabel = notServiceable ? 'Lokasi Luar Jangkauan' : 'Lanjutkan ke Pembayaran';
 
     return (
         <CustomerMobileLayout
             hideTopBar
             hideCartBar
             hideBottomNav
-            footerSlot={<StepButton label="Lanjutkan ke Pembayaran" disabled={!canContinue || form.processing} processing={form.processing} onClick={submit} />}
+            footerSlot={<StepButton label={buttonLabel} disabled={!canContinue || form.processing} processing={form.processing} onClick={submit} />}
         >
             <Head title="Informasi Pemesan" />
             <StepHeader title="Customer & Delivery" step="2 dari 3" backHref="/customer/checkout" />
 
             <section className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
-                <h1 className="text-lg font-semibold text-slate-900">Informasi Pemesan</h1>
-                <p className="mt-1 text-sm leading-relaxed text-slate-500">Data ini digunakan untuk konfirmasi dan pengiriman pesanan.</p>
-
                 <div className="mt-4 space-y-3">
                     <Field
                         label="Nama Lengkap"
@@ -152,16 +146,6 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
                 </div>
             </section>
 
-            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Status Customer</div>
-                <div className="mt-2 text-sm font-semibold text-slate-800">
-                    {lookupState === 'checking' && 'Mengecek nomor WhatsApp...'}
-                    {lookupState === 'found' && 'Customer ditemukan'}
-                    {lookupState === 'empty' && 'Customer baru, order tetap bisa dibuat'}
-                    {lookupState === 'idle' && 'Masukkan nomor WhatsApp untuk identitas order.'}
-                </div>
-            </section>
-
             {!isDelivery && (
                 <PickupOutletSelector
                     items={draft?.items ?? []}
@@ -175,55 +159,45 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
             {isDelivery && (
                 <>
                     {hasKnownLocation ? (
-                        <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                            <div className="flex items-start justify-between gap-3">
-                                <div>
-                                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Lokasi Pengiriman</div>
-                                    <div className="mt-2 text-sm font-semibold text-slate-900">
-                                        {[form.data.village, form.data.district, form.data.city].filter(Boolean).join(', ') || 'Lokasi tersimpan'}
+                        <section className="mt-4 space-y-4">
+                            <div className="rounded-xl border border-slate-200 bg-white p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
+                                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Lokasi Pengiriman</span>
+                                        </div>
+                                        <div className="mt-2 text-sm font-semibold text-slate-900">
+                                            {[form.data.village, form.data.district, form.data.city].filter(Boolean).join(', ') || 'Lokasi tersimpan'}
+                                        </div>
+                                        {form.data.address_detail && (
+                                            <div className="mt-1 text-xs text-slate-600">
+                                                <span className="font-semibold text-slate-500">Detail: </span>{form.data.address_detail}
+                                            </div>
+                                        )}
+                                        {form.data.landmark && (
+                                            <div className="mt-1 text-xs text-slate-600">
+                                                <span className="font-semibold text-slate-500">Patokan: </span>{form.data.landmark}
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="mt-1 text-xs leading-relaxed text-slate-500">
-                                        {form.data.address_line || 'Lokasi ini akan digunakan untuk pengiriman pesanan.'}
-                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setLocationSheetOpen(true)}
+                                        className="min-h-10 shrink-0 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
+                                    >
+                                        Ubah Lokasi
+                                    </button>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={() => setLocationSheetOpen(true)}
-                                    className="min-h-10 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
-                                >
-                                    Ubah Lokasi
-                                </button>
                             </div>
 
-                            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                                <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div>
-                                        <div className="text-slate-500">Lat</div>
-                                        <div className="mt-1 font-semibold tabular-nums text-slate-900">{form.data.latitude?.toFixed(6)}</div>
-                                    </div>
-                                    <div>
-                                        <div className="text-slate-500">Lng</div>
-                                        <div className="mt-1 font-semibold tabular-nums text-slate-900">{form.data.longitude?.toFixed(6)}</div>
-                                    </div>
-                                </div>
-                                {knownLocationTimestamp && <div className="mt-3 text-xs text-slate-500">Last Updated: {knownLocationTimestamp}</div>}
-                                <div className="mt-1 text-xs text-slate-500">Lokasi ini akan digunakan untuk pengiriman pesanan.</div>
-                            </div>
-
-                            {deliveryQuote?.outlet && (
-                                <div className="mt-4 rounded-lg border border-emerald-100 bg-emerald-50 p-3">
-                                    <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-700">Kurir Dombi</div>
-                                    <div className="mt-2 text-sm font-semibold text-emerald-900">{deliveryQuote.outlet.name}</div>
-                                    <div className="mt-1 text-xs text-emerald-700">
-                                        {Number(deliveryQuote.distance_km ?? 0).toFixed(2)} km · Ongkir Rp {Number(deliveryQuote.delivery_fee ?? 0).toLocaleString('id-ID')}
-                                    </div>
-                                </div>
-                            )}
-
-                            {deliveryQuote && !deliveryQuote.is_serviceable && (
-                                <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-3 text-sm text-red-700">
-                                    Maaf, lokasi Anda berada di luar area layanan Kurir Dombi.
-                                </div>
+                            {deliveryQuote && (
+                                <DeliveryQuoteCard
+                                    outlet={deliveryQuote.outlet}
+                                    distance_km={Number(deliveryQuote.distance_km ?? 0)}
+                                    delivery_fee={Number(deliveryQuote.delivery_fee ?? 0)}
+                                    is_serviceable={deliveryQuote.is_serviceable ?? false}
+                                />
                             )}
                         </section>
                     ) : (
@@ -231,6 +205,7 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
                             <LocationSearchPanel
                                 value={{
                                     address_line: form.data.address_line,
+                                    address_detail: form.data.address_detail,
                                     province: form.data.province,
                                     city: form.data.city,
                                     district: form.data.district,
@@ -251,6 +226,7 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
                                     form.setData({
                                         ...form.data,
                                         address_line: savedLocation.address_line ?? '',
+                                        address_detail: savedLocation.address_detail ?? '',
                                         province: savedLocation.province ?? '',
                                         city: savedLocation.city ?? '',
                                         district: savedLocation.district ?? '',
@@ -266,6 +242,7 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
                                     form.setData({
                                         ...form.data,
                                         address_line: next.address_line ?? form.data.address_line,
+                                        address_detail: next.address_detail ?? form.data.address_detail,
                                         province: next.province ?? form.data.province,
                                         city: next.city ?? form.data.city,
                                         district: next.district ?? form.data.district,
@@ -320,6 +297,7 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
                     form.setData({
                         ...form.data,
                         address_line: location.address_line ?? '',
+                        address_detail: location.address_detail ?? '',
                         province: location.province ?? '',
                         city: location.city ?? '',
                         district: location.district ?? '',

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { LocateFixed, MapPin, Search, X } from 'lucide-react';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
 import { type CustomerLocation, syncCustomerLocationDraft, useCustomerLocation } from '@/lib/customer-location';
 import { reverseGeocode } from '@/lib/geocoding';
@@ -12,6 +13,7 @@ type Props = {
 type SheetMode = 'options' | 'manual';
 type LocationDraft = {
     address_line: string;
+    address_detail?: string;
     province: string;
     city: string;
     district: string;
@@ -26,7 +28,7 @@ type LocationDraft = {
 };
 
 export default function LocationSheet({ open, onClose, onLocationSaved }: Props) {
-    const { location, saveLocation } = useCustomerLocation();
+    const { location, hasUsedLocation, saveLocation } = useCustomerLocation();
     const [mode, setMode] = useState<SheetMode>('options');
     const [loadingCurrent, setLoadingCurrent] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -128,118 +130,139 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
         return null;
     }
 
+    const showSaved = location && hasUsedLocation;
+
     return (
-        <div className="fixed inset-0 z-50 bg-slate-950/40">
-            <button type="button" aria-label="Tutup" className="absolute inset-0 h-full w-full" onClick={onClose} />
-            <div className="absolute inset-x-0 bottom-0 mx-auto max-w-lg rounded-t-3xl bg-white px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 shadow-[0_-16px_40px_rgba(15,23,42,0.16)]">
-                <div className="mx-auto h-1.5 w-12 rounded-full bg-slate-200" />
-                <div className="mt-4 flex items-start justify-between gap-4">
-                    <div>
-                        <h2 className="text-base font-semibold text-slate-900">Tentukan Lokasi Anda</h2>
-                        <p className="mt-1 text-sm text-slate-500">Lokasi membantu kami merekomendasikan outlet pickup terbaik dan mempermudah pengantaran.</p>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40" onClick={onClose}>
+            <div
+                className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="shrink-0 px-5 pt-4 pb-2">
+                    <div className="mx-auto h-1.5 w-10 rounded-full bg-slate-200" />
+                    <div className="mt-3 flex items-center justify-between">
+                        <h2 className="text-[15px] font-semibold text-slate-900">Tentukan Lokasi Anda</h2>
+                        <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 active:bg-slate-100">
+                            <X className="h-4 w-4" />
+                        </button>
                     </div>
-                    <button type="button" onClick={onClose} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 active:bg-slate-100">
-                        ✕
-                    </button>
                 </div>
 
-                {mode === 'options' && (
-                    <div className="mt-5 space-y-3">
-                        <button
-                            type="button"
-                            onClick={handleUseCurrentLocation}
-                            disabled={loadingCurrent}
-                            className="flex min-h-[56px] w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 text-left transition-all active:scale-[0.98]"
-                        >
-                            <div>
-                                <div className="text-sm font-semibold text-slate-900">Gunakan Lokasi Saya</div>
-                                <div className="mt-1 text-xs text-slate-500">Izin lokasi hanya diminta setelah Anda menekan tombol ini.</div>
-                            </div>
-                            <span className="text-slate-400">{loadingCurrent ? '...' : '›'}</span>
-                        </button>
+                {/* Body */}
+                <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-5">
+                    {mode === 'options' && (
+                        <div className="mt-2 space-y-2">
+                            {/* Primary Actions */}
+                            <button
+                                type="button"
+                                onClick={handleUseCurrentLocation}
+                                disabled={loadingCurrent}
+                                className="flex h-14 w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white px-4 transition-all active:scale-[0.98] active:bg-slate-50 disabled:opacity-60"
+                            >
+                                <LocateFixed className="h-5 w-5 shrink-0 text-emerald-600" />
+                                <span className="text-sm font-semibold text-slate-900">
+                                    {loadingCurrent ? 'Mengambil lokasi...' : 'Gunakan Lokasi Saya'}
+                                </span>
+                            </button>
 
-                        <button
-                            type="button"
-                            onClick={() => setMode('manual')}
-                            className="flex min-h-[56px] w-full items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 text-left transition-all active:scale-[0.98]"
-                        >
-                            <div>
-                                <div className="text-sm font-semibold text-slate-900">Cari Alamat Manual</div>
-                                <div className="mt-1 text-xs text-slate-500">Cari alamat, pilih hasilnya, lalu sesuaikan pin bila perlu.</div>
-                            </div>
-                            <span className="text-slate-400">›</span>
-                        </button>
+                            <button
+                                type="button"
+                                onClick={() => setMode('manual')}
+                                className="flex h-14 w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white px-4 transition-all active:scale-[0.98] active:bg-slate-50"
+                            >
+                                <Search className="h-5 w-5 shrink-0 text-slate-500" />
+                                <span className="text-sm font-semibold text-slate-900">Cari Alamat Manual</span>
+                            </button>
 
-                        {location && (
-                            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-                                <div className="font-semibold">
-                                    {[location.village, location.district].filter(Boolean).join(', ') || location.address_line || 'Lokasi tersimpan'}
-                                </div>
-                                <div className="mt-1 text-xs text-emerald-700">{location.address_line || 'Gunakan lagi untuk rekomendasi outlet pickup.'}</div>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setDraft(toDraft(location));
-                                        setMode('manual');
-                                    }}
-                                    className="mt-3 min-h-10 rounded-lg border border-emerald-200 bg-white px-3 text-xs font-semibold text-emerald-700 active:bg-emerald-50"
-                                >
-                                    Gunakan Lagi
-                                </button>
-                            </div>
-                        )}
+                            {/* Saved Location — returning users only */}
+                            {showSaved && (
+                                <>
+                                    <div className="h-px bg-slate-100" />
+                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                        <div className="flex items-center gap-2">
+                                            <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
+                                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Lokasi Terakhir</span>
+                                        </div>
+                                        <div className="mt-2 text-sm font-semibold text-slate-900">
+                                            {[location.village, location.district].filter(Boolean).join(', ') || 'Lokasi tersimpan'}
+                                        </div>
+                                        {location.city && (
+                                            <div className="mt-0.5 text-xs text-slate-500">{location.city}</div>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setDraft(toDraft(location));
+                                                setMode('manual');
+                                            }}
+                                            className="mt-3 flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
+                                        >
+                                            Gunakan Lagi
+                                        </button>
+                                    </div>
+                                </>
+                            )}
 
-                        {error && <p className="text-sm text-red-600">{error}</p>}
-                    </div>
-                )}
+                            {error && (
+                                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">{error}</div>
+                            )}
+                        </div>
+                    )}
 
-                {mode === 'manual' && (
-                    <div className="mt-5 space-y-4">
-                        <button type="button" onClick={() => setMode('options')} className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            ← Kembali
-                        </button>
+                    {mode === 'manual' && (
+                        <div className="mt-2 space-y-4">
+                            <button type="button" onClick={() => setMode('options')} className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 active:text-slate-700">
+                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Kembali
+                            </button>
 
-                        <LocationSearchPanel
-                            value={draft ?? {
-                                address_line: '',
-                                province: '',
-                                city: '',
-                                district: '',
-                                village: '',
-                                postal_code: '',
-                                latitude: null,
-                                longitude: null,
-                                accuracy: null,
-                                timestamp: Date.now(),
-                            }}
-                            onChange={(next) => setDraft((current) => ({
-                                address_line: next.address_line ?? current?.address_line ?? '',
-                                province: next.province ?? current?.province ?? '',
-                                city: next.city ?? current?.city ?? '',
-                                district: next.district ?? current?.district ?? '',
-                                village: next.village ?? current?.village ?? '',
-                                postal_code: next.postal_code ?? current?.postal_code ?? '',
-                                latitude: next.latitude ?? current?.latitude ?? null,
-                                longitude: next.longitude ?? current?.longitude ?? null,
-                                accuracy: next.accuracy ?? current?.accuracy ?? null,
-                                timestamp: next.timestamp ?? current?.timestamp ?? Date.now(),
-                                landmark: next.landmark ?? current?.landmark,
-                                delivery_notes: next.delivery_notes ?? current?.delivery_notes,
-                            }))}
-                            savedLocation={location}
-                            showSavedLocation={false}
-                        />
+                            <LocationSearchPanel
+                                value={draft ?? {
+                                    address_line: '',
+                                    address_detail: '',
+                                    province: '',
+                                    city: '',
+                                    district: '',
+                                    village: '',
+                                    postal_code: '',
+                                    latitude: null,
+                                    longitude: null,
+                                    accuracy: null,
+                                    timestamp: Date.now(),
+                                }}
+                                onChange={(next) => setDraft((current) => ({
+                                    address_line: next.address_line ?? current?.address_line ?? '',
+                                    address_detail: next.address_detail ?? current?.address_detail ?? '',
+                                    province: next.province ?? current?.province ?? '',
+                                    city: next.city ?? current?.city ?? '',
+                                    district: next.district ?? current?.district ?? '',
+                                    village: next.village ?? current?.village ?? '',
+                                    postal_code: next.postal_code ?? current?.postal_code ?? '',
+                                    latitude: next.latitude ?? current?.latitude ?? null,
+                                    longitude: next.longitude ?? current?.longitude ?? null,
+                                    accuracy: next.accuracy ?? current?.accuracy ?? null,
+                                    timestamp: next.timestamp ?? current?.timestamp ?? Date.now(),
+                                    landmark: next.landmark ?? current?.landmark,
+                                    delivery_notes: next.delivery_notes ?? current?.delivery_notes,
+                                }))}
+                                savedLocation={location}
+                                showSavedLocation={false}
+                            />
 
-                        <button
-                            type="button"
-                            onClick={confirmManualLocation}
-                            disabled={!draft || draft.latitude === null || draft.longitude === null}
-                            className="flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:scale-[0.98] disabled:bg-slate-300 disabled:active:scale-100"
-                        >
-                            Simpan Lokasi
-                        </button>
-                    </div>
-                )}
+                            <button
+                                type="button"
+                                onClick={confirmManualLocation}
+                                disabled={!draft || draft.latitude === null || draft.longitude === null}
+                                className="flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-emerald-700 disabled:bg-slate-300 disabled:active:scale-100"
+                            >
+                                Simpan Lokasi
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -252,6 +275,7 @@ function toDraft(location: CustomerLocation | null): LocationDraft | null {
 
     return {
         address_line: location.address_line ?? '',
+        address_detail: location.address_detail ?? '',
         province: location.province ?? '',
         city: location.city ?? '',
         district: location.district ?? '',
@@ -269,6 +293,7 @@ function toDraft(location: CustomerLocation | null): LocationDraft | null {
 function toCustomerLocation(draft: LocationDraft): CustomerLocation {
     return {
         address_line: draft.address_line,
+        address_detail: draft.address_detail,
         province: draft.province,
         city: draft.city,
         district: draft.district,

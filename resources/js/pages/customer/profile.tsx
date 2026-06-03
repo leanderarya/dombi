@@ -1,44 +1,27 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
-import AccountMenuItem from '@/components/customer/account-menu-item';
-import ProfileCard from '@/components/customer/profile-card';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { HelpCircle, Info, MapPin, Package } from 'lucide-react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
-import { confirmLogout } from '@/lib/confirm-logout';
 
 export default function Profile({ defaultAddress }: any) {
-    const { auth, appVersion } = usePage<any>().props;
-    const user = auth.user;
+    const { appVersion } = usePage<any>().props;
 
     return (
         <CustomerMobileLayout hideTopBar>
-            <Head title="Profil Saya" />
+            <Head title="Pengaturan" />
 
             {/* Header */}
             <div className="flex items-center justify-between">
-                <h1 className="text-lg font-bold text-slate-900">Profil Saya</h1>
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                </div>
+                <h1 className="text-lg font-bold text-slate-900">Pengaturan</h1>
             </div>
-
-            {/* Profile Card */}
-            <section className="mt-4">
-                <ProfileCard user={user} />
-            </section>
 
             {/* Default Address */}
             {defaultAddress && (
-                <section className="mt-6">
+                <section className="mt-5">
                     <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Alamat Utama</h2>
                     <div className="mt-2 rounded-xl border border-emerald-200 bg-white p-4">
                         <div className="flex items-start gap-3">
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                                <svg className="h-4 w-4 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
+                                <MapPin className="h-4 w-4 text-emerald-700" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
@@ -55,43 +38,36 @@ export default function Profile({ defaultAddress }: any) {
                 </section>
             )}
 
-            {/* Account Menu */}
+            {/* Menu */}
             <section className="mt-6">
-                <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pengaturan Akun</h2>
-                <div className="mt-2 space-y-2">
-                    <AccountMenuItem href="/customer/orders" title="Pesanan Saya" icon={<OrderIcon />} />
-                    <AccountMenuItem href="/customer/addresses" title="Alamat Saya" icon={<AddressIcon />} />
-                    <AccountMenuItem href="/customer/help" title="Bantuan" icon={<HelpIcon />} />
-                    <AccountMenuItem href="/customer/about" title="Tentang Dombi" icon={<InfoIcon />} />
+                <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Menu</h2>
+                <div className="mt-2 space-y-1">
+                    <MenuItem href="/customer/orders" title="Pesanan Saya" icon={<Package className="h-5 w-5 text-slate-400" />} />
+                    <MenuItem href="/customer/addresses" title="Alamat Saya" icon={<MapPin className="h-5 w-5 text-slate-400" />} />
+                    <MenuItem href="/customer/help" title="Bantuan" icon={<HelpCircle className="h-5 w-5 text-slate-400" />} />
+                    <MenuItem href="/customer/about" title="Tentang Dombi" icon={<Info className="h-5 w-5 text-slate-400" />} />
                 </div>
             </section>
 
-            {/* Logout */}
-            <section className="mt-6">
-                <button
-                    onClick={() => confirmLogout()}
-                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-red-200 text-sm font-semibold text-red-600 active:bg-red-50"
-                >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Logout
-                </button>
-                <p className="mt-3 text-center text-[11px] text-slate-400">Versi {appVersion ?? '1.0.0'}</p>
-            </section>
+            {/* Version */}
+            <p className="mt-8 text-center text-[11px] text-slate-400">Versi {appVersion ?? '1.0.0'}</p>
         </CustomerMobileLayout>
     );
 }
 
-function OrderIcon() {
-    return <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>;
-}
-function AddressIcon() {
-    return <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>;
-}
-function HelpIcon() {
-    return <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>;
-}
-function InfoIcon() {
-    return <svg className="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+function MenuItem({ href, title, icon }: { href: string; title: string; icon: React.ReactNode }) {
+    return (
+        <Link
+            href={href}
+            className="flex min-h-[52px] items-center gap-3.5 rounded-xl px-1 active:bg-slate-50"
+        >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-50">
+                {icon}
+            </div>
+            <span className="text-sm font-medium text-slate-900">{title}</span>
+            <svg className="ml-auto h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+        </Link>
+    );
 }

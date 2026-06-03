@@ -19,7 +19,8 @@ class Order extends Model
     protected $fillable = [
         'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'status', 'fulfillment_type',
         'subtotal', 'delivery_fee', 'payment_method', 'payment_fee', 'total', 'customer_name', 'customer_phone',
-        'customer_address', 'latitude', 'longitude', 'delivery_distance_km', 'notes', 'ordered_at',
+        'customer_address', 'customer_address_detail', 'customer_landmark', 'latitude', 'longitude',
+        'delivery_distance_km', 'notes', 'ordered_at',
     ];
 
     protected function casts(): array

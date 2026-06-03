@@ -119,7 +119,7 @@ export default function LeafletPicker({ latitude, longitude, onChange }: Props) 
 
     return (
         <div className="relative overflow-hidden rounded-lg border border-zinc-200">
-            <div ref={mapRef} className="h-[300px] w-full bg-zinc-100" />
+            <div ref={mapRef} className="h-[260px] w-full bg-zinc-100 sm:h-[300px]" style={{ touchAction: 'pan-x pan-y' }} />
             {!loaded && (
                 <div className="absolute inset-0 flex items-center justify-center bg-zinc-50">
                     <span className="text-xs text-slate-400">Memuat peta...</span>

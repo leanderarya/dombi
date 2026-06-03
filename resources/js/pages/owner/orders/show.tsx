@@ -1,5 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import { MapPin } from 'lucide-react';
 import OrderStatusChip from '@/components/owner/order-status-chip';
 import OwnerBottomNav from '@/components/owner/owner-bottom-nav';
 import OwnerMobileHeader from '@/components/owner/owner-mobile-header';
@@ -74,7 +75,26 @@ function MobileView({ order, reservedStocks, couriers }: any) {
                     </div>
                     <div className="mt-2 flex items-start gap-2 border-t border-slate-100 pt-2">
                         <svg className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        <span className="text-xs leading-relaxed text-slate-600">{order.customer_address}</span>
+                        <div className="min-w-0 flex-1">
+                            <span className="text-xs leading-relaxed text-slate-600">{order.customer_address}</span>
+                            {order.customer_address_detail && (
+                                <div className="mt-1 text-xs text-slate-600"><span className="font-medium text-slate-500">Detail: </span>{order.customer_address_detail}</div>
+                            )}
+                            {order.customer_landmark && (
+                                <div className="mt-1 text-xs text-slate-600"><span className="font-medium text-slate-500">Patokan: </span>{order.customer_landmark}</div>
+                            )}
+                            {order.latitude && order.longitude && (
+                                <a
+                                    href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="mt-2 inline-flex min-h-[32px] items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 active:bg-emerald-100"
+                                >
+                                    <MapPin className="h-3.5 w-3.5" />
+                                    Buka di Maps
+                                </a>
+                            )}
+                        </div>
                     </div>
                 </section>
 
@@ -238,6 +258,23 @@ function DesktopView({ order, reservedStocks, couriers }: any) {
                         <div className="font-semibold">{order.customer_name}</div>
                         <div className="text-slate-500">{order.customer_phone}</div>
                         <div className="mt-1 text-xs text-slate-600">{order.customer_address}</div>
+                        {order.customer_address_detail && (
+                            <div className="mt-1 text-xs text-slate-600"><span className="font-medium text-slate-500">Detail: </span>{order.customer_address_detail}</div>
+                        )}
+                        {order.customer_landmark && (
+                            <div className="mt-1 text-xs text-slate-600"><span className="font-medium text-slate-500">Patokan: </span>{order.customer_landmark}</div>
+                        )}
+                        {order.latitude && order.longitude && (
+                            <a
+                                href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 active:bg-emerald-100"
+                            >
+                                <MapPin className="h-3.5 w-3.5" />
+                                Buka di Maps
+                            </a>
+                        )}
                     </div>
                     {order.status === 'ready_for_pickup' && !order.delivery && (
                         <form onSubmit={(e) => { e.preventDefault(); form.post(`/owner/orders/${order.id}/assign-courier`); }} className="rounded-lg border border-slate-200 bg-white p-4">

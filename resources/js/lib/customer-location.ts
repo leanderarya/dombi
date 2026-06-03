@@ -2,6 +2,7 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 export type CustomerLocation = {
     address_line?: string;
+    address_detail?: string;
     province?: string;
     city?: string;
     district?: string;
@@ -13,6 +14,7 @@ export type CustomerLocation = {
     timestamp: number;
     landmark?: string;
     delivery_notes?: string;
+    used_for_order?: boolean;
 };
 
 type Listener = () => void;
@@ -37,9 +39,18 @@ class CustomerLocationStore {
     }
 
     save(location: CustomerLocation): void {
-        this.location = location;
+        const wasUsed = this.location?.used_for_order ?? false;
+        this.location = { ...location, used_for_order: wasUsed || location.used_for_order === true };
         this.persist();
         this.notify();
+    }
+
+    markUsedForOrder(): void {
+        if (this.location) {
+            this.location = { ...this.location, used_for_order: true };
+            this.persist();
+            this.notify();
+        }
     }
 
     clear(): void {
@@ -117,6 +128,10 @@ export function useCustomerLocation() {
         store.clear();
     }, []);
 
+    const markUsedForOrder = useCallback(() => {
+        store.markUsedForOrder();
+    }, []);
+
     const summary = useMemo(() => {
         if (! location) {
             return null;
@@ -125,16 +140,20 @@ export function useCustomerLocation() {
         return [location.village, location.district].filter(Boolean).join(', ') || location.address_line || null;
     }, [location]);
 
+    const hasUsedLocation = useMemo(() => location?.used_for_order === true, [location]);
+
     return {
         location,
         summary,
+        hasUsedLocation,
         saveLocation,
         clearLocation,
+        markUsedForOrder,
     };
 }
 
 export async function syncCustomerLocationDraft(location: CustomerLocation): Promise<void> {
-    const token = document.querySelector('meta[name=\"csrf-token\"]')?.getAttribute('content');
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     await fetch('/customer/location', {
         method: 'POST',

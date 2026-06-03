@@ -8,10 +8,16 @@ export default function CreateAddress() {
         recipient_name: '',
         phone: '',
         address: '',
+        address_detail: '',
         kelurahan: '',
         kecamatan: '',
+        city: '',
+        province: '',
+        postal_code: '',
         latitude: '',
         longitude: '',
+        landmark: '',
+        delivery_notes: '',
         is_default: false,
     });
 

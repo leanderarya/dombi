@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { lazy, Suspense } from 'react';
+import { MapPin } from 'lucide-react';
 import CurrentLocationButton from './current-location-button';
 
 const LeafletPicker = lazy(() => import('./leaflet-picker'));
@@ -9,10 +10,16 @@ interface FormData {
     recipient_name: string;
     phone: string;
     address: string;
+    address_detail: string;
     kelurahan: string;
     kecamatan: string;
+    city: string;
+    province: string;
+    postal_code: string;
     latitude: string;
     longitude: string;
+    landmark: string;
+    delivery_notes: string;
     is_default: boolean;
 }
 
@@ -52,7 +59,8 @@ export default function AddressForm({ data, errors, processing, setData, onSubmi
                     <p className="mt-1.5 text-xs text-red-600">{errors.latitude || errors.longitude}</p>
                 )}
                 {data.latitude && data.longitude && (
-                    <p className="mt-1.5 text-[11px] tabular-nums text-slate-400">
+                    <p className="mt-1.5 flex items-center gap-1.5 text-[11px] tabular-nums text-slate-400">
+                        <MapPin className="h-3 w-3" />
                         {Number(data.latitude).toFixed(6)}, {Number(data.longitude).toFixed(6)}
                     </p>
                 )}
@@ -80,10 +88,47 @@ export default function AddressForm({ data, errors, processing, setData, onSubmi
                 {errors.address && <p className="mt-1 text-xs text-red-600">{errors.address}</p>}
             </div>
 
+            {/* Address Detail */}
+            <Field label="Detail Alamat" placeholder="Blok B3 No 27, Lantai 2, dll" value={data.address_detail} error={errors.address_detail} onChange={(v) => setData('address_detail', v)} />
+
             {/* Kelurahan / Kecamatan */}
             <div className="grid grid-cols-2 gap-3">
                 <Field label="Kelurahan" placeholder="Kelurahan" value={data.kelurahan} error={errors.kelurahan} onChange={(v) => setData('kelurahan', v)} />
                 <Field label="Kecamatan" placeholder="Kecamatan" value={data.kecamatan} error={errors.kecamatan} onChange={(v) => setData('kecamatan', v)} />
+            </div>
+
+            {/* City / Province */}
+            <div className="grid grid-cols-2 gap-3">
+                <Field label="Kota" placeholder="Kota" value={data.city} error={errors.city} onChange={(v) => setData('city', v)} />
+                <Field label="Provinsi" placeholder="Provinsi" value={data.province} error={errors.province} onChange={(v) => setData('province', v)} />
+            </div>
+
+            {/* Postal Code */}
+            <Field label="Kode Pos" placeholder="Kode Pos" value={data.postal_code} error={errors.postal_code} onChange={(v) => setData('postal_code', v)} inputMode="numeric" />
+
+            {/* Landmark */}
+            <div>
+                <label className="text-xs font-semibold text-slate-700">Patokan / Ciri Rumah</label>
+                <input
+                    value={data.landmark}
+                    onChange={(e) => setData('landmark', e.target.value)}
+                    className="mt-1.5 min-h-11 w-full rounded-lg border border-zinc-200 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                    placeholder="Rumah cat hijau dekat mushola"
+                />
+                {errors.landmark && <p className="mt-1 text-xs text-red-600">{errors.landmark}</p>}
+                <p className="mt-1 text-[11px] text-slate-400">Membantu kurir menemukan lokasi dengan lebih cepat.</p>
+            </div>
+
+            {/* Delivery Notes */}
+            <div>
+                <label className="text-xs font-semibold text-slate-700">Catatan Kurir</label>
+                <textarea
+                    value={data.delivery_notes}
+                    onChange={(e) => setData('delivery_notes', e.target.value)}
+                    className="mt-1.5 min-h-16 w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                    placeholder="Instruksi tambahan untuk kurir"
+                />
+                {errors.delivery_notes && <p className="mt-1 text-xs text-red-600">{errors.delivery_notes}</p>}
             </div>
 
             {/* Default toggle */}
@@ -117,8 +162,8 @@ export default function AddressForm({ data, errors, processing, setData, onSubmi
     );
 }
 
-function Field({ label, value, error, onChange, placeholder, type = 'text', required }: {
-    label: string; value: string; error?: string; onChange: (v: string) => void; placeholder?: string; type?: string; required?: boolean;
+function Field({ label, value, error, onChange, placeholder, type = 'text', required, inputMode }: {
+    label: string; value: string; error?: string; onChange: (v: string) => void; placeholder?: string; type?: string; required?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
 }) {
     return (
         <div>
@@ -127,6 +172,7 @@ function Field({ label, value, error, onChange, placeholder, type = 'text', requ
                 type={type}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
+                inputMode={inputMode}
                 className="mt-1.5 min-h-11 w-full rounded-lg border border-zinc-200 px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
                 placeholder={placeholder}
                 required={required}

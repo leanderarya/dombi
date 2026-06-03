@@ -12,8 +12,8 @@ class CustomerAddress extends Model
 
     protected $fillable = [
         'user_id', 'label', 'recipient_name', 'phone', 'address', 'address_line',
-        'kelurahan', 'kecamatan', 'province', 'city', 'district', 'village',
-        'postal_code', 'latitude', 'longitude', 'landmark', 'delivery_notes',
+        'address_detail', 'kelurahan', 'kecamatan', 'province', 'city', 'district',
+        'village', 'postal_code', 'latitude', 'longitude', 'landmark', 'delivery_notes',
         'is_default',
     ];
 

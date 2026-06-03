@@ -31,8 +31,11 @@ class CheckoutController extends Controller
         ]));
     }
 
-    public function index(Request $request): Response
-    {
+    public function index(
+        Request $request,
+        RecommendOutletService $recommendOutletService,
+        DeliveryPricingService $deliveryPricingService,
+    ): Response {
         $draftItems = collect($request->session()->get('checkout.cart', []));
         $products = Product::query()
             ->where('is_active', true)
@@ -40,6 +43,31 @@ class CheckoutController extends Controller
             ->get(['id', 'name', 'price', 'image', 'unit']);
 
         $items = $this->mapItems($draftItems, $products);
+        $location = $request->session()->get('checkout.location');
+        $latitude = isset($location['latitude']) ? (float) $location['latitude'] : null;
+        $longitude = isset($location['longitude']) ? (float) $location['longitude'] : null;
+
+        $nearestOutlet = null;
+        $deliveryPreview = null;
+
+        if ($latitude !== null && $longitude !== null) {
+            $recommended = $recommendOutletService->recommendForDelivery($latitude, $longitude, $draftItems->all());
+
+            if ($recommended) {
+                $outlet = Outlet::query()->find($recommended['id'], ['id', 'name', 'latitude', 'longitude', 'address', 'kelurahan', 'kecamatan']);
+
+                if ($outlet && $outlet->latitude !== null && $outlet->longitude !== null) {
+                    $quote = $deliveryPricingService->quote($latitude, $longitude, (float) $outlet->latitude, (float) $outlet->longitude);
+                    $nearestOutlet = [
+                        'id' => $outlet->id,
+                        'name' => $outlet->name,
+                        'distance_km' => $quote['distance_km'],
+                        'stock_available' => true,
+                    ];
+                    $deliveryPreview = $quote;
+                }
+            }
+        }
 
         return Inertia::render('customer/checkout/index', [
             'products' => $products,
@@ -49,6 +77,9 @@ class CheckoutController extends Controller
                 'fulfillment' => $request->session()->get('checkout.fulfillment'),
             ],
             'summary' => $this->buildItemSummary($items),
+            'nearestOutlet' => $nearestOutlet,
+            'deliveryPreview' => $deliveryPreview,
+            'deliveryTiers' => config('delivery.tiers', []),
         ]);
     }
 
@@ -105,6 +136,7 @@ class CheckoutController extends Controller
             'previewOutlet' => $previewOutlet ? $previewOutlet->only(['id', 'name', 'address', 'kelurahan', 'kecamatan', 'phone']) : null,
             'pickupRecommendations' => $pickupRecommendations,
             'deliveryQuote' => $deliveryQuote,
+            'deliveryTiers' => config('delivery.tiers', []),
         ]);
     }
 
@@ -123,12 +155,13 @@ class CheckoutController extends Controller
             'latitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-180,180'],
             'address_line' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'string', 'max:1000'],
+            'address_detail' => ['nullable', 'string', 'max:500'],
             'province' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:255'],
             'district' => ['nullable', 'string', 'max:255'],
             'village' => ['nullable', 'string', 'max:255'],
             'postal_code' => ['nullable', 'string', 'max:20'],
-            'landmark' => ['nullable', 'string', 'max:255'],
+            'landmark' => ['nullable', 'string', 'max:500'],
             'delivery_notes' => ['nullable', 'string', 'max:1000'],
             'selected_outlet_id' => [$isDelivery ? 'nullable' : 'required', 'nullable', 'integer', Rule::exists('outlets', 'id')],
         ]);
@@ -161,6 +194,7 @@ class CheckoutController extends Controller
             $locationPayload = [
                 ...$existingLocation,
                 'address_line' => $validated['address_line'] ?? ($existingLocation['address_line'] ?? null),
+                'address_detail' => $validated['address_detail'] ?? ($existingLocation['address_detail'] ?? null),
                 'province' => $validated['province'] ?? ($existingLocation['province'] ?? null),
                 'city' => $validated['city'] ?? ($existingLocation['city'] ?? null),
                 'district' => $validated['district'] ?? ($existingLocation['district'] ?? null),
@@ -174,6 +208,7 @@ class CheckoutController extends Controller
 
             $request->session()->put('checkout.location', [
                 'address_line' => $locationPayload['address_line'],
+                'address_detail' => $locationPayload['address_detail'],
                 'province' => $locationPayload['province'],
                 'city' => $locationPayload['city'],
                 'district' => $locationPayload['district'],
@@ -226,6 +261,7 @@ class CheckoutController extends Controller
                     ['value' => 'card', 'label' => 'Card', 'fee_rate' => 0.04],
                 ],
             ],
+            'deliveryTiers' => config('delivery.tiers', []),
         ]);
     }
 
@@ -326,6 +362,7 @@ class CheckoutController extends Controller
     {
         $validated = $request->validate([
             'address_line' => ['nullable', 'string', 'max:1000'],
+            'address_detail' => ['nullable', 'string', 'max:500'],
             'province' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:255'],
             'district' => ['nullable', 'string', 'max:255'],
@@ -335,7 +372,7 @@ class CheckoutController extends Controller
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'accuracy' => ['nullable', 'numeric', 'min:0'],
             'timestamp' => ['nullable', 'integer'],
-            'landmark' => ['nullable', 'string', 'max:255'],
+            'landmark' => ['nullable', 'string', 'max:500'],
             'delivery_notes' => ['nullable', 'string', 'max:1000'],
         ]);
 

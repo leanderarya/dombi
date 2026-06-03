@@ -1,12 +1,16 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import { AlertCircle, MapPin, Store } from 'lucide-react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatDistance } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
+import { useCustomerLocation } from '@/lib/customer-location';
 
 export default function CheckoutPayment({ draft, summary }: any) {
     const cart = useCart();
+    const { markUsedForOrder } = useCustomerLocation();
     const fulfillmentType = draft?.fulfillment?.fulfillment_type ?? 'pickup';
+    const isDelivery = fulfillmentType === 'delivery_dombi';
     const [itemsExpanded, setItemsExpanded] = useState(false);
     const form = useForm({
         payment_method: 'cod',
@@ -16,13 +20,15 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const selectedOption = paymentOptions.find((option: any) => option.value === form.data.payment_method) ?? paymentOptions[0];
     const paymentFee = Math.round((summary.subtotal ?? 0) * (selectedOption?.fee_rate ?? 0) * 100) / 100;
     const total = (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
-    const deliveryLabel = fulfillmentType === 'delivery_dombi' ? 'Ongkir Kurir Dombi' : 'Delivery Fee';
-    const totalLabel = 'Total';
-    const deliveryBlocked = fulfillmentType === 'delivery_dombi' && !!summary.delivery_quote && summary.delivery_quote.is_serviceable === false;
+    const deliveryBlocked = isDelivery && !!summary.delivery_quote && summary.delivery_quote.is_serviceable === false;
+    const ctaLabel = buildCtaLabel(form.data.payment_method, total);
 
     const submit = () => {
         form.post('/customer/checkout/payment', {
-            onSuccess: () => cart.clear(),
+            onSuccess: () => {
+                cart.clear();
+                markUsedForOrder();
+            },
         });
     };
 
@@ -33,7 +39,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
             hideBottomNav
             footerSlot={
                 <StepButton
-                    label={form.data.payment_method === 'qris' || form.data.payment_method === 'card' ? 'Bayar' : 'Buat Pesanan'}
+                    label={ctaLabel}
                     disabled={form.processing || deliveryBlocked}
                     processing={form.processing}
                     onClick={submit}
@@ -43,63 +49,17 @@ export default function CheckoutPayment({ draft, summary }: any) {
             <Head title="Pembayaran" />
             <StepHeader title="Pembayaran" step="3 dari 3" backHref="/customer/checkout/customer" />
 
-            <section className="mt-5">
-                <h1 className="text-xl font-semibold text-slate-900">Pembayaran</h1>
-                <p className="mt-1 text-sm text-slate-500">Pilih metode pembayaran dan lihat total akhir sebelum order dibuat.</p>
-            </section>
-
+            {/* Pesanan */}
             <section className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Customer Summary</div>
-                <div className="mt-3 space-y-2 text-sm">
-                    <SummaryPair label="Nama" value={draft?.customer?.customer_name ?? '-'} />
-                    <SummaryPair label="Nomor HP" value={draft?.customer?.phone_number ?? '-'} />
-                </div>
-            </section>
-
-            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Fulfillment Summary</div>
-                <div className="mt-3 text-sm font-semibold text-slate-900">{fulfillmentLabel(fulfillmentType)}</div>
-                {fulfillmentType === 'pickup' && draft?.pickup_outlet && (
-                    <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
-                        <div className="font-semibold">{draft.pickup_outlet.name}</div>
-                        <div className="mt-1 text-xs text-emerald-700">{draft.pickup_outlet.address}</div>
-                        <div className="mt-1 text-xs text-emerald-700">
-                            {[draft.pickup_outlet.kelurahan, draft.pickup_outlet.kecamatan].filter(Boolean).join(' · ')}
-                        </div>
-                    </div>
-                )}
-                {fulfillmentType === 'delivery_dombi' && summary.delivery_quote?.outlet && (
-                    <div className="mt-3 rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-3 text-sm text-emerald-900">
-                        <div className="font-semibold">{summary.delivery_quote.outlet.name}</div>
-                        <div className="mt-1 text-xs text-emerald-700">
-                            {Number(summary.delivery_quote.distance_km ?? 0).toFixed(2)} km · {formatCurrency(summary.delivery_fee)}
-                        </div>
-                    </div>
-                )}
-            </section>
-
-            {fulfillmentType !== 'pickup' && draft?.location && (
-                <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Location Summary</div>
-                    <div className="mt-3 space-y-2 text-sm text-slate-700">
-                        <p className="font-semibold text-slate-900">{draft.location.address_line}</p>
-                        <p>{[draft.location.village, draft.location.district, draft.location.city, draft.location.province].filter(Boolean).join(', ')}</p>
-                        {draft.location.postal_code && <p>Kode pos {draft.location.postal_code}</p>}
-                        {draft.location.landmark && <p>Patokan: {draft.location.landmark}</p>}
-                    </div>
-                </section>
-            )}
-
-            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
                 <button
                     type="button"
                     onClick={() => setItemsExpanded((value) => !value)}
                     className="flex w-full items-center justify-between text-left"
                 >
                     <div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Items Summary</div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pesanan</div>
                         <div className="mt-1 text-sm font-semibold text-slate-900">
-                            {draft?.items?.length ?? 0} Produk • {formatCurrency(summary.subtotal)}
+                            {draft?.items?.length ?? 0} Produk · {formatCurrency(summary.subtotal)}
                         </div>
                     </div>
                     <span className="text-lg text-slate-500">{itemsExpanded ? '−' : '+'}</span>
@@ -122,8 +82,60 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 )}
             </section>
 
-            <section className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Metode pembayaran</div>
+            {/* Pengiriman */}
+            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pengiriman</div>
+
+                {isDelivery && summary.delivery_quote?.outlet && (
+                    <div className="mt-3 space-y-2">
+                        <div className="text-sm font-semibold text-slate-900">{summary.delivery_quote.outlet.name}</div>
+                        <div className="flex items-center gap-3 text-xs text-slate-600">
+                            <span>Jarak: <span className="font-semibold text-slate-900">{formatDistance(Number(summary.delivery_quote.distance_km ?? 0))}</span></span>
+                            <span>·</span>
+                            <span>Kurir Dombi</span>
+                        </div>
+                        <div className="text-xs">
+                            <span className="text-slate-500">Ongkir: </span>
+                            <span className="font-bold text-slate-900">{formatCurrency(summary.delivery_fee)}</span>
+                        </div>
+                        {draft?.location && (
+                            <div className="mt-2 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                                <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                                    <span>{[draft.location.village, draft.location.district, draft.location.city].filter(Boolean).join(', ') || draft.location.address_line}</span>
+                                </div>
+                                {draft.location.address_detail && (
+                                    <div className="mt-1"><span className="font-medium text-slate-500">Detail: </span>{draft.location.address_detail}</div>
+                                )}
+                                {draft.location.landmark && (
+                                    <div className="mt-1"><span className="font-medium text-slate-500">Patokan: </span>{draft.location.landmark}</div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {fulfillmentType === 'pickup' && draft?.pickup_outlet && (
+                    <div className="mt-3 space-y-2">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+                            <Store className="h-4 w-4 shrink-0 text-slate-400" />
+                            <span>{draft.pickup_outlet.name}</span>
+                        </div>
+                        <div className="text-xs text-slate-500">{draft.pickup_outlet.address}</div>
+                        <div className="text-xs text-slate-500">
+                            {[draft.pickup_outlet.kelurahan, draft.pickup_outlet.kecamatan].filter(Boolean).join(' · ')}
+                        </div>
+                    </div>
+                )}
+
+                {!isDelivery && fulfillmentType !== 'pickup' && (
+                    <div className="mt-3 text-sm text-slate-500">-</div>
+                )}
+            </section>
+
+            {/* Pembayaran */}
+            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pembayaran</div>
                 <div className="mt-3 space-y-3">
                     {paymentOptions.map((option: any) => (
                         <button
@@ -143,29 +155,48 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                     {option.value === 'cod' && 'Bayar saat produk diterima'}
                                 </div>
                             </div>
-                            <div className="text-sm font-bold tabular-nums text-slate-900">
-                                {option.fee_rate > 0 ? `${(option.fee_rate * 100).toFixed(option.value === 'qris' ? 1 : 0)}%` : '0%'}
+                            <div className="text-right">
+                                <div className="text-sm font-bold tabular-nums text-slate-900">
+                                    {option.fee_rate > 0 ? `${(option.fee_rate * 100).toFixed(option.value === 'qris' ? 1 : 0)}%` : '0%'}
+                                </div>
+                                {form.data.payment_method === option.value && paymentFee > 0 && (
+                                    <div className="mt-0.5 text-xs font-semibold text-emerald-700">+ {formatCurrency(paymentFee)}</div>
+                                )}
                             </div>
                         </button>
                     ))}
                 </div>
             </section>
 
-            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Ringkasan pembayaran</div>
+            {/* Total Card */}
+            <section className="mt-4 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Total Pembayaran</div>
                 <div className="mt-3 space-y-2">
                     <SummaryRow label="Subtotal" value={formatCurrency(summary.subtotal)} />
-                    <SummaryRow label={deliveryLabel} value={formatCurrency(summary.delivery_fee)} />
-                    <SummaryRow label="Payment Fee" value={formatCurrency(paymentFee)} />
-                    <div className="border-t border-slate-100 pt-2">
-                        <SummaryRow label={totalLabel} value={formatCurrency(total)} strong />
+                    <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />
+                    {paymentFee > 0 && <SummaryRow label="Biaya Pembayaran" value={formatCurrency(paymentFee)} />}
+                    <div className="border-t border-emerald-200 pt-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-emerald-900">Total</span>
+                            <span className="text-xl font-bold tabular-nums text-emerald-900">{formatCurrency(total)}</span>
+                        </div>
                     </div>
                 </div>
-                {fulfillmentType === 'delivery_dombi' && summary.delivery_quote && !summary.delivery_quote.is_serviceable && (
-                    <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs leading-relaxed text-red-700">
-                        Maaf, lokasi Anda berada di luar area layanan Kurir Dombi.
-                    </p>
+                {deliveryBlocked && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs leading-relaxed text-red-700">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                        <span>Lokasi Anda berada di luar area layanan Kurir Dombi. Silakan kembali dan ubah lokasi.</span>
+                    </div>
                 )}
+            </section>
+
+            {/* Customer Info (compact) */}
+            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pemesan</div>
+                <div className="mt-2 flex items-center justify-between text-sm">
+                    <span className="font-semibold text-slate-900">{draft?.customer?.customer_name ?? '-'}</span>
+                    <span className="text-slate-500">{draft?.customer?.phone_number ?? '-'}</span>
+                </div>
             </section>
         </CustomerMobileLayout>
     );
@@ -205,28 +236,19 @@ function StepButton({ label, disabled, processing, onClick }: { label: string; d
     );
 }
 
-function SummaryRow({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+function SummaryRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-center justify-between text-sm">
-            <span className={strong ? 'font-semibold text-slate-900' : 'text-slate-500'}>{label}</span>
-            <span className={`tabular-nums ${strong ? 'text-lg font-bold text-slate-900' : 'font-semibold text-slate-800'}`}>{value}</span>
+            <span className="text-slate-600">{label}</span>
+            <span className="font-semibold tabular-nums text-slate-800">{value}</span>
         </div>
     );
 }
 
-function SummaryPair({ label, value }: { label: string; value: string }) {
-    return (
-        <div className="flex items-center justify-between gap-4">
-            <span className="text-slate-500">{label}</span>
-            <span className="text-right font-semibold text-slate-900">{value}</span>
-        </div>
-    );
-}
-
-function fulfillmentLabel(value: string) {
-    if (value === 'pickup') {
-        return 'Pickup';
+function buildCtaLabel(paymentMethod: string, total: number): string {
+    const formattedTotal = formatCurrency(total);
+    if (paymentMethod === 'qris' || paymentMethod === 'card') {
+        return `Bayar ${formattedTotal}`;
     }
-
-    return 'Kurir Dombi';
+    return `Buat Pesanan ${formattedTotal}`;
 }

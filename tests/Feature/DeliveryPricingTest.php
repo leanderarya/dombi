@@ -98,6 +98,98 @@ class DeliveryPricingTest extends TestCase
         $this->assertNull(Order::query()->first());
     }
 
+    public function test_home_page_returns_service_status_with_location(): void
+    {
+        $this->createStockedProduct();
+
+        $this->withSession([
+            'checkout.location' => $this->locationDraft(),
+        ])->get('/customer/home')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/home')
+                ->has('serviceStatus')
+                ->where('serviceStatus.is_serviceable', true)
+                ->where('serviceStatus.outlet_name', 'Outlet Banyumanik')
+            );
+    }
+
+    public function test_home_page_returns_null_service_status_without_location(): void
+    {
+        $this->get('/customer/home')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/home')
+                ->where('serviceStatus', null)
+            );
+    }
+
+    public function test_checkout_index_returns_delivery_tiers_and_preview(): void
+    {
+        $product = $this->createStockedProduct();
+
+        $this->withSession([
+            'checkout.cart' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'checkout.location' => $this->locationDraft(),
+        ])->get('/customer/checkout')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/checkout/index')
+                ->has('deliveryTiers')
+                ->has('deliveryPreview')
+                ->where('deliveryPreview.is_serviceable', true)
+                ->has('nearestOutlet')
+                ->where('nearestOutlet.name', 'Outlet Banyumanik')
+            );
+    }
+
+    public function test_checkout_customer_returns_delivery_tiers(): void
+    {
+        $product = $this->createStockedProduct();
+
+        $this->withSession([
+            'checkout.cart' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'checkout.fulfillment' => [
+                'fulfillment_type' => 'delivery_dombi',
+            ],
+            'checkout.location' => $this->locationDraft(),
+        ])->get('/customer/checkout/customer')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/checkout/customer')
+                ->has('deliveryTiers')
+                ->has('deliveryQuote')
+            );
+    }
+
+    public function test_checkout_payment_returns_delivery_tiers(): void
+    {
+        $product = $this->createStockedProduct();
+
+        $this->withSession([
+            'checkout.cart' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'checkout.fulfillment' => [
+                'fulfillment_type' => 'delivery_dombi',
+            ],
+            'checkout.customer' => [
+                'customer_name' => 'Sarah Dombi',
+                'phone_number' => '6281234567890',
+            ],
+            'checkout.location' => $this->locationDraft(),
+        ])->get('/customer/checkout/payment')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/checkout/payment')
+                ->has('deliveryTiers')
+            );
+    }
+
     private function createStockedProduct(): Product
     {
         $outlet = Outlet::create([

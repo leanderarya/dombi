@@ -144,6 +144,8 @@ class GuestCustomerCheckoutTest extends TestCase
         $this->assertGreaterThan(0, (float) $order->delivery_distance_km);
         $this->assertNotNull($order->recommended_outlet_id);
         $this->assertSame('Jl. Ngesrep Timur V No. 12', $order->customer_address);
+        $this->assertSame('Blok B3 No 27', $order->customer_address_detail);
+        $this->assertSame('Rumah cat hijau dekat mushola', $order->customer_landmark);
         $this->assertEquals(-7.0523456, (float) $order->latitude);
         $this->assertEquals(110.4345678, (float) $order->longitude);
     }
@@ -304,6 +306,7 @@ class GuestCustomerCheckoutTest extends TestCase
     {
         return [
             'address_line' => 'Jl. Ngesrep Timur V No. 12',
+            'address_detail' => 'Blok B3 No 27',
             'province' => 'Jawa Tengah',
             'city' => 'Kota Semarang',
             'district' => 'Banyumanik',
@@ -311,7 +314,7 @@ class GuestCustomerCheckoutTest extends TestCase
             'postal_code' => '50269',
             'latitude' => -7.0523456,
             'longitude' => 110.4345678,
-            'landmark' => 'Dekat minimarket',
+            'landmark' => 'Rumah cat hijau dekat mushola',
             'delivery_notes' => 'Rumah pagar hijau',
         ];
     }

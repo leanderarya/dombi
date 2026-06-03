@@ -8,10 +8,16 @@ export default function EditAddress({ address }: any) {
         recipient_name: address.recipient_name,
         phone: address.phone,
         address: address.address,
+        address_detail: address.address_detail ?? '',
         kelurahan: address.kelurahan ?? '',
         kecamatan: address.kecamatan ?? '',
+        city: address.city ?? '',
+        province: address.province ?? '',
+        postal_code: address.postal_code ?? '',
         latitude: address.latitude ? String(address.latitude) : '',
         longitude: address.longitude ? String(address.longitude) : '',
+        landmark: address.landmark ?? '',
+        delivery_notes: address.delivery_notes ?? '',
         is_default: address.is_default,
     });
 

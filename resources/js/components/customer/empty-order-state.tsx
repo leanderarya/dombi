@@ -1,4 +1,5 @@
 import { Link } from '@inertiajs/react';
+import { Package, Search, CheckCircle } from 'lucide-react';
 
 interface Props {
     type?: 'no-orders' | 'no-active' | 'no-results';
@@ -6,19 +7,19 @@ interface Props {
 
 const content = {
     'no-orders': {
-        icon: '📦',
+        icon: Package,
         title: 'Belum ada pesanan',
         description: 'Pesanan yang kamu buat akan muncul di sini.',
         showCta: true,
     },
     'no-active': {
-        icon: '✓',
+        icon: CheckCircle,
         title: 'Tidak ada pesanan aktif',
         description: 'Semua pesanan sudah selesai diproses.',
         showCta: false,
     },
     'no-results': {
-        icon: '🔍',
+        icon: Search,
         title: 'Tidak ada hasil',
         description: 'Coba ubah filter untuk melihat pesanan lain.',
         showCta: false,
@@ -26,11 +27,11 @@ const content = {
 };
 
 export default function EmptyOrderState({ type = 'no-orders' }: Props) {
-    const { icon, title, description, showCta } = content[type];
+    const { icon: Icon, title, description, showCta } = content[type];
 
     return (
         <div className="flex flex-col items-center justify-center rounded-lg border border-zinc-100 bg-white py-12 text-center">
-            <span className="text-3xl">{icon}</span>
+            <Icon className="h-10 w-10 text-slate-300" />
             <p className="mt-3 text-sm font-semibold text-slate-700">{title}</p>
             <p className="mt-1 text-xs text-slate-400">{description}</p>
             {showCta && (

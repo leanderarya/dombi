@@ -3,18 +3,14 @@ import { useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import { useCart } from '@/lib/use-cart';
 import { useCustomerLocation } from '@/lib/customer-location';
-import { confirmLogout } from '@/lib/confirm-logout';
 
 interface Props {
-    /** Override address text (optional — falls back to shared defaultAddress) */
     addressOverride?: string | null;
 }
 
 export default function CustomerTopBar({ addressOverride }: Props) {
-    const { auth } = usePage<any>().props;
     const { totalItems } = useCart();
     const { summary } = useCustomerLocation();
-    const user = auth?.user;
     const [sheetOpen, setSheetOpen] = useState(false);
 
     const addressText = addressOverride ?? summary;
@@ -34,29 +30,16 @@ export default function CustomerTopBar({ addressOverride }: Props) {
                         </svg>
                     </div>
                 </button>
-                <div className="flex items-center gap-2">
-                    <Link href="/customer/checkout" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
-                        </svg>
-                        {totalItems > 0 && (
-                            <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-emerald-600 px-1 text-[10px] font-bold text-white">
-                                {totalItems > 9 ? '9+' : totalItems}
-                            </span>
-                        )}
-                    </Link>
-                    {user ? (
-                        <button onClick={() => confirmLogout()} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 active:bg-zinc-100">
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                            </svg>
-                        </button>
-                    ) : (
-                        <Link href="/login" className="flex h-10 min-w-10 items-center justify-center rounded-lg px-2 text-xs font-bold text-emerald-700 active:bg-zinc-100">
-                            Login
-                        </Link>
+                <Link href="/customer/checkout" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
+                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+                    </svg>
+                    {totalItems > 0 && (
+                        <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-emerald-600 px-1 text-[10px] font-bold text-white">
+                            {totalItems > 9 ? '9+' : totalItems}
+                        </span>
                     )}
-                </div>
+                </Link>
             </div>
         </header>
         <LocationSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />

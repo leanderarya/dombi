@@ -1,4 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { MapPin } from 'lucide-react';
 import CourierCard from '@/components/customer/courier-card';
 import OrderSummaryCard from '@/components/customer/order-summary-card';
 import OutletFulfillmentCard from '@/components/customer/outlet-fulfillment-card';
@@ -77,6 +78,23 @@ export default function OrderShow({ order }: any) {
                     <div className="mt-2 text-sm font-medium text-slate-900">{order.customer_name}</div>
                     <div className="mt-0.5 text-xs text-slate-500">{order.customer_phone}</div>
                     <div className="mt-1.5 text-xs leading-relaxed text-slate-600">{order.customer_address}</div>
+                    {order.customer_address_detail && (
+                        <div className="mt-1 text-xs text-slate-600"><span className="font-medium text-slate-500">Detail: </span>{order.customer_address_detail}</div>
+                    )}
+                    {order.customer_landmark && (
+                        <div className="mt-1 text-xs text-slate-600"><span className="font-medium text-slate-500">Patokan: </span>{order.customer_landmark}</div>
+                    )}
+                    {order.latitude && order.longitude && (
+                        <a
+                            href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-3 inline-flex min-h-[36px] items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 active:bg-emerald-100"
+                        >
+                            <MapPin className="h-3.5 w-3.5" />
+                            Buka di Maps
+                        </a>
+                    )}
                 </div>
             </main>
 

@@ -1,4 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { MapPin } from 'lucide-react';
 import DeliveryStatusBadge from '../../../components/delivery-status-badge';
 import OrderStatusBadge from '../../../components/order-status-badge';
 import CourierLayout from '../../../layouts/courier-layout';
@@ -54,6 +55,23 @@ export default function CourierDeliveryShow({ delivery }: any) {
                         <div>{order.customer_name}</div>
                         <div>{order.customer_phone}</div>
                         <div className="text-zinc-600">{order.customer_address}</div>
+                        {order.customer_address_detail && (
+                            <div className="mt-1 text-zinc-600"><span className="font-medium text-zinc-500">Detail: </span>{order.customer_address_detail}</div>
+                        )}
+                        {order.customer_landmark && (
+                            <div className="mt-1 text-zinc-600"><span className="font-medium text-zinc-500">Patokan: </span>{order.customer_landmark}</div>
+                        )}
+                        {order.latitude && order.longitude && (
+                            <a
+                                href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 inline-flex min-h-[36px] items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700 active:bg-emerald-100"
+                            >
+                                <MapPin className="h-4 w-4" />
+                                Buka di Maps
+                            </a>
+                        )}
                         {order.notes && <div className="mt-3 rounded-md bg-zinc-50 p-3">{order.notes}</div>}
                     </section>
                     <section className="rounded-lg border bg-white p-5 text-sm">

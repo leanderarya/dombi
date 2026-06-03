@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import { MapPin, Plus, Search } from 'lucide-react';
 import OfflineBanner from '@/components/offline-banner';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 
@@ -34,9 +35,7 @@ export default function AddressesIndex({ addresses }: any) {
                     </Link>
                     <h1 className="text-sm font-semibold text-slate-900">Alamat Saya</h1>
                     <Link href="/customer/addresses/create" className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
+                        <Plus className="h-5 w-5" />
                     </Link>
                 </div>
             </header>
@@ -47,9 +46,7 @@ export default function AddressesIndex({ addresses }: any) {
 
                 {/* Search */}
                 <div className="relative">
-                    <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                     <input
                         type="text"
                         value={search}
@@ -62,10 +59,7 @@ export default function AddressesIndex({ addresses }: any) {
                 {/* Address List */}
                 {filtered.length === 0 ? (
                     <div className="mt-8 flex flex-col items-center py-10 text-center">
-                        <svg className="h-12 w-12 text-slate-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
+                        <MapPin className="h-12 w-12 text-slate-200" />
                         <p className="mt-3 text-sm font-semibold text-slate-600">
                             {search ? 'Tidak ditemukan' : 'Belum ada alamat'}
                         </p>
@@ -92,10 +86,7 @@ export default function AddressesIndex({ addresses }: any) {
                     href="/customer/addresses/create"
                     className="mx-auto flex max-w-lg min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-bold text-white shadow-lg active:bg-slate-800"
                 >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
+                    <MapPin className="h-4 w-4" />
                     + Tambah Alamat Baru
                 </Link>
             </div>
@@ -107,6 +98,7 @@ export default function AddressesIndex({ addresses }: any) {
 
 function AddressCard({ address, onSetDefault }: { address: any; onSetDefault: () => void }) {
     const isDefault = address.is_default;
+    const locationSummary = [address.village || address.kelurahan, address.district || address.kecamatan].filter(Boolean).join(', ');
 
     return (
         <div className={`rounded-xl border bg-white p-4 ${isDefault ? 'border-emerald-300' : 'border-zinc-200'}`}>
@@ -121,7 +113,16 @@ function AddressCard({ address, onSetDefault }: { address: any; onSetDefault: ()
             {/* Details */}
             <div className="mt-2 text-sm font-medium text-slate-700">{address.recipient_name}</div>
             <div className="mt-0.5 text-xs text-slate-500">{address.phone}</div>
-            <div className="mt-1.5 text-xs leading-relaxed text-slate-600">{address.address}</div>
+            <div className="mt-1.5 text-xs leading-relaxed text-slate-600">{address.address_line || address.address}</div>
+            {address.address_detail && (
+                <div className="mt-1 text-xs text-slate-500">Detail: {address.address_detail}</div>
+            )}
+            {locationSummary && (
+                <div className="mt-1 text-xs text-slate-500">{locationSummary}</div>
+            )}
+            {address.landmark && (
+                <div className="mt-1 text-xs text-slate-500">Patokan: {address.landmark}</div>
+            )}
 
             {/* Actions */}
             <div className="mt-3 flex items-center gap-3 border-t border-zinc-50 pt-3">
