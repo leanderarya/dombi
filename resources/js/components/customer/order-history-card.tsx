@@ -1,4 +1,5 @@
 import { Link, router } from '@inertiajs/react';
+import { Package } from 'lucide-react';
 import { orderStatusLabel, orderStatusTone } from '@/lib/customer-status';
 import { formatCurrency } from '@/lib/format';
 
@@ -26,7 +27,7 @@ export default function OrderHistoryCard({ order }: Props) {
     const dateStr = order.created_at ? formatShortDate(order.created_at) : '-';
 
     return (
-        <div className="rounded-lg border border-zinc-100 bg-white p-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
             {/* Header: code + status */}
             <div className="flex items-start justify-between gap-3">
                 <div className="text-sm font-bold text-slate-900">{order.order_code}</div>
@@ -37,9 +38,8 @@ export default function OrderHistoryCard({ order }: Props) {
 
             {/* Body: outlet + items */}
             <div className="mt-3 flex gap-3">
-                {/* Image placeholder */}
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-50">
-                    <span className="text-xl opacity-40">🥛</span>
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-slate-50">
+                    <Package className="h-5 w-5 text-slate-400" />
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="text-xs text-slate-400">{dateStr}</div>
@@ -51,15 +51,15 @@ export default function OrderHistoryCard({ order }: Props) {
             </div>
 
             {/* Footer: total + actions */}
-            <div className="mt-3 flex items-center justify-between gap-3 border-t border-zinc-50 pt-3">
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-50 pt-3">
                 <div>
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Total Tagihan</div>
+                    <div className="text-[10px] font-medium uppercase tracking-wide text-slate-400">Total</div>
                     <div className="text-sm font-bold tabular-nums text-slate-900">{formatCurrency(order.total)}</div>
                 </div>
                 <div className="flex gap-2">
                     <Link
                         href={`/customer/orders/${order.id}`}
-                        className="flex min-h-9 items-center rounded-full border border-zinc-200 px-4 text-xs font-semibold text-slate-700 active:bg-zinc-50"
+                        className="flex min-h-9 items-center rounded-full border border-slate-200 px-4 text-xs font-semibold text-slate-700 active:bg-slate-50"
                     >
                         Detail
                     </Link>

@@ -33,6 +33,8 @@ Route::get('/', function () {
         : app(CustomerHomeController::class)();
 })->name('home');
 
+Route::get('/track/{token}', \App\Http\Controllers\TrackController::class)->name('track');
+
 // System endpoints
 Route::get('/api/health', [SystemController::class, 'health'])->name('health');
 Route::get('/api/version', [SystemController::class, 'version'])->name('version');
@@ -101,6 +103,7 @@ Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->g
     Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
     Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->name('checkout.submit');
     Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
+    Route::post('/orders/recovery', \App\Http\Controllers\Customer\GuestOrderRecoveryController::class)->name('orders.recovery');
 });
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {

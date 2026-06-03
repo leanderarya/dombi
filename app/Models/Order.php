@@ -17,11 +17,20 @@ class Order extends Model
     public const HISTORY_STATUSES = ['completed', 'cancelled', 'failed'];
 
     protected $fillable = [
-        'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'status', 'fulfillment_type',
+        'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'recovery_token', 'status', 'fulfillment_type',
         'subtotal', 'delivery_fee', 'payment_method', 'payment_fee', 'total', 'customer_name', 'customer_phone',
         'customer_address', 'customer_address_detail', 'customer_landmark', 'latitude', 'longitude',
         'delivery_distance_km', 'notes', 'ordered_at',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Order $order): void {
+            if (empty($order->recovery_token)) {
+                $order->recovery_token = static::generateRecoveryToken();
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -35,6 +44,19 @@ class Order extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
         ];
+    }
+
+    private static function generateRecoveryToken(): string
+    {
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $token = strtoupper(bin2hex(random_bytes(3)));
+
+            if (! static::where('recovery_token', $token)->exists()) {
+                return $token;
+            }
+        }
+
+        return strtoupper(bin2hex(random_bytes(4)));
     }
 
     public function customer(): BelongsTo

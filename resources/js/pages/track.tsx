@@ -1,0 +1,278 @@
+import { Head } from '@inertiajs/react';
+import { ArrowLeft, Clock, Copy, ExternalLink, MapPin, Package, Truck, UserCheck, XCircle, CheckCircle2, Circle } from 'lucide-react';
+import { formatCurrency, formatDate } from '@/lib/format';
+
+type HistoryItem = {
+    to_status: string;
+    notes?: string | null;
+    created_at?: string | null;
+};
+
+type TrackOrder = {
+    id: number;
+    order_code: string;
+    status: string;
+    fulfillment_type: string;
+    customer_name: string;
+    total: number;
+    ordered_at?: string;
+    outlet?: { name: string };
+    items: { product_name: string; quantity: number; price: number; subtotal: number }[];
+    status_histories: HistoryItem[];
+    delivery?: { status: string; courier?: { name: string } };
+    customer_address?: string;
+    customer_address_detail?: string;
+    customer_landmark?: string;
+    latitude?: number;
+    longitude?: number;
+};
+
+type Props = {
+    order: TrackOrder | null;
+    found: boolean;
+};
+
+const TIMELINE_STEPS = [
+    { key: 'pending', label: 'Pesanan Dibuat', icon: Clock },
+    { key: 'confirmed', label: 'Outlet Menyiapkan Pesanan', icon: Package },
+    { key: 'preparing', label: 'Pesanan Sedang Disiapkan', icon: Package },
+    { key: 'ready_for_pickup', label: 'Pesanan Siap', icon: Package },
+    { key: 'picked_up', label: 'Kurir Mengambil Pesanan', icon: UserCheck },
+    { key: 'delivering', label: 'Dalam Perjalanan', icon: Truck },
+    { key: 'completed', label: 'Pesanan Selesai', icon: CheckCircle2 },
+];
+
+export default function TrackPage({ order, found }: Props) {
+    if (!found || !order) {
+        return (
+            <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
+                <Head title="Lacak Pesanan" />
+                <div className="mx-auto flex max-w-lg flex-col items-center justify-center px-4 py-20 text-center">
+                    <XCircle className="h-12 w-12 text-slate-300" />
+                    <h1 className="mt-4 text-lg font-semibold text-slate-900">Pesanan Tidak Ditemukan</h1>
+                    <p className="mt-2 text-sm text-slate-500">Kode pelacakan tidak valid atau pesanan sudah tidak tersedia.</p>
+                    <a href="/customer/home" className="mt-6 flex min-h-11 items-center rounded-lg bg-emerald-600 px-5 text-sm font-bold text-white active:bg-emerald-700">
+                        Kembali ke Beranda
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
+    const isCancelled = order.status === 'cancelled';
+    const isFailed = order.status === 'failed';
+    const isTerminal = isCancelled || isFailed;
+
+    const steps = isTerminal
+        ? [TIMELINE_STEPS[0], { key: order.status, label: isCancelled ? 'Pesanan Dibatalkan' : 'Pesanan Gagal', icon: XCircle }]
+        : getStepsForFulfillment(order.fulfillment_type);
+
+    const currentIndex = isTerminal ? 1 : steps.findIndex((s) => s.key === order.status);
+    const effectiveIndex = currentIndex < 0 ? 0 : currentIndex;
+
+    const historyMap = new Map<string, HistoryItem>();
+    for (const h of order.status_histories) {
+        if (!historyMap.has(h.to_status)) {
+            historyMap.set(h.to_status, h);
+        }
+    }
+
+    const trackingUrl = `${window.location.origin}/track/${(window as any).__TRACKING_TOKEN__ || ''}`;
+
+    return (
+        <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
+            <Head title={`Lacak ${order.order_code}`} />
+
+            {/* Header */}
+            <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur">
+                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+                    <a href="/customer/home" className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
+                        <ArrowLeft className="h-5 w-5" />
+                    </a>
+                    <div className="text-center">
+                        <div className="text-sm font-semibold text-slate-900">{order.order_code}</div>
+                        {order.ordered_at && (
+                            <div className="text-[11px] text-slate-500">{formatDate(order.ordered_at)}</div>
+                        )}
+                    </div>
+                    <div className="h-10 w-10" />
+                </div>
+            </header>
+
+            {/* Content */}
+            <main className="mx-auto max-w-lg px-4 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+                {/* Status Badge */}
+                <div className="flex items-center justify-center">
+                    <StatusBadge status={order.status} />
+                </div>
+
+                {/* Timeline */}
+                <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Status Pesanan</div>
+                    <div className="mt-4 space-y-0">
+                        {steps.map((step, index) => {
+                            const isCompleted = index < effectiveIndex;
+                            const isCurrent = index === effectiveIndex;
+                            const history = historyMap.get(step.key);
+                            const isLast = index === steps.length - 1;
+                            const Icon = step.icon;
+
+                            return (
+                                <div key={step.key} className="relative flex gap-3 pb-5 last:pb-0">
+                                    {!isLast && (
+                                        <div className={`absolute left-[11px] top-6 bottom-0 w-px ${isCompleted ? 'bg-emerald-200' : 'bg-slate-200'}`} />
+                                    )}
+                                    <div className="relative shrink-0 pt-0.5">
+                                        {isCompleted ? (
+                                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600">
+                                                <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                                            </div>
+                                        ) : isCurrent ? (
+                                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 ring-2 ring-emerald-500">
+                                                <Icon className="h-3 w-3 text-emerald-600" />
+                                            </div>
+                                        ) : (
+                                            <div className="flex h-6 w-6 items-center justify-center">
+                                                <Circle className="h-3 w-3 text-slate-300" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="min-w-0 flex-1 pt-0.5">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className={`text-sm font-semibold ${isCurrent ? 'text-emerald-700' : isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
+                                                {step.label}
+                                            </div>
+                                            {history?.created_at && (
+                                                <span className={`shrink-0 text-xs tabular-nums ${isCurrent ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>
+                                                    {formatTime(history.created_at)}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {history?.notes && (
+                                            <div className="mt-0.5 text-xs leading-relaxed text-slate-500">{history.notes}</div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Delivery Info */}
+                {order.outlet && (
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pengiriman</div>
+                        <div className="mt-2 text-sm font-semibold text-slate-900">{order.outlet.name}</div>
+                        {order.delivery?.courier && (
+                            <div className="mt-1 text-xs text-slate-500">Kurir: {order.delivery.courier.name}</div>
+                        )}
+                        {order.customer_address && (
+                            <div className="mt-3 border-t border-slate-100 pt-3">
+                                <div className="text-xs font-medium text-slate-500">Alamat Pengiriman</div>
+                                <div className="mt-1 text-xs text-slate-700">{order.customer_address}</div>
+                                {order.customer_address_detail && (
+                                    <div className="mt-1 text-xs text-slate-500">Detail: {order.customer_address_detail}</div>
+                                )}
+                                {order.customer_landmark && (
+                                    <div className="mt-1 text-xs text-slate-500">Patokan: {order.customer_landmark}</div>
+                                )}
+                                {order.latitude && order.longitude && (
+                                    <a
+                                        href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700"
+                                    >
+                                        <MapPin className="h-3 w-3" />
+                                        Buka di Maps
+                                    </a>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Order Summary */}
+                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Ringkasan Pesanan</div>
+                    <div className="mt-3 space-y-2">
+                        {order.items.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between text-sm">
+                                <div className="min-w-0">
+                                    <span className="text-slate-900">{item.product_name}</span>
+                                    <span className="ml-1 text-xs text-slate-400">x{item.quantity}</span>
+                                </div>
+                                <span className="shrink-0 font-semibold tabular-nums text-slate-900">{formatCurrency(item.subtotal)}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-3 border-t border-slate-100 pt-3">
+                        <div className="flex items-center justify-between text-sm">
+                            <span className="font-semibold text-slate-900">Total</span>
+                            <span className="text-base font-bold tabular-nums text-emerald-700">{formatCurrency(order.total)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Dombi branding */}
+                <div className="mt-8 text-center">
+                    <p className="text-[11px] text-slate-400">Powered by</p>
+                    <p className="text-sm font-bold text-slate-600">Dombi</p>
+                </div>
+            </main>
+        </div>
+    );
+}
+
+function StatusBadge({ status }: { status: string }) {
+    const labels: Record<string, string> = {
+        pending: 'Menunggu Konfirmasi',
+        confirmed: 'Diterima Outlet',
+        preparing: 'Sedang Disiapkan',
+        ready_for_pickup: 'Siap Diambil',
+        picked_up: 'Sudah Diambil Kurir',
+        delivering: 'Dalam Perjalanan',
+        completed: 'Selesai',
+        cancelled: 'Dibatalkan',
+        failed: 'Gagal',
+    };
+
+    const tones: Record<string, string> = {
+        pending: 'bg-amber-50 text-amber-800 ring-amber-200',
+        confirmed: 'bg-blue-50 text-blue-800 ring-blue-200',
+        preparing: 'bg-orange-50 text-orange-800 ring-orange-200',
+        ready_for_pickup: 'bg-purple-50 text-purple-800 ring-purple-200',
+        picked_up: 'bg-blue-50 text-blue-800 ring-blue-200',
+        delivering: 'bg-indigo-50 text-indigo-800 ring-indigo-200',
+        completed: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
+        cancelled: 'bg-red-50 text-red-800 ring-red-200',
+        failed: 'bg-red-50 text-red-800 ring-red-200',
+    };
+
+    return (
+        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1 ${tones[status] ?? 'bg-slate-50 text-slate-800 ring-slate-200'}`}>
+            {labels[status] ?? status}
+        </span>
+    );
+}
+
+function getStepsForFulfillment(fulfillmentType: string) {
+    if (fulfillmentType === 'pickup') {
+        return [
+            TIMELINE_STEPS[0],
+            TIMELINE_STEPS[1],
+            TIMELINE_STEPS[2],
+            TIMELINE_STEPS[3],
+            TIMELINE_STEPS[6],
+        ];
+    }
+    return TIMELINE_STEPS;
+}
+
+function formatTime(value: string): string {
+    try {
+        return new Date(value).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    } catch {
+        return '-';
+    }
+}
