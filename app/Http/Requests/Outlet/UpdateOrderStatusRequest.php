@@ -8,14 +8,10 @@ use Illuminate\Validation\Rule;
 
 class UpdateOrderStatusRequest extends FormRequest
 {
-    /**
-     * Statuses that an outlet user is allowed to transition to.
-     */
     private const OUTLET_ALLOWED_STATUSES = [
         'confirmed',
         'preparing',
         'ready_for_pickup',
-        'cancelled',
     ];
 
     public function authorize(): bool

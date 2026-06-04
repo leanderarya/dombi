@@ -266,9 +266,14 @@ class GuestCustomerCheckoutTest extends TestCase
             );
     }
 
-    public function test_order_history_still_requires_customer_login(): void
+    public function test_guest_can_access_orders_page_without_login(): void
     {
-        $this->get('/customer/orders')->assertRedirect('/login');
+        $this->get('/customer/orders')->assertOk();
+    }
+
+    public function test_guest_can_access_settings_page_without_login(): void
+    {
+        $this->get('/customer/profile')->assertOk();
     }
 
     private function createStockedProduct(): Product

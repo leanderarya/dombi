@@ -5,7 +5,7 @@ import Pagination from '@/components/pagination';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
 
-const statuses = ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'completed', 'cancelled'];
+const statuses = ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup', 'completed', 'cancelled_by_outlet'];
 
 export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
     return (

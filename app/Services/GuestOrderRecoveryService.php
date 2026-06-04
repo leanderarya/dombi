@@ -71,9 +71,13 @@ class GuestOrderRecoveryService
             'fulfillment_type' => $order->fulfillment_type,
             'total' => (float) $order->total,
             'customer_name' => $order->customer_name,
-            'outlet_name' => $order->outlet?->name,
-            'item_count' => $order->items->count(),
+            'outlet' => $order->outlet ? ['id' => $order->outlet->id, 'name' => $order->outlet->name] : null,
+            'items' => $order->items->map(fn ($item) => [
+                'product_name' => $item->product_name,
+                'quantity' => $item->quantity,
+            ])->values()->all(),
             'ordered_at' => $order->ordered_at?->toISOString(),
+            'created_at' => $order->ordered_at?->toISOString(),
         ];
     }
 

@@ -34,7 +34,7 @@ class DemoReadinessTest extends TestCase
             'customer_id' => $owner->id,
             'outlet_id' => $outlet->id,
             'order_code' => 'DOMBI-ACCESS-1',
-            'status' => 'pending',
+            'status' => 'pending_confirmation',
             'subtotal' => 0,
             'delivery_fee' => 0,
             'total' => 0,

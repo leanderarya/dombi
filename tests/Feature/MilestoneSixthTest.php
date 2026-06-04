@@ -169,7 +169,7 @@ class MilestoneSixthTest extends TestCase
             'Customer tidak mau'
         );
 
-        $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'cancelled']);
+        $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'cancelled_by_outlet']);
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
             ->where('product_id', $context['product']->id)
             ->first();

@@ -1,6 +1,6 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle2, Copy, MapPin, Share2, Truck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Copy, MapPin, Share2, Truck, XCircle } from 'lucide-react';
 import OrderSummaryCard from '@/components/customer/order-summary-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import StickyOrderActions from '@/components/customer/sticky-order-actions';
@@ -9,11 +9,19 @@ import { orderStatusLabel, orderStatusTone, activeOrderStatuses } from '@/lib/cu
 import { useOrderRecovery } from '@/lib/order-recovery';
 import { formatDate } from '@/lib/format';
 
-export default function OrderShow({ order }: any) {
+export default function OrderShow({ order, cancellationReasons = [] }: any) {
     const isActive = activeOrderStatuses.includes(order.status);
-    const isTerminal = ['completed', 'cancelled', 'failed'].includes(order.status);
+    const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
+    const isPending = order.status === 'pending_confirmation';
+    const isExpired = order.status === 'expired';
     const { addOrder } = useOrderRecovery();
     const [copied, setCopied] = useState(false);
+    const [showCancelSheet, setShowCancelSheet] = useState(false);
+
+    const cancelForm = useForm({
+        reason: '',
+        note: '',
+    });
 
     useEffect(() => {
         if (order.customer_phone && order.order_code) {
@@ -44,6 +52,12 @@ export default function OrderShow({ order }: any) {
             const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
             window.open(whatsappUrl, '_blank');
         }
+    }
+
+    function handleCancel() {
+        cancelForm.post(`/customer/orders/${order.id}/cancel`, {
+            onSuccess: () => setShowCancelSheet(false),
+        });
     }
 
     return (
@@ -117,6 +131,45 @@ export default function OrderShow({ order }: any) {
                     />
                 </div>
 
+                {/* Rejection Reason */}
+                {order.status === 'rejected_by_outlet' && order.rejection_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div className="text-[11px] font-bold uppercase tracking-wider text-red-600">Pesanan Ditolak Outlet</div>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.rejection_reason}</div>
+                        {order.rejection_note && (
+                            <div className="mt-1 text-xs text-red-700">{order.rejection_note}</div>
+                        )}
+                    </div>
+                )}
+
+                {/* Cancellation Reason */}
+                {order.status === 'cancelled_by_customer' && order.cancellation_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div className="text-[11px] font-bold uppercase tracking-wider text-red-600">Pesanan Dibatalkan</div>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
+                        {order.cancellation_note && (
+                            <div className="mt-1 text-xs text-red-700">{order.cancellation_note}</div>
+                        )}
+                    </div>
+                )}
+
+                {/* Expired Reason */}
+                {isExpired && (
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-slate-500" />
+                            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Pesanan Kadaluarsa</div>
+                        </div>
+                        <div className="mt-2 text-sm text-slate-700">Outlet tidak memberikan konfirmasi dalam batas waktu yang ditentukan.</div>
+                    </div>
+                )}
+
                 {/* Courier Card */}
                 {order.delivery?.courier && (
                     <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
@@ -165,6 +218,19 @@ export default function OrderShow({ order }: any) {
                     </div>
                 )}
 
+                {/* Cancel Button */}
+                {isPending && (
+                    <div className="mt-4">
+                        <button
+                            type="button"
+                            onClick={() => setShowCancelSheet(true)}
+                            className="flex h-11 w-full items-center justify-center rounded-xl border border-red-200 text-sm font-semibold text-red-600 active:bg-red-50"
+                        >
+                            Batalkan Pesanan
+                        </button>
+                    </div>
+                )}
+
                 {/* Order Summary */}
                 <div className="mt-4">
                     <OrderSummaryCard
@@ -178,6 +244,70 @@ export default function OrderShow({ order }: any) {
 
             {/* Sticky Bottom Actions */}
             <StickyOrderActions orderId={order.id} showReorder={isTerminal} />
+
+            {/* Cancel Sheet */}
+            {showCancelSheet && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40" onClick={() => setShowCancelSheet(false)}>
+                    <div
+                        className="flex w-full max-w-lg flex-col rounded-t-3xl bg-white px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="mx-auto h-1.5 w-10 rounded-full bg-slate-200" />
+                        <div className="mt-3 flex items-center justify-between">
+                            <h2 className="text-[15px] font-semibold text-slate-900">Batalkan Pesanan</h2>
+                            <button type="button" onClick={() => setShowCancelSheet(false)} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 active:bg-slate-100">
+                                <XCircle className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <p className="mt-2 text-sm text-slate-500">Pilih alasan pembatalan.</p>
+
+                        <div className="mt-4 space-y-2">
+                            {cancellationReasons.map((reason: string) => (
+                                <button
+                                    key={reason}
+                                    type="button"
+                                    onClick={() => cancelForm.setData('reason', reason)}
+                                    className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
+                                        cancelForm.data.reason === reason
+                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                            : 'border-slate-200 text-slate-700 active:bg-slate-50'
+                                    }`}
+                                >
+                                    {reason}
+                                </button>
+                            ))}
+                        </div>
+
+                        {cancelForm.data.reason === 'Lainnya' && (
+                            <div className="mt-3">
+                                <textarea
+                                    value={cancelForm.data.note}
+                                    onChange={(e) => cancelForm.setData('note', e.target.value)}
+                                    placeholder="Jelaskan alasan pembatalan..."
+                                    className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                                />
+                            </div>
+                        )}
+
+                        {cancelForm.errors.reason && (
+                            <p className="mt-2 text-xs text-red-600">{cancelForm.errors.reason}</p>
+                        )}
+                        {cancelForm.errors.note && (
+                            <p className="mt-1 text-xs text-red-600">{cancelForm.errors.note}</p>
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={handleCancel}
+                            disabled={!cancelForm.data.reason || cancelForm.processing}
+                            className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:bg-red-700 disabled:bg-slate-300"
+                        >
+                            {cancelForm.processing ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

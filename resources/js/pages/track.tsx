@@ -25,6 +25,10 @@ type TrackOrder = {
     customer_landmark?: string;
     latitude?: number;
     longitude?: number;
+    rejection_reason?: string;
+    rejection_note?: string;
+    cancellation_reason?: string;
+    cancellation_note?: string;
 };
 
 type Props = {
@@ -33,8 +37,8 @@ type Props = {
 };
 
 const TIMELINE_STEPS = [
-    { key: 'pending', label: 'Pesanan Dibuat', icon: Clock },
-    { key: 'confirmed', label: 'Outlet Menyiapkan Pesanan', icon: Package },
+    { key: 'pending_confirmation', label: 'Pesanan Dibuat', icon: Clock },
+    { key: 'confirmed', label: 'Outlet Menerima Pesanan', icon: Package },
     { key: 'preparing', label: 'Pesanan Sedang Disiapkan', icon: Package },
     { key: 'ready_for_pickup', label: 'Pesanan Siap', icon: Package },
     { key: 'picked_up', label: 'Kurir Mengambil Pesanan', icon: UserCheck },
@@ -59,12 +63,24 @@ export default function TrackPage({ order, found }: Props) {
         );
     }
 
-    const isCancelled = order.status === 'cancelled';
-    const isFailed = order.status === 'failed';
-    const isTerminal = isCancelled || isFailed;
+    const isCancelled = order.status === 'cancelled_by_customer' || order.status === 'cancelled_by_outlet';
+    const isRejected = order.status === 'rejected_by_outlet';
+    const isFailed = order.status === 'failed_delivery';
+    const isExpired = order.status === 'expired';
+    const isTerminal = isCancelled || isRejected || isFailed || isExpired;
+
+    const terminalLabel = isRejected
+        ? 'Ditolak Outlet'
+        : order.status === 'cancelled_by_customer'
+            ? 'Dibatalkan Customer'
+            : order.status === 'cancelled_by_outlet'
+                ? 'Dibatalkan Outlet'
+                : isExpired
+                    ? 'Konfirmasi Kadaluarsa'
+                    : 'Pengiriman Gagal';
 
     const steps = isTerminal
-        ? [TIMELINE_STEPS[0], { key: order.status, label: isCancelled ? 'Pesanan Dibatalkan' : 'Pesanan Gagal', icon: XCircle }]
+        ? [TIMELINE_STEPS[0], { key: order.status, label: terminalLabel, icon: XCircle }]
         : getStepsForFulfillment(order.fulfillment_type);
 
     const currentIndex = isTerminal ? 1 : steps.findIndex((s) => s.key === order.status);
@@ -157,6 +173,36 @@ export default function TrackPage({ order, found }: Props) {
                         })}
                     </div>
                 </div>
+
+                {/* Rejection Reason */}
+                {isRejected && order.rejection_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-red-600">Alasan Ditolak</div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.rejection_reason}</div>
+                        {order.rejection_note && (
+                            <div className="mt-1 text-xs text-red-700">{order.rejection_note}</div>
+                        )}
+                    </div>
+                )}
+
+                {/* Cancellation Reason */}
+                {isCancelled && order.cancellation_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-red-600">Alasan Dibatalkan</div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
+                        {order.cancellation_note && (
+                            <div className="mt-1 text-xs text-red-700">{order.cancellation_note}</div>
+                        )}
+                    </div>
+                )}
+
+                {/* Expired Reason */}
+                {isExpired && (
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Pesanan Kadaluarsa</div>
+                        <div className="mt-2 text-sm text-slate-700">Outlet tidak memberikan konfirmasi dalam batas waktu yang ditentukan.</div>
+                    </div>
+                )}
 
                 {/* Delivery Info */}
                 {order.outlet && (

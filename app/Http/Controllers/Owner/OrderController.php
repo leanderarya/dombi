@@ -30,9 +30,9 @@ class OrderController extends Controller
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['status', 'outlet_id', 'date', 'search']),
             'stats' => [
-                'pendingOrders' => Order::where('status', 'pending')->count(),
+                'pendingOrders' => Order::where('status', 'pending_confirmation')->count(),
                 'activeDeliveries' => Order::whereIn('status', ['picked_up', 'delivering'])->count(),
-                'failedDeliveries' => Order::where('status', 'failed')->count(),
+                'failedDeliveries' => Order::where('status', 'failed_delivery')->count(),
             ],
             'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);

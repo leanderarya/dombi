@@ -19,7 +19,7 @@ class DashboardController extends Controller
         return Inertia::render('outlet/dashboard', [
             'outlet' => $outlet,
             'stats' => [
-                'pendingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'pending')->count(),
+                'pendingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'pending_confirmation')->count(),
                 'preparingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'preparing')->count(),
                 'readyForPickupOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'ready_for_pickup')->count(),
                 'todayOrders' => Order::where('outlet_id', $outlet->id)->whereDate('created_at', today())->count(),
@@ -35,7 +35,7 @@ class DashboardController extends Controller
                 ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
                 ->get(['id', 'product_id', 'current_stock', 'reserved_stock', 'minimum_stock']),
             'recentOrders' => Order::where('outlet_id', $outlet->id)
-                ->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready_for_pickup'])
+                ->whereIn('status', ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup'])
                 ->latest()
                 ->limit(5)
                 ->get(['id', 'order_code', 'status', 'customer_name', 'total', 'created_at']),

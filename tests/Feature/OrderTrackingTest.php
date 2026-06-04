@@ -23,7 +23,7 @@ class OrderTrackingTest extends TestCase
                 ->component('track')
                 ->where('found', true)
                 ->where('order.order_code', $order->order_code)
-                ->where('order.status', 'pending')
+                ->where('order.status', 'pending_confirmation')
             );
     }
 
@@ -65,7 +65,7 @@ class OrderTrackingTest extends TestCase
 
         $order->statusHistories()->create([
             'from_status' => null,
-            'to_status' => 'pending',
+            'to_status' => 'pending_confirmation',
             'notes' => 'Order dibuat',
             'changed_by' => $order->customer_id,
         ]);
@@ -144,7 +144,7 @@ class OrderTrackingTest extends TestCase
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
             'order_code' => 'DOMBI-TRACK-' . strtoupper(uniqid()),
-            'status' => 'pending',
+            'status' => 'pending_confirmation',
             'fulfillment_type' => 'delivery_dombi',
             'subtotal' => 50000,
             'delivery_fee' => 5000,

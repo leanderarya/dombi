@@ -14,6 +14,7 @@ const filterOptions = [
     { key: 'all', label: 'Semua' },
     { key: 'completed', label: 'Selesai' },
     { key: 'cancelled', label: 'Dibatalkan' },
+    { key: 'failed', label: 'Gagal' },
 ];
 
 type ViewState = 'candidate' | 'recovered' | 'empty';
@@ -27,7 +28,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
     const [recoveryLoading, setRecoveryLoading] = useState(false);
 
     const hasServerOrders = (activeOrders && activeOrders.length > 0) || (historyOrders?.data && historyOrders.data.length > 0);
-    const hasRecoveredOrders = recoveredActive !== null && (recoveredActive.length > 0 || (recoveredHistory && recoveredHistory.length > 0));
+    const hasRecoveredOrders = recoveredActive !== null;
 
     const viewState: ViewState = hasServerOrders || hasRecoveredOrders
         ? 'recovered'
@@ -60,7 +61,8 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
     const filteredHistory = useMemo(() => {
         if (filter === 'all') return displayHistory;
         if (filter === 'completed') return displayHistory.filter((o: any) => o.status === 'completed');
-        if (filter === 'cancelled') return displayHistory.filter((o: any) => ['cancelled', 'failed'].includes(o.status));
+        if (filter === 'cancelled') return displayHistory.filter((o: any) => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet'].includes(o.status));
+        if (filter === 'failed') return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes(o.status));
         return displayHistory;
     }, [displayHistory, filter]);
 

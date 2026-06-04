@@ -12,12 +12,16 @@ import OwnerLayout from '@/layouts/owner-layout';
 
 const statusFilters = [
     { key: '', label: 'Semua' },
-    { key: 'pending', label: 'Pending' },
-    { key: 'confirmed', label: 'Confirmed' },
-    { key: 'preparing', label: 'Preparing' },
-    { key: 'delivering', label: 'Delivering' },
-    { key: 'completed', label: 'Completed' },
-    { key: 'failed', label: 'Failed' },
+    { key: 'pending_confirmation', label: 'Menunggu Konfirmasi' },
+    { key: 'confirmed', label: 'Diterima' },
+    { key: 'preparing', label: 'Disiapkan' },
+    { key: 'delivering', label: 'Dalam Pengiriman' },
+    { key: 'completed', label: 'Selesai' },
+    { key: 'rejected_by_outlet', label: 'Ditolak Outlet' },
+    { key: 'cancelled_by_customer', label: 'Dibatalkan Customer' },
+    { key: 'cancelled_by_outlet', label: 'Dibatalkan Outlet' },
+    { key: 'failed_delivery', label: 'Pengiriman Gagal' },
+    { key: 'expired', label: 'Kadaluarsa' },
 ];
 
 export default function OwnerOrdersIndex({ orders, outlets, filters, stats, couriers }: any) {

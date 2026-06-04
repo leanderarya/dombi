@@ -25,7 +25,7 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
 function MobileView({ order, reservedStocks, couriers }: any) {
     const form = useForm({ courier_id: couriers[0]?.id ?? '' });
     const canAssign = order.status === 'ready_for_pickup' && !order.delivery;
-    const isFailed = order.status === 'failed';
+    const isFailed = order.status === 'failed_delivery';
     const canResolve = ['failed', 'retry_delivery', 'returned_to_outlet'].includes(order.delivery?.status ?? '');
     const [resolveOpen, setResolveOpen] = useState(false);
 

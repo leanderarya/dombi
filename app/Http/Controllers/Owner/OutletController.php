@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\StoreOutletRequest;
 use App\Http\Requests\Owner\UpdateOutletRequest;
 use App\Models\Delivery;
+use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\RestockRequest;
 use App\Services\OutletProvisioningService;
@@ -20,7 +21,7 @@ class OutletController extends Controller
         return Inertia::render('owner/outlets/index', [
             'outlets' => Outlet::query()
                 ->withCount([
-                    'orders as active_orders_count' => fn ($query) => $query->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering']),
+                    'orders as active_orders_count' => fn ($query) => $query->whereIn('status', Order::ACTIVE_STATUSES),
                     'inventories as inventory_items_count',
                     'inventories as low_stock_count' => fn ($query) => $query->whereRaw('(current_stock - reserved_stock) <= minimum_stock'),
                     'restockRequests as pending_restocks_count' => fn ($query) => $query->whereIn('status', ['requested', 'preparing', 'shipped']),
@@ -48,7 +49,7 @@ class OutletController extends Controller
     public function show(Outlet $outlet): Response
     {
         $outlet->loadCount([
-            'orders as active_orders_count' => fn ($query) => $query->whereIn('status', ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering']),
+            'orders as active_orders_count' => fn ($query) => $query->whereIn('status', Order::ACTIVE_STATUSES),
             'orders as today_orders_count' => fn ($query) => $query->whereDate('created_at', today()),
             'inventories as inventory_items_count',
             'inventories as low_stock_count' => fn ($query) => $query->whereRaw('(current_stock - reserved_stock) <= minimum_stock'),

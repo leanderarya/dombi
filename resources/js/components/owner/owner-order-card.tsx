@@ -18,7 +18,7 @@ interface Props {
 }
 
 export default function OwnerOrderCard({ order, onSelect, onAssign }: Props) {
-    const isFailed = order.status === 'failed';
+    const isFailed = order.status === 'failed_delivery';
     const isReadyForPickup = order.status === 'ready_for_pickup';
     const canAssign = isReadyForPickup && !order.delivery;
     const isDelivering = order.status === 'delivering' || order.status === 'picked_up';

@@ -151,7 +151,7 @@ class GuestOrderRecoveryTest extends TestCase
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
             'order_code' => 'DOMBI-TOKEN-001',
-            'status' => 'pending',
+            'status' => 'pending_confirmation',
             'fulfillment_type' => 'pickup',
             'subtotal' => 25000,
             'delivery_fee' => 0,
@@ -212,7 +212,40 @@ class GuestOrderRecoveryTest extends TestCase
 
         $data = $response->json();
         $this->assertGreaterThan(0, count($data['active_orders']));
-        $this->assertSame('pending', $data['active_orders'][0]['status']);
+        $this->assertSame('pending_confirmation', $data['active_orders'][0]['status']);
+    }
+
+    public function test_recovery_returns_orders_with_outlet_object_and_items_array(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+
+        $response = $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567890',
+        ])->assertOk();
+
+        $data = $response->json();
+
+        // Active order has outlet as object with name
+        $activeOrder = $data['active_orders'][0];
+        $this->assertIsArray($activeOrder['outlet']);
+        $this->assertArrayHasKey('name', $activeOrder['outlet']);
+        $this->assertSame('Outlet Test', $activeOrder['outlet']['name']);
+
+        // Active order has items as array
+        $this->assertIsArray($activeOrder['items']);
+        $this->assertGreaterThan(0, count($activeOrder['items']));
+        $this->assertArrayHasKey('product_name', $activeOrder['items'][0]);
+        $this->assertArrayHasKey('quantity', $activeOrder['items'][0]);
+
+        // Active order has created_at for frontend date display
+        $this->assertNotNull($activeOrder['created_at']);
+
+        // Recent order also has correct shape
+        $recentOrder = $data['recent_orders'][0];
+        $this->assertIsArray($recentOrder['outlet']);
+        $this->assertArrayHasKey('name', $recentOrder['outlet']);
+        $this->assertIsArray($recentOrder['items']);
+        $this->assertNotNull($recentOrder['created_at']);
     }
 
     private function createCustomerWithOrders(): User
@@ -231,7 +264,7 @@ class GuestOrderRecoveryTest extends TestCase
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
             'order_code' => 'DOMBI-ACTIVE-001',
-            'status' => 'pending',
+            'status' => 'pending_confirmation',
             'fulfillment_type' => 'delivery_dombi',
             'subtotal' => 50000,
             'delivery_fee' => 5000,

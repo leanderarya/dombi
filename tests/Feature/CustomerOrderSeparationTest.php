@@ -90,7 +90,7 @@ class CustomerOrderSeparationTest extends TestCase
 
         Order::create([
             'customer_id' => $customer->id, 'outlet_id' => $outlet->id, 'order_code' => 'DOMBI-CANCEL-001',
-            'status' => 'cancelled', 'subtotal' => 50000, 'delivery_fee' => 0, 'total' => 50000,
+            'status' => 'cancelled_by_outlet', 'subtotal' => 50000, 'delivery_fee' => 0, 'total' => 50000,
             'customer_name' => 'Test', 'customer_phone' => '08', 'customer_address' => 'Addr',
         ]);
 
@@ -100,7 +100,7 @@ class CustomerOrderSeparationTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->has('activeOrders', 0)
                 ->has('historyOrders.data', 1)
-                ->where('historyOrders.data.0.status', 'cancelled')
+                ->where('historyOrders.data.0.status', 'cancelled_by_outlet')
             );
     }
 
@@ -139,12 +139,12 @@ class CustomerOrderSeparationTest extends TestCase
     public function test_order_model_has_status_constants(): void
     {
         $this->assertSame(
-            ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'],
+            ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'],
             Order::ACTIVE_STATUSES
         );
 
         $this->assertSame(
-            ['completed', 'cancelled', 'failed'],
+            ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'],
             Order::HISTORY_STATUSES
         );
     }

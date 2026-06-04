@@ -14,7 +14,9 @@ class OrderStatusHistory extends Model
         'from_status',
         'to_status',
         'notes',
+        'reason',
         'changed_by',
+        'changed_by_type',
         'created_at',
     ];
 

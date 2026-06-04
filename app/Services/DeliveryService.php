@@ -79,7 +79,7 @@ class DeliveryService
 
     public function failDelivery(Delivery $delivery, User $courier, string $reason): Delivery
     {
-        $result = $this->transition($delivery, $courier, 'delivering', 'failed', 'failed', [
+        $result = $this->transition($delivery, $courier, 'delivering', 'failed', 'failed_delivery', [
             'failed_reason' => $reason,
         ]);
 
@@ -191,12 +191,13 @@ class DeliveryService
 
         $this->inventoryService->releaseReservedStock($order);
 
-        $order->update(['status' => 'cancelled']);
+        $order->update(['status' => 'cancelled_by_outlet']);
         $order->statusHistories()->create([
             'from_status' => $fromStatus,
-            'to_status' => 'cancelled',
+            'to_status' => 'cancelled_by_outlet',
             'notes' => 'Delivery gagal dan dibatalkan, reserved stock dilepas.',
             'changed_by' => $resolver->id,
+            'changed_by_type' => 'owner',
             'created_at' => now(),
         ]);
     }

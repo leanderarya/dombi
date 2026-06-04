@@ -204,7 +204,7 @@ class InventorySafetyTest extends TestCase
             ])
             ->assertRedirect();
 
-        $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'cancelled']);
+        $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'cancelled_by_outlet']);
         // Reserved stock should be released
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
             ->where('product_id', $context['product']->id)

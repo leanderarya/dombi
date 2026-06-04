@@ -1,28 +1,34 @@
-export const activeOrderStatuses = ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'] as const;
-export const historyOrderStatuses = ['completed', 'cancelled', 'failed'] as const;
+export const activeOrderStatuses = ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'] as const;
+export const historyOrderStatuses = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'] as const;
 
 export const orderStatusLabels: Record<string, string> = {
-    pending: 'Menunggu konfirmasi',
-    confirmed: 'Diterima outlet',
-    preparing: 'Sedang disiapkan',
-    ready_for_pickup: 'Siap diambil',
-    picked_up: 'Sudah diambil',
-    delivering: 'Dalam pengiriman',
+    pending_confirmation: 'Menunggu Konfirmasi',
+    confirmed: 'Diterima Outlet',
+    preparing: 'Sedang Disiapkan',
+    ready_for_pickup: 'Siap Diambil',
+    picked_up: 'Sudah Diambil Kurir',
+    delivering: 'Dalam Perjalanan',
     completed: 'Selesai',
-    cancelled: 'Dibatalkan',
-    failed: 'Gagal',
+    cancelled_by_customer: 'Dibatalkan Customer',
+    cancelled_by_outlet: 'Dibatalkan Outlet',
+    rejected_by_outlet: 'Ditolak Outlet',
+    failed_delivery: 'Pengiriman Gagal',
+    expired: 'Kadaluarsa',
 };
 
 export const orderStatusTone: Record<string, string> = {
-    pending: 'bg-amber-50 text-amber-800 ring-amber-200',
+    pending_confirmation: 'bg-amber-50 text-amber-800 ring-amber-200',
     confirmed: 'bg-blue-50 text-blue-800 ring-blue-200',
     preparing: 'bg-orange-50 text-orange-800 ring-orange-200',
     ready_for_pickup: 'bg-purple-50 text-purple-800 ring-purple-200',
     picked_up: 'bg-blue-50 text-blue-800 ring-blue-200',
     delivering: 'bg-indigo-50 text-indigo-800 ring-indigo-200',
     completed: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
-    cancelled: 'bg-red-50 text-red-800 ring-red-200',
-    failed: 'bg-red-50 text-red-800 ring-red-200',
+    cancelled_by_customer: 'bg-red-50 text-red-800 ring-red-200',
+    cancelled_by_outlet: 'bg-red-50 text-red-800 ring-red-200',
+    rejected_by_outlet: 'bg-red-50 text-red-800 ring-red-200',
+    failed_delivery: 'bg-red-50 text-red-800 ring-red-200',
+    expired: 'bg-slate-50 text-slate-800 ring-slate-200',
 };
 
 export const deliveryStatusLabels: Record<string, string> = {
@@ -54,7 +60,7 @@ export function deliveryStatusLabel(status?: string | null) {
 }
 
 export function orderProgressIndex(status?: string | null) {
-    const steps = ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering', 'completed'];
+    const steps = ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering', 'completed'];
     const index = steps.indexOf(status ?? '');
 
     return {

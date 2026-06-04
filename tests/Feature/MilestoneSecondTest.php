@@ -26,7 +26,7 @@ class MilestoneSecondTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_outlet_can_cancel_pending_order_and_release_reserved_stock(): void
+    public function test_outlet_can_reject_pending_order_and_release_reserved_stock(): void
     {
         [$outletUser, $outlet] = $this->makeOutlet('Outlet Processing');
         $product = Product::create([
@@ -55,10 +55,12 @@ class MilestoneSecondTest extends TestCase
         ]);
 
         $this->actingAs($outletUser)
-            ->post(route('outlet.orders.status', $order), ['status' => 'cancelled'])
+            ->post(route('outlet.orders.reject', $order), [
+                'reason' => 'Stok Tidak Tersedia',
+            ])
             ->assertRedirect(route('outlet.orders.show', $order));
 
-        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'cancelled']);
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'status' => 'rejected_by_outlet']);
         $this->assertSame(0, OutletInventory::first()->reserved_stock);
         $this->assertTrue(StockMovement::where('reference_id', $order->id)->where('type', 'order_cancelled')->exists());
     }
@@ -99,7 +101,7 @@ class MilestoneSecondTest extends TestCase
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
             'order_code' => 'DOMBI-'.uniqid(),
-            'status' => 'pending',
+            'status' => 'pending_confirmation',
             'subtotal' => 50000,
             'delivery_fee' => 0,
             'total' => 50000,

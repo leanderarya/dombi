@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Models\Order;
 use App\Services\OrderService;
+use App\Services\OrderStatusService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -48,7 +50,18 @@ class OrderController extends Controller
 
         return Inertia::render('customer/orders/show', [
             'order' => $order->load(['outlet', 'items.product', 'statusHistories.actor', 'delivery.courier']),
+            'cancellationReasons' => OrderStatusService::cancellationReasons(),
         ]);
+    }
+
+    public function cancel(CancelOrderRequest $request, Order $order, OrderStatusService $orderStatusService): RedirectResponse
+    {
+        abort_unless($order->customer_id === auth()->id(), 403);
+
+        $validated = $request->validated();
+        $orderStatusService->cancelByCustomer($order, $validated['reason'], $validated['note'] ?? null, $request->user());
+
+        return redirect()->route('customer.orders.show', $order)->with('success', 'Pesanan berhasil dibatalkan.');
     }
 
     public function repeat(Order $order, OrderService $orderService): RedirectResponse

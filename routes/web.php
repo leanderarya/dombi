@@ -104,14 +104,15 @@ Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->g
     Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->name('checkout.submit');
     Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
     Route::post('/orders/recovery', \App\Http\Controllers\Customer\GuestOrderRecoveryController::class)->name('orders.recovery');
+    Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
+    Route::get('/profile', [\App\Http\Controllers\Customer\ProfileController::class, 'index'])->name('profile');
 });
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
-    Route::get('/profile', [\App\Http\Controllers\Customer\ProfileController::class, 'index'])->name('profile');
     Route::resource('addresses', CustomerAddressController::class)->except(['show']);
     Route::post('/addresses/{address}/set-default', [CustomerAddressController::class, 'setDefault'])->name('addresses.set-default');
-    Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
     Route::post('/orders/{order}/repeat', [CustomerOrderController::class, 'repeat'])->name('orders.repeat');
 });
 
@@ -121,6 +122,7 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     Route::get('/orders', [OutletOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OutletOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/status', [OutletOrderController::class, 'updateStatus'])->name('orders.status');
+    Route::post('/orders/{order}/reject', [OutletOrderController::class, 'reject'])->name('orders.reject');
     Route::post('/orders/{order}/assign-courier', [OutletOrderController::class, 'assignCourier'])->name('orders.assign-courier');
     Route::get('/restocks', [OutletRestockController::class, 'index'])->name('restocks.index');
     Route::get('/restocks/create', [OutletRestockController::class, 'create'])->name('restocks.create');

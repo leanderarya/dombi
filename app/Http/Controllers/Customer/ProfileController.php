@@ -14,9 +14,11 @@ class ProfileController extends Controller
         $customer = auth()->user();
 
         return Inertia::render('customer/profile', [
-            'defaultAddress' => CustomerAddress::where('user_id', $customer->id)
-                ->where('is_default', true)
-                ->first(),
+            'defaultAddress' => $customer
+                ? CustomerAddress::where('user_id', $customer->id)
+                    ->where('is_default', true)
+                    ->first()
+                : null,
         ]);
     }
 }

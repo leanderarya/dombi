@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignCourierRequest;
+use App\Http\Requests\Outlet\RejectOrderRequest;
 use App\Http\Requests\Outlet\UpdateOrderStatusRequest;
 use App\Models\Order;
 use App\Models\User;
@@ -43,6 +44,7 @@ class OrderController extends Controller
         return Inertia::render('outlet/orders/show', [
             'order' => $order->load(['items.product', 'statusHistories.actor', 'delivery.courier']),
             'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'rejectionReasons' => OrderStatusService::rejectionReasons(),
         ]);
     }
 
@@ -51,6 +53,14 @@ class OrderController extends Controller
         $orderStatusService->updateStatus($order, $request->validated('status'), $request->user());
 
         return redirect()->route('outlet.orders.show', $order)->with('success', 'Status order berhasil diperbarui.');
+    }
+
+    public function reject(RejectOrderRequest $request, Order $order, OrderStatusService $orderStatusService): RedirectResponse
+    {
+        $validated = $request->validated();
+        $orderStatusService->rejectOrder($order, $validated['reason'], $validated['note'] ?? null, $request->user());
+
+        return redirect()->route('outlet.orders.show', $order)->with('success', 'Pesanan berhasil ditolak.');
     }
 
     public function assignCourier(AssignCourierRequest $request, Order $order, DeliveryService $deliveryService): RedirectResponse

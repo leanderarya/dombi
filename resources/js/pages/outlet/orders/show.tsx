@@ -1,21 +1,27 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { MapPin } from 'lucide-react';
+import { useState } from 'react';
+import { MapPin, XCircle } from 'lucide-react';
 import DeliveryStatusBadge from '../../../components/delivery-status-badge';
 import OrderStatusBadge from '../../../components/order-status-badge';
 import OutletLayout from '../../../layouts/outlet-layout';
 
-const actions: Record<string, Array<[string, string, string]>> = {
-    pending: [['confirmed', 'Accept Order', 'bg-emerald-700 text-white'], ['cancelled', 'Cancel Order', 'border border-red-200 text-red-700']],
-    confirmed: [['preparing', 'Start Preparing', 'bg-orange-600 text-white']],
-    preparing: [['ready_for_pickup', 'Mark Ready for Pickup', 'bg-purple-700 text-white']],
-};
-
-export default function OutletOrderShow({ order, couriers }: any) {
+export default function OutletOrderShow({ order, couriers, rejectionReasons = [] }: any) {
     const { errors } = usePage<any>().props;
     const assignForm = useForm({ courier_id: couriers[0]?.id ?? '' });
+    const rejectForm = useForm({ reason: '', note: '' });
+    const [showRejectSheet, setShowRejectSheet] = useState(false);
+
     const updateStatus = (status: string) => {
         router.post(`/outlet/orders/${order.id}/status`, { status });
     };
+
+    const handleReject = () => {
+        rejectForm.post(`/outlet/orders/${order.id}/reject`, {
+            onSuccess: () => setShowRejectSheet(false),
+        });
+    };
+
+    const isPending = order.status === 'pending_confirmation';
 
     return (
         <OutletLayout>
@@ -43,13 +49,51 @@ export default function OutletOrderShow({ order, couriers }: any) {
                         <div className="text-xl font-semibold">Rp {Number(order.total).toLocaleString('id-ID')}</div>
                     </div>
                     <div className="mt-5 flex flex-wrap gap-3">
-                        {(actions[order.status] ?? []).map(([status, label, className]) => (
-                            <button key={status} onClick={() => updateStatus(status)} className={`rounded-md px-4 py-2 text-sm font-medium ${className}`}>
-                                {label}
+                        {isPending && (
+                            <>
+                                <button
+                                    onClick={() => updateStatus('confirmed')}
+                                    className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white"
+                                >
+                                    Terima Pesanan
+                                </button>
+                                <button
+                                    onClick={() => setShowRejectSheet(true)}
+                                    className="rounded-md border border-red-200 px-4 py-2 text-sm font-medium text-red-700"
+                                >
+                                    Tolak Pesanan
+                                </button>
+                            </>
+                        )}
+                        {order.status === 'confirmed' && (
+                            <button
+                                onClick={() => updateStatus('preparing')}
+                                className="rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white"
+                            >
+                                Mulai Persiapan
                             </button>
-                        ))}
-                        {order.status === 'ready_for_pickup' && !order.delivery && <span className="rounded-md bg-purple-50 px-4 py-2 text-sm font-medium text-purple-800">Waiting Courier Assignment</span>}
+                        )}
+                        {order.status === 'preparing' && (
+                            <button
+                                onClick={() => updateStatus('ready_for_pickup')}
+                                className="rounded-md bg-purple-700 px-4 py-2 text-sm font-medium text-white"
+                            >
+                                Siap Diambil
+                            </button>
+                        )}
+                        {order.status === 'ready_for_pickup' && !order.delivery && (
+                            <span className="rounded-md bg-purple-50 px-4 py-2 text-sm font-medium text-purple-800">Menugaskan Kurir</span>
+                        )}
                     </div>
+
+                    {/* Rejection Info */}
+                    {order.status === 'rejected_by_outlet' && order.rejection_reason && (
+                        <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3">
+                            <div className="text-xs font-bold uppercase tracking-wider text-red-600">Pesanan Ditolak</div>
+                            <div className="mt-1 text-sm text-red-800">{order.rejection_reason}</div>
+                            {order.rejection_note && <div className="mt-1 text-xs text-red-700">{order.rejection_note}</div>}
+                        </div>
+                    )}
                 </section>
                 <aside className="space-y-5">
                     <section className="rounded-lg border bg-white p-5 text-sm">
@@ -104,6 +148,7 @@ export default function OutletOrderShow({ order, couriers }: any) {
                                 <div key={history.id} className="border-l-2 border-emerald-200 pl-3">
                                     <div className="font-medium">{history.to_status.replaceAll('_', ' ')}</div>
                                     <div className="text-zinc-500">{history.notes}</div>
+                                    {history.reason && <div className="text-xs text-zinc-400">Alasan: {history.reason}</div>}
                                     <div className="text-xs text-zinc-400">{new Date(history.created_at).toLocaleString('id-ID')} {history.actor ? `oleh ${history.actor.name}` : ''}</div>
                                 </div>
                             ))}
@@ -111,6 +156,70 @@ export default function OutletOrderShow({ order, couriers }: any) {
                     </section>
                 </aside>
             </div>
+
+            {/* Reject Sheet */}
+            {showRejectSheet && (
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40" onClick={() => setShowRejectSheet(false)}>
+                    <div
+                        className="flex w-full max-w-lg flex-col rounded-t-3xl bg-white px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="mx-auto h-1.5 w-10 rounded-full bg-slate-200" />
+                        <div className="mt-3 flex items-center justify-between">
+                            <h2 className="text-[15px] font-semibold text-slate-900">Tolak Pesanan</h2>
+                            <button type="button" onClick={() => setShowRejectSheet(false)} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 active:bg-slate-100">
+                                <XCircle className="h-4 w-4" />
+                            </button>
+                        </div>
+
+                        <p className="mt-2 text-sm text-slate-500">Pilih alasan penolakan.</p>
+
+                        <div className="mt-4 space-y-2">
+                            {rejectionReasons.map((reason: string) => (
+                                <button
+                                    key={reason}
+                                    type="button"
+                                    onClick={() => rejectForm.setData('reason', reason)}
+                                    className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
+                                        rejectForm.data.reason === reason
+                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                            : 'border-slate-200 text-slate-700 active:bg-slate-50'
+                                    }`}
+                                >
+                                    {reason}
+                                </button>
+                            ))}
+                        </div>
+
+                        {rejectForm.data.reason === 'Lainnya' && (
+                            <div className="mt-3">
+                                <textarea
+                                    value={rejectForm.data.note}
+                                    onChange={(e) => rejectForm.setData('note', e.target.value)}
+                                    placeholder="Jelaskan alasan penolakan..."
+                                    className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                                />
+                            </div>
+                        )}
+
+                        {rejectForm.errors.reason && (
+                            <p className="mt-2 text-xs text-red-600">{rejectForm.errors.reason}</p>
+                        )}
+                        {rejectForm.errors.note && (
+                            <p className="mt-1 text-xs text-red-600">{rejectForm.errors.note}</p>
+                        )}
+
+                        <button
+                            type="button"
+                            onClick={handleReject}
+                            disabled={!rejectForm.data.reason || rejectForm.processing}
+                            className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:bg-red-700 disabled:bg-slate-300"
+                        >
+                            {rejectForm.processing ? 'Menolak...' : 'Tolak Pesanan'}
+                        </button>
+                    </div>
+                </div>
+            )}
         </OutletLayout>
     );
 }

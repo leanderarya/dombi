@@ -53,7 +53,7 @@ class OrderService
                 'outlet_id' => $outlet->id,
                 'recommended_outlet_id' => $payload['recommended_outlet_id'] ?? $outlet->id,
                 'order_code' => $this->generateOrderCodeWithRetry(),
-                'status' => 'pending',
+                'status' => Order::STATUS_PENDING_CONFIRMATION,
                 'fulfillment_type' => $fulfillmentType,
                 'subtotal' => $subtotal,
                 'delivery_fee' => $deliveryFee,
@@ -80,9 +80,10 @@ class OrderService
 
             $order->statusHistories()->create([
                 'from_status' => null,
-                'to_status' => 'pending',
+                'to_status' => Order::STATUS_PENDING_CONFIRMATION,
                 'notes' => 'Order dibuat customer.',
                 'changed_by' => $customer->id,
+                'changed_by_type' => 'customer',
                 'created_at' => now(),
             ]);
 

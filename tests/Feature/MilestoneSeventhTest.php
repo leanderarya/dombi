@@ -41,7 +41,7 @@ class MilestoneSeventhTest extends TestCase
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
         $order = Order::create([
             'customer_id' => $owner->id, 'outlet_id' => $outlet->id, 'order_code' => 'DOMBI-TEST-0001',
-            'status' => 'failed', 'subtotal' => 0, 'delivery_fee' => 0, 'total' => 0,
+            'status' => 'failed_delivery', 'subtotal' => 0, 'delivery_fee' => 0, 'total' => 0,
             'customer_name' => 'Test', 'customer_phone' => '08', 'customer_address' => 'Addr',
         ]);
         Delivery::create(['order_id' => $order->id, 'courier_id' => $courier->id, 'status' => 'failed', 'failed_reason' => 'Alamat salah']);

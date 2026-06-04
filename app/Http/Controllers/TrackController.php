@@ -40,6 +40,7 @@ class TrackController extends Controller
                 'status_histories' => $order->statusHistories->map(fn ($h) => [
                     'to_status' => $h->to_status,
                     'notes' => $h->notes,
+                    'reason' => $h->reason,
                     'created_at' => $h->created_at?->toISOString(),
                 ]),
                 'delivery' => $order->delivery ? [
@@ -51,6 +52,10 @@ class TrackController extends Controller
                 'customer_landmark' => $order->customer_landmark,
                 'latitude' => $order->latitude,
                 'longitude' => $order->longitude,
+                'rejection_reason' => $order->rejection_reason,
+                'rejection_note' => $order->rejection_note,
+                'cancellation_reason' => $order->cancellation_reason,
+                'cancellation_note' => $order->cancellation_note,
             ],
             'found' => true,
         ]);

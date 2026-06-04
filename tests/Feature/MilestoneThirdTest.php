@@ -67,7 +67,7 @@ class MilestoneThirdTest extends TestCase
             ->where('product_id', $context['product']->id)
             ->firstOrFail();
 
-        $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'failed']);
+        $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'failed_delivery']);
         $this->assertDatabaseHas('deliveries', ['id' => $delivery->id, 'status' => 'failed', 'failed_reason' => 'Alamat tidak ditemukan']);
         $this->assertSame(10, $inventory->current_stock);
         $this->assertSame(1, $inventory->reserved_stock);
