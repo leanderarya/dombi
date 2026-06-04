@@ -10,7 +10,7 @@ import OwnerLayout from '@/layouts/owner-layout';
 import { confirmLogout } from '@/lib/confirm-logout';
 import { usePolling } from '@/lib/use-polling';
 
-export default function Dashboard({ stats, alerts, recentActivity }: any) {
+export default function Dashboard({ stats, deliveryStats, alerts, recentActivity }: any) {
     usePolling(30000);
 
     return (
@@ -18,19 +18,19 @@ export default function Dashboard({ stats, alerts, recentActivity }: any) {
             {/* Desktop: use existing sidebar layout */}
             <div className="hidden lg:block">
                 <OwnerLayout>
-                    <DesktopDashboard stats={stats} alerts={alerts} recentActivity={recentActivity} />
+                    <DesktopDashboard stats={stats} deliveryStats={deliveryStats} alerts={alerts} recentActivity={recentActivity} />
                 </OwnerLayout>
             </div>
 
             {/* Mobile: dedicated operational mobile UI */}
             <div className="lg:hidden">
-                <MobileDashboard stats={stats} alerts={alerts} recentActivity={recentActivity} />
+                <MobileDashboard stats={stats} deliveryStats={deliveryStats} alerts={alerts} recentActivity={recentActivity} />
             </div>
         </>
     );
 }
 
-function MobileDashboard({ stats, alerts, recentActivity }: any) {
+function MobileDashboard({ stats, deliveryStats, alerts, recentActivity }: any) {
     const hasAlerts = alerts.failedDeliveries.length > 0 || alerts.lowStockItems.length > 0 || alerts.pendingRestocks.length > 0;
 
     // Build activity feed items
@@ -102,6 +102,23 @@ function MobileDashboard({ stats, alerts, recentActivity }: any) {
                     </div>
                 </section>
 
+                {/* Delivery KPIs */}
+                <section className="mt-6">
+                    <div className="flex items-center justify-between">
+                        <SectionLabel>Delivery Operations</SectionLabel>
+                        <Link href="/owner/deliveries/board" className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Board</Link>
+                    </div>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                        <KpiCard label="Menunggu Kurir" value={deliveryStats.waitingForCourier} href="/owner/deliveries/board" color="amber" progress={deliveryStats.waitingForCourier > 0 ? 40 : 0} />
+                        <KpiCard label="Dalam Perjalanan" value={deliveryStats.inTransit} href="/owner/deliveries/board" color="blue" progress={deliveryStats.inTransit > 0 ? 50 : 0} />
+                        <KpiCard label="Terlambat" value={deliveryStats.late} href="/owner/deliveries/board" color="red" progress={deliveryStats.late > 0 ? 80 : 0} />
+                    </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                        <KpiCard label="Gagal" value={deliveryStats.failed} href="/owner/deliveries?status=failed" color="red" progress={deliveryStats.failed > 0 ? 60 : 0} />
+                        <KpiCard label="Selesai Hari Ini" value={deliveryStats.completedToday} href="/owner/deliveries/board" color="emerald" progress={deliveryStats.completedToday > 0 ? 70 : 0} />
+                    </div>
+                </section>
+
                 {/* Recent Activity */}
                 {activityItems.length > 0 && (
                     <section className="mt-6">
@@ -143,7 +160,7 @@ function MobileDashboard({ stats, alerts, recentActivity }: any) {
     );
 }
 
-function DesktopDashboard({ stats, alerts, recentActivity }: any) {
+function DesktopDashboard({ stats, deliveryStats, alerts, recentActivity }: any) {
     return (
         <>
             <Head title="Owner Dashboard" />
@@ -154,9 +171,22 @@ function DesktopDashboard({ stats, alerts, recentActivity }: any) {
                 <KpiCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="amber" />
                 <KpiCard label="Stok Rendah" value={stats.lowStocks} href="/owner/inventories" color="red" />
             </div>
+
+            {/* Delivery KPIs */}
+            <div className="mt-5">
+                <h2 className="text-sm font-semibold text-slate-700">Delivery Operations</h2>
+                <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-5">
+                    <KpiCard label="Menunggu Kurir" value={deliveryStats.waitingForCourier} href="/owner/deliveries/board" color="amber" />
+                    <KpiCard label="Dalam Perjalanan" value={deliveryStats.inTransit} href="/owner/deliveries/board" color="blue" />
+                    <KpiCard label="Terlambat" value={deliveryStats.late} href="/owner/deliveries/board" color="red" />
+                    <KpiCard label="Gagal" value={deliveryStats.failed} href="/owner/deliveries?status=failed" color="red" />
+                    <KpiCard label="Selesai Hari Ini" value={deliveryStats.completedToday} href="/owner/deliveries/board" color="emerald" />
+                </div>
+            </div>
+
             {alerts.failedDeliveries.length > 0 && (
-                <Link href="/owner/deliveries?status=failed" className="mt-4 block rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
-                    ⚠️ {alerts.failedDeliveries.length} delivery gagal perlu ditindak
+                <Link href="/owner/deliveries/board" className="mt-4 block rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
+                    {alerts.failedDeliveries.length} delivery gagal perlu ditindak
                 </Link>
             )}
         </>

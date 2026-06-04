@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
@@ -180,10 +181,9 @@ class GuestCustomerCheckoutTest extends TestCase
     public function test_existing_customer_is_reused_by_phone_in_fulfillment_flow(): void
     {
         $product = $this->createStockedProduct();
-        $existing = User::factory()->create([
-            'role' => 'customer',
-            'phone' => '6281234567890',
+        $existing = Customer::create([
             'name' => 'Existing Customer',
+            'phone' => '6281234567890',
         ]);
 
         $this->seedCheckoutDraft([
@@ -202,7 +202,7 @@ class GuestCustomerCheckoutTest extends TestCase
         ])->assertRedirect();
 
         $this->assertSame($existing->id, Order::latest()->firstOrFail()->customer_id);
-        $this->assertSame(1, User::where('phone', '6281234567890')->count());
+        $this->assertSame(1, Customer::where('phone', '6281234567890')->count());
     }
 
     public function test_customer_step_requires_location_for_delivery_fulfillment(): void

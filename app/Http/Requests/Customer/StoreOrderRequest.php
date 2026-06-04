@@ -10,19 +10,15 @@ class StoreOrderRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return ! $this->user() || $this->user()->isCustomer();
+        return true;
     }
 
     public function rules(): array
     {
-        $addressRule = $this->user()?->isCustomer()
-            ? Rule::exists('customer_addresses', 'id')->where('user_id', $this->user()->id)
-            : 'prohibited';
-
         return [
             'address_id' => [
                 'nullable',
-                $addressRule,
+                'prohibited',
             ],
             'customer_name' => ['required_without:address_id', 'nullable', 'string', 'min:3', 'max:255'],
             'phone_number' => ['required_without:address_id', 'nullable', 'string', 'max:20'],

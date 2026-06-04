@@ -4,9 +4,11 @@ namespace App\Services;
 
 use App\Models\Delivery;
 use App\Models\DeliveryResolutionLog;
+use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
 use App\Models\User;
 use App\Support\OperationalLog;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -40,26 +42,38 @@ class DeliveryService
                 ]);
             }
 
-            return Delivery::create([
+            $delivery = Delivery::create([
                 'order_id' => $order->id,
                 'courier_id' => $courier->id,
                 'status' => 'waiting_pickup',
                 'assigned_by' => $assignedBy->id,
                 'assigned_at' => now(),
-            ])->load(['order.outlet', 'order.items.product', 'courier', 'assignedBy']);
+            ]);
+
+            $this->recordHistory($delivery, null, 'waiting_pickup', $assignedBy, $assignedBy->isOwner() ? 'owner' : 'outlet', 'Kurir di-assign.');
+
+            return $delivery->load(['order.outlet', 'order.items.product', 'courier', 'assignedBy']);
         });
     }
 
     public function confirmPickup(Delivery $delivery, User $courier): Delivery
     {
-        return $this->transition($delivery, $courier, 'waiting_pickup', 'picked_up', 'picked_up', [
+        $result = $this->transition($delivery, $courier, 'waiting_pickup', 'picked_up', 'picked_up', [
             'pickup_time' => now(),
         ]);
+
+        $this->recordHistory($result, 'waiting_pickup', 'picked_up', $courier, 'courier', 'Kurir mengkonfirmasi pickup.');
+
+        return $result;
     }
 
     public function startDelivery(Delivery $delivery, User $courier): Delivery
     {
-        return $this->transition($delivery, $courier, 'picked_up', 'delivering', 'delivering');
+        $result = $this->transition($delivery, $courier, 'picked_up', 'delivering', 'delivering');
+
+        $this->recordHistory($result, 'picked_up', 'delivering', $courier, 'courier', 'Kurir memulai pengiriman.');
+
+        return $result;
     }
 
     public function completeDelivery(Delivery $delivery, User $courier, ?array $payload = []): Delivery
@@ -73,6 +87,8 @@ class DeliveryService
 
             $this->inventoryService->completeOrderStock($delivery->order);
 
+            $this->recordHistory($delivery, 'delivering', 'completed', $courier, 'courier', 'Pengiriman selesai.');
+
             return $delivery->fresh(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier']);
         });
     }
@@ -82,6 +98,8 @@ class DeliveryService
         $result = $this->transition($delivery, $courier, 'delivering', 'failed', 'failed_delivery', [
             'failed_reason' => $reason,
         ]);
+
+        $this->recordHistory($result, 'delivering', 'failed', $courier, 'courier', $reason);
 
         OperationalLog::deliveryFailed($result->id, $result->order_id, $courier->id, $reason);
 
@@ -111,6 +129,8 @@ class DeliveryService
             ]);
 
             $order = $delivery->order;
+
+            $this->recordHistory($delivery, 'failed', $resolution, $resolver, $resolver->isOwner() ? 'owner' : 'outlet', $notes ?? "Resolved: {$resolution}");
 
             match ($resolution) {
                 'retry_delivery' => $this->handleRetryDelivery($order, $resolver),
@@ -198,6 +218,47 @@ class DeliveryService
             'notes' => 'Delivery gagal dan dibatalkan, reserved stock dilepas.',
             'changed_by' => $resolver->id,
             'changed_by_type' => 'owner',
+            'created_at' => now(),
+        ]);
+    }
+
+    /**
+     * Get the number of active deliveries for a courier.
+     */
+    public function getCourierActiveDeliveryCount(User $courier): int
+    {
+        return Delivery::where('courier_id', $courier->id)
+            ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
+            ->count();
+    }
+
+    /**
+     * Get all active couriers with their current delivery counts.
+     */
+    public function getAvailableCouriers(): Collection
+    {
+        return User::where('role', 'courier')
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get()
+            ->map(function (User $courier): array {
+                return [
+                    'id' => $courier->id,
+                    'name' => $courier->name,
+                    'active_deliveries' => $this->getCourierActiveDeliveryCount($courier),
+                ];
+            });
+    }
+
+    private function recordHistory(Delivery $delivery, ?string $fromStatus, string $toStatus, ?User $actor = null, ?string $actorType = null, ?string $reason = null): void
+    {
+        DeliveryStatusHistory::create([
+            'delivery_id' => $delivery->id,
+            'from_status' => $fromStatus,
+            'to_status' => $toStatus,
+            'changed_by_type' => $actorType,
+            'changed_by_id' => $actor?->id,
+            'reason' => $reason,
             'created_at' => now(),
         ]);
     }

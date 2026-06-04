@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -39,8 +40,9 @@ class MilestoneSeventhTest extends TestCase
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '081234567890' . rand(1000, 9999)]);
         $order = Order::create([
-            'customer_id' => $owner->id, 'outlet_id' => $outlet->id, 'order_code' => 'DOMBI-TEST-0001',
+            'customer_id' => $customer->id, 'outlet_id' => $outlet->id, 'order_code' => 'DOMBI-TEST-0001',
             'status' => 'failed_delivery', 'subtotal' => 0, 'delivery_fee' => 0, 'total' => 0,
             'customer_name' => 'Test', 'customer_phone' => '08', 'customer_address' => 'Addr',
         ]);
@@ -111,10 +113,7 @@ class MilestoneSeventhTest extends TestCase
 
     public function test_customer_home_returns_active_orders_and_products(): void
     {
-        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
-
-        $this->actingAs($customer)
-            ->get('/customer/home')
+        $this->get('/customer/home')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/home')
@@ -159,8 +158,9 @@ class MilestoneSeventhTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '081234567890' . rand(1000, 9999)]);
         Order::create([
-            'customer_id' => $owner->id, 'outlet_id' => $outlet->id, 'order_code' => 'DOMBI-CSV-0001',
+            'customer_id' => $customer->id, 'outlet_id' => $outlet->id, 'order_code' => 'DOMBI-CSV-0001',
             'status' => 'completed', 'subtotal' => 50000, 'delivery_fee' => 0, 'total' => 50000,
             'customer_name' => 'Test', 'customer_phone' => '08', 'customer_address' => 'Addr',
         ]);
@@ -190,14 +190,5 @@ class MilestoneSeventhTest extends TestCase
         $this->actingAs($courier)
             ->get('/owner/dashboard')
             ->assertRedirect('/courier/dashboard');
-    }
-
-    public function test_customer_cannot_access_outlet_dashboard(): void
-    {
-        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
-
-        $this->actingAs($customer)
-            ->get('/outlet/dashboard')
-            ->assertRedirect('/customer/home');
     }
 }

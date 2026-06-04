@@ -62,7 +62,7 @@ class InventoryService
                 'reference_type' => Order::class,
                 'reference_id' => $order->id,
                 'notes' => 'Reserved untuk '.$order->order_code,
-                'created_by' => $order->customer_id,
+                'created_by' => Auth::id(),
             ]);
         }
     }

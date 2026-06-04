@@ -6,7 +6,7 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -93,10 +93,9 @@ class GuestOrderRecoveryTest extends TestCase
 
     public function test_recovery_limits_results(): void
     {
-        $customer = User::factory()->create([
-            'role' => 'customer',
-            'phone' => '6281234567890',
+        $customer = Customer::create([
             'name' => 'Test Customer',
+            'phone' => '6281234567890',
         ]);
 
         $outlet = $this->createOutlet();
@@ -140,8 +139,8 @@ class GuestOrderRecoveryTest extends TestCase
 
     public function test_recovery_token_is_generated_automatically(): void
     {
-        $customer = User::factory()->create([
-            'role' => 'customer',
+        $customer = Customer::create([
+            'name' => 'Test Customer',
             'phone' => '6281234567890',
         ]);
 
@@ -170,8 +169,8 @@ class GuestOrderRecoveryTest extends TestCase
 
     public function test_recovery_tokens_are_unique(): void
     {
-        $customer = User::factory()->create([
-            'role' => 'customer',
+        $customer = Customer::create([
+            'name' => 'Test Customer',
             'phone' => '6281234567890',
         ]);
 
@@ -248,12 +247,11 @@ class GuestOrderRecoveryTest extends TestCase
         $this->assertNotNull($recentOrder['created_at']);
     }
 
-    private function createCustomerWithOrders(): User
+    private function createCustomerWithOrders(): Customer
     {
-        $customer = User::factory()->create([
-            'role' => 'customer',
-            'phone' => '6281234567890',
+        $customer = Customer::create([
             'name' => 'Test Customer',
+            'phone' => '6281234567890',
         ]);
 
         $outlet = $this->createOutlet();

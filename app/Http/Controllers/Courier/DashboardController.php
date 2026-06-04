@@ -13,14 +13,21 @@ class DashboardController extends Controller
     {
         $courierId = auth()->id();
 
+        $todayStart = today();
+
         return Inertia::render('courier/dashboard', [
             'stats' => [
                 'waitingPickup' => Delivery::where('courier_id', $courierId)->where('status', 'waiting_pickup')->count(),
                 'pickedUp' => Delivery::where('courier_id', $courierId)->where('status', 'picked_up')->count(),
                 'delivering' => Delivery::where('courier_id', $courierId)->where('status', 'delivering')->count(),
-                'completedToday' => Delivery::where('courier_id', $courierId)->where('status', 'completed')->whereDate('updated_at', today())->count(),
-                'failedToday' => Delivery::where('courier_id', $courierId)->where('status', 'failed')->whereDate('updated_at', today())->count(),
+                'completedToday' => Delivery::where('courier_id', $courierId)->where('status', 'completed')->whereDate('updated_at', $todayStart)->count(),
+                'failedToday' => Delivery::where('courier_id', $courierId)->where('status', 'failed')->whereDate('updated_at', $todayStart)->count(),
             ],
+            'nextPickup' => Delivery::where('courier_id', $courierId)
+                ->where('status', 'waiting_pickup')
+                ->with(['order:id,order_code,customer_name,customer_address,outlet_id', 'order.outlet:id,name'])
+                ->orderBy('assigned_at')
+                ->first(),
             'activeDeliveries' => Delivery::where('courier_id', $courierId)
                 ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
                 ->with(['order:id,order_code,customer_name,customer_address,outlet_id', 'order.outlet:id,name'])

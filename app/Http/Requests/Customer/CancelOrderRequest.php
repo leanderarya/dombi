@@ -12,7 +12,8 @@ class CancelOrderRequest extends FormRequest
     {
         $order = $this->route('order');
 
-        return (bool) $order && $order->customer_id === $this->user()?->id;
+        // Orders can be cancelled via recovery token (no auth required)
+        return (bool) $order && $order->recovery_token;
     }
 
     public function rules(): array

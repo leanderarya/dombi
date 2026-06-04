@@ -14,7 +14,18 @@ class AuthenticatedSessionController extends Controller
 {
     public function create(): Response
     {
-        return Inertia::render('auth/login');
+        $user = Auth::user();
+
+        return Inertia::render('auth/login', [
+            'auth' => [
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                ] : null,
+            ],
+        ]);
     }
 
     public function store(Request $request): RedirectResponse

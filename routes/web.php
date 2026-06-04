@@ -11,9 +11,11 @@ use App\Http\Controllers\Customer\ProductController as CustomerProductController
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\Outlet\DashboardController;
 use App\Http\Controllers\Outlet\InventoryController as OutletInventoryController;
+use App\Http\Controllers\Outlet\DeliveryController as OutletDeliveryController;
 use App\Http\Controllers\Outlet\OrderController as OutletOrderController;
 use App\Http\Controllers\Outlet\RestockController as OutletRestockController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
+use App\Http\Controllers\Owner\DeliveryBoardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
 use App\Http\Controllers\Owner\InventoryController as OwnerInventoryController;
 use App\Http\Controllers\Owner\OrderController as OwnerOrderController;
@@ -42,10 +44,8 @@ Route::get('/api/status', [SystemController::class, 'status'])
     ->middleware(['auth', 'role:owner'])
     ->name('system.status');
 
-Route::middleware('guest')->group(function (): void {
-    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
-});
+Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
@@ -74,6 +74,7 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('orders/{order}', [OwnerOrderController::class, 'show'])->name('orders.show');
     Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
     Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
+    Route::get('deliveries/board', [DeliveryBoardController::class, 'index'])->name('deliveries.board');
     Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
     Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
     Route::get('stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
@@ -119,6 +120,8 @@ Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer
 Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')->name('outlet.')->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/inventory', OutletInventoryController::class)->name('inventory');
+    Route::get('/deliveries', [OutletDeliveryController::class, 'index'])->name('deliveries.index');
+    Route::get('/deliveries/{delivery}', [OutletDeliveryController::class, 'show'])->name('deliveries.show');
     Route::get('/orders', [OutletOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OutletOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/status', [OutletOrderController::class, 'updateStatus'])->name('orders.status');

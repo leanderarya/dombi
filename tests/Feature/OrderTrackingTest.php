@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\Product;
@@ -117,9 +118,9 @@ class OrderTrackingTest extends TestCase
 
     private function createOrder(array $overrides = []): Order
     {
-        $customer = User::factory()->create([
-            'role' => 'customer',
-            'phone' => '6281234567890',
+        $customer = Customer::create([
+            'name' => 'Test Customer',
+            'phone' => '6281234567890' . rand(1000, 9999),
         ]);
 
         $outlet = Outlet::create([

@@ -2,16 +2,16 @@
 
 namespace App\Services;
 
+use App\Models\Customer;
 use App\Models\CustomerAddress;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class CustomerAddressService
 {
-    public function create(User $customer, array $data): CustomerAddress
+    public function create(Customer $customer, array $data): CustomerAddress
     {
         return DB::transaction(function () use ($customer, $data): CustomerAddress {
-            $hasExisting = $customer->customerAddresses()->exists();
+            $hasExisting = $customer->addresses()->exists();
 
             // First address is always default
             if (! $hasExisting) {
@@ -20,10 +20,10 @@ class CustomerAddressService
 
             // If setting as default, unset others
             if ($data['is_default'] ?? false) {
-                $customer->customerAddresses()->update(['is_default' => false]);
+                $customer->addresses()->update(['is_default' => false]);
             }
 
-            return $customer->customerAddresses()->create($data);
+            return $customer->addresses()->create($data);
         });
     }
 
@@ -31,7 +31,7 @@ class CustomerAddressService
     {
         return DB::transaction(function () use ($address, $data): CustomerAddress {
             if ($data['is_default'] ?? false) {
-                CustomerAddress::where('user_id', $address->user_id)
+                CustomerAddress::where('customer_id', $address->customer_id)
                     ->whereKeyNot($address->id)
                     ->update(['is_default' => false]);
             }
@@ -46,13 +46,13 @@ class CustomerAddressService
     {
         DB::transaction(function () use ($address): void {
             $wasDefault = $address->is_default;
-            $userId = $address->user_id;
+            $customerId = $address->customer_id;
 
             $address->delete();
 
             // If deleted address was default, assign another
             if ($wasDefault) {
-                $fallback = CustomerAddress::where('user_id', $userId)->latest()->first();
+                $fallback = CustomerAddress::where('customer_id', $customerId)->latest()->first();
                 $fallback?->update(['is_default' => true]);
             }
         });
@@ -61,7 +61,7 @@ class CustomerAddressService
     public function setDefault(CustomerAddress $address): void
     {
         DB::transaction(function () use ($address): void {
-            CustomerAddress::where('user_id', $address->user_id)->update(['is_default' => false]);
+            CustomerAddress::where('customer_id', $address->customer_id)->update(['is_default' => false]);
             $address->update(['is_default' => true]);
         });
     }

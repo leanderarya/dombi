@@ -2,9 +2,15 @@ import { useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { formatCurrency } from '@/lib/format';
 
+interface Courier {
+    id: number;
+    name: string;
+    active_deliveries?: number;
+}
+
 interface Props {
     order: any;
-    couriers: { id: number; name: string }[];
+    couriers: Courier[];
     open: boolean;
     onClose: () => void;
 }
@@ -77,6 +83,8 @@ export default function AssignCourierSheet({ order, couriers, open, onClose }: P
                             ) : (
                                 couriers.map((courier) => {
                                     const isSelected = selectedCourier === courier.id;
+                                    const activeCount = courier.active_deliveries ?? 0;
+                                    const isBusy = activeCount >= 3;
                                     return (
                                         <button
                                             key={courier.id}
@@ -84,7 +92,7 @@ export default function AssignCourierSheet({ order, couriers, open, onClose }: P
                                             onClick={() => setSelectedCourier(courier.id)}
                                             className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-150 active:scale-[0.98] ${
                                                 isSelected ? 'border-emerald-300 bg-emerald-50/30' : 'border-slate-200 bg-white'
-                                            }`}
+                                            } ${isBusy ? 'opacity-60' : ''}`}
                                         >
                                             <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}>
                                                 {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
@@ -94,7 +102,14 @@ export default function AssignCourierSheet({ order, couriers, open, onClose }: P
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-sm font-semibold text-slate-900">{courier.name}</div>
-                                                <div className="text-[10px] text-emerald-600">Available</div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className={`text-[10px] ${activeCount === 0 ? 'text-emerald-600' : isBusy ? 'text-amber-600' : 'text-blue-600'}`}>
+                                                        {activeCount === 0 ? 'Tersedia' : `${activeCount} tugas aktif`}
+                                                    </span>
+                                                    {isBusy && (
+                                                        <span className="rounded bg-amber-100 px-1 py-0.5 text-[9px] font-bold text-amber-700">Sibuk</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </button>
                                     );

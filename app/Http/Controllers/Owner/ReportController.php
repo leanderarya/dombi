@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -50,6 +51,19 @@ class ReportController extends Controller
                     ->whereBetween('created_at', [$dateFrom->startOfDay(), $dateTo->endOfDay()])
                     ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
                     ->count(),
+            ],
+            'customerSummary' => [
+                'totalCustomers' => Customer::count(),
+                'guestCustomers' => Customer::where('is_registered', false)->count(),
+                'registeredCustomers' => Customer::where('is_registered', true)->count(),
+                'newCustomersInPeriod' => Customer::query()
+                    ->whereBetween('created_at', [$dateFrom->startOfDay(), $dateTo->endOfDay()])
+                    ->count(),
+                'uniqueCustomersInPeriod' => Order::query()
+                    ->whereBetween('created_at', [$dateFrom->startOfDay(), $dateTo->endOfDay()])
+                    ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
+                    ->distinct('customer_id')
+                    ->count('customer_id'),
             ],
             'ordersByStatus' => (clone $ordersQuery)
                 ->selectRaw('status, count(*) as count')

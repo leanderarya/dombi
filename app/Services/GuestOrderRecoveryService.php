@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Customer;
 use App\Models\Order;
-use App\Models\User;
 use Illuminate\Support\Collection;
 
 class GuestOrderRecoveryService
@@ -23,8 +23,7 @@ class GuestOrderRecoveryService
             ];
         }
 
-        $customer = User::query()
-            ->where('role', 'customer')
+        $customer = Customer::query()
             ->where('phone', $normalizedPhone)
             ->first();
 

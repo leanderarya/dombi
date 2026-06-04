@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
@@ -64,8 +65,10 @@ class MilestoneEighthTest extends TestCase
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
 
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '081234567890' . rand(1000, 9999)]);
+
         Order::create([
-            'customer_id' => $owner->id,
+            'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
             'order_code' => 'DOMBI-STREAM-0001',
             'status' => 'completed',

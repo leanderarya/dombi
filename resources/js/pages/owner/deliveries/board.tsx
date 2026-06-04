@@ -1,0 +1,188 @@
+import { router } from '@inertiajs/react';
+import { useState } from 'react';
+import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
+import DeliveryBoardColumn from '@/components/owner/delivery-board-column';
+import DeliveryPerformanceCard from '@/components/owner/delivery-performance-card';
+import CourierAvailabilityCard from '@/components/owner/courier-availability-card';
+import FilterSheet from '@/components/owner/filter-sheet';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-header';
+import { usePolling } from '@/lib/use-polling';
+
+export default function DeliveryBoard({ board, stats, couriers, filters, outlets }: any) {
+    usePolling(20000);
+
+    const [filterOpen, setFilterOpen] = useState(false);
+    const [assignOpen, setAssignOpen] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState<any>(null);
+
+    const handleAssignCourier = (orderId: number) => {
+        const order = board.unassigned.find((o: any) => o.id === orderId);
+        if (order) {
+            setSelectedOrder(order);
+            setAssignOpen(true);
+        }
+    };
+
+    const handleResolve = (deliveryId: number) => {
+        router.get(`/owner/deliveries/${deliveryId}`);
+    };
+
+    const handleFilterApply = (f: Record<string, string>) => {
+        router.get('/owner/deliveries/board', {
+            outlet_id: f.outlet_id || undefined,
+            courier_id: f.courier_id || undefined,
+            date_range: f.date_range || 'today',
+        }, { preserveState: true, replace: true });
+    };
+
+    const activeFilterCount = [filters.outlet_id, filters.courier_id].filter(Boolean).length + (filters.date_range === 'week' ? 1 : 0);
+
+    const courierOptions = couriers.map((c: any) => ({ value: String(c.id), label: c.name }));
+    const outletOptions = outlets.map((o: any) => ({ value: String(o.id), label: o.name }));
+    const dateOptions = [
+        { value: 'today', label: 'Hari Ini' },
+        { value: 'week', label: 'Minggu Ini' },
+    ];
+
+    return (
+        <OwnerPageShell
+            title="Delivery Board"
+            subtitle={`${stats.unassigned + stats.assigned + stats.inTransit} delivery aktif`}
+            headerRight={
+                <div className="flex items-center gap-1">
+                    <div className="relative">
+                        <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}>
+                            <FilterIcon />
+                        </HeaderIconButton>
+                        {activeFilterCount > 0 && (
+                            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[9px] font-bold text-white">
+                                {activeFilterCount}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            }
+        >
+            {/* Performance KPIs */}
+            <div className="grid grid-cols-3 gap-2">
+                <DeliveryPerformanceCard label="Selesai" value={stats.completed} color="green" />
+                <DeliveryPerformanceCard label="Gagal" value={stats.failed} color="red" href="/owner/deliveries?status=failed" />
+                <DeliveryPerformanceCard label="Terlambat" value={stats.overdue} color="amber" />
+            </div>
+
+            {/* Courier Availability */}
+            {couriers.length > 0 && (
+                <div className="mt-4">
+                    <CourierAvailabilityCard couriers={couriers} />
+                </div>
+            )}
+
+            {/* Board Columns - Mobile: stacked scrollable */}
+            <div className="mt-4 lg:hidden">
+                <div className="space-y-6">
+                    <DeliveryBoardColumn
+                        title="Menunggu Kurir"
+                        count={stats.unassigned}
+                        items={board.unassigned}
+                        color="slate"
+                        emptyMessage="Semua order sudah di-assign"
+                        onAssignCourier={handleAssignCourier}
+                    />
+                    <DeliveryBoardColumn
+                        title="Ditugaskan"
+                        count={stats.assigned}
+                        items={board.assigned}
+                        color="blue"
+                        emptyMessage="Tidak ada kurir menunggu pickup"
+                    />
+                    <DeliveryBoardColumn
+                        title="Dalam Perjalanan"
+                        count={stats.inTransit}
+                        items={board.inTransit}
+                        color="purple"
+                        emptyMessage="Tidak ada delivery dalam perjalanan"
+                    />
+                    <DeliveryBoardColumn
+                        title="Perlu Tindakan"
+                        count={stats.needsAction}
+                        items={board.needsAction}
+                        color="amber"
+                        emptyMessage="Tidak ada delivery bermasalah"
+                        onResolve={handleResolve}
+                    />
+                    <DeliveryBoardColumn
+                        title="Selesai"
+                        count={stats.completed}
+                        items={board.completed}
+                        color="green"
+                        emptyMessage="Belum ada delivery selesai hari ini"
+                    />
+                </div>
+            </div>
+
+            {/* Board Columns - Desktop: grid layout */}
+            <div className="mt-4 hidden lg:grid lg:grid-cols-5 lg:gap-4">
+                <DeliveryBoardColumn
+                    title="Menunggu Kurir"
+                    count={stats.unassigned}
+                    items={board.unassigned}
+                    color="slate"
+                    emptyMessage="Semua order sudah di-assign"
+                    onAssignCourier={handleAssignCourier}
+                />
+                <DeliveryBoardColumn
+                    title="Ditugaskan"
+                    count={stats.assigned}
+                    items={board.assigned}
+                    color="blue"
+                    emptyMessage="Tidak ada kurir menunggu pickup"
+                />
+                <DeliveryBoardColumn
+                    title="Dalam Perjalanan"
+                    count={stats.inTransit}
+                    items={board.inTransit}
+                    color="purple"
+                    emptyMessage="Tidak ada delivery dalam perjalanan"
+                />
+                <DeliveryBoardColumn
+                    title="Perlu Tindakan"
+                    count={stats.needsAction}
+                    items={board.needsAction}
+                    color="amber"
+                    emptyMessage="Tidak ada delivery bermasalah"
+                    onResolve={handleResolve}
+                />
+                <DeliveryBoardColumn
+                    title="Selesai"
+                    count={stats.completed}
+                    items={board.completed}
+                    color="green"
+                    emptyMessage="Belum ada delivery selesai hari ini"
+                />
+            </div>
+
+            {/* Assign Courier Sheet */}
+            {selectedOrder && (
+                <AssignCourierSheet
+                    order={selectedOrder}
+                    couriers={couriers}
+                    open={assignOpen}
+                    onClose={() => { setAssignOpen(false); setSelectedOrder(null); }}
+                />
+            )}
+
+            {/* Filter Sheet */}
+            <FilterSheet
+                open={filterOpen}
+                onClose={() => setFilterOpen(false)}
+                sections={[
+                    { key: 'outlet_id', label: 'Outlet', options: outletOptions, value: filters.outlet_id ? String(filters.outlet_id) : '' },
+                    { key: 'courier_id', label: 'Kurir', options: courierOptions, value: filters.courier_id ? String(filters.courier_id) : '' },
+                    { key: 'date_range', label: 'Periode', options: dateOptions, value: filters.date_range ?? 'today' },
+                ]}
+                onApply={handleFilterApply}
+            />
+        </OwnerPageShell>
+    );
+}

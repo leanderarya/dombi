@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
@@ -36,9 +37,9 @@ class OrderStatusSchemaRegressionTest extends TestCase
 
     public function test_order_can_be_cancelled_by_customer(): void
     {
-        [$order, , $customer] = $this->makePendingConfirmationContext();
+        [$order] = $this->makePendingConfirmationContext();
 
-        app(OrderStatusService::class)->cancelByCustomer($order, 'Salah Pesan', null, $customer);
+        app(OrderStatusService::class)->cancelByCustomer($order, 'Salah Pesan', null);
 
         $this->assertDatabaseHas('orders', [
             'id' => $order->id,
@@ -60,17 +61,14 @@ class OrderStatusSchemaRegressionTest extends TestCase
 
     private function makePendingConfirmationContext(): array
     {
-        $customer = User::create([
+        $customer = Customer::create([
             'name' => 'Customer Schema',
-            'email' => uniqid('customer-schema-').'@example.com',
-            'password' => 'password',
-            'role' => 'customer',
-            'is_active' => true,
+            'phone' => '628123456789' . rand(10, 99),
         ]);
 
         $outletUser = User::create([
             'name' => 'Outlet Schema',
-            'email' => uniqid('outlet-schema-').'@example.com',
+            'email' => uniqid('outlet-schema-') . '@example.com',
             'password' => 'password',
             'role' => 'outlet',
             'is_active' => true,
@@ -106,20 +104,17 @@ class OrderStatusSchemaRegressionTest extends TestCase
         return [$order, $outletUser, $customer];
     }
 
-    private function makePendingConfirmationOrder(?User $customer = null, ?Outlet $outlet = null, ?Product $product = null): Order
+    private function makePendingConfirmationOrder(?Customer $customer = null, ?Outlet $outlet = null, ?Product $product = null): Order
     {
-        $customer ??= User::create([
+        $customer ??= Customer::create([
             'name' => 'Customer Pending',
-            'email' => uniqid('customer-pending-').'@example.com',
-            'password' => 'password',
-            'role' => 'customer',
-            'is_active' => true,
+            'phone' => '628123456789' . rand(10, 99),
         ]);
 
         if (! $outlet) {
             $outletUser = User::create([
                 'name' => 'Outlet Pending',
-                'email' => uniqid('outlet-pending-').'@example.com',
+                'email' => uniqid('outlet-pending-') . '@example.com',
                 'password' => 'password',
                 'role' => 'outlet',
                 'is_active' => true,
@@ -138,13 +133,13 @@ class OrderStatusSchemaRegressionTest extends TestCase
         $order = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'DOMBI-SCHEMA-'.strtoupper(uniqid()),
+            'order_code' => 'DOMBI-SCHEMA-' . strtoupper(uniqid()),
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'subtotal' => 50000,
             'delivery_fee' => 0,
             'total' => 50000,
             'customer_name' => $customer->name,
-            'customer_phone' => '6281234567890',
+            'customer_phone' => $customer->phone,
             'customer_address' => 'Alamat customer schema',
             'ordered_at' => now(),
         ]);

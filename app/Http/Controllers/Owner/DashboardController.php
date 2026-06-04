@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -10,12 +11,13 @@ use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Models\StockMovement;
+use App\Services\DeliverySlaService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(DeliverySlaService $slaService): Response
     {
         return Inertia::render('owner/dashboard', [
             'stats' => [
@@ -29,6 +31,22 @@ class DashboardController extends Controller
                 'failedDeliveries' => Delivery::where('status', 'failed')->count(),
                 'lowStocks' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= minimum_stock')->count(),
                 'pendingRestocks' => RestockRequest::where('status', 'requested')->count(),
+            ],
+            'deliveryStats' => [
+                'waitingForCourier' => Order::where('status', 'ready_for_pickup')->whereDoesntHave('delivery')->count(),
+                'inTransit' => Delivery::whereIn('status', ['picked_up', 'delivering'])->count(),
+                'late' => $slaService->countOverdue(),
+                'failed' => Delivery::where('status', 'failed')->count(),
+                'completedToday' => Delivery::where('status', 'completed')->whereDate('updated_at', today())->count(),
+            ],
+            'customerStats' => [
+                'totalCustomers' => Customer::count(),
+                'guestCustomers' => Customer::where('is_registered', false)->count(),
+                'registeredCustomers' => Customer::where('is_registered', true)->count(),
+                'newCustomersToday' => Customer::whereDate('created_at', today())->count(),
+                'returningCustomers' => Customer::whereHas('orders', function ($q): void {
+                    $q->where('created_at', '>=', now()->subDays(30));
+                })->count(),
             ],
             'alerts' => [
                 'failedDeliveries' => Delivery::where('status', 'failed')

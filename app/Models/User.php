@@ -34,16 +34,6 @@ class User extends Authenticatable
         ];
     }
 
-    public function customerOrders(): HasMany
-    {
-        return $this->hasMany(Order::class, 'customer_id');
-    }
-
-    public function customerAddresses(): HasMany
-    {
-        return $this->hasMany(CustomerAddress::class);
-    }
-
     public function courierDeliveries(): HasMany
     {
         return $this->hasMany(Delivery::class, 'courier_id');
@@ -57,6 +47,11 @@ class User extends Authenticatable
     public function outlet(): HasOne
     {
         return $this->hasOne(Outlet::class);
+    }
+
+    public function customer(): HasOne
+    {
+        return $this->hasOne(Customer::class);
     }
 
     public function isOwner(): bool

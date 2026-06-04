@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Exceptions\InsufficientStockException;
+use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Delivery;
 use App\Models\Order;
@@ -386,7 +387,7 @@ class MilestoneSixthTest extends TestCase
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $outletUser = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
         $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
-        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890' . rand(1000, 9999)]);
 
         $outlet = Outlet::create([
             'user_id' => $outletUser->id,
@@ -416,7 +417,7 @@ class MilestoneSixthTest extends TestCase
         ]);
 
         $address = CustomerAddress::create([
-            'user_id' => $customer->id,
+            'customer_id' => $customer->id,
             'recipient_name' => $customer->name,
             'phone' => '08123456789',
             'address' => 'Alamat customer',

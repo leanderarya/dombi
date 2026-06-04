@@ -1,9 +1,10 @@
 import { Head, Link } from '@inertiajs/react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import CourierLayout from '@/layouts/courier-layout';
+import { formatDeliveryAge } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
 
-export default function CourierDashboard({ stats, activeDeliveries }: any) {
+export default function CourierDashboard({ stats, nextPickup, activeDeliveries }: any) {
     usePolling(15000); // Courier needs faster refresh
     const hasActive = activeDeliveries.length > 0;
 
@@ -20,6 +21,29 @@ export default function CourierDashboard({ stats, activeDeliveries }: any) {
                 <StatCard label="Selesai Hari Ini" value={stats.completedToday} color="green" />
                 <StatCard label="Gagal Hari Ini" value={stats.failedToday} color="red" />
             </div>
+
+            {/* Next Pickup */}
+            {nextPickup && (
+                <section className="mt-5">
+                    <h2 className="text-sm font-semibold text-slate-700">Pickup Berikutnya</h2>
+                    <Link href={`/courier/deliveries/${nextPickup.id}`} className="mt-2 block rounded-xl border border-amber-200 bg-amber-50 p-4 active:bg-amber-100">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="font-medium text-amber-900">{nextPickup.order?.order_code}</div>
+                                <div className="mt-1 text-sm text-amber-700">{nextPickup.order?.customer_name}</div>
+                                <div className="mt-0.5 text-xs text-amber-600 line-clamp-1">{nextPickup.order?.customer_address}</div>
+                                <div className="mt-1 text-xs text-amber-600">Outlet: {nextPickup.order?.outlet?.name ?? '-'}</div>
+                                {nextPickup.assigned_at && (
+                                    <div className="mt-1 text-xs font-medium text-amber-700">
+                                        Di-assign {formatDeliveryAge(nextPickup.assigned_at ? Math.floor((Date.now() - new Date(nextPickup.assigned_at).getTime()) / 60000) : null)} lalu
+                                    </div>
+                                )}
+                            </div>
+                            <DeliveryStatusBadge status={nextPickup.status} />
+                        </div>
+                    </Link>
+                </section>
+            )}
 
             {/* Quick Actions */}
             <div className="mt-5 flex gap-2">

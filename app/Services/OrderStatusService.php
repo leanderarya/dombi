@@ -132,7 +132,7 @@ class OrderStatusService
         });
     }
 
-    public function cancelByCustomer(Order $order, string $reason, ?string $note, User $customer): Order
+    public function cancelByCustomer(Order $order, string $reason, ?string $note): Order
     {
         if (! $order->isPendingConfirmation()) {
             throw ValidationException::withMessages([
@@ -152,7 +152,7 @@ class OrderStatusService
             ]);
         }
 
-        return DB::transaction(function () use ($order, $reason, $note, $customer): Order {
+        return DB::transaction(function () use ($order, $reason, $note): Order {
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
 
             $this->inventoryService->releaseReservedStock($order);
@@ -160,7 +160,7 @@ class OrderStatusService
             $order->update([
                 'status' => Order::CANCELLED_BY_CUSTOMER,
                 'cancelled_at' => now(),
-                'cancelled_by' => $customer->id,
+                'cancelled_by' => $order->customer_id,
                 'cancellation_reason' => $reason,
                 'cancellation_note' => $note,
             ]);
@@ -170,7 +170,7 @@ class OrderStatusService
                 'to_status' => Order::CANCELLED_BY_CUSTOMER,
                 'notes' => "Pesanan dibatalkan customer. Alasan: {$reason}",
                 'reason' => $reason,
-                'changed_by' => $customer->id,
+                'changed_by' => $order->customer_id,
                 'changed_by_type' => 'customer',
                 'created_at' => now(),
             ]);

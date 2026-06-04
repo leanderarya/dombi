@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
@@ -89,12 +90,9 @@ class MilestoneSecondTest extends TestCase
 
     private function makeOrder(Outlet $outlet): Order
     {
-        $customer = User::create([
+        $customer = Customer::create([
             'name' => 'Customer',
-            'email' => uniqid('customer').'@example.com',
-            'password' => 'password',
-            'role' => 'customer',
-            'is_active' => true,
+            'phone' => '081234567890' . rand(1000, 9999),
         ]);
 
         return Order::create([

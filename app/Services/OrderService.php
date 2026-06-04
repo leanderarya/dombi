@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -9,7 +10,6 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class OrderService
@@ -21,15 +21,15 @@ class OrderService
         private readonly InventoryService $inventoryService,
     ) {}
 
-    public function createCustomerOrder(User $customer, array $payload): Order
+    public function createCustomerOrder(Customer $customer, array $payload): Order
     {
         return $this->createCheckoutOrder($customer, $payload);
     }
 
-    public function createCheckoutOrder(?User $customer, array $payload): Order
+    public function createCheckoutOrder(User|Customer|null $user, array $payload): Order
     {
-        return DB::transaction(function () use ($customer, $payload): Order {
-            $customer = $customer ?? $this->findOrCreateGuestCustomer($payload);
+        return DB::transaction(function () use ($user, $payload): Order {
+            $customer = $user instanceof Customer ? $user : $this->findOrCreateGuestCustomer($payload);
             $items = $this->buildOrderItems($payload['items']);
             $fulfillmentType = $payload['fulfillment_type'] ?? 'delivery_dombi';
             $address = $this->shouldUseDeliveryAddress($fulfillmentType)
@@ -108,40 +108,38 @@ class OrderService
         );
     }
 
-    private function findOrCreateGuestCustomer(array $payload): User
+    private function findOrCreateGuestCustomer(array $payload): Customer
     {
         $phone = (string) $payload['phone_number'];
 
-        $customer = User::query()
-            ->where('role', 'customer')
+        $customer = Customer::query()
             ->where('phone', $phone)
             ->lockForUpdate()
             ->first();
 
         if ($customer) {
+            $customer->update(['last_order_at' => now()]);
+
             return $customer;
         }
 
-        return User::create([
+        return Customer::create([
             'name' => $payload['customer_name'],
-            'email' => $this->generateCustomerEmail($phone),
-            'password' => Str::random(40),
-            'role' => 'customer',
             'phone' => $phone,
-            'is_active' => true,
-            'must_change_password' => false,
+            'is_registered' => false,
+            'last_order_at' => now(),
         ]);
     }
 
-    private function resolveCheckoutAddress(User $customer, array $payload): CustomerAddress
+    private function resolveCheckoutAddress(Customer $customer, array $payload): CustomerAddress
     {
         if (! empty($payload['address_id'])) {
             return CustomerAddress::query()
-                ->where('user_id', $customer->id)
+                ->where('customer_id', $customer->id)
                 ->findOrFail($payload['address_id']);
         }
 
-        CustomerAddress::where('user_id', $customer->id)->update(['is_default' => false]);
+        CustomerAddress::where('customer_id', $customer->id)->update(['is_default' => false]);
 
         $addressLine = trim((string) $payload['address_line']);
         $houseNumber = trim((string) ($payload['house_number'] ?? ''));
@@ -152,7 +150,7 @@ class OrderService
 
         $deliveryNotes = $payload['delivery_notes'] ?? null;
 
-        return $customer->customerAddresses()->create([
+        return $customer->addresses()->create([
             'label' => 'Alamat Checkout',
             'recipient_name' => $payload['customer_name'] ?? $customer->name,
             'phone' => $payload['phone_number'] ?? $customer->phone,
@@ -240,53 +238,6 @@ class OrderService
         return 'Ambil di '.$outlet->name;
     }
 
-    private function generateCustomerEmail(string $phone): string
-    {
-        $base = 'customer-'.$phone;
-        $email = $base.'@dombi.local';
-        $suffix = 2;
-
-        while (User::where('email', $email)->exists()) {
-            $email = $base.'-'.$suffix.'@dombi.local';
-            $suffix++;
-        }
-
-        return $email;
-    }
-
-    public function repeatOrder(User $customer, Order $previousOrder): Order
-    {
-        abort_unless($previousOrder->customer_id === $customer->id, 403);
-
-        $address = $customer->customerAddresses()->latest()->first();
-
-        if (! $address) {
-            throw ValidationException::withMessages(['address_id' => 'Buat alamat terlebih dahulu sebelum order ulang.']);
-        }
-
-        return $this->createCustomerOrder($customer, [
-            'address_id' => $address->id,
-            'items' => $previousOrder->items->map(fn ($item): array => [
-                'product_id' => $item->product_id,
-                'quantity' => $item->quantity,
-            ])->all(),
-        ]);
-    }
-
-    public function generateOrderCode(): string
-    {
-        $date = Carbon::now()->format('Ymd');
-        $count = Order::query()
-            ->whereDate('created_at', Carbon::today())
-            ->lockForUpdate()
-            ->count() + 1;
-
-        return sprintf('DOMBI-%s-%04d', $date, $count);
-    }
-
-    /**
-     * Generate order code with retry to handle duplicate race conditions.
-     */
     private function generateOrderCodeWithRetry(): string
     {
         $date = Carbon::now()->format('Ymd');

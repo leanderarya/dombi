@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\User;
 use App\Support\OperationalLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,9 +33,6 @@ class MilestoneNinthTest extends TestCase
     public function test_status_endpoint_requires_owner_auth(): void
     {
         $this->get('/api/status')->assertRedirect('/login');
-
-        $customer = User::factory()->create(['role' => 'customer', 'is_active' => true]);
-        $this->actingAs($customer)->get('/api/status')->assertRedirect('/customer/home');
 
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $this->actingAs($owner)->get('/api/status')

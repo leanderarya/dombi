@@ -5,7 +5,7 @@ import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
 
-export default function OutletDashboard({ outlet, stats, lowStockItems, recentOrders }: any) {
+export default function OutletDashboard({ outlet, stats, deliveryStats, lowStockItems, recentOrders }: any) {
     usePolling(20000); // Refresh every 20s
     return (
         <OutletLayout>
@@ -15,7 +15,21 @@ export default function OutletDashboard({ outlet, stats, lowStockItems, recentOr
                 <p className="text-sm text-zinc-500">{outlet.kecamatan}</p>
             </div>
 
-            {/* Stats - mobile 2 cols */}
+            {/* Delivery Stats */}
+            <div className="mt-5">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Delivery</h2>
+                    <Link href="/outlet/deliveries" className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Lihat Semua</Link>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <StatCard label="Perlu Dikirim" value={deliveryStats.needsDispatch} href="/outlet/deliveries" color="amber" urgent={deliveryStats.needsDispatch > 0} />
+                    <StatCard label="Menunggu Pickup" value={deliveryStats.waitingPickup} href="/outlet/deliveries?status=waiting_pickup" color="blue" />
+                    <StatCard label="Dalam Perjalanan" value={deliveryStats.inTransit} href="/outlet/deliveries?status=delivering" color="purple" />
+                    <StatCard label="Gagal" value={deliveryStats.failed} href="/outlet/deliveries?status=failed" color="red" urgent={deliveryStats.failed > 0} />
+                </div>
+            </div>
+
+            {/* Order Stats - mobile 2 cols */}
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <StatCard label="Pending" value={stats.pendingOrders} href="/outlet/orders?status=pending" color="yellow" urgent={stats.pendingOrders > 0} />
                 <StatCard label="Preparing" value={stats.preparingOrders} href="/outlet/orders?status=preparing" color="blue" />

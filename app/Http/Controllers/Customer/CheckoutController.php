@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\Outlet;
 use App\Models\Product;
 use App\Models\User;
@@ -12,7 +13,6 @@ use App\Services\RecommendOutletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -172,10 +172,9 @@ class CheckoutController extends Controller
             return back()->withErrors(['phone_number' => 'Nomor WhatsApp harus menggunakan format Indonesia yang valid.'])->withInput();
         }
 
-        $existingCustomer = User::query()
-            ->where('role', 'customer')
+        $existingCustomer = Customer::query()
             ->where('phone', $phone)
-            ->with(['customerAddresses' => fn ($query) => $query->latest()->limit(1)])
+            ->with(['addresses' => fn ($query) => $query->latest()->limit(1)])
             ->first();
 
         $request->session()->put('checkout.customer', [
@@ -320,10 +319,6 @@ class CheckoutController extends Controller
             'notes' => $location['delivery_notes'] ?? null,
         ]);
 
-        if (! $request->user()) {
-            Auth::login($order->customer);
-        }
-
         $request->session()->forget([
             'checkout.cart',
             'checkout.fulfillment',
@@ -331,7 +326,11 @@ class CheckoutController extends Controller
             'checkout.location',
         ]);
 
-        return redirect()->route('customer.orders.show', $order)->with('success', 'Order berhasil dibuat.');
+        if ($request->user()) {
+            return redirect()->route('customer.orders.show', $order)->with('success', 'Order berhasil dibuat.');
+        }
+
+        return redirect()->route('track', ['token' => $order->recovery_token])->with('success', 'Order berhasil dibuat.');
     }
 
     public function lookupCustomer(Request $request): JsonResponse
@@ -342,10 +341,9 @@ class CheckoutController extends Controller
             return response()->json(['found' => false]);
         }
 
-        $customer = User::query()
-            ->where('role', 'customer')
+        $customer = Customer::query()
             ->where('phone', $phone)
-            ->with(['customerAddresses' => fn ($query) => $query->latest()->limit(1)])
+            ->with(['addresses' => fn ($query) => $query->latest()->limit(1)])
             ->first();
 
         return response()->json([
@@ -353,7 +351,7 @@ class CheckoutController extends Controller
             'customer' => $customer ? [
                 'name' => $customer->name,
                 'phone_number' => $phone,
-                'previous_address' => $customer->customerAddresses->first(),
+                'previous_address' => $customer->addresses->first(),
             ] : null,
         ]);
     }

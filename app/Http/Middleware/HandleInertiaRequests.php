@@ -43,9 +43,6 @@ class HandleInertiaRequests extends Middleware
             'appVersion' => config('app.version', '1.0.0'),
             'auth' => [
                 'user' => $user,
-                'defaultAddress' => fn () => $user && $user->role === 'customer'
-                    ? $user->customerAddresses()->where('is_default', true)->first(['id', 'label', 'recipient_name', 'address', 'kecamatan', 'latitude', 'longitude'])
-                    : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

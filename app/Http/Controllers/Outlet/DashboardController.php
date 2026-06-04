@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
+use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\OutletInventory;
 use App\Models\RestockRequest;
@@ -34,6 +35,12 @@ class DashboardController extends Controller
                 ->where('outlet_id', $outlet->id)
                 ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
                 ->get(['id', 'product_id', 'current_stock', 'reserved_stock', 'minimum_stock']),
+            'deliveryStats' => [
+                'needsDispatch' => Order::where('outlet_id', $outlet->id)->where('status', 'ready_for_pickup')->whereDoesntHave('delivery')->count(),
+                'waitingPickup' => Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))->where('status', 'waiting_pickup')->count(),
+                'inTransit' => Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))->whereIn('status', ['picked_up', 'delivering'])->count(),
+                'failed' => Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))->where('status', 'failed')->count(),
+            ],
             'recentOrders' => Order::where('outlet_id', $outlet->id)
                 ->whereIn('status', ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup'])
                 ->latest()

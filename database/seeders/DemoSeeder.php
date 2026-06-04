@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Delivery;
 use App\Models\Order;
@@ -27,7 +28,7 @@ class DemoSeeder extends Seeder
         $outletBanyumanikUser = User::updateOrCreate(['email' => 'outlet.banyumanik@example.com'], ['name' => 'Outlet Banyumanik', 'password' => $password, 'role' => 'outlet', 'phone' => '082100000002', 'is_active' => true, 'must_change_password' => false]);
         $courierAndi = User::updateOrCreate(['email' => 'courier.andi@example.com'], ['name' => 'Andi Courier', 'password' => $password, 'role' => 'courier', 'phone' => '083100000001', 'is_active' => true, 'must_change_password' => false]);
         $courierBudi = User::updateOrCreate(['email' => 'courier.budi@example.com'], ['name' => 'Budi Courier', 'password' => $password, 'role' => 'courier', 'phone' => '083100000002', 'is_active' => true, 'must_change_password' => false]);
-        $customer = User::updateOrCreate(['email' => 'customer@example.com'], ['name' => 'Customer Demo', 'password' => $password, 'role' => 'customer', 'phone' => '084100000001', 'is_active' => true, 'must_change_password' => false]);
+        $customer = Customer::updateOrCreate(['phone' => '6284100000001'], ['name' => 'Customer Demo', 'email' => 'customer@example.com', 'is_registered' => false]);
 
         $category = ProductCategory::updateOrCreate(['slug' => 'susu-kambing'], ['name' => 'Susu Kambing', 'is_active' => true]);
 
@@ -69,8 +70,8 @@ class DemoSeeder extends Seeder
         }
 
         CustomerAddress::updateOrCreate(
-            ['user_id' => $customer->id, 'label' => 'Rumah Tembalang'],
-            ['recipient_name' => 'Customer Demo', 'phone' => '084100000001', 'address' => 'Jl. Sekitar Kampus Tembalang, Semarang', 'kelurahan' => 'Tembalang', 'kecamatan' => 'Tembalang', 'latitude' => -7.0559000, 'longitude' => 110.4375000, 'is_default' => true]
+            ['customer_id' => $customer->id, 'label' => 'Rumah Tembalang'],
+            ['recipient_name' => 'Customer Demo', 'phone' => '6284100000001', 'address' => 'Jl. Sekitar Kampus Tembalang, Semarang', 'kelurahan' => 'Tembalang', 'kecamatan' => 'Tembalang', 'latitude' => -7.0559000, 'longitude' => 110.4375000, 'is_default' => true]
         );
 
         $pendingOrder = $this->order('DOMBI-DEMO-PENDING', $customer, $banyumanik, [['product' => $products['500ml'], 'quantity' => 2]], 'pending');
@@ -107,7 +108,7 @@ class DemoSeeder extends Seeder
         $distribution->items()->create(['product_id' => $products['1l']->id, 'quantity' => 4]);
     }
 
-    private function order(string $code, User $customer, Outlet $outlet, array $items, string $status): Order
+    private function order(string $code, Customer $customer, Outlet $outlet, array $items, string $status): Order
     {
         $subtotal = collect($items)->sum(fn (array $item): float => $item['product']->price * $item['quantity']);
 

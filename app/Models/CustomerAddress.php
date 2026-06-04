@@ -11,7 +11,7 @@ class CustomerAddress extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'label', 'recipient_name', 'phone', 'address', 'address_line',
+        'customer_id', 'label', 'recipient_name', 'phone', 'address', 'address_line',
         'address_detail', 'kelurahan', 'kecamatan', 'province', 'city', 'district',
         'village', 'postal_code', 'latitude', 'longitude', 'landmark', 'delivery_notes',
         'is_default',
@@ -26,8 +26,8 @@ class CustomerAddress extends Model
         ];
     }
 
-    public function user(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 }
