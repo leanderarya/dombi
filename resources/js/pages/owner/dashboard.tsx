@@ -1,39 +1,40 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import ActivityFeed from '@/components/owner/activity-feed-card';
+import CourierLeaderboardCard from '@/components/owner/courier-leaderboard-card';
+import DeliveryHealthScoreCard from '@/components/owner/delivery-health-score-card';
+import FailureReasonsCard from '@/components/owner/failure-reasons-card';
 import KpiCard from '@/components/owner/kpi-card';
+import OldestDeliveriesCard from '@/components/owner/oldest-deliveries-card';
 import OperationalAlertCard, { AlertTruckIcon, AlertInventoryIcon, AlertRestockIcon } from '@/components/owner/operational-alert-card';
 import OutletHealthCard from '@/components/owner/outlet-health-card';
 import OwnerBottomNav from '@/components/owner/owner-bottom-nav';
 import QuickActionCard from '@/components/owner/quick-action-card';
+import SlaViolationsCard from '@/components/owner/sla-violations-card';
 import OfflineBanner from '@/components/offline-banner';
 import OwnerLayout from '@/layouts/owner-layout';
 import { confirmLogout } from '@/lib/confirm-logout';
 import { usePolling } from '@/lib/use-polling';
 
-export default function Dashboard({ stats, deliveryStats, alerts, recentActivity }: any) {
+export default function Dashboard({ stats, deliveryStats, intelligence, alerts, recentActivity }: any) {
     usePolling(30000);
 
     return (
         <>
-            {/* Desktop: use existing sidebar layout */}
             <div className="hidden lg:block">
                 <OwnerLayout>
-                    <DesktopDashboard stats={stats} deliveryStats={deliveryStats} alerts={alerts} recentActivity={recentActivity} />
+                    <DesktopDashboard stats={stats} deliveryStats={deliveryStats} intelligence={intelligence} alerts={alerts} recentActivity={recentActivity} />
                 </OwnerLayout>
             </div>
-
-            {/* Mobile: dedicated operational mobile UI */}
             <div className="lg:hidden">
-                <MobileDashboard stats={stats} deliveryStats={deliveryStats} alerts={alerts} recentActivity={recentActivity} />
+                <MobileDashboard stats={stats} deliveryStats={deliveryStats} intelligence={intelligence} alerts={alerts} recentActivity={recentActivity} />
             </div>
         </>
     );
 }
 
-function MobileDashboard({ stats, deliveryStats, alerts, recentActivity }: any) {
+function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentActivity }: any) {
     const hasAlerts = alerts.failedDeliveries.length > 0 || alerts.lowStockItems.length > 0 || alerts.pendingRestocks.length > 0;
 
-    // Build activity feed items
     const activityItems = recentActivity.slice(0, 5).map((m: any) => ({
         id: m.id,
         title: `${m.product?.name ?? 'Produk'} ${activityVerb(m.type)}`,
@@ -41,20 +42,25 @@ function MobileDashboard({ stats, deliveryStats, alerts, recentActivity }: any) 
         color: activityColor(m.type),
     }));
 
-    // Build outlet health from low stock data
     const outletHealth = buildOutletHealth(alerts.lowStockItems, stats.activeOutlets);
 
     return (
         <div className="min-h-dvh bg-slate-50 text-slate-900">
             <Head title="Owner Dashboard" />
             <OfflineBanner />
-
             <DashboardGreeting />
 
             <main className="px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">
+                {/* Health Score */}
+                {intelligence?.healthScore && (
+                    <section>
+                        <DeliveryHealthScoreCard health={intelligence.healthScore} />
+                    </section>
+                )}
+
                 {/* Operational Alerts */}
                 {hasAlerts && (
-                    <section>
+                    <section className="mt-4">
                         <SectionLabel>Operational Alerts</SectionLabel>
                         <div className="mt-2 space-y-2">
                             {alerts.failedDeliveries.length > 0 && (
@@ -92,7 +98,7 @@ function MobileDashboard({ stats, deliveryStats, alerts, recentActivity }: any) 
                 )}
 
                 {/* KPI Grid */}
-                <section className={hasAlerts ? 'mt-6' : ''}>
+                <section className={hasAlerts ? 'mt-6' : 'mt-4'}>
                     <SectionLabel>Performance Overview</SectionLabel>
                     <div className="mt-2 grid grid-cols-2 gap-3">
                         <KpiCard label="Total Order" value={stats.todayOrders + stats.activeOrders} href="/owner/orders" color="emerald" progress={70} />
@@ -118,6 +124,34 @@ function MobileDashboard({ stats, deliveryStats, alerts, recentActivity }: any) 
                         <KpiCard label="Selesai Hari Ini" value={deliveryStats.completedToday} href="/owner/deliveries/board" color="emerald" progress={deliveryStats.completedToday > 0 ? 70 : 0} />
                     </div>
                 </section>
+
+                {/* SLA Violations */}
+                {intelligence?.slaViolations && (
+                    <section className="mt-6">
+                        <SlaViolationsCard violations={intelligence.slaViolations} />
+                    </section>
+                )}
+
+                {/* Oldest Deliveries */}
+                {intelligence?.oldestDeliveries && intelligence.oldestDeliveries.length > 0 && (
+                    <section className="mt-6">
+                        <OldestDeliveriesCard deliveries={intelligence.oldestDeliveries} />
+                    </section>
+                )}
+
+                {/* Failure Reasons */}
+                {intelligence?.failureReasons && intelligence.failureReasons.length > 0 && (
+                    <section className="mt-6">
+                        <FailureReasonsCard reasons={intelligence.failureReasons} />
+                    </section>
+                )}
+
+                {/* Courier Leaderboard */}
+                {intelligence?.courierLeaderboard && intelligence.courierLeaderboard.length > 0 && (
+                    <section className="mt-6">
+                        <CourierLeaderboardCard couriers={intelligence.courierLeaderboard} />
+                    </section>
+                )}
 
                 {/* Recent Activity */}
                 {activityItems.length > 0 && (
@@ -160,16 +194,27 @@ function MobileDashboard({ stats, deliveryStats, alerts, recentActivity }: any) 
     );
 }
 
-function DesktopDashboard({ stats, deliveryStats, alerts, recentActivity }: any) {
+function DesktopDashboard({ stats, deliveryStats, intelligence, alerts, recentActivity }: any) {
     return (
         <>
             <Head title="Owner Dashboard" />
             <h1 className="text-xl font-semibold">Dashboard</h1>
-            <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
-                <KpiCard label="Order Hari Ini" value={stats.todayOrders} href="/owner/orders" color="emerald" />
-                <KpiCard label="Active Delivery" value={stats.activeDeliveries} href="/owner/deliveries" color="blue" />
-                <KpiCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="amber" />
-                <KpiCard label="Stok Rendah" value={stats.lowStocks} href="/owner/inventories" color="red" />
+
+            {/* Health Score + KPIs */}
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-4">
+                {intelligence?.healthScore && (
+                    <div className="lg:col-span-1">
+                        <DeliveryHealthScoreCard health={intelligence.healthScore} />
+                    </div>
+                )}
+                <div className="lg:col-span-3">
+                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                        <KpiCard label="Order Hari Ini" value={stats.todayOrders} href="/owner/orders" color="emerald" />
+                        <KpiCard label="Active Delivery" value={stats.activeDeliveries} href="/owner/deliveries" color="blue" />
+                        <KpiCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="amber" />
+                        <KpiCard label="Stok Rendah" value={stats.lowStocks} href="/owner/inventories" color="red" />
+                    </div>
+                </div>
             </div>
 
             {/* Delivery KPIs */}
@@ -182,6 +227,14 @@ function DesktopDashboard({ stats, deliveryStats, alerts, recentActivity }: any)
                     <KpiCard label="Gagal" value={deliveryStats.failed} href="/owner/deliveries?status=failed" color="red" />
                     <KpiCard label="Selesai Hari Ini" value={deliveryStats.completedToday} href="/owner/deliveries/board" color="emerald" />
                 </div>
+            </div>
+
+            {/* Intelligence Grid */}
+            <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {intelligence?.slaViolations && <SlaViolationsCard violations={intelligence.slaViolations} />}
+                {intelligence?.oldestDeliveries && <OldestDeliveriesCard deliveries={intelligence.oldestDeliveries} />}
+                {intelligence?.failureReasons && <FailureReasonsCard reasons={intelligence.failureReasons} />}
+                {intelligence?.courierLeaderboard && <CourierLeaderboardCard couriers={intelligence.courierLeaderboard} />}
             </div>
 
             {alerts.failedDeliveries.length > 0 && (
@@ -197,7 +250,6 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
     return <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{children}</h2>;
 }
 
-// Helpers
 function activityVerb(type: string): string {
     const verbs: Record<string, string> = { order_completed: 'Selesai', order_reserved: 'Reserved', order_cancelled: 'Dibatalkan', restock_in: 'Diterima', stock_adjustment: 'Diupdate', initial_stock: 'Diinisialisasi' };
     return verbs[type] ?? 'Diproses';
@@ -237,7 +289,6 @@ function buildOutletHealth(lowStockItems: any[], totalOutlets: number) {
 function OrdersIcon() { return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>; }
 function AuditIcon() { return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>; }
 function RestockIcon() { return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>; }
-
 
 function DashboardGreeting() {
     const { auth } = usePage<any>().props;

@@ -4,14 +4,35 @@ import CourierLayout from '@/layouts/courier-layout';
 import { formatDeliveryAge } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
 
-export default function CourierDashboard({ stats, nextPickup, activeDeliveries }: any) {
-    usePolling(15000); // Courier needs faster refresh
+export default function CourierDashboard({ stats, performance, nextPickup, activeDeliveries }: any) {
+    usePolling(15000);
     const hasActive = activeDeliveries.length > 0;
 
     return (
         <CourierLayout>
             <Head title="Courier Dashboard" />
             <h1 className="text-xl font-semibold sm:text-2xl">Dashboard</h1>
+
+            {/* Performance Summary */}
+            {performance && (
+                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Performa Hari Ini</h2>
+                    <div className="mt-3 grid grid-cols-3 gap-3">
+                        <div className="text-center">
+                            <div className="text-2xl font-bold text-emerald-700">{performance.successRate}%</div>
+                            <div className="text-[11px] text-slate-500">Tingkat Sukses</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-2xl font-bold text-blue-700">{performance.avgDeliveryTime ?? '-'}m</div>
+                            <div className="text-[11px] text-slate-500">Rata-rata Kirim</div>
+                        </div>
+                        <div className="text-center">
+                            <CapacityBadge status={performance.capacityStatus} count={performance.activeDeliveries} />
+                            <div className="text-[11px] text-slate-500">Kapasitas</div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Stats - mobile 2 cols */}
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
@@ -109,6 +130,22 @@ function StatCard({ label, value, color, urgent }: { label: string; value: numbe
         <div className={`rounded-xl border p-3 ${base} ${urgent ? 'ring-2 ring-amber-300' : ''}`}>
             <div className="text-xs font-medium text-slate-500">{label}</div>
             <div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
+        </div>
+    );
+}
+
+function CapacityBadge({ status, count }: { status: string; count: number }) {
+    const config: Record<string, { label: string; color: string }> = {
+        available: { label: 'Tersedia', color: 'text-emerald-700' },
+        busy: { label: 'Sibuk', color: 'text-amber-700' },
+        overloaded: { label: 'Overload', color: 'text-red-700' },
+    };
+    const c = config[status] ?? config.available;
+
+    return (
+        <div>
+            <div className={`text-2xl font-bold ${c.color}`}>{count}</div>
+            <div className={`text-[10px] font-bold ${c.color}`}>{c.label}</div>
         </div>
     );
 }

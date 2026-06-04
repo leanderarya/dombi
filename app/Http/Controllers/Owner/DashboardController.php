@@ -11,13 +11,14 @@ use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Models\StockMovement;
+use App\Services\DeliveryIntelligenceService;
 use App\Services\DeliverySlaService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(DeliverySlaService $slaService): Response
+    public function __invoke(DeliverySlaService $slaService, DeliveryIntelligenceService $intelligence): Response
     {
         return Inertia::render('owner/dashboard', [
             'stats' => [
@@ -47,6 +48,14 @@ class DashboardController extends Controller
                 'returningCustomers' => Customer::whereHas('orders', function ($q): void {
                     $q->where('created_at', '>=', now()->subDays(30));
                 })->count(),
+            ],
+            'intelligence' => [
+                'oldestDeliveries' => $intelligence->getOldestDeliveries(10),
+                'slaViolations' => $intelligence->getSlaViolations(),
+                'failureReasons' => $intelligence->getTopFailureReasons(5),
+                'courierLeaderboard' => $intelligence->getCourierLeaderboard(5),
+                'healthScore' => $intelligence->getHealthScore(),
+                'courierCapacity' => $intelligence->getAllCouriersCapacity(),
             ],
             'alerts' => [
                 'failedDeliveries' => Delivery::where('status', 'failed')

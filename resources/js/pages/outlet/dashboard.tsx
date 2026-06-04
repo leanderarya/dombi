@@ -5,8 +5,8 @@ import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
 
-export default function OutletDashboard({ outlet, stats, deliveryStats, lowStockItems, recentOrders }: any) {
-    usePolling(20000); // Refresh every 20s
+export default function OutletDashboard({ outlet, stats, deliveryStats, failureReasons, lowStockItems, recentOrders }: any) {
+    usePolling(20000);
     return (
         <OutletLayout>
             <Head title="Outlet Dashboard" />
@@ -27,7 +27,28 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                     <StatCard label="Dalam Perjalanan" value={deliveryStats.inTransit} href="/outlet/deliveries?status=delivering" color="purple" />
                     <StatCard label="Gagal" value={deliveryStats.failed} href="/outlet/deliveries?status=failed" color="red" urgent={deliveryStats.failed > 0} />
                 </div>
+                <div className="mt-2 grid grid-cols-2 gap-3">
+                    <StatCard label="Selesai Hari Ini" value={deliveryStats.completedToday} color="green" />
+                    {deliveryStats.avgDispatchTime !== null && (
+                        <StatCard label="Rata-rata Dispatch" value={deliveryStats.avgDispatchTime} suffix="m" color="blue" />
+                    )}
+                </div>
             </div>
+
+            {/* Failure Reasons */}
+            {failureReasons && failureReasons.length > 0 && (
+                <section className="mt-5">
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Alasan Gagal</h2>
+                    <div className="mt-2 space-y-2">
+                        {failureReasons.map((r: any, idx: number) => (
+                            <div key={idx} className="flex items-center justify-between rounded-lg border border-red-100 bg-red-50 px-3 py-2">
+                                <span className="text-sm text-red-700">{r.reason}</span>
+                                <span className="text-sm font-bold text-red-600">{r.count}x</span>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* Order Stats - mobile 2 cols */}
             <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -91,13 +112,15 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
     );
 }
 
-function StatCard({ label, value, href, color, urgent }: { label: string; value: number; href?: string; color?: string; urgent?: boolean }) {
+function StatCard({ label, value, href, color, urgent, suffix }: { label: string; value: number; href?: string; color?: string; urgent?: boolean; suffix?: string }) {
     const colorClasses: Record<string, string> = {
         yellow: 'border-yellow-100 bg-yellow-50',
         amber: 'border-amber-100 bg-amber-50',
         orange: 'border-orange-100 bg-orange-50',
         blue: 'border-blue-100 bg-blue-50',
         purple: 'border-purple-100 bg-purple-50',
+        green: 'border-green-100 bg-green-50',
+        red: 'border-red-100 bg-red-50',
     };
     const base = colorClasses[color ?? ''] ?? 'border-zinc-100 bg-white';
     const Wrapper = href ? Link : 'div';
@@ -105,7 +128,7 @@ function StatCard({ label, value, href, color, urgent }: { label: string; value:
     return (
         <Wrapper {...(href ? { href } : {})} className={`rounded-xl border p-3 ${base} ${urgent ? 'ring-2 ring-amber-300' : ''} active:scale-[0.97] transition-transform`}>
             <div className="text-xs font-medium text-slate-500">{label}</div>
-            <div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
+            <div className="mt-1 text-2xl font-bold text-slate-900">{value}{suffix ?? ''}</div>
         </Wrapper>
     );
 }

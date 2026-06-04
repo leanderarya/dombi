@@ -32,6 +32,11 @@ class DeliveryResolutionLog extends Model
         return $this->belongsTo(Order::class);
     }
 
+    public function delivery(): BelongsTo
+    {
+        return $this->belongsTo(Delivery::class);
+    }
+
     public function resolver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resolved_by');

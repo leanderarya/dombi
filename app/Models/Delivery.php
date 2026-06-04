@@ -38,6 +38,7 @@ class Delivery extends Model
         'proof_image',
         'assigned_by',
         'assigned_at',
+        'retry_count',
     ];
 
     protected function casts(): array
