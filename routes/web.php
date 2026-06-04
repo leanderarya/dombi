@@ -122,6 +122,7 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     Route::get('/inventory', OutletInventoryController::class)->name('inventory');
     Route::get('/deliveries', [OutletDeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('/deliveries/{delivery}', [OutletDeliveryController::class, 'show'])->name('deliveries.show');
+    Route::post('/deliveries/{delivery}/confirm-return', [OutletDeliveryController::class, 'confirmReturn'])->name('deliveries.confirm-return');
     Route::get('/orders', [OutletOrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OutletOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/status', [OutletOrderController::class, 'updateStatus'])->name('orders.status');
@@ -142,4 +143,12 @@ Route::middleware(['auth', 'role:courier'])->prefix('courier')->name('courier.')
     Route::post('/deliveries/{delivery}/start-delivery', [CourierDeliveryController::class, 'startDelivery'])->name('deliveries.start-delivery');
     Route::post('/deliveries/{delivery}/complete', [CourierDeliveryController::class, 'complete'])->name('deliveries.complete');
     Route::post('/deliveries/{delivery}/fail', [CourierDeliveryController::class, 'fail'])->name('deliveries.fail');
+    Route::post('/deliveries/{delivery}/reject', [CourierDeliveryController::class, 'reject'])->name('deliveries.reject');
+    Route::post('/deliveries/{delivery}/return-to-outlet', [CourierDeliveryController::class, 'returnToOutlet'])->name('deliveries.return-to-outlet');
+
+    // Availability & Shift
+    Route::post('/availability/toggle', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'toggleOnline'])->name('availability.toggle');
+    Route::post('/shift/start', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'startShift'])->name('shift.start');
+    Route::post('/shift/end', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'endShift'])->name('shift.end');
+    Route::get('/availability/status', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'status'])->name('availability.status');
 });

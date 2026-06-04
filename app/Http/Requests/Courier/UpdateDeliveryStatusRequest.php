@@ -15,6 +15,11 @@ class UpdateDeliveryStatusRequest extends FormRequest
 
     public function rules(): array
     {
-        return [];
+        return [
+            'delivered_to' => ['nullable', 'string', 'max:255'],
+            'delivery_note' => ['nullable', 'string', 'max:1000'],
+            'proof_image' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+        ];
     }
 }

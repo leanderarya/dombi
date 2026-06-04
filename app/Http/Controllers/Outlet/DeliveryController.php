@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\Delivery;
 use App\Models\Order;
+use App\Services\DeliveryService;
 use App\Services\DeliverySlaService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -143,5 +145,23 @@ class DeliveryController extends Controller
                 ]),
             ],
         ]);
+    }
+
+    public function confirmReturn(Request $request, Delivery $delivery, DeliveryService $deliveryService): RedirectResponse
+    {
+        $outlet = $request->user()->outlet;
+        abort_unless($outlet && $delivery->order->outlet_id === $outlet->id, 403);
+
+        $request->validate([
+            'return_note' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $deliveryService->confirmReturn(
+            $delivery,
+            $request->user(),
+            $request->input('return_note')
+        );
+
+        return redirect()->route('outlet.deliveries.show', $delivery)->with('success', 'Pengembalian barang dikonfirmasi.');
     }
 }

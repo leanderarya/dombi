@@ -1,96 +1,151 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import CourierLayout from '@/layouts/courier-layout';
-import { formatDeliveryAge } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
 
-export default function CourierDashboard({ stats, performance, nextPickup, activeDeliveries }: any) {
+interface TaskItem {
+    id: number;
+    order_code: string;
+    customer_name: string;
+    customer_address?: string;
+    outlet_name?: string;
+    status?: string;
+    assigned_at?: string;
+    pickup_time?: string;
+    delivered_time?: string;
+    delivered_to?: string;
+    failed_reason?: string;
+    updated_at?: string;
+    age_minutes?: number;
+}
+
+interface CourierData {
+    id: number;
+    name: string;
+    is_online: boolean;
+    is_on_shift: boolean;
+    shift_started_at: string | null;
+}
+
+interface Props {
+    courier: CourierData;
+    stats: {
+        waitingPickup: number;
+        inTransit: number;
+        completedToday: number;
+        failedToday: number;
+    };
+    performance: {
+        successRate: number;
+        avgDeliveryTime: number | null;
+        capacityStatus: string;
+        activeDeliveries: number;
+    };
+    tasks: {
+        waitingPickup: TaskItem[];
+        inTransit: TaskItem[];
+        needsAction: TaskItem[];
+        completedToday: TaskItem[];
+    };
+}
+
+export default function CourierDashboard({ courier, stats, performance, tasks }: Props) {
     usePolling(15000);
-    const hasActive = activeDeliveries.length > 0;
+
+    const toggleOnline = () => {
+        router.post('/courier/availability/toggle', {}, { preserveScroll: true });
+    };
+
+    const startShift = () => {
+        router.post('/courier/shift/start', {}, { preserveScroll: true });
+    };
+
+    const endShift = () => {
+        router.post('/courier/shift/end', {}, { preserveScroll: true });
+    };
 
     return (
         <CourierLayout>
-            <Head title="Courier Dashboard" />
-            <h1 className="text-xl font-semibold sm:text-2xl">Dashboard</h1>
+            <Head title="Dashboard" />
 
-            {/* Performance Summary */}
-            {performance && (
-                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Performa Hari Ini</h2>
-                    <div className="mt-3 grid grid-cols-3 gap-3">
-                        <div className="text-center">
-                            <div className="text-2xl font-bold text-emerald-700">{performance.successRate}%</div>
-                            <div className="text-[11px] text-slate-500">Tingkat Sukses</div>
+            {/* Availability Bar */}
+            <div className="mb-5 flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4">
+                <div className="flex items-center gap-3">
+                    <div className={`h-3 w-3 rounded-full ${courier.is_online ? 'bg-emerald-500' : 'bg-slate-300'}`} />
+                    <div>
+                        <div className="text-sm font-semibold text-slate-900">
+                            {courier.is_online ? 'Online' : 'Offline'}
                         </div>
-                        <div className="text-center">
-                            <div className="text-2xl font-bold text-blue-700">{performance.avgDeliveryTime ?? '-'}m</div>
-                            <div className="text-[11px] text-slate-500">Rata-rata Kirim</div>
-                        </div>
-                        <div className="text-center">
-                            <CapacityBadge status={performance.capacityStatus} count={performance.activeDeliveries} />
-                            <div className="text-[11px] text-slate-500">Kapasitas</div>
-                        </div>
+                        {courier.is_on_shift && courier.shift_started_at && (
+                            <div className="text-[11px] text-slate-500">
+                                Shift sejak {new Date(courier.shift_started_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                        )}
                     </div>
                 </div>
-            )}
-
-            {/* Stats - mobile 2 cols */}
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
-                <StatCard label="Waiting Pickup" value={stats.waitingPickup} color="yellow" urgent={stats.waitingPickup > 0} />
-                <StatCard label="Picked Up" value={stats.pickedUp} color="blue" />
-                <StatCard label="Delivering" value={stats.delivering} color="purple" urgent={stats.delivering > 0} />
-                <StatCard label="Selesai Hari Ini" value={stats.completedToday} color="green" />
-                <StatCard label="Gagal Hari Ini" value={stats.failedToday} color="red" />
+                <div className="flex gap-2">
+                    <button
+                        onClick={toggleOnline}
+                        className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
+                            courier.is_online
+                                ? 'border border-zinc-200 bg-white text-slate-600 active:bg-zinc-50'
+                                : 'bg-emerald-700 text-white active:bg-emerald-800'
+                        }`}
+                    >
+                        {courier.is_online ? 'Go Offline' : 'Go Online'}
+                    </button>
+                    {!courier.is_on_shift ? (
+                        <button
+                            onClick={startShift}
+                            className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition-colors active:bg-emerald-800"
+                        >
+                            Mulai Shift
+                        </button>
+                    ) : (
+                        <button
+                            onClick={endShift}
+                            className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-colors active:bg-red-50"
+                        >
+                            Akhiri Shift
+                        </button>
+                    )}
+                </div>
             </div>
 
-            {/* Next Pickup */}
-            {nextPickup && (
-                <section className="mt-5">
-                    <h2 className="text-sm font-semibold text-slate-700">Pickup Berikutnya</h2>
-                    <Link href={`/courier/deliveries/${nextPickup.id}`} className="mt-2 block rounded-xl border border-amber-200 bg-amber-50 p-4 active:bg-amber-100">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                                <div className="font-medium text-amber-900">{nextPickup.order?.order_code}</div>
-                                <div className="mt-1 text-sm text-amber-700">{nextPickup.order?.customer_name}</div>
-                                <div className="mt-0.5 text-xs text-amber-600 line-clamp-1">{nextPickup.order?.customer_address}</div>
-                                <div className="mt-1 text-xs text-amber-600">Outlet: {nextPickup.order?.outlet?.name ?? '-'}</div>
-                                {nextPickup.assigned_at && (
-                                    <div className="mt-1 text-xs font-medium text-amber-700">
-                                        Di-assign {formatDeliveryAge(nextPickup.assigned_at ? Math.floor((Date.now() - new Date(nextPickup.assigned_at).getTime()) / 60000) : null)} lalu
-                                    </div>
-                                )}
-                            </div>
-                            <DeliveryStatusBadge status={nextPickup.status} />
-                        </div>
-                    </Link>
-                </section>
-            )}
-
-            {/* Quick Actions */}
-            <div className="mt-5 flex gap-2">
-                <Link href="/courier/deliveries?status=waiting_pickup" className="flex-1 rounded-lg bg-emerald-700 px-4 py-3 text-center text-sm font-medium text-white active:bg-emerald-800">
-                    Pickup ({stats.waitingPickup})
-                </Link>
-                <Link href="/courier/deliveries?status=delivering" className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-center text-sm font-medium active:bg-zinc-50">
-                    Delivering ({stats.delivering})
-                </Link>
+            {/* Stats */}
+            <div className="mb-5 grid grid-cols-4 gap-2">
+                <StatCard label="Pickup" value={stats.waitingPickup} color="amber" />
+                <StatCard label="Antar" value={stats.inTransit} color="blue" />
+                <StatCard label="Selesai" value={stats.completedToday} color="emerald" />
+                <StatCard label="Gagal" value={stats.failedToday} color="red" />
             </div>
 
-            {/* Active Deliveries */}
-            {hasActive && (
-                <section className="mt-6">
-                    <h2 className="text-sm font-semibold text-slate-700">Delivery Aktif</h2>
+            {/* Active Delivery Focus */}
+            {tasks.inTransit.length > 0 && (
+                <section className="mb-5">
+                    <SectionLabel>Sedang Diantar</SectionLabel>
                     <div className="mt-2 space-y-2">
-                        {activeDeliveries.map((delivery: any) => (
-                            <Link key={delivery.id} href={`/courier/deliveries/${delivery.id}`} className="block rounded-xl border border-zinc-100 bg-white p-4 active:bg-zinc-50">
+                        {tasks.inTransit.map((task) => (
+                            <Link
+                                key={task.id}
+                                href={`/courier/deliveries/${task.id}`}
+                                className="block rounded-lg border-2 border-blue-200 bg-blue-50 p-4 transition-colors active:bg-blue-100"
+                            >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
-                                        <div className="font-medium">{delivery.order?.order_code}</div>
-                                        <div className="mt-1 text-sm text-zinc-600">{delivery.order?.customer_name}</div>
-                                        <div className="mt-0.5 text-xs text-zinc-400 line-clamp-1">{delivery.order?.customer_address}</div>
-                                        <div className="mt-1 text-xs text-zinc-500">Outlet: {delivery.order?.outlet?.name ?? '-'}</div>
+                                        <div className="text-sm font-bold text-blue-900">{task.order_code}</div>
+                                        <div className="mt-1 text-sm text-blue-700">{task.customer_name}</div>
+                                        <div className="mt-0.5 text-xs text-blue-600 line-clamp-2">{task.customer_address}</div>
                                     </div>
-                                    <DeliveryStatusBadge status={delivery.status} />
+                                    <DeliveryStatusBadge status={task.status ?? 'delivering'} />
+                                </div>
+                                <div className="mt-3 flex gap-2">
+                                    <span className="rounded-md bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700">
+                                        📞 Hubungi
+                                    </span>
+                                    <span className="rounded-md bg-blue-100 px-2.5 py-1 text-xs font-medium text-blue-700">
+                                        🗺️ Maps
+                                    </span>
                                 </div>
                             </Link>
                         ))}
@@ -98,54 +153,119 @@ export default function CourierDashboard({ stats, performance, nextPickup, activ
                 </section>
             )}
 
-            {!hasActive && (
-                <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-zinc-100 bg-white py-12 text-center">
-                    <span className="text-4xl">🎉</span>
-                    <p className="mt-2 text-sm font-medium text-slate-600">Tidak ada delivery aktif</p>
-                    <p className="text-xs text-slate-400">Delivery baru akan muncul saat kamu di-assign.</p>
-                </div>
+            {/* Waiting Pickup */}
+            {tasks.waitingPickup.length > 0 && (
+                <section className="mb-5">
+                    <SectionLabel>Menunggu Pickup ({tasks.waitingPickup.length})</SectionLabel>
+                    <div className="mt-2 space-y-2">
+                        {tasks.waitingPickup.map((task) => (
+                            <Link
+                                key={task.id}
+                                href={`/courier/deliveries/${task.id}`}
+                                className="block rounded-lg border border-amber-200 bg-amber-50 p-4 transition-colors active:bg-amber-100"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-sm font-bold text-amber-900">{task.order_code}</div>
+                                        <div className="mt-0.5 text-xs text-amber-700">{task.customer_name}</div>
+                                        <div className="mt-0.5 text-[11px] text-amber-600">Outlet: {task.outlet_name}</div>
+                                    </div>
+                                    {task.age_minutes !== undefined && task.age_minutes > 15 && (
+                                        <span className="rounded-md bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">
+                                            {task.age_minutes}m
+                                        </span>
+                                    )}
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+                </section>
             )}
 
-            {/* History link */}
-            <div className="mt-6">
-                <Link href="/courier/deliveries" className="block rounded-lg border border-zinc-200 bg-white px-4 py-3 text-center text-sm font-medium text-slate-600 active:bg-zinc-50">
-                    Lihat Semua Riwayat Delivery
-                </Link>
-            </div>
+            {/* Needs Action */}
+            {tasks.needsAction.length > 0 && (
+                <section className="mb-5">
+                    <SectionLabel>Perlu Tindakan ({tasks.needsAction.length})</SectionLabel>
+                    <div className="mt-2 space-y-2">
+                        {tasks.needsAction.map((task) => (
+                            <Link
+                                key={task.id}
+                                href={`/courier/deliveries/${task.id}`}
+                                className="block rounded-lg border border-red-200 bg-red-50 p-4 transition-colors active:bg-red-100"
+                            >
+                                <div className="text-sm font-bold text-red-900">{task.order_code}</div>
+                                <div className="mt-0.5 text-xs text-red-700">{task.customer_name}</div>
+                                {task.failed_reason && (
+                                    <div className="mt-2 rounded-md bg-red-100 px-2 py-1.5 text-xs text-red-700">
+                                        {task.failed_reason}
+                                    </div>
+                                )}
+                            </Link>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Completed Today */}
+            {tasks.completedToday.length > 0 && (
+                <section className="mb-5">
+                    <div className="flex items-center justify-between">
+                        <SectionLabel>Selesai Hari Ini ({tasks.completedToday.length})</SectionLabel>
+                        <Link href="/courier/deliveries?status=completed" className="text-[11px] font-bold text-emerald-700">
+                            Lihat Semua
+                        </Link>
+                    </div>
+                    <div className="mt-2 space-y-2">
+                        {tasks.completedToday.slice(0, 5).map((task) => (
+                            <div
+                                key={task.id}
+                                className="rounded-lg border border-zinc-200 bg-white p-3"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <div className="text-sm font-medium text-slate-700">{task.order_code}</div>
+                                        <div className="text-xs text-slate-500">{task.customer_name}</div>
+                                    </div>
+                                    {task.delivered_to && (
+                                        <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                                            → {task.delivered_to}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Empty State */}
+            {tasks.waitingPickup.length === 0 && tasks.inTransit.length === 0 && tasks.needsAction.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <span className="text-4xl">📦</span>
+                    <p className="mt-2 text-sm font-medium text-slate-600">Tidak ada tugas aktif</p>
+                    <p className="mt-1 text-xs text-slate-400">Tugas baru akan muncul saat Anda di-assign.</p>
+                </div>
+            )}
         </CourierLayout>
     );
 }
 
-function StatCard({ label, value, color, urgent }: { label: string; value: number; color?: string; urgent?: boolean }) {
-    const colorClasses: Record<string, string> = {
-        yellow: 'border-yellow-100 bg-yellow-50',
-        blue: 'border-blue-100 bg-blue-50',
-        purple: 'border-purple-100 bg-purple-50',
-        green: 'border-green-100 bg-green-50',
-        red: 'border-red-100 bg-red-50',
-    };
-    const base = colorClasses[color ?? ''] ?? 'border-zinc-100 bg-white';
-
-    return (
-        <div className={`rounded-xl border p-3 ${base} ${urgent ? 'ring-2 ring-amber-300' : ''}`}>
-            <div className="text-xs font-medium text-slate-500">{label}</div>
-            <div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
-        </div>
-    );
+function SectionLabel({ children }: { children: React.ReactNode }) {
+    return <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">{children}</h2>;
 }
 
-function CapacityBadge({ status, count }: { status: string; count: number }) {
-    const config: Record<string, { label: string; color: string }> = {
-        available: { label: 'Tersedia', color: 'text-emerald-700' },
-        busy: { label: 'Sibuk', color: 'text-amber-700' },
-        overloaded: { label: 'Overload', color: 'text-red-700' },
+function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
+    const colorClasses: Record<string, string> = {
+        amber: 'border-amber-100 bg-amber-50 text-amber-700',
+        blue: 'border-blue-100 bg-blue-50 text-blue-700',
+        emerald: 'border-emerald-100 bg-emerald-50 text-emerald-700',
+        red: 'border-red-100 bg-red-50 text-red-700',
     };
-    const c = config[status] ?? config.available;
 
     return (
-        <div>
-            <div className={`text-2xl font-bold ${c.color}`}>{count}</div>
-            <div className={`text-[10px] font-bold ${c.color}`}>{c.label}</div>
+        <div className={`rounded-lg border p-3 text-center ${colorClasses[color] ?? 'border-zinc-200 bg-white'}`}>
+            <div className="text-2xl font-bold">{value}</div>
+            <div className="text-[10px] font-bold uppercase tracking-wider">{label}</div>
         </div>
     );
 }

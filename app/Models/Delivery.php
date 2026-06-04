@@ -23,6 +23,11 @@ class Delivery extends Model
         'returned_to_outlet' => ['cancelled_and_released'],
     ];
 
+    public const RETURN_STATUSES = [
+        'returning_to_outlet',
+        'returned_to_outlet',
+    ];
+
     protected $fillable = [
         'order_id',
         'courier_id',
@@ -39,6 +44,15 @@ class Delivery extends Model
         'assigned_by',
         'assigned_at',
         'retry_count',
+        'delivered_to',
+        'delivery_note',
+        'rejection_reason',
+        'rejection_note',
+        'rejected_at',
+        'return_status',
+        'return_confirmed_by',
+        'return_confirmed_at',
+        'return_notes',
     ];
 
     protected function casts(): array
@@ -48,6 +62,8 @@ class Delivery extends Model
             'delivered_time' => 'datetime',
             'assigned_at' => 'datetime',
             'resolved_at' => 'datetime',
+            'rejected_at' => 'datetime',
+            'return_confirmed_at' => 'datetime',
         ];
     }
 
@@ -71,6 +87,11 @@ class Delivery extends Model
         return $this->belongsTo(User::class, 'resolved_by');
     }
 
+    public function returnConfirmedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'return_confirmed_by');
+    }
+
     public function statusHistories(): HasMany
     {
         return $this->hasMany(DeliveryStatusHistory::class);
@@ -82,5 +103,20 @@ class Delivery extends Model
         $allowed = self::RESOLUTION_TRANSITIONS[$currentStatus] ?? [];
 
         return in_array($status, $allowed, true);
+    }
+
+    public function isReturning(): bool
+    {
+        return $this->return_status === 'returning_to_outlet';
+    }
+
+    public function isReturned(): bool
+    {
+        return $this->return_status === 'returned_to_outlet';
+    }
+
+    public function isActive(): bool
+    {
+        return in_array($this->status, ['waiting_pickup', 'picked_up', 'delivering'], true);
     }
 }

@@ -61,7 +61,7 @@ class MilestoneThirdTest extends TestCase
         app(DeliveryService::class)->startDelivery($delivery, $context['courier']);
 
         $this->actingAs($context['courier'])
-            ->post(route('courier.deliveries.fail', $delivery), ['failed_reason' => 'Alamat tidak ditemukan'])
+            ->post(route('courier.deliveries.fail', $delivery), ['failed_reason' => 'Alamat Tidak Jelas'])
             ->assertRedirect(route('courier.deliveries.show', $delivery));
 
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
@@ -69,7 +69,7 @@ class MilestoneThirdTest extends TestCase
             ->firstOrFail();
 
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'failed_delivery']);
-        $this->assertDatabaseHas('deliveries', ['id' => $delivery->id, 'status' => 'failed', 'failed_reason' => 'Alamat tidak ditemukan']);
+        $this->assertDatabaseHas('deliveries', ['id' => $delivery->id, 'status' => 'failed', 'failed_reason' => 'Alamat Tidak Jelas']);
         $this->assertSame(10, $inventory->current_stock);
         $this->assertSame(1, $inventory->reserved_stock);
     }
@@ -78,7 +78,7 @@ class MilestoneThirdTest extends TestCase
     {
         $context = $this->makeReadyForPickupOrder(quantity: 1);
         $delivery = app(DeliveryService::class)->assignCourier($context['order'], $context['courier'], $context['owner']);
-        $otherCourier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
+        $otherCourier = User::factory()->create(['role' => 'courier', 'is_active' => true, 'is_online' => true]);
 
         $this->actingAs($otherCourier)
             ->post(route('courier.deliveries.confirm-pickup', $delivery))
@@ -111,7 +111,7 @@ class MilestoneThirdTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $outletUser = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
-        $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
+        $courier = User::factory()->create(['role' => 'courier', 'is_active' => true, 'is_online' => true]);
         $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890' . rand(1000, 9999)]);
 
         $outlet = Outlet::create([

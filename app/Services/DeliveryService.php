@@ -19,9 +19,9 @@ class DeliveryService
         private readonly InventoryService $inventoryService,
     ) {}
 
-    public function assignCourier(Order $order, User $courier, User $assignedBy): Delivery
+    public function assignCourier(Order $order, User $courier, User $assignedBy, bool $overrideCapacity = false, ?string $overrideReason = null): Delivery
     {
-        return DB::transaction(function () use ($order, $courier, $assignedBy): Delivery {
+        return DB::transaction(function () use ($order, $courier, $assignedBy, $overrideCapacity, $overrideReason): Delivery {
             $order = Order::query()->lockForUpdate()->with('delivery')->findOrFail($order->id);
 
             if ($order->status !== 'ready_for_pickup') {
@@ -36,9 +36,30 @@ class DeliveryService
                 ]);
             }
 
-            if ($order->delivery) {
+            if (! $courier->is_online) {
+                throw ValidationException::withMessages([
+                    'courier_id' => 'Kurir sedang offline.',
+                ]);
+            }
+
+            if ($order->delivery && $order->delivery->status !== 'rejected_by_courier') {
                 throw ValidationException::withMessages([
                     'courier_id' => 'Order ini sudah memiliki delivery.',
+                ]);
+            }
+
+            // Delete rejected delivery to allow reassignment
+            if ($order->delivery && $order->delivery->status === 'rejected_by_courier') {
+                $order->delivery->delete();
+            }
+
+            // Capacity check
+            $maxActive = config('delivery.capacity.max_active_deliveries', 3);
+            $activeCount = $this->getCourierActiveDeliveryCount($courier);
+
+            if ($activeCount >= $maxActive && ! $overrideCapacity) {
+                throw ValidationException::withMessages([
+                    'courier_id' => "Kurir sudah memiliki {$activeCount} delivery aktif (maksimal {$maxActive}). Gunakan override untuk memaksa assign.",
                 ]);
             }
 
@@ -50,9 +71,60 @@ class DeliveryService
                 'assigned_at' => now(),
             ]);
 
-            $this->recordHistory($delivery, null, 'waiting_pickup', $assignedBy, $assignedBy->isOwner() ? 'owner' : 'outlet', 'Kurir di-assign.');
+            $courier->recordActivity();
+
+            $reason = 'Kurir di-assign.';
+            if ($overrideCapacity) {
+                $reason = 'Kurir di-assign dengan override kapasitas. Alasan: ' . ($overrideReason ?? 'Tidak ada alasan.');
+            }
+
+            $this->recordHistory($delivery, null, 'waiting_pickup', $assignedBy, $assignedBy->isOwner() ? 'owner' : 'outlet', $reason);
 
             return $delivery->load(['order.outlet', 'order.items.product', 'courier', 'assignedBy']);
+        });
+    }
+
+    public function rejectAssignment(Delivery $delivery, User $courier, string $reason, ?string $note = null): Delivery
+    {
+        return DB::transaction(function () use ($delivery, $courier, $reason, $note): Delivery {
+            $delivery = Delivery::query()->lockForUpdate()->findOrFail($delivery->id);
+
+            if ($delivery->courier_id !== $courier->id) {
+                abort(403);
+            }
+
+            if ($delivery->status !== 'waiting_pickup') {
+                throw ValidationException::withMessages([
+                    'status' => 'Hanya delivery yang menunggu pickup yang bisa ditolak.',
+                ]);
+            }
+
+            $delivery->update([
+                'status' => 'rejected_by_courier',
+                'rejection_reason' => $reason,
+                'rejection_note' => $note,
+                'rejected_at' => now(),
+            ]);
+
+            $courier->recordActivity();
+
+            $this->recordHistory($delivery, 'waiting_pickup', 'rejected_by_courier', $courier, 'courier', $reason);
+
+            // Return order to ready_for_pickup for reassignment
+            $order = $delivery->order;
+            $order->update(['status' => 'ready_for_pickup']);
+            $order->statusHistories()->create([
+                'from_status' => 'ready_for_pickup',
+                'to_status' => 'ready_for_pickup',
+                'notes' => "Kurir menolak assignment. Alasan: {$reason}",
+                'changed_by' => $courier->id,
+                'changed_by_type' => 'courier',
+                'created_at' => now(),
+            ]);
+
+            OperationalLog::deliveryResolved($delivery->id, 'rejected_by_courier', $courier->id);
+
+            return $delivery->fresh();
         });
     }
 
@@ -62,6 +134,7 @@ class DeliveryService
             'pickup_time' => now(),
         ]);
 
+        $courier->recordActivity();
         $this->recordHistory($result, 'waiting_pickup', 'picked_up', $courier, 'courier', 'Kurir mengkonfirmasi pickup.');
 
         return $result;
@@ -71,6 +144,7 @@ class DeliveryService
     {
         $result = $this->transition($delivery, $courier, 'picked_up', 'delivering', 'delivering');
 
+        $courier->recordActivity();
         $this->recordHistory($result, 'picked_up', 'delivering', $courier, 'courier', 'Kurir memulai pengiriman.');
 
         return $result;
@@ -83,27 +157,87 @@ class DeliveryService
                 'delivered_time' => now(),
                 'notes' => $payload['notes'] ?? $delivery->notes,
                 'proof_image' => $payload['proof_image'] ?? $delivery->proof_image,
+                'delivered_to' => $payload['delivered_to'] ?? $delivery->delivered_to,
+                'delivery_note' => $payload['delivery_note'] ?? $delivery->delivery_note,
             ]);
 
             $this->inventoryService->completeOrderStock($delivery->order);
 
+            $courier->recordActivity();
             $this->recordHistory($delivery, 'delivering', 'completed', $courier, 'courier', 'Pengiriman selesai.');
 
             return $delivery->fresh(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier']);
         });
     }
 
-    public function failDelivery(Delivery $delivery, User $courier, string $reason): Delivery
+    public function failDelivery(Delivery $delivery, User $courier, string $reason, ?string $failureNote = null): Delivery
     {
+        $failedReason = $reason;
+        if ($reason === 'Lainnya' && $failureNote) {
+            $failedReason = 'Lainnya: ' . $failureNote;
+        }
+
         $result = $this->transition($delivery, $courier, 'delivering', 'failed', 'failed_delivery', [
-            'failed_reason' => $reason,
+            'failed_reason' => $failedReason,
         ]);
 
+        $courier->recordActivity();
         $this->recordHistory($result, 'delivering', 'failed', $courier, 'courier', $reason);
 
         OperationalLog::deliveryFailed($result->id, $result->order_id, $courier->id, $reason);
 
         return $result;
+    }
+
+    public function returnToOutlet(Delivery $delivery, User $courier, ?string $note = null): Delivery
+    {
+        return DB::transaction(function () use ($delivery, $courier, $note): Delivery {
+            $delivery = Delivery::query()->lockForUpdate()->findOrFail($delivery->id);
+
+            if ($delivery->courier_id !== $courier->id) {
+                abort(403);
+            }
+
+            if ($delivery->status !== 'failed') {
+                throw ValidationException::withMessages([
+                    'status' => 'Hanya delivery gagal yang bisa dikembalikan ke outlet.',
+                ]);
+            }
+
+            $delivery->update([
+                'return_status' => 'returning_to_outlet',
+                'return_notes' => $note,
+            ]);
+
+            $courier->recordActivity();
+            $this->recordHistory($delivery, 'failed', 'returning_to_outlet', $courier, 'courier', $note ?? 'Mengembalikan pesanan ke outlet.');
+
+            return $delivery->fresh();
+        });
+    }
+
+    public function confirmReturn(Delivery $delivery, User $outletUser, ?string $note = null): Delivery
+    {
+        return DB::transaction(function () use ($delivery, $outletUser, $note): Delivery {
+            $delivery = Delivery::query()->lockForUpdate()->findOrFail($delivery->id);
+
+            if ($delivery->return_status !== 'returning_to_outlet') {
+                throw ValidationException::withMessages([
+                    'status' => 'Delivery belum dalam status returning_to_outlet.',
+                ]);
+            }
+
+            $delivery->update([
+                'return_status' => 'returned_to_outlet',
+                'return_confirmed_by' => $outletUser->id,
+                'return_confirmed_at' => now(),
+                'return_notes' => $note ?? $delivery->return_notes,
+            ]);
+
+            $this->recordHistory($delivery, 'returning_to_outlet', 'returned_to_outlet', $outletUser, 'outlet', $note ?? 'Outlet mengkonfirmasi penerimaan barang kembali.');
+
+            return $delivery->fresh();
+        });
     }
 
     /**
@@ -239,6 +373,7 @@ class DeliveryService
     {
         return User::where('role', 'courier')
             ->where('is_active', true)
+            ->where('is_online', true)
             ->orderBy('name')
             ->get()
             ->map(function (User $courier): array {
@@ -246,6 +381,8 @@ class DeliveryService
                     'id' => $courier->id,
                     'name' => $courier->name,
                     'active_deliveries' => $this->getCourierActiveDeliveryCount($courier),
+                    'is_online' => $courier->is_online,
+                    'is_on_shift' => $courier->isOnShift(),
                 ];
             });
     }

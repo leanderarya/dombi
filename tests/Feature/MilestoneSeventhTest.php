@@ -105,7 +105,8 @@ class MilestoneSeventhTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('courier/dashboard')
                 ->has('stats')
-                ->has('activeDeliveries')
+                ->has('tasks')
+                ->has('courier')
             );
     }
 
