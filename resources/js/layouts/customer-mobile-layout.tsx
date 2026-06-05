@@ -10,16 +10,14 @@ import { useCart } from '@/lib/use-cart';
 
 interface Props extends PropsWithChildren {
     activeOrder?: any;
-    /** Override address display in top bar (optional — defaults to shared auth.defaultAddress) */
     topAddress?: string | null;
     footerSlot?: ReactNode;
     hideTopBar?: boolean;
-    products?: { id: number; price: number | string }[];
     hideCartBar?: boolean;
     hideBottomNav?: boolean;
 }
 
-export default function CustomerMobileLayout({ children, activeOrder, topAddress, footerSlot, hideTopBar = false, products, hideCartBar = false, hideBottomNav = false }: Props) {
+export default function CustomerMobileLayout({ children, activeOrder, topAddress, footerSlot, hideTopBar = false, hideCartBar = false, hideBottomNav = false }: Props) {
     const { flash } = usePage<any>().props;
     const { totalItems } = useCart();
 
@@ -41,7 +39,7 @@ export default function CustomerMobileLayout({ children, activeOrder, topAddress
                 {children}
             </main>
 
-            {footerSlot ?? (activeOrder ? <ActiveOrderBar order={activeOrder} /> : showCartBar ? <FloatingCartBar products={products} /> : null)}
+            {footerSlot ?? (activeOrder ? <ActiveOrderBar order={activeOrder} /> : showCartBar ? <FloatingCartBar /> : null)}
             {!hideBottomNav && <CustomerBottomNav />}
         </div>
     );

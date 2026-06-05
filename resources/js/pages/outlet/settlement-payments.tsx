@@ -1,0 +1,200 @@
+import { Head, useForm, router } from '@inertiajs/react';
+import { useState } from 'react';
+import { formatCurrency, formatDate } from '@/lib/format';
+
+interface Payment {
+    id: number;
+    reference_number: string;
+    payment_date: string;
+    amount: number;
+    status: string;
+    notes: string | null;
+    rejection_reason: string | null;
+    verifier: { name: string } | null;
+    verified_at: string | null;
+}
+
+interface Props {
+    payments: {
+        data: Payment[];
+        current_page: number;
+        last_page: number;
+    };
+}
+
+export default function OutletSettlementPayments({ payments }: Props) {
+    const [showForm, setShowForm] = useState(false);
+
+    const { data, setData, post, processing, errors, reset } = useForm({
+        amount: '',
+        reference_number: '',
+        payment_date: new Date().toISOString().split('T')[0],
+        notes: '',
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post('/outlet/settlement-payments', {
+            onSuccess: () => {
+                reset();
+                setShowForm(false);
+            },
+        });
+    };
+
+    const statusLabels: Record<string, string> = {
+        pending_verification: 'Menunggu Verifikasi',
+        verified: 'Terverifikasi',
+        rejected: 'Ditolak',
+    };
+
+    const statusColors: Record<string, string> = {
+        pending_verification: 'bg-amber-50 text-amber-800',
+        verified: 'bg-emerald-50 text-emerald-800',
+        rejected: 'bg-red-50 text-red-800',
+    };
+
+    return (
+        <>
+            <Head title="Pembayaran Settlement" />
+
+            <div className="p-4">
+                <div className="mb-4 flex items-center justify-between">
+                    <h1 className="text-lg font-bold text-slate-900">Pembayaran Settlement</h1>
+                    <button
+                        onClick={() => setShowForm(!showForm)}
+                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                    >
+                        {showForm ? 'Batal' : 'Bayar'}
+                    </button>
+                </div>
+
+                {/* Payment Form */}
+                {showForm && (
+                    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
+                        <h2 className="mb-3 text-sm font-semibold text-slate-900">Submit Pembayaran</h2>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-zinc-500">Jumlah (Rp)</label>
+                                <input
+                                    type="number"
+                                    value={data.amount}
+                                    onChange={(e) => setData('amount', e.target.value)}
+                                    min="1"
+                                    required
+                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    placeholder="1200000"
+                                />
+                                {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount}</p>}
+                            </div>
+
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-zinc-500">Nomor Referensi</label>
+                                <input
+                                    type="text"
+                                    value={data.reference_number}
+                                    onChange={(e) => setData('reference_number', e.target.value)}
+                                    required
+                                    maxLength={100}
+                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    placeholder="TRF-20260605-001"
+                                />
+                                {errors.reference_number && <p className="mt-1 text-xs text-red-600">{errors.reference_number}</p>}
+                            </div>
+
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-zinc-500">Tanggal Pembayaran</label>
+                                <input
+                                    type="date"
+                                    value={data.payment_date}
+                                    onChange={(e) => setData('payment_date', e.target.value)}
+                                    required
+                                    max={new Date().toISOString().split('T')[0]}
+                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                />
+                                {errors.payment_date && <p className="mt-1 text-xs text-red-600">{errors.payment_date}</p>}
+                            </div>
+
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-zinc-500">Catatan (opsional)</label>
+                                <textarea
+                                    value={data.notes}
+                                    onChange={(e) => setData('notes', e.target.value)}
+                                    maxLength={500}
+                                    rows={2}
+                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    placeholder="Transfer via BCA..."
+                                />
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={processing}
+                                className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                            >
+                                {processing ? 'Mengirim...' : 'Kirim Pembayaran'}
+                            </button>
+                        </div>
+                    </form>
+                )}
+
+                {/* Payment List */}
+                <div className="space-y-2">
+                    {payments.data.length === 0 ? (
+                        <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center">
+                            <p className="text-sm text-zinc-500">Belum ada pembayaran</p>
+                        </div>
+                    ) : (
+                        payments.data.map((payment) => (
+                            <div key={payment.id} className="rounded-xl border border-zinc-200 bg-white p-4">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <div className="text-sm font-semibold text-slate-900">{formatCurrency(payment.amount)}</div>
+                                        <div className="text-xs text-zinc-500">{payment.reference_number}</div>
+                                        <div className="text-xs text-zinc-400">{formatDate(payment.payment_date)}</div>
+                                    </div>
+                                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[payment.status]}`}>
+                                        {statusLabels[payment.status]}
+                                    </span>
+                                </div>
+                                {payment.notes && (
+                                    <div className="mt-2 text-xs text-zinc-500">{payment.notes}</div>
+                                )}
+                                {payment.rejection_reason && (
+                                    <div className="mt-2 rounded-lg bg-red-50 p-2 text-xs text-red-700">
+                                        Alasan ditolak: {payment.rejection_reason}
+                                    </div>
+                                )}
+                                {payment.verifier && (
+                                    <div className="mt-2 text-xs text-zinc-400">
+                                        Diverifikasi oleh {payment.verifier.name}
+                                    </div>
+                                )}
+                            </div>
+                        ))
+                    )}
+                </div>
+
+                {/* Pagination */}
+                {payments.last_page > 1 && (
+                    <div className="mt-4 flex justify-center gap-2">
+                        {Array.from({ length: payments.last_page }, (_, i) => i + 1).map((page) => (
+                            <button
+                                key={page}
+                                onClick={() => router.get(`/outlet/settlement-payments?page=${page}`)}
+                                className={`h-8 w-8 rounded-lg text-sm ${
+                                    page === payments.current_page
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-zinc-100 text-zinc-600'
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </>
+    );
+}

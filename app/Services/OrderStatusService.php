@@ -43,6 +43,7 @@ class OrderStatusService
     public function __construct(
         private readonly InventoryService $inventoryService,
         private readonly NotificationService $notificationService,
+        private readonly SettlementService $settlementService,
     ) {}
 
     public function updateStatus(Order $order, string $status, ?User $actor = null): Order
@@ -86,6 +87,11 @@ class OrderStatusService
 
             // Fire notifications based on status
             $this->fireStatusNotifications($order, $fromStatus, $status);
+
+            // Record settlement payable when order is completed
+            if ($status === 'completed') {
+                $this->settlementService->recordSale($order->fresh('items'));
+            }
 
             return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
         });

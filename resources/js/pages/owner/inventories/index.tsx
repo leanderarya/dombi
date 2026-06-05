@@ -43,7 +43,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
 
                 {outletSections.length === 0 && (
                     <div className="mt-8 flex flex-col items-center py-10 text-center">
-                        <span className="text-3xl">📦</span>
+                        <span className="text-3xl">&#128230;</span>
                         <p className="mt-2 text-sm font-semibold text-slate-600">Tidak ada outlet aktif</p>
                     </div>
                 )}
@@ -61,10 +61,19 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                             className: 'font-medium text-slate-900',
                         },
                         {
-                            key: 'product_name',
+                            key: 'variant_name',
                             label: 'Produk',
                             className: 'font-semibold text-slate-900',
-                            render: (row: any) => row.product?.name ?? '-',
+                            render: (row: any) => {
+                                const familyName = row.variant?.family?.name;
+                                const variantName = row.variant?.name ?? row.product?.name ?? '-';
+                                return (
+                                    <div>
+                                        {familyName && <div className="text-[11px] text-slate-400">{familyName}</div>}
+                                        <div>{variantName}</div>
+                                    </div>
+                                );
+                            },
                         },
                         {
                             key: 'current_stock',
@@ -127,6 +136,25 @@ function OutletSection({ section, onAdjust }: { section: any; onAdjust?: (item: 
     };
     const config = healthConfig[section.health as keyof typeof healthConfig] ?? healthConfig.healthy;
 
+    // Group inventories by family
+    const familyGroups = new Map<number, { family: any; items: any[] }>();
+    const noFamilyItems: any[] = [];
+
+    for (const item of section.inventories) {
+        const familyId = item.variant?.family_id ?? item.variant?.family?.id;
+        if (familyId) {
+            if (!familyGroups.has(familyId)) {
+                familyGroups.set(familyId, {
+                    family: item.variant?.family,
+                    items: [],
+                });
+            }
+            familyGroups.get(familyId)!.items.push(item);
+        } else {
+            noFamilyItems.push(item);
+        }
+    }
+
     return (
         <div className="rounded-xl border border-slate-200 bg-white">
             <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
@@ -142,11 +170,28 @@ function OutletSection({ section, onAdjust }: { section: any; onAdjust?: (item: 
                 </StatusBadge>
             </div>
 
-            <div className="divide-y divide-slate-50">
-                {section.inventories.map((item: any) => (
-                    <SkuRow key={item.id} item={item} onAdjust={onAdjust ? () => onAdjust(item) : undefined} />
-                ))}
-            </div>
+            {/* Grouped by family */}
+            {[...familyGroups.entries()].map(([familyId, group]) => (
+                <div key={familyId}>
+                    <div className="border-b border-slate-50 bg-slate-50/50 px-4 py-2">
+                        <div className="text-xs font-semibold text-slate-600">{group.family?.name ?? 'Unknown Family'}</div>
+                    </div>
+                    <div className="divide-y divide-slate-50">
+                        {group.items.map((item: any) => (
+                            <SkuRow key={item.id} item={item} onAdjust={onAdjust ? () => onAdjust(item) : undefined} />
+                        ))}
+                    </div>
+                </div>
+            ))}
+
+            {/* Items without family */}
+            {noFamilyItems.length > 0 && (
+                <div className="divide-y divide-slate-50">
+                    {noFamilyItems.map((item: any) => (
+                        <SkuRow key={item.id} item={item} onAdjust={onAdjust ? () => onAdjust(item) : undefined} />
+                    ))}
+                </div>
+            )}
 
             {section.inventories.length > 0 && (
                 <div className="flex gap-2 border-t border-slate-100 px-4 py-2.5">
@@ -168,12 +213,15 @@ function SkuRow({ item, onAdjust }: { item: any; onAdjust?: () => void }) {
     const isCritical = available <= 0;
     const isWarning = item.reserved_stock > item.current_stock * 0.5;
 
+    const displayName = item.variant?.name ?? item.product?.name ?? '-';
+    const familyName = item.variant?.family?.name;
+
     return (
         <div className="flex items-center gap-3 px-4 py-2.5">
             <div className="min-w-0 flex-1">
-                <div className="text-xs font-semibold text-slate-900">{item.product?.name ?? '-'}</div>
+                <div className="text-xs font-semibold text-slate-900">{displayName}</div>
                 <div className={`mt-0.5 text-[11px] ${isWarning ? 'text-amber-600' : 'text-slate-400'}`}>
-                    {isWarning && '⚠ '}R:{item.reserved_stock} / C:{item.current_stock}
+                    {isWarning && '! '}R:{item.reserved_stock} / C:{item.current_stock}
                 </div>
             </div>
             <div className="text-right">

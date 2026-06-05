@@ -15,7 +15,7 @@ class StoreRestockRequest extends FormRequest
     {
         return [
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_id' => ['required', 'exists:products,id'],
+            'items.*.product_variant_id' => ['required', 'exists:product_variants,id'],
             'items.*.requested_quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string'],
         ];

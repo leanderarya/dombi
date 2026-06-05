@@ -3,6 +3,7 @@
 use App\Http\Middleware\DevOnly;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\AllowGuestOrCustomer;
+use App\Http\Middleware\AllowCustomerOrRecoveredGuest;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
@@ -24,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'guest.or.customer' => AllowGuestOrCustomer::class,
+            'customer.or.recovered' => AllowCustomerOrRecoveredGuest::class,
             'role' => RoleMiddleware::class,
             'password.changed' => EnsurePasswordIsChanged::class,
             'dev' => DevOnly::class,

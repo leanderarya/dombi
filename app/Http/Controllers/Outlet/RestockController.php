@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Outlet\ConfirmDistributionReceivedRequest;
 use App\Http\Requests\Outlet\StoreRestockRequest;
 use App\Models\OutletInventory;
-use App\Models\Product;
+use App\Models\ProductFamily;
 use App\Models\RestockRequest;
 use App\Models\StockDistribution;
 use App\Services\RestockService;
@@ -39,9 +39,14 @@ class RestockController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
+        $families = ProductFamily::where('is_active', true)
+            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('outlet/restocks/create', [
-            'products' => Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'unit']),
-            'inventories' => OutletInventory::with('product')
+            'families' => $families,
+            'inventories' => OutletInventory::with('variant.family')
                 ->where('outlet_id', $outlet->id)
                 ->get(),
         ]);
@@ -60,7 +65,7 @@ class RestockController extends Controller
         abort_unless($outlet && $restockRequest->outlet_id === $outlet->id, 403);
 
         return Inertia::render('outlet/restocks/show', [
-            'restock' => $restockRequest->load(['outlet', 'items.product', 'distribution.items.product']),
+            'restock' => $restockRequest->load(['outlet', 'items.variant.family', 'distribution.items.variant.family']),
         ]);
     }
 

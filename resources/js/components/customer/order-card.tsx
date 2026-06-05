@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { orderStatusLabel, orderStatusTone } from '@/lib/customer-status';
 import { formatCurrency, formatDate } from '@/lib/format';
 
@@ -35,12 +35,12 @@ export default function OrderCard({ order, showReorder = false }: Props) {
                 </div>
             </Link>
             {showReorder && (
-                <button
-                    onClick={() => router.post(`/customer/orders/${order.id}/repeat`)}
+                <Link
+                    href={`/customer/orders/${order.id}/restore-cart`}
                     className="mt-3 flex min-h-11 w-full items-center justify-center rounded-lg border border-emerald-200 bg-emerald-50 text-sm font-semibold text-emerald-800 active:bg-emerald-100"
                 >
                     Order ulang
-                </button>
+                </Link>
             )}
         </div>
     );

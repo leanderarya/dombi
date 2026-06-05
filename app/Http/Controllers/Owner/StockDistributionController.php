@@ -32,7 +32,7 @@ class StockDistributionController extends Controller
     public function show(StockDistribution $distribution): Response
     {
         return Inertia::render('owner/distributions/show', [
-            'distribution' => $distribution->load(['outlet', 'items.product', 'restockRequest.items.product', 'sender', 'receiver']),
+            'distribution' => $distribution->load(['outlet', 'items.variant.family', 'restockRequest.items.variant.family', 'sender', 'receiver']),
         ]);
     }
 

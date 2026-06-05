@@ -7,6 +7,8 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
+use App\Models\ProductFamily;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -38,9 +40,22 @@ class MilestoneSecondTest extends TestCase
             'is_active' => true,
         ]);
 
+        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        $variant = ProductVariant::create([
+            'product_family_id' => $family->id,
+            'product_id' => $product->id,
+            'name' => 'Original 500ml',
+            'flavor' => 'Original',
+            'size' => '500ml',
+            'center_price' => 20000,
+            'selling_price' => 25000,
+            'is_active' => true,
+        ]);
+
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
             'current_stock' => 5,
             'reserved_stock' => 2,
             'minimum_stock' => 1,
@@ -49,6 +64,7 @@ class MilestoneSecondTest extends TestCase
         $order = $this->makeOrder($outlet);
         $order->items()->create([
             'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
             'product_name' => $product->name,
             'quantity' => 2,
             'price' => 25000,

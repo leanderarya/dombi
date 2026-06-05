@@ -11,23 +11,29 @@ const content = {
         title: 'Belum ada pesanan',
         description: 'Pesanan yang kamu buat akan muncul di sini.',
         showCta: true,
+        ctaLabel: 'Pesan Sekarang',
+        ctaHref: '/customer/checkout',
     },
     'no-active': {
         icon: CheckCircle,
         title: 'Tidak ada pesanan aktif',
         description: 'Semua pesanan sudah selesai diproses.',
-        showCta: false,
+        showCta: true,
+        ctaLabel: 'Pesan Lagi',
+        ctaHref: '/customer/products',
     },
     'no-results': {
         icon: Search,
         title: 'Tidak ada hasil',
         description: 'Coba ubah filter untuk melihat pesanan lain.',
         showCta: false,
+        ctaLabel: '',
+        ctaHref: '',
     },
 };
 
 export default function EmptyOrderState({ type = 'no-orders' }: Props) {
-    const { icon: Icon, title, description, showCta } = content[type];
+    const { icon: Icon, title, description, showCta, ctaLabel, ctaHref } = content[type];
 
     return (
         <div className="flex flex-col items-center justify-center rounded-lg border border-zinc-100 bg-white py-12 text-center">
@@ -35,8 +41,8 @@ export default function EmptyOrderState({ type = 'no-orders' }: Props) {
             <p className="mt-3 text-sm font-semibold text-slate-700">{title}</p>
             <p className="mt-1 text-xs text-slate-400">{description}</p>
             {showCta && (
-                <Link href="/customer/checkout" className="mt-4 flex min-h-10 items-center rounded-lg bg-emerald-700 px-5 text-sm font-semibold text-white active:bg-emerald-800">
-                    Pesan Sekarang
+                <Link href={ctaHref ?? '/customer/checkout'} className="mt-4 flex min-h-10 items-center rounded-lg bg-emerald-700 px-5 text-sm font-semibold text-white active:bg-emerald-800">
+                    {ctaLabel ?? 'Pesan Sekarang'}
                 </Link>
             )}
         </div>

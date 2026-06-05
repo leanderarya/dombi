@@ -30,8 +30,10 @@ class RestockService
             ]);
 
             foreach ($payload['items'] as $item) {
+                $variant = \App\Models\ProductVariant::find($item['product_variant_id']);
                 $request->items()->create([
-                    'product_id' => $item['product_id'],
+                    'product_id' => $variant?->product_id,
+                    'product_variant_id' => $item['product_variant_id'],
                     'requested_quantity' => $item['requested_quantity'],
                 ]);
             }
@@ -39,7 +41,7 @@ class RestockService
             $request->load('outlet');
             $this->notificationService->notifyRestockCreated($request);
 
-            return $request->load(['outlet', 'items.product']);
+            return $request->load(['outlet', 'items.variant.family']);
         });
     }
 
@@ -88,7 +90,7 @@ class RestockService
 
             $this->notificationService->notifyRestockApproved($request->fresh());
 
-            return $request->fresh(['outlet', 'items.product', 'distribution.items.product']);
+            return $request->fresh(['outlet', 'items.variant.family', 'distribution.items.variant.family']);
         });
     }
 
@@ -110,7 +112,7 @@ class RestockService
 
             $this->notificationService->notifyRestockRejected($request->fresh(), $reason);
 
-            return $request->fresh(['outlet', 'items.product']);
+            return $request->fresh(['outlet', 'items.variant.family']);
         });
     }
 
@@ -125,7 +127,7 @@ class RestockService
 
             // Idempotency: if distribution already exists, return it
             if ($request->distribution) {
-                return $request->distribution->load('items.product');
+                return $request->distribution->load('items.variant.family');
             }
 
             $distribution = StockDistribution::create([
@@ -143,6 +145,7 @@ class RestockService
 
                 $distribution->items()->create([
                     'product_id' => $item->product_id,
+                    'product_variant_id' => $item->product_variant_id,
                     'quantity' => $item->approved_quantity,
                 ]);
                 $hasItems = true;
@@ -154,7 +157,7 @@ class RestockService
                 ]);
             }
 
-            return $distribution->load(['outlet', 'items.product']);
+            return $distribution->load(['outlet', 'items.variant.family']);
         });
     }
 
@@ -177,7 +180,7 @@ class RestockService
 
             $this->notificationService->notifyDistributionSent($distribution->fresh());
 
-            return $distribution->fresh(['outlet', 'items.product', 'restockRequest']);
+            return $distribution->fresh(['outlet', 'items.variant.family', 'restockRequest']);
         });
     }
 
@@ -193,7 +196,7 @@ class RestockService
 
             // Idempotency: if already completed, return without error
             if (in_array($distribution->status, ['received', 'completed'], true)) {
-                return $distribution->fresh(['outlet', 'items.product', 'restockRequest']);
+                return $distribution->fresh(['outlet', 'items.variant.family', 'restockRequest']);
             }
 
             if ($distribution->status !== 'shipped') {
@@ -203,14 +206,14 @@ class RestockService
             foreach ($distribution->items as $item) {
                 $inventory = OutletInventory::query()
                     ->where('outlet_id', $distribution->outlet_id)
-                    ->where('product_id', $item->product_id)
+                    ->where('product_variant_id', $item->product_variant_id)
                     ->lockForUpdate()
                     ->first();
 
                 if (! $inventory) {
                     $inventory = OutletInventory::create([
                         'outlet_id' => $distribution->outlet_id,
-                        'product_id' => $item->product_id,
+                        'product_variant_id' => $item->product_variant_id,
                         'current_stock' => 0,
                         'reserved_stock' => 0,
                         'minimum_stock' => 0,
@@ -226,6 +229,7 @@ class RestockService
                 StockMovement::create([
                     'outlet_id' => $distribution->outlet_id,
                     'product_id' => $item->product_id,
+                    'product_variant_id' => $item->product_variant_id,
                     'type' => 'restock_in',
                     'quantity' => $item->quantity,
                     'before_stock' => $beforeStock,
@@ -249,7 +253,7 @@ class RestockService
 
             $this->notificationService->notifyDistributionReceived($distribution->fresh());
 
-            return $distribution->fresh(['outlet', 'items.product', 'restockRequest']);
+            return $distribution->fresh(['outlet', 'items.variant.family', 'restockRequest']);
         });
     }
 }

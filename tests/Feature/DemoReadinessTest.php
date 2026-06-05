@@ -6,7 +6,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\User;
-use Database\Seeders\DemoSeeder;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -29,7 +29,7 @@ class DemoReadinessTest extends TestCase
 
     public function test_demo_seeder_creates_login_accounts_and_sample_flow_data(): void
     {
-        $this->seed(DemoSeeder::class);
+        $this->seed(DatabaseSeeder::class);
 
         $this->assertDatabaseHas('users', ['email' => 'owner@example.com', 'role' => 'owner']);
         $this->assertDatabaseHas('users', ['email' => 'outlet.tembalang@example.com', 'role' => 'outlet']);
@@ -44,7 +44,7 @@ class DemoReadinessTest extends TestCase
 
     public function test_demo_accounts_can_open_their_dashboards_only(): void
     {
-        $this->seed(DemoSeeder::class);
+        $this->seed(DatabaseSeeder::class);
 
         $owner = User::where('email', 'owner@example.com')->firstOrFail();
         $outlet = User::where('email', 'outlet.banyumanik@example.com')->firstOrFail();

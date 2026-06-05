@@ -28,6 +28,27 @@ class OrderTrackingTest extends TestCase
             );
     }
 
+    public function test_order_exposes_public_tracking_url_accessor(): void
+    {
+        $order = $this->createOrder();
+
+        $this->assertSame(url('/track/' . $order->recovery_token), $order->tracking_url);
+    }
+
+    public function test_public_track_page_includes_tracking_link_payload_for_sharing(): void
+    {
+        $order = $this->createOrder();
+
+        $this->get('/track/' . $order->recovery_token)
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('track')
+                ->where('found', true)
+                ->where('order.recovery_token', $order->recovery_token)
+                ->where('order.tracking_url', url('/track/' . $order->recovery_token))
+            );
+    }
+
     public function test_public_track_page_returns_not_found_for_invalid_token(): void
     {
         $this->get('/track/INVALID1')

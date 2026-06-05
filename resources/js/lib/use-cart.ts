@@ -1,17 +1,12 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 export interface CartItem {
-    product_id: number;
+    product_variant_id: number;
     quantity: number;
 }
 
 type Listener = () => void;
 
-/**
- * Lightweight client-side cart store.
- * Persists to sessionStorage so it survives Inertia page navigations.
- * Returns new array references on mutation for React change detection.
- */
 class CartStore {
     private items: CartItem[] = [];
     private listeners: Set<Listener> = new Set();
@@ -26,36 +21,36 @@ class CartStore {
         return this.snapshot;
     }
 
-    getQuantity(productId: number): number {
-        return this.items.find((i) => i.product_id === productId)?.quantity ?? 0;
+    getQuantity(variantId: number): number {
+        return this.items.find((i) => i.product_variant_id === variantId)?.quantity ?? 0;
     }
 
-    addItem(productId: number): void {
-        const existing = this.items.find((i) => i.product_id === productId);
+    addItem(variantId: number, qty: number = 1): void {
+        const existing = this.items.find((i) => i.product_variant_id === variantId);
         if (existing) {
-            existing.quantity += 1;
+            existing.quantity += qty;
         } else {
-            this.items.push({ product_id: productId, quantity: 1 });
+            this.items.push({ product_variant_id: variantId, quantity: qty });
         }
         this.commit();
     }
 
-    setQuantity(productId: number, quantity: number): void {
+    setQuantity(variantId: number, quantity: number): void {
         if (quantity <= 0) {
-            this.removeItem(productId);
+            this.removeItem(variantId);
             return;
         }
-        const existing = this.items.find((i) => i.product_id === productId);
+        const existing = this.items.find((i) => i.product_variant_id === variantId);
         if (existing) {
             existing.quantity = quantity;
         } else {
-            this.items.push({ product_id: productId, quantity });
+            this.items.push({ product_variant_id: variantId, quantity });
         }
         this.commit();
     }
 
-    removeItem(productId: number): void {
-        this.items = this.items.filter((i) => i.product_id !== productId);
+    removeItem(variantId: number): void {
+        this.items = this.items.filter((i) => i.product_variant_id !== variantId);
         this.commit();
     }
 
@@ -96,7 +91,7 @@ class CartStore {
                 const parsed = JSON.parse(stored);
                 if (Array.isArray(parsed)) {
                     this.items = parsed.filter(
-                        (i: any) => typeof i.product_id === 'number' && typeof i.quantity === 'number' && i.quantity > 0
+                        (i: any) => typeof i.product_variant_id === 'number' && typeof i.quantity === 'number' && i.quantity > 0
                     );
                 }
             }
@@ -112,31 +107,21 @@ const subscribe = (cb: Listener) => store.subscribe(cb);
 const getSnapshot = () => store.getSnapshot();
 const getServerSnapshot = () => [] as CartItem[];
 
-/**
- * React hook for reactive cart access.
- * All derived values (totalItems) are computed from the subscribed snapshot
- * to guarantee consistency — never stale.
- */
 export function useCart() {
     const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
-    // Derive totalItems from the snapshot — guaranteed in sync
     const totalItems = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
 
-    const addItem = useCallback((productId: number) => store.addItem(productId), []);
-    const setQuantity = useCallback((productId: number, qty: number) => store.setQuantity(productId, qty), []);
-    const removeItem = useCallback((productId: number) => store.removeItem(productId), []);
+    const addItem = useCallback((variantId: number, qty?: number) => store.addItem(variantId, qty), []);
+    const setQuantity = useCallback((variantId: number, qty: number) => store.setQuantity(variantId, qty), []);
+    const removeItem = useCallback((variantId: number) => store.removeItem(variantId), []);
     const clear = useCallback(() => store.clear(), []);
-    const getQuantity = useCallback((productId: number) => store.getQuantity(productId), []);
+    const getQuantity = useCallback((variantId: number) => store.getQuantity(variantId), []);
 
     return { items, totalItems, getQuantity, addItem, setQuantity, removeItem, clear };
 }
 
-/**
- * Lightweight hook for a single product's quantity.
- * Derives from the items snapshot — re-renders only when items change.
- */
-export function useProductQuantity(productId: number): number {
+export function useProductQuantity(variantId: number): number {
     const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-    return items.find((i) => i.product_id === productId)?.quantity ?? 0;
+    return items.find((i) => i.product_variant_id === variantId)?.quantity ?? 0;
 }

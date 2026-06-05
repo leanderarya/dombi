@@ -49,13 +49,13 @@ return new class extends Migration
         Schema::create('outlet_inventories', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('outlet_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
             $table->unsignedInteger('current_stock')->default(0);
             $table->unsignedInteger('reserved_stock')->default(0);
             $table->unsignedInteger('minimum_stock')->default(0);
             $table->timestamp('last_restock_at')->nullable();
             $table->timestamps();
-            $table->unique(['outlet_id', 'product_id']);
+            // Unique constraint on [outlet_id, product_variant_id] added in variant migration
         });
 
         Schema::create('customer_addresses', function (Blueprint $table): void {
@@ -95,7 +95,7 @@ return new class extends Migration
         Schema::create('order_items', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('order_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('product_id')->constrained()->restrictOnDelete();
+            $table->foreignId('product_id')->nullable()->constrained()->nullOnDelete();
             $table->string('product_name');
             $table->unsignedInteger('quantity');
             $table->decimal('price', 12, 2);

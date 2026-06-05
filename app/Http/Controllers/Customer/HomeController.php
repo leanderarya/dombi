@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Outlet;
-use App\Models\Product;
+use App\Models\ProductFamily;
 use App\Services\DeliveryPricingService;
 use App\Services\OutletAssignmentService;
 use Inertia\Inertia;
@@ -39,8 +39,15 @@ class HomeController extends Controller
             }
         }
 
+        $families = ProductFamily::query()
+            ->where('is_active', true)
+            ->with(['variants' => fn ($q) => $q->where('is_active', true)])
+            ->orderBy('name')
+            ->limit(6)
+            ->get();
+
         return Inertia::render('customer/home', [
-            'products' => Product::where('is_active', true)->latest()->limit(6)->get(),
+            'families' => $families,
             'activeOrders' => collect(),
             'lastOrder' => null,
             'serviceStatus' => $serviceStatus,

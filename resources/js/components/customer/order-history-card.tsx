@@ -1,6 +1,6 @@
-import { Link, router } from '@inertiajs/react';
-import { Package } from 'lucide-react';
-import { orderStatusLabel, orderStatusTone } from '@/lib/customer-status';
+import { Link } from '@inertiajs/react';
+import { Package, RotateCcw } from 'lucide-react';
+import { orderStatusLabel, orderStatusTone, isTerminalOrder } from '@/lib/customer-status';
 import { formatCurrency } from '@/lib/format';
 
 interface OrderItem {
@@ -12,6 +12,8 @@ interface Props {
     order: {
         id: number;
         order_code: string;
+        recovery_token?: string;
+        tracking_url?: string;
         status: string;
         total: number | string;
         created_at?: string;
@@ -25,6 +27,11 @@ export default function OrderHistoryCard({ order }: Props) {
     const itemCount = order.items?.length ?? 0;
     const itemSummary = order.items?.map((i) => i.product_name).join(', ') ?? '';
     const dateStr = order.created_at ? formatShortDate(order.created_at) : '-';
+    const isGuest = !!order.recovery_token;
+    const isTerminal = isTerminalOrder(order.status);
+    const detailHref = isGuest
+        ? (order.tracking_url ?? `/track/${order.recovery_token}`)
+        : `/customer/orders/${order.id}`;
 
     return (
         <div className="rounded-xl border border-slate-200 bg-white p-4">
@@ -58,17 +65,20 @@ export default function OrderHistoryCard({ order }: Props) {
                 </div>
                 <div className="flex gap-2">
                     <Link
-                        href={`/customer/orders/${order.id}`}
+                        href={detailHref}
                         className="flex min-h-9 items-center rounded-full border border-slate-200 px-4 text-xs font-semibold text-slate-700 active:bg-slate-50"
                     >
                         Detail
                     </Link>
-                    <button
-                        onClick={() => router.post(`/customer/orders/${order.id}/repeat`)}
-                        className="flex min-h-9 items-center rounded-full bg-emerald-700 px-4 text-xs font-semibold text-white active:bg-emerald-800"
-                    >
-                        Beli Lagi
-                    </button>
+                    {isTerminal && (
+                        <Link
+                            href={`/customer/orders/${order.id}/restore-cart`}
+                            className="flex min-h-9 items-center gap-1.5 rounded-full bg-emerald-700 px-4 text-xs font-semibold text-white active:bg-emerald-800"
+                        >
+                            <RotateCcw className="h-3 w-3" />
+                            Pesan Lagi
+                        </Link>
+                    )}
                 </div>
             </div>
         </div>

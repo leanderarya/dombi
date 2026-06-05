@@ -20,7 +20,7 @@ class RestockController extends Controller
     {
         return Inertia::render('owner/restocks/index', [
             'restocks' => RestockRequest::query()
-                ->with(['outlet', 'items.product'])
+                ->with(['outlet', 'items.variant.family'])
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
                 ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
                 ->when($request->filled('search'), fn ($query) => $query->where(function ($searchQuery) use ($request): void {
@@ -51,17 +51,17 @@ class RestockController extends Controller
             'requester',
             'approver',
             'rejecter',
-            'items.product',
-            'distribution.items.product',
+            'items.variant.family',
+            'distribution.items.variant.family',
             'distribution.sender',
             'distribution.receiver',
         ]);
 
         return Inertia::render('owner/restocks/show', [
             'restock' => $restockRequest,
-            'inventories' => OutletInventory::with('product')
+            'inventories' => OutletInventory::with('variant.family')
                 ->where('outlet_id', $restockRequest->outlet_id)
-                ->whereIn('product_id', $restockRequest->items->pluck('product_id'))
+                ->whereIn('product_variant_id', $restockRequest->items->pluck('product_variant_id'))
                 ->get(),
         ]);
     }

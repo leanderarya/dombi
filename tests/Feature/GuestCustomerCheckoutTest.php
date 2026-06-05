@@ -44,7 +44,7 @@ class GuestCustomerCheckoutTest extends TestCase
             ->assertSessionHas('checkout.fulfillment.fulfillment_type', 'pickup');
     }
 
-    public function test_customer_cannot_continue_checkout_without_choosing_fulfillment(): void
+    public function test_checkout_without_fulfillment_stores_items_and_redirects_to_step_one(): void
     {
         $product = $this->createStockedProduct();
 
@@ -52,7 +52,9 @@ class GuestCustomerCheckoutTest extends TestCase
             'items' => [
                 ['product_id' => $product->id, 'quantity' => 1],
             ],
-        ])->assertSessionHasErrors(['fulfillment_type']);
+        ])->assertRedirect('/customer/checkout')
+            ->assertSessionHas('checkout.cart.0.product_id', $product->id)
+            ->assertSessionMissing('checkout.fulfillment');
     }
 
     public function test_customer_checkout_step_hides_ojol_by_rejecting_it_as_a_public_option(): void

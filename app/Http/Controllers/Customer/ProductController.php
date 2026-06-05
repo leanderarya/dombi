@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
+use App\Models\ProductFamily;
+use App\Models\ProductVariant;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -11,17 +12,23 @@ class ProductController extends Controller
 {
     public function index(): Response
     {
+        $families = ProductFamily::query()
+            ->where('is_active', true)
+            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('customer/products', [
-            'products' => Product::where('is_active', true)->latest()->paginate(12),
+            'families' => $families,
         ]);
     }
 
-    public function checkout(): Response
+    public function show(ProductFamily $family): Response
     {
-        return Inertia::render('customer/checkout', [
-            'products' => Product::where('is_active', true)->orderBy('name')->get(),
-            'addresses' => collect(),
-            'selectedProductId' => request()->integer('product_id') ?: null,
+        $family->load(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')]);
+
+        return Inertia::render('customer/product-detail', [
+            'family' => $family,
         ]);
     }
 }

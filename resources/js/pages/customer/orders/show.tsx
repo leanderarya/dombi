@@ -29,13 +29,12 @@ export default function OrderShow({ order, cancellationReasons = [] }: any) {
         }
     }, [order.customer_phone, order.order_code, addOrder]);
 
-    const trackingUrl = order.recovery_token
-        ? `${window.location.origin}/track/${order.recovery_token}`
-        : null;
+    const trackingUrl = order.tracking_url
+        ?? (order.recovery_token ? `${window.location.origin}/track/${order.recovery_token}` : null);
 
-    function handleCopyToken() {
-        if (order.recovery_token) {
-            navigator.clipboard.writeText(order.recovery_token);
+    function handleCopyLink() {
+        if (trackingUrl) {
+            navigator.clipboard.writeText(trackingUrl);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
@@ -98,26 +97,31 @@ export default function OrderShow({ order, cancellationReasons = [] }: any) {
                         <div className="mt-2 flex items-center gap-3">
                             <div className="flex-1">
                                 <div className="text-lg font-bold tabular-nums tracking-wider text-slate-900">{order.recovery_token}</div>
-                                <div className="mt-0.5 text-[11px] text-slate-500">Gunakan kode ini untuk melacak pesanan</div>
+                                <div className="mt-0.5 text-[11px] text-slate-500">Gunakan link publik ini untuk melacak pesanan tanpa login</div>
                             </div>
                             <button
                                 type="button"
-                                onClick={handleCopyToken}
+                                onClick={handleCopyLink}
                                 className="flex h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
                             >
                                 {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                                {copied ? 'Tersalin' : 'Salin'}
+                                {copied ? 'Tersalin' : 'Salin Link'}
                             </button>
                         </div>
                         {trackingUrl && (
-                            <button
-                                type="button"
-                                onClick={handleShare}
-                                className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
-                            >
-                                <Share2 className="h-4 w-4" />
-                                Bagikan Link Pelacakan
-                            </button>
+                            <>
+                                <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold tabular-nums text-slate-700 break-all">
+                                    {trackingUrl}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleShare}
+                                    className="mt-3 flex h-10 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
+                                >
+                                    <Share2 className="h-4 w-4" />
+                                    Bagikan Link Pelacakan
+                                </button>
+                            </>
                         )}
                     </div>
                 )}

@@ -5,9 +5,17 @@ import SectionCard from '@/components/ui/section-card';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import OutletLayout from '@/layouts/outlet-layout';
 
-export default function CreateRestock({ products, inventories }: any) {
-    const form = useForm({ notes: '', items: [{ product_id: products[0]?.id ?? '', requested_quantity: 1 }] });
-    const inventoryByProduct = new Map(inventories.map((item: any) => [item.product_id, item]));
+export default function CreateRestock({ families, inventories }: any) {
+    const allVariants = families?.flatMap((f: any) =>
+        (f.variants ?? []).map((v: any) => ({
+            ...v,
+            family_name: f.name,
+            family_id: f.id,
+        }))
+    ) ?? [];
+
+    const form = useForm({ notes: '', items: [{ product_variant_id: allVariants[0]?.id ?? '', requested_quantity: 1 }] });
+    const inventoryByVariant = new Map(inventories.map((item: any) => [item.product_variant_id, item]));
 
     const setItem = (index: number, key: string, value: any) => {
         const items = [...form.data.items] as any[];
@@ -16,7 +24,7 @@ export default function CreateRestock({ products, inventories }: any) {
     };
 
     const addItem = () => {
-        form.setData('items', [...form.data.items, { product_id: products[0]?.id ?? '', requested_quantity: 1 }] as any);
+        form.setData('items', [...form.data.items, { product_variant_id: allVariants[0]?.id ?? '', requested_quantity: 1 }] as any);
     };
 
     const removeItem = (index: number) => {
@@ -34,7 +42,7 @@ export default function CreateRestock({ products, inventories }: any) {
             {/* Items */}
             <div className="space-y-3">
                 {form.data.items.map((item: any, index: number) => {
-                    const inventory: any = inventoryByProduct.get(Number(item.product_id));
+                    const inventory: any = inventoryByVariant.get(Number(item.product_variant_id));
 
                     return (
                         <SectionCard key={index}>
@@ -52,14 +60,18 @@ export default function CreateRestock({ products, inventories }: any) {
                             </div>
 
                             <div className="mt-3">
-                                <label className="text-xs font-medium text-slate-500">Produk</label>
+                                <label className="text-xs font-medium text-slate-500">Varian Produk</label>
                                 <select
-                                    value={item.product_id}
-                                    onChange={(e) => setItem(index, 'product_id', e.target.value)}
+                                    value={item.product_variant_id}
+                                    onChange={(e) => setItem(index, 'product_variant_id', e.target.value)}
                                     className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm"
                                 >
-                                    {products.map((product: any) => (
-                                        <option key={product.id} value={product.id}>{product.name}</option>
+                                    {families?.map((family: any) => (
+                                        <optgroup key={family.id} label={family.name}>
+                                            {family.variants?.map((v: any) => (
+                                                <option key={v.id} value={v.id}>{v.name}</option>
+                                            ))}
+                                        </optgroup>
                                     ))}
                                 </select>
                             </div>

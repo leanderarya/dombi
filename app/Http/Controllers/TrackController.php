@@ -48,6 +48,8 @@ class TrackController extends Controller
             'order' => [
                 'id' => $order->id,
                 'order_code' => $order->order_code,
+                'recovery_token' => $order->recovery_token,
+                'tracking_url' => $order->tracking_url,
                 'status' => $order->status,
                 'fulfillment_type' => $order->fulfillment_type,
                 'customer_name' => $order->customer_name,

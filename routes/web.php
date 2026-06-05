@@ -71,6 +71,12 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
     Route::get('/profile', OwnerProfileController::class)->name('profile');
     Route::resource('outlets', OwnerOutletController::class);
     Route::resource('products', OwnerProductController::class)->except(['show']);
+
+    // Product Families & Variants
+    Route::resource('product-families', App\Http\Controllers\Owner\ProductFamilyController::class)->except(['create', 'edit', 'destroy']);
+    Route::post('product-families/{family}/variants', [App\Http\Controllers\Owner\ProductVariantController::class, 'store'])->name('product-families.variants.store');
+    Route::put('variants/{variant}', [App\Http\Controllers\Owner\ProductVariantController::class, 'update'])->name('variants.update');
+
     Route::get('inventories', [OwnerInventoryController::class, 'index'])->name('inventories.index');
     Route::get('inventories/create', [OwnerInventoryController::class, 'create'])->name('inventories.create');
     Route::post('inventories', [OwnerInventoryController::class, 'store'])->name('inventories.store');
@@ -93,6 +99,15 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
     Route::get('distributions', [OwnerStockDistributionController::class, 'index'])->name('distributions.index');
     Route::get('distributions/{distribution}', [OwnerStockDistributionController::class, 'show'])->name('distributions.show');
     Route::post('distributions/{distribution}/mark-shipped', [OwnerStockDistributionController::class, 'markShipped'])->name('distributions.mark-shipped');
+
+    // Settlement
+    Route::get('settlement', [App\Http\Controllers\Owner\SettlementController::class, 'index'])->name('settlement.index');
+    Route::get('settlement/outlet/{outletId}', [App\Http\Controllers\Owner\SettlementController::class, 'outlet'])->name('settlement.outlet');
+
+    // Settlement Payments
+    Route::get('settlement-payments', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
+    Route::post('settlement-payments/{payment}/verify', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'verify'])->name('settlement-payments.verify');
+    Route::post('settlement-payments/{payment}/reject', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'reject'])->name('settlement-payments.reject');
 });
 
 Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->group(function (): void {
@@ -101,6 +116,8 @@ Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->g
     Route::get('/help', fn () => \Inertia\Inertia::render('customer/help'))->name('help');
     Route::get('/about', fn () => \Inertia\Inertia::render('customer/about'))->name('about');
     Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
+    Route::get('/products/{family}', [CustomerProductController::class, 'show'])->name('products.show');
+    Route::post('/cart/add', [\App\Http\Controllers\Customer\CartController::class, 'addItem'])->name('cart.add');
     Route::get('/checkout', [CustomerCheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout', [CustomerCheckoutController::class, 'storeIndex'])->name('checkout.store');
     Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
@@ -120,7 +137,11 @@ Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer
     Route::post('/addresses/{address}/set-default', [CustomerAddressController::class, 'setDefault'])->name('addresses.set-default');
     Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
     Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
+});
+
+Route::middleware(['customer.or.recovered'])->prefix('customer')->name('customer.')->group(function (): void {
     Route::post('/orders/{order}/repeat', [CustomerOrderController::class, 'repeat'])->name('orders.repeat');
+    Route::get('/orders/{order}/restore-cart', [CustomerOrderController::class, 'restoreCart'])->name('orders.restore-cart');
 });
 
 Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')->name('outlet.')->group(function (): void {
@@ -139,6 +160,13 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     Route::post('/restocks', [OutletRestockController::class, 'store'])->name('restocks.store');
     Route::get('/restocks/{restockRequest}', [OutletRestockController::class, 'show'])->name('restocks.show');
     Route::post('/distributions/{distribution}/confirm-received', [OutletRestockController::class, 'confirmReceived'])->name('distributions.confirm-received');
+
+    // Settlement
+    Route::get('/settlement', [App\Http\Controllers\Outlet\SettlementController::class, 'index'])->name('settlement.index');
+
+    // Settlement Payments
+    Route::get('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
+    Route::post('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'store'])->name('settlement-payments.store');
 });
 
 Route::middleware(['auth', 'role:courier', 'password.changed'])->prefix('courier')->name('courier.')->group(function (): void {

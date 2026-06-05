@@ -81,13 +81,27 @@ class GuestOrderRecoveryTest extends TestCase
         $customer = $this->createCustomerWithOrders();
         $order = Order::where('customer_id', $customer->id)->first();
 
+        // 628... format
         $this->postJson('/customer/orders/recovery', [
             'phone' => '6281234567890',
             'recovery_token' => $order->recovery_token,
         ])->assertOk()->assertJson(['found' => true]);
 
+        // 8... format (without leading 0)
         $this->postJson('/customer/orders/recovery', [
             'phone' => '81234567890',
+            'recovery_token' => $order->recovery_token,
+        ])->assertOk()->assertJson(['found' => true]);
+
+        // 08... format
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567890',
+            'recovery_token' => $order->recovery_token,
+        ])->assertOk()->assertJson(['found' => true]);
+
+        // +628... format
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '+6281234567890',
             'recovery_token' => $order->recovery_token,
         ])->assertOk()->assertJson(['found' => true]);
     }
@@ -99,11 +113,60 @@ class GuestOrderRecoveryTest extends TestCase
         ])->assertUnprocessable();
     }
 
-    public function test_recovery_requires_verification(): void
+    public function test_recovery_with_phone_only_returns_orders(): void
     {
+        $customer = $this->createCustomerWithOrders();
+
         $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567890',
-        ])->assertStatus(422);
+        ])->assertOk()
+            ->assertJson([
+                'found' => true,
+                'customer_name' => 'Test Customer',
+            ])
+            ->assertJsonStructure([
+                'found',
+                'customer_name',
+                'active_orders',
+                'recent_orders',
+            ]);
+    }
+
+    public function test_recovery_with_phone_only_returns_empty_for_unknown_phone(): void
+    {
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '089999999999',
+        ])->assertOk()
+            ->assertJson([
+                'found' => false,
+                'active_orders' => [],
+                'recent_orders' => [],
+            ]);
+    }
+
+    public function test_recovery_with_phone_only_normalizes_formats(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+
+        // 08... format
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567890',
+        ])->assertOk()->assertJson(['found' => true]);
+
+        // 628... format
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '6281234567890',
+        ])->assertOk()->assertJson(['found' => true]);
+
+        // +628... format
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '+6281234567890',
+        ])->assertOk()->assertJson(['found' => true]);
+
+        // 8... format
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '81234567890',
+        ])->assertOk()->assertJson(['found' => true]);
     }
 
     public function test_recovery_with_order_code(): void
@@ -274,6 +337,111 @@ class GuestOrderRecoveryTest extends TestCase
         $this->assertArrayHasKey('name', $recentOrder['outlet']);
         $this->assertIsArray($recentOrder['items']);
         $this->assertNotNull($recentOrder['created_at']);
+    }
+
+    // ─── GUEST TRACKING ACCESS ──────────────────────────────────────
+
+    public function test_recovery_response_includes_recovery_token(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
+
+        $response = $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567890',
+            'recovery_token' => $order->recovery_token,
+        ])->assertOk();
+
+        $data = $response->json();
+        $this->assertArrayHasKey('recovery_token', $data['active_orders'][0]);
+        $this->assertSame($order->recovery_token, $data['active_orders'][0]['recovery_token']);
+    }
+
+    public function test_recovery_response_includes_public_tracking_url(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
+
+        $response = $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567890',
+            'recovery_token' => $order->recovery_token,
+        ])->assertOk();
+
+        $data = $response->json();
+        $this->assertArrayHasKey('tracking_url', $data['active_orders'][0]);
+        $this->assertSame(url('/track/' . $order->recovery_token), $data['active_orders'][0]['tracking_url']);
+    }
+
+    public function test_recovery_accepts_existing_64_character_tokens(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
+        $token = str_repeat('A', 64);
+        $order->forceFill(['recovery_token' => $token])->save();
+
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567890',
+            'recovery_token' => $token,
+        ])->assertOk()
+            ->assertJson([
+                'found' => true,
+                'customer_name' => 'Test Customer',
+            ]);
+    }
+
+    public function test_guest_can_access_tracking_page_without_auth(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
+
+        $this->get('/track/' . $order->recovery_token)
+            ->assertOk();
+    }
+
+    public function test_guest_tracking_with_invalid_token_returns_not_found(): void
+    {
+        $this->get('/track/INVALIDTOKEN12345678901234567890')
+            ->assertOk();
+    }
+
+    public function test_guest_redirected_from_customer_orders_to_login(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
+
+        $this->get('/customer/orders/' . $order->id)
+            ->assertRedirect('/login');
+    }
+
+    public function test_authenticated_customer_can_access_order_detail(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
+
+        $user = \App\Models\User::factory()->create([
+            'role' => 'customer',
+            'is_active' => true,
+        ]);
+
+        // Link customer to user
+        $customer->update(['user_id' => $user->id]);
+
+        $this->actingAs($user)
+            ->get('/customer/orders/' . $order->id)
+            ->assertOk();
+    }
+
+    public function test_phone_only_recovery_includes_recovery_token(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+
+        $response = $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567890',
+        ])->assertOk();
+
+        $data = $response->json();
+        $this->assertTrue($data['found']);
+        $this->assertArrayHasKey('recovery_token', $data['active_orders'][0]);
+        $this->assertNotEmpty($data['active_orders'][0]['recovery_token']);
     }
 
     private function createCustomerWithOrders(): Customer

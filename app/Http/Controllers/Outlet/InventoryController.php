@@ -16,9 +16,9 @@ class InventoryController extends Controller
 
         return Inertia::render('outlet/inventory', [
             'outlet' => $outlet,
-            'inventories' => OutletInventory::with('product')
+            'inventories' => OutletInventory::with(['variant.family', 'product'])
                 ->where('outlet_id', $outlet->id)
-                ->orderByDesc('updated_at')
+                ->orderBy('product_variant_id')
                 ->get(),
         ]);
     }

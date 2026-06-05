@@ -34,10 +34,17 @@ class OutletAssignmentService
 
     public function outletHasEnoughStock(Outlet $outlet, array $items): bool
     {
-        $inventories = $outlet->inventories->keyBy('product_id');
+        // Key by product_variant_id for variant-level stock checking
+        $inventories = $outlet->inventories->keyBy('product_variant_id');
 
         foreach ($items as $item) {
-            $inventory = $inventories->get((int) $item['product_id']);
+            $variantId = (int) ($item['product_variant_id'] ?? 0);
+            if (! $variantId) {
+                // Skip items without variant_id (legacy compatibility)
+                continue;
+            }
+
+            $inventory = $inventories->get($variantId);
 
             if (! $inventory) {
                 return false;

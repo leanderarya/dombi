@@ -1,5 +1,6 @@
-import { Head } from '@inertiajs/react';
-import { ArrowLeft, Clock, Copy, ExternalLink, MapPin, Package, Truck, UserCheck, XCircle, CheckCircle2, Circle } from 'lucide-react';
+import { Head, Link } from '@inertiajs/react';
+import { useState } from 'react';
+import { ArrowLeft, Clock, Copy, MapPin, MessageCircle, Package, RotateCcw, Share2, Truck, UserCheck, XCircle, CheckCircle2, Circle } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 type HistoryItem = {
@@ -11,6 +12,8 @@ type HistoryItem = {
 type TrackOrder = {
     id: number;
     order_code: string;
+    recovery_token: string;
+    tracking_url: string;
     status: string;
     fulfillment_type: string;
     customer_name: string;
@@ -48,6 +51,8 @@ const TIMELINE_STEPS = [
 ];
 
 export default function TrackPage({ order, found, notifications = [] }: Props) {
+    const [copied, setCopied] = useState(false);
+
     if (!found || !order) {
         return (
             <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
@@ -68,7 +73,8 @@ export default function TrackPage({ order, found, notifications = [] }: Props) {
     const isRejected = order.status === 'rejected_by_outlet';
     const isFailed = order.status === 'failed_delivery';
     const isExpired = order.status === 'expired';
-    const isTerminal = isCancelled || isRejected || isFailed || isExpired;
+    const isCompleted = order.status === 'completed';
+    const isTerminal = isCompleted || isCancelled || isRejected || isFailed || isExpired;
 
     const terminalLabel = isRejected
         ? 'Ditolak Outlet'
@@ -94,7 +100,27 @@ export default function TrackPage({ order, found, notifications = [] }: Props) {
         }
     }
 
-    const trackingUrl = `${window.location.origin}/track/${(window as any).__TRACKING_TOKEN__ || ''}`;
+    const trackingUrl = order.tracking_url;
+    const shareText = `Lacak pesanan Dombi saya:\n${trackingUrl}`;
+
+    function copyTrackingLink() {
+        navigator.clipboard.writeText(trackingUrl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    }
+
+    function shareTrackingLink() {
+        if (navigator.share) {
+            navigator.share({ text: shareText }).catch(() => {});
+            return;
+        }
+
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    }
+
+    function shareViaWhatsApp() {
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    }
 
     return (
         <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
@@ -117,10 +143,44 @@ export default function TrackPage({ order, found, notifications = [] }: Props) {
             </header>
 
             {/* Content */}
-            <main className="mx-auto max-w-lg px-4 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+            <main className={`mx-auto max-w-lg px-4 py-4 ${isTerminal ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]' : 'pb-[calc(2rem+env(safe-area-inset-bottom))]'}`}>
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
                     <StatusBadge status={order.status} />
+                </div>
+
+                {/* Public Tracking Link */}
+                <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Link Pelacakan Publik</div>
+                    <div className="mt-2 rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold tabular-nums text-slate-700 break-all">
+                        {trackingUrl}
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-2">
+                        <button
+                            type="button"
+                            onClick={copyTrackingLink}
+                            className="flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 active:bg-slate-50"
+                        >
+                            <Copy className="h-3.5 w-3.5" />
+                            {copied ? 'Tersalin' : 'Salin'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={shareTrackingLink}
+                            className="flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 text-xs font-bold text-white active:bg-emerald-700"
+                        >
+                            <Share2 className="h-3.5 w-3.5" />
+                            Share
+                        </button>
+                        <button
+                            type="button"
+                            onClick={shareViaWhatsApp}
+                            className="flex min-h-10 items-center justify-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 active:bg-emerald-100"
+                        >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            WA
+                        </button>
+                    </div>
                 </div>
 
                 {/* Timeline */}
@@ -290,6 +350,27 @@ export default function TrackPage({ order, found, notifications = [] }: Props) {
                     <p className="text-sm font-bold text-slate-600">Dombi</p>
                 </div>
             </main>
+
+            {/* Sticky Reorder CTA for terminal orders */}
+            {isTerminal && (
+                <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white px-4 pb-[env(safe-area-inset-bottom)] pt-3">
+                    <div className="mx-auto max-w-lg space-y-2">
+                        <a
+                            href={`/customer/orders/${order.id}/restore-cart`}
+                            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white active:bg-emerald-800"
+                        >
+                            <RotateCcw className="h-4 w-4" />
+                            Pesan Lagi
+                        </a>
+                        <Link
+                            href="/customer/home"
+                            className="flex min-h-10 w-full items-center justify-center text-xs font-bold uppercase tracking-wide text-slate-500 active:text-slate-700"
+                        >
+                            Kembali ke Beranda
+                        </Link>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
@@ -297,6 +378,7 @@ export default function TrackPage({ order, found, notifications = [] }: Props) {
 function StatusBadge({ status }: { status: string }) {
     const labels: Record<string, string> = {
         pending: 'Menunggu Konfirmasi',
+        pending_confirmation: 'Menunggu Konfirmasi',
         confirmed: 'Diterima Outlet',
         preparing: 'Sedang Disiapkan',
         ready_for_pickup: 'Siap Diambil',
@@ -304,11 +386,17 @@ function StatusBadge({ status }: { status: string }) {
         delivering: 'Dalam Perjalanan',
         completed: 'Selesai',
         cancelled: 'Dibatalkan',
+        cancelled_by_customer: 'Dibatalkan Customer',
+        cancelled_by_outlet: 'Dibatalkan Outlet',
+        rejected_by_outlet: 'Ditolak Outlet',
         failed: 'Gagal',
+        failed_delivery: 'Pengiriman Gagal',
+        expired: 'Kadaluarsa',
     };
 
     const tones: Record<string, string> = {
         pending: 'bg-amber-50 text-amber-800 ring-amber-200',
+        pending_confirmation: 'bg-amber-50 text-amber-800 ring-amber-200',
         confirmed: 'bg-blue-50 text-blue-800 ring-blue-200',
         preparing: 'bg-orange-50 text-orange-800 ring-orange-200',
         ready_for_pickup: 'bg-purple-50 text-purple-800 ring-purple-200',
@@ -316,7 +404,12 @@ function StatusBadge({ status }: { status: string }) {
         delivering: 'bg-indigo-50 text-indigo-800 ring-indigo-200',
         completed: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
         cancelled: 'bg-red-50 text-red-800 ring-red-200',
+        cancelled_by_customer: 'bg-red-50 text-red-800 ring-red-200',
+        cancelled_by_outlet: 'bg-red-50 text-red-800 ring-red-200',
+        rejected_by_outlet: 'bg-red-50 text-red-800 ring-red-200',
         failed: 'bg-red-50 text-red-800 ring-red-200',
+        failed_delivery: 'bg-red-50 text-red-800 ring-red-200',
+        expired: 'bg-slate-50 text-slate-800 ring-slate-200',
     };
 
     return (

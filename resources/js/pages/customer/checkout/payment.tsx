@@ -68,9 +68,12 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 {itemsExpanded && (
                     <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
                         {(draft?.items ?? []).map((item: any) => (
-                            <div key={item.product_id} className="flex items-start justify-between gap-3 text-sm">
+                            <div key={item.product_variant_id} className="flex items-start justify-between gap-3 text-sm">
                                 <div className="min-w-0">
                                     <p className="font-semibold text-slate-900">{item.name}</p>
+                                    {item.variant_name && (
+                                        <p className="text-xs text-slate-400">{item.variant_name}</p>
+                                    )}
                                     <p className="mt-1 text-xs text-slate-500">
                                         {item.quantity} x {formatCurrency(item.price)}
                                     </p>

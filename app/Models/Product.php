@@ -14,15 +14,22 @@ class Product extends Model
 
     protected $fillable = [
         'product_category_id', 'name', 'slug', 'description', 'size',
-        'unit', 'price', 'image', 'is_active',
+        'unit', 'price', 'center_price', 'selling_price', 'image', 'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'center_price' => 'decimal:2',
+            'selling_price' => 'decimal:2',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function getOutletMarginAttribute(): float
+    {
+        return (float) $this->selling_price - (float) $this->center_price;
     }
 
     public function category(): BelongsTo

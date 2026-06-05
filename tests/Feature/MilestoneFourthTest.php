@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
+use App\Models\ProductFamily;
+use App\Models\ProductVariant;
 use App\Models\RestockRequest;
 use App\Models\StockDistribution;
 use App\Models\StockMovement;
@@ -25,12 +27,12 @@ class MilestoneFourthTest extends TestCase
         $this->actingAs($context['outletUser'])
             ->post(route('outlet.restocks.store'), [
                 'notes' => 'Stok menipis',
-                'items' => [['product_id' => $context['product']->id, 'requested_quantity' => 6]],
+                'items' => [['product_variant_id' => $context['variant']->id, 'requested_quantity' => 6]],
             ])
             ->assertRedirect();
 
         $this->assertDatabaseHas('restock_requests', ['outlet_id' => $context['outlet']->id, 'status' => 'requested']);
-        $this->assertDatabaseHas('restock_request_items', ['product_id' => $context['product']->id, 'requested_quantity' => 6]);
+        $this->assertDatabaseHas('restock_request_items', ['product_variant_id' => $context['variant']->id, 'requested_quantity' => 6]);
     }
 
     public function test_owner_can_approve_request_and_create_distribution(): void
@@ -48,7 +50,7 @@ class MilestoneFourthTest extends TestCase
         $this->assertDatabaseHas('restock_request_items', ['id' => $restock->items->first()->id, 'approved_quantity' => 4]);
         $this->assertDatabaseHas('restock_requests', ['id' => $restock->id, 'status' => 'preparing']);
         $this->assertDatabaseHas('stock_distributions', ['restock_request_id' => $restock->id, 'status' => 'preparing', 'sent_by' => null, 'sent_at' => null]);
-        $this->assertDatabaseHas('stock_distribution_items', ['product_id' => $context['product']->id, 'quantity' => 4]);
+        $this->assertDatabaseHas('stock_distribution_items', ['product_variant_id' => $context['variant']->id, 'quantity' => 4]);
     }
 
     public function test_owner_can_reject_request(): void
@@ -92,7 +94,7 @@ class MilestoneFourthTest extends TestCase
             ->assertRedirect();
 
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_id', $context['product']->id)
+            ->where('product_variant_id', $context['variant']->id)
             ->firstOrFail();
 
         $this->assertSame(6, $inventory->current_stock);
@@ -206,7 +208,7 @@ class MilestoneFourthTest extends TestCase
     {
         return app(RestockService::class)->createRequest($context['outletUser'], [
             'notes' => 'Perlu restock',
-            'items' => [['product_id' => $context['product']->id, 'requested_quantity' => 6]],
+            'items' => [['product_variant_id' => $context['variant']->id, 'requested_quantity' => 6]],
         ])->load('items');
     }
 
@@ -232,14 +234,27 @@ class MilestoneFourthTest extends TestCase
             'is_active' => true,
         ]);
 
+        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        $variant = ProductVariant::create([
+            'product_family_id' => $family->id,
+            'product_id' => $product->id,
+            'name' => 'Original 500ml',
+            'flavor' => 'Original',
+            'size' => '500ml',
+            'center_price' => 20000,
+            'selling_price' => 25000,
+            'is_active' => true,
+        ]);
+
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
             'current_stock' => 2,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
         ]);
 
-        return compact('owner', 'outletUser', 'outlet', 'product');
+        return compact('owner', 'outletUser', 'outlet', 'product', 'variant');
     }
 }

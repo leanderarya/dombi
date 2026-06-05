@@ -75,6 +75,10 @@ class Order extends Model
         'expired_at', 'expired_reason',
     ];
 
+    protected $appends = [
+        'tracking_url',
+    ];
+
     protected static function booted(): void
     {
         static::creating(function (Order $order): void {
@@ -153,6 +157,15 @@ class Order extends Model
         }
 
         return max(0, now()->diffInSeconds($this->confirmation_expires_at, false));
+    }
+
+    public function getTrackingUrlAttribute(): ?string
+    {
+        if (empty($this->recovery_token)) {
+            return null;
+        }
+
+        return route('track', ['token' => $this->recovery_token]);
     }
 
     public function customer(): BelongsTo

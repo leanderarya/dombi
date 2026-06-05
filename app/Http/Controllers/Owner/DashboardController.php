@@ -8,7 +8,7 @@ use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\RestockRequest;
 use App\Models\StockMovement;
 use App\Services\DeliveryIntelligenceService;
@@ -23,7 +23,7 @@ class DashboardController extends Controller
         return Inertia::render('owner/dashboard', [
             'stats' => [
                 'activeOutlets' => Outlet::where('status', 'active')->count(),
-                'activeProducts' => Product::where('is_active', true)->count(),
+                'activeProducts' => ProductVariant::where('is_active', true)->count(),
                 'todayOrders' => Order::whereDate('created_at', today())->count(),
                 'activeOrders' => Order::whereIn('status', Order::ACTIVE_STATUSES)->count(),
                 'pendingOrders' => Order::where('status', 'pending_confirmation')->count(),
@@ -63,20 +63,20 @@ class DashboardController extends Controller
                     ->latest()
                     ->limit(5)
                     ->get(['id', 'order_id', 'courier_id', 'status', 'failed_reason', 'updated_at']),
-                'lowStockItems' => OutletInventory::with(['outlet:id,name', 'product:id,name'])
+                'lowStockItems' => OutletInventory::with(['outlet:id,name', 'variant:id,name,product_family_id', 'variant.family:id,name'])
                     ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
                     ->limit(8)
-                    ->get(['id', 'outlet_id', 'product_id', 'current_stock', 'reserved_stock', 'minimum_stock']),
+                    ->get(['id', 'outlet_id', 'product_variant_id', 'current_stock', 'reserved_stock', 'minimum_stock']),
                 'pendingRestocks' => RestockRequest::where('status', 'requested')
                     ->with('outlet:id,name')
                     ->latest()
                     ->limit(5)
                     ->get(['id', 'outlet_id', 'status', 'created_at']),
             ],
-            'recentActivity' => StockMovement::with(['outlet:id,name', 'product:id,name', 'creator:id,name'])
+            'recentActivity' => StockMovement::with(['outlet:id,name', 'variant:id,name,product_family_id', 'variant.family:id,name', 'creator:id,name'])
                 ->latest()
                 ->limit(10)
-                ->get(['id', 'outlet_id', 'product_id', 'type', 'quantity', 'before_stock', 'after_stock', 'created_by', 'created_at']),
+                ->get(['id', 'outlet_id', 'product_variant_id', 'type', 'quantity', 'before_stock', 'after_stock', 'created_by', 'created_at']),
         ]);
     }
 }

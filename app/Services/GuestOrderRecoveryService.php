@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\Order;
+use App\Support\PhoneNormalizer;
 
 class GuestOrderRecoveryService
 {
@@ -11,14 +12,13 @@ class GuestOrderRecoveryService
     private const MAX_DAYS = 30;
 
     /**
-     * Recover orders using phone + recovery_token OR phone + order_code.
-     * Phone alone is NOT sufficient to prevent enumeration attacks.
+     * Recover orders using phone + recovery_token OR phone + order_code OR phone only.
      */
     public function recover(string $phone, ?string $recoveryToken = null, ?string $orderCode = null): array
     {
-        $normalizedPhone = $this->normalizePhone($phone);
+        $normalizedPhone = PhoneNormalizer::normalize($phone);
 
-        if (! preg_match('/^62[0-9]{9,13}$/', $normalizedPhone)) {
+        if (! PhoneNormalizer::isValidIndonesian($normalizedPhone)) {
             return $this->notFoundResponse();
         }
 
@@ -30,11 +30,11 @@ class GuestOrderRecoveryService
             return $this->notFoundResponse();
         }
 
-        // Verify knowledge: must provide recovery_token OR order_code
+        // If recovery_token or order_code provided, verify it matches this customer
         if ($recoveryToken) {
             $order = Order::query()
                 ->where('customer_id', $customer->id)
-                ->where('recovery_token', strtoupper($recoveryToken))
+                ->where('recovery_token', strtoupper(trim($recoveryToken)))
                 ->first();
 
             if (! $order) {
@@ -49,10 +49,9 @@ class GuestOrderRecoveryService
             if (! $order) {
                 return $this->notFoundResponse();
             }
-        } else {
-            // No verification provided — reject
-            return $this->notFoundResponse();
         }
+
+        // Phone-only lookup is allowed — return all orders for this customer
 
         $activeOrders = Order::query()
             ->where('customer_id', $customer->id)
@@ -74,6 +73,7 @@ class GuestOrderRecoveryService
 
         return [
             'found' => true,
+            'customer_id' => $customer->id,
             'customer_name' => $customer->name,
             'active_orders' => $activeOrders->all(),
             'recent_orders' => $recentOrders->all(),
@@ -94,6 +94,8 @@ class GuestOrderRecoveryService
         return [
             'id' => $order->id,
             'order_code' => $order->order_code,
+            'recovery_token' => $order->recovery_token,
+            'tracking_url' => $order->tracking_url,
             'status' => $order->status,
             'fulfillment_type' => $order->fulfillment_type,
             'total' => (float) $order->total,
@@ -106,20 +108,5 @@ class GuestOrderRecoveryService
             'ordered_at' => $order->ordered_at?->toISOString(),
             'created_at' => $order->ordered_at?->toISOString(),
         ];
-    }
-
-    private function normalizePhone(string $phone): string
-    {
-        $digits = preg_replace('/\D+/', '', $phone) ?? '';
-
-        if (str_starts_with($digits, '0')) {
-            return '62'.substr($digits, 1);
-        }
-
-        if (str_starts_with($digits, '8')) {
-            return '62'.$digits;
-        }
-
-        return $digits;
     }
 }

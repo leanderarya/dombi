@@ -7,6 +7,7 @@ use App\Models\CustomerAddress;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -163,6 +164,91 @@ class OrderService
         );
     }
 
+    public function repeatOrder(Customer $customer, Order $previousOrder): Order
+    {
+        $items = $previousOrder->items->map(function ($item) {
+            return [
+                'product_variant_id' => $item->product_variant_id,
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+            ];
+        })->toArray();
+
+        return $this->createCheckoutOrder($customer, [
+            'items' => $items,
+            'fulfillment_type' => $previousOrder->fulfillment_type,
+            'customer_name' => $customer->name,
+            'phone_number' => $customer->phone,
+            'payment_method' => 'cod',
+        ]);
+    }
+
+    /**
+     * Restore cart items from a previous order.
+     *
+     * Validates variants exist and are active, checks stock availability,
+     * and returns validated items with current pricing.
+     *
+     * @return array{items: array, warnings: array}
+     */
+    public function restoreCartFromOrder(Order $order): array
+    {
+        $order->load('items.variant');
+
+        $restoredItems = [];
+        $warnings = [];
+
+        foreach ($order->items as $item) {
+            $variant = $item->variant;
+            $originalQuantity = (int) $item->quantity;
+            $originalName = $item->product_name . ($item->variant_name_snapshot ? " {$item->variant_name_snapshot}" : '');
+
+            // Check variant exists and is active
+            if (! $variant || ! $variant->is_active) {
+                $warnings[] = "{$originalName} sudah tidak tersedia.";
+                continue;
+            }
+
+            // Use current pricing, not old snapshot
+            $currentPrice = (float) $variant->selling_price;
+
+            // Check stock availability across all active outlets
+            $availableStock = $this->getMaxAvailableStock($variant->id);
+            $restoredQuantity = min($originalQuantity, $availableStock);
+
+            if ($restoredQuantity <= 0) {
+                $warnings[] = "{$originalName} stok habis.";
+                continue;
+            }
+
+            if ($restoredQuantity < $originalQuantity) {
+                $warnings[] = "{$originalName}: stok tersedia hanya {$restoredQuantity}.";
+            }
+
+            $restoredItems[] = [
+                'product_variant_id' => $variant->id,
+                'quantity' => $restoredQuantity,
+            ];
+        }
+
+        return [
+            'items' => $restoredItems,
+            'warnings' => $warnings,
+        ];
+    }
+
+    /**
+     * Get maximum available stock for a variant across all active outlets.
+     */
+    private function getMaxAvailableStock(int $variantId): int
+    {
+        return (int) \App\Models\OutletInventory::query()
+            ->where('product_variant_id', $variantId)
+            ->whereHas('outlet', fn ($q) => $q->where('status', 'active'))
+            ->selectRaw('MAX(current_stock - reserved_stock) as max_available')
+            ->value('max_available') ?? 0;
+    }
+
     private function findOrCreateGuestCustomer(array $payload): Customer
     {
         $phone = (string) $payload['phone_number'];
@@ -229,28 +315,68 @@ class OrderService
 
     private function buildOrderItems(array $rawItems): array
     {
-        $productIds = collect($rawItems)->pluck('product_id')->all();
+        // Support both product_id (legacy) and product_variant_id (new)
+        $variantIds = collect($rawItems)->pluck('product_variant_id')->filter()->all();
+        $productIds = collect($rawItems)->pluck('product_id')->filter()->all();
+
+        $variants = ProductVariant::query()
+            ->whereIn('id', $variantIds)
+            ->where('is_active', true)
+            ->with('family')
+            ->get()
+            ->keyBy('id');
+
         $products = Product::query()
             ->whereIn('id', $productIds)
             ->where('is_active', true)
             ->get()
             ->keyBy('id');
 
-        return collect($rawItems)->map(function (array $item) use ($products): array {
+        return collect($rawItems)->map(function (array $item) use ($variants, $products): array {
+            $quantity = (int) $item['quantity'];
+
+            // Prefer variant over product
+            if (! empty($item['product_variant_id'])) {
+                $variant = $variants->get((int) $item['product_variant_id']);
+
+                if (! $variant) {
+                    throw ValidationException::withMessages(['items' => 'Varian produk tidak ditemukan atau tidak aktif.']);
+                }
+
+                return [
+                    'product_id' => $variant->product_id,
+                    'product_variant_id' => $variant->id,
+                    'product_name' => $variant->family?->name ?? $variant->name,
+                    'variant_name_snapshot' => $variant->name,
+                    'quantity' => $quantity,
+                    'price' => $variant->selling_price,
+                    'center_price_snapshot' => $variant->center_price,
+                    'selling_price_snapshot' => $variant->selling_price,
+                    'outlet_margin_snapshot' => $variant->outlet_margin,
+                    'subtotal' => $quantity * (float) $variant->selling_price,
+                ];
+            }
+
+            // Legacy product flow
             $product = $products->get((int) $item['product_id']);
 
             if (! $product) {
-                throw ValidationException::withMessages(['items' => 'Produk inactive tidak bisa dipesan.']);
+                throw ValidationException::withMessages(['items' => 'Produk tidak ditemukan atau tidak aktif.']);
             }
 
-            $quantity = (int) $item['quantity'];
+            $price = $product->selling_price > 0 ? $product->selling_price : $product->price;
 
             return [
                 'product_id' => $product->id,
+                'product_variant_id' => null,
                 'product_name' => $product->name,
+                'variant_name_snapshot' => null,
                 'quantity' => $quantity,
-                'price' => $product->price,
-                'subtotal' => $quantity * (float) $product->price,
+                'price' => $price,
+                'center_price_snapshot' => $product->center_price > 0 ? $product->center_price : $product->price,
+                'selling_price_snapshot' => $price,
+                'outlet_margin_snapshot' => $product->selling_price > 0 ? $product->selling_price - $product->center_price : 0,
+                'subtotal' => $quantity * (float) $price,
             ];
         })->values()->all();
     }

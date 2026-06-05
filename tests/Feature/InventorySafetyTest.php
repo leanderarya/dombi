@@ -10,6 +10,8 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
+use App\Models\ProductFamily;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Services\DeliveryService;
@@ -31,7 +33,7 @@ class InventorySafetyTest extends TestCase
     {
         $context = $this->makeOrderContext(quantity: 5);
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_id', $context['product']->id)
+            ->where('product_variant_id', $context['variant']->id)
             ->first();
 
         // Artificially reduce current_stock below what's needed
@@ -45,7 +47,7 @@ class InventorySafetyTest extends TestCase
     {
         $context = $this->makeOrderContext(quantity: 3);
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_id', $context['product']->id)
+            ->where('product_variant_id', $context['variant']->id)
             ->first();
 
         // Artificially reduce reserved_stock below what's needed
@@ -55,18 +57,21 @@ class InventorySafetyTest extends TestCase
         app(InventoryService::class)->completeOrderStock($context['order']);
     }
 
-    public function test_release_reserved_stock_throws_when_reserved_insufficient(): void
+    public function test_release_reserved_stock_gracefully_handles_insufficient_reserved(): void
     {
         $context = $this->makeOrderContext(quantity: 3);
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_id', $context['product']->id)
+            ->where('product_variant_id', $context['variant']->id)
             ->first();
 
         // Artificially reduce reserved_stock below what's needed
         $inventory->update(['reserved_stock' => 1]);
 
-        $this->expectException(InsufficientStockException::class);
+        // Should not throw - graceful degradation sets reserved to 0
         app(InventoryService::class)->releaseReservedStock($context['order']);
+
+        $inventory->refresh();
+        $this->assertSame(0, $inventory->reserved_stock);
     }
 
     public function test_adjust_stock_throws_when_new_stock_below_reserved(): void
@@ -77,7 +82,7 @@ class InventorySafetyTest extends TestCase
         // reserved_stock is 3, trying to set current_stock to 2
         app(InventoryService::class)->adjustStock(
             $context['outlet']->id,
-            $context['product']->id,
+            $context['variant']->id,
             2
         );
     }
@@ -116,7 +121,7 @@ class InventorySafetyTest extends TestCase
             ->assertRedirect();
 
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_id', $context['product']->id)
+            ->where('product_variant_id', $context['variant']->id)
             ->first();
 
         // Only added once: initial 2 + restock 4 = 6
@@ -150,7 +155,7 @@ class InventorySafetyTest extends TestCase
 
         $order2 = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
-            'items' => [['product_id' => $context['product']->id, 'quantity' => 1]],
+            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 1]],
         ]);
 
         $this->assertNotEquals($order1->order_code, $order2->order_code);
@@ -189,7 +194,7 @@ class InventorySafetyTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'preparing']);
         // Reserved stock should still be held
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_id', $context['product']->id)
+            ->where('product_variant_id', $context['variant']->id)
             ->first();
         $this->assertSame(1, $inventory->reserved_stock);
     }
@@ -208,7 +213,7 @@ class InventorySafetyTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'cancelled_by_outlet']);
         // Reserved stock should be released
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_id', $context['product']->id)
+            ->where('product_variant_id', $context['variant']->id)
             ->first();
         $this->assertSame(0, $inventory->reserved_stock);
     }
@@ -272,7 +277,7 @@ class InventorySafetyTest extends TestCase
     {
         $context = $this->makeOrderContext(quantity: 2);
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_id', $context['product']->id)
+            ->where('product_variant_id', $context['variant']->id)
             ->first();
 
         $originalStock = $inventory->current_stock;
@@ -343,9 +348,27 @@ class InventorySafetyTest extends TestCase
             'is_active' => true,
         ]);
 
+        $family = ProductFamily::create([
+            'name' => 'Susu Kambing',
+            'brand' => 'Test',
+            'is_active' => true,
+        ]);
+
+        $variant = ProductVariant::create([
+            'product_family_id' => $family->id,
+            'product_id' => $product->id,
+            'name' => 'Original 500ml',
+            'flavor' => 'Original',
+            'size' => '500ml',
+            'center_price' => 20000,
+            'selling_price' => 25000,
+            'is_active' => true,
+        ]);
+
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 0,
             'minimum_stock' => 1,
@@ -362,10 +385,10 @@ class InventorySafetyTest extends TestCase
 
         $order = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
-            'items' => [['product_id' => $product->id, 'quantity' => $quantity]],
+            'items' => [['product_variant_id' => $variant->id, 'quantity' => $quantity]],
         ]);
 
-        return compact('owner', 'outletUser', 'courier', 'customer', 'outlet', 'product', 'order');
+        return compact('owner', 'outletUser', 'courier', 'customer', 'outlet', 'product', 'variant', 'order');
     }
 
     private function makeRestockContext(): array
@@ -390,9 +413,27 @@ class InventorySafetyTest extends TestCase
             'is_active' => true,
         ]);
 
+        $family = ProductFamily::create([
+            'name' => 'Susu Kambing Restock',
+            'brand' => 'Test',
+            'is_active' => true,
+        ]);
+
+        $variant = ProductVariant::create([
+            'product_family_id' => $family->id,
+            'product_id' => $product->id,
+            'name' => 'Original 500ml',
+            'flavor' => 'Original',
+            'size' => '500ml',
+            'center_price' => 20000,
+            'selling_price' => 25000,
+            'is_active' => true,
+        ]);
+
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
             'current_stock' => 2,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -401,7 +442,7 @@ class InventorySafetyTest extends TestCase
         $restockService = app(RestockService::class);
         $restock = $restockService->createRequest($outletUser, [
             'notes' => 'Perlu restock',
-            'items' => [['product_id' => $product->id, 'requested_quantity' => 6]],
+            'items' => [['product_variant_id' => $variant->id, 'requested_quantity' => 6]],
         ])->load('items');
 
         $restockService->approveRequest($restock, $owner, [
@@ -411,7 +452,7 @@ class InventorySafetyTest extends TestCase
         $distribution = $restock->fresh('distribution')->distribution;
         $restockService->markShipped($distribution, $owner);
 
-        return compact('owner', 'outletUser', 'outlet', 'product', 'distribution');
+        return compact('owner', 'outletUser', 'outlet', 'product', 'variant', 'distribution');
     }
 
     private function makeRestockRequestContext(): array
@@ -436,9 +477,27 @@ class InventorySafetyTest extends TestCase
             'is_active' => true,
         ]);
 
+        $family = ProductFamily::create([
+            'name' => 'Susu Kambing Request',
+            'brand' => 'Test',
+            'is_active' => true,
+        ]);
+
+        $variant = ProductVariant::create([
+            'product_family_id' => $family->id,
+            'product_id' => $product->id,
+            'name' => 'Original 500ml',
+            'flavor' => 'Original',
+            'size' => '500ml',
+            'center_price' => 20000,
+            'selling_price' => 25000,
+            'is_active' => true,
+        ]);
+
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
+            'product_variant_id' => $variant->id,
             'current_stock' => 2,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -446,9 +505,9 @@ class InventorySafetyTest extends TestCase
 
         $restock = app(RestockService::class)->createRequest($outletUser, [
             'notes' => 'Perlu restock',
-            'items' => [['product_id' => $product->id, 'requested_quantity' => 6]],
+            'items' => [['product_variant_id' => $variant->id, 'requested_quantity' => 6]],
         ])->load('items');
 
-        return compact('owner', 'outletUser', 'outlet', 'product', 'restock');
+        return compact('owner', 'outletUser', 'outlet', 'product', 'variant', 'restock');
     }
 }

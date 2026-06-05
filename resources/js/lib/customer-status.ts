@@ -68,3 +68,32 @@ export function orderProgressIndex(status?: string | null) {
         index: index < 0 ? 0 : index,
     };
 }
+
+/**
+ * Terminal statuses where tracking is no longer meaningful.
+ * These orders should show "Pesan Lagi" instead of "Lacak Pesanan".
+ */
+export const terminalOrderStatuses = [
+    'completed',
+    'cancelled_by_customer',
+    'cancelled_by_outlet',
+    'rejected_by_outlet',
+    'failed_delivery',
+    'expired',
+] as const;
+
+export function isTerminalOrder(status: string): boolean {
+    return (terminalOrderStatuses as readonly string[]).includes(status);
+}
+
+export type OrderActionType = 'track' | 'reorder';
+
+/**
+ * Returns the primary CTA action for a given order status.
+ *
+ * - Active orders (in-progress) → 'track' (Lacak Pesanan)
+ * - Terminal orders (completed/cancelled/failed/expired) → 'reorder' (Pesan Lagi)
+ */
+export function getOrderPrimaryAction(status: string): OrderActionType {
+    return isTerminalOrder(status) ? 'reorder' : 'track';
+}
