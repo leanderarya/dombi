@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Notification;
 use App\Models\Order;
 use Inertia\Inertia;
 
@@ -19,6 +20,28 @@ class TrackController extends Controller
                 'order' => null,
                 'found' => false,
             ]);
+        }
+
+        // Get notifications for this order's customer
+        $notifications = collect();
+        if ($order->customer_id) {
+            $notifications = Notification::query()
+                ->where('customer_id', $order->customer_id)
+                ->where(function ($query) use ($order) {
+                    $query->whereJsonContains('data->order_id', $order->id)
+                        ->orWhere('entity_type', 'order')
+                        ->orWhere('entity_type', 'delivery');
+                })
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(fn (Notification $n) => [
+                    'id' => $n->id,
+                    'type' => $n->type,
+                    'title' => $n->title,
+                    'message' => $n->message,
+                    'time_ago' => $n->created_at->diffForHumans(),
+                ]);
         }
 
         return Inertia::render('track', [
@@ -57,6 +80,7 @@ class TrackController extends Controller
                 'cancellation_reason' => $order->cancellation_reason,
                 'cancellation_note' => $order->cancellation_note,
             ],
+            'notifications' => $notifications,
             'found' => true,
         ]);
     }

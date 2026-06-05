@@ -42,11 +42,23 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'appVersion' => config('app.version', '1.0.0'),
             'auth' => [
-                'user' => $user,
+                'user' => $user ? [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'must_change_password' => $user->must_change_password,
+                    'is_active' => $user->is_active,
+                ] : null,
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'outlet_provisioning' => fn () => $request->session()->get('outlet_provisioning'),
+            ],
+            'dev' => [
+                'isLocal' => app()->isLocal(),
+                'env' => config('app.env'),
+                'currentRole' => $user?->role ?? 'guest',
             ],
         ];
     }

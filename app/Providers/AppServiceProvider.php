@@ -69,5 +69,20 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('sensitive', function (Request $request) {
             return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
         });
+
+        // Recovery: 5 per minute per IP (prevent phone enumeration)
+        RateLimiter::for('recovery', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        // Customer lookup: 10 per minute per IP
+        RateLimiter::for('lookup', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
+
+        // Tracking: 30 per minute per IP (prevent abuse of public tracking endpoint)
+        RateLimiter::for('track', function (Request $request) {
+            return Limit::perMinute(30)->by($request->ip());
+        });
     }
 }

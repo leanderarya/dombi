@@ -34,6 +34,7 @@ type TrackOrder = {
 type Props = {
     order: TrackOrder | null;
     found: boolean;
+    notifications?: { id: number; type: string; title: string; message: string; time_ago: string }[];
 };
 
 const TIMELINE_STEPS = [
@@ -46,7 +47,7 @@ const TIMELINE_STEPS = [
     { key: 'completed', label: 'Pesanan Selesai', icon: CheckCircle2 },
 ];
 
-export default function TrackPage({ order, found }: Props) {
+export default function TrackPage({ order, found, notifications = [] }: Props) {
     if (!found || !order) {
         return (
             <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
@@ -259,6 +260,29 @@ export default function TrackPage({ order, found }: Props) {
                         </div>
                     </div>
                 </div>
+
+                {/* Notifications */}
+                {notifications.length > 0 && (
+                    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Riwayat Notifikasi</div>
+                        <div className="mt-3 space-y-3">
+                            {notifications.map((notification) => (
+                                <div key={notification.id} className="flex items-start gap-3 border-b border-slate-100 pb-3 last:border-0 last:pb-0">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50">
+                                        <svg className="h-4 w-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                        </svg>
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <div className="text-sm font-semibold text-slate-900">{notification.title}</div>
+                                        <div className="mt-0.5 text-xs text-slate-500">{notification.message}</div>
+                                        <div className="mt-1 text-[10px] text-slate-400">{notification.time_ago}</div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Dombi branding */}
                 <div className="mt-8 text-center">

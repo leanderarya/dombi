@@ -17,6 +17,7 @@ class DeliveryService
     public function __construct(
         private readonly OrderStatusService $orderStatusService,
         private readonly InventoryService $inventoryService,
+        private readonly NotificationService $notificationService,
     ) {}
 
     public function assignCourier(Order $order, User $courier, User $assignedBy, bool $overrideCapacity = false, ?string $overrideReason = null): Delivery
@@ -80,6 +81,8 @@ class DeliveryService
 
             $this->recordHistory($delivery, null, 'waiting_pickup', $assignedBy, $assignedBy->isOwner() ? 'owner' : 'outlet', $reason);
 
+            $this->notificationService->notifyCourierAssigned($delivery);
+
             return $delivery->load(['order.outlet', 'order.items.product', 'courier', 'assignedBy']);
         });
     }
@@ -124,30 +127,38 @@ class DeliveryService
 
             OperationalLog::deliveryResolved($delivery->id, 'rejected_by_courier', $courier->id);
 
+            $this->notificationService->notifyCourierRejectedAssignment($delivery, $reason);
+
             return $delivery->fresh();
         });
     }
 
     public function confirmPickup(Delivery $delivery, User $courier): Delivery
     {
-        $result = $this->transition($delivery, $courier, 'waiting_pickup', 'picked_up', 'picked_up', [
-            'pickup_time' => now(),
-        ]);
+        return DB::transaction(function () use ($delivery, $courier): Delivery {
+            $result = $this->transition($delivery, $courier, 'waiting_pickup', 'picked_up', 'picked_up', [
+                'pickup_time' => now(),
+            ]);
 
-        $courier->recordActivity();
-        $this->recordHistory($result, 'waiting_pickup', 'picked_up', $courier, 'courier', 'Kurir mengkonfirmasi pickup.');
+            $courier->recordActivity();
+            $this->recordHistory($result, 'waiting_pickup', 'picked_up', $courier, 'courier', 'Kurir mengkonfirmasi pickup.');
 
-        return $result;
+            $this->notificationService->notifyCourierPickedUp($result);
+
+            return $result;
+        });
     }
 
     public function startDelivery(Delivery $delivery, User $courier): Delivery
     {
-        $result = $this->transition($delivery, $courier, 'picked_up', 'delivering', 'delivering');
+        return DB::transaction(function () use ($delivery, $courier): Delivery {
+            $result = $this->transition($delivery, $courier, 'picked_up', 'delivering', 'delivering');
 
-        $courier->recordActivity();
-        $this->recordHistory($result, 'picked_up', 'delivering', $courier, 'courier', 'Kurir memulai pengiriman.');
+            $courier->recordActivity();
+            $this->recordHistory($result, 'picked_up', 'delivering', $courier, 'courier', 'Kurir memulai pengiriman.');
 
-        return $result;
+            return $result;
+        });
     }
 
     public function completeDelivery(Delivery $delivery, User $courier, ?array $payload = []): Delivery
@@ -166,27 +177,33 @@ class DeliveryService
             $courier->recordActivity();
             $this->recordHistory($delivery, 'delivering', 'completed', $courier, 'courier', 'Pengiriman selesai.');
 
+            $this->notificationService->notifyDeliveryCompleted($delivery);
+
             return $delivery->fresh(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier']);
         });
     }
 
     public function failDelivery(Delivery $delivery, User $courier, string $reason, ?string $failureNote = null): Delivery
     {
-        $failedReason = $reason;
-        if ($reason === 'Lainnya' && $failureNote) {
-            $failedReason = 'Lainnya: ' . $failureNote;
-        }
+        return DB::transaction(function () use ($delivery, $courier, $reason, $failureNote): Delivery {
+            $failedReason = $reason;
+            if ($reason === 'Lainnya' && $failureNote) {
+                $failedReason = 'Lainnya: ' . $failureNote;
+            }
 
-        $result = $this->transition($delivery, $courier, 'delivering', 'failed', 'failed_delivery', [
-            'failed_reason' => $failedReason,
-        ]);
+            $result = $this->transition($delivery, $courier, 'delivering', 'failed', 'failed_delivery', [
+                'failed_reason' => $failedReason,
+            ]);
 
-        $courier->recordActivity();
-        $this->recordHistory($result, 'delivering', 'failed', $courier, 'courier', $reason);
+            $courier->recordActivity();
+            $this->recordHistory($result, 'delivering', 'failed', $courier, 'courier', $reason);
 
-        OperationalLog::deliveryFailed($result->id, $result->order_id, $courier->id, $reason);
+            OperationalLog::deliveryFailed($result->id, $result->order_id, $courier->id, $reason);
 
-        return $result;
+            $this->notificationService->notifyDeliveryFailed($result, $failedReason);
+
+            return $result;
+        });
     }
 
     public function returnToOutlet(Delivery $delivery, User $courier, ?string $note = null): Delivery
@@ -211,6 +228,9 @@ class DeliveryService
 
             $courier->recordActivity();
             $this->recordHistory($delivery, 'failed', 'returning_to_outlet', $courier, 'courier', $note ?? 'Mengembalikan pesanan ke outlet.');
+
+            $this->notificationService->notifyReturnedToOutlet($delivery);
+            $this->notificationService->notifyReturnedDeliveryPending($delivery);
 
             return $delivery->fresh();
         });

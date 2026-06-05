@@ -68,13 +68,14 @@ class MilestoneSecondTest extends TestCase
 
     private function makeOutlet(string $name): array
     {
-        $user = User::create([
+        $user = User::make([
             'name' => $name.' User',
             'email' => str($name)->slug().'-user@example.com',
             'password' => 'password',
-            'role' => 'outlet',
-            'is_active' => true,
         ]);
+        $user->role = 'outlet';
+        $user->is_active = true;
+        $user->save();
 
         $outlet = Outlet::create([
             'user_id' => $user->id,

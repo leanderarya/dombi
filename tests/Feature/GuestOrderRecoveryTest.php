@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use App\Models\Outlet;
-use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\Customer;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -14,12 +13,14 @@ class GuestOrderRecoveryTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_recovery_returns_orders_for_valid_phone(): void
+    public function test_recovery_returns_orders_for_valid_phone_and_token(): void
     {
         $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
 
         $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567890',
+            'recovery_token' => $order->recovery_token,
         ])->assertOk()
             ->assertJson([
                 'found' => true,
@@ -37,6 +38,7 @@ class GuestOrderRecoveryTest extends TestCase
     {
         $this->postJson('/customer/orders/recovery', [
             'phone' => '089999999999',
+            'recovery_token' => 'A1B2C3D4E5F6A1B2C3D4E5F6A1B2C3D4',
         ])->assertOk()
             ->assertJson([
                 'found' => false,
@@ -48,9 +50,11 @@ class GuestOrderRecoveryTest extends TestCase
     public function test_recovery_returns_active_orders(): void
     {
         $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
 
         $response = $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567890',
+            'recovery_token' => $order->recovery_token,
         ])->assertOk();
 
         $data = $response->json();
@@ -61,9 +65,11 @@ class GuestOrderRecoveryTest extends TestCase
     public function test_recovery_returns_recent_history(): void
     {
         $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
 
         $response = $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567890',
+            'recovery_token' => $order->recovery_token,
         ])->assertOk();
 
         $data = $response->json();
@@ -73,14 +79,16 @@ class GuestOrderRecoveryTest extends TestCase
     public function test_recovery_normalizes_phone_format(): void
     {
         $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
 
-        // Try with different phone formats
         $this->postJson('/customer/orders/recovery', [
             'phone' => '6281234567890',
+            'recovery_token' => $order->recovery_token,
         ])->assertOk()->assertJson(['found' => true]);
 
         $this->postJson('/customer/orders/recovery', [
             'phone' => '81234567890',
+            'recovery_token' => $order->recovery_token,
         ])->assertOk()->assertJson(['found' => true]);
     }
 
@@ -89,6 +97,24 @@ class GuestOrderRecoveryTest extends TestCase
         $this->postJson('/customer/orders/recovery', [
             'phone' => '123',
         ])->assertUnprocessable();
+    }
+
+    public function test_recovery_requires_verification(): void
+    {
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567890',
+        ])->assertStatus(422);
+    }
+
+    public function test_recovery_with_order_code(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+
+        $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567890',
+            'order_code' => 'DOMBI-ACTIVE-001',
+        ])->assertOk()
+            ->assertJson(['found' => true]);
     }
 
     public function test_recovery_limits_results(): void
@@ -101,7 +127,7 @@ class GuestOrderRecoveryTest extends TestCase
         $outlet = $this->createOutlet();
         $product = $this->createProduct();
 
-        // Create 15 completed orders
+        $lastToken = null;
         for ($i = 0; $i < 15; $i++) {
             $order = Order::create([
                 'customer_id' => $customer->id,
@@ -127,10 +153,13 @@ class GuestOrderRecoveryTest extends TestCase
                 'price' => $product->price,
                 'subtotal' => 25000,
             ]);
+
+            $lastToken = $order->recovery_token;
         }
 
         $response = $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567890',
+            'recovery_token' => $lastToken,
         ])->assertOk();
 
         $data = $response->json();
@@ -164,7 +193,7 @@ class GuestOrderRecoveryTest extends TestCase
         ]);
 
         $this->assertNotNull($order->recovery_token);
-        $this->assertMatchesRegularExpression('/^[A-Z0-9]{6,8}$/', $order->recovery_token);
+        $this->assertMatchesRegularExpression('/^[A-F0-9]{32}$/', $order->recovery_token);
     }
 
     public function test_recovery_tokens_are_unique(): void
@@ -204,9 +233,11 @@ class GuestOrderRecoveryTest extends TestCase
     public function test_recovery_returns_active_orders_first(): void
     {
         $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
 
         $response = $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567890',
+            'recovery_token' => $order->recovery_token,
         ])->assertOk();
 
         $data = $response->json();
@@ -217,29 +248,27 @@ class GuestOrderRecoveryTest extends TestCase
     public function test_recovery_returns_orders_with_outlet_object_and_items_array(): void
     {
         $customer = $this->createCustomerWithOrders();
+        $order = Order::where('customer_id', $customer->id)->first();
 
         $response = $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567890',
+            'recovery_token' => $order->recovery_token,
         ])->assertOk();
 
         $data = $response->json();
 
-        // Active order has outlet as object with name
         $activeOrder = $data['active_orders'][0];
         $this->assertIsArray($activeOrder['outlet']);
         $this->assertArrayHasKey('name', $activeOrder['outlet']);
         $this->assertSame('Outlet Test', $activeOrder['outlet']['name']);
 
-        // Active order has items as array
         $this->assertIsArray($activeOrder['items']);
         $this->assertGreaterThan(0, count($activeOrder['items']));
         $this->assertArrayHasKey('product_name', $activeOrder['items'][0]);
         $this->assertArrayHasKey('quantity', $activeOrder['items'][0]);
 
-        // Active order has created_at for frontend date display
         $this->assertNotNull($activeOrder['created_at']);
 
-        // Recent order also has correct shape
         $recentOrder = $data['recent_orders'][0];
         $this->assertIsArray($recentOrder['outlet']);
         $this->assertArrayHasKey('name', $recentOrder['outlet']);
@@ -257,7 +286,6 @@ class GuestOrderRecoveryTest extends TestCase
         $outlet = $this->createOutlet();
         $product = $this->createProduct();
 
-        // Create active order
         $activeOrder = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
@@ -283,7 +311,6 @@ class GuestOrderRecoveryTest extends TestCase
             'subtotal' => 50000,
         ]);
 
-        // Create completed order
         $completedOrder = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
@@ -327,14 +354,12 @@ class GuestOrderRecoveryTest extends TestCase
 
     private function createProduct(): Product
     {
-        $product = Product::create([
+        return Product::create([
             'name' => 'Susu Kambing 500ml',
             'slug' => 'susu-kambing-500ml-recovery',
             'unit' => 'botol',
             'price' => 25000,
             'is_active' => true,
         ]);
-
-        return $product;
     }
 }

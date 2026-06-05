@@ -1,4 +1,4 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import ActivityFeed from '@/components/owner/activity-feed-card';
 import CourierLeaderboardCard from '@/components/owner/courier-leaderboard-card';
 import DeliveryHealthScoreCard from '@/components/owner/delivery-health-score-card';
@@ -10,6 +10,8 @@ import OutletHealthCard from '@/components/owner/outlet-health-card';
 import OwnerBottomNav from '@/components/owner/owner-bottom-nav';
 import QuickActionCard from '@/components/owner/quick-action-card';
 import SlaViolationsCard from '@/components/owner/sla-violations-card';
+import SectionCard from '@/components/ui/section-card';
+import EmptyState from '@/components/ui/empty-state';
 import OfflineBanner from '@/components/offline-banner';
 import OwnerLayout from '@/layouts/owner-layout';
 import { confirmLogout } from '@/lib/confirm-logout';
@@ -51,53 +53,29 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
             <DashboardGreeting />
 
             <main className="px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">
-                {/* Health Score */}
                 {intelligence?.healthScore && (
                     <section>
                         <DeliveryHealthScoreCard health={intelligence.healthScore} />
                     </section>
                 )}
 
-                {/* Operational Alerts */}
                 {hasAlerts && (
                     <section className="mt-4">
                         <SectionLabel>Operational Alerts</SectionLabel>
                         <div className="mt-2 space-y-2">
                             {alerts.failedDeliveries.length > 0 && (
-                                <OperationalAlertCard
-                                    href="/owner/deliveries?status=failed"
-                                    icon={<AlertTruckIcon />}
-                                    title={`${alerts.failedDeliveries.length} Failed Deliveries`}
-                                    subtitle="Immediate operational action required"
-                                    count={alerts.failedDeliveries.length}
-                                    severity="critical"
-                                />
+                                <OperationalAlertCard href="/owner/deliveries?status=failed" icon={<AlertTruckIcon />} title={`${alerts.failedDeliveries.length} Failed Deliveries`} subtitle="Immediate operational action required" count={alerts.failedDeliveries.length} severity="critical" />
                             )}
                             {alerts.lowStockItems.length > 0 && (
-                                <OperationalAlertCard
-                                    href="/owner/inventories"
-                                    icon={<AlertInventoryIcon />}
-                                    title={`${alerts.lowStockItems.length} Low Stock Outlets`}
-                                    subtitle="Available stock below minimum threshold"
-                                    count={alerts.lowStockItems.length}
-                                    severity="warning"
-                                />
+                                <OperationalAlertCard href="/owner/inventories" icon={<AlertInventoryIcon />} title={`${alerts.lowStockItems.length} Low Stock Outlets`} subtitle="Available stock below minimum threshold" count={alerts.lowStockItems.length} severity="warning" />
                             )}
                             {alerts.pendingRestocks.length > 0 && (
-                                <OperationalAlertCard
-                                    href="/owner/restocks?status=requested"
-                                    icon={<AlertRestockIcon />}
-                                    title={`${alerts.pendingRestocks.length} Restock Pending`}
-                                    subtitle="Awaiting approval"
-                                    count={alerts.pendingRestocks.length}
-                                    severity="info"
-                                />
+                                <OperationalAlertCard href="/owner/restocks?status=requested" icon={<AlertRestockIcon />} title={`${alerts.pendingRestocks.length} Restock Pending`} subtitle="Awaiting approval" count={alerts.pendingRestocks.length} severity="info" />
                             )}
                         </div>
                     </section>
                 )}
 
-                {/* KPI Grid */}
                 <section className={hasAlerts ? 'mt-6' : 'mt-4'}>
                     <SectionLabel>Performance Overview</SectionLabel>
                     <div className="mt-2 grid grid-cols-2 gap-3">
@@ -108,7 +86,6 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
                     </div>
                 </section>
 
-                {/* Delivery KPIs */}
                 <section className="mt-6">
                     <div className="flex items-center justify-between">
                         <SectionLabel>Delivery Operations</SectionLabel>
@@ -125,35 +102,30 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
                     </div>
                 </section>
 
-                {/* SLA Violations */}
                 {intelligence?.slaViolations && (
                     <section className="mt-6">
                         <SlaViolationsCard violations={intelligence.slaViolations} />
                     </section>
                 )}
 
-                {/* Oldest Deliveries */}
                 {intelligence?.oldestDeliveries && intelligence.oldestDeliveries.length > 0 && (
                     <section className="mt-6">
                         <OldestDeliveriesCard deliveries={intelligence.oldestDeliveries} />
                     </section>
                 )}
 
-                {/* Failure Reasons */}
                 {intelligence?.failureReasons && intelligence.failureReasons.length > 0 && (
                     <section className="mt-6">
                         <FailureReasonsCard reasons={intelligence.failureReasons} />
                     </section>
                 )}
 
-                {/* Courier Leaderboard */}
                 {intelligence?.courierLeaderboard && intelligence.courierLeaderboard.length > 0 && (
                     <section className="mt-6">
                         <CourierLeaderboardCard couriers={intelligence.courierLeaderboard} />
                     </section>
                 )}
 
-                {/* Recent Activity */}
                 {activityItems.length > 0 && (
                     <section className="mt-6">
                         <div className="flex items-center justify-between">
@@ -166,7 +138,6 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
                     </section>
                 )}
 
-                {/* Outlet Health */}
                 {outletHealth.length > 0 && (
                     <section className="mt-6">
                         <SectionLabel>Outlet Health</SectionLabel>
@@ -178,7 +149,6 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
                     </section>
                 )}
 
-                {/* Quick Actions */}
                 <section className="mt-6">
                     <SectionLabel>Quick Actions</SectionLabel>
                     <div className="mt-2 grid grid-cols-3 gap-3">
@@ -195,59 +165,136 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
 }
 
 function DesktopDashboard({ stats, deliveryStats, intelligence, alerts, recentActivity }: any) {
+    const hasAlerts = alerts.failedDeliveries.length > 0 || alerts.lowStockItems.length > 0 || alerts.pendingRestocks.length > 0;
+
+    const activityItems = recentActivity.slice(0, 8).map((m: any) => ({
+        id: m.id,
+        title: `${m.product?.name ?? 'Produk'} ${activityVerb(m.type)}`,
+        subtitle: `${timeAgo(m.created_at)} · ${m.outlet?.name ?? ''}`,
+        color: activityColor(m.type),
+    }));
+
+    const outletHealth = buildOutletHealth(alerts.lowStockItems, stats.activeOutlets);
+
     return (
         <>
             <Head title="Owner Dashboard" />
-            <h1 className="text-xl font-semibold">Dashboard</h1>
 
-            {/* Health Score + KPIs */}
-            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-4">
+            {/* Row 1: Business KPIs */}
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+                <KpiCard label="Order Hari Ini" value={stats.todayOrders} href="/owner/orders" color="emerald" />
+                <KpiCard label="Active Delivery" value={stats.activeDeliveries} href="/owner/deliveries" color="blue" />
+                <KpiCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="amber" />
+                <KpiCard label="Stok Rendah" value={stats.lowStocks} href="/owner/inventories" color="red" />
                 {intelligence?.healthScore && (
-                    <div className="lg:col-span-1">
+                    <div className="col-span-2 lg:col-span-1">
                         <DeliveryHealthScoreCard health={intelligence.healthScore} />
                     </div>
                 )}
-                <div className="lg:col-span-3">
-                    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                        <KpiCard label="Order Hari Ini" value={stats.todayOrders} href="/owner/orders" color="emerald" />
-                        <KpiCard label="Active Delivery" value={stats.activeDeliveries} href="/owner/deliveries" color="blue" />
-                        <KpiCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="amber" />
-                        <KpiCard label="Stok Rendah" value={stats.lowStocks} href="/owner/inventories" color="red" />
+            </div>
+
+            {/* Row 2: Operational Alerts + Delivery Health */}
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
+                {/* Operational Alerts */}
+                <SectionCard label="Operational Alerts">
+                    {hasAlerts ? (
+                        <div className="mt-2 space-y-2">
+                            {alerts.failedDeliveries.length > 0 && (
+                                <OperationalAlertCard href="/owner/deliveries?status=failed" icon={<AlertTruckIcon />} title={`${alerts.failedDeliveries.length} Failed Deliveries`} subtitle="Immediate action required" count={alerts.failedDeliveries.length} severity="critical" />
+                            )}
+                            {alerts.lowStockItems.length > 0 && (
+                                <OperationalAlertCard href="/owner/inventories" icon={<AlertInventoryIcon />} title={`${alerts.lowStockItems.length} Low Stock`} subtitle="Below minimum threshold" count={alerts.lowStockItems.length} severity="warning" />
+                            )}
+                            {alerts.pendingRestocks.length > 0 && (
+                                <OperationalAlertCard href="/owner/restocks?status=requested" icon={<AlertRestockIcon />} title={`${alerts.pendingRestocks.length} Restock Pending`} subtitle="Awaiting approval" count={alerts.pendingRestocks.length} severity="info" />
+                            )}
+                        </div>
+                    ) : (
+                        <div className="mt-2 text-xs text-slate-400">No alerts</div>
+                    )}
+                </SectionCard>
+
+                {/* Delivery KPIs */}
+                <SectionCard label="Delivery Operations" labelRight={<Link href="/owner/deliveries/board" className="text-[11px] font-bold text-emerald-700">Board</Link>}>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                        <MiniKpi label="Menunggu" value={deliveryStats.waitingForCourier} color="amber" />
+                        <MiniKpi label="Dalam Perjalanan" value={deliveryStats.inTransit} color="blue" />
+                        <MiniKpi label="Terlambat" value={deliveryStats.late} color="red" />
                     </div>
+                    <div className="mt-2 grid grid-cols-2 gap-2">
+                        <MiniKpi label="Gagal" value={deliveryStats.failed} color="red" />
+                        <MiniKpi label="Selesai Hari Ini" value={deliveryStats.completedToday} color="emerald" />
+                    </div>
+                </SectionCard>
+
+                {/* Inventory Health */}
+                <SectionCard label="Inventory Health">
+                    {outletHealth.length > 0 ? (
+                        <div className="mt-2 flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                            {outletHealth.map((outlet) => (
+                                <OutletHealthCard key={outlet.id} outlet={outlet} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="mt-2 text-xs text-slate-400">All outlets healthy</div>
+                    )}
+                </SectionCard>
+            </div>
+
+            {/* Row 3: Intelligence + Activity */}
+            <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                {/* Left: Intelligence */}
+                <div className="space-y-4">
+                    {intelligence?.slaViolations && <SlaViolationsCard violations={intelligence.slaViolations} />}
+                    {intelligence?.oldestDeliveries && intelligence.oldestDeliveries.length > 0 && <OldestDeliveriesCard deliveries={intelligence.oldestDeliveries} />}
+                    {intelligence?.failureReasons && intelligence.failureReasons.length > 0 && <FailureReasonsCard reasons={intelligence.failureReasons} />}
+                </div>
+
+                {/* Right: Activity + Leaderboard */}
+                <div className="space-y-4">
+                    {intelligence?.courierLeaderboard && intelligence.courierLeaderboard.length > 0 && <CourierLeaderboardCard couriers={intelligence.courierLeaderboard} />}
+                    {activityItems.length > 0 && (
+                        <SectionCard label="Recent Activity" labelRight={<Link href="/owner/stock-movements" className="text-[11px] font-bold text-emerald-700">Lihat Semua</Link>}>
+                            <div className="mt-2">
+                                <ActivityFeed items={activityItems} />
+                            </div>
+                        </SectionCard>
+                    )}
                 </div>
             </div>
 
-            {/* Delivery KPIs */}
-            <div className="mt-5">
-                <h2 className="text-sm font-semibold text-slate-700">Delivery Operations</h2>
-                <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-5">
-                    <KpiCard label="Menunggu Kurir" value={deliveryStats.waitingForCourier} href="/owner/deliveries/board" color="amber" />
-                    <KpiCard label="Dalam Perjalanan" value={deliveryStats.inTransit} href="/owner/deliveries/board" color="blue" />
-                    <KpiCard label="Terlambat" value={deliveryStats.late} href="/owner/deliveries/board" color="red" />
-                    <KpiCard label="Gagal" value={deliveryStats.failed} href="/owner/deliveries?status=failed" color="red" />
-                    <KpiCard label="Selesai Hari Ini" value={deliveryStats.completedToday} href="/owner/deliveries/board" color="emerald" />
-                </div>
-            </div>
-
-            {/* Intelligence Grid */}
-            <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {intelligence?.slaViolations && <SlaViolationsCard violations={intelligence.slaViolations} />}
-                {intelligence?.oldestDeliveries && <OldestDeliveriesCard deliveries={intelligence.oldestDeliveries} />}
-                {intelligence?.failureReasons && <FailureReasonsCard reasons={intelligence.failureReasons} />}
-                {intelligence?.courierLeaderboard && <CourierLeaderboardCard couriers={intelligence.courierLeaderboard} />}
-            </div>
-
-            {alerts.failedDeliveries.length > 0 && (
-                <Link href="/owner/deliveries/board" className="mt-4 block rounded-lg border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
-                    {alerts.failedDeliveries.length} delivery gagal perlu ditindak
+            {/* Quick Actions */}
+            <div className="mt-4 flex gap-3">
+                <Link href="/owner/orders" className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-zinc-50">
+                    <OrdersIcon /> Manage Orders
                 </Link>
-            )}
+                <Link href="/owner/deliveries/board" className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-zinc-50">
+                    <TruckIcon /> Delivery Board
+                </Link>
+                <Link href="/owner/inventories" className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-zinc-50">
+                    <InventoryIcon /> Inventory
+                </Link>
+                <Link href="/owner/reports" className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-zinc-50">
+                    <ReportsIcon /> Reports
+                </Link>
+            </div>
         </>
     );
 }
 
+// ─── Helpers ──────────────────────────────────────────────────
+
 function SectionLabel({ children }: { children: React.ReactNode }) {
     return <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{children}</h2>;
+}
+
+function MiniKpi({ label, value, color }: { label: string; value: number; color: string }) {
+    return (
+        <div className="rounded-lg border border-zinc-100 bg-zinc-50/50 p-2 text-center">
+            <div className={`text-lg font-bold ${color === 'red' && value > 0 ? 'text-red-600' : 'text-slate-900'}`}>{value}</div>
+            <div className="text-[10px] font-medium text-slate-500">{label}</div>
+        </div>
+    );
 }
 
 function activityVerb(type: string): string {
@@ -270,7 +317,7 @@ function timeAgo(dateStr: string): string {
     return `${Math.floor(hours / 24)} hari lalu`;
 }
 
-function buildOutletHealth(lowStockItems: any[], totalOutlets: number) {
+function buildOutletHealth(lowStockItems: any[], _totalOutlets: number) {
     const outletMap = new Map<number, { id: number; name: string; lowCount: number }>();
     for (const item of lowStockItems) {
         if (!item.outlet) continue;
@@ -286,9 +333,12 @@ function buildOutletHealth(lowStockItems: any[], totalOutlets: number) {
     }));
 }
 
-function OrdersIcon() { return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>; }
-function AuditIcon() { return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>; }
-function RestockIcon() { return <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>; }
+function OrdersIcon() { return <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>; }
+function AuditIcon() { return <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>; }
+function RestockIcon() { return <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>; }
+function TruckIcon() { return <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>; }
+function InventoryIcon() { return <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>; }
+function ReportsIcon() { return <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>; }
 
 function DashboardGreeting() {
     const { auth } = usePage<any>().props;

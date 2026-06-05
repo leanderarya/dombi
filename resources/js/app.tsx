@@ -1,4 +1,6 @@
 import { createInertiaApp } from '@inertiajs/react';
+import { createRoot } from 'react-dom/client';
+import DevToolbar from '@/components/dev-toolbar';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
 
@@ -6,6 +8,21 @@ createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     progress: {
         color: '#047857',
+    },
+    setup({ el, App, props }) {
+        const root = createRoot(el!);
+
+        root.render(
+            <>
+                <App {...props} />
+                {(props.initialPage.props.dev as Record<string, unknown>)?.isLocal && (
+                    <DevToolbar
+                        currentRole={(props.initialPage.props.dev as Record<string, unknown>).currentRole as string | null}
+                        env={(props.initialPage.props.dev as Record<string, unknown>).env as string}
+                    />
+                )}
+            </>
+        );
     },
 });
 

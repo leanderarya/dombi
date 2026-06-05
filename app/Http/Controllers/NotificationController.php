@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Notification;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class NotificationController extends Controller
+{
+    public function index(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $notifications = Notification::query()
+            ->where('user_type', $user->role)
+            ->where('user_id', $user->id)
+            ->latest()
+            ->limit(50)
+            ->get();
+
+        $unreadCount = Notification::query()
+            ->where('user_type', $user->role)
+            ->where('user_id', $user->id)
+            ->unread()
+            ->count();
+
+        return response()->json([
+            'notifications' => $notifications->map(fn (Notification $n) => [
+                'id' => $n->id,
+                'type' => $n->type,
+                'title' => $n->title,
+                'message' => $n->message,
+                'data' => $n->data,
+                'read_at' => $n->read_at?->toISOString(),
+                'created_at' => $n->created_at->toISOString(),
+                'time_ago' => $n->created_at->diffForHumans(),
+            ]),
+            'unread_count' => $unreadCount,
+        ]);
+    }
+
+    public function unreadCount(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $count = Notification::query()
+            ->where('user_type', $user->role)
+            ->where('user_id', $user->id)
+            ->unread()
+            ->count();
+
+        return response()->json(['unread_count' => $count]);
+    }
+
+    public function markAsRead(Request $request, Notification $notification): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($notification->user_type !== $user->role || $notification->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $notification->markAsRead();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function markAllAsRead(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        Notification::query()
+            ->where('user_type', $user->role)
+            ->where('user_id', $user->id)
+            ->unread()
+            ->update(['read_at' => now()]);
+
+        return response()->json(['success' => true]);
+    }
+}

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -32,6 +33,8 @@ class UserFactory extends Factory
             'role' => 'customer',
             'phone' => fake()->phoneNumber(),
             'is_active' => true,
+            'is_online' => false,
+            'must_change_password' => false,
             'remember_token' => Str::random(10),
         ];
     }
@@ -44,5 +47,25 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
         ]);
+    }
+
+    /**
+     * Create a model instance and persist it.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @param  \Illuminate\Database\Eloquent\Model|null  $parent
+     * @return \App\Models\User
+     */
+    public function create($attributes = [], ?Model $parent = null): User
+    {
+        // Force-create to bypass mass assignment protection
+        $user = User::forceCreate(
+            array_merge($this->definition(), $this->states[$this->state ?? 'default'] ?? [], $attributes)
+        );
+
+        // Run afterCreating callbacks
+        $this->callAfterCreating(collect([$user]), $parent);
+
+        return $user;
     }
 }

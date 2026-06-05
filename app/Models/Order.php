@@ -109,14 +109,14 @@ class Order extends Model
     private static function generateRecoveryToken(): string
     {
         for ($attempt = 0; $attempt < 5; $attempt++) {
-            $token = strtoupper(bin2hex(random_bytes(3)));
+            $token = strtoupper(bin2hex(random_bytes(16)));
 
             if (! static::where('recovery_token', $token)->exists()) {
                 return $token;
             }
         }
 
-        return strtoupper(bin2hex(random_bytes(4)));
+        return strtoupper(bin2hex(random_bytes(16)));
     }
 
     public function isPendingConfirmation(): bool

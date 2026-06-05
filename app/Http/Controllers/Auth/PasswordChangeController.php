@@ -26,10 +26,10 @@ class PasswordChangeController extends Controller
             'password' => ['required', 'confirmed', Password::min(8)],
         ]);
 
-        $request->user()->update([
+        $request->user()->forceFill([
             'password' => Hash::make($validated['password']),
             'must_change_password' => false,
-        ]);
+        ])->save();
 
         return redirect()->route('dashboard')->with('success', 'Password operasional berhasil diperbarui.');
     }

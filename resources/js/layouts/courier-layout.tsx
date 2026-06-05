@@ -1,45 +1,75 @@
-import { Link, router, usePage } from '@inertiajs/react';
-import type { PropsWithChildren } from 'react';
-import OfflineBanner from '@/components/offline-banner';
+import { router, usePage } from '@inertiajs/react';
+import { useState, type PropsWithChildren, ReactNode } from 'react';
+import { LogOut } from 'lucide-react';
+import NotificationBell from '@/components/notification-bell';
+import NotificationSheet from '@/components/notification-sheet';
+import MobileRoleLayout from '@/components/ui/mobile-role-layout';
+import PageHeader from '@/components/ui/page-header';
+import CourierBottomNav from '@/components/courier-bottom-nav';
 
-const nav = [
-    ['/courier/dashboard', 'Tugas Saya'],
-    ['/courier/deliveries', 'Riwayat'],
-];
+interface Props extends PropsWithChildren {
+    title?: string;
+    subtitle?: string;
+    backHref?: string;
+    hideNav?: boolean;
+    /** Extra content below the header (e.g. filter chips) */
+    headerBelow?: ReactNode;
+}
 
-export default function CourierLayout({ children }: PropsWithChildren) {
+export default function CourierLayout({ children, title, subtitle, backHref, hideNav = false, headerBelow }: Props) {
     const page = usePage<any>();
-    const { auth, flash } = page.props;
-    const url = page.url;
+    const { auth } = page.props;
+    const [notificationOpen, setNotificationOpen] = useState(false);
+
+    const rightSlot = (
+        <div className="flex items-center gap-1">
+            <NotificationBell onClick={() => setNotificationOpen(true)} />
+            <button
+                onClick={() => router.post('/logout')}
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 active:bg-zinc-100"
+                aria-label="Logout"
+            >
+                <LogOut className="h-4 w-4" />
+            </button>
+        </div>
+    );
+
+    const brandSlot = backHref ? undefined : (
+        <div className="flex items-center gap-2">
+            <div className="font-semibold text-emerald-800">Dombi</div>
+            {auth?.user?.is_online !== undefined && (
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                    auth.user.is_online
+                        ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                        : 'bg-slate-50 text-slate-500 ring-1 ring-slate-200'
+                }`}>
+                    {auth.user.is_online ? 'Online' : 'Offline'}
+                </span>
+            )}
+        </div>
+    );
 
     return (
-        <div className="min-h-dvh bg-[#f8f7f2] pb-safe text-slate-900">
-            <OfflineBanner />
-            <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/95 backdrop-blur-sm">
-                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <div className="flex items-center gap-3">
-                        <div className="font-semibold text-emerald-800">Dombi Courier</div>
-                        <div className="flex items-center gap-1.5">
-                            <div className={`h-2 w-2 rounded-full ${auth?.user?.is_online ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                            <span className="text-[10px] font-medium text-slate-500">
-                                {auth?.user?.is_online ? 'Online' : 'Offline'}
-                            </span>
-                        </div>
-                    </div>
-                    <button onClick={() => router.post('/logout')} className="rounded-md border border-zinc-200 px-2.5 py-1.5 text-xs text-zinc-600">Logout</button>
+        <MobileRoleLayout
+            bottomNav={!hideNav ? <CourierBottomNav /> : undefined}
+            hideBottomNav={hideNav}
+        >
+            <PageHeader
+                title={title ?? (backHref ? undefined : '')}
+                subtitle={subtitle}
+                backHref={backHref}
+                right={backHref ? rightSlot : brandSlot ? undefined : rightSlot}
+                below={headerBelow}
+            />
+            {/* When there's no title, render brand in the header */}
+            {!title && !backHref && (
+                <div className="mb-4 flex items-center justify-between">
+                    {brandSlot}
+                    {rightSlot}
                 </div>
-                <nav className="mx-auto flex max-w-lg gap-1 px-4 pb-2">
-                    {nav.map(([href, label]) => (
-                        <Link key={href} href={href} className={`flex-1 rounded-md px-3 py-1.5 text-center text-sm font-medium transition-colors ${url?.startsWith(href) ? 'bg-emerald-50 text-emerald-800' : 'text-slate-500 active:bg-zinc-50'}`}>
-                            {label}
-                        </Link>
-                    ))}
-                </nav>
-            </header>
-            <main className="mx-auto max-w-lg px-4 py-5">
-                {flash?.success && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-800">{flash.success}</div>}
-                {children}
-            </main>
-        </div>
+            )}
+            {children}
+            <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
+        </MobileRoleLayout>
     );
 }

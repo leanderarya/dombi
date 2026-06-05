@@ -1,30 +1,30 @@
 const styles: Record<string, string> = {
-    waiting_assignment: 'bg-zinc-200 text-zinc-800',
-    waiting_pickup: 'bg-yellow-100 text-yellow-800',
-    picked_up: 'bg-blue-100 text-blue-800',
-    delivering: 'bg-purple-100 text-purple-800',
-    completed: 'bg-green-100 text-green-800',
-    failed: 'bg-red-100 text-red-800',
-    retry_delivery: 'bg-orange-100 text-orange-800',
-    returned_to_outlet: 'bg-amber-100 text-amber-800',
-    cancelled_and_released: 'bg-zinc-300 text-zinc-900',
+    waiting_assignment: 'bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200',
+    waiting_pickup: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+    picked_up: 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
+    delivering: 'bg-purple-50 text-purple-700 ring-1 ring-purple-200',
+    completed: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
+    failed: 'bg-red-50 text-red-700 ring-1 ring-red-200',
+    retry_delivery: 'bg-orange-50 text-orange-700 ring-1 ring-orange-200',
+    returned_to_outlet: 'bg-amber-50 text-amber-700 ring-1 ring-amber-200',
+    cancelled_and_released: 'bg-zinc-100 text-zinc-700 ring-1 ring-zinc-200',
 };
 
 const labels: Record<string, string> = {
-    waiting_assignment: 'Waiting Assignment',
-    waiting_pickup: 'Waiting Pickup',
-    picked_up: 'Picked Up',
-    delivering: 'Delivering',
-    completed: 'Completed',
-    failed: 'Failed',
-    retry_delivery: 'Retry Delivery',
-    returned_to_outlet: 'Returned to Outlet',
-    cancelled_and_released: 'Cancelled & Released',
+    waiting_assignment: 'Menunggu Assignment',
+    waiting_pickup: 'Menunggu Pickup',
+    picked_up: 'Sudah Diambil',
+    delivering: 'Sedang Diantar',
+    completed: 'Selesai',
+    failed: 'Gagal',
+    retry_delivery: 'Pengiriman Ulang',
+    returned_to_outlet: 'Dikembalikan',
+    cancelled_and_released: 'Dibatalkan',
 };
 
 export default function DeliveryStatusBadge({ status }: { status: string }) {
     return (
-        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${styles[status] ?? styles.waiting_assignment}`}>
+        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ${styles[status] ?? styles.waiting_assignment}`}>
             {labels[status] ?? status.replaceAll('_', ' ')}
         </span>
     );

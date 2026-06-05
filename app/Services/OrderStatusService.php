@@ -40,7 +40,10 @@ class OrderStatusService
         'Lainnya',
     ];
 
-    public function __construct(private readonly InventoryService $inventoryService) {}
+    public function __construct(
+        private readonly InventoryService $inventoryService,
+        private readonly NotificationService $notificationService,
+    ) {}
 
     public function updateStatus(Order $order, string $status, ?User $actor = null): Order
     {
@@ -81,6 +84,9 @@ class OrderStatusService
                 'created_at' => now(),
             ]);
 
+            // Fire notifications based on status
+            $this->fireStatusNotifications($order, $fromStatus, $status);
+
             return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
         });
     }
@@ -108,6 +114,12 @@ class OrderStatusService
         return DB::transaction(function () use ($order, $reason, $note, $actor): Order {
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
 
+            if (! $order->isPendingConfirmation()) {
+                throw ValidationException::withMessages([
+                    'status' => 'Pesanan sudah tidak dalam status menunggu konfirmasi.',
+                ]);
+            }
+
             $this->inventoryService->releaseReservedStock($order);
 
             $order->update([
@@ -127,6 +139,8 @@ class OrderStatusService
                 'changed_by_type' => 'outlet',
                 'created_at' => now(),
             ]);
+
+            $this->notificationService->notifyOrderRejected($order, $reason);
 
             return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
         });
@@ -155,6 +169,12 @@ class OrderStatusService
         return DB::transaction(function () use ($order, $reason, $note): Order {
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
 
+            if (! $order->isPendingConfirmation()) {
+                throw ValidationException::withMessages([
+                    'status' => 'Pesanan sudah tidak dalam status menunggu konfirmasi.',
+                ]);
+            }
+
             $this->inventoryService->releaseReservedStock($order);
 
             $order->update([
@@ -174,6 +194,8 @@ class OrderStatusService
                 'changed_by_type' => 'customer',
                 'created_at' => now(),
             ]);
+
+            $this->notificationService->notifyOrderCancelled($order);
 
             return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
         });
@@ -205,6 +227,8 @@ class OrderStatusService
                 'changed_by_type' => 'system',
                 'created_at' => now(),
             ]);
+
+            $this->notificationService->notifyOrderExpired($order);
 
             return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
         });
@@ -245,6 +269,14 @@ class OrderStatusService
             'cancelled_by_customer' => 'Pesanan dibatalkan customer.',
             'expired' => 'Pesanan kadaluarsa.',
             default => 'Status order diperbarui.',
+        };
+    }
+
+    private function fireStatusNotifications(Order $order, string $fromStatus, string $toStatus): void
+    {
+        match ($toStatus) {
+            'confirmed' => $this->notificationService->notifyOrderConfirmed($order),
+            default => null,
         };
     }
 }

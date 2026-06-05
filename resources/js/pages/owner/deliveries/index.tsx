@@ -1,19 +1,20 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import EmptyState from '@/components/empty-state';
+import EmptyState from '@/components/ui/empty-state';
 import FilterSheet from '@/components/owner/filter-sheet';
-import OrderStatusChip from '@/components/owner/order-status-chip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { HeaderIconButton, SearchIcon, FilterIcon } from '@/components/owner/owner-mobile-header';
+import DataTable from '@/components/ui/data-table';
+import StatusBadge from '@/components/ui/status-badge';
 import Pagination from '@/components/pagination';
+import { getDeliveryStatus } from '@/lib/status-labels';
 import { formatDate } from '@/lib/format';
 
 const statusOptions = [
-    { value: 'waiting_pickup', label: 'Waiting Pickup' },
-    { value: 'picked_up', label: 'Picked Up' },
-    { value: 'delivering', label: 'Delivering' },
-    { value: 'completed', label: 'Completed' },
-    { value: 'failed', label: 'Failed' },
+    { value: 'waiting_pickup', label: 'Menunggu Pickup' },
+    { value: 'picked_up', label: 'Diambil Kurir' },
+    { value: 'delivering', label: 'Dalam Pengiriman' },
+    { value: 'completed', label: 'Selesai' },
+    { value: 'failed', label: 'Gagal' },
 ];
 
 export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: any) {
@@ -31,32 +32,95 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: 
 
     return (
         <OwnerPageShell
-            title="Deliveries"
+            title="Pengiriman"
             headerRight={
                 <>
-                    <HeaderIconButton label="Search"><SearchIcon /></HeaderIconButton>
-                    <div className="relative">
-                        <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
-                        {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[9px] font-bold text-white">{activeFilterCount}</span>}
-                    </div>
+                    <select
+                        value={filters.status ?? ''}
+                        onChange={(e) => setFilter('status', e.target.value)}
+                        className="h-9 rounded-lg border border-zinc-200 px-3 text-sm"
+                    >
+                        <option value="">Semua status</option>
+                        {statusOptions.map((sf) => <option key={sf.value} value={sf.value}>{sf.label}</option>)}
+                    </select>
+                    <select
+                        value={filters.courier_id ?? ''}
+                        onChange={(e) => setFilter('courier_id', e.target.value)}
+                        className="h-9 rounded-lg border border-zinc-200 px-3 text-sm"
+                    >
+                        <option value="">Semua kurir</option>
+                        {couriers.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
                 </>
             }
         >
             {deliveries.data.length === 0 ? (
-                <EmptyState icon="🚚" title="Tidak ada delivery" description="Delivery akan muncul setelah kurir di-assign." />
+                <EmptyState icon="🚚" title="Tidak ada pengiriman" description="Pengiriman akan muncul setelah kurir di-assign." />
             ) : (
-                <div className="space-y-2">
-                    {deliveries.data.map((d: any) => (
-                        <Link key={d.id} href={`/owner/deliveries/${d.id}`} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
-                            <div className="min-w-0 flex-1">
-                                <div className="text-sm font-bold tabular-nums text-slate-900">{d.order.order_code}</div>
-                                <div className="mt-0.5 text-xs text-slate-500">{d.order.outlet?.name ?? '-'} · {d.courier?.name ?? 'No courier'}</div>
-                                <div className="mt-1 text-[10px] tabular-nums text-slate-400">{formatDate(d.assigned_at)}</div>
-                            </div>
-                            <OrderStatusChip status={d.status} />
-                        </Link>
-                    ))}
-                </div>
+                <>
+                    {/* Mobile: cards */}
+                    <div className="space-y-2 lg:hidden">
+                        {deliveries.data.map((d: any) => (
+                            <Link key={d.id} href={`/owner/deliveries/${d.id}`} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-sm font-bold tabular-nums text-slate-900">{d.order.order_code}</div>
+                                    <div className="mt-0.5 text-xs text-slate-500">{d.order.outlet?.name ?? '-'} · {d.courier?.name ?? 'Belum ada kurir'}</div>
+                                    <div className="mt-1 text-[10px] tabular-nums text-slate-400">{formatDate(d.assigned_at)}</div>
+                                </div>
+                                <StatusBadge variant={getDeliveryStatus(d.status).variant} size="sm">
+                                    {getDeliveryStatus(d.status).label}
+                                </StatusBadge>
+                            </Link>
+                        ))}
+                    </div>
+
+                    {/* Desktop: table */}
+                    <div className="hidden lg:block">
+                        <DataTable
+                            rowKey="id"
+                            data={deliveries.data}
+                            columns={[
+                                {
+                                    key: 'order_code',
+                                    label: 'Kode Pesanan',
+                                    className: 'font-bold tabular-nums text-slate-900',
+                                    render: (row: any) => row.order?.order_code ?? '-',
+                                },
+                                {
+                                    key: 'outlet',
+                                    label: 'Outlet',
+                                    render: (row: any) => row.order?.outlet?.name ?? '-',
+                                },
+                                {
+                                    key: 'courier',
+                                    label: 'Kurir',
+                                    render: (row: any) => row.courier?.name ?? 'Belum ada kurir',
+                                },
+                                {
+                                    key: 'status',
+                                    label: 'Status',
+                                    render: (row: any) => {
+                                        const s = getDeliveryStatus(row.status);
+                                        return <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>;
+                                    },
+                                },
+                                {
+                                    key: 'assigned_at',
+                                    label: 'Waktu',
+                                    render: (row: any) => formatDate(row.assigned_at),
+                                },
+                            ]}
+                            actions={[
+                                {
+                                    label: 'Detail',
+                                    variant: 'secondary',
+                                    onClick: (row) => router.visit(`/owner/deliveries/${row.id}`),
+                                },
+                            ]}
+                            emptyMessage="Tidak ada pengiriman"
+                        />
+                    </div>
+                </>
             )}
             <Pagination links={deliveries.links} />
 
@@ -65,7 +129,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: 
                 onClose={() => setFilterOpen(false)}
                 sections={[
                     { key: 'status', label: 'Status', options: statusOptions, value: filters.status ?? '' },
-                    { key: 'courier_id', label: 'Courier', options: couriers.map((c: any) => ({ value: String(c.id), label: c.name })), value: filters.courier_id ? String(filters.courier_id) : '' },
+                    { key: 'courier_id', label: 'Kurir', options: couriers.map((c: any) => ({ value: String(c.id), label: c.name })), value: filters.courier_id ? String(filters.courier_id) : '' },
                 ]}
                 onApply={handleFilterApply}
             />

@@ -34,6 +34,8 @@ class AddressController extends Controller
 
     public function edit(CustomerAddress $address): Response
     {
+        $this->authorizeAddress($address);
+
         return Inertia::render('customer/addresses/edit', [
             'address' => $address,
         ]);
@@ -41,6 +43,8 @@ class AddressController extends Controller
 
     public function update(UpdateCustomerAddressRequest $request, CustomerAddress $address): RedirectResponse
     {
+        $this->authorizeAddress($address);
+
         $this->addressService->update($address, $request->validated());
 
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat berhasil diperbarui.');
@@ -48,6 +52,8 @@ class AddressController extends Controller
 
     public function destroy(CustomerAddress $address): RedirectResponse
     {
+        $this->authorizeAddress($address);
+
         $this->addressService->delete($address);
 
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat berhasil dihapus.');
@@ -55,8 +61,19 @@ class AddressController extends Controller
 
     public function setDefault(CustomerAddress $address): RedirectResponse
     {
+        $this->authorizeAddress($address);
+
         $this->addressService->setDefault($address);
 
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat utama berhasil diperbarui.');
+    }
+
+    private function authorizeAddress(CustomerAddress $address): void
+    {
+        $user = auth()->user();
+
+        if ($user->customer?->id !== $address->customer_id) {
+            abort(403, 'Anda tidak memiliki akses ke alamat ini.');
+        }
     }
 }

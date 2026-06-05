@@ -35,9 +35,10 @@ class OrderService
             $address = $this->shouldUseDeliveryAddress($fulfillmentType)
                 ? $this->resolveCheckoutAddress($customer, $payload)
                 : null;
-            $outlet = $this->assignOutlet($items, $fulfillmentType, $address, $payload);
 
-            if (! $outlet) {
+            $candidates = $this->getCandidateOutlets($items, $fulfillmentType, $address, $payload);
+
+            if ($candidates->isEmpty()) {
                 throw ValidationException::withMessages([
                     'items' => 'Stok produk tidak tersedia di outlet terdekat maupun outlet lain.',
                 ]);
@@ -48,47 +49,101 @@ class OrderService
             $deliveryDistance = (float) ($payload['delivery_distance_km'] ?? 0);
             $paymentFee = (float) ($payload['payment_fee'] ?? 0);
 
-            $order = Order::create([
-                'customer_id' => $customer->id,
-                'outlet_id' => $outlet->id,
-                'recommended_outlet_id' => $payload['recommended_outlet_id'] ?? $outlet->id,
-                'order_code' => $this->generateOrderCodeWithRetry(),
-                'status' => Order::STATUS_PENDING_CONFIRMATION,
-                'fulfillment_type' => $fulfillmentType,
-                'subtotal' => $subtotal,
-                'delivery_fee' => $deliveryFee,
-                'delivery_distance_km' => $deliveryDistance,
-                'payment_method' => $payload['payment_method'] ?? 'cod',
-                'payment_fee' => $paymentFee,
-                'total' => $subtotal + $deliveryFee + $paymentFee,
-                'customer_name' => $address?->recipient_name ?? ($payload['customer_name'] ?? $customer->name),
-                'customer_phone' => $address?->phone ?? ($payload['phone_number'] ?? $customer->phone),
-                'customer_address' => $address?->address_line ?: $this->pickupAddressLabel($outlet, $fulfillmentType),
-                'customer_address_detail' => $address?->address_detail ?? null,
-                'customer_landmark' => $address?->landmark ?? null,
-                'latitude' => $address?->latitude,
-                'longitude' => $address?->longitude,
-                'notes' => $payload['notes'] ?? $address?->delivery_notes ?? null,
-                'ordered_at' => now(),
-            ]);
-
-            foreach ($items as $item) {
-                $order->items()->create($item);
+            // Try each outlet until reservation succeeds
+            foreach ($candidates as $outlet) {
+                try {
+                    return $this->createOrderWithReservation(
+                        $customer, $outlet, $items, $payload, $fulfillmentType, $address,
+                        $subtotal, $deliveryFee, $deliveryDistance, $paymentFee,
+                    );
+                } catch (ValidationException $e) {
+                    // Stock was taken between snapshot and reservation — try next outlet
+                    continue;
+                }
             }
 
-            $this->inventoryService->reserveStock($outlet->id, $items, $order);
-
-            $order->statusHistories()->create([
-                'from_status' => null,
-                'to_status' => Order::STATUS_PENDING_CONFIRMATION,
-                'notes' => 'Order dibuat customer.',
-                'changed_by' => $customer->id,
-                'changed_by_type' => 'customer',
-                'created_at' => now(),
+            throw ValidationException::withMessages([
+                'items' => 'Stok produk tidak tersedia di outlet terdekat maupun outlet lain.',
             ]);
-
-            return $order->load(['outlet', 'items.product']);
         });
+    }
+
+    private function createOrderWithReservation(
+        Customer $customer,
+        Outlet $outlet,
+        array $items,
+        array $payload,
+        string $fulfillmentType,
+        ?CustomerAddress $address,
+        float $subtotal,
+        float $deliveryFee,
+        float $deliveryDistance,
+        float $paymentFee,
+    ): Order {
+        $order = Order::create([
+            'customer_id' => $customer->id,
+            'outlet_id' => $outlet->id,
+            'recommended_outlet_id' => $payload['recommended_outlet_id'] ?? $outlet->id,
+            'order_code' => $this->generateOrderCodeWithRetry(),
+            'status' => Order::STATUS_PENDING_CONFIRMATION,
+            'fulfillment_type' => $fulfillmentType,
+            'subtotal' => $subtotal,
+            'delivery_fee' => $deliveryFee,
+            'delivery_distance_km' => $deliveryDistance,
+            'payment_method' => $payload['payment_method'] ?? 'cod',
+            'payment_fee' => $paymentFee,
+            'total' => $subtotal + $deliveryFee + $paymentFee,
+            'customer_name' => $address?->recipient_name ?? ($payload['customer_name'] ?? $customer->name),
+            'customer_phone' => $address?->phone ?? ($payload['phone_number'] ?? $customer->phone),
+            'customer_address' => $address?->address_line ?: $this->pickupAddressLabel($outlet, $fulfillmentType),
+            'customer_address_detail' => $address?->address_detail ?? null,
+            'customer_landmark' => $address?->landmark ?? null,
+            'latitude' => $address?->latitude,
+            'longitude' => $address?->longitude,
+            'notes' => $payload['notes'] ?? $address?->delivery_notes ?? null,
+            'ordered_at' => now(),
+        ]);
+
+        foreach ($items as $item) {
+            $order->items()->create($item);
+        }
+
+        $this->inventoryService->reserveStock($outlet->id, $items, $order);
+
+        $order->statusHistories()->create([
+            'from_status' => null,
+            'to_status' => Order::STATUS_PENDING_CONFIRMATION,
+            'notes' => 'Order dibuat customer.',
+            'changed_by' => $customer->id,
+            'changed_by_type' => 'customer',
+            'created_at' => now(),
+        ]);
+
+        return $order->load(['outlet', 'items.product']);
+    }
+
+    private function getCandidateOutlets(array $items, string $fulfillmentType, ?CustomerAddress $address, array $payload): \Illuminate\Support\Collection
+    {
+        if ($fulfillmentType === 'pickup' && ! empty($payload['selected_outlet_id'])) {
+            $selectedOutlet = Outlet::query()
+                ->where('status', 'active')
+                ->with('inventories')
+                ->find((int) $payload['selected_outlet_id']);
+
+            if ($selectedOutlet && $this->outletAssignmentService->outletHasEnoughStock($selectedOutlet, $items)) {
+                return collect([$selectedOutlet]);
+            }
+
+            throw ValidationException::withMessages([
+                'selected_outlet_id' => 'Outlet pickup yang dipilih sudah tidak tersedia untuk pesanan ini.',
+            ]);
+        }
+
+        return $this->outletAssignmentService->findCandidateOutlets(
+            $this->shouldUseDeliveryAddress($fulfillmentType) && $address?->latitude !== null ? (float) $address->latitude : null,
+            $this->shouldUseDeliveryAddress($fulfillmentType) && $address?->longitude !== null ? (float) $address->longitude : null,
+            $items
+        );
     }
 
     public function previewAvailableOutlet(array $items, ?string $fulfillmentType, ?array $location = null): ?Outlet
@@ -203,30 +258,6 @@ class OrderService
     private function shouldUseDeliveryAddress(?string $fulfillmentType): bool
     {
         return in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
-    }
-
-    private function assignOutlet(array $items, string $fulfillmentType, ?CustomerAddress $address, array $payload): ?Outlet
-    {
-        if ($fulfillmentType === 'pickup' && ! empty($payload['selected_outlet_id'])) {
-            $selectedOutlet = Outlet::query()
-                ->where('status', 'active')
-                ->with('inventories')
-                ->find((int) $payload['selected_outlet_id']);
-
-            if ($selectedOutlet && $this->outletAssignmentService->outletHasEnoughStock($selectedOutlet, $items)) {
-                return $selectedOutlet;
-            }
-
-            throw ValidationException::withMessages([
-                'selected_outlet_id' => 'Outlet pickup yang dipilih sudah tidak tersedia untuk pesanan ini.',
-            ]);
-        }
-
-        return $this->outletAssignmentService->findAvailableOutlet(
-            $this->shouldUseDeliveryAddress($fulfillmentType) && $address?->latitude !== null ? (float) $address->latitude : null,
-            $this->shouldUseDeliveryAddress($fulfillmentType) && $address?->longitude !== null ? (float) $address->longitude : null,
-            $items
-        );
     }
 
     private function pickupAddressLabel(Outlet $outlet, string $fulfillmentType): string

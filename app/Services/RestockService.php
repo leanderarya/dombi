@@ -12,6 +12,10 @@ use Illuminate\Validation\ValidationException;
 
 class RestockService
 {
+    public function __construct(
+        private readonly NotificationService $notificationService,
+    ) {}
+
     public function createRequest(User $outletUser, array $payload): RestockRequest
     {
         return DB::transaction(function () use ($outletUser, $payload): RestockRequest {
@@ -31,6 +35,9 @@ class RestockService
                     'requested_quantity' => $item['requested_quantity'],
                 ]);
             }
+
+            $request->load('outlet');
+            $this->notificationService->notifyRestockCreated($request);
 
             return $request->load(['outlet', 'items.product']);
         });
@@ -79,6 +86,8 @@ class RestockService
 
             $this->createDistribution($request->fresh('items'), $owner);
 
+            $this->notificationService->notifyRestockApproved($request->fresh());
+
             return $request->fresh(['outlet', 'items.product', 'distribution.items.product']);
         });
     }
@@ -98,6 +107,8 @@ class RestockService
                 'rejected_at' => now(),
                 'rejected_reason' => $reason,
             ]);
+
+            $this->notificationService->notifyRestockRejected($request->fresh(), $reason);
 
             return $request->fresh(['outlet', 'items.product']);
         });
@@ -163,6 +174,8 @@ class RestockService
             ]);
 
             $distribution->restockRequest?->update(['status' => 'shipped']);
+
+            $this->notificationService->notifyDistributionSent($distribution->fresh());
 
             return $distribution->fresh(['outlet', 'items.product', 'restockRequest']);
         });
@@ -233,6 +246,8 @@ class RestockService
             ]);
 
             $distribution->restockRequest?->update(['status' => 'completed']);
+
+            $this->notificationService->notifyDistributionReceived($distribution->fresh());
 
             return $distribution->fresh(['outlet', 'items.product', 'restockRequest']);
         });

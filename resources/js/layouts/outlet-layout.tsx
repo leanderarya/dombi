@@ -1,42 +1,55 @@
-import { Link, router, usePage } from '@inertiajs/react';
-import type { PropsWithChildren } from 'react';
-import OfflineBanner from '@/components/offline-banner';
+import { router, usePage } from '@inertiajs/react';
+import { useState, type PropsWithChildren, ReactNode } from 'react';
+import { LogOut } from 'lucide-react';
+import NotificationBell from '@/components/notification-bell';
+import NotificationSheet from '@/components/notification-sheet';
+import MobileRoleLayout from '@/components/ui/mobile-role-layout';
+import PageHeader from '@/components/ui/page-header';
+import OutletBottomNav from '@/components/outlet-bottom-nav';
 
-const nav = [
-    ['/outlet/dashboard', 'Dashboard'],
-    ['/outlet/orders', 'Orders'],
-    ['/outlet/inventory', 'Inventory'],
-    ['/outlet/restocks', 'Restocks'],
-];
+interface Props extends PropsWithChildren {
+    title?: string;
+    subtitle?: string;
+    backHref?: string;
+    hideNav?: boolean;
+    /** Extra content below the header (e.g. filter chips) */
+    headerBelow?: ReactNode;
+    /** Right-side header actions */
+    headerRight?: ReactNode;
+}
 
-export default function OutletLayout({ children }: PropsWithChildren) {
+export default function OutletLayout({ children, title, subtitle, backHref, hideNav = false, headerBelow, headerRight }: Props) {
     const page = usePage<any>();
-    const { auth, flash } = page.props;
-    const url = page.url;
+    const { auth } = page.props;
+    const [notificationOpen, setNotificationOpen] = useState(false);
+
+    const rightSlot = headerRight ?? (
+        <div className="flex items-center gap-1">
+            <NotificationBell onClick={() => setNotificationOpen(true)} />
+            <button
+                onClick={() => router.post('/logout')}
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 active:bg-zinc-100"
+                aria-label="Logout"
+            >
+                <LogOut className="h-4 w-4" />
+            </button>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen bg-[#f8f7f2] pb-safe text-slate-900">
-            <OfflineBanner />
-            <header className="sticky top-0 z-20 border-b border-zinc-200 bg-white/95 backdrop-blur-sm">
-                <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-                    <div>
-                        <div className="font-semibold text-emerald-800">Dombi Outlet</div>
-                        <div className="text-xs text-zinc-500">{auth?.user?.name}</div>
-                    </div>
-                    <button onClick={() => router.post('/logout')} className="rounded-md border border-zinc-200 px-2.5 py-1.5 text-xs text-zinc-600">Logout</button>
-                </div>
-                <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-2 scrollbar-none">
-                    {nav.map(([href, label]) => (
-                        <Link key={href} href={href} className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-medium ${url?.startsWith(href) ? 'bg-emerald-50 text-emerald-800' : 'text-slate-500 active:bg-zinc-50'}`}>
-                            {label}
-                        </Link>
-                    ))}
-                </nav>
-            </header>
-            <main className="mx-auto max-w-5xl px-4 py-5">
-                {flash?.success && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{flash.success}</div>}
-                {children}
-            </main>
-        </div>
+        <MobileRoleLayout
+            bottomNav={!hideNav ? <OutletBottomNav /> : undefined}
+            hideBottomNav={hideNav}
+        >
+            <PageHeader
+                title={title}
+                subtitle={subtitle}
+                backHref={backHref}
+                right={rightSlot}
+                below={headerBelow}
+            />
+            {children}
+            <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
+        </MobileRoleLayout>
     );
 }

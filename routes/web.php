@@ -35,7 +35,7 @@ Route::get('/', function () {
         : app(CustomerHomeController::class)();
 })->name('home');
 
-Route::get('/track/{token}', \App\Http\Controllers\TrackController::class)->name('track');
+Route::get('/track/{token}', \App\Http\Controllers\TrackController::class)->middleware('throttle:track')->name('track');
 
 // System endpoints
 Route::get('/api/health', [SystemController::class, 'health'])->name('health');
@@ -54,13 +54,19 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 Route::middleware('auth')->group(function (): void {
     Route::get('/password/change', [PasswordChangeController::class, 'edit'])->name('password.change');
     Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.update');
+
+    // Notifications
+    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });
 
 Route::get('/dashboard', DashboardRedirectController::class)
     ->middleware(['auth', 'password.changed'])
     ->name('dashboard');
 
-Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->group(function (): void {
+Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->name('owner.')->group(function (): void {
     Route::get('/dashboard', OwnerDashboardController::class)->name('dashboard');
     Route::get('/profile', OwnerProfileController::class)->name('profile');
     Route::resource('outlets', OwnerOutletController::class);
@@ -100,11 +106,11 @@ Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->g
     Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
     Route::get('/checkout/customer', [CustomerCheckoutController::class, 'customer'])->name('checkout.customer');
     Route::post('/checkout/customer', [CustomerCheckoutController::class, 'storeCustomer'])->name('checkout.customer.store');
-    Route::get('/checkout/customer-lookup', [CustomerCheckoutController::class, 'lookupCustomer'])->name('checkout.customer.lookup');
+    Route::get('/checkout/customer-lookup', [CustomerCheckoutController::class, 'lookupCustomer'])->middleware('throttle:lookup')->name('checkout.customer.lookup');
     Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
     Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->name('checkout.submit');
     Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
-    Route::post('/orders/recovery', \App\Http\Controllers\Customer\GuestOrderRecoveryController::class)->name('orders.recovery');
+    Route::post('/orders/recovery', \App\Http\Controllers\Customer\GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/profile', [\App\Http\Controllers\Customer\ProfileController::class, 'index'])->name('profile');
 });
@@ -135,7 +141,7 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     Route::post('/distributions/{distribution}/confirm-received', [OutletRestockController::class, 'confirmReceived'])->name('distributions.confirm-received');
 });
 
-Route::middleware(['auth', 'role:courier'])->prefix('courier')->name('courier.')->group(function (): void {
+Route::middleware(['auth', 'role:courier', 'password.changed'])->prefix('courier')->name('courier.')->group(function (): void {
     Route::get('/dashboard', App\Http\Controllers\Courier\DashboardController::class)->name('dashboard');
     Route::get('/deliveries', [CourierDeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('/deliveries/{delivery}', [CourierDeliveryController::class, 'show'])->name('deliveries.show');
@@ -151,4 +157,13 @@ Route::middleware(['auth', 'role:courier'])->prefix('courier')->name('courier.')
     Route::post('/shift/start', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'startShift'])->name('shift.start');
     Route::post('/shift/end', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'endShift'])->name('shift.end');
     Route::get('/availability/status', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'status'])->name('availability.status');
+});
+
+// ─── DEV ROLE SWITCHER (Local Environment Only) ─────────────────────
+Route::middleware(['dev'])->prefix('dev')->name('dev.')->group(function (): void {
+    Route::get('/switch/owner', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToOwner'])->name('switch.owner');
+    Route::get('/switch/outlet', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToOutlet'])->name('switch.outlet');
+    Route::get('/switch/courier', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToCourier'])->name('switch.courier');
+    Route::get('/switch/customer', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToCustomer'])->name('switch.customer');
+    Route::get('/switch/guest', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToGuest'])->name('switch.guest');
 });

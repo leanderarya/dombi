@@ -176,7 +176,7 @@ class HybridCustomerIdentityTest extends TestCase
         $customer = Customer::create(['name' => 'Recovery Test', 'phone' => '6281234567894', 'is_registered' => false]);
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
 
-        Order::create([
+        $order = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
             'order_code' => 'DOMBI-RECOVERY-001',
@@ -192,6 +192,7 @@ class HybridCustomerIdentityTest extends TestCase
 
         $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567894',
+            'recovery_token' => $order->recovery_token,
         ])->assertOk()
             ->assertJson([
                 'found' => true,
@@ -204,7 +205,7 @@ class HybridCustomerIdentityTest extends TestCase
         $customer = Customer::create(['name' => 'Recovery Auth', 'phone' => '6281234567895', 'is_registered' => false]);
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
 
-        Order::create([
+        $order = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
             'order_code' => 'DOMBI-RECOVERY-002',
@@ -222,6 +223,7 @@ class HybridCustomerIdentityTest extends TestCase
 
         $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567895',
+            'recovery_token' => $order->recovery_token,
         ])->assertOk();
 
         $this->assertFalse(auth()->check(), 'Recovery should NOT authenticate user');

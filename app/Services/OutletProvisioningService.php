@@ -16,16 +16,17 @@ class OutletProvisioningService
             $password = $this->generateTemporaryPassword();
             $email = $this->generateOutletEmail($outlet->name);
 
-            $user = User::create([
+            $user = new User([
                 'name' => $this->generateAccountName($outlet->name),
                 'email' => $email,
                 'password' => $password,
-                'role' => 'outlet',
                 'phone' => $outlet->phone,
-                'is_active' => true,
-                'outlet_id' => $outlet->id,
-                'must_change_password' => true,
             ]);
+            $user->role = 'outlet';
+            $user->is_active = true;
+            $user->outlet_id = $outlet->id;
+            $user->must_change_password = true;
+            $user->save();
 
             $outlet->update(['user_id' => $user->id]);
 

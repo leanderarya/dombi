@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'phone', 'is_active', 'is_online', 'shift_started_at', 'shift_ended_at', 'last_activity_at', 'outlet_id', 'must_change_password'])]
+#[Fillable(['name', 'email', 'password', 'phone'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -85,34 +85,34 @@ class User extends Authenticatable
 
     public function startShift(): void
     {
-        $this->update([
+        $this->forceFill([
             'is_online' => true,
             'shift_started_at' => now(),
             'shift_ended_at' => null,
-        ]);
+        ])->save();
     }
 
     public function endShift(): void
     {
-        $this->update([
+        $this->forceFill([
             'is_online' => false,
             'shift_ended_at' => now(),
-        ]);
+        ])->save();
     }
 
     public function goOnline(): void
     {
-        $this->update(['is_online' => true]);
+        $this->forceFill(['is_online' => true])->save();
     }
 
     public function goOffline(): void
     {
-        $this->update(['is_online' => false]);
+        $this->forceFill(['is_online' => false])->save();
     }
 
     public function recordActivity(): void
     {
-        $this->update(['last_activity_at' => now()]);
+        $this->forceFill(['last_activity_at' => now()])->save();
     }
 
     public function hasActiveDeliveries(): bool

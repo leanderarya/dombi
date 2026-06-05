@@ -1,36 +1,65 @@
 import { Head, Link, router } from '@inertiajs/react';
-import EmptyState from '@/components/empty-state';
-import Pagination from '@/components/pagination';
+import { useState } from 'react';
+import { Plus } from 'lucide-react';
+import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import RestockStatusBadge from '@/components/restock-status-badge';
+import Pagination from '@/components/pagination';
 import OutletLayout from '@/layouts/outlet-layout';
 
-const statuses = ['requested', 'approved', 'rejected', 'preparing', 'shipped', 'received', 'completed'];
+const statusFilters = [
+    { key: '', label: 'Semua' },
+    { key: 'requested', label: 'Diminta' },
+    { key: 'preparing', label: 'Disiapkan' },
+    { key: 'shipped', label: 'Dikirim' },
+    { key: 'completed', label: 'Selesai' },
+    { key: 'rejected', label: 'Ditolak' },
+];
 
 export default function OutletRestocksIndex({ restocks, filters }: any) {
+    const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
+
+    const handleFilterChange = (key: string) => {
+        setActiveFilter(key);
+        router.get('/outlet/restocks', { status: key || undefined }, { preserveState: true, replace: true });
+    };
+
     return (
-        <OutletLayout>
-            <Head title="Restocks" />
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <h1 className="text-2xl font-semibold">Restock Requests</h1>
-                <Link href="/outlet/restocks/create" className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white">Create Request</Link>
-            </div>
-            <select value={filters.status ?? ''} onChange={(e) => router.get('/outlet/restocks', { status: e.target.value || undefined }, { preserveState: true, replace: true })} className="mt-5 rounded-md border px-3 py-2 text-sm">
-                <option value="">Semua status</option>
-                {statuses.map((status) => <option key={status} value={status}>{status}</option>)}
-            </select>
+        <OutletLayout
+            title="Restock"
+            headerRight={
+                <Link href="/outlet/restocks/create" className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-emerald-700 px-3 text-sm font-semibold text-white active:bg-emerald-800">
+                    <Plus className="h-4 w-4" />
+                    Buat
+                </Link>
+            }
+            headerBelow={
+                <FilterChips options={statusFilters} active={activeFilter} onChange={handleFilterChange} />
+            }
+        >
+            <Head title="Restock" />
+
             {restocks.data.length === 0 ? (
-                <div className="mt-5 rounded-lg border bg-white">
-                    <EmptyState icon="📋" title="Belum ada restock request" description="Buat request baru untuk meminta stok tambahan." />
-                </div>
+                <EmptyState
+                    icon="📋"
+                    title="Belum ada restock"
+                    description={activeFilter ? 'Tidak ada restock dengan filter ini.' : 'Buat request baru untuk meminta stok tambahan.'}
+                    action={activeFilter ? { label: 'Reset Filter', onClick: () => handleFilterChange('') } : { label: 'Buat Request Restock', href: '/outlet/restocks/create' }}
+                />
             ) : (
-                <div className="mt-5 space-y-3">
+                <div className="space-y-2">
                     {restocks.data.map((restock: any) => (
-                        <Link key={restock.id} href={`/outlet/restocks/${restock.id}`} className="block rounded-lg border bg-white p-4 transition-colors hover:border-emerald-200">
+                        <Link key={restock.id} href={`/outlet/restocks/${restock.id}`} className="block rounded-xl border border-zinc-200 bg-white p-4 transition-colors active:bg-zinc-50">
                             <div className="flex items-center justify-between">
-                                <div className="font-medium">Request #{restock.id}</div>
+                                <div className="text-sm font-bold text-slate-900">Request #{restock.id}</div>
                                 <RestockStatusBadge status={restock.status} />
                             </div>
-                            <div className="mt-2 text-sm text-zinc-500">Distribution: {restock.distribution?.status ?? '-'}</div>
+                            <div className="mt-1.5 text-xs text-slate-500">
+                                {restock.items?.length ?? 0} item · {restock.distribution?.status ?? 'Menunggu'}
+                            </div>
+                            <div className="mt-1 text-xs text-slate-400">
+                                {new Date(restock.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                            </div>
                         </Link>
                     ))}
                 </div>

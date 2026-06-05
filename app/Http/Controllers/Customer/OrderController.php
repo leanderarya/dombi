@@ -31,6 +31,12 @@ class OrderController extends Controller
 
     public function show(Order $order): Response
     {
+        $user = auth()->user();
+
+        if ($user->customer?->id !== $order->customer_id) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
+        }
+
         return Inertia::render('customer/orders/show', [
             'order' => $order->load(['outlet', 'items.product', 'statusHistories.actor', 'delivery.courier']),
             'cancellationReasons' => OrderStatusService::cancellationReasons(),
@@ -47,6 +53,12 @@ class OrderController extends Controller
 
     public function repeat(Order $order, OrderService $orderService): RedirectResponse
     {
+        $user = auth()->user();
+
+        if ($user->customer?->id !== $order->customer_id) {
+            abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
+        }
+
         $newOrder = $orderService->repeatOrder($order->customer, $order->load('items'));
 
         return redirect()->route('track', ['token' => $newOrder->recovery_token])->with('success', 'Order ulang berhasil dibuat.');

@@ -6,7 +6,6 @@ import DeliveryPerformanceCard from '@/components/owner/delivery-performance-car
 import CourierAvailabilityCard from '@/components/owner/courier-availability-card';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-header';
 import { usePolling } from '@/lib/use-polling';
 
 export default function DeliveryBoard({ board, stats, couriers, filters, outlets }: any) {
@@ -47,21 +46,21 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
 
     return (
         <OwnerPageShell
-            title="Delivery Board"
-            subtitle={`${stats.unassigned + stats.assigned + stats.inTransit} delivery aktif`}
+            title="Papan Pengiriman"
+            subtitle={`${stats.unassigned + stats.assigned + stats.inTransit} pengiriman aktif`}
             headerRight={
-                <div className="flex items-center gap-1">
-                    <div className="relative">
-                        <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}>
-                            <FilterIcon />
-                        </HeaderIconButton>
-                        {activeFilterCount > 0 && (
-                            <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[9px] font-bold text-white">
-                                {activeFilterCount}
-                            </span>
-                        )}
-                    </div>
-                </div>
+                <button
+                    onClick={() => setFilterOpen(true)}
+                    className="relative flex h-9 items-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-sm text-slate-600"
+                >
+                    <FilterIcon />
+                    Filter
+                    {activeFilterCount > 0 && (
+                        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[9px] font-bold text-white">
+                            {activeFilterCount}
+                        </span>
+                    )}
+                </button>
             }
         >
             {/* Performance KPIs */}
@@ -81,95 +80,26 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
             {/* Board Columns - Mobile: stacked scrollable */}
             <div className="mt-4 lg:hidden">
                 <div className="space-y-6">
-                    <DeliveryBoardColumn
-                        title="Menunggu Kurir"
-                        count={stats.unassigned}
-                        items={board.unassigned}
-                        color="slate"
-                        emptyMessage="Semua order sudah di-assign"
-                        onAssignCourier={handleAssignCourier}
-                    />
-                    <DeliveryBoardColumn
-                        title="Ditugaskan"
-                        count={stats.assigned}
-                        items={board.assigned}
-                        color="blue"
-                        emptyMessage="Tidak ada kurir menunggu pickup"
-                    />
-                    <DeliveryBoardColumn
-                        title="Dalam Perjalanan"
-                        count={stats.inTransit}
-                        items={board.inTransit}
-                        color="purple"
-                        emptyMessage="Tidak ada delivery dalam perjalanan"
-                    />
-                    <DeliveryBoardColumn
-                        title="Perlu Tindakan"
-                        count={stats.needsAction}
-                        items={board.needsAction}
-                        color="amber"
-                        emptyMessage="Tidak ada delivery bermasalah"
-                        onResolve={handleResolve}
-                    />
-                    <DeliveryBoardColumn
-                        title="Selesai"
-                        count={stats.completed}
-                        items={board.completed}
-                        color="green"
-                        emptyMessage="Belum ada delivery selesai hari ini"
-                    />
+                    <DeliveryBoardColumn title="Menunggu Kurir" count={stats.unassigned} items={board.unassigned} color="slate" emptyMessage="Semua pesanan sudah di-assign" onAssignCourier={handleAssignCourier} />
+                    <DeliveryBoardColumn title="Ditugaskan" count={stats.assigned} items={board.assigned} color="blue" emptyMessage="Tidak ada kurir menunggu pickup" />
+                    <DeliveryBoardColumn title="Dalam Perjalanan" count={stats.inTransit} items={board.inTransit} color="purple" emptyMessage="Tidak ada pengiriman dalam perjalanan" />
+                    <DeliveryBoardColumn title="Perlu Tindakan" count={stats.needsAction} items={board.needsAction} color="amber" emptyMessage="Tidak ada pengiriman bermasalah" onResolve={handleResolve} />
+                    <DeliveryBoardColumn title="Selesai" count={stats.completed} items={board.completed} color="green" emptyMessage="Belum ada pengiriman selesai hari ini" />
                 </div>
             </div>
 
             {/* Board Columns - Desktop: grid layout */}
             <div className="mt-4 hidden lg:grid lg:grid-cols-5 lg:gap-4">
-                <DeliveryBoardColumn
-                    title="Menunggu Kurir"
-                    count={stats.unassigned}
-                    items={board.unassigned}
-                    color="slate"
-                    emptyMessage="Semua order sudah di-assign"
-                    onAssignCourier={handleAssignCourier}
-                />
-                <DeliveryBoardColumn
-                    title="Ditugaskan"
-                    count={stats.assigned}
-                    items={board.assigned}
-                    color="blue"
-                    emptyMessage="Tidak ada kurir menunggu pickup"
-                />
-                <DeliveryBoardColumn
-                    title="Dalam Perjalanan"
-                    count={stats.inTransit}
-                    items={board.inTransit}
-                    color="purple"
-                    emptyMessage="Tidak ada delivery dalam perjalanan"
-                />
-                <DeliveryBoardColumn
-                    title="Perlu Tindakan"
-                    count={stats.needsAction}
-                    items={board.needsAction}
-                    color="amber"
-                    emptyMessage="Tidak ada delivery bermasalah"
-                    onResolve={handleResolve}
-                />
-                <DeliveryBoardColumn
-                    title="Selesai"
-                    count={stats.completed}
-                    items={board.completed}
-                    color="green"
-                    emptyMessage="Belum ada delivery selesai hari ini"
-                />
+                <DeliveryBoardColumn title="Menunggu Kurir" count={stats.unassigned} items={board.unassigned} color="slate" emptyMessage="Semua pesanan sudah di-assign" onAssignCourier={handleAssignCourier} />
+                <DeliveryBoardColumn title="Ditugaskan" count={stats.assigned} items={board.assigned} color="blue" emptyMessage="Tidak ada kurir menunggu pickup" />
+                <DeliveryBoardColumn title="Dalam Perjalanan" count={stats.inTransit} items={board.inTransit} color="purple" emptyMessage="Tidak ada pengiriman dalam perjalanan" />
+                <DeliveryBoardColumn title="Perlu Tindakan" count={stats.needsAction} items={board.needsAction} color="amber" emptyMessage="Tidak ada pengiriman bermasalah" onResolve={handleResolve} />
+                <DeliveryBoardColumn title="Selesai" count={stats.completed} items={board.completed} color="green" emptyMessage="Belum ada pengiriman selesai hari ini" />
             </div>
 
             {/* Assign Courier Sheet */}
             {selectedOrder && (
-                <AssignCourierSheet
-                    order={selectedOrder}
-                    couriers={couriers}
-                    open={assignOpen}
-                    onClose={() => { setAssignOpen(false); setSelectedOrder(null); }}
-                />
+                <AssignCourierSheet order={selectedOrder} couriers={couriers} open={assignOpen} onClose={() => { setAssignOpen(false); setSelectedOrder(null); }} />
             )}
 
             {/* Filter Sheet */}
@@ -185,4 +115,8 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
             />
         </OwnerPageShell>
     );
+}
+
+function FilterIcon() {
+    return <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>;
 }

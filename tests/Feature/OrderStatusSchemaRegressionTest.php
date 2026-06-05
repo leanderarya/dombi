@@ -66,13 +66,14 @@ class OrderStatusSchemaRegressionTest extends TestCase
             'phone' => '628123456789' . rand(10, 99),
         ]);
 
-        $outletUser = User::create([
+        $outletUser = User::make([
             'name' => 'Outlet Schema',
             'email' => uniqid('outlet-schema-') . '@example.com',
             'password' => 'password',
-            'role' => 'outlet',
-            'is_active' => true,
         ]);
+        $outletUser->role = 'outlet';
+        $outletUser->is_active = true;
+        $outletUser->save();
 
         $outlet = Outlet::create([
             'user_id' => $outletUser->id,
@@ -112,13 +113,14 @@ class OrderStatusSchemaRegressionTest extends TestCase
         ]);
 
         if (! $outlet) {
-            $outletUser = User::create([
+            $outletUser = User::make([
                 'name' => 'Outlet Pending',
                 'email' => uniqid('outlet-pending-') . '@example.com',
                 'password' => 'password',
-                'role' => 'outlet',
-                'is_active' => true,
             ]);
+            $outletUser->role = 'outlet';
+            $outletUser->is_active = true;
+            $outletUser->save();
 
             $outlet = Outlet::create([
                 'user_id' => $outletUser->id,

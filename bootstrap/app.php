@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\DevOnly;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\AllowGuestOrCustomer;
 use App\Http\Middleware\EnsurePasswordIsChanged;
@@ -25,8 +26,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'guest.or.customer' => AllowGuestOrCustomer::class,
             'role' => RoleMiddleware::class,
             'password.changed' => EnsurePasswordIsChanged::class,
+            'dev' => DevOnly::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->reportable(function (\Throwable $e) {
+            if (app()->bound('sentry')) {
+                app('sentry')->captureException($e);
+            }
+        });
     })->create();

@@ -8,6 +8,14 @@ class OutletAssignmentService
 {
     public function findAvailableOutlet(?float $lat, ?float $lng, array $items): ?Outlet
     {
+        return $this->findCandidateOutlets($lat, $lng, $items)->first();
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<int, Outlet>
+     */
+    public function findCandidateOutlets(?float $lat, ?float $lng, array $items): \Illuminate\Support\Collection
+    {
         $outlets = Outlet::query()
             ->where('status', 'active')
             ->with('inventories')
@@ -21,7 +29,7 @@ class OutletAssignmentService
                 ->values();
         }
 
-        return $outlets->first(fn (Outlet $outlet): bool => $this->outletHasEnoughStock($outlet, $items));
+        return $outlets->filter(fn (Outlet $outlet): bool => $this->outletHasEnoughStock($outlet, $items));
     }
 
     public function outletHasEnoughStock(Outlet $outlet, array $items): bool

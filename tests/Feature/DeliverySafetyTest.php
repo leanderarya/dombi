@@ -174,7 +174,7 @@ class DeliverySafetyTest extends TestCase
     public function test_assignment_blocked_for_offline_courier(): void
     {
         $ctx = $this->makeContext();
-        $ctx['courier']->update(['is_online' => false]);
+        $ctx['courier']->forceFill(['is_online' => false])->save();
         $order = $this->makeOrder($ctx);
 
         $this->expectException(ValidationException::class);

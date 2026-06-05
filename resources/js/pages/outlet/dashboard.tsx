@@ -1,100 +1,133 @@
 import { Head, Link } from '@inertiajs/react';
+import { AlertTriangle, Clock, Package, Truck, XCircle } from 'lucide-react';
 import OrderStatusBadge from '@/components/order-status-badge';
-import StockLevelBadge from '@/components/stock-level-badge';
+import SectionCard from '@/components/ui/section-card';
+import EmptyState from '@/components/ui/empty-state';
+import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
 
 export default function OutletDashboard({ outlet, stats, deliveryStats, failureReasons, lowStockItems, recentOrders }: any) {
     usePolling(20000);
+
+    const hasUrgentActions = stats.pendingOrders > 0 || deliveryStats.failed > 0 || deliveryStats.needsDispatch > 0 || lowStockItems.length > 0;
+
     return (
         <OutletLayout>
-            <Head title="Outlet Dashboard" />
-            <div>
-                <h1 className="text-xl font-semibold sm:text-2xl">{outlet.name}</h1>
-                <p className="text-sm text-zinc-500">{outlet.kecamatan}</p>
+            <Head title="Dashboard" />
+            <div className="mb-4">
+                <h1 className="text-lg font-bold text-slate-900">{outlet.name}</h1>
+                <p className="text-xs text-slate-500">{outlet.kecamatan}</p>
             </div>
 
-            {/* Delivery Stats */}
-            <div className="mt-5">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Delivery</h2>
-                    <Link href="/outlet/deliveries" className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Lihat Semua</Link>
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <StatCard label="Perlu Dikirim" value={deliveryStats.needsDispatch} href="/outlet/deliveries" color="amber" urgent={deliveryStats.needsDispatch > 0} />
-                    <StatCard label="Menunggu Pickup" value={deliveryStats.waitingPickup} href="/outlet/deliveries?status=waiting_pickup" color="blue" />
-                    <StatCard label="Dalam Perjalanan" value={deliveryStats.inTransit} href="/outlet/deliveries?status=delivering" color="purple" />
-                    <StatCard label="Gagal" value={deliveryStats.failed} href="/outlet/deliveries?status=failed" color="red" urgent={deliveryStats.failed > 0} />
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-3">
-                    <StatCard label="Selesai Hari Ini" value={deliveryStats.completedToday} color="green" />
-                    {deliveryStats.avgDispatchTime !== null && (
-                        <StatCard label="Rata-rata Dispatch" value={deliveryStats.avgDispatchTime} suffix="m" color="blue" />
-                    )}
-                </div>
-            </div>
-
-            {/* Failure Reasons */}
-            {failureReasons && failureReasons.length > 0 && (
-                <section className="mt-5">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Alasan Gagal</h2>
+            {/* Priority Panel - What needs action NOW */}
+            {hasUrgentActions && (
+                <SectionCard label="Perlu Tindakan" className="mb-4">
                     <div className="mt-2 space-y-2">
-                        {failureReasons.map((r: any, idx: number) => (
-                            <div key={idx} className="flex items-center justify-between rounded-lg border border-red-100 bg-red-50 px-3 py-2">
-                                <span className="text-sm text-red-700">{r.reason}</span>
-                                <span className="text-sm font-bold text-red-600">{r.count}x</span>
-                            </div>
-                        ))}
+                        {stats.pendingOrders > 0 && (
+                            <Link href="/outlet/orders?status=pending_confirmation" className="flex items-center gap-3 rounded-lg border border-zinc-100 bg-zinc-50 p-3 active:bg-zinc-100">
+                                <Package className="h-5 w-5 text-amber-600" />
+                                <div className="flex-1">
+                                    <div className="text-sm font-semibold text-slate-900">{stats.pendingOrders} Pesanan Menunggu</div>
+                                    <div className="text-xs text-slate-500">Perlu konfirmasi atau penolakan</div>
+                                </div>
+                                <StatusBadge variant="warning" size="sm">{stats.pendingOrders}</StatusBadge>
+                            </Link>
+                        )}
+                        {deliveryStats.failed > 0 && (
+                            <Link href="/outlet/deliveries?status=failed" className="flex items-center gap-3 rounded-lg border border-zinc-100 bg-zinc-50 p-3 active:bg-zinc-100">
+                                <XCircle className="h-5 w-5 text-red-600" />
+                                <div className="flex-1">
+                                    <div className="text-sm font-semibold text-slate-900">{deliveryStats.failed} Pengiriman Gagal</div>
+                                    <div className="text-xs text-slate-500">Perlu penanganan</div>
+                                </div>
+                                <StatusBadge variant="danger" size="sm">{deliveryStats.failed}</StatusBadge>
+                            </Link>
+                        )}
+                        {deliveryStats.needsDispatch > 0 && (
+                            <Link href="/outlet/deliveries" className="flex items-center gap-3 rounded-lg border border-zinc-100 bg-zinc-50 p-3 active:bg-zinc-100">
+                                <Truck className="h-5 w-5 text-blue-600" />
+                                <div className="flex-1">
+                                    <div className="text-sm font-semibold text-slate-900">{deliveryStats.needsDispatch} Perlu Dikirim</div>
+                                    <div className="text-xs text-slate-500">Siap assign kurir</div>
+                                </div>
+                                <StatusBadge variant="info" size="sm">{deliveryStats.needsDispatch}</StatusBadge>
+                            </Link>
+                        )}
+                        {lowStockItems.length > 0 && (
+                            <Link href="/outlet/inventory" className="flex items-center gap-3 rounded-lg border border-zinc-100 bg-zinc-50 p-3 active:bg-zinc-100">
+                                <AlertTriangle className="h-5 w-5 text-orange-600" />
+                                <div className="flex-1">
+                                    <div className="text-sm font-semibold text-slate-900">{lowStockItems.length} Stok Rendah</div>
+                                    <div className="text-xs text-slate-500">Perlu restock</div>
+                                </div>
+                                <StatusBadge variant="warning" size="sm">{lowStockItems.length}</StatusBadge>
+                            </Link>
+                        )}
                     </div>
-                </section>
+                </SectionCard>
             )}
 
-            {/* Order Stats - mobile 2 cols */}
-            <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <StatCard label="Pending" value={stats.pendingOrders} href="/outlet/orders?status=pending" color="yellow" urgent={stats.pendingOrders > 0} />
-                <StatCard label="Preparing" value={stats.preparingOrders} href="/outlet/orders?status=preparing" color="blue" />
-                <StatCard label="Ready Pickup" value={stats.readyForPickupOrders} href="/outlet/orders?status=ready_for_pickup" color="purple" />
-                <StatCard label="Order Hari Ini" value={stats.todayOrders} />
-                <StatCard label="Low Stock" value={stats.lowStocks} href="/outlet/inventory" color="amber" urgent={stats.lowStocks > 0} />
-                <StatCard label="Restock Active" value={stats.pendingRestocks} href="/outlet/restocks" color="orange" />
-            </div>
+            {/* Delivery Stats */}
+            <SectionCard label="Pengiriman" className="mb-4" labelRight={<Link href="/outlet/deliveries" className="text-[11px] font-bold text-emerald-700">Lihat Semua</Link>}>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                    <MiniStat label="Menunggu Pickup" value={deliveryStats.waitingPickup} />
+                    <MiniStat label="Dalam Perjalanan" value={deliveryStats.inTransit} />
+                    <MiniStat label="Selesai Hari Ini" value={deliveryStats.completedToday} />
+                    <MiniStat label="Gagal" value={deliveryStats.failed} alert={deliveryStats.failed > 0} />
+                </div>
+            </SectionCard>
 
-            {/* Quick Actions - sticky on mobile */}
-            <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
-                <Link href="/outlet/orders?status=pending" className="shrink-0 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-medium text-white active:bg-emerald-800">Proses Order</Link>
-                <Link href="/outlet/inventory" className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium active:bg-zinc-50">Inventory</Link>
-                <Link href="/outlet/restocks/create" className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium active:bg-zinc-50">Request Restock</Link>
+            {/* Order Stats */}
+            <SectionCard label="Pesanan" className="mb-4" labelRight={<Link href="/outlet/orders" className="text-[11px] font-bold text-emerald-700">Lihat Semua</Link>}>
+                <div className="mt-2 grid grid-cols-3 gap-2">
+                    <MiniStat label="Menunggu" value={stats.pendingOrders} alert={stats.pendingOrders > 0} />
+                    <MiniStat label="Disiapkan" value={stats.preparingOrders} />
+                    <MiniStat label="Siap Ambil" value={stats.readyForPickupOrders} />
+                </div>
+            </SectionCard>
+
+            {/* Quick Actions */}
+            <div className="mb-4 flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                <Link href="/outlet/orders?status=pending_confirmation" className="shrink-0 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white active:bg-emerald-800">
+                    Proses Pesanan
+                </Link>
+                <Link href="/outlet/inventory" className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold active:bg-zinc-50">
+                    Inventaris
+                </Link>
+                <Link href="/outlet/restocks/create" className="shrink-0 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold active:bg-zinc-50">
+                    Request Restock
+                </Link>
             </div>
 
             {/* Low Stock Warning */}
             {lowStockItems.length > 0 && (
-                <section className="mt-6">
-                    <h2 className="text-sm font-semibold text-amber-800">⚠️ Stok Rendah</h2>
+                <SectionCard label="Stok Rendah" className="mb-4" labelRight={<Link href="/outlet/inventory" className="text-[11px] font-bold text-emerald-700">Lihat Semua</Link>}>
                     <div className="mt-2 space-y-2">
-                        {lowStockItems.map((item: any) => (
-                            <div key={item.id} className="flex items-center justify-between rounded-lg border border-amber-100 bg-amber-50 px-3 py-2.5">
+                        {lowStockItems.slice(0, 3).map((item: any) => (
+                            <div key={item.id} className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2.5">
                                 <div>
                                     <div className="text-sm font-medium">{item.product?.name}</div>
-                                    <div className="text-xs text-amber-700">Available: {item.current_stock - item.reserved_stock} / Min: {item.minimum_stock}</div>
+                                    <div className="text-xs text-slate-500">Tersedia: {item.current_stock - item.reserved_stock} / Min: {item.minimum_stock}</div>
                                 </div>
-                                <StockLevelBadge currentStock={item.current_stock} reservedStock={item.reserved_stock} minimumStock={item.minimum_stock} />
+                                <StatusBadge variant={item.current_stock - item.reserved_stock <= 0 ? 'danger' : 'warning'} size="sm">
+                                    {item.current_stock - item.reserved_stock <= 0 ? 'Kritis' : 'Rendah'}
+                                </StatusBadge>
                             </div>
                         ))}
                     </div>
-                    <Link href="/outlet/restocks/create" className="mt-3 block rounded-lg border border-amber-200 bg-amber-100 px-4 py-2.5 text-center text-sm font-medium text-amber-900 active:bg-amber-200">
-                        Request Restock →
-                    </Link>
-                </section>
+                    {lowStockItems.length > 3 && (
+                        <Link href="/outlet/inventory" className="mt-2 block text-center text-xs font-semibold text-emerald-700">
+                            +{lowStockItems.length - 3} lainnya
+                        </Link>
+                    )}
+                </SectionCard>
             )}
 
             {/* Recent Orders */}
             {recentOrders.length > 0 && (
-                <section className="mt-6">
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-sm font-semibold text-slate-700">Order Aktif</h2>
-                        <Link href="/outlet/orders" className="text-xs text-emerald-700">Lihat semua</Link>
-                    </div>
+                <SectionCard label="Pesanan Aktif" className="mb-4" labelRight={<Link href="/outlet/orders" className="text-[11px] font-bold text-emerald-700">Lihat Semua</Link>}>
                     <div className="mt-2 space-y-2">
                         {recentOrders.map((order: any) => (
                             <Link key={order.id} href={`/outlet/orders/${order.id}`} className="flex items-center justify-between rounded-lg border border-zinc-100 bg-white px-3 py-3 active:bg-zinc-50">
@@ -106,29 +139,31 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, failureR
                             </Link>
                         ))}
                     </div>
-                </section>
+                </SectionCard>
+            )}
+
+            {/* Empty State */}
+            {!hasUrgentActions && recentOrders.length === 0 && (
+                <div className="mt-6">
+                    <EmptyState
+                        icon="✨"
+                        title="Semua beres!"
+                        description="Tidak ada tugas yang perlu ditangani saat ini."
+                    />
+                </div>
             )}
         </OutletLayout>
     );
 }
 
-function StatCard({ label, value, href, color, urgent, suffix }: { label: string; value: number; href?: string; color?: string; urgent?: boolean; suffix?: string }) {
-    const colorClasses: Record<string, string> = {
-        yellow: 'border-yellow-100 bg-yellow-50',
-        amber: 'border-amber-100 bg-amber-50',
-        orange: 'border-orange-100 bg-orange-50',
-        blue: 'border-blue-100 bg-blue-50',
-        purple: 'border-purple-100 bg-purple-50',
-        green: 'border-green-100 bg-green-50',
-        red: 'border-red-100 bg-red-50',
-    };
-    const base = colorClasses[color ?? ''] ?? 'border-zinc-100 bg-white';
-    const Wrapper = href ? Link : 'div';
-
+function MiniStat({ label, value, alert }: { label: string; value: number; alert?: boolean }) {
     return (
-        <Wrapper {...(href ? { href } : {})} className={`rounded-xl border p-3 ${base} ${urgent ? 'ring-2 ring-amber-300' : ''} active:scale-[0.97] transition-transform`}>
+        <div className={`rounded-lg border p-2.5 ${alert ? 'border-amber-200' : 'border-zinc-200'} bg-white`}>
             <div className="text-xs font-medium text-slate-500">{label}</div>
-            <div className="mt-1 text-2xl font-bold text-slate-900">{value}{suffix ?? ''}</div>
-        </Wrapper>
+            <div className="mt-0.5 flex items-center gap-1.5">
+                <span className="text-xl font-bold text-slate-900">{value}</span>
+                {alert && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
+            </div>
+        </div>
     );
 }

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\SchedulerHeartbeat;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 
 class SystemController extends Controller
 {
@@ -17,9 +19,13 @@ class SystemController extends Controller
         $checks = [
             'database' => $this->checkDatabase(),
             'cache' => $this->checkCache(),
+            'storage' => $this->checkStorage(),
         ];
 
-        $healthy = ! in_array(false, $checks, true);
+        // Scheduler is informational — unhealthy scheduler doesn't make the app "down"
+        $checks['scheduler'] = $this->checkScheduler();
+
+        $healthy = $checks['database'] && $checks['cache'] && $checks['storage'];
 
         return response()->json([
             'status' => $healthy ? 'healthy' : 'degraded',
@@ -54,9 +60,16 @@ class SystemController extends Controller
             ],
             'queue' => [
                 'driver' => config('queue.default'),
+                'size' => $this->getQueueSize(),
+            ],
+            'scheduler' => [
+                'healthy' => SchedulerHeartbeat::isHealthy(),
+                'last_heartbeat' => SchedulerHeartbeat::getLastHeartbeat(),
+                'minutes_since_last_beat' => SchedulerHeartbeat::minutesSinceLastBeat(),
             ],
             'storage' => [
                 'writable' => is_writable(storage_path()),
+                'disk_free_bytes' => disk_free_space(storage_path()),
             ],
         ]);
     }
@@ -91,6 +104,34 @@ class SystemController extends Controller
             return Cache::get('_health_check') === true;
         } catch (\Throwable) {
             return false;
+        }
+    }
+
+    private function checkScheduler(): bool
+    {
+        return SchedulerHeartbeat::isHealthy();
+    }
+
+    private function checkStorage(): bool
+    {
+        try {
+            $testFile = storage_path('app/.health_check_test');
+            file_put_contents($testFile, 'ok');
+            $result = file_get_contents($testFile) === 'ok';
+            @unlink($testFile);
+
+            return $result && is_writable(storage_path());
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    private function getQueueSize(): ?int
+    {
+        try {
+            return Queue::size();
+        } catch (\Throwable) {
+            return null;
         }
     }
 }

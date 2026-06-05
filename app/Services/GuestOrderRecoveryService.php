@@ -4,23 +4,22 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\Order;
-use Illuminate\Support\Collection;
 
 class GuestOrderRecoveryService
 {
     private const MAX_ORDERS = 10;
     private const MAX_DAYS = 30;
 
-    public function recoverByPhone(string $phone): array
+    /**
+     * Recover orders using phone + recovery_token OR phone + order_code.
+     * Phone alone is NOT sufficient to prevent enumeration attacks.
+     */
+    public function recover(string $phone, ?string $recoveryToken = null, ?string $orderCode = null): array
     {
         $normalizedPhone = $this->normalizePhone($phone);
 
         if (! preg_match('/^62[0-9]{9,13}$/', $normalizedPhone)) {
-            return [
-                'found' => false,
-                'active_orders' => [],
-                'recent_orders' => [],
-            ];
+            return $this->notFoundResponse();
         }
 
         $customer = Customer::query()
@@ -28,11 +27,31 @@ class GuestOrderRecoveryService
             ->first();
 
         if (! $customer) {
-            return [
-                'found' => false,
-                'active_orders' => [],
-                'recent_orders' => [],
-            ];
+            return $this->notFoundResponse();
+        }
+
+        // Verify knowledge: must provide recovery_token OR order_code
+        if ($recoveryToken) {
+            $order = Order::query()
+                ->where('customer_id', $customer->id)
+                ->where('recovery_token', strtoupper($recoveryToken))
+                ->first();
+
+            if (! $order) {
+                return $this->notFoundResponse();
+            }
+        } elseif ($orderCode) {
+            $order = Order::query()
+                ->where('customer_id', $customer->id)
+                ->where('order_code', strtoupper($orderCode))
+                ->first();
+
+            if (! $order) {
+                return $this->notFoundResponse();
+            }
+        } else {
+            // No verification provided — reject
+            return $this->notFoundResponse();
         }
 
         $activeOrders = Order::query()
@@ -58,6 +77,15 @@ class GuestOrderRecoveryService
             'customer_name' => $customer->name,
             'active_orders' => $activeOrders->all(),
             'recent_orders' => $recentOrders->all(),
+        ];
+    }
+
+    private function notFoundResponse(): array
+    {
+        return [
+            'found' => false,
+            'active_orders' => [],
+            'recent_orders' => [],
         ];
     }
 

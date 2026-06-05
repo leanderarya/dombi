@@ -1,44 +1,137 @@
-import { Head, useForm } from '@inertiajs/react';
-import StockLevelBadge from '../../../components/stock-level-badge';
-import OutletLayout from '../../../layouts/outlet-layout';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Plus, Trash2 } from 'lucide-react';
+import StockLevelBadge from '@/components/stock-level-badge';
+import SectionCard from '@/components/ui/section-card';
+import StickyActionBar from '@/components/ui/sticky-action-bar';
+import OutletLayout from '@/layouts/outlet-layout';
 
 export default function CreateRestock({ products, inventories }: any) {
     const form = useForm({ notes: '', items: [{ product_id: products[0]?.id ?? '', requested_quantity: 1 }] });
     const inventoryByProduct = new Map(inventories.map((item: any) => [item.product_id, item]));
+
     const setItem = (index: number, key: string, value: any) => {
         const items = [...form.data.items] as any[];
         items[index] = { ...items[index], [key]: value };
         form.setData('items', items as any);
     };
 
+    const addItem = () => {
+        form.setData('items', [...form.data.items, { product_id: products[0]?.id ?? '', requested_quantity: 1 }] as any);
+    };
+
+    const removeItem = (index: number) => {
+        form.setData('items', form.data.items.filter((_: any, i: number) => i !== index) as any);
+    };
+
+    const handleSubmit = () => {
+        form.post('/outlet/restocks');
+    };
+
     return (
-        <OutletLayout>
-            <Head title="Create Restock" />
-            <h1 className="text-2xl font-semibold">Create Restock Request</h1>
-            <form onSubmit={(e) => { e.preventDefault(); form.post('/outlet/restocks'); }} className="mt-5 space-y-4 rounded-lg border bg-white p-5">
+        <OutletLayout title="Buat Restock" backHref="/outlet/restocks" hideNav>
+            <Head title="Buat Restock" />
+
+            {/* Items */}
+            <div className="space-y-3">
                 {form.data.items.map((item: any, index: number) => {
                     const inventory: any = inventoryByProduct.get(Number(item.product_id));
 
                     return (
-                        <div key={index} className="grid gap-3 rounded-md border p-3 md:grid-cols-[1fr_130px_160px_auto]">
-                            <select value={item.product_id} onChange={(e) => setItem(index, 'product_id', e.target.value)} className="rounded-md border px-3 py-2">
-                                {products.map((product: any) => <option key={product.id} value={product.id}>{product.name}</option>)}
-                            </select>
-                            <input type="number" min="1" value={item.requested_quantity} onChange={(e) => setItem(index, 'requested_quantity', Number(e.target.value))} className="rounded-md border px-3 py-2" />
-                            <div className="text-sm text-zinc-600">
-                                <div>Stock: {inventory?.current_stock ?? 0}</div>
-                                <div>Min: {inventory?.minimum_stock ?? 0}</div>
-                                {inventory && <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} />}
+                        <SectionCard key={index}>
+                            <div className="flex items-start justify-between">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Item {index + 1}</div>
+                                {form.data.items.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeItem(index)}
+                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 active:bg-red-50 active:text-red-600"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                )}
                             </div>
-                            <button type="button" onClick={() => form.setData('items', form.data.items.filter((_: any, i: number) => i !== index) as any)} className="rounded-md border px-3 py-2">Hapus</button>
-                        </div>
+
+                            <div className="mt-3">
+                                <label className="text-xs font-medium text-slate-500">Produk</label>
+                                <select
+                                    value={item.product_id}
+                                    onChange={(e) => setItem(index, 'product_id', e.target.value)}
+                                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm"
+                                >
+                                    {products.map((product: any) => (
+                                        <option key={product.id} value={product.id}>{product.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {inventory && (
+                                <div className="mt-2 flex items-center gap-3 rounded-lg bg-zinc-50 p-2.5 text-xs">
+                                    <div>
+                                        <span className="text-slate-500">Stok:</span>{' '}
+                                        <span className="font-semibold">{inventory.current_stock}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-slate-500">Min:</span>{' '}
+                                        <span className="font-semibold">{inventory.minimum_stock}</span>
+                                    </div>
+                                    <StockLevelBadge
+                                        currentStock={inventory.current_stock}
+                                        reservedStock={inventory.reserved_stock}
+                                        minimumStock={inventory.minimum_stock}
+                                    />
+                                </div>
+                            )}
+
+                            <div className="mt-3">
+                                <label className="text-xs font-medium text-slate-500">Jumlah Diminta</label>
+                                <input
+                                    type="number"
+                                    min="1"
+                                    value={item.requested_quantity}
+                                    onChange={(e) => setItem(index, 'requested_quantity', Number(e.target.value))}
+                                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm"
+                                />
+                            </div>
+                        </SectionCard>
                     );
                 })}
-                <button type="button" onClick={() => form.setData('items', [...form.data.items, { product_id: products[0]?.id ?? '', requested_quantity: 1 }] as any)} className="rounded-md border px-3 py-2">Tambah item</button>
-                <label className="block text-sm">Notes<textarea value={form.data.notes} onChange={(e) => form.setData('notes', e.target.value)} className="mt-1 w-full rounded-md border px-3 py-2" /></label>
-                {form.errors.items && <div className="text-sm text-red-600">{form.errors.items}</div>}
-                <button className="rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">Submit Request</button>
-            </form>
+            </div>
+
+            {/* Add Item Button */}
+            <button
+                type="button"
+                onClick={addItem}
+                className="mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg border border-dashed border-zinc-300 text-sm font-medium text-slate-500 active:bg-zinc-50"
+            >
+                <Plus className="h-4 w-4" />
+                Tambah Item
+            </button>
+
+            {/* Notes */}
+            <div className="mt-4">
+                <label className="text-xs font-medium text-slate-500">Catatan</label>
+                <textarea
+                    value={form.data.notes}
+                    onChange={(e) => form.setData('notes', e.target.value)}
+                    placeholder="Catatan restock (opsional)..."
+                    className="mt-1 min-h-[80px] w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                />
+            </div>
+
+            {form.errors.items && <div className="mt-2 text-xs text-red-600">{form.errors.items}</div>}
+
+            {/* Sticky Submit */}
+            <StickyActionBar
+                actions={[
+                    {
+                        label: 'Kirim Request Restock',
+                        variant: 'primary',
+                        onClick: handleSubmit,
+                        loading: form.processing,
+                    },
+                ]}
+            />
+            <div className="h-20" />
         </OutletLayout>
     );
 }

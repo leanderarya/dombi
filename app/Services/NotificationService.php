@@ -1,0 +1,606 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Customer;
+use App\Models\Notification;
+use App\Models\Order;
+use App\Models\Delivery;
+use App\Models\User;
+
+class NotificationService
+{
+    // Order notifications
+    public const ORDER_CREATED = 'order.created';
+    public const ORDER_CONFIRMED = 'order.confirmed';
+    public const ORDER_REJECTED = 'order.rejected';
+    public const ORDER_EXPIRED = 'order.expired';
+    public const ORDER_CANCELLED = 'order.cancelled';
+
+    // Delivery notifications
+    public const COURIER_ASSIGNED = 'delivery.courier_assigned';
+    public const COURIER_REJECTED_ASSIGNMENT = 'delivery.courier_rejected_assignment';
+    public const COURIER_PICKED_UP = 'delivery.picked_up';
+    public const DELIVERY_OUT_FOR_DELIVERY = 'delivery.out_for_delivery';
+    public const DELIVERY_COMPLETED = 'delivery.completed';
+    public const DELIVERY_FAILED = 'delivery.failed';
+    public const DELIVERY_RETURNED_TO_OUTLET = 'delivery.returned_to_outlet';
+
+    // Inventory notifications
+    public const LOW_STOCK = 'inventory.low_stock';
+    public const CRITICAL_STOCK = 'inventory.critical_stock';
+    public const RESTOCK_CREATED = 'inventory.restock_created';
+    public const RESTOCK_APPROVED = 'inventory.restock_approved';
+    public const RESTOCK_REJECTED = 'inventory.restock_rejected';
+    public const DISTRIBUTION_SENT = 'inventory.distribution_sent';
+    public const DISTRIBUTION_RECEIVED = 'inventory.distribution_received';
+
+    // System notifications
+    public const SLA_VIOLATION = 'system.sla_violation';
+    public const COURIER_OFFLINE = 'system.courier_offline';
+    public const CAPACITY_WARNING = 'system.capacity_warning';
+    public const RETURNED_DELIVERY_PENDING = 'system.returned_delivery_pending';
+
+    /**
+     * Get the owner user(s) for notification targeting.
+     */
+    private function getOwners(): array
+    {
+        return User::where('role', 'owner')->where('is_active', true)->pluck('id')->toArray();
+    }
+
+    /**
+     * Get the outlet user for a given outlet.
+     */
+    private function getOutletUser(int $outletId): ?User
+    {
+        return User::where('role', 'outlet')
+            ->where('outlet_id', $outletId)
+            ->where('is_active', true)
+            ->first();
+    }
+
+    // ─── ORDER NOTIFICATIONS ──────────────────────────────────────────
+
+    public function notifyOrderCreated(Order $order): void
+    {
+        // Notify outlet
+        $outletUser = $this->getOutletUser($order->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::ORDER_CREATED,
+                title: 'Pesanan Baru',
+                message: "Pesanan baru {$order->order_code} dari {$order->customer_name}.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyOrderConfirmed(Order $order): void
+    {
+        // Notify customer
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::ORDER_CONFIRMED,
+                title: 'Pesanan Dikonfirmasi',
+                message: "Pesanan {$order->order_code} telah dikonfirmasi outlet.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyOrderRejected(Order $order, string $reason): void
+    {
+        // Notify customer
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::ORDER_REJECTED,
+                title: 'Pesanan Ditolak',
+                message: "Pesanan {$order->order_code} ditolak. Alasan: {$reason}",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'reason' => $reason]
+            );
+        }
+
+        // Notify owner
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::ORDER_REJECTED,
+                title: 'Pesanan Ditolak Outlet',
+                message: "Pesanan {$order->order_code} ditolak outlet. Alasan: {$reason}",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'reason' => $reason]
+            );
+        }
+    }
+
+    public function notifyOrderExpired(Order $order): void
+    {
+        // Notify customer
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::ORDER_EXPIRED,
+                title: 'Pesanan Kadaluarsa',
+                message: "Pesanan {$order->order_code} kadaluarsa karena tidak dikonfirmasi.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code]
+            );
+        }
+    }
+
+    public function notifyOrderCancelled(Order $order): void
+    {
+        // Notify outlet
+        $outletUser = $this->getOutletUser($order->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::ORDER_CANCELLED,
+                title: 'Pesanan Dibatalkan',
+                message: "Pesanan {$order->order_code} dibatalkan customer.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code]
+            );
+        }
+    }
+
+    // ─── DELIVERY NOTIFICATIONS ───────────────────────────────────────
+
+    public function notifyCourierAssigned(Delivery $delivery): void
+    {
+        $order = $delivery->order;
+
+        // Notify customer
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::COURIER_ASSIGNED,
+                title: 'Kurir Di-assign',
+                message: "Kurir telah ditugaskan untuk pesanan {$order->order_code}.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id, 'courier_id' => $delivery->courier_id]
+            );
+        }
+
+        // Notify courier
+        $this->create(
+            userType: 'courier',
+            userId: $delivery->courier_id,
+            customerId: null,
+            type: self::COURIER_ASSIGNED,
+            title: 'Tugas Baru',
+            message: "Anda mendapat tugas pengiriman untuk pesanan {$order->order_code}.",
+            data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+        );
+
+        // Notify outlet
+        $outletUser = $this->getOutletUser($order->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::COURIER_ASSIGNED,
+                title: 'Kurir Di-assign',
+                message: "Kurir telah di-assign untuk pesanan {$order->order_code}.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+            );
+        }
+    }
+
+    public function notifyCourierPickedUp(Delivery $delivery): void
+    {
+        $order = $delivery->order;
+
+        // Notify customer
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::COURIER_PICKED_UP,
+                title: 'Pesanan Diambil',
+                message: "Pesanan {$order->order_code} telah diambil kurir.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+            );
+        }
+    }
+
+    public function notifyDeliveryCompleted(Delivery $delivery): void
+    {
+        $order = $delivery->order;
+
+        // Notify customer
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::DELIVERY_COMPLETED,
+                title: 'Pesanan Selesai',
+                message: "Pesanan {$order->order_code} telah berhasil dikirim.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+            );
+        }
+
+        // Notify outlet
+        $outletUser = $this->getOutletUser($order->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::DELIVERY_COMPLETED,
+                title: 'Pengiriman Selesai',
+                message: "Pesanan {$order->order_code} berhasil dikirim.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+            );
+        }
+    }
+
+    public function notifyDeliveryFailed(Delivery $delivery, string $reason): void
+    {
+        $order = $delivery->order;
+
+        // Notify customer
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::DELIVERY_FAILED,
+                title: 'Pengiriman Gagal',
+                message: "Pengiriman pesanan {$order->order_code} gagal. Alasan: {$reason}",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id, 'reason' => $reason]
+            );
+        }
+
+        // Notify owner
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::DELIVERY_FAILED,
+                title: 'Pengiriman Gagal',
+                message: "Pengiriman {$order->order_code} gagal. Alasan: {$reason}",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id, 'reason' => $reason]
+            );
+        }
+
+        // Notify outlet
+        $outletUser = $this->getOutletUser($order->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::DELIVERY_FAILED,
+                title: 'Pengiriman Gagal',
+                message: "Pengiriman {$order->order_code} gagal. Alasan: {$reason}",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id, 'reason' => $reason]
+            );
+        }
+    }
+
+    public function notifyReturnedToOutlet(Delivery $delivery): void
+    {
+        $order = $delivery->order;
+
+        // Notify outlet
+        $outletUser = $this->getOutletUser($order->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::DELIVERY_RETURNED_TO_OUTLET,
+                title: 'Barang Dikembalikan',
+                message: "Barang pesanan {$order->order_code} sedang dikembalikan ke outlet.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+            );
+        }
+
+        // Notify owner
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::DELIVERY_RETURNED_TO_OUTLET,
+                title: 'Barang Dikembalikan ke Outlet',
+                message: "Barang pesanan {$order->order_code} dikembalikan ke outlet.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+            );
+        }
+    }
+
+    // ─── OPERATIONAL NOTIFICATIONS ────────────────────────────────────
+
+    public function notifyCourierRejectedAssignment(Delivery $delivery, string $reason): void
+    {
+        $order = $delivery->order;
+
+        // Notify owner
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::COURIER_REJECTED_ASSIGNMENT,
+                title: 'Kurir Menolak Tugas',
+                message: "Kurir menolak tugas untuk pesanan {$order->order_code}. Alasan: {$reason}",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id, 'courier_id' => $delivery->courier_id, 'reason' => $reason]
+            );
+        }
+
+        // Notify outlet
+        $outletUser = $this->getOutletUser($order->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::COURIER_REJECTED_ASSIGNMENT,
+                title: 'Kurir Menolak Tugas',
+                message: "Kurir menolak tugas untuk pesanan {$order->order_code}.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+            );
+        }
+    }
+
+    public function notifySlaViolation(string $title, string $message, array $data = []): void
+    {
+        // Notify all owners
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::SLA_VIOLATION,
+                title: $title,
+                message: $message,
+                data: $data
+            );
+        }
+    }
+
+    public function notifyReturnedDeliveryPending(Delivery $delivery): void
+    {
+        $order = $delivery->order;
+
+        // Notify outlet to confirm receipt
+        $outletUser = $this->getOutletUser($order->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::RETURNED_DELIVERY_PENDING,
+                title: 'Konfirmasi Penerimaan Barang',
+                message: "Barang pesanan {$order->order_code} menunggu konfirmasi penerimaan.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+            );
+        }
+    }
+
+    // ─── INVENTORY NOTIFICATIONS ─────────────────────────────────────
+
+    public function notifyLowStock(int $outletId, string $productName, int $available, int $minimum): void
+    {
+        // Notify outlet
+        $outletUser = $this->getOutletUser($outletId);
+        if ($outletUser) {
+            $severity = $available <= 0 ? self::CRITICAL_STOCK : self::LOW_STOCK;
+            $title = $available <= 0 ? 'Stok Kritis' : 'Stok Rendah';
+            $message = "{$productName}: tersedia {$available}, minimum {$minimum}.";
+
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: $severity,
+                title: $title,
+                message: $message,
+                data: ['outlet_id' => $outletId, 'product_name' => $productName, 'available' => $available, 'minimum' => $minimum],
+                entityType: 'outlet',
+                entityId: $outletId
+            );
+        }
+
+        // Notify owners
+        $severity = $available <= 0 ? self::CRITICAL_STOCK : self::LOW_STOCK;
+        $title = $available <= 0 ? 'Stok Kritis' : 'Stok Rendah';
+        $outletName = \App\Models\Outlet::find($outletId)?->name ?? 'Unknown';
+        $message = "{$productName} di {$outletName}: tersedia {$available}, minimum {$minimum}.";
+
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: $severity,
+                title: $title,
+                message: $message,
+                data: ['outlet_id' => $outletId, 'product_name' => $productName, 'available' => $available, 'minimum' => $minimum],
+                entityType: 'outlet',
+                entityId: $outletId
+            );
+        }
+    }
+
+    public function notifyRestockCreated(\App\Models\RestockRequest $restock): void
+    {
+        // Notify owners
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::RESTOCK_CREATED,
+                title: 'Request Restock Baru',
+                message: "Request restock baru dari outlet {$restock->outlet->name}.",
+                data: ['restock_id' => $restock->id, 'outlet_id' => $restock->outlet_id],
+                entityType: 'restock_request',
+                entityId: $restock->id
+            );
+        }
+    }
+
+    public function notifyRestockApproved(\App\Models\RestockRequest $restock): void
+    {
+        // Notify outlet
+        $outletUser = $this->getOutletUser($restock->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::RESTOCK_APPROVED,
+                title: 'Restock Disetujui',
+                message: "Request restock #{$restock->id} telah disetujui.",
+                data: ['restock_id' => $restock->id],
+                entityType: 'restock_request',
+                entityId: $restock->id
+            );
+        }
+    }
+
+    public function notifyRestockRejected(\App\Models\RestockRequest $restock, string $reason): void
+    {
+        // Notify outlet
+        $outletUser = $this->getOutletUser($restock->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::RESTOCK_REJECTED,
+                title: 'Restock Ditolak',
+                message: "Request restock #{$restock->id} ditolak. Alasan: {$reason}",
+                data: ['restock_id' => $restock->id, 'reason' => $reason],
+                entityType: 'restock_request',
+                entityId: $restock->id
+            );
+        }
+    }
+
+    public function notifyDistributionSent(\App\Models\StockDistribution $distribution): void
+    {
+        // Notify outlet
+        $outletUser = $this->getOutletUser($distribution->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::DISTRIBUTION_SENT,
+                title: 'Distribusi Dikirim',
+                message: "Distribusi #{$distribution->id} sedang dikirim ke outlet Anda.",
+                data: ['distribution_id' => $distribution->id],
+                entityType: 'stock_distribution',
+                entityId: $distribution->id
+            );
+        }
+    }
+
+    public function notifyDistributionReceived(\App\Models\StockDistribution $distribution): void
+    {
+        // Notify owners
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::DISTRIBUTION_RECEIVED,
+                title: 'Distribusi Diterima',
+                message: "Distribusi #{$distribution->id} telah diterima outlet.",
+                data: ['distribution_id' => $distribution->id],
+                entityType: 'stock_distribution',
+                entityId: $distribution->id
+            );
+        }
+    }
+
+    // ─── SYSTEM NOTIFICATIONS ────────────────────────────────────────
+
+    public function notifyCourierOffline(User $courier): void
+    {
+        // Notify owners
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::COURIER_OFFLINE,
+                title: 'Kurir Offline',
+                message: "Kurir {$courier->name} telah offline.",
+                data: ['courier_id' => $courier->id],
+                entityType: 'user',
+                entityId: $courier->id
+            );
+        }
+    }
+
+    public function notifyCapacityWarning(User $courier, int $activeCount, int $maxCount): void
+    {
+        // Notify owners
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::CAPACITY_WARNING,
+                title: 'Kapasitas Kurir Penuh',
+                message: "Kurir {$courier->name} memiliki {$activeCount} delivery aktif (maks {$maxCount}).",
+                data: ['courier_id' => $courier->id, 'active_count' => $activeCount, 'max_count' => $maxCount],
+                entityType: 'user',
+                entityId: $courier->id
+            );
+        }
+    }
+
+    // ─── HELPER METHODS ───────────────────────────────────────────────
+
+    private function create(
+        string $userType,
+        ?int $userId,
+        ?int $customerId,
+        string $type,
+        string $title,
+        string $message,
+        array $data = [],
+        ?string $entityType = null,
+        ?int $entityId = null
+    ): Notification {
+        return Notification::create([
+            'user_type' => $userType,
+            'user_id' => $userId,
+            'customer_id' => $customerId,
+            'type' => $type,
+            'title' => $title,
+            'message' => $message,
+            'data' => $data ?: null,
+            'entity_type' => $entityType,
+            'entity_id' => $entityId,
+        ]);
+    }
+}

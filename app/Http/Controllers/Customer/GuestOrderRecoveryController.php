@@ -13,9 +13,24 @@ class GuestOrderRecoveryController extends Controller
     {
         $validated = $request->validate([
             'phone' => ['required', 'string', 'min:8', 'max:20'],
+            'recovery_token' => ['nullable', 'string', 'size:32'],
+            'order_code' => ['nullable', 'string', 'max:30'],
         ]);
 
-        $result = $recoveryService->recoverByPhone($validated['phone']);
+        if (empty($validated['recovery_token']) && empty($validated['order_code'])) {
+            return response()->json([
+                'found' => false,
+                'message' => 'Token pemulihan atau kode pesanan wajib diisi.',
+                'active_orders' => [],
+                'recent_orders' => [],
+            ], 422);
+        }
+
+        $result = $recoveryService->recover(
+            $validated['phone'],
+            $validated['recovery_token'] ?? null,
+            $validated['order_code'] ?? null,
+        );
 
         return response()->json($result);
     }
