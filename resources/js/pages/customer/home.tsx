@@ -92,54 +92,61 @@ export default function Home({ families, activeOrders, lastOrder }: any) {
                 </section>
             )}
 
-            {/* Product Families */}
+            {/* Featured Products */}
             <section className="mt-6">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Produk</h2>
                     <Link href="/customer/products" className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Semua</Link>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-3">
-                    {families?.slice(0, 6).map((family: Family) => {
-                        const minPrice = Math.min(...(family.variants?.map(v => v.selling_price) ?? [0]));
-                        const variantCount = family.variants?.length ?? 0;
-                        const flavors = [...new Set(family.variants?.map(v => v.flavor).filter(Boolean) ?? [])];
+                <div className="mt-2 divide-y divide-zinc-100">
+                    {(() => {
+                        const rows: Array<{ key: string; familyId: number; label: string; description: string | null; lowestPrice: number }> = [];
+                        for (const family of (families ?? [])) {
+                            const activeVariants = (family.variants ?? []).filter((v: Variant) => v.is_active);
+                            if (activeVariants.length === 0) continue;
 
-                        return (
-                            <Link
-                                key={family.id}
-                                href={`/customer/products/${family.id}`}
-                                className="block rounded-xl border border-zinc-100 bg-white overflow-hidden active:bg-zinc-50"
-                            >
-                                {/* Image placeholder */}
-                                <div className="flex h-28 items-center justify-center bg-gradient-to-br from-emerald-50 to-zinc-50">
-                                    <span className="text-4xl">🥛</span>
+                            const flavorMap = new Map<string | null, Variant[]>();
+                            for (const v of activeVariants) {
+                                const k = v.flavor ?? '__no_flavor__';
+                                if (!flavorMap.has(k)) flavorMap.set(k, []);
+                                flavorMap.get(k)!.push(v);
+                            }
+
+                            for (const [k, vars] of flavorMap) {
+                                const flavor = k === '__no_flavor__' ? null : k;
+                                const lowest = Math.min(...vars.map((v) => v.selling_price));
+                                rows.push({
+                                    key: `${family.id}-${flavor ?? 'default'}`,
+                                    familyId: family.id,
+                                    label: flavor ? `${family.name} ${flavor}` : family.name,
+                                    description: family.description,
+                                    lowestPrice: lowest,
+                                });
+                            }
+                        }
+                        return rows.slice(0, 6);
+                    })().map((row) => (
+                        <Link
+                            key={row.key}
+                            href={`/customer/products/${row.familyId}`}
+                            className="flex items-center gap-3.5 bg-white py-3 active:bg-zinc-50"
+                        >
+                            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-zinc-50">
+                                <span className="text-3xl">&#129371;</span>
+                            </div>
+                            <div className="min-w-0 flex-1">
+                                <div className="text-sm font-semibold text-slate-900 leading-tight">
+                                    {row.label}
                                 </div>
-
-                                <div className="p-3">
-                                    <div className="text-sm font-semibold text-slate-900 leading-tight">{family.name}</div>
-
-                                    {flavors.length > 0 && (
-                                        <div className="mt-1 flex flex-wrap gap-1">
-                                            {flavors.slice(0, 3).map((flavor) => (
-                                                <span key={flavor} className="text-[10px] text-zinc-500">
-                                                    {flavor}{flavors.indexOf(flavor) < Math.min(flavors.length, 3) - 1 ? ' ·' : ''}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    <div className="mt-2 flex items-center justify-between">
-                                        <span className="text-xs font-bold text-emerald-700">
-                                            {minPrice > 0 ? `Mulai ${formatCurrency(minPrice)}` : ''}
-                                        </span>
-                                        <span className="text-[10px] text-zinc-400">
-                                            {variantCount} varian
-                                        </span>
-                                    </div>
+                                <div className="mt-0.5 text-xs text-zinc-500 truncate">
+                                    {row.description || row.label}
                                 </div>
-                            </Link>
-                        );
-                    })}
+                                <div className="mt-1 text-sm font-bold tabular-nums text-emerald-700">
+                                    Mulai {formatCurrency(row.lowestPrice)}
+                                </div>
+                            </div>
+                        </Link>
+                    ))}
                 </div>
             </section>
         </CustomerMobileLayout>

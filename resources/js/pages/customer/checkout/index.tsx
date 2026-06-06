@@ -85,7 +85,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
 
             {items.length === 0 ? (
                 <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 text-center">
-                    <p className="text-sm font-semibold text-slate-900">Keranjang masih kosong</p>
+                    <p className="text-sm font-semibold text-slate-900">Belum ada produk di keranjang</p>
                     <p className="mt-1 text-xs text-slate-500">Pilih produk terlebih dahulu untuk melanjutkan checkout.</p>
                     <button onClick={() => router.visit('/customer/products')} className="mt-4 min-h-11 rounded-lg bg-emerald-600 px-5 text-sm font-bold text-white">
                         Lihat Produk

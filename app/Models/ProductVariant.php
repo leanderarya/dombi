@@ -60,4 +60,32 @@ class ProductVariant extends Model
 
         return implode(' ', $parts);
     }
+
+    /**
+     * Total available stock across all active outlets.
+     * Requires inventories to be eager-loaded for performance.
+     */
+    public function getAvailableStockAttribute(): int
+    {
+        return (int) $this->inventories->sum(fn ($inv) => $inv->current_stock - $inv->reserved_stock);
+    }
+
+    /**
+     * Stock status for customer-facing display.
+     * Returns: 'available', 'low', or 'out_of_stock'.
+     */
+    public function getStockStatusAttribute(): string
+    {
+        $stock = $this->available_stock;
+
+        if ($stock <= 0) {
+            return 'out_of_stock';
+        }
+
+        if ($stock <= 5) {
+            return 'low';
+        }
+
+        return 'available';
+    }
 }

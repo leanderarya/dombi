@@ -25,10 +25,24 @@ class ProductController extends Controller
 
     public function show(ProductFamily $family): Response
     {
-        $family->load(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')]);
+        $family->load([
+            'variants' => fn ($q) => $q->where('is_active', true)
+                ->orderBy('name')
+                ->with('inventories'),
+        ]);
+
+        // Other families for cross-sell recommendations
+        $otherFamilies = ProductFamily::query()
+            ->where('is_active', true)
+            ->where('id', '!=', $family->id)
+            ->with(['variants' => fn ($q) => $q->where('is_active', true)])
+            ->orderBy('name')
+            ->limit(4)
+            ->get();
 
         return Inertia::render('customer/product-detail', [
             'family' => $family,
+            'otherFamilies' => $otherFamilies,
         ]);
     }
 }

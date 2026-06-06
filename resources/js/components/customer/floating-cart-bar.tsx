@@ -37,7 +37,7 @@ export default function FloatingCartBar() {
                 </div>
 
                 <span className="flex min-h-9 items-center rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white">
-                    Checkout
+                    Lihat Keranjang
                 </span>
             </button>
         </div>
