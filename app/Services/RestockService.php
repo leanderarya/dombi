@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\OutletInventory;
+use App\Models\ProductVariant;
 use App\Models\RestockRequest;
 use App\Models\StockDistribution;
 use App\Models\StockMovement;
@@ -164,10 +165,40 @@ class RestockService
     public function markShipped(StockDistribution $distribution, User $owner): StockDistribution
     {
         return DB::transaction(function () use ($distribution, $owner): StockDistribution {
-            $distribution = StockDistribution::query()->lockForUpdate()->with('restockRequest')->findOrFail($distribution->id);
+            $distribution = StockDistribution::query()->lockForUpdate()->with(['restockRequest', 'items'])->findOrFail($distribution->id);
 
             if ($distribution->status !== 'preparing') {
                 throw ValidationException::withMessages(['status' => 'Distribution hanya bisa dikirim saat preparing.']);
+            }
+
+            foreach ($distribution->items as $item) {
+                $variant = ProductVariant::query()->lockForUpdate()->findOrFail($item->product_variant_id);
+                $before = (int) $variant->center_stock;
+                $quantity = (int) $item->quantity;
+
+                if ($before < $quantity) {
+                    throw ValidationException::withMessages([
+                        'inventory' => "Stok pusat untuk {$variant->name} hanya {$before}. Tidak cukup untuk distribusi {$quantity}.",
+                    ]);
+                }
+
+                $variant->decrement('center_stock', $quantity);
+                $after = (int) $variant->fresh()->center_stock;
+
+                StockMovement::create([
+                    'outlet_id' => $distribution->outlet_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'type' => 'distribution_out',
+                    'quantity' => -$quantity,
+                    'before_stock' => $before,
+                    'after_stock' => $after,
+                    'before_reserved' => 0,
+                    'after_reserved' => 0,
+                    'reference_type' => StockDistribution::class,
+                    'reference_id' => $distribution->id,
+                    'notes' => 'Distribution shipped to outlet',
+                    'created_by' => $owner->id,
+                ]);
             }
 
             $distribution->update([

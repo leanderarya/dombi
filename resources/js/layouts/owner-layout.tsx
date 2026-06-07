@@ -10,58 +10,65 @@ import UpdateBanner from '@/components/update-banner';
 interface NavGroup {
     label: string;
     icon: ReactNode;
-    items: [string, string][];
+    items: Array<{
+        href: string;
+        label: string;
+        badgeKey?: 'pendingReturns' | 'pendingExchanges';
+    }>;
 }
 
 const navGroups: NavGroup[] = [
     {
         label: 'Dashboard',
         icon: <DashboardIcon />,
-        items: [['/owner/dashboard', 'Dashboard']],
+        items: [{ href: '/owner/dashboard', label: 'Dashboard' }],
     },
     {
         label: 'Operasional',
         icon: <OperationalIcon />,
         items: [
-            ['/owner/orders', 'Pesanan'],
-            ['/owner/deliveries', 'Pengiriman'],
+            { href: '/owner/orders', label: 'Pesanan' },
+            { href: '/owner/deliveries', label: 'Pengiriman' },
+            { href: '/owner/returns', label: 'Returns', badgeKey: 'pendingReturns' },
+            { href: '/owner/exchanges', label: 'Exchanges', badgeKey: 'pendingExchanges' },
         ],
     },
     {
         label: 'Master Data',
         icon: <MasterDataIcon />,
         items: [
-            ['/owner/outlets', 'Outlet'],
-            ['/owner/products', 'Produk'],
+            { href: '/owner/outlets', label: 'Outlet' },
+            { href: '/owner/products', label: 'Produk' },
         ],
     },
     {
         label: 'Persediaan',
         icon: <InventoryIcon />,
         items: [
-            ['/owner/inventories', 'Inventaris'],
-            ['/owner/restocks', 'Restock'],
-            ['/owner/distributions', 'Distribusi'],
+            { href: '/owner/inventories', label: 'Inventaris' },
+            { href: '/owner/restocks', label: 'Restock' },
+            { href: '/owner/distributions', label: 'Distribusi' },
         ],
     },
     {
         label: 'Analitik',
         icon: <AnalyticsIcon />,
         items: [
-            ['/owner/stock-movements', 'Audit Trail'],
-            ['/owner/reports', 'Laporan'],
+            { href: '/owner/stock-movements', label: 'Audit Trail' },
+            { href: '/owner/reports', label: 'Laporan' },
         ],
     },
 ];
 
 export default function OwnerLayout({ children }: PropsWithChildren) {
     const page = usePage<any>();
-    const { auth, flash } = page.props;
+    const { auth, flash, ownerOperationalCounts } = page.props;
     const url = page.url;
+    const pendingCounts = ownerOperationalCounts ?? { pendingReturns: 0, pendingExchanges: 0 };
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
         // Auto-expand the group containing the current URL
-        const active = navGroups.find((g) => g.items.some(([href]) => url?.startsWith(href)));
+        const active = navGroups.find((g) => g.items.some((item) => url?.startsWith(item.href)));
         return new Set(active ? [active.label] : []);
     });
 
@@ -96,16 +103,16 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                     <nav className="flex-1 overflow-y-auto px-3 pb-4">
                         {navGroups.map((group) => {
                             const isExpanded = expandedGroups.has(group.label);
-                            const hasActive = group.items.some(([href]) => url?.startsWith(href));
+                            const hasActive = group.items.some((item) => url?.startsWith(item.href));
 
                             return (
                                 <div key={group.label} className="mb-1">
                                     {group.items.length === 1 ? (
                                         /* Single-item groups render as direct link */
                                         <Link
-                                            href={group.items[0][0]}
+                                            href={group.items[0].href}
                                             className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                                url?.startsWith(group.items[0][0])
+                                                url?.startsWith(group.items[0].href)
                                                     ? 'bg-emerald-50 text-emerald-800'
                                                     : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
                                             }`}
@@ -129,17 +136,24 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                                             </button>
                                             {isExpanded && (
                                                 <div className="ml-6 mt-0.5 space-y-0.5">
-                                                    {group.items.map(([href, label]) => (
+                                                    {group.items.map((item) => (
                                                         <Link
-                                                            key={href}
-                                                            href={href}
+                                                            key={item.href}
+                                                            href={item.href}
                                                             className={`block rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                                                                url?.startsWith(href)
+                                                                url?.startsWith(item.href)
                                                                     ? 'bg-emerald-50 text-emerald-800'
                                                                     : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-700'
                                                             }`}
                                                         >
-                                                            {label}
+                                                            <span className="flex items-center justify-between gap-2">
+                                                                <span>{item.label}</span>
+                                                                {item.badgeKey && (pendingCounts[item.badgeKey] ?? 0) > 0 && (
+                                                                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                                                                        {pendingCounts[item.badgeKey]}
+                                                                    </span>
+                                                                )}
+                                                            </span>
                                                         </Link>
                                                     ))}
                                                 </div>

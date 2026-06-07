@@ -13,7 +13,7 @@ class ProductVariant extends Model
 
     protected $fillable = [
         'product_family_id', 'product_id', 'name', 'flavor', 'size',
-        'sku', 'barcode', 'center_price', 'selling_price', 'is_active',
+        'sku', 'barcode', 'center_price', 'selling_price', 'center_stock', 'is_active',
     ];
 
     protected function casts(): array
@@ -21,6 +21,7 @@ class ProductVariant extends Model
         return [
             'center_price' => 'decimal:2',
             'selling_price' => 'decimal:2',
+            'center_stock' => 'integer',
             'is_active' => 'boolean',
         ];
     }

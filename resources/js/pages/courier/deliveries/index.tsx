@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Truck } from 'lucide-react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import FilterChips from '@/components/ui/filter-chips';
 import SectionCard from '@/components/ui/section-card';
@@ -33,7 +34,7 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
 
             {deliveries.data.length === 0 ? (
                 <EmptyState
-                    icon="🚚"
+                    icon={<Truck className="h-8 w-8 text-slate-400" />}
                     title="Belum ada delivery"
                     description="Delivery akan muncul setelah kamu di-assign."
                 />

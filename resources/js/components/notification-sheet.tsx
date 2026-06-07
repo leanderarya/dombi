@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, type ReactNode } from 'react';
+import { CircleCheck, CircleX, Clock, Ban, Truck, Package, Bike, TriangleAlert, Undo2, RefreshCw, Bell, ClipboardList, Mail } from 'lucide-react';
 
 interface Notification {
     id: number;
@@ -16,20 +17,20 @@ interface Props {
     onClose: () => void;
 }
 
-const typeIcons: Record<string, string> = {
-    'order.confirmed': '✅',
-    'order.rejected': '❌',
-    'order.expired': '⏰',
-    'order.cancelled': '🚫',
-    'delivery.courier_assigned': '🚚',
-    'delivery.picked_up': '📦',
-    'delivery.out_for_delivery': '🛵',
-    'delivery.completed': '🎉',
-    'delivery.failed': '⚠️',
-    'delivery.returned_to_outlet': '↩️',
-    'operational.courier_rejected': '🔄',
-    'operational.sla_violation': '🔔',
-    'operational.returned_pending': '📋',
+const typeIcons: Record<string, ReactNode> = {
+    'order.confirmed': <CircleCheck className="h-5 w-5 text-emerald-600" />,
+    'order.rejected': <CircleX className="h-5 w-5 text-red-600" />,
+    'order.expired': <Clock className="h-5 w-5 text-amber-600" />,
+    'order.cancelled': <Ban className="h-5 w-5 text-slate-500" />,
+    'delivery.courier_assigned': <Truck className="h-5 w-5 text-blue-600" />,
+    'delivery.picked_up': <Package className="h-5 w-5 text-emerald-600" />,
+    'delivery.out_for_delivery': <Bike className="h-5 w-5 text-blue-600" />,
+    'delivery.completed': <CircleCheck className="h-5 w-5 text-emerald-600" />,
+    'delivery.failed': <TriangleAlert className="h-5 w-5 text-red-600" />,
+    'delivery.returned_to_outlet': <Undo2 className="h-5 w-5 text-amber-600" />,
+    'operational.courier_rejected': <RefreshCw className="h-5 w-5 text-amber-600" />,
+    'operational.sla_violation': <Bell className="h-5 w-5 text-red-600" />,
+    'operational.returned_pending': <ClipboardList className="h-5 w-5 text-blue-600" />,
 };
 
 export default function NotificationSheet({ open, onClose }: Props) {
@@ -119,7 +120,7 @@ export default function NotificationSheet({ open, onClose }: Props) {
                         </div>
                     ) : notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
-                            <span className="text-4xl">🔔</span>
+                            <Bell className="h-8 w-8 text-slate-400" />
                             <p className="mt-2 text-sm text-slate-500">Belum ada notifikasi</p>
                         </div>
                     ) : (
@@ -135,8 +136,8 @@ export default function NotificationSheet({ open, onClose }: Props) {
                                     }`}
                                 >
                                     <div className="flex items-start gap-3">
-                                        <span className="mt-0.5 text-lg">
-                                            {typeIcons[notification.type] ?? '📩'}
+                                        <span className="mt-0.5 text-slate-500">
+                                            {typeIcons[notification.type] ?? <Mail className="h-5 w-5" />}
                                         </span>
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2">

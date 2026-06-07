@@ -34,6 +34,8 @@ class NotificationService
     public const RESTOCK_REJECTED = 'inventory.restock_rejected';
     public const DISTRIBUTION_SENT = 'inventory.distribution_sent';
     public const DISTRIBUTION_RECEIVED = 'inventory.distribution_received';
+    public const RETURN_REQUEST_CREATED = 'inventory.return_request_created';
+    public const EXCHANGE_REQUEST_CREATED = 'inventory.exchange_request_created';
 
     // System notifications
     public const SLA_VIOLATION = 'system.sla_violation';
@@ -536,6 +538,64 @@ class NotificationService
                 data: ['distribution_id' => $distribution->id],
                 entityType: 'stock_distribution',
                 entityId: $distribution->id
+            );
+        }
+    }
+
+    public function notifyReturnRequestCreated(\App\Models\ReturnRequest $return): void
+    {
+        $return->loadMissing(['outlet', 'items.variant.family']);
+
+        $firstItem = $return->items->first();
+        $itemSummary = $firstItem
+            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk') . " x{$firstItem->quantity}")
+            : 'Tanpa item';
+
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::RETURN_REQUEST_CREATED,
+                title: 'Return Request Baru',
+                message: "{$return->outlet->name} mengajukan return: {$itemSummary}.",
+                data: [
+                    'return_request_id' => $return->id,
+                    'outlet_id' => $return->outlet_id,
+                    'reason' => $return->reason,
+                    'item_summary' => $itemSummary,
+                ],
+                entityType: 'return_request',
+                entityId: $return->id
+            );
+        }
+    }
+
+    public function notifyExchangeRequestCreated(\App\Models\ExchangeRequest $exchange): void
+    {
+        $exchange->loadMissing(['outlet', 'items.variant.family', 'returnRequest']);
+
+        $firstItem = $exchange->items->first();
+        $itemSummary = $firstItem
+            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk') . " x{$firstItem->quantity}")
+            : 'Tanpa item';
+
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::EXCHANGE_REQUEST_CREATED,
+                title: 'Exchange Request Baru',
+                message: "{$exchange->outlet->name} mengajukan tukar produk: {$itemSummary}.",
+                data: [
+                    'exchange_request_id' => $exchange->id,
+                    'return_request_id' => $exchange->return_request_id,
+                    'outlet_id' => $exchange->outlet_id,
+                    'item_summary' => $itemSummary,
+                ],
+                entityType: 'exchange_request',
+                entityId: $exchange->id
             );
         }
     }

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Inbox } from 'lucide-react';
 
 interface Column<T> {
     key: string;
@@ -51,7 +52,7 @@ export default function DataTable<T extends Record<string, any>>({
     if (data.length === 0) {
         return (
             <div className="flex flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white py-12 text-center">
-                <div className="text-3xl">📭</div>
+                <div className="text-slate-400"><Inbox className="h-8 w-8" /></div>
                 <p className="mt-2 text-sm font-medium text-slate-600">{emptyMessage}</p>
                 {emptyAction && (
                     <div className="mt-3">

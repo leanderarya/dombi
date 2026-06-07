@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Package } from 'lucide-react';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import OrderStatusBadge from '@/components/order-status-badge';
@@ -37,7 +38,7 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
 
             {orders.data.length === 0 ? (
                 <EmptyState
-                    icon="📦"
+                    icon={<Package className="h-8 w-8 text-slate-400" />}
                     title="Belum ada pesanan"
                     description={activeFilter ? 'Tidak ada pesanan dengan filter ini.' : 'Pesanan akan muncul saat customer memesan.'}
                     action={activeFilter ? { label: 'Reset Filter', onClick: () => handleFilterChange('') } : undefined}

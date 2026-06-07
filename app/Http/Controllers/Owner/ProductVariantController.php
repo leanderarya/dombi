@@ -28,6 +28,7 @@ class ProductVariantController extends Controller
             'sku' => ['nullable', 'string', 'max:50', 'unique:product_variants,sku'],
             'center_price' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0', 'gte:center_price'],
+            'center_stock' => ['required', 'integer', 'min:0'],
         ]);
 
         $family->variants()->create($validated);
@@ -45,6 +46,7 @@ class ProductVariantController extends Controller
             'sku' => ['nullable', 'string', 'max:50', 'unique:product_variants,sku,' . $variant->id],
             'center_price' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0', 'gte:center_price'],
+            'center_stock' => ['required', 'integer', 'min:0'],
             'is_active' => ['boolean'],
         ]);
 

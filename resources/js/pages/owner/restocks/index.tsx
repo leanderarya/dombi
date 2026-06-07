@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { ClipboardList } from 'lucide-react';
 import EmptyState from '@/components/empty-state';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -35,7 +36,7 @@ export default function OwnerRestocksIndex({ restocks, outlets, filters, statusO
             }
         >
             {restocks.data.length === 0 ? (
-                <EmptyState icon="📋" title="Tidak ada restock" description="Request akan muncul saat outlet meminta restock." />
+                <EmptyState icon={<ClipboardList className="h-8 w-8 text-slate-400" />} title="Tidak ada restock" description="Request akan muncul saat outlet meminta restock." />
             ) : (
                 <div className="space-y-2">
                     {restocks.data.map((r: any) => (

@@ -1,12 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, Package, Truck, Box, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, Package, Box, Banknote, MoreHorizontal } from 'lucide-react';
 
 const navItems = [
     { href: '/outlet/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/outlet/orders', label: 'Pesanan', icon: Package },
-    { href: '/outlet/deliveries', label: 'Pengiriman', icon: Truck },
     { href: '/outlet/inventory', label: 'Inventaris', icon: Box },
-    { href: '/outlet/restocks', label: 'Lainnya', icon: MoreHorizontal },
+    { href: '/outlet/settlement', label: 'Settlement', icon: Banknote },
+    { href: '/outlet/more', label: 'Lainnya', icon: MoreHorizontal, match: ['/outlet/more', '/outlet/restocks', '/outlet/deliveries', '/outlet/returns', '/outlet/exchanges', '/outlet/settlement-payments'] },
 ];
 
 export default function OutletBottomNav() {
@@ -16,7 +16,7 @@ export default function OutletBottomNav() {
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)]">
             <div className="mx-auto grid h-14 max-w-lg grid-cols-5">
                 {navItems.map((item) => {
-                    const active = url === item.href || url.startsWith(`${item.href}/`);
+                    const active = (item.match ?? [item.href]).some((href) => url === href || url.startsWith(`${href}/`));
                     const Icon = item.icon;
 
                     return (

@@ -4,21 +4,28 @@ namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
 use App\Models\Delivery;
+use App\Models\ExchangeRequest;
 use App\Models\Order;
 use App\Models\OutletInventory;
+use App\Models\OutletPayable;
 use App\Models\RestockRequest;
+use App\Models\ReturnRequest;
+use App\Models\SettlementPayment;
 use App\Services\DeliveryIntelligenceService;
+use App\Services\SettlementReconciliationService;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(DeliveryIntelligenceService $intelligence): Response
+    public function __invoke(DeliveryIntelligenceService $intelligence, SettlementReconciliationService $reconciliationService): Response
     {
         $outlet = auth()->user()->outlet;
         abort_unless($outlet, 403);
 
         $outletDeliveries = Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id));
+
+        $reconciliation = $reconciliationService->getOutletReconciliation($outlet->id);
 
         return Inertia::render('outlet/dashboard', [
             'outlet' => $outlet,
@@ -33,6 +40,18 @@ class DashboardController extends Controller
                 'pendingRestocks' => RestockRequest::where('outlet_id', $outlet->id)
                     ->whereIn('status', ['requested', 'preparing', 'shipped'])
                     ->count(),
+                'pendingReturns' => ReturnRequest::where('outlet_id', $outlet->id)
+                    ->whereIn('status', ['submitted', 'approved'])
+                    ->count(),
+                'pendingExchanges' => ExchangeRequest::where('outlet_id', $outlet->id)
+                    ->whereIn('status', ['submitted', 'approved', 'preparing', 'shipped'])
+                    ->count(),
+                'returnValue' => ReturnRequest::where('outlet_id', $outlet->id)
+                    ->whereIn('status', ['submitted', 'approved', 'received_at_center'])
+                    ->sum('total_value'),
+                'exchangeValue' => ExchangeRequest::where('outlet_id', $outlet->id)
+                    ->whereIn('status', ['submitted', 'approved', 'preparing', 'shipped'])
+                    ->sum('exchange_value'),
             ],
             'lowStockItems' => OutletInventory::with('product:id,name,unit')
                 ->where('outlet_id', $outlet->id)
@@ -60,6 +79,40 @@ class DashboardController extends Controller
                 ->latest()
                 ->limit(5)
                 ->get(['id', 'order_code', 'status', 'customer_name', 'total', 'created_at']),
+            'settlementStats' => [
+                'outstanding' => (float) $reconciliation['outstanding'],
+                'pendingPayments' => (float) $reconciliation['pending_payments'],
+                'verifiedPayments' => (float) $reconciliation['verified_payments'],
+                'margin' => (float) OutletPayable::where('outlet_id', $outlet->id)
+                    ->where('type', 'sale')
+                    ->whereMonth('created_at', now()->month)
+                    ->whereYear('created_at', now()->year)
+                    ->sum('outlet_margin'),
+            ],
+        ]);
+    }
+
+    public function more(): Response
+    {
+        $outlet = auth()->user()->outlet;
+        abort_unless($outlet, 403);
+
+        return Inertia::render('outlet/more', [
+            'pendingReturns' => ReturnRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['submitted', 'approved'])
+                ->count(),
+            'pendingExchanges' => ExchangeRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['submitted', 'approved', 'preparing', 'shipped'])
+                ->count(),
+            'pendingRestocks' => RestockRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['requested', 'preparing', 'shipped'])
+                ->count(),
+            'activeDeliveries' => Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
+                ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
+                ->count(),
+            'pendingSettlementPayments' => \App\Models\SettlementPayment::where('outlet_id', $outlet->id)
+                ->where('status', \App\Models\SettlementPayment::STATUS_PENDING)
+                ->count(),
         ]);
     }
 

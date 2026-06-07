@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { Package } from 'lucide-react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import DataTable from '@/components/ui/data-table';
 import EmptyState from '@/components/ui/empty-state';
@@ -22,7 +23,7 @@ export default function ProductsIndex({ products }: any) {
             {/* Mobile: cards */}
             <div className="lg:hidden">
                 {products.data.length === 0 ? (
-                    <EmptyState icon="📦" title="Belum ada produk" description="Tambah produk pertama untuk mulai berjualan." action={{ label: 'Tambah Produk', href: '/owner/products/create' }} />
+                    <EmptyState icon={<Package className="h-8 w-8 text-slate-400" />} title="Belum ada produk" description="Tambah produk pertama untuk mulai berjualan." action={{ label: 'Tambah Produk', href: '/owner/products/create' }} />
                 ) : (
                     <div className="space-y-2">
                         {products.data.map((product: any) => (

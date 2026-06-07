@@ -1,4 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
+import type { ReactNode } from 'react';
+import { Milk, Zap, Handshake } from 'lucide-react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 
 export default function About() {
@@ -45,9 +47,9 @@ export default function About() {
             <section className="mt-6">
                 <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Nilai Kami</h2>
                 <div className="mt-2 space-y-2">
-                    <ValueCard icon="🥛" title="Kesegaran" description="Produk susu kambing segar langsung dari peternakan terpercaya." />
-                    <ValueCard icon="⚡" title="Kecepatan" description="Pengiriman cepat melalui jaringan outlet dan kurir terdekat." />
-                    <ValueCard icon="🤝" title="Kepercayaan" description="Transparansi penuh dari pemesanan hingga pengiriman." />
+                    <ValueCard icon={<Milk className="h-5 w-5 text-slate-600" />} title="Kesegaran" description="Produk susu kambing segar langsung dari peternakan terpercaya." />
+                    <ValueCard icon={<Zap className="h-5 w-5 text-slate-600" />} title="Kecepatan" description="Pengiriman cepat melalui jaringan outlet dan kurir terdekat." />
+                    <ValueCard icon={<Handshake className="h-5 w-5 text-slate-600" />} title="Kepercayaan" description="Transparansi penuh dari pemesanan hingga pengiriman." />
                 </div>
             </section>
 
@@ -69,10 +71,10 @@ export default function About() {
     );
 }
 
-function ValueCard({ icon, title, description }: { icon: string; title: string; description: string }) {
+function ValueCard({ icon, title, description }: { icon: ReactNode; title: string; description: string }) {
     return (
         <div className="flex items-start gap-3 rounded-xl border border-zinc-100 bg-white p-4">
-            <span className="text-lg">{icon}</span>
+            <span className="text-slate-600">{icon}</span>
             <div>
                 <div className="text-sm font-semibold text-slate-900">{title}</div>
                 <div className="mt-0.5 text-xs leading-relaxed text-slate-500">{description}</div>

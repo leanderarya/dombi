@@ -62,6 +62,29 @@ const DISTRIBUTION_STATUSES: Record<string, StatusConfig> = {
     completed: { label: 'Selesai', variant: 'success' },
 };
 
+// ─── RETURN STATUSES ──────────────────────────────────────────
+
+const RETURN_STATUSES: Record<string, StatusConfig> = {
+    draft: { label: 'Draft', variant: 'neutral' },
+    submitted: { label: 'Diajukan', variant: 'warning' },
+    approved: { label: 'Disetujui', variant: 'info' },
+    rejected: { label: 'Ditolak', variant: 'danger' },
+    received_at_center: { label: 'Diterima Pusat', variant: 'info' },
+    completed: { label: 'Selesai', variant: 'success' },
+};
+
+// ─── EXCHANGE STATUSES ────────────────────────────────────────
+
+const EXCHANGE_STATUSES: Record<string, StatusConfig> = {
+    submitted: { label: 'Diajukan', variant: 'warning' },
+    approved: { label: 'Disetujui', variant: 'info' },
+    rejected: { label: 'Ditolak', variant: 'danger' },
+    preparing: { label: 'Disiapkan', variant: 'info' },
+    shipped: { label: 'Dikirim', variant: 'info' },
+    received: { label: 'Diterima', variant: 'success' },
+    completed: { label: 'Selesai', variant: 'success' },
+};
+
 // ─── HELPERS ───────────────────────────────────────────────────
 
 export function getOrderStatus(status: string): StatusConfig {
@@ -78,6 +101,14 @@ export function getRestockStatus(status: string): StatusConfig {
 
 export function getDistributionStatus(status: string): StatusConfig {
     return DISTRIBUTION_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
+}
+
+export function getReturnStatus(status: string): StatusConfig {
+    return RETURN_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
+}
+
+export function getExchangeStatus(status: string): StatusConfig {
+    return EXCHANGE_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
 }
 
 export type { StatusConfig, StatusVariant };

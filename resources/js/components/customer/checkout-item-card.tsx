@@ -1,4 +1,5 @@
 import { formatCurrency } from '@/lib/format';
+import { Package } from 'lucide-react';
 
 interface Props {
     name: string;
@@ -17,7 +18,7 @@ export default function CheckoutItemCard({ name, price, quantity, image, onQuant
                 {image ? (
                     <img src={image} alt={name} className="h-full w-full object-cover" />
                 ) : (
-                    <span className="text-xl opacity-30">🥛</span>
+                    <Package className="h-6 w-6 text-zinc-400" />
                 )}
             </div>
 

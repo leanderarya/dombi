@@ -1,8 +1,11 @@
+import type { ReactNode } from 'react';
+import { CreditCard, Banknote } from 'lucide-react';
+
 interface PaymentOption {
     id: string;
     label: string;
     description: string;
-    icon: string;
+    icon: ReactNode;
 }
 
 interface Props {
@@ -11,8 +14,8 @@ interface Props {
 }
 
 const options: PaymentOption[] = [
-    { id: 'dombi_pay', label: 'Dombi Pay (E-Wallet)', description: 'Bayar via saldo Dombi', icon: '💳' },
-    { id: 'cod', label: 'Cash on Delivery', description: 'Bayar saat diterima', icon: '💵' },
+    { id: 'dombi_pay', label: 'Dombi Pay (E-Wallet)', description: 'Bayar via saldo Dombi', icon: <CreditCard className="h-5 w-5 text-slate-600" /> },
+    { id: 'cod', label: 'Cash on Delivery', description: 'Bayar saat diterima', icon: <Banknote className="h-5 w-5 text-slate-600" /> },
 ];
 
 export default function PaymentMethodCard({ selected, onChange }: Props) {

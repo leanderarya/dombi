@@ -26,6 +26,10 @@ use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\RestockController as OwnerRestockController;
 use App\Http\Controllers\Owner\StockDistributionController as OwnerStockDistributionController;
 use App\Http\Controllers\Owner\StockMovementController;
+use App\Http\Controllers\Owner\ReturnController as OwnerReturnController;
+use App\Http\Controllers\Owner\ExchangeController as OwnerExchangeController;
+use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
+use App\Http\Controllers\Outlet\ExchangeController as OutletExchangeController;
 use App\Http\Controllers\SystemController;
 use Illuminate\Support\Facades\Route;
 
@@ -108,6 +112,23 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
     Route::get('settlement-payments', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
     Route::post('settlement-payments/{payment}/verify', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'verify'])->name('settlement-payments.verify');
     Route::post('settlement-payments/{payment}/reject', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'reject'])->name('settlement-payments.reject');
+
+    // Returns
+    Route::get('returns', [OwnerReturnController::class, 'index'])->name('returns.index');
+    Route::get('returns/{returnRequest}', [OwnerReturnController::class, 'show'])->name('returns.show');
+    Route::post('returns/{returnRequest}/approve', [OwnerReturnController::class, 'approve'])->name('returns.approve');
+    Route::post('returns/{returnRequest}/reject', [OwnerReturnController::class, 'reject'])->name('returns.reject');
+    Route::post('returns/{returnRequest}/mark-received', [OwnerReturnController::class, 'markReceived'])->name('returns.mark-received');
+    Route::post('returns/{returnRequest}/complete', [OwnerReturnController::class, 'complete'])->name('returns.complete');
+
+    // Exchanges
+    Route::get('exchanges', [OwnerExchangeController::class, 'index'])->name('exchanges.index');
+    Route::get('exchanges/{exchangeRequest}', [OwnerExchangeController::class, 'show'])->name('exchanges.show');
+    Route::post('exchanges/{exchangeRequest}/approve', [OwnerExchangeController::class, 'approve'])->name('exchanges.approve');
+    Route::post('exchanges/{exchangeRequest}/reject', [OwnerExchangeController::class, 'reject'])->name('exchanges.reject');
+    Route::post('exchanges/{exchangeRequest}/mark-preparing', [OwnerExchangeController::class, 'markPreparing'])->name('exchanges.mark-preparing');
+    Route::post('exchanges/{exchangeRequest}/mark-shipped', [OwnerExchangeController::class, 'markShipped'])->name('exchanges.mark-shipped');
+    Route::post('exchanges/{exchangeRequest}/complete', [OwnerExchangeController::class, 'complete'])->name('exchanges.complete');
 });
 
 Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->group(function (): void {
@@ -146,6 +167,7 @@ Route::middleware(['customer.or.recovered'])->prefix('customer')->name('customer
 
 Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')->name('outlet.')->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
+    Route::get('/more', [DashboardController::class, 'more'])->name('more');
     Route::get('/inventory', OutletInventoryController::class)->name('inventory');
     Route::get('/deliveries', [OutletDeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('/deliveries/{delivery}', [OutletDeliveryController::class, 'show'])->name('deliveries.show');
@@ -167,6 +189,19 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     // Settlement Payments
     Route::get('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
     Route::post('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'store'])->name('settlement-payments.store');
+
+    // Returns
+    Route::get('/returns', [OutletReturnController::class, 'index'])->name('returns.index');
+    Route::get('/returns/create', [OutletReturnController::class, 'create'])->name('returns.create');
+    Route::post('/returns', [OutletReturnController::class, 'store'])->name('returns.store');
+    Route::get('/returns/{returnRequest}', [OutletReturnController::class, 'show'])->name('returns.show');
+
+    // Exchanges
+    Route::get('/exchanges', [OutletExchangeController::class, 'index'])->name('exchanges.index');
+    Route::get('/exchanges/create', [OutletExchangeController::class, 'create'])->name('exchanges.create');
+    Route::post('/exchanges', [OutletExchangeController::class, 'store'])->name('exchanges.store');
+    Route::get('/exchanges/{exchangeRequest}', [OutletExchangeController::class, 'show'])->name('exchanges.show');
+    Route::post('/exchanges/{exchangeRequest}/confirm-received', [OutletExchangeController::class, 'confirmReceived'])->name('exchanges.confirm-received');
 });
 
 Route::middleware(['auth', 'role:courier', 'password.changed'])->prefix('courier')->name('courier.')->group(function (): void {

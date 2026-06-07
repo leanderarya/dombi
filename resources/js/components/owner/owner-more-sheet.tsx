@@ -18,6 +18,8 @@ interface MenuItem {
 const managementItems: MenuItem[] = [
     { href: '/owner/products', title: 'Kelola Produk', subtitle: 'Produk, harga, dan status aktif', icon: ProductIcon },
     { href: '/owner/outlets', title: 'Kelola Outlet', subtitle: 'Data outlet dan lokasi operasional', icon: OutletIcon },
+    { href: '/owner/returns', title: 'Returns', subtitle: 'Review return request dari outlet', icon: ReturnIcon },
+    { href: '/owner/exchanges', title: 'Exchanges', subtitle: 'Review permintaan tukar produk', icon: ExchangeIcon },
     { href: '/owner/reports', title: 'Reports', subtitle: 'Ringkasan performa operasional', icon: ReportIcon },
 ];
 
@@ -141,6 +143,14 @@ function OutletIcon({ className }: { className?: string }) {
 
 function ReportIcon({ className }: { className?: string }) {
     return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 17v-6m4 6V7m4 10v-3M5 21h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>;
+}
+
+function ReturnIcon({ className }: { className?: string }) {
+    return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10M7 12h10M7 17h6M7 3v4m0 0l-3-3m3 3l3-3M5 21h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>;
+}
+
+function ExchangeIcon({ className }: { className?: string }) {
+    return <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4 7h11m0 0l-3-3m3 3l-3 3M20 17H9m0 0l3-3m-3 3l3 3" /></svg>;
 }
 
 function StockMovementIcon({ className }: { className?: string }) {

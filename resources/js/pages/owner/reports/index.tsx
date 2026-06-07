@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Download } from 'lucide-react';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-header';
@@ -28,7 +29,7 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
             headerRight={
                 <>
                     <button onClick={handleExport} className="flex h-10 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-600 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
-                        📥 CSV
+                        <Download className="h-4 w-4" /> CSV
                     </button>
                     <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
                 </>

@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Delivery;
+use App\Models\ExchangeRequest;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\ProductVariant;
+use App\Models\ReturnRequest;
 use App\Models\RestockRequest;
 use App\Models\StockMovement;
 use App\Services\DeliveryIntelligenceService;
@@ -32,6 +34,8 @@ class DashboardController extends Controller
                 'failedDeliveries' => Delivery::where('status', 'failed')->count(),
                 'lowStocks' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= minimum_stock')->count(),
                 'pendingRestocks' => RestockRequest::where('status', 'requested')->count(),
+                'pendingReturns' => ReturnRequest::where('status', ReturnRequest::STATUS_SUBMITTED)->count(),
+                'pendingExchanges' => ExchangeRequest::where('status', ExchangeRequest::STATUS_SUBMITTED)->count(),
             ],
             'deliveryStats' => [
                 'waitingForCourier' => Order::where('status', 'ready_for_pickup')->whereDoesntHave('delivery')->count(),
@@ -72,6 +76,16 @@ class DashboardController extends Controller
                     ->latest()
                     ->limit(5)
                     ->get(['id', 'outlet_id', 'status', 'created_at']),
+                'pendingReturns' => ReturnRequest::where('status', ReturnRequest::STATUS_SUBMITTED)
+                    ->with(['outlet:id,name', 'items.variant:id,name,product_family_id', 'items.variant.family:id,name'])
+                    ->latest()
+                    ->limit(5)
+                    ->get(['id', 'outlet_id', 'reason', 'total_value', 'created_at']),
+                'pendingExchanges' => ExchangeRequest::where('status', ExchangeRequest::STATUS_SUBMITTED)
+                    ->with(['outlet:id,name', 'returnRequest:id', 'items.variant:id,name,product_family_id', 'items.variant.family:id,name'])
+                    ->latest()
+                    ->limit(5)
+                    ->get(['id', 'outlet_id', 'return_request_id', 'exchange_value', 'created_at']),
             ],
             'recentActivity' => StockMovement::with(['outlet:id,name', 'variant:id,name,product_family_id', 'variant.family:id,name', 'creator:id,name'])
                 ->latest()

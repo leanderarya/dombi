@@ -20,7 +20,7 @@ class SettlementReconciliationService
         $from = $from ?? now()->startOfMonth();
         $to = $to ?? now()->endOfDay();
 
-        // Center share from sales
+        // Center share from sales only (matching SettlementService::getOutletSummary logic)
         $centerShare = OutletPayable::query()
             ->where('outlet_id', $outletId)
             ->where('type', 'sale')
@@ -47,7 +47,14 @@ class SettlementReconciliationService
             ->whereBetween('payment_date', [$from->toDateString(), $to->toDateString()])
             ->sum('amount');
 
-        $outstanding = (float) $centerShare - (float) $verifiedPayments;
+        // Adjustments (returns + exchanges) for this period
+        $adjustments = (float) OutletPayable::query()
+            ->where('outlet_id', $outletId)
+            ->where('type', 'adjustment')
+            ->whereBetween('created_at', [$from, $to])
+            ->sum('amount');
+
+        $outstanding = (float) $centerShare - (float) $verifiedPayments + $adjustments;
 
         // Last payment
         $lastPayment = SettlementPayment::query()
@@ -61,6 +68,7 @@ class SettlementReconciliationService
             'verified_payments' => (float) $verifiedPayments,
             'pending_payments' => (float) $pendingPayments,
             'rejected_payments' => (float) $rejectedPayments,
+            'adjustments' => $adjustments,
             'outstanding' => max(0, $outstanding),
             'last_payment' => $lastPayment ? [
                 'date' => $lastPayment->payment_date->toDateString(),

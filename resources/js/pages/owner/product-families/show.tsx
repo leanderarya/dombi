@@ -10,6 +10,7 @@ interface Variant {
     sku: string | null;
     center_price: number;
     selling_price: number;
+    center_stock: number;
     is_active: boolean;
     order_items_count: number;
 }
@@ -38,6 +39,7 @@ export default function ProductFamilyShow({ family }: Props) {
         sku: '',
         center_price: '',
         selling_price: '',
+        center_stock: '',
         is_active: true,
     });
 
@@ -71,6 +73,7 @@ export default function ProductFamilyShow({ family }: Props) {
             sku: variant.sku ?? '',
             center_price: String(variant.center_price),
             selling_price: String(variant.selling_price),
+            center_stock: String(variant.center_stock),
             is_active: variant.is_active,
         });
     };
@@ -177,6 +180,17 @@ export default function ProductFamilyShow({ family }: Props) {
                                     />
                                 </div>
                             </div>
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-zinc-500">Stok Pusat</label>
+                                <input
+                                    type="number"
+                                    value={data.center_stock}
+                                    onChange={(e) => setData('center_stock', e.target.value)}
+                                    required
+                                    min="0"
+                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                />
+                            </div>
                             {editingVariant && (
                                 <div>
                                     <label className="flex items-center gap-2">
@@ -224,6 +238,7 @@ export default function ProductFamilyShow({ family }: Props) {
                                         <div className="mt-1 flex gap-4 text-xs text-zinc-500">
                                             <span>Center: {formatCurrency(variant.center_price)}</span>
                                             <span>Jual: {formatCurrency(variant.selling_price)}</span>
+                                            <span>Stok Pusat: {variant.center_stock}</span>
                                             <span className="text-emerald-600">
                                                 Margin: {formatCurrency(variant.selling_price - variant.center_price)}
                                             </span>

@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { Package } from 'lucide-react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { orderProgressIndex, orderStatusLabel } from '@/lib/customer-status';
 import { formatCurrency } from '@/lib/format';
@@ -57,7 +58,7 @@ export default function Home({ families, activeOrders, lastOrder }: any) {
                     <div className="mt-2 rounded-xl border border-zinc-100 bg-white p-4">
                         <div className="flex items-center gap-3">
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-50">
-                                <span className="text-xl">🥛</span>
+                                <Package className="h-6 w-6 text-slate-400" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="truncate text-sm font-semibold text-slate-900">
@@ -82,7 +83,7 @@ export default function Home({ families, activeOrders, lastOrder }: any) {
             {!lastOrder && !activeOrder && (
                 <section>
                     <div className="rounded-xl border border-zinc-100 bg-white p-5 text-center">
-                        <span className="text-3xl">🥛</span>
+                        <Package className="mx-auto h-10 w-10 text-slate-400" />
                         <p className="mt-2 text-sm font-semibold text-slate-900">Susu kambing segar siap diantar</p>
                         <p className="mt-1 text-xs text-slate-500">Pilih produk dan pesan langsung ke alamat kamu.</p>
                         <Link href="/customer/products" className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white active:bg-emerald-800">

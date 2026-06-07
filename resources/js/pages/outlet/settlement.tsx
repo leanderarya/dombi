@@ -1,5 +1,13 @@
-import { Head, router, Link } from '@inertiajs/react';
-import { formatCurrency } from '@/lib/format';
+import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
+import { formatCurrency, formatDate } from '@/lib/format';
+import OutletLayout from '@/layouts/outlet-layout';
+import SectionCard from '@/components/ui/section-card';
+import StatusBadge from '@/components/ui/status-badge';
+import BottomSheet from '@/components/ui/bottom-sheet';
+import StickyActionBar from '@/components/ui/sticky-action-bar';
+import EmptyState from '@/components/ui/empty-state';
+import { ChartColumn } from 'lucide-react';
 
 interface TopProduct {
     product_name: string;
@@ -24,6 +32,7 @@ interface Reconciliation {
     pending_payments: number;
     rejected_payments: number;
     outstanding: number;
+    adjustments: number;
     last_payment: {
         date: string;
         amount: number;
@@ -31,9 +40,33 @@ interface Reconciliation {
     } | null;
 }
 
+interface Payment {
+    id: number;
+    amount: number;
+    reference_number: string;
+    payment_date: string;
+    status: string;
+    notes: string | null;
+    rejection_reason: string | null;
+    verifier: string | null;
+    verified_at: string | null;
+}
+
+interface TimelineEntry {
+    id: number;
+    type: string;
+    amount: number;
+    center_share: number;
+    outlet_margin: number;
+    notes: string | null;
+    created_at: string;
+}
+
 interface Props {
     summary: SettlementSummary;
     reconciliation: Reconciliation;
+    payments: Payment[];
+    timeline: TimelineEntry[];
     period: string;
     periodRange: { from: string; to: string };
 }
@@ -44,106 +77,403 @@ const periods = [
     { key: 'month', label: 'Bulan Ini' },
 ];
 
-export default function OutletSettlement({ summary, reconciliation, period }: Props) {
+const statusLabels: Record<string, string> = {
+    pending_verification: 'Menunggu Verifikasi',
+    verified: 'Terverifikasi',
+    rejected: 'Ditolak',
+};
+
+const statusVariants: Record<string, 'success' | 'warning' | 'danger'> = {
+    pending_verification: 'warning',
+    verified: 'success',
+    rejected: 'danger',
+};
+
+export default function OutletSettlement({ summary, reconciliation, payments, timeline, period }: Props) {
+    const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
+
     const handlePeriodChange = (newPeriod: string) => {
         router.get('/outlet/settlement', { period: newPeriod }, { preserveState: true });
     };
 
+    const hasPayments = payments.length > 0;
+    const hasTimeline = timeline.length > 0;
+    const hasSales = summary.orders_count > 0;
+    const isSettled = reconciliation.outstanding <= 0;
+
     return (
-        <>
+        <OutletLayout title="Settlement" subtitle="Pantau setoran ke pusat dan margin outlet">
             <Head title="Settlement" />
 
-            <div className="p-4">
-                <h1 className="mb-4 text-lg font-bold text-slate-900">Settlement</h1>
+            {/* Period Selector */}
+            <div className="mb-4 flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                {periods.map((p) => (
+                    <button
+                        key={p.key}
+                        onClick={() => handlePeriodChange(p.key)}
+                        className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                            period === p.key
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-zinc-100 text-zinc-600 active:bg-zinc-200'
+                        }`}
+                    >
+                        {p.label}
+                    </button>
+                ))}
+            </div>
 
-                {/* Period Selector */}
-                <div className="mb-4 flex gap-2 overflow-x-auto pb-2">
-                    {periods.map((p) => (
-                        <button
-                            key={p.key}
-                            onClick={() => handlePeriodChange(p.key)}
-                            className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                                period === p.key
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                            }`}
-                        >
-                            {p.label}
-                        </button>
-                    ))}
-                </div>
-
-                {/* Outstanding */}
-                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-center">
-                    <div className="text-sm text-red-700">Total yang Harus Dibayar ke Center</div>
-                    <div className="mt-1 text-3xl font-bold text-red-600">{formatCurrency(reconciliation.outstanding)}</div>
-                </div>
-
-                {/* Financial Summary */}
-                <div className="mb-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                        <div className="text-xs text-zinc-500">Pendapatan Kotor</div>
-                        <div className="mt-1 text-lg font-bold text-slate-900">{formatCurrency(summary.gross_revenue)}</div>
-                        <div className="mt-0.5 text-xs text-zinc-400">{summary.orders_count} pesanan</div>
-                    </div>
-                    <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                        <div className="text-xs text-zinc-500">Margin Saya</div>
-                        <div className="mt-1 text-lg font-bold text-emerald-600">{formatCurrency(summary.outlet_margin)}</div>
-                    </div>
-                    <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                        <div className="text-xs text-zinc-500">Sudah Dibayar</div>
-                        <div className="mt-1 text-lg font-bold text-emerald-600">{formatCurrency(reconciliation.verified_payments)}</div>
-                    </div>
-                    <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                        <div className="text-xs text-zinc-500">Menunggu Verifikasi</div>
-                        <div className="mt-1 text-lg font-bold text-amber-600">{formatCurrency(reconciliation.pending_payments)}</div>
+            {/* Hero Card */}
+            {isSettled ? (
+                <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                    <div className="flex items-center gap-2">
+                        <svg className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-sm font-semibold text-emerald-700">Tidak ada kewajiban setoran saat ini</span>
                     </div>
                 </div>
+            ) : (
+                <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-5">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Belum Disetor</div>
+                    <div className="mt-1 text-3xl font-bold tabular-nums text-red-600">
+                        {formatCurrency(reconciliation.outstanding)}
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500">
+                        Jumlah yang masih perlu disetor ke pusat.
+                    </div>
+                    <button
+                        onClick={() => setPaymentSheetOpen(true)}
+                        className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white active:bg-emerald-800"
+                    >
+                        Ajukan Pembayaran
+                    </button>
+                </div>
+            )}
 
-                {/* Last Payment */}
-                {reconciliation.last_payment && (
-                    <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
-                        <div className="text-xs text-zinc-500">Pembayaran Terakhir</div>
-                        <div className="mt-1 text-sm font-semibold text-slate-900">
-                            {formatCurrency(reconciliation.last_payment.amount)}
+            {/* Outstanding Breakdown Card */}
+            {hasSales && (
+                <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Rincian Kewajiban</div>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-slate-600">Kewajiban Awal</span>
+                            <span className="text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(reconciliation.center_share)}</span>
                         </div>
-                        <div className="text-xs text-zinc-400">
-                            {reconciliation.last_payment.reference} • {reconciliation.last_payment.date}
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-slate-600">Sudah Disetor</span>
+                            <span className="text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(reconciliation.verified_payments)}</span>
+                        </div>
+                        {reconciliation.adjustments !== 0 && (
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-slate-600">Penyesuaian</span>
+                                <span className={`text-sm font-semibold tabular-nums ${reconciliation.adjustments < 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                    {reconciliation.adjustments < 0 ? '- ' : ''}{formatCurrency(Math.abs(reconciliation.adjustments))}
+                                </span>
+                            </div>
+                        )}
+                        <div className="border-t border-zinc-200 pt-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-bold text-slate-900">Belum Disetor</span>
+                                <span className={`text-sm font-bold tabular-nums ${reconciliation.outstanding > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                    {formatCurrency(reconciliation.outstanding)}
+                                </span>
+                            </div>
                         </div>
                     </div>
-                )}
+                </div>
+            )}
 
-                {/* Top Products */}
-                {summary.top_products.length > 0 && (
-                    <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
-                        <div className="mb-3 text-sm font-semibold text-slate-900">Produk Terlaris</div>
-                        <div className="space-y-2">
-                            {summary.top_products.map((product, index) => (
-                                <div key={product.product_name} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-100 text-xs font-bold text-zinc-600">
-                                            {index + 1}
-                                        </span>
-                                        <span className="text-sm text-slate-900">{product.product_name}</span>
+            {/* KPI Grid */}
+            <div className="mb-4 grid grid-cols-2 gap-2">
+                <KpiCard label="Omset" value={summary.gross_revenue} />
+                <KpiCard label="Keuntungan Outlet" value={summary.outlet_margin} accent />
+                <KpiCard label="Sudah Disetor" value={reconciliation.verified_payments} />
+                <KpiCard
+                    label="Penyesuaian"
+                    value={Math.abs(reconciliation.adjustments)}
+                    highlight={reconciliation.adjustments < 0}
+                    negative={reconciliation.adjustments < 0}
+                />
+            </div>
+
+            {/* No Sales Empty State */}
+            {!hasSales && (
+                <div className="mb-4">
+                    <EmptyState
+                        icon={<ChartColumn className="h-8 w-8 text-slate-400" />}
+                        title="Belum ada penjualan"
+                        description="Belum ada penjualan pada periode ini."
+                    />
+                </div>
+            )}
+
+            {/* Payment History (above timeline) */}
+            {hasPayments && (
+                <SectionCard label="Riwayat Pembayaran" className="mb-4">
+                    <div className="mt-2 space-y-2">
+                        {payments.map((payment) => (
+                            <div key={payment.id} className="rounded-lg border border-zinc-100 bg-zinc-50 p-3">
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <div className="text-sm font-semibold text-slate-900">{formatCurrency(payment.amount)}</div>
+                                        <div className="text-[11px] text-zinc-400">{formatDate(payment.payment_date)}</div>
+                                        <div className="mt-0.5 text-xs text-zinc-500">{payment.reference_number}</div>
                                     </div>
-                                    <div className="text-right">
-                                        <div className="text-sm font-semibold text-slate-900">{formatCurrency(product.total_revenue)}</div>
-                                        <div className="text-xs text-zinc-400">{product.total_qty} unit</div>
+                                    <StatusBadge variant={statusVariants[payment.status]}>
+                                        {statusLabels[payment.status]}
+                                    </StatusBadge>
+                                </div>
+                                {payment.rejection_reason && (
+                                    <div className="mt-2 rounded-md bg-red-50 p-2 text-xs text-red-700">
+                                        Ditolak: {payment.rejection_reason}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </SectionCard>
+            )}
+
+            {!hasPayments && hasSales && (
+                <SectionCard label="Riwayat Pembayaran" className="mb-4">
+                    <div className="py-6 text-center text-sm text-zinc-500">
+                        Belum ada riwayat pembayaran.
+                    </div>
+                </SectionCard>
+            )}
+
+            {/* Aktivitas Settlement */}
+            {hasTimeline && (
+                <SectionCard label="Aktivitas Settlement" className="mb-4">
+                    <div className="mt-2 space-y-0">
+                        {timeline.map((entry, idx) => (
+                            <TimelineItem key={entry.id} entry={entry} isLast={idx === timeline.length - 1} />
+                        ))}
+                    </div>
+                </SectionCard>
+            )}
+
+            {/* Periode Saat Ini */}
+            {hasSales && (
+                <SectionCard label="Periode Saat Ini" className="mb-4">
+                    <div className="mt-2 space-y-2">
+                        <BreakdownRow label="Total Pesanan" value={summary.orders_count} isCurrency={false} />
+                        <BreakdownRow label="Unit Terjual" value={summary.units_sold} isCurrency={false} />
+                        <BreakdownRow label="Omset" value={summary.gross_revenue} />
+                        <BreakdownRow label="Kewajiban Awal" value={summary.center_share} />
+                        <BreakdownRow label="Keuntungan Outlet" value={summary.outlet_margin} />
+                        {reconciliation.adjustments !== 0 && (
+                            <BreakdownRow label="Penyesuaian Return/Exchange" value={reconciliation.adjustments} negative={reconciliation.adjustments < 0} />
+                        )}
+                    </div>
+                </SectionCard>
+            )}
+
+            {/* Top Products */}
+            {summary.top_products.length > 0 && (
+                <SectionCard label="Produk Terlaris" className="mb-24">
+                    <div className="mt-2 space-y-2">
+                        {summary.top_products.map((product, index) => (
+                            <div key={product.product_name} className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2.5">
+                                <div className="flex items-center gap-2.5">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-200 text-[11px] font-bold text-zinc-600">
+                                        {index + 1}
+                                    </span>
+                                    <div>
+                                        <div className="text-sm font-medium text-slate-900">{product.product_name}</div>
+                                        <div className="text-[11px] text-zinc-500">{product.total_qty} unit</div>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
+                                <div className="text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(product.total_revenue)}</div>
+                            </div>
+                        ))}
+                    </div>
+                </SectionCard>
+            )}
+
+            {/* Sticky Payment CTA */}
+            {hasSales && !isSettled && (
+                <StickyActionBar
+                    actions={[
+                        {
+                            label: 'Ajukan Pembayaran',
+                            onClick: () => setPaymentSheetOpen(true),
+                        },
+                    ]}
+                />
+            )}
+
+            {/* Payment Bottom Sheet */}
+            <PaymentSheet
+                open={paymentSheetOpen}
+                onClose={() => setPaymentSheetOpen(false)}
+                outstanding={reconciliation.outstanding}
+            />
+        </OutletLayout>
+    );
+}
+
+/* ── KPI Card ── */
+function KpiCard({ label, value, accent, highlight, negative }: { label: string; value: number; accent?: boolean; highlight?: boolean; negative?: boolean }) {
+    return (
+        <div className={`rounded-xl border p-3.5 ${
+            highlight && value > 0
+                ? 'border-emerald-200 bg-emerald-50'
+                : accent
+                    ? 'border-emerald-200 bg-emerald-50'
+                    : 'border-zinc-200 bg-white'
+        }`}>
+            <div className="text-[11px] font-medium text-slate-500">{label}</div>
+            <div className={`mt-1 text-base font-bold tabular-nums ${
+                highlight && value > 0
+                    ? 'text-emerald-700'
+                    : accent
+                        ? 'text-emerald-700'
+                        : 'text-slate-900'
+            }`}>
+                {negative ? '- ' : ''}{formatCurrency(value)}
+            </div>
+        </div>
+    );
+}
+
+/* ── Breakdown Row ── */
+function BreakdownRow({ label, value, negative, muted, isCurrency = true }: { label: string; value: number; negative?: boolean; muted?: boolean; isCurrency?: boolean }) {
+    return (
+        <div className="flex items-center justify-between">
+            <span className={`text-sm ${muted ? 'text-zinc-400' : 'text-slate-600'}`}>{label}</span>
+            <span className={`text-sm font-semibold tabular-nums ${negative ? 'text-emerald-600' : muted ? 'text-zinc-400' : 'text-slate-900'}`}>
+                {negative && value > 0 ? '- ' : ''}{isCurrency ? formatCurrency(Math.abs(value)) : value}
+            </span>
+        </div>
+    );
+}
+
+/* ── Timeline Item ── */
+function TimelineItem({ entry, isLast }: { entry: TimelineEntry; isLast: boolean }) {
+    const isCredit = entry.type === 'sale';
+    const isAdjustment = entry.type === 'adjustment';
+
+    const typeLabels: Record<string, string> = {
+        sale: 'Penjualan',
+        settlement: 'Pembayaran',
+        adjustment: 'Penyesuaian Return/Exchange',
+    };
+
+    return (
+        <div className="flex gap-3">
+            {/* Timeline line */}
+            <div className="flex flex-col items-center">
+                <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${isCredit ? 'bg-emerald-500' : isAdjustment ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                {!isLast && <div className="w-px flex-1 bg-zinc-200" />}
+            </div>
+
+            <div className={`flex-1 ${isLast ? 'pb-0' : 'pb-4'}`}>
+                <div className="flex items-start justify-between">
+                    <div>
+                        <div className="text-sm font-medium text-slate-900">{typeLabels[entry.type] ?? entry.type}</div>
+                        {entry.notes && <div className="text-[11px] text-zinc-500">{entry.notes}</div>}
+                    </div>
+                    <div className={`text-sm font-bold tabular-nums ${isCredit ? 'text-slate-900' : 'text-emerald-600'}`}>
+                        {isCredit ? '+ ' : '- '}{formatCurrency(Math.abs(entry.amount))}
+                    </div>
+                </div>
+                <div className="mt-0.5 text-[11px] text-zinc-400">{formatDate(entry.created_at)}</div>
+            </div>
+        </div>
+    );
+}
+
+/* ── Payment Bottom Sheet ── */
+function PaymentSheet({ open, onClose, outstanding }: { open: boolean; onClose: () => void; outstanding: number }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        amount: '',
+        reference_number: '',
+        payment_date: new Date().toISOString().split('T')[0],
+        notes: '',
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post('/outlet/settlement-payments', {
+            onSuccess: () => {
+                reset();
+                onClose();
+            },
+        });
+    };
+
+    return (
+        <BottomSheet open={open} onClose={onClose} title="Ajukan Pembayaran">
+            <form onSubmit={handleSubmit} className="space-y-4">
+                {outstanding > 0 && (
+                    <div className="rounded-lg bg-zinc-50 p-3 text-center">
+                        <div className="text-[11px] font-medium text-zinc-500">Belum Disetor</div>
+                        <div className="mt-0.5 text-lg font-bold text-slate-900">{formatCurrency(outstanding)}</div>
                     </div>
                 )}
 
-                {/* Payment Link */}
-                <Link
-                    href="/outlet/settlement-payments"
-                    className="block w-full rounded-xl bg-emerald-600 py-3 text-center text-sm font-medium text-white hover:bg-emerald-700"
+                <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Nominal (Rp)</label>
+                    <input
+                        type="number"
+                        value={data.amount}
+                        onChange={(e) => setData('amount', e.target.value)}
+                        min="1"
+                        required
+                        className="w-full rounded-lg border border-zinc-200 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        placeholder="Masukkan nominal"
+                    />
+                    {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount}</p>}
+                </div>
+
+                <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Referensi Transfer</label>
+                    <input
+                        type="text"
+                        value={data.reference_number}
+                        onChange={(e) => setData('reference_number', e.target.value)}
+                        required
+                        maxLength={100}
+                        className="w-full rounded-lg border border-zinc-200 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        placeholder="No. referensi transfer"
+                    />
+                    {errors.reference_number && <p className="mt-1 text-xs text-red-600">{errors.reference_number}</p>}
+                </div>
+
+                <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Tanggal Transfer</label>
+                    <input
+                        type="date"
+                        value={data.payment_date}
+                        onChange={(e) => setData('payment_date', e.target.value)}
+                        required
+                        max={new Date().toISOString().split('T')[0]}
+                        className="w-full rounded-lg border border-zinc-200 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                    />
+                    {errors.payment_date && <p className="mt-1 text-xs text-red-600">{errors.payment_date}</p>}
+                </div>
+
+                <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Catatan (opsional)</label>
+                    <textarea
+                        value={data.notes}
+                        onChange={(e) => setData('notes', e.target.value)}
+                        maxLength={500}
+                        rows={2}
+                        className="w-full rounded-lg border border-zinc-200 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        placeholder="Transfer via BCA..."
+                    />
+                </div>
+
+                <button
+                    type="submit"
+                    disabled={processing}
+                    className="flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white active:bg-emerald-800 disabled:bg-zinc-300"
                 >
-                    Bayar / Lihat Riwayat Pembayaran
-                </Link>
-            </div>
-        </>
+                    {processing ? 'Mengirim...' : 'Kirim Bukti Pembayaran'}
+                </button>
+            </form>
+        </BottomSheet>
     );
 }

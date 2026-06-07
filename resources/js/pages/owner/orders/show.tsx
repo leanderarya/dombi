@@ -1,6 +1,6 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Package } from 'lucide-react';
 import OrderStatusChip from '@/components/owner/order-status-chip';
 import OwnerBottomNav from '@/components/owner/owner-bottom-nav';
 import OwnerMobileHeader from '@/components/owner/owner-mobile-header';
@@ -150,7 +150,7 @@ function MobileView({ order, reservedStocks, couriers }: any) {
                             const stockImpact = reservedStocks.find((s: any) => s.product_id === item.product_id);
                             return (
                                 <div key={item.id} className="flex items-center gap-3 border-b border-slate-50 py-2 last:border-b-0 last:pb-0 first:pt-0">
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-50 text-xs">🥛</div>
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-50"><Package className="h-4 w-4 text-slate-400" /></div>
                                     <div className="min-w-0 flex-1">
                                         <div className="text-xs font-semibold text-slate-900">{item.product_name}</div>
                                         {stockImpact && (

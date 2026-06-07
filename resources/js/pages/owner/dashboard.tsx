@@ -5,7 +5,7 @@ import DeliveryHealthScoreCard from '@/components/owner/delivery-health-score-ca
 import FailureReasonsCard from '@/components/owner/failure-reasons-card';
 import KpiCard from '@/components/owner/kpi-card';
 import OldestDeliveriesCard from '@/components/owner/oldest-deliveries-card';
-import OperationalAlertCard, { AlertTruckIcon, AlertInventoryIcon, AlertRestockIcon } from '@/components/owner/operational-alert-card';
+import OperationalAlertCard, { AlertTruckIcon, AlertInventoryIcon, AlertRestockIcon, AlertReturnIcon, AlertExchangeIcon } from '@/components/owner/operational-alert-card';
 import OutletHealthCard from '@/components/owner/outlet-health-card';
 import OwnerBottomNav from '@/components/owner/owner-bottom-nav';
 import QuickActionCard from '@/components/owner/quick-action-card';
@@ -35,7 +35,7 @@ export default function Dashboard({ stats, deliveryStats, intelligence, alerts, 
 }
 
 function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentActivity }: any) {
-    const hasAlerts = alerts.failedDeliveries.length > 0 || alerts.lowStockItems.length > 0 || alerts.pendingRestocks.length > 0;
+    const hasAlerts = alerts.failedDeliveries.length > 0 || alerts.lowStockItems.length > 0 || alerts.pendingRestocks.length > 0 || alerts.pendingReturns.length > 0 || alerts.pendingExchanges.length > 0;
 
     const activityItems = recentActivity.slice(0, 5).map((m: any) => ({
         id: m.id,
@@ -72,6 +72,26 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
                             {alerts.pendingRestocks.length > 0 && (
                                 <OperationalAlertCard href="/owner/restocks?status=requested" icon={<AlertRestockIcon />} title={`${alerts.pendingRestocks.length} Restock Pending`} subtitle="Awaiting approval" count={alerts.pendingRestocks.length} severity="info" />
                             )}
+                            {alerts.pendingReturns.map((item: any) => (
+                                <OperationalAlertCard
+                                    key={`return-${item.id}`}
+                                    href={`/owner/returns/${item.id}`}
+                                    icon={<AlertReturnIcon />}
+                                    title={`${item.outlet?.name} Return Request`}
+                                    subtitle={`${firstVariantLabel(item.items)} · ${formatCompactQuantity(item.items)}`}
+                                    severity="warning"
+                                />
+                            ))}
+                            {alerts.pendingExchanges.map((item: any) => (
+                                <OperationalAlertCard
+                                    key={`exchange-${item.id}`}
+                                    href={`/owner/exchanges/${item.id}`}
+                                    icon={<AlertExchangeIcon />}
+                                    title={`${item.outlet?.name} Exchange Request`}
+                                    subtitle={`${firstVariantLabel(item.items)} · ${formatCompactQuantity(item.items)}`}
+                                    severity="info"
+                                />
+                            ))}
                         </div>
                     </section>
                 )}
@@ -82,6 +102,8 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
                         <KpiCard label="Total Order" value={stats.todayOrders + stats.activeOrders} href="/owner/orders" color="emerald" progress={70} />
                         <KpiCard label="Aktif Delivery" value={stats.activeDeliveries} href="/owner/deliveries" color="blue" progress={stats.activeDeliveries > 0 ? 50 : 0} />
                         <KpiCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="amber" progress={stats.pendingRestocks > 0 ? 30 : 0} />
+                        <KpiCard label="Pending Returns" value={stats.pendingReturns} href="/owner/returns?status=submitted" color="amber" progress={stats.pendingReturns > 0 ? 45 : 0} />
+                        <KpiCard label="Pending Exchanges" value={stats.pendingExchanges} href="/owner/exchanges?status=submitted" color="blue" progress={stats.pendingExchanges > 0 ? 45 : 0} />
                         <KpiCard label="Stok Rendah" value={stats.lowStocks} href="/owner/inventories" color="red" progress={stats.lowStocks > 0 ? Math.min(100, stats.lowStocks * 15) : 0} />
                     </div>
                 </section>
@@ -155,6 +177,8 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
                         <QuickActionCard href="/owner/orders" label="Manage Orders" icon={<OrdersIcon />} />
                         <QuickActionCard href="/owner/stock-movements" label="Inventory Audit" icon={<AuditIcon />} />
                         <QuickActionCard href="/owner/restocks?status=requested" label="Restock Requests" icon={<RestockIcon />} />
+                        <QuickActionCard href="/owner/returns?status=submitted" label="Review Returns" icon={<ReturnsIcon />} />
+                        <QuickActionCard href="/owner/exchanges?status=submitted" label="Review Exchanges" icon={<ExchangeIcon />} />
                     </div>
                 </section>
             </main>
@@ -165,7 +189,7 @@ function MobileDashboard({ stats, deliveryStats, intelligence, alerts, recentAct
 }
 
 function DesktopDashboard({ stats, deliveryStats, intelligence, alerts, recentActivity }: any) {
-    const hasAlerts = alerts.failedDeliveries.length > 0 || alerts.lowStockItems.length > 0 || alerts.pendingRestocks.length > 0;
+    const hasAlerts = alerts.failedDeliveries.length > 0 || alerts.lowStockItems.length > 0 || alerts.pendingRestocks.length > 0 || alerts.pendingReturns.length > 0 || alerts.pendingExchanges.length > 0;
 
     const activityItems = recentActivity.slice(0, 8).map((m: any) => ({
         id: m.id,
@@ -181,17 +205,19 @@ function DesktopDashboard({ stats, deliveryStats, intelligence, alerts, recentAc
             <Head title="Owner Dashboard" />
 
             {/* Row 1: Business KPIs */}
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
                 <KpiCard label="Order Hari Ini" value={stats.todayOrders} href="/owner/orders" color="emerald" />
                 <KpiCard label="Active Delivery" value={stats.activeDeliveries} href="/owner/deliveries" color="blue" />
                 <KpiCard label="Restock Pending" value={stats.pendingRestocks} href="/owner/restocks?status=requested" color="amber" />
+                <KpiCard label="Pending Returns" value={stats.pendingReturns} href="/owner/returns?status=submitted" color="amber" />
+                <KpiCard label="Pending Exchanges" value={stats.pendingExchanges} href="/owner/exchanges?status=submitted" color="blue" />
                 <KpiCard label="Stok Rendah" value={stats.lowStocks} href="/owner/inventories" color="red" />
-                {intelligence?.healthScore && (
-                    <div className="col-span-2 lg:col-span-1">
-                        <DeliveryHealthScoreCard health={intelligence.healthScore} />
-                    </div>
-                )}
             </div>
+            {intelligence?.healthScore && (
+                <div className="mt-4">
+                    <DeliveryHealthScoreCard health={intelligence.healthScore} />
+                </div>
+            )}
 
             {/* Row 2: Operational Alerts + Delivery Health */}
             <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -208,6 +234,26 @@ function DesktopDashboard({ stats, deliveryStats, intelligence, alerts, recentAc
                             {alerts.pendingRestocks.length > 0 && (
                                 <OperationalAlertCard href="/owner/restocks?status=requested" icon={<AlertRestockIcon />} title={`${alerts.pendingRestocks.length} Restock Pending`} subtitle="Awaiting approval" count={alerts.pendingRestocks.length} severity="info" />
                             )}
+                            {alerts.pendingReturns.map((item: any) => (
+                                <OperationalAlertCard
+                                    key={`desktop-return-${item.id}`}
+                                    href={`/owner/returns/${item.id}`}
+                                    icon={<AlertReturnIcon />}
+                                    title={`${item.outlet?.name} Return Request`}
+                                    subtitle={`${firstVariantLabel(item.items)} · ${formatCompactQuantity(item.items)}`}
+                                    severity="warning"
+                                />
+                            ))}
+                            {alerts.pendingExchanges.map((item: any) => (
+                                <OperationalAlertCard
+                                    key={`desktop-exchange-${item.id}`}
+                                    href={`/owner/exchanges/${item.id}`}
+                                    icon={<AlertExchangeIcon />}
+                                    title={`${item.outlet?.name} Exchange Request`}
+                                    subtitle={`${firstVariantLabel(item.items)} · ${formatCompactQuantity(item.items)}`}
+                                    severity="info"
+                                />
+                            ))}
                         </div>
                     ) : (
                         <div className="mt-2 text-xs text-slate-400">No alerts</div>
@@ -277,6 +323,12 @@ function DesktopDashboard({ stats, deliveryStats, intelligence, alerts, recentAc
                 <Link href="/owner/reports" className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-zinc-50">
                     <ReportsIcon /> Reports
                 </Link>
+                <Link href="/owner/returns?status=submitted" className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-zinc-50">
+                    <ReturnsIcon /> Returns
+                </Link>
+                <Link href="/owner/exchanges?status=submitted" className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 text-xs font-semibold text-slate-700 hover:bg-zinc-50">
+                    <ExchangeIcon /> Exchanges
+                </Link>
             </div>
         </>
     );
@@ -317,6 +369,16 @@ function timeAgo(dateStr: string): string {
     return `${Math.floor(hours / 24)} hari lalu`;
 }
 
+function firstVariantLabel(items: any[] = []): string {
+    const first = items[0];
+    return first?.variant?.full_name ?? first?.variant?.name ?? 'Produk';
+}
+
+function formatCompactQuantity(items: any[] = []): string {
+    const totalQuantity = items.reduce((sum, item) => sum + Number(item.quantity ?? 0), 0);
+    return `x${totalQuantity}`;
+}
+
 function buildOutletHealth(lowStockItems: any[], _totalOutlets: number) {
     const outletMap = new Map<number, { id: number; name: string; lowCount: number }>();
     for (const item of lowStockItems) {
@@ -331,6 +393,14 @@ function buildOutletHealth(lowStockItems: any[], _totalOutlets: number) {
         stockPercent: Math.max(10, 100 - o.lowCount * 25),
         updatedAgo: 'Baru saja',
     }));
+}
+
+function ReturnsIcon() {
+    return <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h10M7 12h10M7 17h6M7 3v4m0 0l-3-3m3 3l3-3M5 21h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>;
+}
+
+function ExchangeIcon() {
+    return <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4 7h11m0 0l-3-3m3 3l-3 3M20 17H9m0 0l3-3m-3 3l3 3" /></svg>;
 }
 
 function OrdersIcon() { return <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>; }

@@ -9,7 +9,7 @@ const navItems = [
     { href: '/owner/restocks', label: 'Restocks', icon: RestockIcon },
 ];
 
-const moreRoutes = ['/owner/products', '/owner/outlets', '/owner/reports', '/owner/stock-movements', '/owner/deliveries', '/owner/profile'];
+const moreRoutes = ['/owner/products', '/owner/outlets', '/owner/reports', '/owner/stock-movements', '/owner/deliveries', '/owner/profile', '/owner/returns', '/owner/exchanges'];
 
 export default function OwnerBottomNav() {
     const { url } = usePage();

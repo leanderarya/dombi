@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { ClipboardList } from 'lucide-react';
 import EmptyState from '@/components/empty-state';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -30,7 +31,7 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
             }
         >
             {movements.data.length === 0 ? (
-                <EmptyState icon="📋" title="Belum ada movement" description="Perubahan stok akan tercatat di sini." />
+                <EmptyState icon={<ClipboardList className="h-8 w-8 text-slate-400" />} title="Belum ada movement" description="Perubahan stok akan tercatat di sini." />
             ) : (
                 <div className="space-y-1.5">
                     {movements.data.map((m: any) => (

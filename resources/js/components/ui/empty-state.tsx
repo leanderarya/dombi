@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Inbox } from 'lucide-react';
 
 interface Action {
     label: string;
@@ -15,10 +16,10 @@ interface Props {
     secondaryAction?: Action;
 }
 
-export default function EmptyState({ icon = '📭', title, description, action, secondaryAction }: Props) {
+export default function EmptyState({ icon, title, description, action, secondaryAction }: Props) {
     return (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="text-4xl">{icon}</div>
+            <div className="text-slate-400">{icon ?? <Inbox className="h-8 w-8" />}</div>
             <p className="mt-2 text-sm font-medium text-slate-600">{title}</p>
             {description && <p className="mt-1 text-xs text-slate-400">{description}</p>}
             {(action || secondaryAction) && (

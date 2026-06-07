@@ -1,4 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
+import { Store } from 'lucide-react';
 import EmptyState from '@/components/ui/empty-state';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
@@ -32,7 +33,7 @@ export default function OutletsIndex({ outlets }: any) {
             {/* Mobile: cards */}
             <div className="lg:hidden">
                 {outlets.data.length === 0 ? (
-                    <EmptyState icon="🏬" title="Belum ada outlet" description="Tambah outlet pertama dengan memilih titik lokasi di peta." />
+                    <EmptyState icon={<Store className="h-8 w-8 text-slate-400" />} title="Belum ada outlet" description="Tambah outlet pertama dengan memilih titik lokasi di peta." />
                 ) : (
                     <div className="space-y-3">
                         {outlets.data.map((outlet: any) => <OutletCard key={outlet.id} outlet={outlet} />)}

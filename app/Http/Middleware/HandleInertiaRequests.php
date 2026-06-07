@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ExchangeRequest;
+use App\Models\ReturnRequest;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -60,6 +62,16 @@ class HandleInertiaRequests extends Middleware
                 'env' => config('app.env'),
                 'currentRole' => $user?->role ?? 'guest',
             ],
+            'ownerOperationalCounts' => function () use ($user) {
+                if (!$user || $user->role !== 'owner') {
+                    return null;
+                }
+
+                return [
+                    'pendingReturns' => ReturnRequest::where('status', ReturnRequest::STATUS_SUBMITTED)->count(),
+                    'pendingExchanges' => ExchangeRequest::where('status', ExchangeRequest::STATUS_SUBMITTED)->count(),
+                ];
+            },
         ];
     }
 }

@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Package } from 'lucide-react';
 import EmptyState from '@/components/empty-state';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -37,7 +38,7 @@ export default function OwnerDistributionsIndex({ distributions, outlets, filter
             }
         >
             {distributions.data.length === 0 ? (
-                <EmptyState icon="📦" title="Tidak ada distribution" description="Distribution dibuat setelah restock disetujui." />
+                <EmptyState icon={<Package className="h-8 w-8 text-slate-400" />} title="Tidak ada distribution" description="Distribution dibuat setelah restock disetujui." />
             ) : (
                 <div className="space-y-2">
                     {distributions.data.map((d: any) => (

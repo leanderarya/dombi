@@ -427,6 +427,7 @@ class InventorySafetyTest extends TestCase
             'size' => '500ml',
             'center_price' => 20000,
             'selling_price' => 25000,
+            'center_stock' => 100,
             'is_active' => true,
         ]);
 

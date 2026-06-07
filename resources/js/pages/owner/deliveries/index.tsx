@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Truck } from 'lucide-react';
 import EmptyState from '@/components/ui/empty-state';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -55,7 +56,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: 
             }
         >
             {deliveries.data.length === 0 ? (
-                <EmptyState icon="🚚" title="Tidak ada pengiriman" description="Pengiriman akan muncul setelah kurir di-assign." />
+                <EmptyState icon={<Truck className="h-8 w-8 text-slate-400" />} title="Tidak ada pengiriman" description="Pengiriman akan muncul setelah kurir di-assign." />
             ) : (
                 <>
                     {/* Mobile: cards */}

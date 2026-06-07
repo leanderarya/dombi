@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Truck } from 'lucide-react';
+import { Package, Truck } from 'lucide-react';
 import AssignCourierSheet from '@/components/operations/assign-courier-sheet';
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
@@ -91,7 +91,7 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
             <SectionCard label="Riwayat Pengiriman" className="mb-4">
                 {deliveries.data.length === 0 ? (
                     <EmptyState
-                        icon="📦"
+                        icon={<Package className="h-8 w-8 text-slate-400" />}
                         title="Belum ada pengiriman"
                         description="Pengiriman akan muncul setelah kurir di-assign."
                     />

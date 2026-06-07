@@ -1,6 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, ClipboardList } from 'lucide-react';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import RestockStatusBadge from '@/components/restock-status-badge';
@@ -41,7 +41,7 @@ export default function OutletRestocksIndex({ restocks, filters }: any) {
 
             {restocks.data.length === 0 ? (
                 <EmptyState
-                    icon="📋"
+                    icon={<ClipboardList className="h-8 w-8 text-slate-400" />}
                     title="Belum ada restock"
                     description={activeFilter ? 'Tidak ada restock dengan filter ini.' : 'Buat request baru untuk meminta stok tambahan.'}
                     action={activeFilter ? { label: 'Reset Filter', onClick: () => handleFilterChange('') } : { label: 'Buat Request Restock', href: '/outlet/restocks/create' }}

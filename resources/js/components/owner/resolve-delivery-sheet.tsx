@@ -1,5 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { Package, TriangleAlert } from 'lucide-react';
 import { formatDate } from '@/lib/format';
 
 interface Props {
@@ -148,8 +149,8 @@ export default function ResolveDeliverySheet({ delivery, open, onClose }: Props)
 
                         {/* Inventory Impact */}
                         {selectedOption && (
-                            <div className={`mt-3 rounded-md border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-medium ${selectedOption.inventoryColor}`}>
-                                📦 {selectedOption.inventoryNote}
+                            <div className={`mt-3 flex items-center gap-2 rounded-md border border-slate-100 bg-slate-50 px-3 py-2 text-xs font-medium ${selectedOption.inventoryColor}`}>
+                                <Package className="h-4 w-4" /> {selectedOption.inventoryNote}
                             </div>
                         )}
 
@@ -167,8 +168,8 @@ export default function ResolveDeliverySheet({ delivery, open, onClose }: Props)
 
                         {/* Destructive Confirmation */}
                         {isDestructive && confirmDestructive && (
-                            <div className="mt-2 rounded-md border border-red-200 bg-red-50 p-2 text-[11px] font-medium text-red-800">
-                                ⚠️ Tindakan ini akan melepas reserved stock dan membatalkan order secara permanen.
+                            <div className="mt-2 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-2 text-[11px] font-medium text-red-800">
+                                <TriangleAlert className="h-4 w-4 shrink-0" /> Tindakan ini akan melepas reserved stock dan membatalkan order secara permanen.
                             </div>
                         )}
 

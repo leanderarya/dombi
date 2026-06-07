@@ -1,5 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
+import { Package } from 'lucide-react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import DataTable from '@/components/ui/data-table';
@@ -71,7 +72,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
             {/* Mobile: cards */}
             <div className="lg:hidden">
                 {orders.data.length === 0 ? (
-                    <EmptyState icon="📦" title="Tidak ada pesanan" description="Pesanan akan muncul setelah customer membuat pesanan." />
+                    <EmptyState icon={<Package className="h-8 w-8 text-slate-400" />} title="Tidak ada pesanan" description="Pesanan akan muncul setelah customer membuat pesanan." />
                 ) : (
                     <div className="space-y-3">
                         {orders.data.map((order: any) => (
