@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 
 export default function OwnerProfile() {
@@ -7,7 +7,6 @@ export default function OwnerProfile() {
 
     return (
         <OwnerPageShell title="Profile" subtitle="Owner account">
-            <Head title="Owner Profile" />
             <div className="rounded-2xl border border-slate-200 bg-white p-4">
                 <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-base font-bold text-white">

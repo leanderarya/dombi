@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Outlet;
 use App\Models\ProductVariant;
 use App\Models\User;
+use App\Services\CheckoutOtpService;
 use App\Services\DeliveryPricingService;
 use App\Services\OrderService;
 use App\Services\RecommendOutletService;
@@ -175,6 +176,21 @@ class CheckoutController extends Controller
     {
         $fulfillmentType = $request->session()->get('checkout.fulfillment.fulfillment_type');
         $isDelivery = in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
+
+        // Delivery requires authentication
+        if ($isDelivery && ! $request->user()) {
+            $request->session()->put('redirect_after_login', route('customer.checkout.customer'));
+
+            return redirect()->route('customer.checkout.login-prompt');
+        }
+
+        // Delivery requires phone-verified Customer
+        if ($isDelivery && $request->user() && ! $request->user()->customer?->phone) {
+            $request->session()->put('redirect_after_login', route('customer.checkout.customer'));
+
+            return redirect()->route('customer.verify-phone');
+        }
+
         $existingLocation = $request->session()->get('checkout.location', []);
         $hasExistingLocation = $isDelivery
             && is_array($existingLocation)
@@ -254,10 +270,80 @@ class CheckoutController extends Controller
         return redirect()->route('customer.checkout.payment');
     }
 
-    public function payment(Request $request, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): Response
+    /**
+     * Show OTP verification page for delivery orders.
+     */
+    public function verifyOtp(Request $request, CheckoutOtpService $otpService): Response|RedirectResponse
+    {
+        $fulfillmentType = $request->session()->get('checkout.fulfillment.fulfillment_type');
+        $customer = $request->session()->get('checkout.customer');
+
+        if (! $customer || ! in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true)) {
+            return redirect()->route('customer.checkout.payment');
+        }
+
+        // If already verified, go to payment
+        if ($otpService->isVerified($request, $customer['phone_number'])) {
+            return redirect()->route('customer.checkout.payment');
+        }
+
+        return Inertia::render('customer/checkout/verify-otp', [
+            'phone' => $customer['phone_number'],
+            'otpLength' => CheckoutOtpService::OTP_LENGTH,
+            'ttlSeconds' => CheckoutOtpService::OTP_TTL_SECONDS,
+        ]);
+    }
+
+    /**
+     * Send OTP for delivery checkout.
+     */
+    public function sendOtp(Request $request, CheckoutOtpService $otpService): JsonResponse|RedirectResponse
+    {
+        $customer = $request->session()->get('checkout.customer');
+
+        if (! $customer) {
+            return redirect()->route('customer.checkout.customer');
+        }
+
+        $otpService->sendOtp($request, $customer['phone_number']);
+
+        return response()->json(['sent' => true]);
+    }
+
+    /**
+     * Verify OTP code for delivery checkout.
+     */
+    public function verifyOtpSubmit(Request $request, CheckoutOtpService $otpService): JsonResponse
+    {
+        $customer = $request->session()->get('checkout.customer');
+
+        if (! $customer) {
+            return response()->json(['verified' => false, 'error' => 'Sesi checkout tidak ditemukan.'], 422);
+        }
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'size:6'],
+        ]);
+
+        $verified = $otpService->verify($request, $validated['code'], $customer['phone_number']);
+
+        if (! $verified) {
+            $remainingAttempts = max(0, CheckoutOtpService::MAX_ATTEMPTS - (int) $request->session()->get(CheckoutOtpService::SESSION_KEY_OTP_ATTEMPTS, 0));
+
+            return response()->json([
+                'verified' => false,
+                'error' => 'Kode OTP tidak valid atau sudah kadaluarsa.',
+                'remaining_attempts' => $remainingAttempts,
+            ], 422);
+        }
+
+        return response()->json(['verified' => true]);
+    }
+
+    public function payment(Request $request, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService, CheckoutOtpService $otpService): Response|RedirectResponse
     {
         $cart = collect($request->session()->get('checkout.cart', []));
-        
+
         // Load variants with family info
         $variantIds = $cart->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
         $variants = ProductVariant::query()
@@ -270,6 +356,17 @@ class CheckoutController extends Controller
         $subtotal = (float) collect($items)->sum('subtotal');
         $fulfillmentType = $request->session()->get('checkout.fulfillment.fulfillment_type', 'pickup');
         $location = $request->session()->get('checkout.location');
+
+        // Require OTP verification for delivery orders
+        $isDelivery = in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
+        if ($isDelivery) {
+            $customer = $request->session()->get('checkout.customer');
+            $phone = $customer['phone_number'] ?? null;
+
+            if (! $phone || ! $otpService->isVerified($request, $phone)) {
+                return redirect()->route('customer.checkout.verify-otp');
+            }
+        }
         $pickupOutlet = $fulfillmentType === 'pickup'
             ? Outlet::query()->find($request->session()->get('checkout.fulfillment.selected_outlet_id'), ['id', 'name', 'address', 'kelurahan', 'kecamatan'])
             : null;
@@ -300,7 +397,7 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function submit(Request $request, OrderService $orderService, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): RedirectResponse
+    public function submit(Request $request, OrderService $orderService, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService, CheckoutOtpService $otpService): RedirectResponse
     {
         $fulfillmentType = $request->session()->get('checkout.fulfillment.fulfillment_type');
         $customer = $request->session()->get('checkout.customer');
@@ -317,6 +414,15 @@ class CheckoutController extends Controller
 
         if (in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true) && ! $location) {
             return redirect()->route('customer.checkout.customer')->withErrors(['latitude' => 'Lengkapi alamat pengiriman terlebih dahulu.']);
+        }
+
+        // Require OTP verification for delivery orders
+        $isDelivery = in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
+        if ($isDelivery) {
+            $phone = $customer['phone_number'] ?? null;
+            if (! $phone || ! $otpService->isVerified($request, $phone)) {
+                return redirect()->route('customer.checkout.verify-otp')->withErrors(['otp' => 'Verifikasi nomor HP diperlukan untuk pengiriman.']);
+            }
         }
 
         if (! is_array($cart) || count($cart) === 0) {
@@ -362,11 +468,25 @@ class CheckoutController extends Controller
             'checkout.location',
         ]);
 
+        // Check if OTP was verified before clearing session
+        $wasOtpVerified = $isDelivery && $otpService->isVerified($request, $customer['phone_number'] ?? '');
+
+        // Clear OTP verification state
+        $otpService->clear($request);
+
         if ($request->user()) {
             return redirect()->route('customer.orders.show', $order)->with('success', 'Order berhasil dibuat.');
         }
 
-        return redirect()->route('track', ['token' => $order->recovery_token])->with('success', 'Order berhasil dibuat.');
+        // Flash account promotion data for OTP-verified delivery guests
+        $redirect = redirect()->route('track', ['token' => $order->recovery_token])->with('success', 'Order berhasil dibuat.');
+        if ($wasOtpVerified) {
+            $redirect->with('canCreateAccount', true)
+                ->with('accountPhone', $customer['phone_number'] ?? '')
+                ->with('accountName', $customer['customer_name'] ?? '');
+        }
+
+        return $redirect;
     }
 
     public function lookupCustomer(Request $request): JsonResponse

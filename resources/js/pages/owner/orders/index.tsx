@@ -1,11 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import { Package } from 'lucide-react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import DataTable from '@/components/ui/data-table';
-import EmptyState from '@/components/ui/empty-state';
-import OwnerOrderCard from '@/components/owner/owner-order-card';
 import Pagination from '@/components/pagination';
 import { getOrderStatus } from '@/lib/status-labels';
 import StatusBadge from '@/components/ui/status-badge';
@@ -69,28 +66,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                 </>
             }
         >
-            {/* Mobile: cards */}
-            <div className="lg:hidden">
-                {orders.data.length === 0 ? (
-                    <EmptyState icon={<Package className="h-8 w-8 text-slate-400" />} title="Tidak ada pesanan" description="Pesanan akan muncul setelah customer membuat pesanan." />
-                ) : (
-                    <div className="space-y-3">
-                        {orders.data.map((order: any) => (
-                            <OwnerOrderCard
-                                key={order.id}
-                                order={order}
-                                onSelect={() => router.visit(`/owner/orders/${order.id}`)}
-                                onAssign={() => setAssignOrder(order)}
-                            />
-                        ))}
-                    </div>
-                )}
-                <Pagination links={orders.links} />
-            </div>
-
-            {/* Desktop: table */}
-            <div className="hidden lg:block">
-                <DataTable
+            <DataTable
                     rowKey="id"
                     data={orders.data}
                     columns={[
@@ -145,7 +121,6 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                     emptyAction={{ label: 'Lihat Semua Pesanan', href: '/owner/orders' }}
                 />
                 <Pagination links={orders.links} />
-            </div>
 
             <AssignCourierSheet order={assignOrder} couriers={couriers ?? []} open={!!assignOrder} onClose={() => setAssignOrder(null)} />
         </OwnerPageShell>

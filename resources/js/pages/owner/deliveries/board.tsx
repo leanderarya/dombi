@@ -77,19 +77,8 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
                 </div>
             )}
 
-            {/* Board Columns - Mobile: stacked scrollable */}
-            <div className="mt-4 lg:hidden">
-                <div className="space-y-6">
-                    <DeliveryBoardColumn title="Menunggu Kurir" count={stats.unassigned} items={board.unassigned} color="slate" emptyMessage="Semua pesanan sudah di-assign" onAssignCourier={handleAssignCourier} />
-                    <DeliveryBoardColumn title="Ditugaskan" count={stats.assigned} items={board.assigned} color="blue" emptyMessage="Tidak ada kurir menunggu pickup" />
-                    <DeliveryBoardColumn title="Dalam Perjalanan" count={stats.inTransit} items={board.inTransit} color="purple" emptyMessage="Tidak ada pengiriman dalam perjalanan" />
-                    <DeliveryBoardColumn title="Perlu Tindakan" count={stats.needsAction} items={board.needsAction} color="amber" emptyMessage="Tidak ada pengiriman bermasalah" onResolve={handleResolve} />
-                    <DeliveryBoardColumn title="Selesai" count={stats.completed} items={board.completed} color="green" emptyMessage="Belum ada pengiriman selesai hari ini" />
-                </div>
-            </div>
-
-            {/* Board Columns - Desktop: grid layout */}
-            <div className="mt-4 hidden lg:grid lg:grid-cols-5 lg:gap-4">
+            {/* Board Columns */}
+            <div className="mt-4 grid grid-cols-5 gap-4">
                 <DeliveryBoardColumn title="Menunggu Kurir" count={stats.unassigned} items={board.unassigned} color="slate" emptyMessage="Semua pesanan sudah di-assign" onAssignCourier={handleAssignCourier} />
                 <DeliveryBoardColumn title="Ditugaskan" count={stats.assigned} items={board.assigned} color="blue" emptyMessage="Tidak ada kurir menunggu pickup" />
                 <DeliveryBoardColumn title="Dalam Perjalanan" count={stats.inTransit} items={board.inTransit} color="purple" emptyMessage="Tidak ada pengiriman dalam perjalanan" />

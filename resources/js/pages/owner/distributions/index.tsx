@@ -1,17 +1,18 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Package } from 'lucide-react';
-import EmptyState from '@/components/empty-state';
+import EmptyState from '@/components/ui/empty-state';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-header';
+import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
 import Pagination from '@/components/pagination';
 import { formatDate } from '@/lib/format';
+import { getDistributionStatus } from '@/lib/status-labels';
 
 const statusOptions = [
-    { value: 'preparing', label: 'Preparing' },
-    { value: 'shipped', label: 'Shipped' },
-    { value: 'completed', label: 'Completed' },
+    { value: 'preparing', label: 'Disiapkan' },
+    { value: 'shipped', label: 'Dikirim' },
+    { value: 'completed', label: 'Selesai' },
 ];
 const statusStyles: Record<string, string> = {
     preparing: 'bg-orange-50 text-orange-700 border-orange-200',
@@ -29,7 +30,7 @@ export default function OwnerDistributionsIndex({ distributions, outlets, filter
 
     return (
         <OwnerPageShell
-            title="Distributions"
+            title="Distribusi"
             headerRight={
                 <div className="relative">
                     <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
@@ -48,7 +49,7 @@ export default function OwnerDistributionsIndex({ distributions, outlets, filter
                                 <div className="mt-0.5 text-xs text-slate-500">{d.outlet.name}</div>
                                 <div className="mt-1 text-[10px] tabular-nums text-slate-400">{d.sent_at ? formatDate(d.sent_at) : 'Belum dikirim'}</div>
                             </div>
-                            <span className={`rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${statusStyles[d.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>{d.status}</span>
+                            <span className={`rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${statusStyles[d.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>{getDistributionStatus(d.status).label}</span>
                         </Link>
                     ))}
                 </div>

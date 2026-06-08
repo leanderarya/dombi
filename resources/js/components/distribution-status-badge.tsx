@@ -1,3 +1,5 @@
+import { getDistributionStatus } from '@/lib/status-labels';
+
 const styles: Record<string, string> = {
     preparing: 'bg-purple-100 text-purple-800',
     shipped: 'bg-indigo-100 text-indigo-800',
@@ -5,5 +7,6 @@ const styles: Record<string, string> = {
 };
 
 export default function DistributionStatusBadge({ status }: { status: string }) {
-    return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${styles[status] ?? styles.preparing}`}>{status}</span>;
+    const { label } = getDistributionStatus(status);
+    return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${styles[status] ?? styles.preparing}`}>{label}</span>;
 }

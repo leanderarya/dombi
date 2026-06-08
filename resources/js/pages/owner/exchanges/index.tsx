@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import StatusBadge from '@/components/ui/status-badge';
 import Pagination from '@/components/pagination';
@@ -7,17 +7,16 @@ import { formatCurrency, formatDate } from '@/lib/format';
 
 export default function OwnerExchangesIndex({ exchanges, filters, dashboard, outlets, reasons }: any) {
     return (
-        <OwnerPageShell title="Exchange Requests">
-            <Head title="Exchange Requests" />
+        <OwnerPageShell title="Permintaan Tukar Produk">
 
             <div className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                     <div className="rounded-xl border border-zinc-100 bg-white p-4">
-                        <div className="text-xs text-zinc-500">Pending Exchanges</div>
+                        <div className="text-xs text-zinc-500">Tukar Produk Tertunda</div>
                         <div className="mt-1 text-2xl font-bold text-slate-900">{dashboard.pending_exchanges}</div>
                     </div>
                     <div className="rounded-xl border border-zinc-100 bg-white p-4">
-                        <div className="text-xs text-zinc-500">Exchange Value</div>
+                        <div className="text-xs text-zinc-500">Nilai Tukar</div>
                         <div className="mt-1 text-2xl font-bold text-emerald-700">{formatCurrency(dashboard.exchange_value)}</div>
                     </div>
                 </div>
@@ -99,7 +98,7 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                                 </div>
                                 <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-400">
                                     <span>{formatDate(ex.created_at)}</span>
-                                    <span className="font-semibold text-emerald-700">Review</span>
+                                    <span className="font-semibold text-emerald-700">Tinjau</span>
                                 </div>
                             </Link>
                         );

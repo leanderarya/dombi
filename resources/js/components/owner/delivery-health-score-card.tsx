@@ -15,8 +15,8 @@ interface Props {
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-    excellent: { label: 'Excellent', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-    good: { label: 'Good', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
+    excellent: { label: 'Sangat Baik', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
+    good: { label: 'Baik', color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200' },
     needs_attention: { label: 'Perlu Perhatian', color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
     critical: { label: 'Kritis', color: 'text-red-700', bg: 'bg-red-50 border-red-200' },
 };
@@ -26,7 +26,7 @@ export default function DeliveryHealthScoreCard({ health }: Props) {
 
     return (
         <div className={`rounded-xl border p-4 ${config.bg}`}>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Health Score</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Skor Kesehatan</h3>
             <div className="mt-2 flex items-center gap-3">
                 <div className={`text-4xl font-bold ${config.color}`}>{health.score}</div>
                 <div>

@@ -3,94 +3,244 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
-use App\Models\Customer;
-use App\Models\Delivery;
 use App\Models\ExchangeRequest;
-use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\ProductVariant;
-use App\Models\ReturnRequest;
 use App\Models\RestockRequest;
-use App\Models\StockMovement;
-use App\Services\DeliveryIntelligenceService;
-use App\Services\DeliverySlaService;
+use App\Models\ReturnRequest;
+use App\Models\SettlementPayment;
+use App\Services\SettlementReconciliationService;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(DeliverySlaService $slaService, DeliveryIntelligenceService $intelligence): Response
+    public function __invoke(SettlementReconciliationService $reconciliationService): Response
     {
+        $collection = $reconciliationService->getCollectionCenter();
+
+        $pendingRestocks = (int) RestockRequest::query()
+            ->where('status', 'requested')
+            ->count();
+        $pendingReturns = (int) ReturnRequest::query()
+            ->where('status', ReturnRequest::STATUS_SUBMITTED)
+            ->count();
+        $pendingExchanges = (int) ExchangeRequest::query()
+            ->where('status', ExchangeRequest::STATUS_SUBMITTED)
+            ->count();
+        $pendingSettlementVerifications = (int) SettlementPayment::query()
+            ->where('status', SettlementPayment::STATUS_PENDING)
+            ->count();
+
+        $criticalCenterStock = $this->criticalCenterStock();
+        $outletAttention = $this->outletAttention($collection['priority_list']);
+
         return Inertia::render('owner/dashboard', [
-            'stats' => [
-                'activeOutlets' => Outlet::where('status', 'active')->count(),
-                'activeProducts' => ProductVariant::where('is_active', true)->count(),
-                'todayOrders' => Order::whereDate('created_at', today())->count(),
-                'activeOrders' => Order::whereIn('status', Order::ACTIVE_STATUSES)->count(),
-                'pendingOrders' => Order::where('status', 'pending_confirmation')->count(),
-                'readyPickupOrders' => Order::where('status', 'ready_for_pickup')->count(),
-                'activeDeliveries' => Delivery::whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])->count(),
-                'failedDeliveries' => Delivery::where('status', 'failed')->count(),
-                'lowStocks' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= minimum_stock')->count(),
-                'pendingRestocks' => RestockRequest::where('status', 'requested')->count(),
-                'pendingReturns' => ReturnRequest::where('status', ReturnRequest::STATUS_SUBMITTED)->count(),
-                'pendingExchanges' => ExchangeRequest::where('status', ExchangeRequest::STATUS_SUBMITTED)->count(),
+            'hero' => [
+                'outstandingAmount' => (float) ($collection['hero']['total_outstanding'] ?? 0),
+                'subtitle' => 'Kewajiban outlet yang belum diselesaikan.',
+                'ctaLabel' => 'Lihat Penagihan',
+                'ctaHref' => '/owner/settlement/collection',
             ],
-            'deliveryStats' => [
-                'waitingForCourier' => Order::where('status', 'ready_for_pickup')->whereDoesntHave('delivery')->count(),
-                'inTransit' => Delivery::whereIn('status', ['picked_up', 'delivering'])->count(),
-                'late' => $slaService->countOverdue(),
-                'failed' => Delivery::where('status', 'failed')->count(),
-                'completedToday' => Delivery::where('status', 'completed')->whereDate('updated_at', today())->count(),
+            'kpis' => [
+                'outstandingAmount' => (float) ($collection['hero']['total_outstanding'] ?? 0),
+                'approvalsNeeded' => $pendingRestocks + $pendingReturns + $pendingExchanges,
+                'outletsNeedingAttention' => count($outletAttention),
+                'criticalCenterSkus' => $criticalCenterStock->count(),
             ],
-            'customerStats' => [
-                'totalCustomers' => Customer::count(),
-                'guestCustomers' => Customer::where('is_registered', false)->count(),
-                'registeredCustomers' => Customer::where('is_registered', true)->count(),
-                'newCustomersToday' => Customer::whereDate('created_at', today())->count(),
-                'returningCustomers' => Customer::whereHas('orders', function ($q): void {
-                    $q->where('created_at', '>=', now()->subDays(30));
-                })->count(),
+            'actionRequired' => [
+                'restocks' => $pendingRestocks,
+                'returns' => $pendingReturns,
+                'exchanges' => $pendingExchanges,
+                'pendingSettlementVerifications' => $pendingSettlementVerifications,
             ],
-            'intelligence' => [
-                'oldestDeliveries' => $intelligence->getOldestDeliveries(10),
-                'slaViolations' => $intelligence->getSlaViolations(),
-                'failureReasons' => $intelligence->getTopFailureReasons(5),
-                'courierLeaderboard' => $intelligence->getCourierLeaderboard(5),
-                'healthScore' => $intelligence->getHealthScore(),
-                'courierCapacity' => $intelligence->getAllCouriersCapacity(),
-            ],
-            'alerts' => [
-                'failedDeliveries' => Delivery::where('status', 'failed')
-                    ->with(['order:id,order_code,customer_name', 'courier:id,name'])
-                    ->latest()
-                    ->limit(5)
-                    ->get(['id', 'order_id', 'courier_id', 'status', 'failed_reason', 'updated_at']),
-                'lowStockItems' => OutletInventory::with(['outlet:id,name', 'variant:id,name,product_family_id', 'variant.family:id,name'])
-                    ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
-                    ->limit(8)
-                    ->get(['id', 'outlet_id', 'product_variant_id', 'current_stock', 'reserved_stock', 'minimum_stock']),
-                'pendingRestocks' => RestockRequest::where('status', 'requested')
-                    ->with('outlet:id,name')
-                    ->latest()
-                    ->limit(5)
-                    ->get(['id', 'outlet_id', 'status', 'created_at']),
-                'pendingReturns' => ReturnRequest::where('status', ReturnRequest::STATUS_SUBMITTED)
-                    ->with(['outlet:id,name', 'items.variant:id,name,product_family_id', 'items.variant.family:id,name'])
-                    ->latest()
-                    ->limit(5)
-                    ->get(['id', 'outlet_id', 'reason', 'total_value', 'created_at']),
-                'pendingExchanges' => ExchangeRequest::where('status', ExchangeRequest::STATUS_SUBMITTED)
-                    ->with(['outlet:id,name', 'returnRequest:id', 'items.variant:id,name,product_family_id', 'items.variant.family:id,name'])
-                    ->latest()
-                    ->limit(5)
-                    ->get(['id', 'outlet_id', 'return_request_id', 'exchange_value', 'created_at']),
-            ],
-            'recentActivity' => StockMovement::with(['outlet:id,name', 'variant:id,name,product_family_id', 'variant.family:id,name', 'creator:id,name'])
-                ->latest()
-                ->limit(10)
-                ->get(['id', 'outlet_id', 'product_variant_id', 'type', 'quantity', 'before_stock', 'after_stock', 'created_by', 'created_at']),
+            'outletAttention' => $outletAttention,
+            'settlementAlerts' => collect($collection['priority_list'] ?? [])
+                ->take(5)
+                ->map(fn (array $item) => [
+                    'outlet' => $item['outlet'],
+                    'outstandingAmount' => (float) $item['outstanding'],
+                    'daysOverdue' => (int) ($item['days_overdue'] ?? 0),
+                    'detailHref' => '/owner/settlement/outlet/'.$item['outlet']['id'],
+                ])
+                ->values()
+                ->all(),
+            'inventoryRisks' => $criticalCenterStock
+                ->take(5)
+                ->values()
+                ->all(),
         ]);
+    }
+
+    /**
+     * @return Collection<int, array{
+     *     variant: array{id:int,name:string,full_name:string,family_name:?string},
+     *     centerStock:int,
+     *     threshold:int,
+     *     shortage:int,
+     *     detailHref:string
+     * }>
+     */
+    private function criticalCenterStock(): Collection
+    {
+        return ProductVariant::query()
+            ->with('family:id,name')
+            ->where('is_active', true)
+            ->get()
+            ->map(function (ProductVariant $variant): array {
+                $threshold = $this->centerStockThreshold($variant);
+
+                return [
+                    'variant' => [
+                        'id' => $variant->id,
+                        'name' => $variant->name,
+                        'full_name' => $variant->full_name,
+                        'family_name' => $variant->family?->name,
+                    ],
+                    'centerStock' => (int) $variant->center_stock,
+                    'threshold' => $threshold,
+                    'shortage' => max(0, $threshold - (int) $variant->center_stock),
+                    'detailHref' => '/owner/product-families/'.$variant->product_family_id,
+                ];
+            })
+            ->filter(fn (array $item) => $item['centerStock'] <= $item['threshold'])
+            ->sortByDesc('shortage')
+            ->values();
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $priorityList
+     * @return array<int, array{
+     *     outlet: array{id:int,name:string},
+     *     outstandingAmount: float,
+     *     pendingRestocks: int,
+     *     pendingReturns: int,
+     *     pendingExchanges: int,
+     *     pendingIssues: int,
+     *     criticalStocks: int,
+     *     daysOverdue: int,
+     *     severityScore: int,
+     *     detailHref: string
+     * }>
+     */
+    private function outletAttention(array $priorityList): array
+    {
+        $restockCounts = RestockRequest::query()
+            ->selectRaw('outlet_id, COUNT(*) as aggregate')
+            ->where('status', 'requested')
+            ->groupBy('outlet_id')
+            ->pluck('aggregate', 'outlet_id');
+
+        $returnCounts = ReturnRequest::query()
+            ->selectRaw('outlet_id, COUNT(*) as aggregate')
+            ->where('status', ReturnRequest::STATUS_SUBMITTED)
+            ->groupBy('outlet_id')
+            ->pluck('aggregate', 'outlet_id');
+
+        $exchangeCounts = ExchangeRequest::query()
+            ->selectRaw('outlet_id, COUNT(*) as aggregate')
+            ->where('status', ExchangeRequest::STATUS_SUBMITTED)
+            ->groupBy('outlet_id')
+            ->pluck('aggregate', 'outlet_id');
+
+        $criticalStockCounts = OutletInventory::query()
+            ->selectRaw('outlet_id, COUNT(*) as aggregate')
+            ->whereRaw('(current_stock - reserved_stock) <= 0')
+            ->groupBy('outlet_id')
+            ->pluck('aggregate', 'outlet_id');
+
+        $priorityByOutlet = collect($priorityList)
+            ->mapWithKeys(fn (array $item) => [
+                (int) $item['outlet']['id'] => [
+                    'outstanding' => (float) $item['outstanding'],
+                    'days_overdue' => (int) ($item['days_overdue'] ?? 0),
+                ],
+            ]);
+
+        $items = Outlet::query()
+            ->where('status', 'active')
+            ->get(['id', 'name'])
+            ->map(function (Outlet $outlet) use ($restockCounts, $returnCounts, $exchangeCounts, $criticalStockCounts, $priorityByOutlet): ?array {
+                $pendingRestocks = (int) ($restockCounts[$outlet->id] ?? 0);
+                $pendingReturns = (int) ($returnCounts[$outlet->id] ?? 0);
+                $pendingExchanges = (int) ($exchangeCounts[$outlet->id] ?? 0);
+                $criticalStocks = (int) ($criticalStockCounts[$outlet->id] ?? 0);
+                $outstandingAmount = (float) ($priorityByOutlet[$outlet->id]['outstanding'] ?? 0);
+                $daysOverdue = (int) ($priorityByOutlet[$outlet->id]['days_overdue'] ?? 0);
+                $pendingIssues = $pendingRestocks + $pendingReturns + $pendingExchanges;
+
+                $outstandingThreshold = 100_000;
+                $criticalSkuThreshold = 1;
+                $overdueThreshold = 7;
+
+                $meetsOutstanding = $outstandingAmount >= $outstandingThreshold;
+                $meetsCritical = $criticalStocks >= $criticalSkuThreshold;
+                $meetsPending = $pendingIssues > 0;
+                $meetsOverdue = $daysOverdue > $overdueThreshold;
+
+                if (! $meetsOutstanding && ! $meetsCritical && ! $meetsPending && ! $meetsOverdue) {
+                    return null;
+                }
+
+                $score = 0;
+                if ($outstandingAmount >= 1_000_000) {
+                    $score += 50;
+                } elseif ($outstandingAmount >= 500_000) {
+                    $score += 40;
+                } elseif ($outstandingAmount >= 100_000) {
+                    $score += 30;
+                }
+                $score += $criticalStocks * 10;
+                $score += $pendingRestocks * 5;
+                $score += $pendingReturns * 5;
+                $score += $pendingExchanges * 5;
+
+                return [
+                    'outlet' => [
+                        'id' => $outlet->id,
+                        'name' => $outlet->name,
+                    ],
+                    'outstandingAmount' => $outstandingAmount,
+                    'pendingRestocks' => $pendingRestocks,
+                    'pendingReturns' => $pendingReturns,
+                    'pendingExchanges' => $pendingExchanges,
+                    'pendingIssues' => $pendingIssues,
+                    'criticalStocks' => $criticalStocks,
+                    'daysOverdue' => $daysOverdue,
+                    'severityScore' => $score,
+                    'detailHref' => '/owner/outlets/'.$outlet->id,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+
+        usort($items, function (array $left, array $right): int {
+            return [$right['severityScore'], $right['outstandingAmount'], $left['outlet']['name']]
+                <=> [$left['severityScore'], $left['outstandingAmount'], $right['outlet']['name']];
+        });
+
+        return array_slice($items, 0, 5);
+    }
+
+    private function centerStockThreshold(ProductVariant $variant): int
+    {
+        $size = strtolower((string) $variant->size);
+
+        if (str_contains($size, '1l')) {
+            return 20;
+        }
+
+        if (str_contains($size, '500')) {
+            return 15;
+        }
+
+        if (str_contains($size, '250')) {
+            return 10;
+        }
+
+        return 15;
     }
 }

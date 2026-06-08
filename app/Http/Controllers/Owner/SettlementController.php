@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Models\OutletPayable;
 use App\Services\SettlementReconciliationService;
 use App\Services\SettlementService;
 use Carbon\Carbon;
@@ -38,6 +39,15 @@ class SettlementController extends Controller
         ]);
     }
 
+    public function collection(): Response
+    {
+        $collection = $this->reconciliationService->getCollectionCenter();
+
+        return Inertia::render('owner/settlement-collection', [
+            'collection' => $collection,
+        ]);
+    }
+
     public function outlet(Request $request, int $outletId): Response
     {
         $period = $request->string('period', 'month')->toString();
@@ -46,10 +56,30 @@ class SettlementController extends Controller
         $summary = $this->settlementService->getOutletSummary($outletId, $from, $to);
         $reconciliation = $this->reconciliationService->getOutletReconciliation($outletId, $from, $to);
 
+        // Settlement timeline: recent payables for this outlet
+        $timeline = OutletPayable::query()
+            ->where('outlet_id', $outletId)
+            ->whereBetween('created_at', [$from, $to])
+            ->latest()
+            ->limit(20)
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'type' => $p->type,
+                'amount' => (float) $p->amount,
+                'center_share' => (float) $p->center_share,
+                'outlet_margin' => (float) $p->outlet_margin,
+                'notes' => $p->notes,
+                'created_at' => $p->created_at->toISOString(),
+            ])
+            ->toArray();
+
         return Inertia::render('owner/settlement-outlet', [
             'summary' => $summary,
             'reconciliation' => $reconciliation,
+            'timeline' => $timeline,
             'outletId' => $outletId,
+            'outletName' => \App\Models\Outlet::find($outletId)?->name ?? '',
             'period' => $period,
             'periodRange' => [
                 'from' => $from->toDateString(),
@@ -60,7 +90,7 @@ class SettlementController extends Controller
 
     private function resolvePeriod(string $period, Request $request): array
     {
-        return match ($period) {
+        [$from, $to] = match ($period) {
             'today' => [now()->startOfDay(), now()->endOfDay()],
             'week' => [now()->startOfWeek(), now()->endOfWeek()],
             'month' => [now()->startOfMonth(), now()->endOfMonth()],
@@ -70,5 +100,7 @@ class SettlementController extends Controller
             ],
             default => [now()->startOfMonth(), now()->endOfMonth()],
         };
+
+        return [Carbon::parse($from), Carbon::parse($to)];
     }
 }

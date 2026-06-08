@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 
 export default function CreateProduct({ categories }: any) {

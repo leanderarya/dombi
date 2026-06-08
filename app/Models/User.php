@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'phone'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'provider', 'provider_id', 'avatar'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -76,6 +76,16 @@ class User extends Authenticatable
     public function isCourier(): bool
     {
         return $this->role === 'courier';
+    }
+
+    public function hasGoogleAccount(): bool
+    {
+        return $this->provider === 'google' && $this->provider_id !== null;
+    }
+
+    public function needsPhoneVerification(): bool
+    {
+        return $this->isCustomer() && $this->customer === null;
     }
 
     public function isOnShift(): bool

@@ -44,8 +44,8 @@ class OrderTrackingTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('track')
                 ->where('found', true)
-                ->where('order.recovery_token', $order->recovery_token)
                 ->where('order.tracking_url', url('/track/' . $order->recovery_token))
+                ->missing('order.recovery_token')
             );
     }
 
@@ -100,10 +100,10 @@ class OrderTrackingTest extends TestCase
             );
     }
 
-    public function test_track_page_includes_delivery_address(): void
+    public function test_track_page_includes_masked_delivery_address(): void
     {
         $order = $this->createOrder([
-            'customer_address' => 'Jl. Test No. 123',
+            'customer_address' => 'Jl. Melati No. 123, RT 01/RW 02, Kel. Tembalang',
             'customer_address_detail' => 'Blok A5',
             'customer_landmark' => 'Rumah hijau',
         ]);
@@ -111,9 +111,11 @@ class OrderTrackingTest extends TestCase
         $this->get('/track/' . $order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('order.customer_address', 'Jl. Test No. 123')
-                ->where('order.customer_address_detail', 'Blok A5')
-                ->where('order.customer_landmark', 'Rumah hijau')
+                ->where('order.customer_address', 'Jl. Melati, Kel. Tembalang')
+                ->missing('order.customer_address_detail')
+                ->missing('order.customer_landmark')
+                ->missing('order.latitude')
+                ->missing('order.longitude')
             );
     }
 

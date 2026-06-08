@@ -1,4 +1,4 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import StatusBadge from '@/components/ui/status-badge';
@@ -29,19 +29,12 @@ export default function OwnerExchangesShow({ exchange }: any) {
     };
 
     return (
-        <OwnerPageShell title={`Exchange #${exchange.id}`}>
-            <Head title={`Exchange #${exchange.id}`} />
-
+        <OwnerPageShell title={`Exchange #${exchange.id}`} subtitle={exchange.outlet?.name} backHref="/owner/exchanges">
             <div className="space-y-6">
                 <div className="flex items-start justify-between">
                     <div>
-                        <Link href="/owner/exchanges" className="text-xs text-zinc-500 hover:text-zinc-700">
-                            &larr; Kembali
-                        </Link>
-                        <h1 className="mt-1 text-xl font-bold text-slate-900">Exchange #{exchange.id}</h1>
-                        <div className="mt-0.5 text-sm text-zinc-500">{exchange.outlet?.name}</div>
+                        <StatusBadge variant={status.variant}>{status.label}</StatusBadge>
                     </div>
-                    <StatusBadge variant={status.variant}>{status.label}</StatusBadge>
                 </div>
 
                 {/* Linked Return */}
@@ -130,7 +123,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                             onClick={() => setShowComplete(true)}
                             className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white active:bg-emerald-700"
                         >
-                            Complete Exchange
+                            Selesaikan Tukar Produk
                         </button>
                     )}
                 </div>
@@ -139,7 +132,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
             {showApprove && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl bg-white p-6">
-                        <h3 className="text-lg font-bold text-slate-900">Setujui Exchange</h3>
+                        <h3 className="text-lg font-bold text-slate-900">Setujui Tukar Produk</h3>
                         <textarea value={approveForm.data.notes} onChange={(e) => approveForm.setData('notes', e.target.value)} placeholder="Catatan (opsional)" className="mt-4 w-full rounded-xl border border-zinc-200 p-3 text-sm" rows={3} />
                         <div className="mt-4 flex gap-3">
                             <button onClick={() => setShowApprove(false)} className="flex-1 rounded-xl border border-zinc-200 py-3 text-sm font-medium">Batal</button>
@@ -152,7 +145,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
             {showReject && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl bg-white p-6">
-                        <h3 className="text-lg font-bold text-slate-900">Tolak Exchange</h3>
+                        <h3 className="text-lg font-bold text-slate-900">Tolak Tukar Produk</h3>
                         <textarea value={rejectForm.data.reason} onChange={(e) => rejectForm.setData('reason', e.target.value)} placeholder="Alasan penolakan" className="mt-4 w-full rounded-xl border border-zinc-200 p-3 text-sm" rows={3} />
                         {rejectForm.errors.reason && <div className="mt-1 text-xs text-red-600">{rejectForm.errors.reason}</div>}
                         <div className="mt-4 flex gap-3">
@@ -166,7 +159,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
             {showComplete && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl bg-white p-6">
-                        <h3 className="text-lg font-bold text-slate-900">Complete Exchange</h3>
+                        <h3 className="text-lg font-bold text-slate-900">Selesaikan Tukar Produk</h3>
                         <p className="mt-2 text-sm text-zinc-600">
                             Tandai exchange ini selesai setelah outlet mengonfirmasi produk pengganti diterima.
                         </p>
@@ -176,7 +169,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                 onClick={() => router.post(`/owner/exchanges/${exchange.id}/complete`, {}, { onSuccess: () => setShowComplete(false) })}
                                 className="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white"
                             >
-                                Complete
+                                Selesai
                             </button>
                         </div>
                     </div>

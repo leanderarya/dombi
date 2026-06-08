@@ -1,4 +1,4 @@
-import { Head, Link, useForm, router } from '@inertiajs/react';
+import { Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import StatusBadge from '@/components/ui/status-badge';
@@ -42,20 +42,13 @@ export default function OwnerReturnsShow({ return: ret }: any) {
     };
 
     return (
-        <OwnerPageShell title={`Return #${ret.id}`}>
-            <Head title={`Return #${ret.id}`} />
-
+        <OwnerPageShell title={`Return #${ret.id}`} subtitle={ret.outlet?.name} backHref="/owner/returns">
             <div className="space-y-6">
                 {/* Header */}
                 <div className="flex items-start justify-between">
                     <div>
-                        <Link href="/owner/returns" className="text-xs text-zinc-500 hover:text-zinc-700">
-                            &larr; Kembali
-                        </Link>
-                        <h1 className="mt-1 text-xl font-bold text-slate-900">Return #{ret.id}</h1>
-                        <div className="mt-0.5 text-sm text-zinc-500">{ret.outlet?.name}</div>
+                        <StatusBadge variant={status.variant}>{status.label}</StatusBadge>
                     </div>
-                    <StatusBadge variant={status.variant}>{status.label}</StatusBadge>
                 </div>
 
                 {/* Info */}

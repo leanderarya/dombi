@@ -1,10 +1,10 @@
 import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ClipboardList } from 'lucide-react';
-import EmptyState from '@/components/empty-state';
+import EmptyState from '@/components/ui/empty-state';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-header';
+import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
 import Pagination from '@/components/pagination';
 import { formatDate } from '@/lib/format';
 

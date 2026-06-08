@@ -12,29 +12,29 @@ interface Props {
 const resolutionOptions = [
     {
         value: 'retry_delivery',
-        label: 'Retry Delivery',
+        label: 'Kirim Ulang',
         description: 'Assign courier baru dan lanjutkan pengiriman.',
         inventoryNote: 'Reserved stock tetap aktif.',
         inventoryColor: 'text-blue-700',
-        ctaLabel: 'Assign New Courier',
+        ctaLabel: 'Tugaskan Kurir Baru',
         destructive: false,
     },
     {
         value: 'returned_to_outlet',
-        label: 'Return to Outlet',
+        label: 'Kembalikan ke Outlet',
         description: 'Barang kembali ke outlet dan menunggu proses berikutnya.',
         inventoryNote: 'Barang kembali ke outlet dengan stok tetap reserved.',
         inventoryColor: 'text-amber-700',
-        ctaLabel: 'Return to Outlet',
+        ctaLabel: 'Kembalikan ke Outlet',
         destructive: false,
     },
     {
         value: 'cancelled_and_released',
-        label: 'Cancel & Release Stock',
+        label: 'Batalkan & Lepas Stok',
         description: 'Batalkan order dan kembalikan stok ke inventory.',
         inventoryNote: 'Reserved stock akan dilepas kembali ke inventory.',
         inventoryColor: 'text-red-700',
-        ctaLabel: 'Cancel Order',
+        ctaLabel: 'Batalkan Pesanan',
         destructive: true,
     },
 ];
@@ -102,17 +102,17 @@ export default function ResolveDeliverySheet({ delivery, open, onClose }: Props)
                 <div className="px-4 pb-4">
                     {/* Header */}
                     <div>
-                        <h2 className="text-base font-bold text-slate-900">Resolve Failed Delivery</h2>
+                        <h2 className="text-base font-bold text-slate-900">Selesaikan Pengiriman Gagal</h2>
                         <p className="mt-0.5 text-xs text-slate-500">Pilih tindakan operasional untuk order ini.</p>
                     </div>
 
                     {/* Incident Summary */}
                     <div className="mt-3 rounded-lg border border-red-100 bg-red-50/50 p-3">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-red-600">Incident</div>
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-red-600">Insiden</div>
                         <div className="mt-1.5 space-y-1 text-xs">
-                            <div className="flex justify-between"><span className="text-slate-500">Reason</span><span className="font-medium text-slate-900">{delivery.failed_reason ?? '-'}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Courier</span><span className="text-slate-700">{delivery.courier?.name ?? '-'}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500">Customer</span><span className="text-slate-700">{order?.customer_name ?? '-'}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Alasan</span><span className="font-medium text-slate-900">{delivery.failed_reason ?? '-'}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Kurir</span><span className="text-slate-700">{delivery.courier?.name ?? '-'}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500">Pelanggan</span><span className="text-slate-700">{order?.customer_name ?? '-'}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500">Outlet</span><span className="text-slate-700">{order?.outlet?.name ?? '-'}</span></div>
                         </div>
                     </div>
@@ -181,7 +181,7 @@ export default function ResolveDeliverySheet({ delivery, open, onClose }: Props)
                                 isDestructive ? 'bg-red-600 text-white' : 'bg-emerald-700 text-white'
                             }`}
                         >
-                            {form.processing ? 'Processing...' : (confirmDestructive && isDestructive) ? 'Confirm Cancel Order' : selectedOption?.ctaLabel ?? 'Select Resolution'}
+                            {form.processing ? 'Memproses...' : (confirmDestructive && isDestructive) ? 'Konfirmasi Batalkan Pesanan' : selectedOption?.ctaLabel ?? 'Pilih Tindakan'}
                         </button>
                     </form>
                 </div>

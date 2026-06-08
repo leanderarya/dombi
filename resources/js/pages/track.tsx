@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { ArrowLeft, Clock, Copy, MapPin, MessageCircle, Package, RotateCcw, Share2, Truck, UserCheck, XCircle, CheckCircle2, Circle } from 'lucide-react';
+import { ArrowLeft, Clock, Copy, MessageCircle, Package, RotateCcw, Share2, Truck, UserCheck, XCircle, CheckCircle2, Circle } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 type HistoryItem = {
@@ -12,22 +12,16 @@ type HistoryItem = {
 type TrackOrder = {
     id: number;
     order_code: string;
-    recovery_token: string;
     tracking_url: string;
     status: string;
     fulfillment_type: string;
-    customer_name: string;
     total: number;
     ordered_at?: string;
     outlet?: { name: string };
-    items: { product_name: string; quantity: number; price: number; subtotal: number }[];
+    items: { product_name: string; quantity: number; subtotal: number }[];
     status_histories: HistoryItem[];
-    delivery?: { status: string; courier?: { name: string } };
+    delivery?: { courier?: { name: string } };
     customer_address?: string;
-    customer_address_detail?: string;
-    customer_landmark?: string;
-    latitude?: number;
-    longitude?: number;
     rejection_reason?: string;
     rejection_note?: string;
     cancellation_reason?: string;
@@ -37,7 +31,10 @@ type TrackOrder = {
 type Props = {
     order: TrackOrder | null;
     found: boolean;
-    notifications?: { id: number; type: string; title: string; message: string; time_ago: string }[];
+    notifications?: { id: number; title: string; message: string; time_ago: string }[];
+    canCreateAccount?: boolean;
+    accountPhone?: string;
+    accountName?: string;
 };
 
 const TIMELINE_STEPS = [
@@ -50,7 +47,7 @@ const TIMELINE_STEPS = [
     { key: 'completed', label: 'Pesanan Selesai', icon: CheckCircle2 },
 ];
 
-export default function TrackPage({ order, found, notifications = [] }: Props) {
+export default function TrackPage({ order, found, notifications = [], canCreateAccount = false, accountPhone, accountName }: Props) {
     const [copied, setCopied] = useState(false);
 
     if (!found || !order) {
@@ -277,23 +274,6 @@ export default function TrackPage({ order, found, notifications = [] }: Props) {
                             <div className="mt-3 border-t border-slate-100 pt-3">
                                 <div className="text-xs font-medium text-slate-500">Alamat Pengiriman</div>
                                 <div className="mt-1 text-xs text-slate-700">{order.customer_address}</div>
-                                {order.customer_address_detail && (
-                                    <div className="mt-1 text-xs text-slate-500">Detail: {order.customer_address_detail}</div>
-                                )}
-                                {order.customer_landmark && (
-                                    <div className="mt-1 text-xs text-slate-500">Patokan: {order.customer_landmark}</div>
-                                )}
-                                {order.latitude && order.longitude && (
-                                    <a
-                                        href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700"
-                                    >
-                                        <MapPin className="h-3 w-3" />
-                                        Buka di Maps
-                                    </a>
-                                )}
                             </div>
                         )}
                     </div>
@@ -342,6 +322,11 @@ export default function TrackPage({ order, found, notifications = [] }: Props) {
                             ))}
                         </div>
                     </div>
+                )}
+
+                {/* Account Promotion */}
+                {canCreateAccount && accountPhone && (
+                    <AccountPromotionBanner phone={accountPhone} name={accountName} />
                 )}
 
                 {/* Dombi branding */}
@@ -438,4 +423,123 @@ function formatTime(value: string): string {
     } catch {
         return '-';
     }
+}
+
+function AccountPromotionBanner({ phone, name }: { phone: string; name?: string }) {
+    const [showForm, setShowForm] = useState(false);
+    const [formName, setFormName] = useState(name ?? '');
+    const [password, setPassword] = useState('');
+    const [passwordConfirmation, setPasswordConfirmation] = useState('');
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+
+    const maskedPhone = phone.replace(/(\d{2})\d+(\d{4})/, '$1••••$2');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError(null);
+        setLoading(true);
+
+        try {
+            const response = await fetch('/customer/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                },
+                body: JSON.stringify({
+                    phone,
+                    name: formName,
+                    password,
+                    password_confirmation: passwordConfirmation,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                window.location.href = data.redirect;
+            } else {
+                setError(data.error ?? 'Gagal membuat akun.');
+            }
+        } catch {
+            setError('Gagal membuat akun. Periksa koneksi Anda.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Buat Akun</div>
+            <div className="mt-2 text-sm text-emerald-800">
+                Buat akun untuk melacak pesanan, menyimpan alamat, dan memesan lebih mudah.
+            </div>
+
+            {!showForm ? (
+                <button
+                    type="button"
+                    onClick={() => setShowForm(true)}
+                    className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
+                >
+                    Buat Akun Sekarang
+                </button>
+            ) : (
+                <form onSubmit={handleSubmit} className="mt-3 space-y-3">
+                    <div>
+                        <label className="text-xs font-medium text-emerald-700">Nomor HP (terverifikasi)</label>
+                        <div className="mt-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-700">
+                            {maskedPhone}
+                        </div>
+                    </div>
+                    <div>
+                        <label className="text-xs font-medium text-emerald-700">Nama</label>
+                        <input
+                            type="text"
+                            value={formName}
+                            onChange={(e) => setFormName(e.target.value)}
+                            required
+                            minLength={3}
+                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs font-medium text-emerald-700">Password</label>
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            required
+                            minLength={8}
+                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                        />
+                    </div>
+                    <div>
+                        <label className="text-xs font-medium text-emerald-700">Konfirmasi Password</label>
+                        <input
+                            type="password"
+                            value={passwordConfirmation}
+                            onChange={(e) => setPasswordConfirmation(e.target.value)}
+                            required
+                            minLength={8}
+                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                        />
+                    </div>
+
+                    {error && (
+                        <p className="text-sm font-medium text-red-600">{error}</p>
+                    )}
+
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700 disabled:opacity-50"
+                    >
+                        {loading ? 'Membuat Akun...' : 'Daftar'}
+                    </button>
+                </form>
+            )}
+        </div>
+    );
 }

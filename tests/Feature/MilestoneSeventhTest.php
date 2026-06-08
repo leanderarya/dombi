@@ -2,12 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
-use App\Models\Delivery;
-use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\Order;
 use App\Models\Product;
+use App\Models\ProductFamily;
+use App\Models\ProductVariant;
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -18,7 +19,7 @@ class MilestoneSeventhTest extends TestCase
 
     // ─── OWNER DASHBOARD ─────────────────────────────────────────────
 
-    public function test_owner_dashboard_returns_stats_and_alerts(): void
+    public function test_owner_dashboard_returns_decision_center_payload(): void
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
 
@@ -27,49 +28,38 @@ class MilestoneSeventhTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('owner/dashboard')
-                ->has('stats')
-                ->has('alerts')
-                ->has('recentActivity')
-                ->where('stats.pendingOrders', 0)
-                ->where('stats.failedDeliveries', 0)
-            );
-    }
-
-    public function test_owner_dashboard_shows_failed_delivery_alerts(): void
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-        $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
-        $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '081234567890' . rand(1000, 9999)]);
-        $order = Order::create([
-            'customer_id' => $customer->id, 'outlet_id' => $outlet->id, 'order_code' => 'DOMBI-TEST-0001',
-            'status' => 'failed_delivery', 'subtotal' => 0, 'delivery_fee' => 0, 'total' => 0,
-            'customer_name' => 'Test', 'customer_phone' => '08', 'customer_address' => 'Addr',
-        ]);
-        Delivery::create(['order_id' => $order->id, 'courier_id' => $courier->id, 'status' => 'failed', 'failed_reason' => 'Alamat salah']);
-
-        $this->actingAs($owner)
-            ->get('/owner/dashboard')
-            ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->where('stats.failedDeliveries', 1)
-                ->has('alerts.failedDeliveries', 1)
+                ->has('hero')
+                ->has('kpis')
+                ->has('actionRequired')
+                ->has('outletAttention')
+                ->has('settlementAlerts')
+                ->has('inventoryRisks')
             );
     }
 
     public function test_owner_dashboard_shows_low_stock_alerts(): void
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-        $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
-        $product = Product::create(['name' => 'Susu', 'slug' => 'susu-test', 'unit' => 'botol', 'price' => 25000, 'is_active' => true]);
-        OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 2, 'reserved_stock' => 1, 'minimum_stock' => 3]);
+        $family = ProductFamily::create(['name' => 'Susu', 'brand' => 'Dombi']);
+        $product = Product::create(['name' => 'Susu 1L', 'slug' => 'susu-test', 'unit' => 'botol', 'price' => 25000, 'is_active' => true]);
+        ProductVariant::create([
+            'product_family_id' => $family->id,
+            'product_id' => $product->id,
+            'name' => 'Susu 1L',
+            'flavor' => 'Original',
+            'size' => '1L',
+            'center_price' => 20000,
+            'selling_price' => 25000,
+            'center_stock' => 9,
+            'is_active' => true,
+        ]);
 
         $this->actingAs($owner)
             ->get('/owner/dashboard')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('stats.lowStocks', 1)
-                ->has('alerts.lowStockItems', 1)
+                ->where('kpis.criticalCenterSkus', 1)
+                ->has('inventoryRisks', 1)
             );
     }
 
@@ -118,8 +108,8 @@ class MilestoneSeventhTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/home')
-                ->has('families')
                 ->has('activeOrders')
+                ->missing('families')
             );
     }
 

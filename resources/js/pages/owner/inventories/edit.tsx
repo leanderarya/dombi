@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 
 export default function EditInventory({ inventory }: any) {
@@ -8,8 +8,7 @@ export default function EditInventory({ inventory }: any) {
     const familyName = inventory.variant?.family?.name ?? '';
 
     return (
-        <OwnerPageShell title="Edit Stok">
-            <Head title="Edit Stok" />
+        <OwnerPageShell title="Edit Stok" backHref="/owner/inventories">
             <div className="mt-2">
                 <div className="text-sm font-semibold text-slate-900">{inventory.outlet?.name}</div>
                 <div className="mt-0.5 text-sm text-slate-600">

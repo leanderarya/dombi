@@ -43,18 +43,18 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Restock Request</p>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Permintaan Restock</p>
                             <h1 className="mt-1 text-xl font-bold text-slate-950">#{restock.id} · {restock.outlet.name}</h1>
-                            <p className="mt-1 text-xs text-slate-500">{totalRequested} requested · {totalApproved || '-'} approved</p>
+                            <p className="mt-1 text-xs text-slate-500">{totalRequested} Diminta · {totalApproved || '-'} Disetujui</p>
                         </div>
                         <RestockStatusBadge status={restock.status} />
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                        <Metric label="Requested by" value={restock.requester?.name ?? '-'} />
-                        <Metric label="Requested at" value={formatDate(restock.created_at)} />
-                        <Metric label="Owner responsible" value={distribution?.sender?.name ?? restock.approver?.name ?? '-'} />
-                        <Metric label="Warehouse stock" value="Belum aktif" muted />
+                        <Metric label="Diminta oleh" value={restock.requester?.name ?? '-'} />
+                        <Metric label="Tanggal permintaan" value={formatDate(restock.created_at)} />
+                        <Metric label="Penanggung jawab" value={distribution?.sender?.name ?? restock.approver?.name ?? '-'} />
+                        <Metric label="Stok gudang" value="Belum aktif" muted />
                     </div>
                 </section>
 
@@ -79,7 +79,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-sm font-bold text-slate-950">Operational Timeline</h2>
+                            <h2 className="text-sm font-bold text-slate-950">Linimasa Operasional</h2>
                             <p className="mt-0.5 text-xs text-slate-500">Ringkasan status, aktor, dan waktu proses.</p>
                         </div>
                     </div>
@@ -87,13 +87,13 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                 </section>
 
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm">
-                    <h2 className="text-sm font-bold text-slate-950">Notes</h2>
+                    <h2 className="text-sm font-bold text-slate-950">Catatan</h2>
                     <div className="mt-3 space-y-3 text-xs text-slate-600">
-                        <NoteRow label="Outlet notes" value={restock.notes} />
-                        <NoteRow label="Owner notes" value={restock.owner_notes} />
-                        {restock.rejected_reason && <NoteRow label="Rejected reason" value={restock.rejected_reason} danger />}
-                        <NoteRow label="Receive notes" value={distribution?.received_notes} />
-                        <NoteRow label="Damage notes" value={distribution?.damage_notes} />
+                        <NoteRow label="Catatan outlet" value={restock.notes} />
+                        <NoteRow label="Catatan owner" value={restock.owner_notes} />
+                        {restock.rejected_reason && <NoteRow label="Alasan penolakan" value={restock.rejected_reason} danger />}
+                        <NoteRow label="Catatan penerimaan" value={distribution?.received_notes} />
+                        <NoteRow label="Catatan kerusakan" value={distribution?.damage_notes} />
                     </div>
                 </section>
             </div>
@@ -107,7 +107,7 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
             <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 shadow-sm">
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <h2 className="text-sm font-bold text-slate-950">Distribution Status</h2>
+                        <h2 className="text-sm font-bold text-slate-950">Status Distribusi</h2>
                         <p className="mt-1 text-xs leading-5 text-slate-500">Belum ada distribution. Approve request untuk membuat shipment.</p>
                     </div>
                 </div>
@@ -117,8 +117,8 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
 
     const actionLabels: Record<string, string> = {
         preparing: 'Siap dikirim ke outlet.',
-        shipped: 'Waiting Outlet Confirmation',
-        completed: 'Distribution Completed',
+        shipped: 'Menunggu Konfirmasi Outlet',
+        completed: 'Distribusi Selesai',
     };
     const actionLabel = actionLabels[distribution.status] ?? 'Monitoring distribution.';
 
@@ -126,8 +126,8 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Distribution Status</p>
-                    <h2 className="mt-1 text-lg font-bold text-slate-950">Shipment #{distribution.id}</h2>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Status Distribusi</p>
+                    <h2 className="mt-1 text-lg font-bold text-slate-950">Pengiriman #{distribution.id}</h2>
                     <p className="mt-1 text-xs text-slate-500">{actionLabel}</p>
                 </div>
                 <DistributionStatusBadge status={distribution.status} />
@@ -135,15 +135,15 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
 
             <div className="mt-4 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
                 <Metric label="Outlet" value={restock.outlet.name} />
-                <Metric label="Total items" value={`${distribution.items?.length ?? 0} SKU`} />
-                <Metric label="Shipment qty" value={`${totalDistributed} unit`} />
-                <Metric label="Owner responsible" value={distribution.sender?.name ?? restock.approver?.name ?? '-'} />
-                <Metric label="Sent at" value={formatDate(distribution.sent_at)} />
-                <Metric label="Received at" value={formatDate(distribution.received_at)} />
+                <Metric label="Total item" value={`${distribution.items?.length ?? 0} SKU`} />
+                <Metric label="Jumlah kirim" value={`${totalDistributed} unit`} />
+                <Metric label="Penanggung jawab" value={distribution.sender?.name ?? restock.approver?.name ?? '-'} />
+                <Metric label="Tanggal kirim" value={formatDate(distribution.sent_at)} />
+                <Metric label="Tanggal terima" value={formatDate(distribution.received_at)} />
             </div>
 
             <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-3">
-                <div className="mb-2 text-xs font-bold text-slate-700">Shipment summary</div>
+                <div className="mb-2 text-xs font-bold text-slate-700">Ringkasan pengiriman</div>
                 <div className="space-y-2">
                     {distribution.items.map((item: any) => (
                         <div key={item.id} className="flex items-center justify-between gap-3 text-xs">
@@ -160,19 +160,19 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
                     onClick={() => router.post(`/owner/distributions/${distribution.id}/mark-shipped`)}
                     className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white transition-all duration-150 active:scale-[0.98]"
                 >
-                    Mark Shipped
+                    Tandai Dikirim
                 </button>
             )}
 
             {distribution.status === 'shipped' && (
                 <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50 p-3 text-xs font-semibold text-indigo-700">
-                    Waiting Outlet Confirmation
+                    Menunggu Konfirmasi Outlet
                 </div>
             )}
 
             {distribution.status === 'completed' && (
                 <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold text-emerald-700">
-                    Distribution Completed
+                    Distribusi Selesai
                 </div>
             )}
 
@@ -188,7 +188,7 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-sm font-bold text-slate-950">Approve & Prepare</h2>
+                    <h2 className="text-sm font-bold text-slate-950">Setujui & Siapkan</h2>
                     <p className="mt-1 text-xs text-slate-500">Set approved quantity. Distribution akan dibuat status preparing.</p>
                 </div>
             </div>
@@ -212,11 +212,11 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <div className="truncate text-sm font-bold text-slate-950">{item.product.name}</div>
-                                    <div className="mt-0.5 text-xs text-slate-500">Requested {item.requested_quantity}</div>
+                                    <div className="mt-0.5 text-xs text-slate-500">Diminta {item.requested_quantity}</div>
                                 </div>
-                                {inventory ? <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} /> : <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">No Inventory</span>}
+                                {inventory ? <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} /> : <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">Stok Kosong</span>}
                             </div>
-                            <label className="mt-3 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Approved quantity</label>
+                            <label className="mt-3 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Jumlah disetujui</label>
                             <input
                                 type="number"
                                 min="0"
@@ -231,12 +231,12 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
                 <textarea
                     value={form.data.owner_notes}
                     onChange={(event) => form.setData('owner_notes', event.target.value)}
-                    placeholder="Owner notes"
+                    placeholder="Catatan owner"
                     className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 />
                 {form.errors.items && <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700">{form.errors.items}</div>}
                 <button disabled={form.processing} className="min-h-[48px] w-full rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white transition-all duration-150 active:scale-[0.98] disabled:opacity-60">
-                    Approve & Create Distribution
+                    Setujui & Buat Distribusi
                 </button>
             </form>
         </section>
@@ -246,7 +246,7 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
 function RejectPanel({ restock, form }: any) {
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-bold text-slate-950">Reject Request</h2>
+            <h2 className="text-sm font-bold text-slate-950">Tolak Permintaan</h2>
             <p className="mt-1 text-xs leading-5 text-slate-500">Gunakan hanya jika request tidak bisa dipenuhi.</p>
             <form
                 onSubmit={(event) => {
@@ -258,12 +258,12 @@ function RejectPanel({ restock, form }: any) {
                 <textarea
                     value={form.data.rejected_reason}
                     onChange={(event) => form.setData('rejected_reason', event.target.value)}
-                    placeholder="Rejected reason"
+                    placeholder="Alasan penolakan"
                     className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
                 />
                 {form.errors.rejected_reason && <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700">{form.errors.rejected_reason}</div>}
                 <button disabled={form.processing} className="min-h-[48px] w-full rounded-lg border border-red-200 px-4 text-sm font-bold text-red-700 transition-all duration-150 active:scale-[0.98] disabled:opacity-60">
-                    Reject
+                    Tolak
                 </button>
             </form>
         </section>
@@ -273,7 +273,7 @@ function RejectPanel({ restock, form }: any) {
 function ItemsSummary({ restock, inventories }: any) {
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-bold text-slate-950">Request Items</h2>
+            <h2 className="text-sm font-bold text-slate-950">Item Permintaan</h2>
             <div className="mt-3 space-y-2">
                 {restock.items.map((item: any) => {
                     const inventory: any = inventories.get(item.product_id);
@@ -283,7 +283,7 @@ function ItemsSummary({ restock, inventories }: any) {
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <div className="truncate text-sm font-bold text-slate-950">{item.product.name}</div>
-                                    <div className="mt-1 text-xs text-slate-500">Requested {item.requested_quantity} · Approved {item.approved_quantity ?? 0}</div>
+                                    <div className="mt-1 text-xs text-slate-500">Diminta {item.requested_quantity} · Disetujui {item.approved_quantity ?? 0}</div>
                                 </div>
                                 {inventory && <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} />}
                             </div>
@@ -337,7 +337,7 @@ function buildTimeline(restock: any): TimelineEvent[] {
     const distribution = restock.distribution;
     const events: TimelineEvent[] = [
         {
-            label: 'Request Created',
+            label: 'Permintaan Dibuat',
             at: restock.created_at,
             actor: restock.requester?.name,
             note: restock.notes,
@@ -347,7 +347,7 @@ function buildTimeline(restock: any): TimelineEvent[] {
 
     if (restock.rejected_at) {
         events.push({
-            label: 'Rejected',
+            label: 'Ditolak',
             at: restock.rejected_at,
             actor: restock.rejecter?.name,
             note: restock.rejected_reason,
@@ -359,7 +359,7 @@ function buildTimeline(restock: any): TimelineEvent[] {
 
     if (restock.approved_at) {
         events.push({
-            label: 'Approved / Preparing',
+            label: 'Disetujui / Disiapkan',
             at: restock.approved_at,
             actor: restock.approver?.name,
             note: restock.owner_notes,
@@ -369,17 +369,17 @@ function buildTimeline(restock: any): TimelineEvent[] {
 
     if (distribution) {
         events.push({
-            label: 'Distribution Created',
+            label: 'Distribusi Dibuat',
             at: distribution.created_at,
             actor: restock.approver?.name,
-            note: `${distribution.items?.length ?? 0} SKU prepared`,
+            note: `${distribution.items?.length ?? 0} SKU disiapkan`,
             active: true,
         });
     }
 
     if (distribution?.sent_at) {
         events.push({
-            label: 'Shipped',
+            label: 'Dikirim',
             at: distribution.sent_at,
             actor: distribution.sender?.name,
             note: 'Stok dikirim ke outlet.',
@@ -389,7 +389,7 @@ function buildTimeline(restock: any): TimelineEvent[] {
 
     if (distribution?.received_at) {
         events.push({
-            label: 'Received / Completed',
+            label: 'Diterima / Selesai',
             at: distribution.received_at,
             actor: distribution.receiver?.name,
             note: distribution.received_notes || 'Outlet mengonfirmasi stok diterima.',

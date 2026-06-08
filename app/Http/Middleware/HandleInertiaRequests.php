@@ -57,6 +57,7 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'outlet_provisioning' => fn () => $request->session()->get('outlet_provisioning'),
             ],
+            'guestMode' => fn () => session('guest_mode', false),
             'dev' => [
                 'isLocal' => app()->isLocal(),
                 'env' => config('app.env'),

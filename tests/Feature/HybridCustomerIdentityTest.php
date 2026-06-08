@@ -311,7 +311,7 @@ class HybridCustomerIdentityTest extends TestCase
         $this->assertEquals(1, Customer::where('is_registered', true)->count());
     }
 
-    public function test_owner_dashboard_includes_customer_stats(): void
+    public function test_owner_dashboard_still_loads_with_hybrid_customers_present(): void
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
 
@@ -322,10 +322,8 @@ class HybridCustomerIdentityTest extends TestCase
             ->get('/owner/dashboard')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->has('customerStats')
-                ->where('customerStats.totalCustomers', 2)
-                ->where('customerStats.guestCustomers', 1)
-                ->where('customerStats.registeredCustomers', 1)
+                ->has('hero')
+                ->has('kpis')
             );
     }
 

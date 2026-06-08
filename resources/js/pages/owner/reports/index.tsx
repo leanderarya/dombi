@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { Download } from 'lucide-react';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-header';
+import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
 import { formatCurrency } from '@/lib/format';
 
-const statusLabels: Record<string, string> = { pending: 'Pending', confirmed: 'Confirmed', preparing: 'Preparing', ready_for_pickup: 'Ready', delivering: 'Delivering', completed: 'Completed', cancelled: 'Cancelled', failed: 'Failed', waiting_pickup: 'Waiting', retry_delivery: 'Retry', returned_to_outlet: 'Returned', cancelled_and_released: 'Released' };
+const statusLabels: Record<string, string> = { pending: 'Tertunda', confirmed: 'Dikonfirmasi', preparing: 'Disiapkan', ready_for_pickup: 'Siap', delivering: 'Dikirim', completed: 'Selesai', cancelled: 'Dibatalkan', failed: 'Gagal', waiting_pickup: 'Menunggu', retry_delivery: 'Coba Ulang', returned_to_outlet: 'Dikembalikan', cancelled_and_released: 'Dilepas' };
 
 export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStatus, outlets, filters }: any) {
     const [filterOpen, setFilterOpen] = useState(false);
@@ -25,7 +25,7 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
 
     return (
         <OwnerPageShell
-            title="Reports"
+            title="Laporan"
             headerRight={
                 <>
                     <button onClick={handleExport} className="flex h-10 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-600 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
@@ -43,18 +43,18 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
 
             {/* KPI Grid */}
             <div className="mt-3 grid grid-cols-2 gap-2">
-                <Kpi label="Total Orders" value={String(summary.totalOrders)} />
-                <Kpi label="Revenue" value={formatCurrency(summary.totalRevenue)} highlight />
-                <Kpi label="Completed" value={String(summary.completedOrders)} />
-                <Kpi label="Cancelled" value={String(summary.cancelledOrders)} />
-                <Kpi label="Delivery OK" value={String(summary.completedDeliveries)} />
-                <Kpi label="Delivery Fail" value={String(summary.failedDeliveries)} alert={summary.failedDeliveries > 0} />
+                <Kpi label="Total Pesanan" value={String(summary.totalOrders)} />
+                <Kpi label="Pendapatan" value={formatCurrency(summary.totalRevenue)} highlight />
+                <Kpi label="Selesai" value={String(summary.completedOrders)} />
+                <Kpi label="Dibatalkan" value={String(summary.cancelledOrders)} />
+                <Kpi label="Pengiriman Berhasil" value={String(summary.completedDeliveries)} />
+                <Kpi label="Pengiriman Gagal" value={String(summary.failedDeliveries)} alert={summary.failedDeliveries > 0} />
             </div>
 
             {/* Breakdown */}
             <div className="mt-4 space-y-3">
-                <BreakdownCard title="Orders by Status" data={ordersByStatus} />
-                <BreakdownCard title="Deliveries by Status" data={deliveriesByStatus} />
+                <BreakdownCard title="Pesanan per Status" data={ordersByStatus} />
+                <BreakdownCard title="Pengiriman per Status" data={deliveriesByStatus} />
             </div>
 
             <FilterSheet
@@ -83,7 +83,7 @@ function BreakdownCard({ title, data }: { title: string; data: Record<string, nu
     return (
         <div className="rounded-lg border border-slate-200 bg-white p-3">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{title}</div>
-            {entries.length === 0 ? <p className="mt-2 text-xs text-slate-400">No data</p> : (
+            {entries.length === 0 ? <p className="mt-2 text-xs text-slate-400">Tidak ada data</p> : (
                 <div className="mt-2 space-y-1.5">
                     {entries.map(([status, count]) => (
                         <div key={status} className="flex items-center justify-between text-xs">

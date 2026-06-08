@@ -59,4 +59,66 @@ class CartController extends Controller
             'cart_count' => collect($items)->sum('quantity'),
         ]);
     }
+
+    /**
+     * Remove an item from the session cart.
+     */
+    public function removeItem(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'product_variant_id' => ['required', 'integer'],
+        ]);
+
+        $variantId = (int) $validated['product_variant_id'];
+        $cart = collect($request->session()->get('checkout.cart', []));
+        $items = $cart->filter(fn ($item) => ((int) ($item['product_variant_id'] ?? 0)) !== $variantId)->values()->toArray();
+
+        $request->session()->put('checkout.cart', $items);
+
+        return response()->json([
+            'success' => true,
+            'cart_count' => collect($items)->sum('quantity'),
+        ]);
+    }
+
+    /**
+     * Update quantity for an item in the session cart.
+     */
+    public function setQuantity(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'product_variant_id' => ['required', 'integer'],
+            'quantity' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $variantId = (int) $validated['product_variant_id'];
+        $quantity = (int) $validated['quantity'];
+
+        if ($quantity <= 0) {
+            return $this->removeItem($request);
+        }
+
+        $cart = collect($request->session()->get('checkout.cart', []));
+        $items = $cart->toArray();
+        $found = false;
+
+        foreach ($items as &$item) {
+            if (((int) ($item['product_variant_id'] ?? 0)) === $variantId) {
+                $item['quantity'] = $quantity;
+                $found = true;
+                break;
+            }
+        }
+
+        if (! $found) {
+            $items[] = ['product_variant_id' => $variantId, 'quantity' => $quantity];
+        }
+
+        $request->session()->put('checkout.cart', $items);
+
+        return response()->json([
+            'success' => true,
+            'cart_count' => collect($items)->sum('quantity'),
+        ]);
+    }
 }

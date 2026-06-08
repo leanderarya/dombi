@@ -34,10 +34,30 @@ use App\Http\Controllers\SystemController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('dashboard')
-        : app(CustomerHomeController::class)();
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    if (session('guest_mode')) {
+        return app(CustomerHomeController::class)();
+    }
+
+    return \Inertia\Inertia::render('customer/welcome');
 })->name('home');
+
+Route::post('/guest-mode', function () {
+    session(['guest_mode' => true]);
+
+    return redirect()->route('customer.home');
+})->name('guest-mode');
+
+if (app()->isLocal()) {
+    Route::get('/reset-guest-mode', function () {
+        session()->forget('guest_mode');
+
+        return redirect('/');
+    })->name('reset-guest-mode');
+}
 
 Route::get('/track/{token}', \App\Http\Controllers\TrackController::class)->middleware('throttle:track')->name('track');
 
@@ -50,6 +70,10 @@ Route::get('/api/status', [SystemController::class, 'status'])
 
 Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
+
+// Google OAuth
+Route::get('/auth/google', [\App\Http\Controllers\Auth\SocialAuthController::class, 'redirect'])->name('google.redirect');
+Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\SocialAuthController::class, 'callback'])->name('google.callback');
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
@@ -106,6 +130,7 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
 
     // Settlement
     Route::get('settlement', [App\Http\Controllers\Owner\SettlementController::class, 'index'])->name('settlement.index');
+    Route::get('settlement/collection', [App\Http\Controllers\Owner\SettlementController::class, 'collection'])->name('settlement.collection');
     Route::get('settlement/outlet/{outletId}', [App\Http\Controllers\Owner\SettlementController::class, 'outlet'])->name('settlement.outlet');
 
     // Settlement Payments
@@ -133,24 +158,37 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
 
 Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->group(function (): void {
     Route::get('/home', CustomerHomeController::class)->name('home');
+    Route::post('/fulfillment-draft', [CustomerHomeController::class, 'setFulfillmentDraft'])->name('fulfillment-draft');
     Route::post('/location', [CustomerCheckoutController::class, 'storeLocationDraft'])->name('location.store');
     Route::get('/help', fn () => \Inertia\Inertia::render('customer/help'))->name('help');
     Route::get('/about', fn () => \Inertia\Inertia::render('customer/about'))->name('about');
     Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
     Route::get('/products/{family}', [CustomerProductController::class, 'show'])->name('products.show');
     Route::post('/cart/add', [\App\Http\Controllers\Customer\CartController::class, 'addItem'])->name('cart.add');
+    Route::post('/cart/remove', [\App\Http\Controllers\Customer\CartController::class, 'removeItem'])->name('cart.remove');
+    Route::post('/cart/quantity', [\App\Http\Controllers\Customer\CartController::class, 'setQuantity'])->name('cart.quantity');
     Route::get('/checkout', [CustomerCheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout', [CustomerCheckoutController::class, 'storeIndex'])->name('checkout.store');
     Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
     Route::get('/checkout/customer', [CustomerCheckoutController::class, 'customer'])->name('checkout.customer');
     Route::post('/checkout/customer', [CustomerCheckoutController::class, 'storeCustomer'])->name('checkout.customer.store');
     Route::get('/checkout/customer-lookup', [CustomerCheckoutController::class, 'lookupCustomer'])->middleware('throttle:lookup')->name('checkout.customer.lookup');
+    Route::get('/checkout/login-prompt', fn () => \Inertia\Inertia::render('customer/checkout/login-prompt'))->name('checkout.login-prompt');
+    Route::get('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtp'])->name('checkout.verify-otp');
+    Route::post('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtpSubmit'])->name('checkout.verify-otp.submit');
+    Route::post('/checkout/send-otp', [CustomerCheckoutController::class, 'sendOtp'])->name('checkout.send-otp');
     Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
     Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->name('checkout.submit');
     Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
     Route::post('/orders/recovery', \App\Http\Controllers\Customer\GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/profile', [\App\Http\Controllers\Customer\ProfileController::class, 'index'])->name('profile');
+    Route::post('/register', \App\Http\Controllers\Customer\AccountPromotionController::class)->name('register');
+
+    // Phone verification for Google Sign-In users
+    Route::get('/verify-phone', [\App\Http\Controllers\Auth\SocialAuthController::class, 'showVerifyPhone'])->name('verify-phone');
+    Route::post('/verify-phone/send-otp', [\App\Http\Controllers\Auth\SocialAuthController::class, 'sendPhoneOtp'])->name('verify-phone.send-otp');
+    Route::post('/verify-phone/verify', [\App\Http\Controllers\Auth\SocialAuthController::class, 'verifyPhone'])->name('verify-phone.verify');
 });
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {

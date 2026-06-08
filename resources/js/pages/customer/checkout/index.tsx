@@ -1,10 +1,12 @@
-import { Head, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Store, Truck } from 'lucide-react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
+import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { formatCurrency } from '@/lib/format';
+import { useCart } from '@/lib/use-cart';
 
 type DraftItem = {
     product_variant_id: number;
@@ -16,6 +18,10 @@ type DraftItem = {
 };
 
 export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryPreview, deliveryTiers }: any) {
+    const { auth } = usePage().props as any;
+    const isLoggedIn = !!auth?.user;
+    const cart = useCart();
+    const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
     const [items, setItems] = useState<DraftItem[]>(draft?.items ?? []);
     const [fulfillmentType, setFulfillmentType] = useState<string>(
         draft?.fulfillment?.fulfillment_type ?? ''
@@ -25,24 +31,42 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
     const subtotal = items.reduce((sum, item) => sum + Number(item.subtotal), 0);
     const itemCount = items.reduce((sum, item) => sum + Number(item.quantity), 0);
 
-    const updateQuantity = (variantId: number, newQty: number) => {
+    const updateQuantity = useCallback((variantId: number, newQty: number) => {
         if (newQty <= 0) {
-            setItems(items.filter((i) => i.product_variant_id !== variantId));
+            setItems((prev) => prev.filter((i) => i.product_variant_id !== variantId));
+            cart.removeItem(variantId);
+            fetch('/customer/cart/remove', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '' },
+                body: JSON.stringify({ product_variant_id: variantId }),
+            });
             return;
         }
-        setItems(
-            items.map((i) => {
+        setItems((prev) =>
+            prev.map((i) => {
                 if (i.product_variant_id === variantId) {
                     return { ...i, quantity: newQty, subtotal: i.price * newQty };
                 }
                 return i;
             }),
         );
-    };
+        cart.setQuantity(variantId, newQty);
+        fetch('/customer/cart/quantity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '' },
+            body: JSON.stringify({ product_variant_id: variantId, quantity: newQty }),
+        });
+    }, [cart]);
 
-    const removeItem = (variantId: number) => {
-        setItems(items.filter((i) => i.product_variant_id !== variantId));
-    };
+    const removeItem = useCallback((variantId: number) => {
+        setItems((prev) => prev.filter((i) => i.product_variant_id !== variantId));
+        cart.removeItem(variantId);
+        fetch('/customer/cart/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '' },
+            body: JSON.stringify({ product_variant_id: variantId }),
+        });
+    }, [cart]);
 
     const submit = () => {
         setProcessing(true);
@@ -136,11 +160,18 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                         title="Kurir Dombi"
                         icon={<Truck className="h-5 w-5 text-slate-600" />}
                         description="Diantar oleh kurir internal Dombi."
-                        onClick={() => setFulfillmentType('delivery_dombi')}
+                        onClick={() => {
+                            if (!isLoggedIn) {
+                                setDeliverySheetOpen(true);
+                                return;
+                            }
+                            setFulfillmentType('delivery_dombi');
+                        }}
                         detail={deliveryPreview?.is_serviceable ? {
                             deliveryFee: deliveryPreview.delivery_fee,
                         } : undefined}
                     />
+                    <DeliveryLoginSheet open={deliverySheetOpen} onClose={() => setDeliverySheetOpen(false)} />
                 </div>
             </section>
         </CustomerMobileLayout>

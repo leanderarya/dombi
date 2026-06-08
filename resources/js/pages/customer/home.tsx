@@ -1,167 +1,303 @@
-import { Head, Link } from '@inertiajs/react';
-import { Package } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useCallback, useEffect, useState } from 'react';
+import { HelpCircle, MapPin, MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Truck, User } from 'lucide-react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
-import { orderProgressIndex, orderStatusLabel } from '@/lib/customer-status';
-import { formatCurrency } from '@/lib/format';
+import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 
-interface Variant {
-    id: number;
-    name: string;
-    flavor: string | null;
-    size: string | null;
-    selling_price: number;
-    is_active: boolean;
-}
+const HERO_SLIDES = [
+    {
+        title: 'Susu Kambing Segar',
+        subtitle: 'Kualitas terbaik langsung dari Dombi',
+        cta: 'Pesan Sekarang',
+        ctaHref: '/customer/products',
+        gradient: 'from-emerald-600 via-emerald-500 to-teal-500',
+    },
+    {
+        title: 'Delivery Mudah',
+        subtitle: 'Pesanan dikirim langsung ke rumah Anda',
+        cta: null,
+        ctaHref: null,
+        gradient: 'from-emerald-700 via-emerald-600 to-emerald-500',
+    },
+    {
+        title: 'Pickup Cepat',
+        subtitle: 'Ambil langsung tanpa antre',
+        cta: null,
+        ctaHref: null,
+        gradient: 'from-teal-600 via-emerald-500 to-emerald-400',
+    },
+];
 
-interface Family {
-    id: number;
-    name: string;
-    brand: string | null;
-    description: string | null;
-    variants: Variant[];
-}
+export default function Home({ customerName, activeOrders }: any) {
+    const { auth } = usePage<any>().props;
+    const isLoggedIn = !!auth?.user;
+    const hasLinkedCustomer = !!auth?.user?.customer;
+    const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
+    const [slideIndex, setSlideIndex] = useState(0);
 
-export default function Home({ families, activeOrders, lastOrder }: any) {
+    // Auto-rotate hero slides
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
+        }, 5000);
+        return () => clearInterval(timer);
+    }, []);
+
+    const handlePickup = useCallback(() => {
+        router.post('/customer/fulfillment-draft', { fulfillment_type: 'pickup' });
+    }, []);
+
+    const handleDelivery = useCallback(() => {
+        if (!isLoggedIn) {
+            setDeliverySheetOpen(true);
+            return;
+        }
+        if (!hasLinkedCustomer) {
+            router.visit('/customer/verify-phone');
+            return;
+        }
+        router.post('/customer/fulfillment-draft', { fulfillment_type: 'delivery_dombi' });
+    }, [isLoggedIn, hasLinkedCustomer]);
+
     const activeOrder = activeOrders?.[0] ?? null;
 
     return (
-        <CustomerMobileLayout activeOrder={activeOrder}>
+        <CustomerMobileLayout>
             <Head title="Home" />
 
-            {/* Active Order */}
-            {activeOrder && (
-                <section>
-                    <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Order Aktif</h2>
-                    <Link href={`/customer/orders/${activeOrder.id}`} className="mt-2 block rounded-xl border border-emerald-100 bg-emerald-50/40 p-4 active:bg-emerald-50">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0">
-                                <div className="text-sm font-semibold text-slate-900">{orderStatusLabel(activeOrder.status)}</div>
-                                <div className="mt-0.5 text-xs text-slate-500">{activeOrder.outlet?.name ?? 'Outlet sedang dipilih'}</div>
-                                {activeOrder.delivery?.courier && (
-                                    <div className="mt-1 text-xs font-medium text-emerald-700">Kurir: {activeOrder.delivery.courier.name}</div>
-                                )}
-                            </div>
-                            <span className="shrink-0 text-xs font-bold uppercase tracking-wide text-emerald-700">Lacak →</span>
+            {/* SECTION 1 — HERO CAROUSEL */}
+            <section className="-mx-4 -mt-5 overflow-hidden rounded-b-[2rem]">
+                <div
+                    className="relative flex h-[320px] items-center justify-center transition-all duration-700"
+                    style={{ backgroundImage: 'none' }}
+                >
+                    <div className={`absolute inset-0 bg-gradient-to-br ${HERO_SLIDES[slideIndex].gradient} transition-all duration-700`} />
+                    {/* Decorative circles */}
+                    <div className="absolute inset-0 overflow-hidden opacity-10">
+                        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white" />
+                        <div className="absolute -bottom-24 -left-16 h-80 w-80 rounded-full bg-white" />
+                        <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-white" />
+                    </div>
+
+                    <div className="relative z-10 flex flex-col items-center px-8 text-center">
+                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                            <span className="text-3xl font-bold text-white">D</span>
                         </div>
-                        <TrackingBar status={activeOrder.status} />
-                    </Link>
-                </section>
-            )}
-
-            {/* Quick Reorder */}
-            {lastOrder && (
-                <section className={activeOrder ? 'mt-6' : ''}>
-                    <div className="flex items-center justify-between">
-                        <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Order Lagi</h2>
-                        <Link href="/customer/orders" className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Riwayat</Link>
+                        <h1 className="mt-5 text-2xl font-bold leading-tight text-white">
+                            {HERO_SLIDES[slideIndex].title}
+                        </h1>
+                        <p className="mt-2 text-sm text-white/80">
+                            {HERO_SLIDES[slideIndex].subtitle}
+                        </p>
+                        {HERO_SLIDES[slideIndex].cta && (
+                            <Link
+                                href={HERO_SLIDES[slideIndex].ctaHref!}
+                                className="mt-5 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-emerald-700 shadow-lg transition-all active:scale-95"
+                            >
+                                {HERO_SLIDES[slideIndex].cta}
+                            </Link>
+                        )}
                     </div>
-                    <div className="mt-2 rounded-xl border border-zinc-100 bg-white p-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-zinc-50">
-                                <Package className="h-6 w-6 text-slate-400" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="truncate text-sm font-semibold text-slate-900">
-                                    {lastOrder.items?.[0]?.product_name ?? 'Susu Kambing'}
-                                </div>
-                                <div className="mt-0.5 text-xs text-slate-500">
-                                    {lastOrder.items?.length ?? 0} item · {formatCurrency(lastOrder.total)}
-                                </div>
-                            </div>
-                        </div>
-                        <Link
-                            href={`/customer/orders/${lastOrder.id}/restore-cart`}
-                            className="mt-3 flex min-h-11 w-full items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white active:scale-[0.97] active:bg-emerald-800"
-                        >
-                            Order Ulang
-                        </Link>
+
+                    {/* Dot indicators */}
+                    <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2">
+                        {HERO_SLIDES.map((_, i) => (
+                            <button
+                                key={i}
+                                type="button"
+                                onClick={() => setSlideIndex(i)}
+                                className={`h-2 rounded-full transition-all duration-300 ${
+                                    i === slideIndex ? 'w-6 bg-white' : 'w-2 bg-white/40'
+                                }`}
+                            />
+                        ))}
                     </div>
-                </section>
-            )}
-
-            {/* First-time CTA */}
-            {!lastOrder && !activeOrder && (
-                <section>
-                    <div className="rounded-xl border border-zinc-100 bg-white p-5 text-center">
-                        <Package className="mx-auto h-10 w-10 text-slate-400" />
-                        <p className="mt-2 text-sm font-semibold text-slate-900">Susu kambing segar siap diantar</p>
-                        <p className="mt-1 text-xs text-slate-500">Pilih produk dan pesan langsung ke alamat kamu.</p>
-                        <Link href="/customer/products" className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white active:bg-emerald-800">
-                            Pesan Sekarang
-                        </Link>
-                    </div>
-                </section>
-            )}
-
-            {/* Featured Products */}
-            <section className="mt-6">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Produk</h2>
-                    <Link href="/customer/products" className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Semua</Link>
-                </div>
-                <div className="mt-2 divide-y divide-zinc-100">
-                    {(() => {
-                        const rows: Array<{ key: string; familyId: number; label: string; description: string | null; lowestPrice: number }> = [];
-                        for (const family of (families ?? [])) {
-                            const activeVariants = (family.variants ?? []).filter((v: Variant) => v.is_active);
-                            if (activeVariants.length === 0) continue;
-
-                            const flavorMap = new Map<string | null, Variant[]>();
-                            for (const v of activeVariants) {
-                                const k = v.flavor ?? '__no_flavor__';
-                                if (!flavorMap.has(k)) flavorMap.set(k, []);
-                                flavorMap.get(k)!.push(v);
-                            }
-
-                            for (const [k, vars] of flavorMap) {
-                                const flavor = k === '__no_flavor__' ? null : k;
-                                const lowest = Math.min(...vars.map((v) => v.selling_price));
-                                rows.push({
-                                    key: `${family.id}-${flavor ?? 'default'}`,
-                                    familyId: family.id,
-                                    label: flavor ? `${family.name} ${flavor}` : family.name,
-                                    description: family.description,
-                                    lowestPrice: lowest,
-                                });
-                            }
-                        }
-                        return rows.slice(0, 6);
-                    })().map((row) => (
-                        <Link
-                            key={row.key}
-                            href={`/customer/products/${row.familyId}`}
-                            className="flex items-center gap-3.5 bg-white py-3 active:bg-zinc-50"
-                        >
-                            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-zinc-50">
-                                <span className="text-3xl">&#129371;</span>
-                            </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="text-sm font-semibold text-slate-900 leading-tight">
-                                    {row.label}
-                                </div>
-                                <div className="mt-0.5 text-xs text-zinc-500 truncate">
-                                    {row.description || row.label}
-                                </div>
-                                <div className="mt-1 text-sm font-bold tabular-nums text-emerald-700">
-                                    Mulai {formatCurrency(row.lowestPrice)}
-                                </div>
-                            </div>
-                        </Link>
-                    ))}
                 </div>
             </section>
+
+            {/* SECTION 2 — ACCOUNT SUMMARY */}
+            <section className="mt-5">
+                {isLoggedIn ? (
+                    <Link
+                        href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
+                        className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 active:bg-emerald-50"
+                    >
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
+                            <User className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold text-slate-900">
+                                Halo, {customerName ?? auth.user.name}
+                            </div>
+                            <div className="mt-0.5 text-xs text-slate-500">
+                                {activeOrder
+                                    ? `Pesanan Aktif · ${activeOrder.order_code}`
+                                    : 'Belum Ada Pesanan Aktif'}
+                            </div>
+                        </div>
+                        <svg className="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </Link>
+                ) : (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3">
+                        <div className="text-sm font-semibold text-slate-900">Masuk untuk fitur penuh</div>
+                        <div className="mt-0.5 text-xs text-slate-500">Lacak pesanan, simpan alamat, dan lebih banyak lagi.</div>
+                        <a
+                            href="/auth/google"
+                            className="mt-3 flex min-h-[40px] items-center justify-center gap-2 rounded-lg bg-emerald-600 text-xs font-bold text-white active:bg-emerald-700"
+                        >
+                            <svg className="h-4 w-4" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                            </svg>
+                            Masuk dengan Google
+                        </a>
+                    </div>
+                )}
+            </section>
+
+            {/* SECTION 3 — PESAN SEKARANG */}
+            <section className="mt-6">
+                <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pesan Sekarang</h2>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        onClick={handlePickup}
+                        className="group flex flex-col items-start rounded-xl border-2 border-emerald-200 bg-white p-5 text-left transition-all active:scale-[0.98] active:border-emerald-400 active:bg-emerald-50/50"
+                    >
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 transition-colors group-active:bg-emerald-100">
+                            <Store className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div className="mt-4 text-base font-bold text-slate-900">Pickup</div>
+                        <div className="mt-1 text-xs leading-relaxed text-slate-500">
+                            Ambil langsung di outlet terdekat
+                        </div>
+                        <div className="mt-4 text-xs font-bold text-emerald-700">Pilih Pickup</div>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleDelivery}
+                        className="group flex flex-col items-start rounded-xl border-2 border-blue-200 bg-white p-5 text-left transition-all active:scale-[0.98] active:border-blue-400 active:bg-blue-50/50"
+                    >
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 transition-colors group-active:bg-blue-100">
+                            <Truck className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div className="mt-4 text-base font-bold text-slate-900">Delivery</div>
+                        <div className="mt-1 text-xs leading-relaxed text-slate-500">
+                            Dikirim ke alamat Anda
+                        </div>
+                        <div className="mt-4 text-xs font-bold text-blue-700">Pilih Delivery</div>
+                    </button>
+                </div>
+            </section>
+
+            {/* SECTION 4 — YANG MENARIK DI DOMBI */}
+            <section className="mt-6">
+                <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Yang Menarik di Dombi</h2>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                    <Link
+                        href="/customer/products"
+                        className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-emerald-50"
+                    >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                            <Milk className="h-5 w-5 text-emerald-600" />
+                        </div>
+                        <div>
+                            <div className="text-sm font-bold text-slate-900">Produk Segar</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Susu kambing pilihan setiap hari</div>
+                        </div>
+                    </Link>
+
+                    <Link
+                        href="/customer/products"
+                        className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-emerald-50"
+                    >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+                            <MapPinned className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div>
+                            <div className="text-sm font-bold text-slate-900">Outlet Terdekat</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Pesanan diproses dari outlet terbaik</div>
+                        </div>
+                    </Link>
+
+                    {isLoggedIn ? (
+                        <Link
+                            href="/customer/orders"
+                            className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-emerald-50"
+                        >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+                                <Package className="h-5 w-5 text-amber-600" />
+                            </div>
+                            <div>
+                                <div className="text-sm font-bold text-slate-900">Riwayat Pesanan</div>
+                                <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Lihat pesanan sebelumnya</div>
+                            </div>
+                        </Link>
+                    ) : (
+                        <a
+                            href="/auth/google"
+                            className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-emerald-50"
+                        >
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+                                <Package className="h-5 w-5 text-amber-600" />
+                            </div>
+                            <div>
+                                <div className="text-sm font-bold text-slate-900">Riwayat Pesanan</div>
+                                <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Login untuk melihat pesanan</div>
+                            </div>
+                        </a>
+                    )}
+
+                    <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50">
+                            <ShieldCheck className="h-5 w-5 text-purple-600" />
+                        </div>
+                        <div>
+                            <div className="text-sm font-bold text-slate-900">Kualitas Terjamin</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Diproses dengan standar kualitas Dombi</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* SECTION 5 — BANTUAN */}
+            <section className="mt-6">
+                <a
+                    href="https://wa.me/6281111111111"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-4 active:bg-emerald-50"
+                >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                        <MessageCircle className="h-6 w-6 text-emerald-600" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                        <div className="text-sm font-bold text-slate-900">Butuh Bantuan?</div>
+                        <div className="mt-0.5 text-xs text-slate-500">Hubungi tim Dombi via WhatsApp</div>
+                    </div>
+                    <svg className="h-4 w-4 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                </a>
+            </section>
+
+            {/* SECTION 6 — TRUST */}
+            <section className="mt-6 mb-4">
+                <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400">
+                    <span>Sertifikasi Halal</span>
+                    <span className="h-3 w-px bg-slate-200" />
+                    <span>Izin Usaha</span>
+                    <span className="h-3 w-px bg-slate-200" />
+                    <span>Dombi 2024</span>
+                </div>
+            </section>
+
+            <DeliveryLoginSheet open={deliverySheetOpen} onClose={() => setDeliverySheetOpen(false)} />
         </CustomerMobileLayout>
-    );
-}
-
-function TrackingBar({ status }: { status: string }) {
-    const progress = orderProgressIndex(status);
-
-    return (
-        <div className="mt-3 flex gap-1">
-            {progress.steps.map((step, i) => (
-                <div key={step} className={`h-1 flex-1 rounded-full ${i <= progress.index ? 'bg-emerald-500' : 'bg-emerald-200/50'}`} />
-            ))}
-        </div>
     );
 }

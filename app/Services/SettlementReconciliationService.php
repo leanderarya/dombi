@@ -6,6 +6,7 @@ use App\Models\Outlet;
 use App\Models\OutletPayable;
 use App\Models\SettlementPayment;
 use App\Models\SettlementPeriod;
+use App\Services\SettlementService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,7 @@ class SettlementReconciliationService
         $verifiedPayments = SettlementPayment::query()
             ->where('outlet_id', $outletId)
             ->where('status', SettlementPayment::STATUS_VERIFIED)
-            ->whereBetween('payment_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('payment_date', [$from->toDateString(), $to->copy()->endOfDay()->toDateTimeString()])
             ->sum('amount');
 
         // Pending payments
@@ -44,7 +45,7 @@ class SettlementReconciliationService
         $rejectedPayments = SettlementPayment::query()
             ->where('outlet_id', $outletId)
             ->where('status', SettlementPayment::STATUS_REJECTED)
-            ->whereBetween('payment_date', [$from->toDateString(), $to->toDateString()])
+            ->whereBetween('payment_date', [$from->toDateString(), $to->copy()->endOfDay()->toDateTimeString()])
             ->sum('amount');
 
         // Adjustments (returns + exchanges) for this period
@@ -186,5 +187,151 @@ class SettlementReconciliationService
         usort($overdue, fn ($a, $b) => $b['outstanding'] <=> $a['outstanding']);
 
         return $overdue;
+    }
+
+    /**
+     * Get collection center data for the owner.
+     * Aggregates: hero totals, verification queue, priority list, aging buckets, rankings.
+     */
+    public function getCollectionCenter(): array
+    {
+        $outlets = Outlet::where('status', 'active')->get();
+
+        // Use all-time range for collection center
+        $allTimeFrom = Carbon::parse('2020-01-01');
+        $allTimeTo = Carbon::now()->endOfDay();
+
+        // ── Per-outlet reconciliation (all-time) ──
+        $outletRows = [];
+        foreach ($outlets as $outlet) {
+            $rec = $this->getOutletReconciliation($outlet->id, $allTimeFrom, $allTimeTo);
+            $outletRows[] = [
+                'outlet' => ['id' => $outlet->id, 'name' => $outlet->name],
+                ...$rec,
+            ];
+        }
+
+        // Sort by outstanding descending
+        usort($outletRows, fn ($a, $b) => $b['outstanding'] <=> $a['outstanding']);
+
+        // ── Hero totals ──
+        $totalOutstanding = array_sum(array_column($outletRows, 'outstanding'));
+        $totalCollected = array_sum(array_column($outletRows, 'verified_payments'));
+        $totalPending = array_sum(array_column($outletRows, 'pending_payments'));
+
+        // ── Overdue outlets (outstanding > 0) ──
+        $outletsOverdue = count(array_filter($outletRows, fn ($r) => $r['outstanding'] > 0));
+
+        // ── Payment verification queue ──
+        $pendingVerifications = SettlementPayment::query()
+            ->where('status', SettlementPayment::STATUS_PENDING)
+            ->with('outlet')
+            ->latest()
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'outlet' => ['id' => $p->outlet_id, 'name' => $p->outlet->name],
+                'amount' => (float) $p->amount,
+                'reference_number' => $p->reference_number,
+                'payment_date' => $p->payment_date->toDateString(),
+                'notes' => $p->notes,
+                'created_at' => $p->created_at->toISOString(),
+            ])
+            ->toArray();
+
+        // ── Collection priority list (outlets with outstanding > 0) ──
+        $priorityList = [];
+        foreach ($outletRows as $row) {
+            if ($row['outstanding'] <= 0) {
+                continue;
+            }
+
+            // Calculate days overdue: find oldest unpaid sale
+            $oldestUnpaid = OutletPayable::query()
+                ->where('outlet_id', $row['outlet']['id'])
+                ->where('type', 'sale')
+                ->where('center_share', '>', 0)
+                ->oldest()
+                ->first();
+
+            $daysOverdue = 0;
+            if ($oldestUnpaid) {
+                $daysOverdue = (int) $oldestUnpaid->created_at->diffInDays(now());
+            }
+
+            $priorityList[] = [
+                'outlet' => $row['outlet'],
+                'outstanding' => $row['outstanding'],
+                'center_share' => $row['center_share'],
+                'verified_payments' => $row['verified_payments'],
+                'pending_payments' => $row['pending_payments'],
+                'days_overdue' => $daysOverdue,
+            ];
+        }
+
+        // ── Settlement aging buckets ──
+        $buckets = [
+            ['label' => '0–7 Hari', 'min' => 0, 'max' => 7, 'count' => 0, 'amount' => 0.0],
+            ['label' => '8–14 Hari', 'min' => 8, 'max' => 14, 'count' => 0, 'amount' => 0.0],
+            ['label' => '15–30 Hari', 'min' => 15, 'max' => 30, 'count' => 0, 'amount' => 0.0],
+            ['label' => '>30 Hari', 'min' => 31, 'max' => 9999, 'count' => 0, 'amount' => 0.0],
+        ];
+
+        foreach ($priorityList as $item) {
+            $days = $item['days_overdue'];
+            foreach ($buckets as &$bucket) {
+                if ($days >= $bucket['min'] && $days <= $bucket['max']) {
+                    $bucket['count']++;
+                    $bucket['amount'] += $item['outstanding'];
+                    break;
+                }
+            }
+        }
+        unset($bucket);
+
+        // ── Rankings ──
+        $rankByRevenue = collect($outletRows)
+            ->sortByDesc('center_share')
+            ->take(5)
+            ->values()
+            ->toArray();
+
+        $rankByOutstanding = collect($outletRows)
+            ->filter(fn ($r) => $r['outstanding'] > 0)
+            ->sortByDesc('outstanding')
+            ->take(5)
+            ->values()
+            ->toArray();
+
+        // Margin ranking
+        $settlementService = app(SettlementService::class);
+        $rankByMargin = [];
+        foreach ($outlets as $outlet) {
+            $summary = $settlementService->getOutletSummary($outlet->id);
+            $rankByMargin[] = [
+                'outlet' => ['id' => $outlet->id, 'name' => $outlet->name],
+                'outlet_margin' => $summary['outlet_margin'],
+                'gross_revenue' => $summary['gross_revenue'],
+            ];
+        }
+        usort($rankByMargin, fn ($a, $b) => $b['outlet_margin'] <=> $a['outlet_margin']);
+        $rankByMargin = array_slice($rankByMargin, 0, 5);
+
+        return [
+            'hero' => [
+                'total_outstanding' => (float) $totalOutstanding,
+                'total_collected' => (float) $totalCollected,
+                'total_pending' => (float) $totalPending,
+                'outlets_overdue' => (int) $outletsOverdue,
+            ],
+            'verification_queue' => $pendingVerifications,
+            'priority_list' => $priorityList,
+            'aging' => $buckets,
+            'rankings' => [
+                'by_revenue' => $rankByRevenue,
+                'by_outstanding' => $rankByOutstanding,
+                'by_margin' => $rankByMargin,
+            ],
+        ];
     }
 }

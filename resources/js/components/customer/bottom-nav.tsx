@@ -4,7 +4,7 @@ const navItems = [
     { href: '/customer/home', label: 'Beranda', icon: HomeIcon },
     { href: '/customer/products', label: 'Produk', icon: GridIcon },
     { href: '/customer/orders', label: 'Pesanan', icon: OrdersIcon },
-    { href: '/customer/profile', label: 'Pengaturan', icon: SettingsIcon },
+    { href: '/customer/profile', label: 'Akun', icon: SettingsIcon },
 ];
 
 export default function CustomerBottomNav() {

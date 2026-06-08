@@ -8,6 +8,7 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\User;
+use App\Services\CheckoutOtpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -134,6 +135,8 @@ class GuestCustomerCheckoutTest extends TestCase
                 'phone_number' => '6281234567890',
             ],
             'checkout.location' => $this->locationDraft(),
+            CheckoutOtpService::SESSION_KEY_OTP_VERIFIED => true,
+            CheckoutOtpService::SESSION_KEY_OTP_PHONE => '6281234567890',
         ])->post('/customer/checkout/payment', [
             'payment_method' => 'qris',
         ])->assertRedirect();
@@ -169,6 +172,8 @@ class GuestCustomerCheckoutTest extends TestCase
                 'phone_number' => '6281234567890',
             ],
             'checkout.location' => $this->locationDraft(),
+            CheckoutOtpService::SESSION_KEY_OTP_VERIFIED => true,
+            CheckoutOtpService::SESSION_KEY_OTP_PHONE => '6281234567890',
         ])->post('/customer/checkout/payment', [
             'payment_method' => 'card',
         ])->assertRedirect();
@@ -211,6 +216,7 @@ class GuestCustomerCheckoutTest extends TestCase
     {
         $product = $this->createStockedProduct();
 
+        // Guest delivery is now blocked — redirects to login prompt
         $this->withSession([
             'checkout.cart' => [
                 ['product_id' => $product->id, 'quantity' => 1],
@@ -221,13 +227,14 @@ class GuestCustomerCheckoutTest extends TestCase
         ])->post('/customer/checkout/customer', [
             'customer_name' => 'Sarah Dombi',
             'phone_number' => '081234567890',
-        ])->assertSessionHasErrors(['latitude', 'longitude']);
+        ])->assertRedirect('/customer/checkout/login-prompt');
     }
 
     public function test_customer_step_can_reuse_existing_checkout_location_without_resubmitting_coordinates(): void
     {
         $product = $this->createStockedProduct();
 
+        // Guest delivery is now blocked — redirects to login prompt
         $this->withSession([
             'checkout.cart' => [
                 ['product_id' => $product->id, 'quantity' => 1],
@@ -239,9 +246,7 @@ class GuestCustomerCheckoutTest extends TestCase
         ])->post('/customer/checkout/customer', [
             'customer_name' => 'Sarah Dombi',
             'phone_number' => '081234567890',
-        ])->assertRedirect('/customer/checkout/payment')
-            ->assertSessionHas('checkout.location.latitude', -7.0523456)
-            ->assertSessionHas('checkout.customer.phone_number', '6281234567890');
+        ])->assertRedirect('/customer/checkout/login-prompt');
     }
 
     public function test_payment_page_shows_correct_review_summary_from_draft(): void

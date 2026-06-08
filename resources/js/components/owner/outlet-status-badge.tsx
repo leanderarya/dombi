@@ -6,10 +6,10 @@ const styles: Record<string, string> = {
 };
 
 const labels: Record<string, string> = {
-    active: 'Active',
-    inactive: 'Inactive',
-    low_stock: 'Low Stock',
-    busy: 'Busy',
+    active: 'Aktif',
+    inactive: 'Nonaktif',
+    low_stock: 'Stok Rendah',
+    busy: 'Sibuk',
 };
 
 export default function OutletStatusBadge({ status }: { status: string }) {

@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import StatusBadge from '@/components/ui/status-badge';
 import Pagination from '@/components/pagination';
@@ -7,18 +7,17 @@ import { formatCurrency, formatDate } from '@/lib/format';
 
 export default function OwnerReturnsIndex({ returns, filters, dashboard, outlets, reasons }: any) {
     return (
-        <OwnerPageShell title="Return Requests">
-            <Head title="Return Requests" />
+        <OwnerPageShell title="Permintaan Return">
 
             <div className="space-y-6">
                 {/* Dashboard Metrics */}
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                     <div className="rounded-xl border border-zinc-100 bg-white p-4">
-                        <div className="text-xs text-zinc-500">Pending Returns</div>
+                        <div className="text-xs text-zinc-500">Return Tertunda</div>
                         <div className="mt-1 text-2xl font-bold text-slate-900">{dashboard.pending_returns}</div>
                     </div>
                     <div className="rounded-xl border border-zinc-100 bg-white p-4">
-                        <div className="text-xs text-zinc-500">Returned Value</div>
+                        <div className="text-xs text-zinc-500">Nilai Return</div>
                         <div className="mt-1 text-2xl font-bold text-emerald-700">{formatCurrency(dashboard.returned_value)}</div>
                     </div>
                 </div>
@@ -100,7 +99,7 @@ export default function OwnerReturnsIndex({ returns, filters, dashboard, outlets
                                 </div>
                                 <div className="mt-1 flex items-center justify-between text-[11px] text-zinc-400">
                                     <span>{formatDate(ret.created_at)}</span>
-                                    <span className="font-semibold text-emerald-700">Review</span>
+                                    <span className="font-semibold text-emerald-700">Tinjau</span>
                                 </div>
                             </Link>
                         );

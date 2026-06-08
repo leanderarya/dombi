@@ -9,9 +9,9 @@ interface Props {
 }
 
 const statusConfig = {
-    stable: { label: 'Stable', bg: 'bg-emerald-100', text: 'text-emerald-700' },
-    low_stock: { label: 'Low Stock', bg: 'bg-amber-100', text: 'text-amber-700' },
-    critical: { label: 'Critical', bg: 'bg-red-100', text: 'text-red-700' },
+    stable: { label: 'Stabil', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+    low_stock: { label: 'Stok Rendah', bg: 'bg-amber-100', text: 'text-amber-700' },
+    critical: { label: 'Kritis', bg: 'bg-red-100', text: 'text-red-700' },
 };
 
 export default function OutletHealthCard({ outlet }: Props) {

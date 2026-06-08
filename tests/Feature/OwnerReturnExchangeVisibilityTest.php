@@ -64,10 +64,9 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('owner/dashboard')
-                ->where('stats.pendingReturns', 1)
-                ->where('stats.pendingExchanges', 1)
-                ->has('alerts.pendingReturns', 1)
-                ->has('alerts.pendingExchanges', 1)
+                ->where('actionRequired.returns', 1)
+                ->where('actionRequired.exchanges', 1)
+                ->where('kpis.approvalsNeeded', 2)
                 ->where('ownerOperationalCounts.pendingReturns', 1)
                 ->where('ownerOperationalCounts.pendingExchanges', 1)
             );
@@ -118,7 +117,7 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
         $this->actingAs($context['owner'])
             ->get('/owner/dashboard')
             ->assertInertia(fn ($page) => $page
-                ->where('stats.pendingReturns', 0)
+                ->where('actionRequired.returns', 0)
                 ->where('ownerOperationalCounts.pendingReturns', 0)
             );
     }
@@ -135,7 +134,7 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
         $this->actingAs($context['owner'])
             ->get('/owner/dashboard')
             ->assertInertia(fn ($page) => $page
-                ->where('stats.pendingExchanges', 0)
+                ->where('actionRequired.exchanges', 0)
                 ->where('ownerOperationalCounts.pendingExchanges', 0)
             );
     }

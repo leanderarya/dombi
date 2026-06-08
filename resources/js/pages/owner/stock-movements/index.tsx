@@ -1,14 +1,14 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ClipboardList } from 'lucide-react';
-import EmptyState from '@/components/empty-state';
+import EmptyState from '@/components/ui/empty-state';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { HeaderIconButton, FilterIcon } from '@/components/owner/owner-mobile-header';
+import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
 import Pagination from '@/components/pagination';
 import { formatDate } from '@/lib/format';
 
-const typeLabels: Record<string, string> = { initial_stock: 'Initial', stock_adjustment: 'Adjust', order_reserved: 'Reserved', order_completed: 'Completed', order_cancelled: 'Cancelled', restock_in: 'Restock In', delivery_returned: 'Returned' };
+const typeLabels: Record<string, string> = { initial_stock: 'Stok Awal', stock_adjustment: 'Penyesuaian', order_reserved: 'Direservasi', order_completed: 'Selesai', order_cancelled: 'Dibatalkan', restock_in: 'Restock Masuk', delivery_returned: 'Dikembalikan' };
 const typeColors: Record<string, string> = { initial_stock: 'text-slate-600', stock_adjustment: 'text-amber-700', order_reserved: 'text-blue-700', order_completed: 'text-emerald-700', order_cancelled: 'text-red-700', restock_in: 'text-emerald-700', delivery_returned: 'text-purple-700' };
 const typeOptions = Object.entries(typeLabels).map(([k, v]) => ({ value: k, label: v }));
 
@@ -22,7 +22,7 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
 
     return (
         <OwnerPageShell
-            title="Audit Trail"
+            title="Riwayat Perubahan Stok"
             headerRight={
                 <div className="relative">
                     <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
@@ -58,8 +58,8 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
                 onClose={() => setFilterOpen(false)}
                 sections={[
                     { key: 'outlet_id', label: 'Outlet', options: outlets.map((o: any) => ({ value: String(o.id), label: o.name })), value: filters.outlet_id ? String(filters.outlet_id) : '' },
-                    { key: 'product_id', label: 'Product', options: products.map((p: any) => ({ value: String(p.id), label: p.name })), value: filters.product_id ? String(filters.product_id) : '' },
-                    { key: 'type', label: 'Type', options: typeOptions, value: filters.type ?? '' },
+                    { key: 'product_id', label: 'Produk', options: products.map((p: any) => ({ value: String(p.id), label: p.name })), value: filters.product_id ? String(filters.product_id) : '' },
+                    { key: 'type', label: 'Tipe', options: typeOptions, value: filters.type ?? '' },
                 ]}
                 onApply={handleFilterApply}
             />

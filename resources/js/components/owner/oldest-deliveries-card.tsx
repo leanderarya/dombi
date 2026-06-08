@@ -54,7 +54,7 @@ export default function OldestDeliveriesCard({ deliveries }: Props) {
                                 {formatAge(d.age_minutes)}
                             </span>
                             <span className={`text-[10px] font-medium ${slaColors[d.sla_health] ?? 'text-slate-400'}`}>
-                                {d.sla_health === 'critical' ? 'Terlambat' : d.sla_health === 'warning' ? 'Warning' : 'Normal'}
+                                {d.sla_health === 'critical' ? 'Terlambat' : d.sla_health === 'warning' ? 'Peringatan' : 'Normal'}
                             </span>
                         </div>
                     </Link>
