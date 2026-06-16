@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\Customer;
+use App\Models\Delivery;
 use App\Models\Notification;
 use App\Models\Order;
-use App\Models\Delivery;
+use App\Models\Settlement;
+use App\Models\SettlementPayment;
 use App\Models\User;
 
 class NotificationService
@@ -647,7 +649,7 @@ class NotificationService
 
     // ─── SETTLEMENT NOTIFICATIONS ────────────────────────────────────
 
-    public function notifySettlementReminder(\App\Models\Settlement $settlement): void
+    public function notifySettlementReminder(Settlement $settlement): void
     {
         $outletUser = $this->getOutletUser($settlement->outlet_id);
         if ($outletUser) {
@@ -665,7 +667,7 @@ class NotificationService
         }
     }
 
-    public function notifySettlementGenerated(\App\Models\Settlement $settlement): void
+    public function notifySettlementGenerated(Settlement $settlement): void
     {
         $outletUser = $this->getOutletUser($settlement->outlet_id);
         if ($outletUser) {
@@ -683,7 +685,7 @@ class NotificationService
         }
     }
 
-    public function notifyPaymentSubmitted(\App\Models\SettlementPayment $payment): void
+    public function notifyPaymentSubmitted(SettlementPayment $payment): void
     {
         foreach ($this->getOwners() as $ownerId) {
             $this->create(
@@ -700,7 +702,7 @@ class NotificationService
         }
     }
 
-    public function notifyPaymentVerified(\App\Models\SettlementPayment $payment): void
+    public function notifyPaymentVerified(SettlementPayment $payment): void
     {
         $outletUser = $this->getOutletUser($payment->outlet_id);
         if ($outletUser) {
@@ -718,7 +720,7 @@ class NotificationService
         }
     }
 
-    public function notifyPaymentRejected(\App\Models\SettlementPayment $payment, string $reason): void
+    public function notifyPaymentRejected(SettlementPayment $payment, string $reason): void
     {
         $outletUser = $this->getOutletUser($payment->outlet_id);
         if ($outletUser) {
