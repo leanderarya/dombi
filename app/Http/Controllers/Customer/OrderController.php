@@ -33,7 +33,7 @@ class OrderController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->customer?->id !== $order->customer_id) {
+        if (! $user->isOwner() && $user->customer?->id !== $order->customer_id) {
             abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
         }
 
@@ -68,6 +68,11 @@ class OrderController extends Controller
     private function authorizeReorder(Order $order): void
     {
         $user = auth()->user();
+
+        // Owner can reorder any order
+        if ($user && $user->isOwner()) {
+            return;
+        }
 
         // Authenticated customer — check ownership
         if ($user && $user->customer?->id === $order->customer_id) {

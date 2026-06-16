@@ -72,7 +72,7 @@ class AddressController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->customer?->id !== $address->customer_id) {
+        if (! $user->isOwner() && $user->customer?->id !== $address->customer_id) {
             abort(403, 'Anda tidak memiliki akses ke alamat ini.');
         }
     }
