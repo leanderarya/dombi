@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Notification;
 use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Models\User;

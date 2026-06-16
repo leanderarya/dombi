@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SettlementPayment extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'outlet_id', 'settlement_id', 'reference_number', 'payment_date', 'amount',
         'payment_method', 'proof_image', 'notes', 'status', 'verified_by', 'verified_at',

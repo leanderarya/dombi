@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Settlement extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'outlet_id',
         'period_date',

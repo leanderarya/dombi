@@ -14,7 +14,7 @@ class SettlementPaymentFactory extends Factory
     {
         return [
             'outlet_id' => Outlet::factory(),
-            'reference_number' => 'PAY-' . $this->faker->unique()->numerify('######'),
+            'reference_number' => 'PAY-'.$this->faker->unique()->numerify('######'),
             'payment_date' => now()->toDateString(),
             'amount' => $this->faker->randomFloat(2, 50000, 500000),
             'status' => SettlementPayment::STATUS_PENDING,
