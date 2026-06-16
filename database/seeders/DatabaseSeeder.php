@@ -8,13 +8,13 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Create product catalog (families + variants) — must run first
+        // 1. Create product catalog (families + variants)
         $this->call(ProductCatalogSeeder::class);
 
-        // 2. Create demo users, outlets, orders — must run before inventory seeder
-        $this->call(DemoSeeder::class);
+        // 2. Create users (owner, outlets, courier) and outlet data
+        $this->call(OutletSeeder::class);
 
-        // 3. Seed outlet inventory for all active variants — depends on catalog + outlets
+        // 3. Seed outlet inventory for all active variants
         $this->call(OutletInventorySeeder::class);
     }
 }
