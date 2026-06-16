@@ -43,6 +43,13 @@ class NotificationService
     public const CAPACITY_WARNING = 'system.capacity_warning';
     public const RETURNED_DELIVERY_PENDING = 'system.returned_delivery_pending';
 
+    // Settlement notifications
+    public const SETTLEMENT_REMINDER = 'settlement.reminder';
+    public const SETTLEMENT_GENERATED = 'settlement.generated';
+    public const PAYMENT_SUBMITTED = 'payment.submitted';
+    public const PAYMENT_VERIFIED = 'payment.verified';
+    public const PAYMENT_REJECTED = 'payment.rejected';
+
     /**
      * Get the owner user(s) for notification targeting.
      */
@@ -634,6 +641,97 @@ class NotificationService
                 data: ['courier_id' => $courier->id, 'active_count' => $activeCount, 'max_count' => $maxCount],
                 entityType: 'user',
                 entityId: $courier->id
+            );
+        }
+    }
+
+    // ─── SETTLEMENT NOTIFICATIONS ────────────────────────────────────
+
+    public function notifySettlementReminder(\App\Models\Settlement $settlement): void
+    {
+        $outletUser = $this->getOutletUser($settlement->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::SETTLEMENT_REMINDER,
+                title: 'Pengingat Pembayaran',
+                message: "Settlement untuk periode {$settlement->period_date->format('d/m/Y')} jatuh tempo besok. Jumlah: Rp " . number_format($settlement->amount_due, 0, ',', '.'),
+                data: ['settlement_id' => $settlement->id, 'amount_due' => $settlement->amount_due, 'due_date' => $settlement->due_date->toDateString()],
+                entityType: 'settlement',
+                entityId: $settlement->id
+            );
+        }
+    }
+
+    public function notifySettlementGenerated(\App\Models\Settlement $settlement): void
+    {
+        $outletUser = $this->getOutletUser($settlement->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::SETTLEMENT_GENERATED,
+                title: 'Settlement Baru',
+                message: "Settlement untuk periode {$settlement->period_date->format('d/m/Y')} telah dibuat. Jumlah: Rp " . number_format($settlement->amount_due, 0, ',', '.'),
+                data: ['settlement_id' => $settlement->id, 'amount_due' => $settlement->amount_due],
+                entityType: 'settlement',
+                entityId: $settlement->id
+            );
+        }
+    }
+
+    public function notifyPaymentSubmitted(\App\Models\SettlementPayment $payment): void
+    {
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::PAYMENT_SUBMITTED,
+                title: 'Pembayaran Baru',
+                message: "Outlet {$payment->outlet->name} mengirim pembayaran Rp " . number_format($payment->amount, 0, ',', '.') . " (Ref: {$payment->reference_number})",
+                data: ['payment_id' => $payment->id, 'outlet_id' => $payment->outlet_id, 'amount' => $payment->amount, 'reference_number' => $payment->reference_number],
+                entityType: 'settlement_payment',
+                entityId: $payment->id
+            );
+        }
+    }
+
+    public function notifyPaymentVerified(\App\Models\SettlementPayment $payment): void
+    {
+        $outletUser = $this->getOutletUser($payment->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::PAYMENT_VERIFIED,
+                title: 'Pembayaran Diverifikasi',
+                message: "Pembayaran {$payment->reference_number} sebesar Rp " . number_format($payment->amount, 0, ',', '.') . " telah diverifikasi.",
+                data: ['payment_id' => $payment->id, 'amount' => $payment->amount, 'reference_number' => $payment->reference_number],
+                entityType: 'settlement_payment',
+                entityId: $payment->id
+            );
+        }
+    }
+
+    public function notifyPaymentRejected(\App\Models\SettlementPayment $payment, string $reason): void
+    {
+        $outletUser = $this->getOutletUser($payment->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::PAYMENT_REJECTED,
+                title: 'Pembayaran Ditolak',
+                message: "Pembayaran {$payment->reference_number} ditolak. Alasan: {$reason}",
+                data: ['payment_id' => $payment->id, 'amount' => $payment->amount, 'reference_number' => $payment->reference_number, 'reason' => $reason],
+                entityType: 'settlement_payment',
+                entityId: $payment->id
             );
         }
     }
