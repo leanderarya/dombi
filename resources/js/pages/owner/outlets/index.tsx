@@ -1,10 +1,10 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { Store } from 'lucide-react';
-import EmptyState from '@/components/ui/empty-state';
-import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
 import DataTable from '@/components/ui/data-table';
+import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 
 export default function OutletsIndex({ outlets }: any) {
@@ -50,6 +50,7 @@ export default function OutletsIndex({ outlets }: any) {
                         label: 'Status',
                         render: (row: any) => {
                             const status = getOutletStatus(row);
+
                             return <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>;
                         },
                     },
@@ -63,6 +64,7 @@ export default function OutletsIndex({ outlets }: any) {
                         label: 'Stok Rendah',
                         render: (row: any) => {
                             const count = Number(row.low_stock_count);
+
                             return <span className={count > 0 ? 'font-bold text-amber-600' : 'text-slate-500'}>{count}</span>;
                         },
                     },
@@ -89,9 +91,18 @@ export default function OutletsIndex({ outlets }: any) {
 }
 
 function getOutletStatus(outlet: any): { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' } {
-    if (outlet.status !== 'active') return { label: 'Nonaktif', variant: 'neutral' };
-    if (Number(outlet.low_stock_count) > 0) return { label: 'Stok Rendah', variant: 'warning' };
-    if (Number(outlet.active_orders_count) >= 3) return { label: 'Sibuk', variant: 'info' as any };
+    if (outlet.status !== 'active') {
+return { label: 'Nonaktif', variant: 'neutral' };
+}
+
+    if (Number(outlet.low_stock_count) > 0) {
+return { label: 'Stok Rendah', variant: 'warning' };
+}
+
+    if (Number(outlet.active_orders_count) >= 3) {
+return { label: 'Sibuk', variant: 'info' as any };
+}
+
     return { label: 'Aktif', variant: 'success' };
 }
 

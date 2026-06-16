@@ -1,9 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
-import OutletLayout from '@/layouts/outlet-layout';
-import StatusBadge from '@/components/ui/status-badge';
 import Pagination from '@/components/pagination';
-import { getReturnStatus } from '@/lib/status-labels';
+import StatusBadge from '@/components/ui/status-badge';
+import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { getReturnStatus } from '@/lib/status-labels';
 
 export default function OutletReturnsIndex({ returns, filters }: any) {
     return (
@@ -56,6 +56,7 @@ export default function OutletReturnsIndex({ returns, filters }: any) {
                     )}
                     {returns.data.map((ret: any) => {
                         const status = getReturnStatus(ret.status);
+
                         return (
                             <Link
                                 key={ret.id}

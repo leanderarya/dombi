@@ -1,5 +1,5 @@
-import { formatCurrency } from '@/lib/format';
 import { Package } from 'lucide-react';
+import { formatCurrency } from '@/lib/format';
 
 interface Props {
     name: string;

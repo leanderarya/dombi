@@ -62,7 +62,7 @@ class GuestCheckoutAuthTest extends TestCase
         $order = Order::latest()->firstOrFail();
 
         $this->assertNotNull($order->recovery_token, 'Order should have a recovery token');
-        $this->get('/track/' . $order->recovery_token)->assertOk();
+        $this->get('/track/'.$order->recovery_token)->assertOk();
     }
 
     public function test_authenticated_customer_checkout_redirects_to_order_page(): void
@@ -140,7 +140,7 @@ class GuestCheckoutAuthTest extends TestCase
 
         $this->assertFalse(auth()->check());
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk();
     }
 
@@ -231,7 +231,7 @@ class GuestCheckoutAuthTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-' . uniqid(),
+            'slug' => 'susu-kambing-500ml-'.uniqid(),
             'unit' => 'botol',
             'price' => 25000,
             'is_active' => true,

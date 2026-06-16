@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\Outlet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -126,7 +127,7 @@ class AuthRedirectTraceTest extends TestCase
     public function test_outlet_can_access_outlet_dashboard(): void
     {
         $outlet = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
-        \App\Models\Outlet::create([
+        Outlet::create([
             'user_id' => $outlet->id,
             'name' => 'Test Outlet',
             'kelurahan' => 'Test',

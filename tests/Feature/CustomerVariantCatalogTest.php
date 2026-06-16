@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Outlet;
-use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
@@ -15,9 +13,13 @@ class CustomerVariantCatalogTest extends TestCase
     use RefreshDatabase;
 
     private ProductFamily $family;
+
     private ProductVariant $kopi250;
+
     private ProductVariant $kopi1L;
+
     private ProductVariant $vanilla250;
+
     private ProductVariant $vanilla1L;
 
     protected function setUp(): void
@@ -99,7 +101,7 @@ class CustomerVariantCatalogTest extends TestCase
 
     public function test_product_detail_page_loads_with_family_data(): void
     {
-        $this->get('/customer/products/' . $this->family->id)
+        $this->get('/customer/products/'.$this->family->id)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/product-detail')
@@ -113,10 +115,10 @@ class CustomerVariantCatalogTest extends TestCase
             'product_variant_id' => $this->kopi250->id,
             'quantity' => 1,
         ])
-        ->assertOk()
-        ->assertJson([
-            'success' => true,
-        ]);
+            ->assertOk()
+            ->assertJson([
+                'success' => true,
+            ]);
     }
 
     public function test_cart_add_rejects_inactive_variant(): void
@@ -188,7 +190,7 @@ class CustomerVariantCatalogTest extends TestCase
 
     public function test_product_detail_shows_all_sizes_for_family(): void
     {
-        $response = $this->get('/customer/products/' . $this->family->id);
+        $response = $this->get('/customer/products/'.$this->family->id);
         $response->assertOk();
 
         $response->assertInertia(fn ($page) => $page

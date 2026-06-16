@@ -31,7 +31,7 @@ class RestockService
             ]);
 
             foreach ($payload['items'] as $item) {
-                $variant = \App\Models\ProductVariant::find($item['product_variant_id']);
+                $variant = ProductVariant::find($item['product_variant_id']);
                 $request->items()->create([
                     'product_id' => $variant?->product_id,
                     'product_variant_id' => $item['product_variant_id'],
@@ -119,7 +119,7 @@ class RestockService
 
     public function createDistribution(RestockRequest $request, User $owner): StockDistribution
     {
-        return DB::transaction(function () use ($request, $owner): StockDistribution {
+        return DB::transaction(function () use ($request): StockDistribution {
             $request = RestockRequest::query()->lockForUpdate()->with(['items', 'distribution'])->findOrFail($request->id);
 
             if ($request->status !== 'preparing') {

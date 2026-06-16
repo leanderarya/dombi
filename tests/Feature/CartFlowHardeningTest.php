@@ -2,11 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,9 +19,13 @@ class CartFlowHardeningTest extends TestCase
     use RefreshDatabase;
 
     private Product $product;
+
     private ProductFamily $family;
+
     private ProductVariant $variant;
+
     private ProductVariant $variant2;
+
     private Outlet $outlet;
 
     protected function setUp(): void
@@ -262,12 +270,12 @@ class CartFlowHardeningTest extends TestCase
     public function test_reorder_restores_cart_and_checkout_works(): void
     {
         // Create a customer with a completed order
-        $customer = \App\Models\Customer::create([
+        $customer = Customer::create([
             'name' => 'Test Customer',
             'phone' => '6281234567890',
         ]);
 
-        $order = \App\Models\Order::create([
+        $order = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $this->outlet->id,
             'order_code' => 'DOMBI-REORDER-TEST',
@@ -283,7 +291,7 @@ class CartFlowHardeningTest extends TestCase
             'ordered_at' => now(),
         ]);
 
-        \App\Models\OrderItem::create([
+        OrderItem::create([
             'order_id' => $order->id,
             'product_id' => $this->product->id,
             'product_variant_id' => $this->variant->id,
@@ -295,11 +303,11 @@ class CartFlowHardeningTest extends TestCase
         ]);
 
         // Restore cart from order
-        $user = \App\Models\User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $user = User::factory()->create(['role' => 'customer', 'is_active' => true]);
         $customer->update(['user_id' => $user->id]);
 
         $this->actingAs($user)
-            ->get('/customer/orders/' . $order->id . '/restore-cart')
+            ->get('/customer/orders/'.$order->id.'/restore-cart')
             ->assertRedirect('/customer/checkout');
 
         // Verify cart was restored

@@ -1,10 +1,10 @@
 import { Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import StatusBadge from '@/components/ui/status-badge';
 import SectionCard from '@/components/ui/section-card';
-import { getExchangeStatus, getReturnStatus } from '@/lib/status-labels';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { getExchangeStatus, getReturnStatus } from '@/lib/status-labels';
 
 export default function OwnerExchangesShow({ exchange }: any) {
     const [showApprove, setShowApprove] = useState(false);
@@ -18,13 +18,17 @@ export default function OwnerExchangesShow({ exchange }: any) {
 
     const handleApprove = () => {
         approveForm.post(`/owner/exchanges/${exchange.id}/approve`, {
-            onSuccess: () => { setShowApprove(false); approveForm.reset(); },
+            onSuccess: () => {
+ setShowApprove(false); approveForm.reset(); 
+},
         });
     };
 
     const handleReject = () => {
         rejectForm.post(`/owner/exchanges/${exchange.id}/reject`, {
-            onSuccess: () => { setShowReject(false); rejectForm.reset(); },
+            onSuccess: () => {
+ setShowReject(false); rejectForm.reset(); 
+},
         });
     };
 

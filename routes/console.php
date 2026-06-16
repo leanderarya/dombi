@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\SchedulerHeartbeat;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -63,5 +64,5 @@ Schedule::command('backup:monitor')
 // ─── SCHEDULER HEARTBEAT ────────────────────────────────────────────
 
 Schedule::call(function () {
-    \App\Support\SchedulerHeartbeat::record();
+    SchedulerHeartbeat::record();
 })->everyMinute()->name('scheduler-heartbeat');

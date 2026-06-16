@@ -2,10 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
-use App\Models\CustomerAddress;
-use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;

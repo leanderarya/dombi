@@ -2,36 +2,56 @@
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\PasswordChangeController;
+use App\Http\Controllers\Auth\SocialAuthController;
+use App\Http\Controllers\Courier\CourierAvailabilityController;
 use App\Http\Controllers\Courier\DeliveryController as CourierDeliveryController;
+use App\Http\Controllers\Customer\AccountPromotionController;
 use App\Http\Controllers\Customer\AddressController as CustomerAddressController;
+use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\CheckoutController as CustomerCheckoutController;
+use App\Http\Controllers\Customer\GuestOrderRecoveryController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
+use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\DashboardRedirectController;
+use App\Http\Controllers\DevRoleSwitcherController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Outlet\DashboardController;
-use App\Http\Controllers\Outlet\InventoryController as OutletInventoryController;
 use App\Http\Controllers\Outlet\DeliveryController as OutletDeliveryController;
+use App\Http\Controllers\Outlet\ExchangeController as OutletExchangeController;
+use App\Http\Controllers\Outlet\InventoryController as OutletInventoryController;
 use App\Http\Controllers\Outlet\OrderController as OutletOrderController;
 use App\Http\Controllers\Outlet\RestockController as OutletRestockController;
+use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
+use App\Http\Controllers\Outlet\SettlementController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\DeliveryBoardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
+use App\Http\Controllers\Owner\ExchangeController as OwnerExchangeController;
+use App\Http\Controllers\Owner\FinanceSettlementController;
 use App\Http\Controllers\Owner\InventoryController as OwnerInventoryController;
 use App\Http\Controllers\Owner\OrderController as OwnerOrderController;
 use App\Http\Controllers\Owner\OutletController as OwnerOutletController;
-use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
+use App\Http\Controllers\Owner\OutletHolidayController;
+use App\Http\Controllers\Owner\OutletOperatingHoursController;
+use App\Http\Controllers\Owner\OutletProductController;
+use App\Http\Controllers\Owner\PaymentAccountController;
+use App\Http\Controllers\Owner\PricingController;
 use App\Http\Controllers\Owner\ProductController as OwnerProductController;
+use App\Http\Controllers\Owner\ProductFamilyController;
+use App\Http\Controllers\Owner\ProductVariantController;
+use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\RestockController as OwnerRestockController;
+use App\Http\Controllers\Owner\ReturnController as OwnerReturnController;
+use App\Http\Controllers\Owner\SettlementPaymentController;
 use App\Http\Controllers\Owner\StockDistributionController as OwnerStockDistributionController;
 use App\Http\Controllers\Owner\StockMovementController;
-use App\Http\Controllers\Owner\ReturnController as OwnerReturnController;
-use App\Http\Controllers\Owner\ExchangeController as OwnerExchangeController;
-use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
-use App\Http\Controllers\Outlet\ExchangeController as OutletExchangeController;
 use App\Http\Controllers\SystemController;
+use App\Http\Controllers\TrackController;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
     if (auth()->check()) {
@@ -42,7 +62,7 @@ Route::get('/', function () {
         return app(CustomerHomeController::class)();
     }
 
-    return \Inertia\Inertia::render('customer/welcome');
+    return Inertia::render('customer/welcome');
 })->name('home');
 
 Route::post('/guest-mode', function () {
@@ -59,7 +79,7 @@ if (app()->isLocal()) {
     })->name('reset-guest-mode');
 }
 
-Route::get('/track/{token}', \App\Http\Controllers\TrackController::class)->middleware('throttle:track')->name('track');
+Route::get('/track/{token}', TrackController::class)->middleware('throttle:track')->name('track');
 
 // System endpoints
 Route::get('/api/health', [SystemController::class, 'health'])->name('health');
@@ -72,8 +92,8 @@ Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('l
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
 
 // Google OAuth
-Route::get('/auth/google', [\App\Http\Controllers\Auth\SocialAuthController::class, 'redirect'])->name('google.redirect');
-Route::get('/auth/google/callback', [\App\Http\Controllers\Auth\SocialAuthController::class, 'callback'])->name('google.callback');
+Route::get('/auth/google', [SocialAuthController::class, 'redirect'])->name('google.redirect');
+Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->name('google.callback');
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
@@ -84,10 +104,10 @@ Route::middleware('auth')->group(function (): void {
     Route::put('/password/change', [PasswordChangeController::class, 'update'])->name('password.update');
 
     // Notifications
-    Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
-    Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
-    Route::post('/notifications/{notification}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::post('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });
 
 Route::get('/dashboard', DashboardRedirectController::class)
@@ -99,35 +119,35 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
     Route::get('/profile', OwnerProfileController::class)->name('profile');
     Route::resource('outlets', OwnerOutletController::class);
     Route::put('outlets/{outlet}/archive', [OwnerOutletController::class, 'archive'])->name('outlets.archive');
-    Route::get('outlets/{outlet}/operating-hours', [App\Http\Controllers\Owner\OutletOperatingHoursController::class, 'index'])->name('outlets.operating-hours.index');
-    Route::put('outlets/{outlet}/operating-hours', [App\Http\Controllers\Owner\OutletOperatingHoursController::class, 'bulkUpdate'])->name('outlets.operating-hours.bulk-update');
-    Route::post('outlets/{outlet}/holidays', [App\Http\Controllers\Owner\OutletHolidayController::class, 'store'])->name('outlets.holidays.store');
-    Route::put('outlets/{outlet}/holidays/{holiday}', [App\Http\Controllers\Owner\OutletHolidayController::class, 'update'])->name('outlets.holidays.update');
-    Route::delete('outlets/{outlet}/holidays/{holiday}', [App\Http\Controllers\Owner\OutletHolidayController::class, 'destroy'])->name('outlets.holidays.destroy');
-    Route::get('outlets/{outlet}/products', [App\Http\Controllers\Owner\OutletProductController::class, 'index'])->name('outlets.products.index');
-    Route::get('outlets/{outlet}/products/available', [App\Http\Controllers\Owner\OutletProductController::class, 'availableProducts'])->name('outlets.products.available');
-    Route::post('outlets/{outlet}/products', [App\Http\Controllers\Owner\OutletProductController::class, 'addProducts'])->name('outlets.products.add');
-    Route::put('outlets/{outlet}/products/{variantId}/toggle', [App\Http\Controllers\Owner\OutletProductController::class, 'toggle'])->name('outlets.products.toggle');
-    Route::delete('outlets/{outlet}/products/{variantId}', [App\Http\Controllers\Owner\OutletProductController::class, 'remove'])->name('outlets.products.remove');
-    Route::post('outlets/{outlet}/products/bulk-assign', [App\Http\Controllers\Owner\OutletProductController::class, 'bulkAssign'])->name('outlets.products.bulk-assign');
-    Route::post('outlets/{outlet}/restock', [App\Http\Controllers\Owner\OutletProductController::class, 'restock'])->name('outlets.products.restock');
+    Route::get('outlets/{outlet}/operating-hours', [OutletOperatingHoursController::class, 'index'])->name('outlets.operating-hours.index');
+    Route::put('outlets/{outlet}/operating-hours', [OutletOperatingHoursController::class, 'bulkUpdate'])->name('outlets.operating-hours.bulk-update');
+    Route::post('outlets/{outlet}/holidays', [OutletHolidayController::class, 'store'])->name('outlets.holidays.store');
+    Route::put('outlets/{outlet}/holidays/{holiday}', [OutletHolidayController::class, 'update'])->name('outlets.holidays.update');
+    Route::delete('outlets/{outlet}/holidays/{holiday}', [OutletHolidayController::class, 'destroy'])->name('outlets.holidays.destroy');
+    Route::get('outlets/{outlet}/products', [OutletProductController::class, 'index'])->name('outlets.products.index');
+    Route::get('outlets/{outlet}/products/available', [OutletProductController::class, 'availableProducts'])->name('outlets.products.available');
+    Route::post('outlets/{outlet}/products', [OutletProductController::class, 'addProducts'])->name('outlets.products.add');
+    Route::put('outlets/{outlet}/products/{variantId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle');
+    Route::delete('outlets/{outlet}/products/{variantId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove');
+    Route::post('outlets/{outlet}/products/bulk-assign', [OutletProductController::class, 'bulkAssign'])->name('outlets.products.bulk-assign');
+    Route::post('outlets/{outlet}/restock', [OutletProductController::class, 'restock'])->name('outlets.products.restock');
     Route::resource('products', OwnerProductController::class)->except(['show']);
 
     // Product Families & Variants
-    Route::resource('product-families', App\Http\Controllers\Owner\ProductFamilyController::class)->except(['create', 'edit', 'destroy']);
-    Route::post('product-families/{family}/variants', [App\Http\Controllers\Owner\ProductVariantController::class, 'store'])->name('product-families.variants.store');
-    Route::put('variants/{variant}', [App\Http\Controllers\Owner\ProductVariantController::class, 'update'])->name('variants.update');
+    Route::resource('product-families', ProductFamilyController::class)->except(['create', 'edit', 'destroy']);
+    Route::post('product-families/{family}/variants', [ProductVariantController::class, 'store'])->name('product-families.variants.store');
+    Route::put('variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
 
     // Pricing
-    Route::get('pricing', [App\Http\Controllers\Owner\PricingController::class, 'index'])->name('pricing.index');
-    Route::get('pricing/master', [App\Http\Controllers\Owner\PricingController::class, 'master'])->name('pricing.master');
-    Route::patch('pricing/master/{variant}', [App\Http\Controllers\Owner\PricingController::class, 'updateCenterPrice'])->name('pricing.master.update');
-    Route::get('pricing/master/{variant}/impact', [App\Http\Controllers\Owner\PricingController::class, 'getImpact'])->name('pricing.master.impact');
-    Route::get('pricing/history', [App\Http\Controllers\Owner\PricingController::class, 'history'])->name('pricing.history');
-    Route::get('pricing/outlets/{outlet}', [App\Http\Controllers\Owner\PricingController::class, 'show'])->name('pricing.outlets.show');
-    Route::patch('pricing/outlets/{outlet}/variants/{variant}', [App\Http\Controllers\Owner\PricingController::class, 'update'])->name('pricing.outlets.variants.update');
-    Route::post('pricing/outlets/{outlet}/bulk-update', [App\Http\Controllers\Owner\PricingController::class, 'bulkUpdate'])->name('pricing.outlets.bulk-update');
-    Route::post('pricing/outlets/{outlet}/copy', [App\Http\Controllers\Owner\PricingController::class, 'copy'])->name('pricing.outlets.copy');
+    Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
+    Route::get('pricing/master', [PricingController::class, 'master'])->name('pricing.master');
+    Route::patch('pricing/master/{variant}', [PricingController::class, 'updateCenterPrice'])->name('pricing.master.update');
+    Route::get('pricing/master/{variant}/impact', [PricingController::class, 'getImpact'])->name('pricing.master.impact');
+    Route::get('pricing/history', [PricingController::class, 'history'])->name('pricing.history');
+    Route::get('pricing/outlets/{outlet}', [PricingController::class, 'show'])->name('pricing.outlets.show');
+    Route::patch('pricing/outlets/{outlet}/variants/{variant}', [PricingController::class, 'update'])->name('pricing.outlets.variants.update');
+    Route::post('pricing/outlets/{outlet}/bulk-update', [PricingController::class, 'bulkUpdate'])->name('pricing.outlets.bulk-update');
+    Route::post('pricing/outlets/{outlet}/copy', [PricingController::class, 'copy'])->name('pricing.outlets.copy');
 
     Route::get('inventories', [OwnerInventoryController::class, 'index'])->name('inventories.index');
     Route::get('inventories/create', [OwnerInventoryController::class, 'create'])->name('inventories.create');
@@ -153,19 +173,19 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
     Route::post('distributions/{distribution}/mark-shipped', [OwnerStockDistributionController::class, 'markShipped'])->name('distributions.mark-shipped');
 
     // Settlement Payments
-    Route::get('settlement-payments', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
-    Route::post('settlement-payments/{payment}/verify', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'verify'])->name('settlement-payments.verify');
-    Route::post('settlement-payments/{payment}/reject', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'reject'])->name('settlement-payments.reject');
-    Route::post('settlement-payments/bulk-verify', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'bulkVerify'])->name('settlement-payments.bulk-verify');
+    Route::get('settlement-payments', [SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
+    Route::post('settlement-payments/{payment}/verify', [SettlementPaymentController::class, 'verify'])->name('settlement-payments.verify');
+    Route::post('settlement-payments/{payment}/reject', [SettlementPaymentController::class, 'reject'])->name('settlement-payments.reject');
+    Route::post('settlement-payments/bulk-verify', [SettlementPaymentController::class, 'bulkVerify'])->name('settlement-payments.bulk-verify');
 
     // Finance
-    Route::get('finance', [App\Http\Controllers\Owner\FinanceSettlementController::class, 'dashboard'])->name('finance.dashboard');
-    Route::get('finance/settlements/{outlet}', [App\Http\Controllers\Owner\FinanceSettlementController::class, 'outletDetail'])->name('finance.settlements.outlet');
-    Route::post('finance/settlements/{outlet}/payments', [App\Http\Controllers\Owner\FinanceSettlementController::class, 'recordPayment'])->name('finance.settlements.payments');
-    Route::post('finance/settlements/{outlet}/send-invoice', [App\Http\Controllers\Owner\FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
+    Route::get('finance', [FinanceSettlementController::class, 'dashboard'])->name('finance.dashboard');
+    Route::get('finance/settlements/{outlet}', [FinanceSettlementController::class, 'outletDetail'])->name('finance.settlements.outlet');
+    Route::post('finance/settlements/{outlet}/payments', [FinanceSettlementController::class, 'recordPayment'])->name('finance.settlements.payments');
+    Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
 
     // Payment Accounts
-    Route::resource('payment-accounts', \App\Http\Controllers\Owner\PaymentAccountController::class)
+    Route::resource('payment-accounts', PaymentAccountController::class)
         ->only(['index', 'store', 'update', 'destroy']);
 
     // Returns
@@ -190,35 +210,35 @@ Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->g
     Route::get('/home', CustomerHomeController::class)->name('home');
     Route::post('/fulfillment-draft', [CustomerHomeController::class, 'setFulfillmentDraft'])->name('fulfillment-draft');
     Route::post('/location', [CustomerCheckoutController::class, 'storeLocationDraft'])->name('location.store');
-    Route::get('/help', fn () => \Inertia\Inertia::render('customer/help'))->name('help');
-    Route::get('/about', fn () => \Inertia\Inertia::render('customer/about'))->name('about');
+    Route::get('/help', fn () => Inertia::render('customer/help'))->name('help');
+    Route::get('/about', fn () => Inertia::render('customer/about'))->name('about');
     Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
     Route::get('/products/{family}', [CustomerProductController::class, 'show'])->name('products.show');
-    Route::post('/cart/add', [\App\Http\Controllers\Customer\CartController::class, 'addItem'])->name('cart.add');
-    Route::post('/cart/remove', [\App\Http\Controllers\Customer\CartController::class, 'removeItem'])->name('cart.remove');
-    Route::post('/cart/quantity', [\App\Http\Controllers\Customer\CartController::class, 'setQuantity'])->name('cart.quantity');
+    Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
+    Route::post('/cart/remove', [CartController::class, 'removeItem'])->name('cart.remove');
+    Route::post('/cart/quantity', [CartController::class, 'setQuantity'])->name('cart.quantity');
     Route::get('/checkout', [CustomerCheckoutController::class, 'index'])->name('checkout');
     Route::post('/checkout', [CustomerCheckoutController::class, 'storeIndex'])->name('checkout.store');
     Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
     Route::get('/checkout/customer', [CustomerCheckoutController::class, 'customer'])->name('checkout.customer');
     Route::post('/checkout/customer', [CustomerCheckoutController::class, 'storeCustomer'])->name('checkout.customer.store');
     Route::get('/checkout/customer-lookup', [CustomerCheckoutController::class, 'lookupCustomer'])->middleware('throttle:lookup')->name('checkout.customer.lookup');
-    Route::get('/checkout/login-prompt', fn () => \Inertia\Inertia::render('customer/checkout/login-prompt'))->name('checkout.login-prompt');
+    Route::get('/checkout/login-prompt', fn () => Inertia::render('customer/checkout/login-prompt'))->name('checkout.login-prompt');
     Route::get('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtp'])->name('checkout.verify-otp');
     Route::post('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtpSubmit'])->name('checkout.verify-otp.submit');
     Route::post('/checkout/send-otp', [CustomerCheckoutController::class, 'sendOtp'])->name('checkout.send-otp');
     Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
     Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->name('checkout.submit');
     Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
-    Route::post('/orders/recovery', \App\Http\Controllers\Customer\GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
+    Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
-    Route::get('/profile', [\App\Http\Controllers\Customer\ProfileController::class, 'index'])->name('profile');
-    Route::post('/register', \App\Http\Controllers\Customer\AccountPromotionController::class)->name('register');
+    Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+    Route::post('/register', AccountPromotionController::class)->name('register');
 
     // Phone verification for Google Sign-In users
-    Route::get('/verify-phone', [\App\Http\Controllers\Auth\SocialAuthController::class, 'showVerifyPhone'])->name('verify-phone');
-    Route::post('/verify-phone/send-otp', [\App\Http\Controllers\Auth\SocialAuthController::class, 'sendPhoneOtp'])->name('verify-phone.send-otp');
-    Route::post('/verify-phone/verify', [\App\Http\Controllers\Auth\SocialAuthController::class, 'verifyPhone'])->name('verify-phone.verify');
+    Route::get('/verify-phone', [SocialAuthController::class, 'showVerifyPhone'])->name('verify-phone');
+    Route::post('/verify-phone/send-otp', [SocialAuthController::class, 'sendPhoneOtp'])->name('verify-phone.send-otp');
+    Route::post('/verify-phone/verify', [SocialAuthController::class, 'verifyPhone'])->name('verify-phone.verify');
 });
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
@@ -252,7 +272,7 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     Route::post('/distributions/{distribution}/confirm-received', [OutletRestockController::class, 'confirmReceived'])->name('distributions.confirm-received');
 
     // Settlement
-    Route::get('/settlement', [App\Http\Controllers\Outlet\SettlementController::class, 'index'])->name('settlement.index');
+    Route::get('/settlement', [SettlementController::class, 'index'])->name('settlement.index');
 
     // Settlement Payments
     Route::get('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
@@ -284,17 +304,17 @@ Route::middleware(['auth', 'role:courier', 'password.changed'])->prefix('courier
     Route::post('/deliveries/{delivery}/return-to-outlet', [CourierDeliveryController::class, 'returnToOutlet'])->name('deliveries.return-to-outlet');
 
     // Availability & Shift
-    Route::post('/availability/toggle', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'toggleOnline'])->name('availability.toggle');
-    Route::post('/shift/start', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'startShift'])->name('shift.start');
-    Route::post('/shift/end', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'endShift'])->name('shift.end');
-    Route::get('/availability/status', [App\Http\Controllers\Courier\CourierAvailabilityController::class, 'status'])->name('availability.status');
+    Route::post('/availability/toggle', [CourierAvailabilityController::class, 'toggleOnline'])->name('availability.toggle');
+    Route::post('/shift/start', [CourierAvailabilityController::class, 'startShift'])->name('shift.start');
+    Route::post('/shift/end', [CourierAvailabilityController::class, 'endShift'])->name('shift.end');
+    Route::get('/availability/status', [CourierAvailabilityController::class, 'status'])->name('availability.status');
 });
 
 // ─── DEV ROLE SWITCHER (Local Environment Only) ─────────────────────
 Route::middleware(['dev'])->prefix('dev')->name('dev.')->group(function (): void {
-    Route::get('/switch/owner', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToOwner'])->name('switch.owner');
-    Route::get('/switch/outlet', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToOutlet'])->name('switch.outlet');
-    Route::get('/switch/courier', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToCourier'])->name('switch.courier');
-    Route::get('/switch/customer', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToCustomer'])->name('switch.customer');
-    Route::get('/switch/guest', [App\Http\Controllers\DevRoleSwitcherController::class, 'switchToGuest'])->name('switch.guest');
+    Route::get('/switch/owner', [DevRoleSwitcherController::class, 'switchToOwner'])->name('switch.owner');
+    Route::get('/switch/outlet', [DevRoleSwitcherController::class, 'switchToOutlet'])->name('switch.outlet');
+    Route::get('/switch/courier', [DevRoleSwitcherController::class, 'switchToCourier'])->name('switch.courier');
+    Route::get('/switch/customer', [DevRoleSwitcherController::class, 'switchToCustomer'])->name('switch.customer');
+    Route::get('/switch/guest', [DevRoleSwitcherController::class, 'switchToGuest'])->name('switch.guest');
 });

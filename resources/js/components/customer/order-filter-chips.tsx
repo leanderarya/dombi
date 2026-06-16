@@ -14,6 +14,7 @@ export default function OrderFilterChips({ options, active, onChange }: Props) {
         <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
             {options.map((option) => {
                 const isActive = active === option.key;
+
                 return (
                     <button
                         key={option.key}

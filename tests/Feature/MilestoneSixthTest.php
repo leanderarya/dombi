@@ -389,7 +389,7 @@ class MilestoneSixthTest extends TestCase
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $outletUser = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
         $courier = User::factory()->create(['role' => 'courier', 'is_active' => true, 'is_online' => true]);
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890'.rand(1000, 9999)]);
 
         $outlet = Outlet::create([
             'user_id' => $outletUser->id,

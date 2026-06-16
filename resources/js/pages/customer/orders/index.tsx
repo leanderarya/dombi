@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
-import { useCallback, useMemo, useState } from 'react';
 import { ArrowLeft, Phone, Search } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import ActiveOrderCard from '@/components/customer/active-order-card';
 import EmptyOrderState from '@/components/customer/empty-order-state';
 import OrderFilterChips from '@/components/customer/order-filter-chips';
@@ -41,8 +41,10 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
 
     const doRecovery = useCallback(async (phoneNumber: string) => {
         setRecoveryLoading(true);
+
         try {
             const result = await recoverOrders(phoneNumber);
+
             if (result.found) {
                 const orderCodes = [...result.active_orders, ...result.recent_orders].map((o: any) => o.order_code);
                 saveRecovery(phoneNumber, orderCodes);
@@ -59,10 +61,22 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
     }, [saveRecovery, clearRecovery]);
 
     const filteredHistory = useMemo(() => {
-        if (filter === 'all') return displayHistory;
-        if (filter === 'completed') return displayHistory.filter((o: any) => o.status === 'completed');
-        if (filter === 'cancelled') return displayHistory.filter((o: any) => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet'].includes(o.status));
-        if (filter === 'failed') return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes(o.status));
+        if (filter === 'all') {
+return displayHistory;
+}
+
+        if (filter === 'completed') {
+return displayHistory.filter((o: any) => o.status === 'completed');
+}
+
+        if (filter === 'cancelled') {
+return displayHistory.filter((o: any) => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet'].includes(o.status));
+}
+
+        if (filter === 'failed') {
+return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes(o.status));
+}
+
         return displayHistory;
     }, [displayHistory, filter]);
 

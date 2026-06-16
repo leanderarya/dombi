@@ -10,5 +10,6 @@ const styles: Record<string, string> = {
 
 export default function RestockStatusBadge({ status }: { status: string }) {
     const { label } = getRestockStatus(status);
+
     return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${styles[status] ?? styles.requested}`}>{label}</span>;
 }

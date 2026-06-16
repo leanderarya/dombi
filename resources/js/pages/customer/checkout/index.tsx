@@ -1,7 +1,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
+import { Store, Truck } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Store, Truck } from 'lucide-react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
@@ -40,13 +40,16 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                 headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '' },
                 body: JSON.stringify({ product_variant_id: variantId }),
             });
+
             return;
         }
+
         setItems((prev) =>
             prev.map((i) => {
                 if (i.product_variant_id === variantId) {
                     return { ...i, quantity: newQty, subtotal: i.price * newQty };
                 }
+
                 return i;
             }),
         );
@@ -163,8 +166,10 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                         onClick={() => {
                             if (!isLoggedIn) {
                                 setDeliverySheetOpen(true);
+
                                 return;
                             }
+
                             setFulfillmentType('delivery_dombi');
                         }}
                         detail={deliveryPreview?.is_serviceable ? {

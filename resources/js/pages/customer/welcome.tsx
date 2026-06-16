@@ -11,6 +11,7 @@ export default function Welcome() {
         form.action = '/guest-mode';
 
         const csrf = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
+
         if (csrf) {
             const input = document.createElement('input');
             input.type = 'hidden';

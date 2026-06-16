@@ -14,6 +14,7 @@ export default function OutletExchangesCreate({ variants, pendingReturns }: any)
     const selectedSummary = Array.from(selectedVariants.entries()).reduce(
         (summary, [variantId, quantity]) => {
             const variant = variants.find((v: any) => v.id === variantId);
+
             return {
                 totalItems: summary.totalItems + quantity,
                 totalValue: summary.totalValue + Number(variant?.selling_price ?? 0) * quantity,
@@ -24,12 +25,14 @@ export default function OutletExchangesCreate({ variants, pendingReturns }: any)
 
     const toggleVariant = (variantId: number) => {
         const next = new Map(selectedVariants);
+
         if (next.has(variantId)) {
             next.delete(variantId);
         } else {
             const variant = variants.find((v: any) => v.id === variantId);
             next.set(variantId, Math.min(1, Number(variant?.available_stock ?? 1)));
         }
+
         setSelectedVariants(next);
         form.setData('items', Array.from(next.entries()).map(([id, qty]) => ({ product_variant_id: id, quantity: qty })));
     };
@@ -88,6 +91,7 @@ export default function OutletExchangesCreate({ variants, pendingReturns }: any)
                         {variants.map((v: any) => {
                             const isSelected = selectedVariants.has(v.id);
                             const availableStock = Number(v.available_stock ?? 0);
+
                             return (
                                 <div key={v.id} className={`rounded-xl border p-3 transition-colors ${isSelected ? 'border-emerald-500 bg-emerald-50' : 'border-zinc-200 bg-white'}`}>
                                     <button onClick={() => toggleVariant(v.id)} disabled={availableStock <= 0} className="flex min-h-11 w-full items-center gap-3 text-left disabled:opacity-50">

@@ -1,9 +1,9 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
+import CourierAvailabilityCard from '@/components/owner/courier-availability-card';
 import DeliveryBoardColumn from '@/components/owner/delivery-board-column';
 import DeliveryPerformanceCard from '@/components/owner/delivery-performance-card';
-import CourierAvailabilityCard from '@/components/owner/courier-availability-card';
 import FilterSheet from '@/components/owner/filter-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { usePolling } from '@/lib/use-polling';
@@ -17,6 +17,7 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
 
     const handleAssignCourier = (orderId: number) => {
         const order = board.unassigned.find((o: any) => o.id === orderId);
+
         if (order) {
             setSelectedOrder(order);
             setAssignOpen(true);
@@ -88,7 +89,9 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
 
             {/* Assign Courier Sheet */}
             {selectedOrder && (
-                <AssignCourierSheet order={selectedOrder} couriers={couriers} open={assignOpen} onClose={() => { setAssignOpen(false); setSelectedOrder(null); }} />
+                <AssignCourierSheet order={selectedOrder} couriers={couriers} open={assignOpen} onClose={() => {
+ setAssignOpen(false); setSelectedOrder(null); 
+}} />
             )}
 
             {/* Filter Sheet */}

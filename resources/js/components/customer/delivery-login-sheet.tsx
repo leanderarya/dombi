@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
 import { Shield, Truck, MapPin, Clock, X } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface Props {
     open: boolean;
@@ -13,17 +13,30 @@ export default function DeliveryLoginSheet({ open, onClose }: Props) {
         } else {
             document.body.style.overflow = '';
         }
-        return () => { document.body.style.overflow = ''; };
+
+        return () => {
+ document.body.style.overflow = ''; 
+};
     }, [open]);
 
     useEffect(() => {
-        if (!open) return;
-        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        if (!open) {
+return;
+}
+
+        const handler = (e: KeyboardEvent) => {
+ if (e.key === 'Escape') {
+onClose();
+} 
+};
         document.addEventListener('keydown', handler);
+
         return () => document.removeEventListener('keydown', handler);
     }, [open, onClose]);
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     return (
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">

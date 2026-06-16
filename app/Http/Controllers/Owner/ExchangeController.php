@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\ExchangeRequest;
 use App\Models\Outlet;
+use App\Models\ReturnRequest;
 use App\Services\ExchangeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -45,7 +46,7 @@ class ExchangeController extends Controller
             'filters' => $request->only(['status', 'outlet_id', 'date_from', 'date_to', 'reason']),
             'dashboard' => app(ExchangeService::class)->getOwnerDashboard(),
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
-            'reasons' => \App\Models\ReturnRequest::REASONS,
+            'reasons' => ReturnRequest::REASONS,
         ]);
     }
 

@@ -46,6 +46,24 @@ class ProductVariant extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function outletPrices(): HasMany
+    {
+        return $this->hasMany(OutletVariantPrice::class);
+    }
+
+    /**
+     * Get selling price for a specific outlet.
+     * Falls back to global selling_price if no override exists.
+     */
+    public function priceForOutlet(int $outletId): float
+    {
+        $override = $this->outletPrices()
+            ->where('outlet_id', $outletId)
+            ->value('selling_price');
+
+        return $override !== null ? (float) $override : (float) $this->selling_price;
+    }
+
     public function getOutletMarginAttribute(): float
     {
         return (float) $this->selling_price - (float) $this->center_price;

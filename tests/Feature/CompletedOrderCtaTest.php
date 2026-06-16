@@ -23,7 +23,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('completed');
 
         $response = $this->actingAs($context['user'])
-            ->get('/customer/orders/' . $context['order']->id);
+            ->get('/customer/orders/'.$context['order']->id);
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
@@ -37,7 +37,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('pending_confirmation');
 
         $response = $this->actingAs($context['user'])
-            ->get('/customer/orders/' . $context['order']->id);
+            ->get('/customer/orders/'.$context['order']->id);
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
@@ -51,7 +51,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('completed');
         $order = $context['order'];
 
-        $response = $this->get('/track/' . $order->recovery_token);
+        $response = $this->get('/track/'.$order->recovery_token);
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
@@ -66,7 +66,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('preparing');
         $order = $context['order'];
 
-        $response = $this->get('/track/' . $order->recovery_token);
+        $response = $this->get('/track/'.$order->recovery_token);
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
@@ -80,7 +80,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('cancelled_by_customer');
         $order = $context['order'];
 
-        $response = $this->get('/track/' . $order->recovery_token);
+        $response = $this->get('/track/'.$order->recovery_token);
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
@@ -94,7 +94,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('failed_delivery');
         $order = $context['order'];
 
-        $response = $this->get('/track/' . $order->recovery_token);
+        $response = $this->get('/track/'.$order->recovery_token);
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
@@ -109,7 +109,7 @@ class CompletedOrderCtaTest extends TestCase
         $originalOrder = $context['order'];
 
         $response = $this->actingAs($context['user'])
-            ->post('/customer/orders/' . $originalOrder->id . '/repeat');
+            ->post('/customer/orders/'.$originalOrder->id.'/repeat');
 
         $response->assertRedirect('/customer/checkout');
         $response->assertSessionHas('success');
@@ -131,7 +131,7 @@ class CompletedOrderCtaTest extends TestCase
         $originalOrder = $context['order'];
 
         $this->actingAs($context['user'])
-            ->post('/customer/orders/' . $originalOrder->id . '/repeat');
+            ->post('/customer/orders/'.$originalOrder->id.'/repeat');
 
         $cart = session('checkout.cart');
         $this->assertNotNull($cart);
@@ -144,7 +144,7 @@ class CompletedOrderCtaTest extends TestCase
         $originalOrder = $context['order'];
 
         $response = $this->actingAs($context['user'])
-            ->post('/customer/orders/' . $originalOrder->id . '/repeat');
+            ->post('/customer/orders/'.$originalOrder->id.'/repeat');
 
         $response->assertRedirect('/customer/checkout');
     }
@@ -155,7 +155,7 @@ class CompletedOrderCtaTest extends TestCase
         $otherUser = User::factory()->create(['role' => 'customer', 'is_active' => true]);
 
         $response = $this->actingAs($otherUser)
-            ->post('/customer/orders/' . $context['order']->id . '/repeat');
+            ->post('/customer/orders/'.$context['order']->id.'/repeat');
 
         $response->assertForbidden();
     }
@@ -166,9 +166,9 @@ class CompletedOrderCtaTest extends TestCase
         $context['variant']->update(['is_active' => false]);
 
         $response = $this->actingAs($context['user'])
-            ->post('/customer/orders/' . $context['order']->id . '/repeat');
+            ->post('/customer/orders/'.$context['order']->id.'/repeat');
 
-        $response->assertRedirect('/customer/orders/' . $context['order']->id);
+        $response->assertRedirect('/customer/orders/'.$context['order']->id);
         $response->assertSessionHas('error');
     }
 
@@ -178,9 +178,9 @@ class CompletedOrderCtaTest extends TestCase
         $context['variant']->delete();
 
         $response = $this->actingAs($context['user'])
-            ->post('/customer/orders/' . $context['order']->id . '/repeat');
+            ->post('/customer/orders/'.$context['order']->id.'/repeat');
 
-        $response->assertRedirect('/customer/orders/' . $context['order']->id);
+        $response->assertRedirect('/customer/orders/'.$context['order']->id);
         $response->assertSessionHas('error');
     }
 
@@ -193,7 +193,7 @@ class CompletedOrderCtaTest extends TestCase
         $inventory->update(['current_stock' => 1]);
 
         $response = $this->actingAs($context['user'])
-            ->post('/customer/orders/' . $context['order']->id . '/repeat');
+            ->post('/customer/orders/'.$context['order']->id.'/repeat');
 
         $response->assertRedirect('/customer/checkout');
         $response->assertSessionHas('success');
@@ -212,7 +212,7 @@ class CompletedOrderCtaTest extends TestCase
         $context['variant']->update(['selling_price' => 30000]);
 
         $response = $this->actingAs($context['user'])
-            ->post('/customer/orders/' . $context['order']->id . '/repeat');
+            ->post('/customer/orders/'.$context['order']->id.'/repeat');
 
         $response->assertRedirect('/customer/checkout');
         $response->assertSessionHas('success');
@@ -228,7 +228,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('completed');
 
         $response = $this->actingAs($context['user'])
-            ->get('/customer/orders/' . $context['order']->id . '/restore-cart');
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart');
 
         $response->assertRedirect('/customer/checkout');
         $response->assertSessionHas('success');
@@ -244,7 +244,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('failed_delivery');
 
         $response = $this->actingAs($context['user'])
-            ->get('/customer/orders/' . $context['order']->id . '/restore-cart');
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart');
 
         $response->assertRedirect('/customer/checkout');
         $cart = session('checkout.cart');
@@ -256,7 +256,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('cancelled_by_customer');
 
         $response = $this->actingAs($context['user'])
-            ->get('/customer/orders/' . $context['order']->id . '/restore-cart');
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart');
 
         $response->assertRedirect('/customer/checkout');
         $cart = session('checkout.cart');
@@ -268,7 +268,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('expired');
 
         $response = $this->actingAs($context['user'])
-            ->get('/customer/orders/' . $context['order']->id . '/restore-cart');
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart');
 
         $response->assertRedirect('/customer/checkout');
         $cart = session('checkout.cart');
@@ -281,7 +281,7 @@ class CompletedOrderCtaTest extends TestCase
         $otherUser = User::factory()->create(['role' => 'customer', 'is_active' => true]);
 
         $response = $this->actingAs($otherUser)
-            ->get('/customer/orders/' . $context['order']->id . '/restore-cart');
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart');
 
         $response->assertForbidden();
     }
@@ -295,7 +295,7 @@ class CompletedOrderCtaTest extends TestCase
         $family2 = ProductFamily::create(['name' => 'Test Family 2', 'is_active' => true]);
         $product2 = Product::create([
             'name' => 'Test Product 2',
-            'slug' => 'test-product-2-' . uniqid(),
+            'slug' => 'test-product-2-'.uniqid(),
             'unit' => 'botol',
             'price' => 15000,
             'is_active' => true,
@@ -330,7 +330,7 @@ class CompletedOrderCtaTest extends TestCase
         ]);
 
         $response = $this->actingAs($context['user'])
-            ->post('/customer/orders/' . $order->id . '/repeat');
+            ->post('/customer/orders/'.$order->id.'/repeat');
 
         $response->assertRedirect('/customer/checkout');
         $response->assertSessionHas('success');
@@ -346,7 +346,7 @@ class CompletedOrderCtaTest extends TestCase
         $customer = Customer::create([
             'user_id' => $user->id,
             'name' => 'Test Customer',
-            'phone' => '628123456789' . rand(10, 99),
+            'phone' => '628123456789'.rand(10, 99),
             'is_registered' => true,
         ]);
 
@@ -364,7 +364,7 @@ class CompletedOrderCtaTest extends TestCase
 
         $product = Product::create([
             'name' => 'Test Product',
-            'slug' => 'test-product-' . uniqid(),
+            'slug' => 'test-product-'.uniqid(),
             'unit' => 'botol',
             'price' => 25000,
             'is_active' => true,
@@ -399,7 +399,7 @@ class CompletedOrderCtaTest extends TestCase
         $order = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'DOMBI-CTA-' . strtoupper(uniqid()),
+            'order_code' => 'DOMBI-CTA-'.strtoupper(uniqid()),
             'status' => $status,
             'fulfillment_type' => 'pickup',
             'subtotal' => 50000,

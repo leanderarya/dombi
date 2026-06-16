@@ -45,7 +45,7 @@ class DeliveryIntelligenceTest extends TestCase
         return Order::create([
             'customer_id' => $ctx['customer']->id,
             'outlet_id' => $ctx['outlet']->id,
-            'order_code' => 'ORD-' . strtoupper(substr(uniqid(), -6)),
+            'order_code' => 'ORD-'.strtoupper(substr(uniqid(), -6)),
             'status' => $status,
             'fulfillment_type' => 'delivery_dombi',
             'subtotal' => 25000,

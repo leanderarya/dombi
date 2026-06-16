@@ -164,7 +164,7 @@ class NotificationsRebuild extends Command
             }
         }
 
-        $this->info(($dryRun ? '[DRY RUN] ' : '') . "Created {$created} notifications.");
+        $this->info(($dryRun ? '[DRY RUN] ' : '')."Created {$created} notifications.");
 
         return self::SUCCESS;
     }

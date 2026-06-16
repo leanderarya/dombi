@@ -12,12 +12,15 @@ class OutletInventory extends Model
 
     protected $fillable = [
         'outlet_id', 'product_id', 'product_variant_id', 'current_stock',
-        'reserved_stock', 'minimum_stock', 'last_restock_at',
+        'reserved_stock', 'minimum_stock', 'is_active', 'last_restock_at',
     ];
 
     protected function casts(): array
     {
-        return ['last_restock_at' => 'datetime'];
+        return [
+            'last_restock_at' => 'datetime',
+            'is_active' => 'boolean',
+        ];
     }
 
     public function outlet(): BelongsTo

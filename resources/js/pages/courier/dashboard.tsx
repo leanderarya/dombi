@@ -1,9 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
 import { AlertCircle, CheckCircle2, MapPin, Package } from 'lucide-react';
+import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
-import SectionCard from '@/components/ui/section-card';
 import EmptyState from '@/components/ui/empty-state';
+import SectionCard from '@/components/ui/section-card';
 import CourierLayout from '@/layouts/courier-layout';
 import { usePolling } from '@/lib/use-polling';
 
@@ -61,6 +61,7 @@ export default function CourierDashboard({ courier: initialCourier, stats, perfo
 
     const handleAvailabilityToggle = async () => {
         setLoadingAction('availability');
+
         try {
             const res = await fetch('/courier/availability/toggle', {
                 method: 'POST',
@@ -70,6 +71,7 @@ export default function CourierDashboard({ courier: initialCourier, stats, perfo
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                 },
             });
+
             if (res.ok) {
                 const data = await res.json();
                 setCourier((prev) => ({ ...prev, is_online: data.is_online }));
@@ -83,6 +85,7 @@ export default function CourierDashboard({ courier: initialCourier, stats, perfo
 
     const handleShiftStart = async () => {
         setLoadingAction('shift-start');
+
         try {
             const res = await fetch('/courier/shift/start', {
                 method: 'POST',
@@ -92,6 +95,7 @@ export default function CourierDashboard({ courier: initialCourier, stats, perfo
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                 },
             });
+
             if (res.ok) {
                 const data = await res.json();
                 setCourier((prev) => ({
@@ -110,6 +114,7 @@ export default function CourierDashboard({ courier: initialCourier, stats, perfo
 
     const handleShiftEnd = async () => {
         setLoadingAction('shift-end');
+
         try {
             const res = await fetch('/courier/shift/end', {
                 method: 'POST',
@@ -119,6 +124,7 @@ export default function CourierDashboard({ courier: initialCourier, stats, perfo
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                 },
             });
+
             if (res.ok) {
                 const data = await res.json();
                 setCourier((prev) => ({

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\ExchangeRequest;
 use App\Models\OutletInventory;
+use App\Models\ReturnRequest;
 use App\Services\ExchangeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -60,7 +61,7 @@ class ExchangeController extends Controller
             })
             ->values();
 
-        $pendingReturns = \App\Models\ReturnRequest::where('outlet_id', $outlet->id)
+        $pendingReturns = ReturnRequest::where('outlet_id', $outlet->id)
             ->whereIn('status', ['approved', 'received_at_center'])
             ->with('items.variant')
             ->get();

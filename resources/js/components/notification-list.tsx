@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { CircleCheck, CircleX, Clock, Ban, Truck, Package, Bike, TriangleAlert, Undo2, RefreshCw, Bell, ClipboardList, Mail } from 'lucide-react';
+import { useState, useEffect, useCallback  } from 'react';
+import type {ReactNode} from 'react';
 
 interface Notification {
     id: number;
@@ -41,8 +42,10 @@ export default function NotificationList({ initialNotifications, initialUnreadCo
 
     const fetchNotifications = useCallback(async () => {
         setLoading(true);
+
         try {
             const res = await fetch('/notifications');
+
             if (res.ok) {
                 const data = await res.json();
                 setNotifications(data.notifications);
@@ -85,6 +88,7 @@ export default function NotificationList({ initialNotifications, initialUnreadCo
         if (!notification.read_at) {
             handleMarkAsRead(notification.id);
         }
+
         onNotificationClick?.(notification);
     };
 

@@ -18,10 +18,15 @@ class NotificationTest extends TestCase
     use RefreshDatabase;
 
     private User $owner;
+
     private User $outletUser;
+
     private User $courier;
+
     private Customer $customer;
+
     private Outlet $outlet;
+
     private Order $order;
 
     protected function setUp(): void

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import { CreditCard, Banknote } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 interface PaymentOption {
     id: string;
@@ -23,6 +23,7 @@ export default function PaymentMethodCard({ selected, onChange }: Props) {
         <div className="space-y-2">
             {options.map((option) => {
                 const isActive = selected === option.id;
+
                 return (
                     <button
                         key={option.id}

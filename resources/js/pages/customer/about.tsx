@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import type { ReactNode } from 'react';
 import { Milk, Zap, Handshake } from 'lucide-react';
+import type { ReactNode } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 
 export default function About() {

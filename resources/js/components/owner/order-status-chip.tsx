@@ -15,6 +15,7 @@ const chipStyles: Record<string, string> = {
 export default function OrderStatusChip({ status }: { status: string }) {
     const style = chipStyles[status] ?? chipStyles.pending;
     const { label } = getOrderStatus(status);
+
     return (
         <span className={`inline-flex rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${style}`}>
             {label}

@@ -1,11 +1,11 @@
 import { usePage } from '@inertiajs/react';
 import type { PropsWithChildren, ReactNode } from 'react';
-import OfflineBanner from '@/components/offline-banner';
 import ActiveOrderBar from '@/components/customer/active-order-bar';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import CustomerTopBar from '@/components/customer/customer-top-bar';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
+import OfflineBanner from '@/components/offline-banner';
 import { useCart } from '@/lib/use-cart';
 
 interface Props extends PropsWithChildren {

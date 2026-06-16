@@ -1,9 +1,9 @@
 import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
 import { Package, Truck } from 'lucide-react';
+import { useState } from 'react';
+import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import AssignCourierSheet from '@/components/operations/assign-courier-sheet';
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
-import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import FilterSheet from '@/components/operations/filter-sheet';
 import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
@@ -29,6 +29,7 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
 
     const handleAssignCourier = async (orderId: number) => {
         const order = unassignedOrders.find((o: any) => o.id === orderId);
+
         if (order) {
             const res = await fetch(`/outlet/orders/${orderId}`, { headers: { 'X-Inertia': 'true' } });
             const data = await res.json();
@@ -132,7 +133,9 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
                     order={selectedOrder}
                     couriers={couriers}
                     open={assignOpen}
-                    onClose={() => { setAssignOpen(false); setSelectedOrder(null); }}
+                    onClose={() => {
+ setAssignOpen(false); setSelectedOrder(null); 
+}}
                     assignUrl={`/outlet/orders/${selectedOrder.id}/assign-courier`}
                 />
             )}

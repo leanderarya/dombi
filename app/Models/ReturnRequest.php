@@ -10,10 +10,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class ReturnRequest extends Model
 {
     const STATUS_DRAFT = 'draft';
+
     const STATUS_SUBMITTED = 'submitted';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_RECEIVED_AT_CENTER = 'received_at_center';
+
     const STATUS_COMPLETED = 'completed';
 
     const ALL_STATUSES = [

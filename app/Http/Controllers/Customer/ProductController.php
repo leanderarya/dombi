@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductFamily;
-use App\Models\ProductVariant;
 use Inertia\Inertia;
 use Inertia\Response;
 

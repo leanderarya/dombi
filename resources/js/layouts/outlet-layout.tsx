@@ -1,11 +1,13 @@
 import { router, usePage } from '@inertiajs/react';
-import { useState, type PropsWithChildren, ReactNode } from 'react';
 import { LogOut } from 'lucide-react';
+import { useState  } from 'react';
+import type { ReactNode } from 'react';
+import type {PropsWithChildren} from 'react';
 import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
+import OutletBottomNav from '@/components/outlet-bottom-nav';
 import MobileRoleLayout from '@/components/ui/mobile-role-layout';
 import PageHeader from '@/components/ui/page-header';
-import OutletBottomNav from '@/components/outlet-bottom-nav';
 
 interface Props extends PropsWithChildren {
     title?: string;

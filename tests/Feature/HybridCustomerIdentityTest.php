@@ -165,7 +165,7 @@ class HybridCustomerIdentityTest extends TestCase
 
         $this->assertFalse(auth()->check());
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk();
     }
 
@@ -372,7 +372,7 @@ class HybridCustomerIdentityTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-' . uniqid(),
+            'slug' => 'susu-kambing-500ml-'.uniqid(),
             'unit' => 'botol',
             'price' => 25000,
             'is_active' => true,

@@ -22,6 +22,7 @@ class OrderRecoveryStore {
 
     subscribe(listener: () => void): () => void {
         this.listeners.add(listener);
+
         return () => this.listeners.delete(listener);
     }
 
@@ -39,7 +40,9 @@ class OrderRecoveryStore {
     }
 
     addOrder(phone: string, orderCode: string): void {
-        if (!orderCode) return;
+        if (!orderCode) {
+return;
+}
 
         const existing = this.data;
         const codes = [orderCode, ...(existing?.recent_order_codes ?? [])];
@@ -74,8 +77,10 @@ class OrderRecoveryStore {
         try {
             if (!this.data) {
                 localStorage.removeItem(STORAGE_KEY);
+
                 return;
             }
+
             localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
         } catch {
             // Non-critical
@@ -85,9 +90,13 @@ class OrderRecoveryStore {
     private load(): void {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
-            if (!stored) return;
+
+            if (!stored) {
+return;
+}
 
             const parsed = JSON.parse(stored) as RecoveryData;
+
             if (parsed && typeof parsed.phone === 'string' && Array.isArray(parsed.recent_order_codes)) {
                 this.data = parsed;
             }
@@ -101,7 +110,11 @@ const store = new OrderRecoveryStore();
 
 export function maskPhone(phone: string): string {
     const digits = phone.replace(/\D/g, '');
-    if (digits.length < 6) return phone;
+
+    if (digits.length < 6) {
+return phone;
+}
+
     return digits.slice(0, 4) + 'xxxx' + digits.slice(-3);
 }
 

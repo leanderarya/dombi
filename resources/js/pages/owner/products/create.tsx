@@ -3,9 +3,12 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 
 export default function CreateProduct({ categories }: any) {
     const form = useForm({ product_category_id: '', name: '', description: '', size: '', unit: 'botol', price: '', is_active: true as any });
+
     return (
         <OwnerPageShell title="Tambah Produk" backHref="/owner/products">
-            <ProductForm form={form} categories={categories} submit={(e: any) => { e.preventDefault(); form.post('/owner/products'); }} />
+            <ProductForm form={form} categories={categories} submit={(e: any) => {
+ e.preventDefault(); form.post('/owner/products'); 
+}} />
         </OwnerPageShell>
     );
 }

@@ -40,7 +40,7 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->get('/customer/products/' . $family->id);
+        $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/product-detail')
@@ -82,7 +82,7 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => false,
         ]);
 
-        $this->get('/customer/products/' . $family->id)
+        $this->get('/customer/products/'.$family->id)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/product-detail')
@@ -108,7 +108,7 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->get('/customer/products/' . $family->id);
+        $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/product-detail')
@@ -183,7 +183,7 @@ class VariantOrderingAndPricingTest extends TestCase
             ]);
         }
 
-        $response = $this->get('/customer/products/' . $family->id);
+        $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->has('family.variants', 4)
@@ -216,7 +216,7 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->get('/customer/products/' . $family->id);
+        $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
         $variants = $response->viewData('page')['props']['family']['variants'];
@@ -245,7 +245,7 @@ class VariantOrderingAndPricingTest extends TestCase
             ]);
         }
 
-        $response = $this->get('/customer/products/' . $family->id);
+        $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
         $variants = $response->viewData('page')['props']['family']['variants'];
@@ -276,7 +276,7 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->get('/customer/products/' . $family->id)
+        $this->get('/customer/products/'.$family->id)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->has('family.variants', 1)
@@ -316,7 +316,7 @@ class VariantOrderingAndPricingTest extends TestCase
             ]);
         }
 
-        $response = $this->get('/customer/products/' . $family->id);
+        $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
         $variants = $response->viewData('page')['props']['family']['variants'];
@@ -359,7 +359,7 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->get('/customer/products/' . $family->id);
+        $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
         $variants = $response->viewData('page')['props']['family']['variants'];
@@ -401,7 +401,7 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->get('/customer/products/' . $family->id);
+        $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
         $variants = $response->viewData('page')['props']['family']['variants'];
@@ -445,7 +445,7 @@ class VariantOrderingAndPricingTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->get('/customer/products/' . $family->id);
+        $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
         $variants = $response->viewData('page')['props']['family']['variants'];

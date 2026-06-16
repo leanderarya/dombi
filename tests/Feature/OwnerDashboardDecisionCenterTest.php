@@ -98,7 +98,7 @@ class OwnerDashboardDecisionCenterTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('owner/dashboard')
                 ->where('hero.outstandingAmount', 430000)
-                ->where('hero.ctaHref', '/owner/settlement/collection')
+                ->where('hero.ctaHref', '/owner/finance')
                 ->where('kpis.approvalsNeeded', 3)
                 ->where('kpis.outletsNeedingAttention', 2)
                 ->where('kpis.criticalCenterSkus', 2)

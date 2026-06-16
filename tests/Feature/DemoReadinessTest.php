@@ -2,9 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
-use App\Models\Order;
-use App\Models\Outlet;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

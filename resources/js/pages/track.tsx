@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
-import { useState } from 'react';
 import { ArrowLeft, Clock, Copy, MessageCircle, Package, RotateCcw, Share2, Truck, UserCheck, XCircle, CheckCircle2, Circle } from 'lucide-react';
+import { useState } from 'react';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 type HistoryItem = {
@@ -91,6 +91,7 @@ export default function TrackPage({ order, found, notifications = [], canCreateA
     const effectiveIndex = currentIndex < 0 ? 0 : currentIndex;
 
     const historyMap = new Map<string, HistoryItem>();
+
     for (const h of order.status_histories) {
         if (!historyMap.has(h.to_status)) {
             historyMap.set(h.to_status, h);
@@ -109,6 +110,7 @@ export default function TrackPage({ order, found, notifications = [], canCreateA
     function shareTrackingLink() {
         if (navigator.share) {
             navigator.share({ text: shareText }).catch(() => {});
+
             return;
         }
 
@@ -414,6 +416,7 @@ function getStepsForFulfillment(fulfillmentType: string) {
             TIMELINE_STEPS[6],
         ];
     }
+
     return TIMELINE_STEPS;
 }
 

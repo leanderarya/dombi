@@ -16,7 +16,9 @@ const dotColors = {
 };
 
 export default function ActivityFeed({ items }: Props) {
-    if (items.length === 0) return null;
+    if (items.length === 0) {
+return null;
+}
 
     return (
         <div className="space-y-0">

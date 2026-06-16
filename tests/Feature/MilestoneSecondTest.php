@@ -109,7 +109,7 @@ class MilestoneSecondTest extends TestCase
     {
         $customer = Customer::create([
             'name' => 'Customer',
-            'phone' => '081234567890' . rand(1000, 9999),
+            'phone' => '081234567890'.rand(1000, 9999),
         ]);
 
         return Order::create([

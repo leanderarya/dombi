@@ -65,10 +65,10 @@ class ProductCatalogSeeder extends Seeder
 
             foreach ($variants as $variantData) {
                 $sku = strtoupper(substr($family->brand ?? 'DMB', 0, 3))
-                    . '-' . strtoupper(substr($variantData['flavor'], 0, 3))
-                    . '-' . str_replace(['ml', 'L'], ['', 'L'], $variantData['size']);
+                    .'-'.strtoupper(substr($variantData['flavor'], 0, 3))
+                    .'-'.str_replace(['ml', 'L'], ['', 'L'], $variantData['size']);
 
-                $variantName = $variantData['flavor'] . ' ' . $variantData['size'];
+                $variantName = $variantData['flavor'].' '.$variantData['size'];
 
                 ProductVariant::updateOrCreate(
                     ['sku' => $sku],

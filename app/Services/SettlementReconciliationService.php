@@ -6,10 +6,8 @@ use App\Models\Outlet;
 use App\Models\OutletPayable;
 use App\Models\SettlementPayment;
 use App\Models\SettlementPeriod;
-use App\Services\SettlementService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 class SettlementReconciliationService
 {

@@ -1,13 +1,13 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
 import { ArrowLeft, CheckCircle2, Copy, MapPin, Share2, Truck, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import OrderSummaryCard from '@/components/customer/order-summary-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import StickyOrderActions from '@/components/customer/sticky-order-actions';
 import OfflineBanner from '@/components/offline-banner';
 import { orderStatusLabel, orderStatusTone, activeOrderStatuses } from '@/lib/customer-status';
-import { useOrderRecovery } from '@/lib/order-recovery';
 import { formatDate } from '@/lib/format';
+import { useOrderRecovery } from '@/lib/order-recovery';
 
 export default function OrderShow({ order, cancellationReasons = [] }: any) {
     const isActive = activeOrderStatuses.includes(order.status);
@@ -41,7 +41,9 @@ export default function OrderShow({ order, cancellationReasons = [] }: any) {
     }
 
     function handleShare() {
-        if (!trackingUrl) return;
+        if (!trackingUrl) {
+return;
+}
 
         const text = `Lacak pesanan Dombi saya:\n${trackingUrl}`;
 

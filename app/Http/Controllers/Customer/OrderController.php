@@ -109,7 +109,7 @@ class OrderController extends Controller
             : "{$itemCount} produk berhasil dipulihkan ke keranjang.";
 
         if (! empty($result['warnings'])) {
-            $message .= ' ' . implode(' ', $result['warnings']);
+            $message .= ' '.implode(' ', $result['warnings']);
         }
 
         return redirect()->route('customer.checkout')

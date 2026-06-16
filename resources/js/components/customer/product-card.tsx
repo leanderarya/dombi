@@ -1,5 +1,5 @@
-import { memo } from 'react';
 import { Link } from '@inertiajs/react';
+import { memo } from 'react';
 import { formatCurrency } from '@/lib/format';
 
 interface Product {

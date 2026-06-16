@@ -6,7 +6,9 @@ interface Props {
 }
 
 export default function ActiveOrderBar({ order }: Props) {
-    if (!order) return null;
+    if (!order) {
+return null;
+}
 
     return (
         <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-4">

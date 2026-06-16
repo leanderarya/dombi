@@ -11,7 +11,6 @@ use App\Models\OutletInventory;
 use App\Models\ProductVariant;
 use App\Models\RestockRequest;
 use App\Models\StockDistribution;
-use App\Models\StockMovement;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -159,7 +158,7 @@ class DemoSeeder extends Seeder
                 'payment_method' => 'cod',
                 'customer_name' => $customer->name,
                 'customer_phone' => $customer->phone ?? '6284100000001',
-                'customer_address' => 'Ambil di ' . $outlet->name,
+                'customer_address' => 'Ambil di '.$outlet->name,
                 'latitude' => -7.0559000,
                 'longitude' => 110.4375000,
                 'ordered_at' => now(),

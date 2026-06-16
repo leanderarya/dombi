@@ -2,11 +2,13 @@
 
 namespace App\Support;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class SchedulerHeartbeat
 {
     private const CACHE_KEY = 'scheduler:last_heartbeat';
+
     private const STALE_THRESHOLD_MINUTES = 5;
 
     public static function record(): void
@@ -27,7 +29,7 @@ class SchedulerHeartbeat
             return false;
         }
 
-        return now()->diffInMinutes(\Carbon\Carbon::parse($lastHeartbeat)) < self::STALE_THRESHOLD_MINUTES;
+        return now()->diffInMinutes(Carbon::parse($lastHeartbeat)) < self::STALE_THRESHOLD_MINUTES;
     }
 
     public static function minutesSinceLastBeat(): ?int
@@ -38,6 +40,6 @@ class SchedulerHeartbeat
             return null;
         }
 
-        return now()->diffInMinutes(\Carbon\Carbon::parse($lastHeartbeat));
+        return now()->diffInMinutes(Carbon::parse($lastHeartbeat));
     }
 }

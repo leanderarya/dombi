@@ -1,9 +1,9 @@
 import { Head, Link } from '@inertiajs/react';
-import OutletLayout from '@/layouts/outlet-layout';
-import StatusBadge from '@/components/ui/status-badge';
 import SectionCard from '@/components/ui/section-card';
-import { getReturnStatus } from '@/lib/status-labels';
+import StatusBadge from '@/components/ui/status-badge';
+import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { getReturnStatus } from '@/lib/status-labels';
 
 export default function OutletReturnsShow({ return: ret }: any) {
     const status = getReturnStatus(ret.status);

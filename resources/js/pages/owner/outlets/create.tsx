@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
-import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OutletFormSheet from '@/components/owner/outlet-form-sheet';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
 
 export const emptyOutletForm = {
     name: '',
@@ -19,7 +19,7 @@ export const emptyOutletForm = {
     status: 'active',
 };
 
-export default function CreateOutlet() {
+export default function CreateOutlet({ existingOutlets }: any) {
     const form = useForm(emptyOutletForm);
 
     return (
@@ -27,6 +27,7 @@ export default function CreateOutlet() {
             <OutletFormSheet
                 mode="create"
                 form={form}
+                existingOutlets={existingOutlets ?? []}
                 submit={(event) => {
                     event.preventDefault();
                     form.post('/owner/outlets');

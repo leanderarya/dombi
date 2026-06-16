@@ -48,9 +48,18 @@ export default function OwnerOutletCard({ outlet }: { outlet: any }) {
 }
 
 function getOperationalStatus(outlet: any): string {
-    if (outlet.status !== 'active') return 'inactive';
-    if (Number(outlet.low_stock_count) > 0) return 'low_stock';
-    if (Number(outlet.active_orders_count) >= 3) return 'busy';
+    if (outlet.status !== 'active') {
+return 'inactive';
+}
+
+    if (Number(outlet.low_stock_count) > 0) {
+return 'low_stock';
+}
+
+    if (Number(outlet.active_orders_count) >= 3) {
+return 'busy';
+}
+
     return 'active';
 }
 

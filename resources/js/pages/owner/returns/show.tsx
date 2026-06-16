@@ -1,10 +1,10 @@
 import { Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import StatusBadge from '@/components/ui/status-badge';
 import SectionCard from '@/components/ui/section-card';
-import { getReturnStatus } from '@/lib/status-labels';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { getReturnStatus } from '@/lib/status-labels';
 
 export default function OwnerReturnsShow({ return: ret }: any) {
     const [showApprove, setShowApprove] = useState(false);

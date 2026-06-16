@@ -1,9 +1,9 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import { Download } from 'lucide-react';
+import { useState } from 'react';
 import FilterSheet from '@/components/owner/filter-sheet';
-import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { formatCurrency } from '@/lib/format';
 
 const statusLabels: Record<string, string> = { pending: 'Tertunda', confirmed: 'Dikonfirmasi', preparing: 'Disiapkan', ready_for_pickup: 'Siap', delivering: 'Dikirim', completed: 'Selesai', cancelled: 'Dibatalkan', failed: 'Gagal', waiting_pickup: 'Menunggu', retry_delivery: 'Coba Ulang', returned_to_outlet: 'Dikembalikan', cancelled_and_released: 'Dilepas' };
@@ -17,9 +17,19 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
 
     function handleExport() {
         const params = new URLSearchParams();
-        if (filters.date_from) params.set('date_from', filters.date_from);
-        if (filters.date_to) params.set('date_to', filters.date_to);
-        if (filters.outlet_id) params.set('outlet_id', String(filters.outlet_id));
+
+        if (filters.date_from) {
+params.set('date_from', filters.date_from);
+}
+
+        if (filters.date_to) {
+params.set('date_to', filters.date_to);
+}
+
+        if (filters.outlet_id) {
+params.set('outlet_id', String(filters.outlet_id));
+}
+
         window.location.href = `/owner/reports/export-csv?${params.toString()}`;
     }
 
@@ -80,6 +90,7 @@ function Kpi({ label, value, highlight, alert }: { label: string; value: string;
 
 function BreakdownCard({ title, data }: { title: string; data: Record<string, number> }) {
     const entries = Object.entries(data);
+
     return (
         <div className="rounded-lg border border-slate-200 bg-white p-3">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{title}</div>

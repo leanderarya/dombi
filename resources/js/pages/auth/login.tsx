@@ -69,7 +69,9 @@ export default function Login({ auth }: Props) {
     return (
         <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4">
             <Head title="Login" />
-            <form onSubmit={(e) => { e.preventDefault(); form.post('/login'); }} className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+            <form onSubmit={(e) => {
+ e.preventDefault(); form.post('/login'); 
+}} className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
                 <h1 className="text-2xl font-semibold">Login Dombi</h1>
                 <p className="mt-1 text-sm text-zinc-500">Masuk sebagai owner, customer, outlet, atau courier.</p>
                 <label className="mt-6 block text-sm">Email</label>

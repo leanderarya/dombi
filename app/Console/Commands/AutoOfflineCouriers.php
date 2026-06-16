@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 class AutoOfflineCouriers extends Command
 {
     protected $signature = 'couriers:auto-offline';
+
     protected $description = 'Automatically offline couriers with no activity for configured hours and no active deliveries';
 
     public function handle(): int

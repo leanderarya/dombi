@@ -28,7 +28,9 @@ export default function DeliveryAddressCard({ address, hasAddresses }: Props) {
         );
     }
 
-    if (!address) return null;
+    if (!address) {
+return null;
+}
 
     return (
         <div className="rounded-xl border border-zinc-200 bg-white p-4">

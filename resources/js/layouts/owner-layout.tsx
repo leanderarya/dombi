@@ -1,5 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useState, type ReactNode } from 'react';
+import { useState  } from 'react';
+import type {ReactNode} from 'react';
 import type { PropsWithChildren } from 'react';
 import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
@@ -13,6 +14,7 @@ interface NavGroup {
         href: string;
         label: string;
         badgeKey?: 'pendingReturns' | 'pendingExchanges';
+        isActive?: (url: string) => boolean;
     }>;
 }
 
@@ -36,7 +38,8 @@ const navGroups: NavGroup[] = [
         label: 'Keuangan',
         icon: <FinanceIcon />,
         items: [
-            { href: '/owner/settlement/collection', label: 'Settlement' },
+            { href: '/owner/finance', label: 'Dashboard Tagihan' },
+            { href: '/owner/settlement-payments', label: 'Riwayat Pembayaran' },
         ],
     },
     {
@@ -45,6 +48,9 @@ const navGroups: NavGroup[] = [
         items: [
             { href: '/owner/outlets', label: 'Outlet' },
             { href: '/owner/products', label: 'Produk' },
+            { href: '/owner/pricing/master', label: 'Harga Pusat', isActive: (url: string) => url === '/owner/pricing/master' },
+            { href: '/owner/pricing', label: 'Harga Outlet', isActive: (url: string) => url === '/owner/pricing' || url.startsWith('/owner/pricing/outlet') },
+            { href: '/owner/pricing/history', label: 'Riwayat Harga', isActive: (url: string) => url === '/owner/pricing/history' },
         ],
     },
     {
@@ -72,20 +78,36 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
     const url = page.url;
     const pendingCounts = ownerOperationalCounts ?? { pendingReturns: 0, pendingExchanges: 0 };
     const [notificationOpen, setNotificationOpen] = useState(false);
+
+    const isItemActive = (item: NavGroup['items'][number]): boolean => {
+        if (!url) {
+return false;
+}
+
+        if (item.isActive) {
+return item.isActive(url);
+}
+
+        // Default: exact match or sub-path with slash separator
+        return url === item.href || url.startsWith(item.href + '/');
+    };
+
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
-        // Auto-expand the group containing the current URL
-        const active = navGroups.find((g) => g.items.some((item) => url?.startsWith(item.href)));
+        const active = navGroups.find((g) => g.items.some((item) => isItemActive(item)));
+
         return new Set(active ? [active.label] : []);
     });
 
     const toggleGroup = (label: string) => {
         setExpandedGroups((prev) => {
             const next = new Set(prev);
+
             if (next.has(label)) {
                 next.delete(label);
             } else {
                 next.add(label);
             }
+
             return next;
         });
     };
@@ -109,7 +131,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                     <nav className="flex-1 overflow-y-auto px-3 pb-4">
                         {navGroups.map((group) => {
                             const isExpanded = expandedGroups.has(group.label);
-                            const hasActive = group.items.some((item) => url?.startsWith(item.href));
+                            const hasActive = group.items.some((item) => isItemActive(item));
 
                             return (
                                 <div key={group.label} className="mb-1">
@@ -118,7 +140,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                                         <Link
                                             href={group.items[0].href}
                                             className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                                                url?.startsWith(group.items[0].href)
+                                                isItemActive(group.items[0])
                                                     ? 'bg-emerald-50 text-emerald-800'
                                                     : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
                                             }`}
@@ -147,7 +169,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                                                             key={item.href}
                                                             href={item.href}
                                                             className={`block rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
-                                                                url?.startsWith(item.href)
+                                                                isItemActive(item)
                                                                     ? 'bg-emerald-50 text-emerald-800'
                                                                     : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-700'
                                                             }`}

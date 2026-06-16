@@ -19,7 +19,9 @@ export default function CreateInventory({ outlets, families }: any) {
     return (
         <OwnerPageShell title="Tambah Stok" backHref="/owner/inventories">
             <form
-                onSubmit={(e) => { e.preventDefault(); form.post('/owner/inventories'); }}
+                onSubmit={(e) => {
+ e.preventDefault(); form.post('/owner/inventories'); 
+}}
                 className="mt-5 grid gap-4 rounded-lg border border-slate-200 bg-white p-5 sm:grid-cols-2"
             >
                 <label className="text-sm">

@@ -1,8 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import DistributionStatusBadge from '@/components/distribution-status-badge';
 import RestockStatusBadge from '@/components/restock-status-badge';
-import StatusBadge from '@/components/ui/status-badge';
 import SectionCard from '@/components/ui/section-card';
+import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import OutletLayout from '@/layouts/outlet-layout';
 

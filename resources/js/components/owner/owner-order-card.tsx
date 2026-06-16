@@ -1,5 +1,5 @@
-import OrderStatusChip from './order-status-chip';
 import { formatCurrency } from '@/lib/format';
+import OrderStatusChip from './order-status-chip';
 
 interface Props {
     order: {

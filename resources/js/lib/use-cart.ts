@@ -27,25 +27,31 @@ class CartStore {
 
     addItem(variantId: number, qty: number = 1): void {
         const existing = this.items.find((i) => i.product_variant_id === variantId);
+
         if (existing) {
             existing.quantity += qty;
         } else {
             this.items.push({ product_variant_id: variantId, quantity: qty });
         }
+
         this.commit();
     }
 
     setQuantity(variantId: number, quantity: number): void {
         if (quantity <= 0) {
             this.removeItem(variantId);
+
             return;
         }
+
         const existing = this.items.find((i) => i.product_variant_id === variantId);
+
         if (existing) {
             existing.quantity = quantity;
         } else {
             this.items.push({ product_variant_id: variantId, quantity });
         }
+
         this.commit();
     }
 
@@ -61,6 +67,7 @@ class CartStore {
 
     subscribe(listener: Listener): () => void {
         this.listeners.add(listener);
+
         return () => this.listeners.delete(listener);
     }
 
@@ -87,8 +94,10 @@ class CartStore {
     private load(): void {
         try {
             const stored = sessionStorage.getItem('dombi_cart');
+
             if (stored) {
                 const parsed = JSON.parse(stored);
+
                 if (Array.isArray(parsed)) {
                     this.items = parsed.filter(
                         (i: any) => typeof i.product_variant_id === 'number' && typeof i.quantity === 'number' && i.quantity > 0
@@ -123,5 +132,6 @@ export function useCart() {
 
 export function useProductQuantity(variantId: number): number {
     const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
     return items.find((i) => i.product_variant_id === variantId)?.quantity ?? 0;
 }

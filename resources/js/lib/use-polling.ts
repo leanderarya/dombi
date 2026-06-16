@@ -12,7 +12,9 @@ export function usePolling(intervalMs: number = 30000): void {
     const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     useEffect(() => {
-        if (!online) return;
+        if (!online) {
+return;
+}
 
         const poll = () => {
             if (document.visibilityState === 'visible' && navigator.onLine) {
@@ -31,7 +33,10 @@ export function usePolling(intervalMs: number = 30000): void {
         document.addEventListener('visibilitychange', handleVisibility);
 
         return () => {
-            if (timerRef.current) clearInterval(timerRef.current);
+            if (timerRef.current) {
+clearInterval(timerRef.current);
+}
+
             document.removeEventListener('visibilitychange', handleVisibility);
         };
     }, [online, intervalMs]);

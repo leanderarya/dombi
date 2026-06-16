@@ -1,9 +1,9 @@
 import { Link, router } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import StatusBadge from '@/components/ui/status-badge';
 import Pagination from '@/components/pagination';
-import { getExchangeStatus } from '@/lib/status-labels';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { getExchangeStatus } from '@/lib/status-labels';
 
 export default function OwnerExchangesIndex({ exchanges, filters, dashboard, outlets, reasons }: any) {
     return (
@@ -76,6 +76,7 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                     )}
                     {exchanges.data.map((ex: any) => {
                         const status = getExchangeStatus(ex.status);
+
                         return (
                             <Link
                                 key={ex.id}

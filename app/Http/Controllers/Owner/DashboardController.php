@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
 use App\Models\SettlementPayment;
+use App\Services\SettlementAgingService;
 use App\Services\SettlementReconciliationService;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -17,7 +18,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(SettlementReconciliationService $reconciliationService): Response
+    public function __invoke(SettlementReconciliationService $reconciliationService, SettlementAgingService $agingService): Response
     {
         $collection = $reconciliationService->getCollectionCenter();
 
@@ -35,14 +36,15 @@ class DashboardController extends Controller
             ->count();
 
         $criticalCenterStock = $this->criticalCenterStock();
-        $outletAttention = $this->outletAttention($collection['priority_list']);
+        $outletAttention = $this->outletAttention($collection['priority_list'], $agingService);
+        $agingKpis = $agingService->getDashboardAgingKpis();
 
         return Inertia::render('owner/dashboard', [
             'hero' => [
                 'outstandingAmount' => (float) ($collection['hero']['total_outstanding'] ?? 0),
                 'subtitle' => 'Kewajiban outlet yang belum diselesaikan.',
                 'ctaLabel' => 'Lihat Penagihan',
-                'ctaHref' => '/owner/settlement/collection',
+                'ctaHref' => '/owner/finance',
             ],
             'kpis' => [
                 'outstandingAmount' => (float) ($collection['hero']['total_outstanding'] ?? 0),
@@ -50,6 +52,7 @@ class DashboardController extends Controller
                 'outletsNeedingAttention' => count($outletAttention),
                 'criticalCenterSkus' => $criticalCenterStock->count(),
             ],
+            'agingKpis' => $agingKpis,
             'actionRequired' => [
                 'restocks' => $pendingRestocks,
                 'returns' => $pendingReturns,
@@ -63,7 +66,7 @@ class DashboardController extends Controller
                     'outlet' => $item['outlet'],
                     'outstandingAmount' => (float) $item['outstanding'],
                     'daysOverdue' => (int) ($item['days_overdue'] ?? 0),
-                    'detailHref' => '/owner/settlement/outlet/'.$item['outlet']['id'],
+                    'detailHref' => '/owner/finance/settlements/'.$item['outlet']['id'],
                 ])
                 ->values()
                 ->all(),
@@ -125,7 +128,7 @@ class DashboardController extends Controller
      *     detailHref: string
      * }>
      */
-    private function outletAttention(array $priorityList): array
+    private function outletAttention(array $priorityList, SettlementAgingService $agingService): array
     {
         $restockCounts = RestockRequest::query()
             ->selectRaw('outlet_id, COUNT(*) as aggregate')
@@ -162,7 +165,7 @@ class DashboardController extends Controller
         $items = Outlet::query()
             ->where('status', 'active')
             ->get(['id', 'name'])
-            ->map(function (Outlet $outlet) use ($restockCounts, $returnCounts, $exchangeCounts, $criticalStockCounts, $priorityByOutlet): ?array {
+            ->map(function (Outlet $outlet) use ($restockCounts, $returnCounts, $exchangeCounts, $criticalStockCounts, $priorityByOutlet, $agingService): ?array {
                 $pendingRestocks = (int) ($restockCounts[$outlet->id] ?? 0);
                 $pendingReturns = (int) ($returnCounts[$outlet->id] ?? 0);
                 $pendingExchanges = (int) ($exchangeCounts[$outlet->id] ?? 0);
@@ -184,18 +187,7 @@ class DashboardController extends Controller
                     return null;
                 }
 
-                $score = 0;
-                if ($outstandingAmount >= 1_000_000) {
-                    $score += 50;
-                } elseif ($outstandingAmount >= 500_000) {
-                    $score += 40;
-                } elseif ($outstandingAmount >= 100_000) {
-                    $score += 30;
-                }
-                $score += $criticalStocks * 10;
-                $score += $pendingRestocks * 5;
-                $score += $pendingReturns * 5;
-                $score += $pendingExchanges * 5;
+                $score = $agingService->calculateSeverity($outstandingAmount, $daysOverdue, $criticalStocks, $pendingIssues);
 
                 return [
                     'outlet' => [

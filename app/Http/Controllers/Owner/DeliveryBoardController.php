@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\Delivery;
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Models\User;
 use App\Services\DeliverySlaService;
 use Illuminate\Http\Request;
@@ -145,7 +146,7 @@ class DeliveryBoardController extends Controller
                 'courier_id' => $courierId,
                 'date_range' => $dateRange,
             ],
-            'outlets' => \App\Models\Outlet::where('status', 'active')->orderBy('name')->get(['id', 'name']),
+            'outlets' => Outlet::where('status', 'active')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

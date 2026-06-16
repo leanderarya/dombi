@@ -64,7 +64,7 @@ class HandleInertiaRequests extends Middleware
                 'currentRole' => $user?->role ?? 'guest',
             ],
             'ownerOperationalCounts' => function () use ($user) {
-                if (!$user || $user->role !== 'owner') {
+                if (! $user || $user->role !== 'owner') {
                     return null;
                 }
 

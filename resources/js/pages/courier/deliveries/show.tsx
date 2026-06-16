@@ -1,10 +1,10 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
 import { CheckCircle2, Clock, MapPin, MessageCircle, Package, Phone, Truck, XCircle } from 'lucide-react';
+import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import BottomSheet from '@/components/ui/bottom-sheet';
-import StickyActionBar from '@/components/ui/sticky-action-bar';
 import SectionCard from '@/components/ui/section-card';
+import StickyActionBar from '@/components/ui/sticky-action-bar';
 import CourierLayout from '@/layouts/courier-layout';
 import { formatDate } from '@/lib/format';
 

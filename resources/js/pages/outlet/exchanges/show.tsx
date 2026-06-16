@@ -1,9 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
-import OutletLayout from '@/layouts/outlet-layout';
-import StatusBadge from '@/components/ui/status-badge';
 import SectionCard from '@/components/ui/section-card';
-import { getExchangeStatus, getReturnStatus } from '@/lib/status-labels';
+import StatusBadge from '@/components/ui/status-badge';
+import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { getExchangeStatus, getReturnStatus } from '@/lib/status-labels';
 
 export default function OutletExchangesShow({ exchange }: any) {
     const status = getExchangeStatus(exchange.status);

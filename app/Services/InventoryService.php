@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\InsufficientStockException;
 use App\Models\Order;
 use App\Models\OutletInventory;
+use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Support\OperationalLog;
 use Illuminate\Support\Facades\Auth;
@@ -149,6 +150,7 @@ class InventoryService
                     'notes' => 'Release reserved (adjusted) '.$order->order_code,
                     'created_by' => Auth::id(),
                 ]);
+
                 continue;
             }
 
@@ -243,7 +245,7 @@ class InventoryService
             ->first();
 
         if (! $inventory) {
-            $variant = \App\Models\ProductVariant::find($productVariantId);
+            $variant = ProductVariant::find($productVariantId);
             $inventory = OutletInventory::create([
                 'outlet_id' => $outletId,
                 'product_id' => $variant?->product_id,

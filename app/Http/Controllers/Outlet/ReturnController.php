@@ -84,7 +84,7 @@ class ReturnController extends Controller
         abort_unless($outlet, 403);
 
         $validated = $request->validate([
-            'reason' => 'required|string|in:' . implode(',', array_keys(ReturnRequest::REASONS)),
+            'reason' => 'required|string|in:'.implode(',', array_keys(ReturnRequest::REASONS)),
             'notes' => 'nullable|string|max:1000',
             'items' => 'required|array|min:1',
             'items.*.product_variant_id' => 'required|integer|exists:product_variants,id',

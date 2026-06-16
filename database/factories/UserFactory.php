@@ -53,8 +53,6 @@ class UserFactory extends Factory
      * Create a model instance and persist it.
      *
      * @param  array<string, mixed>  $attributes
-     * @param  \Illuminate\Database\Eloquent\Model|null  $parent
-     * @return \App\Models\User
      */
     public function create($attributes = [], ?Model $parent = null): User
     {

@@ -1,8 +1,8 @@
 import { Head, Link } from '@inertiajs/react';
 import { AlertTriangle, Banknote, Package, Repeat2, RotateCcw, Sparkles, Truck, XCircle } from 'lucide-react';
 import OrderStatusBadge from '@/components/order-status-badge';
-import SectionCard from '@/components/ui/section-card';
 import EmptyState from '@/components/ui/empty-state';
+import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';

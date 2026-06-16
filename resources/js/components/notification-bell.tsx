@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
 interface Props {
     unreadCount?: number;
@@ -12,6 +12,7 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
     useEffect(() => {
         if (initialCount !== undefined) {
             setUnreadCount(initialCount);
+
             return;
         }
 
@@ -19,6 +20,7 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
         const fetchCount = async () => {
             try {
                 const res = await fetch('/notifications/unread-count');
+
                 if (res.ok) {
                     const data = await res.json();
                     setUnreadCount(data.unread_count);
@@ -30,6 +32,7 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
 
         fetchCount();
         const interval = setInterval(fetchCount, 30000);
+
         return () => clearInterval(interval);
     }, [initialCount]);
 

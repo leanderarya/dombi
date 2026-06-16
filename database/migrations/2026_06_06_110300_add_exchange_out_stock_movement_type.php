@@ -105,7 +105,7 @@ return new class extends Migration
             )
         ");
 
-        DB::statement("
+        DB::statement('
             INSERT INTO stock_movements_new (
                 id, outlet_id, product_id, product_variant_id, type, quantity,
                 before_stock, after_stock, before_reserved, after_reserved,
@@ -116,7 +116,7 @@ return new class extends Migration
                 before_stock, after_stock, before_reserved, after_reserved,
                 reference_type, reference_id, notes, created_by, created_at, updated_at
             FROM stock_movements
-        ");
+        ');
 
         DB::statement('DROP TABLE stock_movements');
         DB::statement('ALTER TABLE stock_movements_new RENAME TO stock_movements');

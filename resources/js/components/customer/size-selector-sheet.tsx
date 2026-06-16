@@ -47,7 +47,9 @@ export default function SizeSelectorSheet({ open, onClose, familyName, flavorNam
     const isOutOfStock = selectedVariant?.stock_status === 'out_of_stock';
 
     const handleAdd = async () => {
-        if (!selectedVariant || adding || isOutOfStock) return;
+        if (!selectedVariant || adding || isOutOfStock) {
+return;
+}
 
         setAdding(true);
         cart.addItem(selectedVariant.id, quantity);

@@ -2,11 +2,11 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import DataTable from '@/components/ui/data-table';
 import Pagination from '@/components/pagination';
-import { getOrderStatus } from '@/lib/status-labels';
+import DataTable from '@/components/ui/data-table';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
+import { getOrderStatus } from '@/lib/status-labels';
 
 const statusFilters = [
     { key: '', label: 'Semua' },
@@ -89,6 +89,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                             label: 'Status',
                             render: (row: any) => {
                                 const s = getOrderStatus(row.status);
+
                                 return <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>;
                             },
                         },

@@ -7,7 +7,6 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\User;
 use App\Services\CheckoutOtpService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;

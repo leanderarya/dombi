@@ -35,6 +35,7 @@ class CustomerLocationStore {
 
     subscribe(listener: Listener): () => void {
         this.listeners.add(listener);
+
         return () => this.listeners.delete(listener);
     }
 
@@ -71,6 +72,7 @@ class CustomerLocationStore {
                 for (const key of STORAGE_KEYS) {
                     localStorage.removeItem(key);
                 }
+
                 return;
             }
 
@@ -100,6 +102,7 @@ class CustomerLocationStore {
                     && typeof parsed.timestamp === 'number'
                 ) {
                     this.location = parsed;
+
                     return;
                 }
             }

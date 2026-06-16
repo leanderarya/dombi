@@ -32,7 +32,9 @@ export default function LeafletPicker({ latitude, longitude, onChange }: Props) 
             const L = await import('leaflet');
             await import('leaflet/dist/leaflet.css');
 
-            if (cancelled || !mapRef.current || mapInstanceRef.current) return;
+            if (cancelled || !mapRef.current || mapInstanceRef.current) {
+return;
+}
 
             // Fix default marker icon path
             delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -74,6 +76,7 @@ export default function LeafletPicker({ latitude, longitude, onChange }: Props) 
                         onChange(pos.lat, pos.lng);
                     });
                 }
+
                 markerRef.current.setLatLng(e.latlng);
                 onChange(e.latlng.lat, e.latlng.lng);
             });
@@ -87,6 +90,7 @@ export default function LeafletPicker({ latitude, longitude, onChange }: Props) 
 
         return () => {
             cancelled = true;
+
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove();
                 mapInstanceRef.current = null;
@@ -99,13 +103,16 @@ export default function LeafletPicker({ latitude, longitude, onChange }: Props) 
     useEffect(() => {
         if (mapInstanceRef.current && markerRef.current && hasCoords) {
             const pos = markerRef.current.getLatLng();
+
             if (Math.abs(pos.lat - lat!) > 0.0001 || Math.abs(pos.lng - lng!) > 0.0001) {
                 markerRef.current.setLatLng([lat!, lng!]);
                 mapInstanceRef.current.setView([lat!, lng!], DEFAULT_ZOOM);
             }
         } else if (mapInstanceRef.current && hasCoords) {
             import('leaflet').then((L) => {
-                if (!mapInstanceRef.current || markerRef.current) return;
+                if (!mapInstanceRef.current || markerRef.current) {
+return;
+}
 
                 markerRef.current = L.marker([lat!, lng!], { draggable: true }).addTo(mapInstanceRef.current);
                 markerRef.current.on('dragend', () => {

@@ -18,21 +18,27 @@ class InventoryReconcile extends Command
     protected $description = 'Reconcile inventory: verify center stock + outlet stock against StockMovement history (variant-aware)';
 
     private int $centerChecked = 0;
+
     private int $centerDrifted = 0;
+
     private int $outletChecked = 0;
+
     private int $outletDrifted = 0;
+
     private int $fixed = 0;
+
     private array $drifts = [];
+
     private array $conservationViolations = [];
 
     public function handle(): int
     {
-        $fix = $this->option('fix') && !$this->option('dry-run');
+        $fix = $this->option('fix') && ! $this->option('dry-run');
         $outletFilter = $this->option('outlet') ? (int) $this->option('outlet') : null;
 
         $this->newLine();
         $this->info('=== INVENTORY RECONCILIATION ===');
-        $this->info('Mode: ' . ($fix ? 'FIX' : ($this->option('dry-run') ? 'DRY RUN' : 'REPORT')));
+        $this->info('Mode: '.($fix ? 'FIX' : ($this->option('dry-run') ? 'DRY RUN' : 'REPORT')));
         if ($outletFilter) {
             $this->info("Outlet filter: {$outletFilter}");
         }
@@ -107,7 +113,7 @@ class InventoryReconcile extends Command
             ->exists();
 
         // If no center movements exist, treat stored value as baseline
-        if (!$hasMovements) {
+        if (! $hasMovements) {
             return null; // null = no check possible
         }
 
@@ -134,17 +140,17 @@ class InventoryReconcile extends Command
             $variant->update(['center_stock' => $expected]);
 
             StockMovement::create([
-                    'outlet_id' => null,
-                    'product_variant_id' => $variant->id,
-                    'type' => 'stock_adjustment',
-                    'quantity' => $expected - $before,
-                    'before_stock' => $before,
-                    'after_stock' => $expected,
-                    'before_reserved' => 0,
-                    'after_reserved' => 0,
-                    'notes' => 'Center stock reconciliation correction',
-                    'created_by' => null,
-                ]);
+                'outlet_id' => null,
+                'product_variant_id' => $variant->id,
+                'type' => 'stock_adjustment',
+                'quantity' => $expected - $before,
+                'before_stock' => $before,
+                'after_stock' => $expected,
+                'before_reserved' => 0,
+                'after_reserved' => 0,
+                'notes' => 'Center stock reconciliation correction',
+                'created_by' => null,
+            ]);
         });
     }
 
@@ -392,7 +398,7 @@ class InventoryReconcile extends Command
             ->where('product_variant_id', $variantId)
             ->exists();
 
-        if (!$hasMovements) {
+        if (! $hasMovements) {
             return null; // No movements = can't compute expected
         }
 
@@ -403,7 +409,7 @@ class InventoryReconcile extends Command
         if ($outletFilter) {
             $query->where(function ($q) use ($outletFilter) {
                 $q->where('outlet_id', $outletFilter)
-                  ->orWhereNull('outlet_id');
+                    ->orWhereNull('outlet_id');
             });
         }
 
@@ -420,22 +426,22 @@ class InventoryReconcile extends Command
 
         // Center
         $this->info('CENTER INVENTORY');
-        $this->info("----------------");
+        $this->info('----------------');
         $this->info("Checked: {$this->centerChecked} variants");
-        $this->info("Healthy: " . ($this->centerChecked - $this->centerDrifted));
+        $this->info('Healthy: '.($this->centerChecked - $this->centerDrifted));
         $this->line("Drifted: <comment>{$this->centerDrifted}</comment>");
         $this->newLine();
 
         // Outlet
         $this->info('OUTLET INVENTORY');
-        $this->info("----------------");
+        $this->info('----------------');
         $this->info("Checked: {$this->outletChecked} inventories");
-        $this->info("Healthy: " . ($this->outletChecked - $this->outletDrifted));
+        $this->info('Healthy: '.($this->outletChecked - $this->outletDrifted));
         $this->line("Drifted: <comment>{$this->outletDrifted}</comment>");
         $this->newLine();
 
         // Drift details
-        if (!empty($this->drifts)) {
+        if (! empty($this->drifts)) {
             $this->warn('DRIFT DETECTED');
             $this->warn('--------------');
 
@@ -453,7 +459,7 @@ class InventoryReconcile extends Command
                             ['reserved_stock', $d['expected_reserved'], $d['actual_reserved'], $d['reserved_drift']],
                         ]
                     );
-                    if (!empty($d['root_cause'])) {
+                    if (! empty($d['root_cause'])) {
                         $this->line("  Likely cause: <fg=red>{$d['root_cause']}</>");
                     }
                 } else {
@@ -469,7 +475,7 @@ class InventoryReconcile extends Command
         }
 
         // Conservation
-        if (!empty($this->conservationViolations)) {
+        if (! empty($this->conservationViolations)) {
             $this->newLine();
             $this->error('CONSERVATION VIOLATIONS');
             $this->error('-----------------------');
@@ -491,7 +497,7 @@ class InventoryReconcile extends Command
             $this->info('✓ All inventory is consistent. No drift detected.');
         } else {
             $this->warn("Drift: {$totalDrift} record(s)  Conservation violations: {$conservation}");
-            if (!$fix) {
+            if (! $fix) {
                 $this->warn('Run with --fix to apply corrections.');
             } else {
                 $this->info("Fixed: {$this->fixed} record(s)");

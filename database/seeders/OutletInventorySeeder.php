@@ -18,7 +18,7 @@ class OutletInventorySeeder extends Seeder
      */
     private const STOCK_MAP = [
         '250ml' => ['current' => 20, 'minimum' => 5],
-        '1L'    => ['current' => 10, 'minimum' => 3],
+        '1L' => ['current' => 10, 'minimum' => 3],
     ];
 
     public function run(): void
@@ -29,11 +29,13 @@ class OutletInventorySeeder extends Seeder
 
         if ($outlets->isEmpty()) {
             $this->command->warn('OutletInventorySeeder: No active outlets found — skipping.');
+
             return;
         }
 
         if ($variants->isEmpty()) {
             $this->command->warn('OutletInventorySeeder: No active variants found — skipping.');
+
             return;
         }
 
@@ -71,7 +73,7 @@ class OutletInventorySeeder extends Seeder
                         'after_stock' => $stockConfig['current'],
                         'before_reserved' => 0,
                         'after_reserved' => 0,
-                        'notes' => 'Stok awal untuk ' . $variant->full_name,
+                        'notes' => 'Stok awal untuk '.$variant->full_name,
                         'created_by' => $owner?->id,
                     ]);
                 }

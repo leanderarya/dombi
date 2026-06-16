@@ -4,10 +4,9 @@ namespace App\Services;
 
 use App\Models\Delivery;
 use App\Models\DeliveryResolutionLog;
-use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Models\User;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -178,7 +177,7 @@ class DeliveryIntelligenceService
             })
             ->with(['courier:id,name', 'order.outlet:id,name'])
             ->get()
-            ->map(function (Delivery $d) use ($deliverySla): array {
+            ->map(function (Delivery $d): array {
                 $startTime = $d->pickup_time ?? $d->assigned_at;
 
                 return [
@@ -331,9 +330,9 @@ class DeliveryIntelligenceService
      */
     public function getOutletPerformance(): Collection
     {
-        return \App\Models\Outlet::where('status', 'active')
+        return Outlet::where('status', 'active')
             ->get()
-            ->map(function (\App\Models\Outlet $outlet): array {
+            ->map(function (Outlet $outlet): array {
                 $deliveries = Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
                     ->whereDate('updated_at', today())
                     ->get();
@@ -358,7 +357,7 @@ class DeliveryIntelligenceService
             ->values();
     }
 
-    private function outletAvgAssignmentTime(\App\Models\Outlet $outlet): ?int
+    private function outletAvgAssignmentTime(Outlet $outlet): ?int
     {
         $orders = Order::where('outlet_id', $outlet->id)
             ->where('status', '!=', 'pending_confirmation')
@@ -372,7 +371,7 @@ class DeliveryIntelligenceService
         }
 
         $times = $orders->map(function (Order $o): ?int {
-            if (!$o->delivery || !$o->delivery->assigned_at) {
+            if (! $o->delivery || ! $o->delivery->assigned_at) {
                 return null;
             }
 
@@ -382,7 +381,7 @@ class DeliveryIntelligenceService
         return $times->isNotEmpty() ? (int) round($times->avg()) : null;
     }
 
-    private function outletAvgPickupTime(\App\Models\Outlet $outlet): ?int
+    private function outletAvgPickupTime(Outlet $outlet): ?int
     {
         $deliveries = Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
             ->where('status', 'completed')
@@ -395,7 +394,7 @@ class DeliveryIntelligenceService
         }
 
         $times = $deliveries->map(function (Delivery $d): ?int {
-            if (!$d->assigned_at || !$d->pickup_time) {
+            if (! $d->assigned_at || ! $d->pickup_time) {
                 return null;
             }
 
@@ -405,7 +404,7 @@ class DeliveryIntelligenceService
         return $times->isNotEmpty() ? (int) round($times->avg()) : null;
     }
 
-    private function outletAvgDeliveryTime(\App\Models\Outlet $outlet): ?int
+    private function outletAvgDeliveryTime(Outlet $outlet): ?int
     {
         $deliveries = Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
             ->where('status', 'completed')

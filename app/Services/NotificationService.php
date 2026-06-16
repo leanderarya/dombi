@@ -4,52 +4,82 @@ namespace App\Services;
 
 use App\Models\Customer;
 use App\Models\Delivery;
+use App\Models\ExchangeRequest;
 use App\Models\Notification;
 use App\Models\Order;
+use App\Models\Outlet;
+use App\Models\RestockRequest;
+use App\Models\ReturnRequest;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
+use App\Models\StockDistribution;
 use App\Models\User;
 
 class NotificationService
 {
     // Order notifications
     public const ORDER_CREATED = 'order.created';
+
     public const ORDER_CONFIRMED = 'order.confirmed';
+
     public const ORDER_REJECTED = 'order.rejected';
+
     public const ORDER_EXPIRED = 'order.expired';
+
     public const ORDER_CANCELLED = 'order.cancelled';
 
     // Delivery notifications
     public const COURIER_ASSIGNED = 'delivery.courier_assigned';
+
     public const COURIER_REJECTED_ASSIGNMENT = 'delivery.courier_rejected_assignment';
+
     public const COURIER_PICKED_UP = 'delivery.picked_up';
+
     public const DELIVERY_OUT_FOR_DELIVERY = 'delivery.out_for_delivery';
+
     public const DELIVERY_COMPLETED = 'delivery.completed';
+
     public const DELIVERY_FAILED = 'delivery.failed';
+
     public const DELIVERY_RETURNED_TO_OUTLET = 'delivery.returned_to_outlet';
 
     // Inventory notifications
     public const LOW_STOCK = 'inventory.low_stock';
+
     public const CRITICAL_STOCK = 'inventory.critical_stock';
+
     public const RESTOCK_CREATED = 'inventory.restock_created';
+
     public const RESTOCK_APPROVED = 'inventory.restock_approved';
+
     public const RESTOCK_REJECTED = 'inventory.restock_rejected';
+
     public const DISTRIBUTION_SENT = 'inventory.distribution_sent';
+
     public const DISTRIBUTION_RECEIVED = 'inventory.distribution_received';
+
     public const RETURN_REQUEST_CREATED = 'inventory.return_request_created';
+
     public const EXCHANGE_REQUEST_CREATED = 'inventory.exchange_request_created';
 
     // System notifications
     public const SLA_VIOLATION = 'system.sla_violation';
+
     public const COURIER_OFFLINE = 'system.courier_offline';
+
     public const CAPACITY_WARNING = 'system.capacity_warning';
+
     public const RETURNED_DELIVERY_PENDING = 'system.returned_delivery_pending';
 
     // Settlement notifications
     public const SETTLEMENT_REMINDER = 'settlement.reminder';
+
     public const SETTLEMENT_GENERATED = 'settlement.generated';
+
     public const PAYMENT_SUBMITTED = 'payment.submitted';
+
     public const PAYMENT_VERIFIED = 'payment.verified';
+
     public const PAYMENT_REJECTED = 'payment.rejected';
 
     /**
@@ -440,7 +470,7 @@ class NotificationService
         // Notify owners
         $severity = $available <= 0 ? self::CRITICAL_STOCK : self::LOW_STOCK;
         $title = $available <= 0 ? 'Stok Kritis' : 'Stok Rendah';
-        $outletName = \App\Models\Outlet::find($outletId)?->name ?? 'Unknown';
+        $outletName = Outlet::find($outletId)?->name ?? 'Unknown';
         $message = "{$productName} di {$outletName}: tersedia {$available}, minimum {$minimum}.";
 
         foreach ($this->getOwners() as $ownerId) {
@@ -458,7 +488,7 @@ class NotificationService
         }
     }
 
-    public function notifyRestockCreated(\App\Models\RestockRequest $restock): void
+    public function notifyRestockCreated(RestockRequest $restock): void
     {
         // Notify owners
         foreach ($this->getOwners() as $ownerId) {
@@ -476,7 +506,7 @@ class NotificationService
         }
     }
 
-    public function notifyRestockApproved(\App\Models\RestockRequest $restock): void
+    public function notifyRestockApproved(RestockRequest $restock): void
     {
         // Notify outlet
         $outletUser = $this->getOutletUser($restock->outlet_id);
@@ -495,7 +525,7 @@ class NotificationService
         }
     }
 
-    public function notifyRestockRejected(\App\Models\RestockRequest $restock, string $reason): void
+    public function notifyRestockRejected(RestockRequest $restock, string $reason): void
     {
         // Notify outlet
         $outletUser = $this->getOutletUser($restock->outlet_id);
@@ -514,7 +544,7 @@ class NotificationService
         }
     }
 
-    public function notifyDistributionSent(\App\Models\StockDistribution $distribution): void
+    public function notifyDistributionSent(StockDistribution $distribution): void
     {
         // Notify outlet
         $outletUser = $this->getOutletUser($distribution->outlet_id);
@@ -533,7 +563,7 @@ class NotificationService
         }
     }
 
-    public function notifyDistributionReceived(\App\Models\StockDistribution $distribution): void
+    public function notifyDistributionReceived(StockDistribution $distribution): void
     {
         // Notify owners
         foreach ($this->getOwners() as $ownerId) {
@@ -551,13 +581,13 @@ class NotificationService
         }
     }
 
-    public function notifyReturnRequestCreated(\App\Models\ReturnRequest $return): void
+    public function notifyReturnRequestCreated(ReturnRequest $return): void
     {
         $return->loadMissing(['outlet', 'items.variant.family']);
 
         $firstItem = $return->items->first();
         $itemSummary = $firstItem
-            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk') . " x{$firstItem->quantity}")
+            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk')." x{$firstItem->quantity}")
             : 'Tanpa item';
 
         foreach ($this->getOwners() as $ownerId) {
@@ -580,13 +610,13 @@ class NotificationService
         }
     }
 
-    public function notifyExchangeRequestCreated(\App\Models\ExchangeRequest $exchange): void
+    public function notifyExchangeRequestCreated(ExchangeRequest $exchange): void
     {
         $exchange->loadMissing(['outlet', 'items.variant.family', 'returnRequest']);
 
         $firstItem = $exchange->items->first();
         $itemSummary = $firstItem
-            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk') . " x{$firstItem->quantity}")
+            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk')." x{$firstItem->quantity}")
             : 'Tanpa item';
 
         foreach ($this->getOwners() as $ownerId) {
@@ -659,7 +689,7 @@ class NotificationService
                 customerId: null,
                 type: self::SETTLEMENT_REMINDER,
                 title: 'Pengingat Pembayaran',
-                message: "Settlement untuk periode {$settlement->period_date->format('d/m/Y')} jatuh tempo besok. Jumlah: Rp " . number_format($settlement->amount_due, 0, ',', '.'),
+                message: "Settlement untuk periode {$settlement->period_date->format('d/m/Y')} jatuh tempo besok. Jumlah: Rp ".number_format($settlement->amount_due, 0, ',', '.'),
                 data: ['settlement_id' => $settlement->id, 'amount_due' => $settlement->amount_due, 'due_date' => $settlement->due_date->toDateString()],
                 entityType: 'settlement',
                 entityId: $settlement->id
@@ -677,7 +707,7 @@ class NotificationService
                 customerId: null,
                 type: self::SETTLEMENT_GENERATED,
                 title: 'Settlement Baru',
-                message: "Settlement untuk periode {$settlement->period_date->format('d/m/Y')} telah dibuat. Jumlah: Rp " . number_format($settlement->amount_due, 0, ',', '.'),
+                message: "Settlement untuk periode {$settlement->period_date->format('d/m/Y')} telah dibuat. Jumlah: Rp ".number_format($settlement->amount_due, 0, ',', '.'),
                 data: ['settlement_id' => $settlement->id, 'amount_due' => $settlement->amount_due],
                 entityType: 'settlement',
                 entityId: $settlement->id
@@ -694,7 +724,7 @@ class NotificationService
                 customerId: null,
                 type: self::PAYMENT_SUBMITTED,
                 title: 'Pembayaran Baru',
-                message: "Outlet {$payment->outlet->name} mengirim pembayaran Rp " . number_format($payment->amount, 0, ',', '.') . " (Ref: {$payment->reference_number})",
+                message: "Outlet {$payment->outlet->name} mengirim pembayaran Rp ".number_format($payment->amount, 0, ',', '.')." (Ref: {$payment->reference_number})",
                 data: ['payment_id' => $payment->id, 'outlet_id' => $payment->outlet_id, 'amount' => $payment->amount, 'reference_number' => $payment->reference_number],
                 entityType: 'settlement_payment',
                 entityId: $payment->id
@@ -712,7 +742,7 @@ class NotificationService
                 customerId: null,
                 type: self::PAYMENT_VERIFIED,
                 title: 'Pembayaran Diverifikasi',
-                message: "Pembayaran {$payment->reference_number} sebesar Rp " . number_format($payment->amount, 0, ',', '.') . " telah diverifikasi.",
+                message: "Pembayaran {$payment->reference_number} sebesar Rp ".number_format($payment->amount, 0, ',', '.').' telah diverifikasi.',
                 data: ['payment_id' => $payment->id, 'amount' => $payment->amount, 'reference_number' => $payment->reference_number],
                 entityType: 'settlement_payment',
                 entityId: $payment->id

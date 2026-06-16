@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
+use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
-use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -149,7 +149,7 @@ class MilestoneSeventhTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '081234567890' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '081234567890'.rand(1000, 9999)]);
         Order::create([
             'customer_id' => $customer->id, 'outlet_id' => $outlet->id, 'order_code' => 'DOMBI-CSV-0001',
             'status' => 'completed', 'subtotal' => 50000, 'delivery_fee' => 0, 'total' => 50000,

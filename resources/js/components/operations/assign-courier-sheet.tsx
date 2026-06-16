@@ -22,28 +22,49 @@ export default function AssignCourierSheet({ order, couriers, open, onClose, ass
     const form = useForm({ courier_id: '' });
 
     useEffect(() => {
-        if (!open) { setSelectedCourier(null); form.reset(); }
+        if (!open) {
+ setSelectedCourier(null); form.reset(); 
+}
     }, [open]);
 
     useEffect(() => {
-        if (open) document.body.style.overflow = 'hidden';
-        else document.body.style.overflow = '';
-        return () => { document.body.style.overflow = ''; };
+        if (open) {
+document.body.style.overflow = 'hidden';
+} else {
+document.body.style.overflow = '';
+}
+
+        return () => {
+ document.body.style.overflow = ''; 
+};
     }, [open]);
 
     useEffect(() => {
-        if (!open) return;
-        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        if (!open) {
+return;
+}
+
+        const handler = (e: KeyboardEvent) => {
+ if (e.key === 'Escape') {
+onClose();
+} 
+};
         document.addEventListener('keydown', handler);
+
         return () => document.removeEventListener('keydown', handler);
     }, [open, onClose]);
 
-    if (!open || !order) return null;
+    if (!open || !order) {
+return null;
+}
 
     const submitUrl = assignUrl ?? `/owner/orders/${order.id}/assign-courier`;
 
     function handleSubmit() {
-        if (!selectedCourier) return;
+        if (!selectedCourier) {
+return;
+}
+
         form.transform(() => ({ courier_id: String(selectedCourier) }));
         form.post(submitUrl, {
             onSuccess: () => onClose(),
@@ -89,6 +110,7 @@ export default function AssignCourierSheet({ order, couriers, open, onClose, ass
                                     const isSelected = selectedCourier === courier.id;
                                     const activeCount = courier.active_deliveries ?? 0;
                                     const isBusy = activeCount >= 3;
+
                                     return (
                                         <button
                                             key={courier.id}

@@ -33,19 +33,35 @@ export default function InventoryAdjustmentSheet({ item, open, onClose }: Props)
     const [qtyDelta, setQtyDelta] = useState(0);
 
     useEffect(() => {
-        if (open) document.body.style.overflow = 'hidden';
-        else document.body.style.overflow = '';
-        return () => { document.body.style.overflow = ''; };
+        if (open) {
+document.body.style.overflow = 'hidden';
+} else {
+document.body.style.overflow = '';
+}
+
+        return () => {
+ document.body.style.overflow = ''; 
+};
     }, [open]);
 
     useEffect(() => {
-        if (!open) return;
-        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        if (!open) {
+return;
+}
+
+        const handler = (e: KeyboardEvent) => {
+ if (e.key === 'Escape') {
+onClose();
+} 
+};
         document.addEventListener('keydown', handler);
+
         return () => document.removeEventListener('keydown', handler);
     }, [open, onClose]);
 
-    if (!open || !item) return null;
+    if (!open || !item) {
+return null;
+}
 
     const currentStock = Number(item.current_stock ?? 0);
     const reserved = Number(item.reserved_stock ?? 0);
@@ -57,7 +73,10 @@ export default function InventoryAdjustmentSheet({ item, open, onClose }: Props)
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (willViolate || qtyDelta === 0 || !form.data.notes.trim()) return;
+
+        if (willViolate || qtyDelta === 0 || !form.data.notes.trim()) {
+return;
+}
 
         form.transform(() => ({
             current_stock: newStock,
@@ -104,10 +123,14 @@ export default function InventoryAdjustmentSheet({ item, open, onClose }: Props)
                     <div className="mt-4">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Adjustment Type</div>
                         <div className="mt-2 grid grid-cols-2 gap-2">
-                            <button type="button" onClick={() => { setMode('add'); setQtyDelta(0); }} className={`flex min-h-[44px] items-center justify-center rounded-lg border text-xs font-semibold transition-all duration-150 active:scale-[0.98] ${mode === 'add' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-600'}`}>
+                            <button type="button" onClick={() => {
+ setMode('add'); setQtyDelta(0); 
+}} className={`flex min-h-[44px] items-center justify-center rounded-lg border text-xs font-semibold transition-all duration-150 active:scale-[0.98] ${mode === 'add' ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-slate-200 text-slate-600'}`}>
                                 + Tambah Stok
                             </button>
-                            <button type="button" onClick={() => { setMode('subtract'); setQtyDelta(0); }} className={`flex min-h-[44px] items-center justify-center rounded-lg border text-xs font-semibold transition-all duration-150 active:scale-[0.98] ${mode === 'subtract' ? 'border-red-300 bg-red-50 text-red-700' : 'border-slate-200 text-slate-600'}`}>
+                            <button type="button" onClick={() => {
+ setMode('subtract'); setQtyDelta(0); 
+}} className={`flex min-h-[44px] items-center justify-center rounded-lg border text-xs font-semibold transition-all duration-150 active:scale-[0.98] ${mode === 'subtract' ? 'border-red-300 bg-red-50 text-red-700' : 'border-slate-200 text-slate-600'}`}>
                                 − Kurangi Stok
                             </button>
                         </div>
@@ -178,6 +201,7 @@ export default function InventoryAdjustmentSheet({ item, open, onClose }: Props)
 
 function MetricBox({ label, value, color }: { label: string; value: number; color?: string }) {
     const textColor = color === 'red' ? 'text-red-600' : color === 'amber' ? 'text-amber-600' : color === 'blue' ? 'text-blue-600' : 'text-slate-900';
+
     return (
         <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 text-center">
             <div className="text-[8px] font-bold uppercase tracking-wider text-slate-400">{label}</div>

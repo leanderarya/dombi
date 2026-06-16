@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Delivery;
 use App\Models\Order;
+use App\Models\User;
 use App\Services\DeliveryService;
 use App\Services\InventoryService;
 use Illuminate\Console\Command;
@@ -80,7 +81,7 @@ class ResolveStaleOrders extends Command
                     if ($delivery) {
                         $deliveryService->resolveFailedDelivery(
                             $delivery,
-                            auth()->user() ?? \App\Models\User::where('role', 'owner')->first(),
+                            auth()->user() ?? User::where('role', 'owner')->first(),
                             'cancelled_and_released',
                             "Auto-resolved after {$failedDays} days without resolution."
                         );
@@ -139,7 +140,7 @@ class ResolveStaleOrders extends Command
             }
         }
 
-        $this->info(($dryRun ? '[DRY RUN] ' : '') . "Resolved {$totalResolved} stale items.");
+        $this->info(($dryRun ? '[DRY RUN] ' : '')."Resolved {$totalResolved} stale items.");
 
         return self::SUCCESS;
     }

@@ -5,12 +5,13 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Outlet;
+use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\User;
 use App\Services\CheckoutOtpService;
 use App\Services\DeliveryPricingService;
 use App\Services\OrderService;
 use App\Services\RecommendOutletService;
+use App\Support\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,7 @@ use Inertia\Response;
 class CheckoutController extends Controller
 {
     private const FULFILLMENT_TYPES = ['pickup', 'delivery_dombi', 'delivery_ojol'];
+
     private const CHECKOUT_VISIBLE_FULFILLMENT_TYPES = ['pickup', 'delivery_dombi'];
 
     private const PAYMENT_METHODS = ['cod', 'qris', 'transfer', 'card'];
@@ -38,7 +40,7 @@ class CheckoutController extends Controller
         DeliveryPricingService $deliveryPricingService,
     ): Response {
         $draftItems = collect($request->session()->get('checkout.cart', []));
-        
+
         // Load variants with family info
         $variantIds = $draftItems->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
         $variants = ProductVariant::query()
@@ -98,16 +100,17 @@ class CheckoutController extends Controller
 
         // Normalize items to use product_variant_id
         $items = collect($validated['items'])->map(function ($item) {
-            if (!empty($item['product_variant_id'])) {
+            if (! empty($item['product_variant_id'])) {
                 return $item;
             }
             // Legacy: find variant from product_id
-            if (!empty($item['product_id'])) {
+            if (! empty($item['product_id'])) {
                 $variant = ProductVariant::where('product_id', $item['product_id'])->where('is_active', true)->first();
                 if ($variant) {
                     $item['product_variant_id'] = $variant->id;
                 }
             }
+
             return $item;
         })->toArray();
 
@@ -130,10 +133,9 @@ class CheckoutController extends Controller
         OrderService $orderService,
         RecommendOutletService $recommendOutletService,
         DeliveryPricingService $deliveryPricingService,
-    ): Response
-    {
+    ): Response {
         $cart = collect($request->session()->get('checkout.cart', []));
-        
+
         // Load variants with family info
         $variantIds = $cart->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
         $variants = ProductVariant::query()
@@ -558,7 +560,7 @@ class CheckoutController extends Controller
 
         // Load legacy products for fallback
         $productIds = collect($rawItems)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $products = \App\Models\Product::query()
+        $products = Product::query()
             ->whereIn('id', $productIds)
             ->where('is_active', true)
             ->get()
@@ -615,7 +617,7 @@ class CheckoutController extends Controller
             ->keyBy('id');
 
         $productIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $products = \App\Models\Product::query()
+        $products = Product::query()
             ->whereIn('id', $productIds)
             ->where('is_active', true)
             ->get()
@@ -626,6 +628,7 @@ class CheckoutController extends Controller
             $variantId = (int) ($item['product_variant_id'] ?? 0);
             if ($variantId) {
                 $variant = $variants->get($variantId);
+
                 return $variant ? (float) $variant->selling_price * (int) $item['quantity'] : 0;
             }
 
@@ -634,6 +637,7 @@ class CheckoutController extends Controller
             if ($productId) {
                 $product = $products->get($productId);
                 $price = $product?->selling_price > 0 ? $product->selling_price : ($product?->price ?? 0);
+
                 return (float) $price * (int) $item['quantity'];
             }
 
@@ -652,7 +656,7 @@ class CheckoutController extends Controller
 
     private function normalizeIndonesianPhone(string $phone): string
     {
-        return \App\Support\PhoneNormalizer::normalize($phone);
+        return PhoneNormalizer::normalize($phone);
     }
 
     private function resolveDeliveryQuote(array $cart, $location, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): ?array

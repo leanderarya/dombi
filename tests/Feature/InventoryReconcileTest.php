@@ -9,9 +9,6 @@ use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Models\User;
-use App\Services\ExchangeService;
-use App\Services\ReturnService;
-use App\Services\RestockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Tests\TestCase;
@@ -34,7 +31,7 @@ class InventoryReconcileTest extends TestCase
         $exitCode = Artisan::call('inventory:reconcile');
         $output = Artisan::output();
 
-        $this->assertSame(0, $exitCode, "Reconciliation failed with output:\n" . $output);
+        $this->assertSame(0, $exitCode, "Reconciliation failed with output:\n".$output);
         $this->assertStringContainsString('No drift detected', $output);
     }
 
@@ -199,7 +196,7 @@ class InventoryReconcileTest extends TestCase
 
         $exitCode = Artisan::call('inventory:reconcile');
         $output = Artisan::output();
-        $this->assertSame(0, $exitCode, "Reconciliation failed:\n" . $output);
+        $this->assertSame(0, $exitCode, "Reconciliation failed:\n".$output);
     }
 
     // ─── EXCHANGE FLOW RECONCILIATION ──────────────────────────────
@@ -262,7 +259,7 @@ class InventoryReconcileTest extends TestCase
 
         $exitCode = Artisan::call('inventory:reconcile');
         $output = Artisan::output();
-        $this->assertSame(0, $exitCode, "Reconciliation failed:\n" . $output);
+        $this->assertSame(0, $exitCode, "Reconciliation failed:\n".$output);
     }
 
     // ─── DISTRIBUTION FLOW RECONCILIATION ──────────────────────────
@@ -294,7 +291,7 @@ class InventoryReconcileTest extends TestCase
 
         $exitCode = Artisan::call('inventory:reconcile');
         $output = Artisan::output();
-        $this->assertSame(0, $exitCode, "Reconciliation failed:\n" . $output);
+        $this->assertSame(0, $exitCode, "Reconciliation failed:\n".$output);
     }
 
     // ─── MULTI-OUTLET ──────────────────────────────────────────────
@@ -344,7 +341,7 @@ class InventoryReconcileTest extends TestCase
         $exitCode = Artisan::call('inventory:reconcile', ['--outlet' => $ctx['outlet']->id]);
         $output = Artisan::output();
 
-        $this->assertSame(0, $exitCode, "Reconciliation failed:\n" . $output);
+        $this->assertSame(0, $exitCode, "Reconciliation failed:\n".$output);
         $this->assertStringContainsString('No drift detected', $output);
         // Outlet filter only limits outlet inventories, center still checks all
         $this->assertStringContainsString('Checked: 2 inventories', $output);

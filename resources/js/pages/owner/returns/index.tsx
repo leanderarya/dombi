@@ -1,9 +1,9 @@
 import { Link, router } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import StatusBadge from '@/components/ui/status-badge';
 import Pagination from '@/components/pagination';
-import { getReturnStatus } from '@/lib/status-labels';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { getReturnStatus } from '@/lib/status-labels';
 
 export default function OwnerReturnsIndex({ returns, filters, dashboard, outlets, reasons }: any) {
     return (
@@ -79,6 +79,7 @@ export default function OwnerReturnsIndex({ returns, filters, dashboard, outlets
                     )}
                     {returns.data.map((ret: any) => {
                         const status = getReturnStatus(ret.status);
+
                         return (
                             <Link
                                 key={ret.id}

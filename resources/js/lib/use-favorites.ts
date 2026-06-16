@@ -26,11 +26,13 @@ class FavoritesStore {
         } else {
             this.favorites.add(variantId);
         }
+
         this.commit();
     }
 
     subscribe(listener: Listener): () => void {
         this.listeners.add(listener);
+
         return () => this.listeners.delete(listener);
     }
 
@@ -57,8 +59,10 @@ class FavoritesStore {
     private load(): void {
         try {
             const stored = localStorage.getItem('dombi_favorites');
+
             if (stored) {
                 const parsed = JSON.parse(stored);
+
                 if (Array.isArray(parsed)) {
                     this.favorites = new Set(parsed.filter((id: any) => typeof id === 'number'));
                 }

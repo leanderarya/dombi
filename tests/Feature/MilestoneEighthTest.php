@@ -67,7 +67,7 @@ class MilestoneEighthTest extends TestCase
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
 
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '081234567890' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '081234567890'.rand(1000, 9999)]);
 
         Order::create([
             'customer_id' => $customer->id,

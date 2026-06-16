@@ -6,7 +6,6 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\Product;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -18,7 +17,7 @@ class OrderTrackingTest extends TestCase
     {
         $order = $this->createOrder();
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('track')
@@ -32,19 +31,19 @@ class OrderTrackingTest extends TestCase
     {
         $order = $this->createOrder();
 
-        $this->assertSame(url('/track/' . $order->recovery_token), $order->tracking_url);
+        $this->assertSame(url('/track/'.$order->recovery_token), $order->tracking_url);
     }
 
     public function test_public_track_page_includes_tracking_link_payload_for_sharing(): void
     {
         $order = $this->createOrder();
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('track')
                 ->where('found', true)
-                ->where('order.tracking_url', url('/track/' . $order->recovery_token))
+                ->where('order.tracking_url', url('/track/'.$order->recovery_token))
                 ->missing('order.recovery_token')
             );
     }
@@ -65,7 +64,7 @@ class OrderTrackingTest extends TestCase
         $order = $this->createOrder();
         $token = $order->recovery_token;
 
-        $this->get('/track/' . strtolower($token))
+        $this->get('/track/'.strtolower($token))
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('found', true)
@@ -77,7 +76,7 @@ class OrderTrackingTest extends TestCase
     {
         $order = $this->createOrder();
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk();
     }
 
@@ -92,7 +91,7 @@ class OrderTrackingTest extends TestCase
             'changed_by' => $order->customer_id,
         ]);
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('found', true)
@@ -108,7 +107,7 @@ class OrderTrackingTest extends TestCase
             'customer_landmark' => 'Rumah hijau',
         ]);
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('order.customer_address', 'Jl. Melati, Kel. Tembalang')
@@ -123,7 +122,7 @@ class OrderTrackingTest extends TestCase
     {
         $order = $this->createOrder();
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->has('order.items', 1)
@@ -143,7 +142,7 @@ class OrderTrackingTest extends TestCase
     {
         $customer = Customer::create([
             'name' => 'Test Customer',
-            'phone' => '6281234567890' . rand(1000, 9999),
+            'phone' => '6281234567890'.rand(1000, 9999),
         ]);
 
         $outlet = Outlet::create([
@@ -158,7 +157,7 @@ class OrderTrackingTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-tracking-' . uniqid(),
+            'slug' => 'susu-kambing-500ml-tracking-'.uniqid(),
             'unit' => 'botol',
             'price' => 25000,
             'is_active' => true,
@@ -167,7 +166,7 @@ class OrderTrackingTest extends TestCase
         $order = Order::create(array_merge([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'DOMBI-TRACK-' . strtoupper(uniqid()),
+            'order_code' => 'DOMBI-TRACK-'.strtoupper(uniqid()),
             'status' => 'pending_confirmation',
             'fulfillment_type' => 'delivery_dombi',
             'subtotal' => 50000,

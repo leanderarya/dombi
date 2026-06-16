@@ -3,10 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
-use App\Models\Delivery;
 use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\OutletInventory;
+use App\Models\Product;
 use App\Models\User;
 use App\Services\DeliveryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -20,7 +21,7 @@ class DeliveryStatusHistoryTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner']);
         $courier = User::factory()->create(['role' => 'courier', 'is_active' => true, 'is_online' => true]);
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890'.rand(1000, 9999)]);
         $outlet = Outlet::create([
             'user_id' => $owner->id,
             'name' => 'Outlet Test',
@@ -32,13 +33,13 @@ class DeliveryStatusHistoryTest extends TestCase
             'phone' => '08123456789',
             'status' => 'active',
         ]);
-        $product = \App\Models\Product::create([
+        $product = Product::create([
             'name' => 'Nasi Goreng',
-            'slug' => 'nasi-goreng-' . uniqid(),
+            'slug' => 'nasi-goreng-'.uniqid(),
             'price' => 25000,
             'is_active' => true,
         ]);
-        \App\Models\OutletInventory::create([
+        OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
             'current_stock' => 100,
@@ -48,7 +49,7 @@ class DeliveryStatusHistoryTest extends TestCase
         $order = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'ORD-' . strtoupper(substr(uniqid(), -6)),
+            'order_code' => 'ORD-'.strtoupper(substr(uniqid(), -6)),
             'status' => 'ready_for_pickup',
             'fulfillment_type' => 'delivery_dombi',
             'subtotal' => 25000,

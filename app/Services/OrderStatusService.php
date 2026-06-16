@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -44,6 +45,7 @@ class OrderStatusService
         private readonly InventoryService $inventoryService,
         private readonly NotificationService $notificationService,
         private readonly SettlementService $settlementService,
+        private readonly SettlementGeneratorService $settlementGeneratorService,
     ) {}
 
     public function updateStatus(Order $order, string $status, ?User $actor = null): Order
@@ -91,6 +93,13 @@ class OrderStatusService
             // Record settlement payable when order is completed
             if ($status === 'completed') {
                 $this->settlementService->recordSale($order->fresh('items'));
+                // Generate or update daily settlement for this outlet
+                if ($order->outlet_id) {
+                    $outlet = Outlet::find($order->outlet_id);
+                    if ($outlet) {
+                        $this->settlementGeneratorService->generateForOutlet($outlet, now());
+                    }
+                }
             }
 
             return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);

@@ -9,15 +9,15 @@ import {
     RefreshCw,
     Wallet,
 } from 'lucide-react';
+import OutletAttentionList from '@/components/owner/outlet-attention-list';
+import OwnerActionCard from '@/components/owner/owner-action-card';
+import OwnerKpiCard from '@/components/owner/owner-kpi-card';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
 import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
-import OwnerPageShell from '@/components/owner/owner-page-shell';
-import OwnerKpiCard from '@/components/owner/owner-kpi-card';
-import OwnerActionCard from '@/components/owner/owner-action-card';
-import OutletAttentionList from '@/components/owner/outlet-attention-list';
 import { formatCurrency } from '@/lib/format';
-import { usePolling } from '@/lib/use-polling';
 import { stockSeverity, settlementSeverity, pendingSeverity } from '@/lib/severity';
+import { usePolling } from '@/lib/use-polling';
 
 interface DashboardProps {
     hero: {
@@ -108,7 +108,7 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
                     label="Belum Masuk"
                     value={formatCurrency(kpis.outstandingAmount)}
                     tone="danger"
-                    href="/owner/settlement/collection"
+                    href="/owner/finance"
                     icon={<Wallet className="h-5 w-5" />}
                 />
                 <OwnerKpiCard
@@ -188,7 +188,7 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
             <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
                 <SectionCard
                     label="Belum Masuk"
-                    labelRight={<Link href="/owner/settlement/collection" className="text-xs font-semibold text-emerald-700">Lihat Pusat Penagihan</Link>}
+                    labelRight={<Link href="/owner/finance" className="text-xs font-semibold text-emerald-700">Lihat Semua</Link>}
                 >
                     <div className="space-y-3">
                         {settlementAlerts.length > 0 ? settlementAlerts.map((item) => (
@@ -225,6 +225,7 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
                     <div className="space-y-3">
                         {inventoryRisks.length > 0 ? inventoryRisks.map((risk) => {
                             const severity = stockSeverity(risk.centerStock, risk.threshold);
+
                             return (
                                 <Link
                                     key={risk.variant.id}

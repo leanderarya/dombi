@@ -21,14 +21,17 @@ class StoreOutletRequest extends FormRequest
             'city' => ['nullable', 'string', 'max:255'],
             'province' => ['nullable', 'string', 'max:255'],
             'postal_code' => ['nullable', 'string', 'max:20'],
-            'address' => ['required', 'string'],
+            'address' => ['nullable', 'string'],
             'latitude' => ['required', 'numeric', 'between:-90,90'],
             'longitude' => ['required', 'numeric', 'between:-180,180'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'pic_name' => ['nullable', 'string', 'max:255'],
+            'pic_phone' => ['nullable', 'string', 'max:50'],
+            'pic_position' => ['nullable', 'string', 'max:255'],
             'operational_notes' => ['nullable', 'string'],
             'delivery_radius_km' => ['nullable', 'integer', 'min:1', 'max:100'],
             'prep_estimate_minutes' => ['nullable', 'integer', 'min:1', 'max:240'],
-            'status' => ['required', 'in:active,inactive'],
+            'status' => ['required', Rule::in(['active', 'inactive', 'temporarily_closed', 'maintenance', 'archived'])],
         ];
     }
 }

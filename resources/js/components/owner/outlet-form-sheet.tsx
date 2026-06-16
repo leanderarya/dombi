@@ -1,20 +1,30 @@
 import { Link } from '@inertiajs/react';
+import { ChevronDown } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import OutletAddressPreview from './outlet-address-preview';
 import { reverseGeocode } from '@/lib/geocoding';
 
 const OutletLocationMap = lazy(() => import('./outlet-location-map'));
+
+type ExistingOutlet = {
+    id: number;
+    name: string;
+    latitude: number;
+    longitude: number;
+    address?: string;
+};
 
 type Props = {
     mode: 'create' | 'edit';
     form: any;
     submit: (event: FormEvent<HTMLFormElement>) => void;
     outlet?: any;
+    existingOutlets?: ExistingOutlet[];
 };
 
-export default function OutletFormSheet({ mode, form, submit, outlet }: Props) {
+export default function OutletFormSheet({ mode, form, submit, outlet, existingOutlets = [] }: Props) {
     const [geocodingState, setGeocodingState] = useState<'idle' | 'loading' | 'success' | 'failed'>('idle');
+    const [notesExpanded, setNotesExpanded] = useState(false);
     const abortRef = useRef<AbortController | null>(null);
 
     const location = useMemo(() => {
@@ -32,8 +42,11 @@ export default function OutletFormSheet({ mode, form, submit, outlet }: Props) {
         });
     };
 
+    // Reverse geocode when marker moves — updates administrative address fields only
     useEffect(() => {
-        if (!location) return;
+        if (!location) {
+return;
+}
 
         abortRef.current?.abort();
         const controller = new AbortController();
@@ -41,20 +54,22 @@ export default function OutletFormSheet({ mode, form, submit, outlet }: Props) {
 
         const timeout = window.setTimeout(async () => {
             setGeocodingState('loading');
+
             try {
                 const result = await reverseGeocode(location.lat, location.lng, controller.signal);
                 form.setData({
                     ...form.data,
-                    kelurahan: result.kelurahan || form.data.kelurahan,
-                    kecamatan: result.kecamatan || form.data.kecamatan,
-                    city: result.city || form.data.city,
-                    province: result.province || form.data.province,
-                    postal_code: result.postal_code || form.data.postal_code,
-                    address: result.formatted_address || form.data.address,
+                    kelurahan: result.kelurahan || '',
+                    kecamatan: result.kecamatan || '',
+                    city: result.city || '',
+                    province: result.province || '',
+                    postal_code: result.postal_code || '',
                 });
                 setGeocodingState('success');
             } catch (error) {
-                if (!controller.signal.aborted) setGeocodingState('failed');
+                if (!controller.signal.aborted) {
+setGeocodingState('failed');
+}
             }
         }, 650);
 
@@ -64,85 +79,128 @@ export default function OutletFormSheet({ mode, form, submit, outlet }: Props) {
         };
     }, [location?.lat, location?.lng]);
 
-    const title = mode === 'create' ? 'Tambah Outlet' : `Edit ${outlet?.name ?? 'Outlet'}`;
+    const isEdit = mode === 'edit';
+    const title = isEdit ? `Edit ${outlet?.name ?? 'Outlet'}` : 'Tambah Outlet';
+    const hasLocation = !!location;
 
     return (
-        <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/40 lg:static lg:block lg:bg-transparent">
-            <div className="flex h-[calc(100dvh-0.5rem)] w-full max-w-3xl flex-col rounded-t-xl border border-slate-300 bg-[#F8FAFC] lg:h-auto lg:rounded-xl">
-                <div className="sticky top-0 z-20 rounded-t-xl border-b border-slate-200 bg-white px-4 pt-3 pb-4">
-                    <div className="mx-auto h-1 w-12 rounded-full bg-slate-300 lg:hidden" />
-                    <div className="mt-4 flex items-start justify-between gap-3 lg:mt-0">
-                        <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Operational Outlet Setup</p>
-                            <h1 className="mt-1 text-2xl font-semibold text-slate-900">{title}</h1>
-                            <p className="mt-1 text-xs leading-5 text-slate-500">Pilih lokasi peta, cek alamat otomatis, lalu simpan outlet.</p>
-                        </div>
-                        <Link href="/owner/outlets" className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition-colors duration-150 active:bg-[#F8FAFC]" aria-label="Close outlet setup">
-                            <CloseIcon />
-                        </Link>
-                    </div>
+        <div className="w-full max-w-5xl">
+            {/* Header */}
+            <div className="mb-5 flex items-start justify-between gap-3">
+                <div>
+                    <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
+                    <p className="mt-1 text-xs text-slate-500">
+                        {isEdit ? 'Perbarui informasi outlet.' : 'Pilih lokasi pada peta, lalu isi informasi outlet.'}
+                    </p>
                 </div>
+            </div>
 
-                <form onSubmit={submit} className="flex-1 overflow-y-auto px-4 py-4 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-4">
-                    <div className="space-y-4">
-                        <Section title="Outlet Info" subtitle="Identitas singkat untuk operasional cabang.">
-                            <Field label="Outlet name" value={form.data.name} onChange={(value) => form.setData('name', value)} error={form.errors.name} required />
-                            <Field label="Phone" value={form.data.phone ?? ''} onChange={(value) => form.setData('phone', value)} error={form.errors.phone} type="tel" />
-                            <TextArea label="Operational notes" value={form.data.operational_notes ?? ''} onChange={(value) => form.setData('operational_notes', value)} error={form.errors.operational_notes} placeholder="Catatan akses, jam ramai, atau patokan lokasi" />
+            <form onSubmit={submit}>
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+                    {/* Left Column: Form Fields */}
+                    <div className="space-y-4 lg:col-span-3">
+                        {/* Section 1: Informasi Outlet */}
+                        <Section title="Informasi Outlet" subtitle="Identitas singkat untuk operasional cabang.">
+                            <Field label="Nama Outlet" value={form.data.name} onChange={(value) => form.setData('name', value)} error={form.errors.name} required />
+                            <Field label="Nomor Telepon" value={form.data.phone ?? ''} onChange={(value) => form.setData('phone', value)} error={form.errors.phone} type="tel" />
                         </Section>
 
-                        <Section title="Map Location" subtitle="Tap pada peta atau drag marker untuk menentukan titik outlet.">
-                            <Suspense fallback={<div className="flex h-[280px] items-center justify-center rounded-xl border border-slate-300 bg-[#F8FAFC] text-xs font-semibold text-slate-500">Loading operational map...</div>}>
-                                <OutletLocationMap value={location} onChange={setLocation} />
+                        {/* Section 2: Lokasi Terpilih (readonly from map) */}
+                        <Section title="Lokasi Terpilih" subtitle="Data wilayah terdeteksi otomatis dari peta. Geser marker untuk memperbarui.">
+                            {hasLocation ? (
+                                <>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <InfoBadge label="Kelurahan" value={form.data.kelurahan} loading={geocodingState === 'loading'} />
+                                        <InfoBadge label="Kecamatan" value={form.data.kecamatan} loading={geocodingState === 'loading'} />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <InfoBadge label="Kota/Kabupaten" value={form.data.city} loading={geocodingState === 'loading'} />
+                                        <InfoBadge label="Provinsi" value={form.data.province} loading={geocodingState === 'loading'} />
+                                    </div>
+                                    <InfoBadge label="Kode Pos" value={form.data.postal_code} loading={geocodingState === 'loading'} />
+                                    {(form.errors.kelurahan || form.errors.kecamatan) && (
+                                        <p className="text-xs font-semibold text-red-600">Data lokasi belum terdeteksi. Geser marker pada peta.</p>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-6 text-center">
+                                    <div className="text-sm text-slate-500">Pilih lokasi pada peta terlebih dahulu.</div>
+                                    <div className="mt-1 text-xs text-slate-400">Klik pada peta atau cari alamat di kolom pencarian.</div>
+                                </div>
+                            )}
+                        </Section>
+
+                        {/* Section 3: Detail Alamat (optional, manual) */}
+                        <Section title="Detail Alamat" subtitle="Informasi tambahan untuk memudahkan kurir menemukan lokasi.">
+                            <TextArea label="Detail" value={form.data.address ?? ''} onChange={(value) => form.setData('address', value)} error={form.errors.address} placeholder="Ruko nomor 12 sebelah Indomaret..." />
+                        </Section>
+
+                        {/* Section 4: Catatan Internal (collapsible) */}
+                        <div className="rounded-xl border border-slate-200 bg-white">
+                            <button
+                                type="button"
+                                onClick={() => setNotesExpanded(!notesExpanded)}
+                                className="flex w-full items-center justify-between px-4 py-3 text-left"
+                            >
+                                <div>
+                                    <div className="text-base font-semibold text-slate-900">Catatan Internal</div>
+                                    <div className="text-xs text-slate-500">Opsional. Catatan akses, jam ramai, atau patokan lokasi.</div>
+                                </div>
+                                <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${notesExpanded ? 'rotate-180' : ''}`} />
+                            </button>
+                            {notesExpanded && (
+                                <div className="border-t border-slate-100 px-4 py-3">
+                                    <TextArea label="Catatan" value={form.data.operational_notes ?? ''} onChange={(value) => form.setData('operational_notes', value)} error={form.errors.operational_notes} placeholder="Catatan akses, jam ramai, atau patokan lokasi" />
+                                    {isEdit && (
+                                        <div className="mt-3 space-y-3">
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <Field label="Radius Pengiriman (km)" value={form.data.delivery_radius_km ?? ''} onChange={(value) => form.setData('delivery_radius_km', value)} error={form.errors.delivery_radius_km} type="number" />
+                                                <Field label="Estimasi Persiapan (menit)" value={form.data.prep_estimate_minutes ?? ''} onChange={(value) => form.setData('prep_estimate_minutes', value)} error={form.errors.prep_estimate_minutes} type="number" />
+                                            </div>
+                                            <label className="block">
+                                                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Status</span>
+                                                <select value={form.data.status} onChange={(event) => form.setData('status', event.target.value)} className="mt-1.5 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+                                                    <option value="active">Aktif</option>
+                                                    <option value="inactive">Nonaktif</option>
+                                                </select>
+                                            </label>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Action Bar */}
+                        <div className="sticky bottom-0 -mx-4 border-t border-slate-200 bg-white px-4 py-3 lg:-mx-6 lg:px-6">
+                            <div className="flex items-center gap-3">
+                                <Link
+                                    href="/owner/outlets"
+                                    className="flex min-h-[48px] flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                                >
+                                    Batal
+                                </Link>
+                                <button
+                                    type="submit"
+                                    disabled={form.processing}
+                                    className="flex min-h-[48px] flex-[2] items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:bg-slate-300"
+                                >
+                                    {form.processing ? 'Menyimpan...' : 'Simpan Outlet'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Map */}
+                    <div className="lg:col-span-2">
+                        <Section title="Lokasi Outlet" subtitle="Cari alamat atau klik pada peta untuk menentukan lokasi outlet.">
+                            <Suspense fallback={<div className="flex h-[300px] items-center justify-center rounded-xl border border-slate-300 bg-slate-50 text-xs font-semibold text-slate-500 lg:h-[400px]">Loading peta...</div>}>
+                                <OutletLocationMap value={location} onChange={setLocation} existingOutlets={existingOutlets} />
                             </Suspense>
                             {(form.errors.latitude || form.errors.longitude) && <p className="text-xs font-semibold text-red-600">Pilih lokasi outlet dari peta terlebih dahulu.</p>}
                         </Section>
-
-                        <OutletAddressPreview data={form.data} geocodingState={geocodingState} />
-
-                        <Section title="Auto Detected Address" subtitle="Data wilayah boleh dikoreksi jika hasil deteksi kurang tepat.">
-                            <div className="grid grid-cols-2 gap-3">
-                                <Field label="Kelurahan" value={form.data.kelurahan} onChange={(value) => form.setData('kelurahan', value)} error={form.errors.kelurahan} required />
-                                <Field label="Kecamatan" value={form.data.kecamatan} onChange={(value) => form.setData('kecamatan', value)} error={form.errors.kecamatan} required />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                <Field label="Kota/Kabupaten" value={form.data.city ?? ''} onChange={(value) => form.setData('city', value)} error={form.errors.city} />
-                                <Field label="Provinsi" value={form.data.province ?? ''} onChange={(value) => form.setData('province', value)} error={form.errors.province} />
-                            </div>
-                            <Field label="Postal code" value={form.data.postal_code ?? ''} onChange={(value) => form.setData('postal_code', value)} error={form.errors.postal_code} />
-                            <TextArea label="Street detail / building" value={form.data.address} onChange={(value) => form.setData('address', value)} error={form.errors.address} required />
-                        </Section>
-
-                        <Section title="Operational Settings" subtitle="Pengaturan ringan untuk kesiapan cabang.">
-                            <div className="grid grid-cols-2 gap-3">
-                                <Field label="Coverage radius (km)" value={form.data.delivery_radius_km ?? ''} onChange={(value) => form.setData('delivery_radius_km', value)} error={form.errors.delivery_radius_km} type="number" />
-                                <Field label="Prep estimate (min)" value={form.data.prep_estimate_minutes ?? ''} onChange={(value) => form.setData('prep_estimate_minutes', value)} error={form.errors.prep_estimate_minutes} type="number" />
-                            </div>
-                            <label className="block">
-                                <span className="text-xs font-semibold text-slate-700">Status</span>
-                                <select value={form.data.status} onChange={(event) => form.setData('status', event.target.value)} className="mt-1.5 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </label>
-                        </Section>
                     </div>
-                </form>
-
-                <div className="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:static lg:rounded-b-xl">
-                    <button
-                        type="button"
-                        onClick={() => {
-                            const formElement = document.querySelector<HTMLFormElement>('form');
-                            formElement?.requestSubmit();
-                        }}
-                        disabled={form.processing}
-                        className="flex min-h-[48px] w-full items-center justify-center rounded-lg bg-emerald-500 px-4 text-sm font-semibold text-white transition-colors duration-150 active:bg-emerald-600 disabled:bg-slate-300"
-                    >
-                        {form.processing ? 'Menyimpan...' : 'Simpan Outlet'}
-                    </button>
                 </div>
-            </div>
+            </form>
         </div>
     );
 }
@@ -154,6 +212,17 @@ function Section({ title, subtitle, children }: { title: string; subtitle?: stri
             {subtitle && <p className="mt-1 text-xs leading-5 text-slate-500">{subtitle}</p>}
             <div className="mt-4 space-y-3">{children}</div>
         </section>
+    );
+}
+
+function InfoBadge({ label, value, loading }: { label: string; value?: string; loading?: boolean }) {
+    return (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
+            <div className={`mt-0.5 text-sm font-medium ${loading ? 'text-slate-400' : 'text-slate-900'}`}>
+                {loading ? 'Mendeteksi...' : (value || '-')}
+            </div>
+        </div>
     );
 }
 
@@ -171,12 +240,8 @@ function TextArea({ label, value, onChange, error, required, placeholder }: { la
     return (
         <label className="block">
             <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label} {required && <span className="text-red-500">*</span>}</span>
-            <textarea value={value ?? ''} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="mt-1.5 min-h-20 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" required={required} />
+            <textarea value={value ?? ''} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} rows={2} className="mt-1.5 min-h-16 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" required={required} />
             {error && <span className="mt-1 block text-xs font-semibold text-red-600">{error}</span>}
         </label>
     );
-}
-
-function CloseIcon() {
-    return <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>;
 }

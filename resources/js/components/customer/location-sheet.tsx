@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
 import { LocateFixed, MapPin, Search, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
-import { type CustomerLocation, syncCustomerLocationDraft, useCustomerLocation } from '@/lib/customer-location';
+import {  syncCustomerLocationDraft, useCustomerLocation } from '@/lib/customer-location';
+import type {CustomerLocation} from '@/lib/customer-location';
 import { reverseGeocode } from '@/lib/geocoding';
 
 type Props = {
@@ -45,6 +46,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
     async function handleUseCurrentLocation() {
         if (!navigator.geolocation) {
             setError('Geolocation tidak didukung browser ini.');
+
             return;
         }
 
@@ -95,6 +97,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
             },
             (geoError) => {
                 setLoadingCurrent(false);
+
                 switch (geoError.code) {
                     case geoError.PERMISSION_DENIED:
                         setError('Izin lokasi ditolak. Silakan pilih lokasi manual di peta.');

@@ -1,10 +1,10 @@
+import { Head } from '@inertiajs/react';
+import { useMemo, useState } from 'react';
 import SizeSelectorSheet from '@/components/customer/size-selector-sheet';
 import VariantListItem from '@/components/customer/variant-list-item';
 import FilterChips from '@/components/ui/filter-chips';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { sizeToMl } from '@/lib/size';
-import { Head } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
 
 interface Variant {
     id: number;
@@ -59,9 +59,11 @@ export default function Products({ families }: Props) {
     // Build category chips from families
     const filterOptions = useMemo(() => {
         const options = [{ key: 'all', label: 'Semua' }];
+
         for (const family of families) {
             options.push({ key: String(family.id), label: family.name });
         }
+
         return options;
     }, [families]);
 
@@ -70,25 +72,33 @@ export default function Products({ families }: Props) {
         const sections: FamilySection[] = [];
 
         for (const family of families) {
-            if (activeFilter !== 'all' && String(family.id) !== activeFilter)
-                continue;
+            if (activeFilter !== 'all' && String(family.id) !== activeFilter) {
+continue;
+}
 
             const activeVariants = (family.variants ?? []).filter(
                 (v) => v.is_active,
             );
-            if (activeVariants.length === 0) continue;
+
+            if (activeVariants.length === 0) {
+continue;
+}
 
             // Group by flavor within this family
             const flavorMap = new Map<string | null, Variant[]>();
+
             for (const variant of activeVariants) {
                 const key = variant.flavor ?? '__no_flavor__';
+
                 if (!flavorMap.has(key)) {
                     flavorMap.set(key, []);
                 }
+
                 flavorMap.get(key)!.push(variant);
             }
 
             const flavorGroups: FlavorGroup[] = [];
+
             for (const [key, variants] of flavorMap) {
                 const flavor = key === '__no_flavor__' ? null : key;
                 const sortedByPrice = [...variants].sort(

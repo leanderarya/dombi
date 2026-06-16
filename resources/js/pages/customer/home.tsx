@@ -1,8 +1,8 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { useCallback, useEffect, useState } from 'react';
 import { HelpCircle, MapPin, MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Truck, User } from 'lucide-react';
-import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { useCallback, useEffect, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
+import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 
 const HERO_SLIDES = [
     {
@@ -40,6 +40,7 @@ export default function Home({ customerName, activeOrders }: any) {
         const timer = setInterval(() => {
             setSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
         }, 5000);
+
         return () => clearInterval(timer);
     }, []);
 
@@ -50,12 +51,16 @@ export default function Home({ customerName, activeOrders }: any) {
     const handleDelivery = useCallback(() => {
         if (!isLoggedIn) {
             setDeliverySheetOpen(true);
+
             return;
         }
+
         if (!hasLinkedCustomer) {
             router.visit('/customer/verify-phone');
+
             return;
         }
+
         router.post('/customer/fulfillment-draft', { fulfillment_type: 'delivery_dombi' });
     }, [isLoggedIn, hasLinkedCustomer]);
 

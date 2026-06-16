@@ -6,10 +6,12 @@ use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -20,6 +22,7 @@ class OrderService
     public function __construct(
         private readonly OutletAssignmentService $outletAssignmentService,
         private readonly InventoryService $inventoryService,
+        private readonly PricingService $pricingService,
     ) {}
 
     public function createCustomerOrder(Customer $customer, array $payload): Order
@@ -81,6 +84,10 @@ class OrderService
         float $deliveryDistance,
         float $paymentFee,
     ): Order {
+        // Re-resolve prices for the specific outlet (per-outlet pricing)
+        $items = $this->applyOutletPricing($items, $outlet->id);
+        $subtotal = collect($items)->sum('subtotal');
+
         $order = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
@@ -123,7 +130,7 @@ class OrderService
         return $order->load(['outlet', 'items.product']);
     }
 
-    private function getCandidateOutlets(array $items, string $fulfillmentType, ?CustomerAddress $address, array $payload): \Illuminate\Support\Collection
+    private function getCandidateOutlets(array $items, string $fulfillmentType, ?CustomerAddress $address, array $payload): Collection
     {
         if ($fulfillmentType === 'pickup' && ! empty($payload['selected_outlet_id'])) {
             $selectedOutlet = Outlet::query()
@@ -201,11 +208,12 @@ class OrderService
         foreach ($order->items as $item) {
             $variant = $item->variant;
             $originalQuantity = (int) $item->quantity;
-            $originalName = $item->product_name . ($item->variant_name_snapshot ? " {$item->variant_name_snapshot}" : '');
+            $originalName = $item->product_name.($item->variant_name_snapshot ? " {$item->variant_name_snapshot}" : '');
 
             // Check variant exists and is active
             if (! $variant || ! $variant->is_active) {
                 $warnings[] = "{$originalName} sudah tidak tersedia.";
+
                 continue;
             }
 
@@ -218,6 +226,7 @@ class OrderService
 
             if ($restoredQuantity <= 0) {
                 $warnings[] = "{$originalName} stok habis.";
+
                 continue;
             }
 
@@ -242,7 +251,7 @@ class OrderService
      */
     private function getMaxAvailableStock(int $variantId): int
     {
-        return (int) \App\Models\OutletInventory::query()
+        return (int) OutletInventory::query()
             ->where('product_variant_id', $variantId)
             ->whereHas('outlet', fn ($q) => $q->where('status', 'active'))
             ->selectRaw('MAX(current_stock - reserved_stock) as max_available')
@@ -393,6 +402,35 @@ class OrderService
         }
 
         return 'Ambil di '.$outlet->name;
+    }
+
+    /**
+     * Re-resolve item prices using per-outlet pricing.
+     * Overrides selling_price_snapshot and recalculates subtotal/margin.
+     */
+    private function applyOutletPricing(array $items, int $outletId): array
+    {
+        $variantIds = collect($items)->pluck('product_variant_id')->filter()->all();
+        $variants = ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
+
+        return array_map(function (array $item) use ($variants, $outletId) {
+            $variantId = $item['product_variant_id'] ?? null;
+            if (! $variantId || ! isset($variants[$variantId])) {
+                return $item;
+            }
+
+            $variant = $variants[$variantId];
+            $outletPrice = $this->pricingService->getSellingPrice($variant, $outletId);
+            $centerPrice = (float) $variant->center_price;
+            $quantity = (int) $item['quantity'];
+
+            $item['price'] = $outletPrice;
+            $item['selling_price_snapshot'] = $outletPrice;
+            $item['outlet_margin_snapshot'] = $outletPrice - $centerPrice;
+            $item['subtotal'] = $quantity * $outletPrice;
+
+            return $item;
+        }, $items);
     }
 
     private function generateOrderCodeWithRetry(): string

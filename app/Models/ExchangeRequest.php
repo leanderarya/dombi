@@ -5,16 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ExchangeRequest extends Model
 {
     const STATUS_SUBMITTED = 'submitted';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_PREPARING = 'preparing';
+
     const STATUS_SHIPPED = 'shipped';
+
     const STATUS_RECEIVED = 'received';
+
     const STATUS_COMPLETED = 'completed';
 
     const ALL_STATUSES = [

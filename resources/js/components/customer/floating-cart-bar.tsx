@@ -4,7 +4,9 @@ import { useCart } from '@/lib/use-cart';
 export default function FloatingCartBar() {
     const { items, totalItems } = useCart();
 
-    if (totalItems === 0) return null;
+    if (totalItems === 0) {
+return null;
+}
 
     const handleCheckout = () => {
         router.post('/customer/checkout', {

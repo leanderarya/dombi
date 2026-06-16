@@ -87,8 +87,12 @@ function ViolationSection({ label, count, items }: { label: string; count: numbe
 }
 
 function formatAge(minutes: number): string {
-    if (minutes < 60) return `${minutes}m`;
+    if (minutes < 60) {
+return `${minutes}m`;
+}
+
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
+
     return mins > 0 ? `${hours}j ${mins}m` : `${hours}j`;
 }

@@ -76,7 +76,7 @@ class DeliveryService
 
             $reason = 'Kurir di-assign.';
             if ($overrideCapacity) {
-                $reason = 'Kurir di-assign dengan override kapasitas. Alasan: ' . ($overrideReason ?? 'Tidak ada alasan.');
+                $reason = 'Kurir di-assign dengan override kapasitas. Alasan: '.($overrideReason ?? 'Tidak ada alasan.');
             }
 
             $this->recordHistory($delivery, null, 'waiting_pickup', $assignedBy, $assignedBy->isOwner() ? 'owner' : 'outlet', $reason);
@@ -188,7 +188,7 @@ class DeliveryService
         return DB::transaction(function () use ($delivery, $courier, $reason, $failureNote): Delivery {
             $failedReason = $reason;
             if ($reason === 'Lainnya' && $failureNote) {
-                $failedReason = 'Lainnya: ' . $failureNote;
+                $failedReason = 'Lainnya: '.$failureNote;
             }
 
             $result = $this->transition($delivery, $courier, 'delivering', 'failed', 'failed_delivery', [

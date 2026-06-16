@@ -1,10 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
 import { Plus, ClipboardList } from 'lucide-react';
+import { useState } from 'react';
+import Pagination from '@/components/pagination';
+import RestockStatusBadge from '@/components/restock-status-badge';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
-import RestockStatusBadge from '@/components/restock-status-badge';
-import Pagination from '@/components/pagination';
 import OutletLayout from '@/layouts/outlet-layout';
 
 const statusFilters = [

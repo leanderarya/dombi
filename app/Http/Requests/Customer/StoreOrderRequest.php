@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Customer;
 
+use App\Support\PhoneNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -68,6 +69,6 @@ class StoreOrderRequest extends FormRequest
 
     private function normalizeIndonesianPhone(string $phone): string
     {
-        return \App\Support\PhoneNormalizer::normalize($phone);
+        return PhoneNormalizer::normalize($phone);
     }
 }

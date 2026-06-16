@@ -1,15 +1,19 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
 import { MapPin, Plus, Search } from 'lucide-react';
-import OfflineBanner from '@/components/offline-banner';
+import { useMemo, useState } from 'react';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
+import OfflineBanner from '@/components/offline-banner';
 
 export default function AddressesIndex({ addresses }: any) {
     const [search, setSearch] = useState('');
 
     const filtered = useMemo(() => {
-        if (!search.trim()) return addresses;
+        if (!search.trim()) {
+return addresses;
+}
+
         const q = search.toLowerCase();
+
         return addresses.filter((a: any) =>
             (a.label ?? '').toLowerCase().includes(q) ||
             a.recipient_name.toLowerCase().includes(q) ||

@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
-import DeliverySlaBadge from './delivery-sla-badge';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import { formatCurrency, formatDeliveryAge, formatDistance } from '@/lib/format';
+import DeliverySlaBadge from './delivery-sla-badge';
 
 interface DeliveryCardItem {
     id: number;
@@ -82,7 +82,9 @@ export default function DeliveryCard({ item, onAssignCourier, onResolve }: Props
             <div className="mt-2 flex gap-2">
                 {needsAssignment && onAssignCourier && (
                     <button
-                        onClick={(e) => { e.preventDefault(); onAssignCourier(item.id); }}
+                        onClick={(e) => {
+ e.preventDefault(); onAssignCourier(item.id); 
+}}
                         className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-emerald-700 text-xs font-semibold text-white active:bg-emerald-800"
                     >
                         Assign Kurir
@@ -90,7 +92,9 @@ export default function DeliveryCard({ item, onAssignCourier, onResolve }: Props
                 )}
                 {isFailed && onResolve && (
                     <button
-                        onClick={(e) => { e.preventDefault(); onResolve(item.id); }}
+                        onClick={(e) => {
+ e.preventDefault(); onResolve(item.id); 
+}}
                         className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-amber-600 text-xs font-semibold text-white active:bg-amber-700"
                     >
                         Resolve

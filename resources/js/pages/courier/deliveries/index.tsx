@@ -1,13 +1,13 @@
 import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head } from '@inertiajs/react';
 import { Truck } from 'lucide-react';
+import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
+import Pagination from '@/components/pagination';
+import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import SectionCard from '@/components/ui/section-card';
-import EmptyState from '@/components/ui/empty-state';
-import Pagination from '@/components/pagination';
 import CourierLayout from '@/layouts/courier-layout';
-import { Head } from '@inertiajs/react';
 
 const filterOptions = [
     { key: '', label: 'Semua' },

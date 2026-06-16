@@ -63,12 +63,12 @@ class OrderStatusSchemaRegressionTest extends TestCase
     {
         $customer = Customer::create([
             'name' => 'Customer Schema',
-            'phone' => '628123456789' . rand(10, 99),
+            'phone' => '628123456789'.rand(10, 99),
         ]);
 
         $outletUser = User::make([
             'name' => 'Outlet Schema',
-            'email' => uniqid('outlet-schema-') . '@example.com',
+            'email' => uniqid('outlet-schema-').'@example.com',
             'password' => 'password',
         ]);
         $outletUser->role = 'outlet';
@@ -109,13 +109,13 @@ class OrderStatusSchemaRegressionTest extends TestCase
     {
         $customer ??= Customer::create([
             'name' => 'Customer Pending',
-            'phone' => '628123456789' . rand(10, 99),
+            'phone' => '628123456789'.rand(10, 99),
         ]);
 
         if (! $outlet) {
             $outletUser = User::make([
                 'name' => 'Outlet Pending',
-                'email' => uniqid('outlet-pending-') . '@example.com',
+                'email' => uniqid('outlet-pending-').'@example.com',
                 'password' => 'password',
             ]);
             $outletUser->role = 'outlet';
@@ -135,7 +135,7 @@ class OrderStatusSchemaRegressionTest extends TestCase
         $order = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'DOMBI-SCHEMA-' . strtoupper(uniqid()),
+            'order_code' => 'DOMBI-SCHEMA-'.strtoupper(uniqid()),
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'subtotal' => 50000,
             'delivery_fee' => 0,

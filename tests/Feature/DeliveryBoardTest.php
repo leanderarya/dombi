@@ -6,8 +6,8 @@ use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Outlet;
-use App\Models\Product;
 use App\Models\OutletInventory;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -20,7 +20,7 @@ class DeliveryBoardTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner']);
         $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890'.rand(1000, 9999)]);
         $outletUser = User::factory()->create(['role' => 'outlet']);
         $outlet = Outlet::create([
             'user_id' => $outletUser->id,
@@ -36,7 +36,7 @@ class DeliveryBoardTest extends TestCase
         $outletUser->update(['outlet_id' => $outlet->id]);
         $product = Product::create([
             'name' => 'Nasi Goreng',
-            'slug' => 'nasi-goreng-' . uniqid(),
+            'slug' => 'nasi-goreng-'.uniqid(),
             'price' => 25000,
             'is_active' => true,
         ]);
@@ -56,7 +56,7 @@ class DeliveryBoardTest extends TestCase
         return Order::create([
             'customer_id' => $ctx['customer']->id,
             'outlet_id' => $ctx['outlet']->id,
-            'order_code' => 'ORD-' . strtoupper(substr(uniqid(), -6)),
+            'order_code' => 'ORD-'.strtoupper(substr(uniqid(), -6)),
             'status' => $status,
             'fulfillment_type' => 'delivery_dombi',
             'subtotal' => 25000,

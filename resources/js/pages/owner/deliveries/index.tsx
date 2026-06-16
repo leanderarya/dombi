@@ -1,12 +1,12 @@
 import { Link, router } from '@inertiajs/react';
 import { Truck } from 'lucide-react';
-import EmptyState from '@/components/ui/empty-state';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import DataTable from '@/components/ui/data-table';
-import StatusBadge from '@/components/ui/status-badge';
 import Pagination from '@/components/pagination';
-import { getDeliveryStatus } from '@/lib/status-labels';
+import DataTable from '@/components/ui/data-table';
+import EmptyState from '@/components/ui/empty-state';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatDate } from '@/lib/format';
+import { getDeliveryStatus } from '@/lib/status-labels';
 
 const statusOptions = [
     { value: 'waiting_pickup', label: 'Menunggu Pickup' },
@@ -73,6 +73,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: 
                             label: 'Status',
                             render: (row: any) => {
                                 const s = getDeliveryStatus(row.status);
+
                                 return <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>;
                             },
                         },

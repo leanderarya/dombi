@@ -2,12 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\Product;
-use App\Models\OutletInventory;
-use App\Models\Customer;
 use App\Models\User;
 use App\Services\DeliverySlaService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -21,7 +20,7 @@ class DeliverySlaTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner']);
         $courier = User::factory()->create(['role' => 'courier', 'is_active' => true]);
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890'.rand(1000, 9999)]);
         $outlet = Outlet::create([
             'user_id' => $owner->id,
             'name' => 'Outlet Test',
@@ -35,7 +34,7 @@ class DeliverySlaTest extends TestCase
         ]);
         $product = Product::create([
             'name' => 'Nasi Goreng',
-            'slug' => 'nasi-goreng-' . uniqid(),
+            'slug' => 'nasi-goreng-'.uniqid(),
             'price' => 25000,
             'is_active' => true,
         ]);
@@ -48,7 +47,7 @@ class DeliverySlaTest extends TestCase
         return Order::create([
             'customer_id' => $ctx['customer']->id,
             'outlet_id' => $ctx['outlet']->id,
-            'order_code' => 'ORD-' . strtoupper(substr(uniqid(), -6)),
+            'order_code' => 'ORD-'.strtoupper(substr(uniqid(), -6)),
             'status' => 'ready_for_pickup',
             'fulfillment_type' => 'delivery_dombi',
             'subtotal' => 25000,

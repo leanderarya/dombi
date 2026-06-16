@@ -13,7 +13,9 @@ export default function OutletProvisioningSummary({ provisioning }: { provisioni
     const [open, setOpen] = useState(Boolean(provisioning));
     const [copied, setCopied] = useState(false);
 
-    if (!provisioning || !open) return null;
+    if (!provisioning || !open) {
+return null;
+}
 
     const credentials = [
         `Outlet: ${provisioning.outlet_name}`,

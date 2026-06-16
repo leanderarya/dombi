@@ -1,10 +1,10 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import { MapPin, Package } from 'lucide-react';
+import { useState } from 'react';
 import OrderStatusChip from '@/components/owner/order-status-chip';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import OwnerLayout from '@/layouts/owner-layout';
 import { formatCurrency } from '@/lib/format';
-import { useState } from 'react';
 
 export default function OwnerOrderShow({ order, reservedStocks, couriers }: any) {
     const form = useForm({ courier_id: couriers[0]?.id ?? '' });
@@ -63,7 +63,9 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
                         )}
                     </div>
                     {order.status === 'ready_for_pickup' && !order.delivery && (
-                        <form onSubmit={(e) => { e.preventDefault(); form.post(`/owner/orders/${order.id}/assign-courier`); }} className="rounded-lg border border-slate-200 bg-white p-4">
+                        <form onSubmit={(e) => {
+ e.preventDefault(); form.post(`/owner/orders/${order.id}/assign-courier`); 
+}} className="rounded-lg border border-slate-200 bg-white p-4">
                             <select value={form.data.courier_id} onChange={(e) => form.setData('courier_id', e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm">
                                 {couriers.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                             </select>

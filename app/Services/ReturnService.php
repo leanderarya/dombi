@@ -11,7 +11,6 @@ use App\Models\ReturnRequestItem;
 use App\Models\ReturnStatusHistory;
 use App\Models\StockMovement;
 use App\Models\User;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -61,7 +60,7 @@ class ReturnService
     public function approveRequest(ReturnRequest $return, User $owner, ?string $notes = null): ReturnRequest
     {
         return DB::transaction(function () use ($return, $owner, $notes) {
-            if (!$return->isSubmitted()) {
+            if (! $return->isSubmitted()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only submitted requests can be approved.'],
                 ]);
@@ -84,7 +83,7 @@ class ReturnService
     public function rejectRequest(ReturnRequest $return, User $owner, string $reason): ReturnRequest
     {
         return DB::transaction(function () use ($return, $owner, $reason) {
-            if (!$return->isSubmitted()) {
+            if (! $return->isSubmitted()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only submitted requests can be rejected.'],
                 ]);
@@ -107,7 +106,7 @@ class ReturnService
     public function markReceivedAtCenter(ReturnRequest $return, User $owner, ?string $notes = null): ReturnRequest
     {
         return DB::transaction(function () use ($return, $owner, $notes) {
-            if (!$return->isApproved()) {
+            if (! $return->isApproved()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only approved requests can be marked as received.'],
                 ]);
@@ -135,7 +134,7 @@ class ReturnService
     public function completeReturn(ReturnRequest $return, User $owner, ?string $notes = null, bool $recordAdjustment = true): ReturnRequest
     {
         return DB::transaction(function () use ($return, $owner, $notes, $recordAdjustment) {
-            if (!$return->isReceivedAtCenter()) {
+            if (! $return->isReceivedAtCenter()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only received requests can be completed.'],
                 ]);
@@ -203,12 +202,12 @@ class ReturnService
 
     private function adjustOutletInventory(int $outletId, int $variantId, int $quantity, int $returnId, int $userId): void
     {
-        $inventory = \App\Models\OutletInventory::lockForUpdate()
+        $inventory = OutletInventory::lockForUpdate()
             ->where('outlet_id', $outletId)
             ->where('product_variant_id', $variantId)
             ->first();
 
-        if (!$inventory) {
+        if (! $inventory) {
             throw ValidationException::withMessages([
                 'inventory' => ['Outlet inventory not found for this variant.'],
             ]);
@@ -268,7 +267,7 @@ class ReturnService
 
             if ($available < $quantity) {
                 throw ValidationException::withMessages([
-                    'items.' . $firstIndexes[$variantId] . '.quantity' => ["Stok tersedia hanya {$available}."],
+                    'items.'.$firstIndexes[$variantId].'.quantity' => ["Stok tersedia hanya {$available}."],
                 ]);
             }
         }

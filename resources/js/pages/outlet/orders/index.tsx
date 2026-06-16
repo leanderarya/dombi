@@ -1,10 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
 import { Package } from 'lucide-react';
-import EmptyState from '@/components/ui/empty-state';
-import FilterChips from '@/components/ui/filter-chips';
+import { useState } from 'react';
 import OrderStatusBadge from '@/components/order-status-badge';
 import Pagination from '@/components/pagination';
+import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
 

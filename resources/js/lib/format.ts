@@ -3,7 +3,10 @@ export function formatCurrency(value: number | string) {
 }
 
 export function formatDistance(km: number | null | undefined): string {
-    if (km === null || km === undefined) return '-';
+    if (km === null || km === undefined) {
+return '-';
+}
+
     return `${km.toFixed(1)} km`;
 }
 
@@ -19,12 +22,36 @@ export function formatDate(value?: string | null) {
 }
 
 export function formatDeliveryAge(minutes: number | null | undefined): string {
-    if (minutes === null || minutes === undefined) return '-';
-    if (minutes < 1) return 'Baru saja';
-    if (minutes < 60) return `${minutes} menit`;
+    if (minutes === null || minutes === undefined) {
+return '-';
+}
+
+    if (minutes < 1) {
+return 'Baru saja';
+}
+
+    if (minutes < 60) {
+return `${minutes} menit`;
+}
+
     const hours = Math.floor(minutes / 60);
     const remainMins = minutes % 60;
-    if (hours < 24) return remainMins > 0 ? `${hours} jam ${remainMins} menit` : `${hours} jam`;
+
+    if (hours < 24) {
+return remainMins > 0 ? `${hours} jam ${remainMins} menit` : `${hours} jam`;
+}
+
     const days = Math.floor(hours / 24);
+
     return `${days} hari`;
+}
+
+export function formatMarginPercent(margin: number, sellingPrice: number): string {
+    if (sellingPrice <= 0) {
+return '(0%)';
+}
+
+    const pct = (margin / sellingPrice) * 100;
+
+    return `(${pct.toFixed(1)}%)`;
 }

@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { lazy, Suspense } from 'react';
 import { MapPin } from 'lucide-react';
+import { lazy, Suspense } from 'react';
 import CurrentLocationButton from './current-location-button';
 
 const LeafletPicker = lazy(() => import('./leaflet-picker'));

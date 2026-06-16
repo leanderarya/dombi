@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use App\Models\Order;
-use App\Services\CheckoutOtpService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

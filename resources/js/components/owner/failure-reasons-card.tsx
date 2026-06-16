@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
 import { Search, MapPin, DoorOpen, TriangleAlert, CircleX } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 interface FailureReason {
     reason: string;

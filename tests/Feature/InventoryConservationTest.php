@@ -7,14 +7,12 @@ use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
-use App\Models\RestockRequest;
-use App\Models\StockDistribution;
-use App\Models\StockMovement;
 use App\Models\User;
 use App\Services\ExchangeService;
 use App\Services\RestockService;
 use App\Services\ReturnService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class InventoryConservationTest extends TestCase
@@ -151,11 +149,11 @@ class InventoryConservationTest extends TestCase
             ['restock_request_item_id' => $restock->items->first()->id, 'approved_quantity' => 10],
         ]);
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
 
         try {
             app(RestockService::class)->markShipped($restock->distribution, $ctx['owner']);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             // Center stock should be unchanged
             $this->assertSame(5, (int) $ctx['variant']->fresh()->center_stock);
             throw $e;

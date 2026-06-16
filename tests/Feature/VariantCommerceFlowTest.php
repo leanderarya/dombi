@@ -4,14 +4,12 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
-use App\Models\StockMovement;
 use App\Services\SettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -21,8 +19,11 @@ class VariantCommerceFlowTest extends TestCase
     use RefreshDatabase;
 
     private ProductFamily $family;
+
     private ProductVariant $variant;
+
     private Outlet $outlet;
+
     private Product $product;
 
     protected function setUp(): void

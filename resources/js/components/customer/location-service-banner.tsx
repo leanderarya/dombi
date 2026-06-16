@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { AlertCircle, MapPin, Truck } from 'lucide-react';
+import { useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';

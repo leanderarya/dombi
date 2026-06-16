@@ -1,9 +1,9 @@
 import { useForm } from '@inertiajs/react';
-import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OutletFormSheet from '@/components/owner/outlet-form-sheet';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { emptyOutletForm } from './create';
 
-export default function EditOutlet({ outlet }: any) {
+export default function EditOutlet({ outlet, existingOutlets }: any) {
     const form = useForm({
         ...emptyOutletForm,
         name: outlet.name ?? '',
@@ -28,6 +28,7 @@ export default function EditOutlet({ outlet }: any) {
                 mode="edit"
                 outlet={outlet}
                 form={form}
+                existingOutlets={existingOutlets ?? []}
                 submit={(event) => {
                     event.preventDefault();
                     form.put(`/owner/outlets/${outlet.id}`);

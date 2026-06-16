@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 class SettlementSendReminders extends Command
 {
     protected $signature = 'settlement:send-reminders';
+
     protected $description = 'Send payment reminders for settlements due tomorrow';
 
     public function handle(NotificationService $notificationService): int

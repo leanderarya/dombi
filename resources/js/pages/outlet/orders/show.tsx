@@ -1,11 +1,11 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import { MapPin, XCircle } from 'lucide-react';
+import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import OrderStatusBadge from '@/components/order-status-badge';
-import StatusBadge from '@/components/ui/status-badge';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import SectionCard from '@/components/ui/section-card';
+import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import OutletLayout from '@/layouts/outlet-layout';
 
@@ -32,6 +32,7 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
 
     // Build sticky actions
     const actions = [];
+
     if (isPending) {
         actions.push({
             label: 'Terima Pesanan',
@@ -44,6 +45,7 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
             onClick: () => setShowRejectSheet(true),
         });
     }
+
     if (isConfirmed) {
         actions.push({
             label: 'Mulai Persiapan',
@@ -51,6 +53,7 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
             onClick: () => updateStatus('preparing'),
         });
     }
+
     if (isPreparing) {
         actions.push({
             label: 'Siap Diambil',
@@ -101,7 +104,9 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                         <div className="text-sm">Selesai: {order.delivery.delivered_time ? new Date(order.delivery.delivered_time).toLocaleString('id-ID') : '-'}</div>
                     </div>
                 ) : isReadyForPickup ? (
-                    <form onSubmit={(e) => { e.preventDefault(); assignForm.post(`/outlet/orders/${order.id}/assign-courier`); }} className="mt-2 space-y-3">
+                    <form onSubmit={(e) => {
+ e.preventDefault(); assignForm.post(`/outlet/orders/${order.id}/assign-courier`); 
+}} className="mt-2 space-y-3">
                         <select value={assignForm.data.courier_id} onChange={(e) => assignForm.setData('courier_id', e.target.value)} className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm">
                             {couriers.map((courier: any) => <option key={courier.id} value={courier.id}>{courier.name}</option>)}
                         </select>

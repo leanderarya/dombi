@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle, Package } from 'lucide-react';
-import SectionCard from '@/components/ui/section-card';
 import EmptyState from '@/components/ui/empty-state';
+import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
@@ -12,6 +12,7 @@ export default function OutletInventory({ outlet, inventories }: any) {
 
     for (const item of inventories) {
         const familyId = item.variant?.family_id ?? item.variant?.family?.id;
+
         if (familyId) {
             if (!familyGroups.has(familyId)) {
                 familyGroups.set(familyId, {
@@ -19,6 +20,7 @@ export default function OutletInventory({ outlet, inventories }: any) {
                     items: [],
                 });
             }
+
             familyGroups.get(familyId)!.items.push(item);
         } else {
             noFamilyItems.push(item);
@@ -27,13 +29,22 @@ export default function OutletInventory({ outlet, inventories }: any) {
 
     // Categorize families by worst health status
     const familyHealth = new Map<number, 'danger' | 'warning' | 'success'>();
+
     for (const [familyId, group] of familyGroups) {
         let worst: 'danger' | 'warning' | 'success' = 'success';
+
         for (const item of group.items) {
             const available = item.current_stock - item.reserved_stock;
-            if (available <= 0) { worst = 'danger'; break; }
-            if (available <= item.minimum_stock) { worst = 'warning'; }
+
+            if (available <= 0) {
+ worst = 'danger'; break; 
+}
+
+            if (available <= item.minimum_stock) {
+ worst = 'warning'; 
+}
         }
+
         familyHealth.set(familyId, worst);
     }
 
@@ -132,8 +143,15 @@ function FamilyGroup({ group, variant }: { group: { family: any; items: any[] };
 
 function getVariant(item: any): 'danger' | 'warning' | 'success' {
     const available = item.current_stock - item.reserved_stock;
-    if (available <= 0) return 'danger';
-    if (available <= item.minimum_stock) return 'warning';
+
+    if (available <= 0) {
+return 'danger';
+}
+
+    if (available <= item.minimum_stock) {
+return 'warning';
+}
+
     return 'success';
 }
 

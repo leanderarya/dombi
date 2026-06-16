@@ -1,8 +1,8 @@
 import { router } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import Pagination from '@/components/pagination';
 import DataTable from '@/components/ui/data-table';
 import StatusBadge from '@/components/ui/status-badge';
-import Pagination from '@/components/pagination';
 import { formatCurrency } from '@/lib/format';
 
 export default function ProductsIndex({ products }: any) {
@@ -54,7 +54,11 @@ export default function ProductsIndex({ products }: any) {
                     {
                         label: 'Hapus',
                         variant: 'danger',
-                        onClick: (row) => { if (confirm('Hapus produk ini?')) router.delete(`/owner/products/${row.id}`); },
+                        onClick: (row) => {
+ if (confirm('Hapus produk ini?')) {
+router.delete(`/owner/products/${row.id}`);
+} 
+},
                     },
                 ]}
                 emptyMessage="Belum ada produk"

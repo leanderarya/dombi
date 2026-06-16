@@ -13,6 +13,7 @@ use App\Models\ReturnRequest;
 use App\Models\SettlementPayment;
 use App\Services\DeliveryIntelligenceService;
 use App\Services\SettlementReconciliationService;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -68,7 +69,7 @@ class DashboardController extends Controller
             'failureReasons' => (clone $outletDeliveries)
                 ->where('status', 'failed')
                 ->whereNotNull('failed_reason')
-                ->select('failed_reason', \Illuminate\Support\Facades\DB::raw('COUNT(*) as count'))
+                ->select('failed_reason', DB::raw('COUNT(*) as count'))
                 ->groupBy('failed_reason')
                 ->orderByDesc('count')
                 ->limit(3)
@@ -110,8 +111,8 @@ class DashboardController extends Controller
             'activeDeliveries' => Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
                 ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
                 ->count(),
-            'pendingSettlementPayments' => \App\Models\SettlementPayment::where('outlet_id', $outlet->id)
-                ->where('status', \App\Models\SettlementPayment::STATUS_PENDING)
+            'pendingSettlementPayments' => SettlementPayment::where('outlet_id', $outlet->id)
+                ->where('status', SettlementPayment::STATUS_PENDING)
                 ->count(),
         ]);
     }
@@ -129,7 +130,7 @@ class DashboardController extends Controller
         }
 
         $times = $orders->map(function (Order $o): ?int {
-            if (!$o->delivery || !$o->delivery->assigned_at) {
+            if (! $o->delivery || ! $o->delivery->assigned_at) {
                 return null;
             }
 

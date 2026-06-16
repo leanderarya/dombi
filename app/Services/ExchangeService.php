@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\ExchangeRequest;
-use App\Models\ExchangeRequestItem;
 use App\Models\ExchangeStatusHistory;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
@@ -24,7 +23,7 @@ class ExchangeService
             $exchangeValue = 0;
             $this->assertOutletHasAvailableStock($outlet, $data['items']);
 
-            if (!empty($data['return_request_id'])) {
+            if (! empty($data['return_request_id'])) {
                 $return = ReturnRequest::findOrFail($data['return_request_id']);
                 if ((int) $return->outlet_id !== (int) $outlet->id) {
                     throw ValidationException::withMessages([
@@ -75,7 +74,7 @@ class ExchangeService
     public function approveRequest(ExchangeRequest $exchange, User $owner, ?string $notes = null): ExchangeRequest
     {
         return DB::transaction(function () use ($exchange, $owner, $notes) {
-            if (!$exchange->isSubmitted()) {
+            if (! $exchange->isSubmitted()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only submitted exchange requests can be approved.'],
                 ]);
@@ -98,7 +97,7 @@ class ExchangeService
     public function rejectRequest(ExchangeRequest $exchange, User $owner, string $reason): ExchangeRequest
     {
         return DB::transaction(function () use ($exchange, $owner, $reason) {
-            if (!$exchange->isSubmitted()) {
+            if (! $exchange->isSubmitted()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only submitted exchange requests can be rejected.'],
                 ]);
@@ -121,7 +120,7 @@ class ExchangeService
     public function markPreparing(ExchangeRequest $exchange, User $owner): ExchangeRequest
     {
         return DB::transaction(function () use ($exchange, $owner) {
-            if (!$exchange->isApproved()) {
+            if (! $exchange->isApproved()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only approved exchanges can be marked as preparing.'],
                 ]);
@@ -143,7 +142,7 @@ class ExchangeService
         return DB::transaction(function () use ($exchange, $owner) {
             $exchange = $this->lockExchange($exchange->id);
 
-            if (!$exchange->isPreparing() && !$exchange->isApproved()) {
+            if (! $exchange->isPreparing() && ! $exchange->isApproved()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only preparing or approved exchanges can be shipped.'],
                 ]);
@@ -171,7 +170,7 @@ class ExchangeService
         return DB::transaction(function () use ($exchange, $outletUser, $notes) {
             $exchange = $this->lockExchange($exchange->id);
 
-            if (!$exchange->isShipped()) {
+            if (! $exchange->isShipped()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only shipped exchanges can be confirmed as received.'],
                 ]);
@@ -201,7 +200,7 @@ class ExchangeService
         return DB::transaction(function () use ($exchange, $owner) {
             $exchange = $this->lockExchange($exchange->id);
 
-            if (!$exchange->isReceived()) {
+            if (! $exchange->isReceived()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only received exchanges can be completed.'],
                 ]);
@@ -328,7 +327,7 @@ class ExchangeService
 
             if ($available < $quantity) {
                 throw ValidationException::withMessages([
-                    'items.' . $firstIndexes[$variantId] . '.quantity' => ["Stok tersedia hanya {$available}."],
+                    'items.'.$firstIndexes[$variantId].'.quantity' => ["Stok tersedia hanya {$available}."],
                 ]);
             }
         }

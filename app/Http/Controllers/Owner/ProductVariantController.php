@@ -43,7 +43,7 @@ class ProductVariantController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'flavor' => ['nullable', 'string', 'max:100'],
             'size' => ['nullable', 'string', 'max:50'],
-            'sku' => ['nullable', 'string', 'max:50', 'unique:product_variants,sku,' . $variant->id],
+            'sku' => ['nullable', 'string', 'max:50', 'unique:product_variants,sku,'.$variant->id],
             'center_price' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'min:0', 'gte:center_price'],
             'center_stock' => ['required', 'integer', 'min:0'],

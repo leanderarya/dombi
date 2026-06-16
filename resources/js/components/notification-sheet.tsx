@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { CircleCheck, CircleX, Clock, Ban, Truck, Package, Bike, TriangleAlert, Undo2, RefreshCw, Bell, ClipboardList, Mail } from 'lucide-react';
+import { useState, useEffect, useCallback  } from 'react';
+import type {ReactNode} from 'react';
 
 interface Notification {
     id: number;
@@ -40,8 +41,10 @@ export default function NotificationSheet({ open, onClose }: Props) {
 
     const fetchNotifications = useCallback(async () => {
         setLoading(true);
+
         try {
             const res = await fetch('/notifications');
+
             if (res.ok) {
                 const data = await res.json();
                 setNotifications(data.notifications);
@@ -61,13 +64,24 @@ export default function NotificationSheet({ open, onClose }: Props) {
         } else {
             document.body.style.overflow = '';
         }
-        return () => { document.body.style.overflow = ''; };
+
+        return () => {
+ document.body.style.overflow = ''; 
+};
     }, [open, fetchNotifications]);
 
     useEffect(() => {
-        if (!open) return;
-        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        if (!open) {
+return;
+}
+
+        const handler = (e: KeyboardEvent) => {
+ if (e.key === 'Escape') {
+onClose();
+} 
+};
         document.addEventListener('keydown', handler);
+
         return () => document.removeEventListener('keydown', handler);
     }, [open, onClose]);
 
@@ -91,7 +105,9 @@ export default function NotificationSheet({ open, onClose }: Props) {
         }
     };
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     return (
         <div className="fixed inset-0 z-50 flex items-end justify-center">

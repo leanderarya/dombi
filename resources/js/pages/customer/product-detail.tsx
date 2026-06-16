@@ -37,7 +37,10 @@ interface Props {
 
 function findSmallestSize(variants: Variant[]): string | null {
     const sizes = variants.map((v) => v.size).filter(Boolean) as string[];
-    if (sizes.length === 0) return null;
+
+    if (sizes.length === 0) {
+return null;
+}
 
     return sizes.reduce((smallest, current) =>
         sizeToMl(current) < sizeToMl(smallest) ? current : smallest,
@@ -46,6 +49,7 @@ function findSmallestSize(variants: Variant[]): string | null {
 
 function findSoleFlavor(variants: Variant[]): string | null {
     const flavors = [...new Set(variants.map((v) => v.flavor).filter(Boolean))] as string[];
+
     return flavors.length === 1 ? flavors[0] : null;
 }
 
@@ -107,13 +111,22 @@ function ProductDetailInner({ family, otherFamilies = [] }: Props) {
 
     const variantSummary = useMemo(() => {
         const parts: string[] = [];
-        if (effectiveFlavor) parts.push(effectiveFlavor);
-        if (effectiveSize) parts.push(effectiveSize);
+
+        if (effectiveFlavor) {
+parts.push(effectiveFlavor);
+}
+
+        if (effectiveSize) {
+parts.push(effectiveSize);
+}
+
         return parts.join(' \u2022 ');
     }, [effectiveFlavor, effectiveSize]);
 
     const handleAddToCart = async () => {
-        if (!selectedVariant || adding || isOutOfStock) return;
+        if (!selectedVariant || adding || isOutOfStock) {
+return;
+}
 
         setAdding(true);
 
@@ -341,6 +354,7 @@ function ProductDetailInner({ family, otherFamilies = [] }: Props) {
                             <div className="mt-3 flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
                                 {otherFamilies.map((other) => {
                                     const minPrice = Math.min(...(other.variants?.map((v) => v.selling_price) ?? [0]));
+
                                     return (
                                         <Link
                                             key={other.id}
@@ -428,9 +442,12 @@ function RadioDot({ checked, disabled }: { checked: boolean; disabled?: boolean 
 }
 
 function PriceDiff({ diff, selected }: { diff: number; selected: boolean }) {
-    if (diff === 0) return null;
+    if (diff === 0) {
+return null;
+}
 
     const prefix = diff > 0 ? '+' : '';
+
     return (
         <span className={`text-xs tabular-nums ${selected ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>
             {prefix}{formatCurrency(diff)}

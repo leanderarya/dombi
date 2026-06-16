@@ -66,6 +66,7 @@ export default function OrderTimeline({ currentStatus, histories = [], fulfillme
     const effectiveIndex = currentIndex < 0 ? 0 : currentIndex;
 
     const historyMap = new Map<string, HistoryItem>();
+
     for (const h of histories) {
         if (!historyMap.has(h.to_status)) {
             historyMap.set(h.to_status, h);

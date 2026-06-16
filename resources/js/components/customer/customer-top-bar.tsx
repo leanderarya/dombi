@@ -1,9 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
 import { LogIn, User } from 'lucide-react';
+import { useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
-import { useCart } from '@/lib/use-cart';
 import { useCustomerLocation } from '@/lib/customer-location';
+import { useCart } from '@/lib/use-cart';
 
 interface Props {
     addressOverride?: string | null;

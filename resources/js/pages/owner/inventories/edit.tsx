@@ -17,7 +17,9 @@ export default function EditInventory({ inventory }: any) {
                 </div>
             </div>
             <form
-                onSubmit={(e) => { e.preventDefault(); form.put(`/owner/inventories/${inventory.id}`); }}
+                onSubmit={(e) => {
+ e.preventDefault(); form.put(`/owner/inventories/${inventory.id}`); 
+}}
                 className="mt-5 grid gap-4 rounded-lg border border-slate-200 bg-white p-5 sm:grid-cols-2"
             >
                 <label className="text-sm">

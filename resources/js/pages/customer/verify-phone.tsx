@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Phone, Shield } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Props {
     user: {
@@ -23,23 +23,39 @@ export default function VerifyPhone({ user, otpLength, ttlSeconds }: Props) {
     const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     useEffect(() => {
-        if (countdown <= 0) return;
+        if (countdown <= 0) {
+return;
+}
+
         const timer = setInterval(() => setCountdown((prev) => Math.max(0, prev - 1)), 1000);
+
         return () => clearInterval(timer);
     }, [countdown]);
 
     const normalizePhone = (raw: string): string => {
         const digits = raw.replace(/\D/g, '');
-        if (digits.startsWith('62')) return digits;
-        if (digits.startsWith('0')) return '62' + digits.slice(1);
-        if (digits.startsWith('8')) return '62' + digits;
+
+        if (digits.startsWith('62')) {
+return digits;
+}
+
+        if (digits.startsWith('0')) {
+return '62' + digits.slice(1);
+}
+
+        if (digits.startsWith('8')) {
+return '62' + digits;
+}
+
         return digits;
     };
 
     const sendOtp = useCallback(async () => {
         const normalized = normalizePhone(phone);
+
         if (!/^62[0-9]{9,13}$/.test(normalized)) {
             setError('Nomor HP tidak valid. Gunakan format Indonesia (08xxx).');
+
             return;
         }
 
@@ -112,10 +128,14 @@ export default function VerifyPhone({ user, otpLength, ttlSeconds }: Props) {
     }, [code, step, otpLength, verifyOtp]);
 
     const handleInput = (index: number, value: string) => {
-        if (!/^\d*$/.test(value)) return;
+        if (!/^\d*$/.test(value)) {
+return;
+}
+
         const newCode = [...code];
         newCode[index] = value.slice(-1);
         setCode(newCode);
+
         if (value && index < otpLength - 1) {
             inputRefs.current[index + 1]?.focus();
         }
@@ -130,9 +150,17 @@ export default function VerifyPhone({ user, otpLength, ttlSeconds }: Props) {
     const handlePaste = (e: React.ClipboardEvent) => {
         e.preventDefault();
         const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, otpLength);
-        if (!pasted.length) return;
+
+        if (!pasted.length) {
+return;
+}
+
         const newCode = [...code];
-        for (let i = 0; i < pasted.length; i++) newCode[i] = pasted[i];
+
+        for (let i = 0; i < pasted.length; i++) {
+newCode[i] = pasted[i];
+}
+
         setCode(newCode);
         const nextEmpty = newCode.findIndex((c) => c === '');
         inputRefs.current[nextEmpty === -1 ? otpLength - 1 : nextEmpty]?.focus();
@@ -150,7 +178,9 @@ export default function VerifyPhone({ user, otpLength, ttlSeconds }: Props) {
                     {step === 'otp' ? (
                         <button
                             type="button"
-                            onClick={() => { setStep('phone'); setError(null); }}
+                            onClick={() => {
+ setStep('phone'); setError(null); 
+}}
                             className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100"
                         >
                             <ArrowLeft className="h-5 w-5" />
@@ -230,7 +260,9 @@ export default function VerifyPhone({ user, otpLength, ttlSeconds }: Props) {
                                 {code.map((digit, index) => (
                                     <input
                                         key={index}
-                                        ref={(el) => { inputRefs.current[index] = el; }}
+                                        ref={(el) => {
+ inputRefs.current[index] = el; 
+}}
                                         type="tel"
                                         inputMode="numeric"
                                         maxLength={1}

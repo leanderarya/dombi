@@ -1,7 +1,7 @@
 import { Link, useForm } from '@inertiajs/react';
 import { useState } from 'react';
-import { formatCurrency } from '@/lib/format';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { formatCurrency } from '@/lib/format';
 
 interface Variant {
     id: number;
@@ -56,7 +56,11 @@ export default function ProductFamilyShow({ family }: Props) {
 
     const handleUpdateVariant = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingVariant) return;
+
+        if (!editingVariant) {
+return;
+}
+
         put(`/owner/variants/${editingVariant.id}`, {
             onSuccess: () => {
                 reset();
@@ -84,7 +88,9 @@ export default function ProductFamilyShow({ family }: Props) {
             {/* Add Variant Button */}
             <div className="mb-4">
                 <button
-                    onClick={() => { setShowVariantForm(!showVariantForm); setEditingVariant(null); reset(); }}
+                    onClick={() => {
+ setShowVariantForm(!showVariantForm); setEditingVariant(null); reset(); 
+}}
                     className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
                 >
                     {showVariantForm ? 'Batal' : 'Tambah Variant'}

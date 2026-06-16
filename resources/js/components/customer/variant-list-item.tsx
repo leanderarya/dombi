@@ -1,6 +1,6 @@
-import { memo, useState } from 'react';
 import { Link } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
+import { memo, useState } from 'react';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
@@ -39,10 +39,14 @@ const VariantListItem = memo(function VariantListItem({ variant, familyId, famil
     const handleQuickAdd = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        if (adding || isOutOfStock) return;
+
+        if (adding || isOutOfStock) {
+return;
+}
 
         if (onQuickAdd) {
             onQuickAdd();
+
             return;
         }
 

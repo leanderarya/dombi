@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
 import { Package, TriangleAlert } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { formatDate } from '@/lib/format';
 
 interface Props {
@@ -61,29 +61,45 @@ export default function ResolveDeliverySheet({ delivery, open, onClose }: Props)
         } else {
             document.body.style.overflow = '';
         }
-        return () => { document.body.style.overflow = ''; };
+
+        return () => {
+ document.body.style.overflow = ''; 
+};
     }, [open]);
 
     // ESC to close
     useEffect(() => {
-        if (!open) return;
-        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        if (!open) {
+return;
+}
+
+        const handler = (e: KeyboardEvent) => {
+ if (e.key === 'Escape') {
+onClose();
+} 
+};
         document.addEventListener('keydown', handler);
+
         return () => document.removeEventListener('keydown', handler);
     }, [open, onClose]);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
+
         if (isDestructive && !confirmDestructive) {
             setConfirmDestructive(true);
+
             return;
         }
+
         form.post(`/owner/deliveries/${delivery.id}/resolve`, {
             onSuccess: () => onClose(),
         });
     }
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     const order = delivery.order;
 
@@ -122,6 +138,7 @@ export default function ResolveDeliverySheet({ delivery, open, onClose }: Props)
                         <div className="mt-4 space-y-2">
                             {resolutionOptions.map((opt) => {
                                 const isSelected = form.data.resolution === opt.value;
+
                                 return (
                                     <label
                                         key={opt.value}
@@ -140,7 +157,9 @@ export default function ResolveDeliverySheet({ delivery, open, onClose }: Props)
                                                 <div className="mt-0.5 text-[11px] text-slate-500">{opt.description}</div>
                                             </div>
                                         </div>
-                                        <input type="radio" name="resolution" value={opt.value} checked={isSelected} onChange={() => { form.setData('resolution', opt.value); setConfirmDestructive(false); }} className="sr-only" />
+                                        <input type="radio" name="resolution" value={opt.value} checked={isSelected} onChange={() => {
+ form.setData('resolution', opt.value); setConfirmDestructive(false); 
+}} className="sr-only" />
                                     </label>
                                 );
                             })}

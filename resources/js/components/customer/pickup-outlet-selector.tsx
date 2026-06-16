@@ -91,6 +91,7 @@ export default function PickupOutletSelector({ items, initialRecommendations, se
     useEffect(() => {
         if (!selectedOutletId && recommendations.recommended?.id) {
             onSelect(recommendations.recommended.id);
+
             return;
         }
 

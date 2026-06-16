@@ -8,7 +8,6 @@ use App\Models\Outlet;
 use App\Models\OutletPayable;
 use App\Models\SettlementPeriod;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class SettlementService
@@ -32,6 +31,9 @@ class SettlementService
             'amount' => (float) $order->total,
             'center_share' => $centerShare,
             'outlet_margin' => $outletMargin,
+            'due_date' => now()->addDays(7)->toDateString(),
+            'paid_amount' => 0,
+            'remaining_amount' => $centerShare,
             'notes' => "Penjualan order {$order->order_code}",
         ]);
     }

@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { Search, X } from 'lucide-react';
-import { recoverOrders, useOrderRecovery } from '@/lib/order-recovery';
+import { useState } from 'react';
 import { formatCurrency } from '@/lib/format';
+import { recoverOrders, useOrderRecovery } from '@/lib/order-recovery';
 
 type Props = {
     open: boolean;
@@ -22,12 +22,16 @@ export default function RecoverySheet({ open, onClose, onRecovered }: Props) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     async function handleRecover() {
         const trimmed = phone.trim();
+
         if (trimmed.length < 8) {
             setError('Masukkan nomor WhatsApp yang valid.');
+
             return;
         }
 
@@ -40,6 +44,7 @@ export default function RecoverySheet({ open, onClose, onRecovered }: Props) {
             if (!result.found) {
                 setError('Pesanan tidak ditemukan untuk nomor ini.');
                 setLoading(false);
+
                 return;
             }
 
@@ -79,7 +84,9 @@ export default function RecoverySheet({ open, onClose, onRecovered }: Props) {
                             setError(null);
                         }}
                         onKeyDown={(e) => {
-                            if (e.key === 'Enter') handleRecover();
+                            if (e.key === 'Enter') {
+handleRecover();
+}
                         }}
                         inputMode="tel"
                         placeholder="081234567890"

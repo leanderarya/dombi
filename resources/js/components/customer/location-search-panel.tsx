@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { CheckCircle2, MapPin, Search } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import LeafletPicker from '@/components/customer/leaflet-picker';
 import type { CustomerLocation } from '@/lib/customer-location';
-import { type PlaceSuggestion, reverseGeocode, searchPlaces } from '@/lib/geocoding';
+import {  reverseGeocode, searchPlaces } from '@/lib/geocoding';
+import type {PlaceSuggestion} from '@/lib/geocoding';
 
 type LocationDraft = {
     address_line: string;
@@ -72,12 +73,14 @@ export default function LocationSearchPanel({
 
         if (suppressSearchRef.current) {
             suppressSearchRef.current = false;
+
             return;
         }
 
         if (normalized.length < 3) {
             setSuggestions([]);
             setSearchState('idle');
+
             return;
         }
 
@@ -119,10 +122,12 @@ export default function LocationSearchPanel({
                 postal_code: cached.postal_code || value.postal_code,
                 timestamp: Date.now(),
             });
+
             if (!showSuggestions) {
                 suppressSearchRef.current = true;
                 setQuery(cached.formatted_address || value.address_line);
             }
+
             return;
         }
 
@@ -138,6 +143,7 @@ export default function LocationSearchPanel({
                     postal_code: result.postal_code || value.postal_code,
                     timestamp: Date.now(),
                 });
+
                 if (!showSuggestions) {
                     suppressSearchRef.current = true;
                     setQuery(result.formatted_address || value.address_line);
@@ -152,6 +158,7 @@ export default function LocationSearchPanel({
         }
 
         const key = cacheKey(value.latitude, value.longitude);
+
         if (lastReverseKey.current === key) {
             return;
         }

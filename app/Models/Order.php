@@ -13,16 +13,27 @@ class Order extends Model
     use HasFactory;
 
     public const STATUS_PENDING_CONFIRMATION = 'pending_confirmation';
+
     public const STATUS_CONFIRMED = 'confirmed';
+
     public const STATUS_PREPARING = 'preparing';
+
     public const STATUS_READY_FOR_PICKUP = 'ready_for_pickup';
+
     public const STATUS_PICKED_UP = 'picked_up';
+
     public const STATUS_DELIVERING = 'delivering';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED_BY_CUSTOMER = 'cancelled_by_customer';
+
     public const STATUS_CANCELLED_BY_OUTLET = 'cancelled_by_outlet';
+
     public const STATUS_REJECTED_BY_OUTLET = 'rejected_by_outlet';
+
     public const STATUS_FAILED_DELIVERY = 'failed_delivery';
+
     public const STATUS_EXPIRED = 'expired';
 
     public const ALL_STATUSES = [
@@ -59,9 +70,13 @@ class Order extends Model
     ];
 
     public const PENDING_CONFIRMATION = self::STATUS_PENDING_CONFIRMATION;
+
     public const REJECTED = self::STATUS_REJECTED_BY_OUTLET;
+
     public const CANCELLED_BY_CUSTOMER = self::STATUS_CANCELLED_BY_CUSTOMER;
+
     public const FAILED_DELIVERY = self::STATUS_FAILED_DELIVERY;
+
     public const EXPIRED = self::STATUS_EXPIRED;
 
     protected $fillable = [

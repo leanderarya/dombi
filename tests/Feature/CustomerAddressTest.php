@@ -14,7 +14,7 @@ class CustomerAddressTest extends TestCase
 
     public function test_customer_address_belongs_to_customer(): void
     {
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890'.rand(1000, 9999)]);
 
         $address = CustomerAddress::create([
             'customer_id' => $customer->id,
@@ -31,7 +31,7 @@ class CustomerAddressTest extends TestCase
 
     public function test_customer_can_have_multiple_addresses(): void
     {
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890'.rand(1000, 9999)]);
 
         CustomerAddress::create([
             'customer_id' => $customer->id,
@@ -56,7 +56,7 @@ class CustomerAddressTest extends TestCase
 
     public function test_address_service_sets_default_correctly(): void
     {
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '6281234567890'.rand(1000, 9999)]);
         $service = app(CustomerAddressService::class);
 
         $addr1 = $service->create($customer, [

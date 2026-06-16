@@ -21,31 +21,51 @@ interface Props {
 
 export default function FilterSheet({ open, onClose, sections, onApply }: Props) {
     useEffect(() => {
-        if (open) document.body.style.overflow = 'hidden';
-        else document.body.style.overflow = '';
-        return () => { document.body.style.overflow = ''; };
+        if (open) {
+document.body.style.overflow = 'hidden';
+} else {
+document.body.style.overflow = '';
+}
+
+        return () => {
+ document.body.style.overflow = ''; 
+};
     }, [open]);
 
     useEffect(() => {
-        if (!open) return;
-        const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+        if (!open) {
+return;
+}
+
+        const handler = (e: KeyboardEvent) => {
+ if (e.key === 'Escape') {
+onClose();
+} 
+};
         document.addEventListener('keydown', handler);
+
         return () => document.removeEventListener('keydown', handler);
     }, [open, onClose]);
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     // Local state mirrors current filters for preview before apply
     const handleSelect = (key: string, value: string) => {
         const updated: Record<string, string> = {};
-        sections.forEach((s) => { updated[s.key] = s.key === key ? value : s.value; });
+        sections.forEach((s) => {
+ updated[s.key] = s.key === key ? value : s.value; 
+});
         onApply(updated);
         onClose();
     };
 
     const handleClear = () => {
         const cleared: Record<string, string> = {};
-        sections.forEach((s) => { cleared[s.key] = ''; });
+        sections.forEach((s) => {
+ cleared[s.key] = ''; 
+});
         onApply(cleared);
         onClose();
     };

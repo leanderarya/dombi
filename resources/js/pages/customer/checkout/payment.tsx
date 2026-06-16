@@ -1,10 +1,10 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { useState } from 'react';
 import { AlertCircle, MapPin, Store } from 'lucide-react';
+import { useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { useCustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
-import { useCustomerLocation } from '@/lib/customer-location';
 
 export default function CheckoutPayment({ draft, summary }: any) {
     const cart = useCart();
@@ -250,8 +250,10 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 
 function buildCtaLabel(paymentMethod: string, total: number): string {
     const formattedTotal = formatCurrency(total);
+
     if (paymentMethod === 'qris' || paymentMethod === 'card') {
         return `Bayar ${formattedTotal}`;
     }
+
     return `Buat Pesanan ${formattedTotal}`;
 }

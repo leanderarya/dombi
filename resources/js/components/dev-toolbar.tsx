@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
 
 const roles = [
     { label: 'Owner', route: '/dev/switch/owner', icon: '👑' },

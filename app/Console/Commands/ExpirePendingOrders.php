@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class ExpirePendingOrders extends Command
 {
     protected $signature = 'orders:expire-pending';
+
     protected $description = 'Expire orders that have passed the confirmation deadline';
 
     public function handle(OrderStatusService $orderStatusService): int

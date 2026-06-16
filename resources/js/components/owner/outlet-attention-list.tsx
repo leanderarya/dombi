@@ -23,8 +23,14 @@ interface Props {
 }
 
 function severityBorder(severity: Severity): string {
-    if (severity === 'critical') return 'border-l-red-400';
-    if (severity === 'warning') return 'border-l-amber-400';
+    if (severity === 'critical') {
+return 'border-l-red-400';
+}
+
+    if (severity === 'warning') {
+return 'border-l-amber-400';
+}
+
     return 'border-l-blue-400';
 }
 

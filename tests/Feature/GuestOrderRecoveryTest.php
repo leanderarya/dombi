@@ -2,10 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\Product;
-use App\Models\Customer;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -368,7 +369,7 @@ class GuestOrderRecoveryTest extends TestCase
 
         $data = $response->json();
         $this->assertArrayHasKey('tracking_url', $data['active_orders'][0]);
-        $this->assertSame(url('/track/' . $order->recovery_token), $data['active_orders'][0]['tracking_url']);
+        $this->assertSame(url('/track/'.$order->recovery_token), $data['active_orders'][0]['tracking_url']);
     }
 
     public function test_recovery_accepts_existing_64_character_tokens(): void
@@ -393,7 +394,7 @@ class GuestOrderRecoveryTest extends TestCase
         $customer = $this->createCustomerWithOrders();
         $order = Order::where('customer_id', $customer->id)->first();
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk();
     }
 
@@ -408,7 +409,7 @@ class GuestOrderRecoveryTest extends TestCase
         $customer = $this->createCustomerWithOrders();
         $order = Order::where('customer_id', $customer->id)->first();
 
-        $this->get('/customer/orders/' . $order->id)
+        $this->get('/customer/orders/'.$order->id)
             ->assertRedirect('/login');
     }
 
@@ -417,7 +418,7 @@ class GuestOrderRecoveryTest extends TestCase
         $customer = $this->createCustomerWithOrders();
         $order = Order::where('customer_id', $customer->id)->first();
 
-        $user = \App\Models\User::factory()->create([
+        $user = User::factory()->create([
             'role' => 'customer',
             'is_active' => true,
         ]);
@@ -426,7 +427,7 @@ class GuestOrderRecoveryTest extends TestCase
         $customer->update(['user_id' => $user->id]);
 
         $this->actingAs($user)
-            ->get('/customer/orders/' . $order->id)
+            ->get('/customer/orders/'.$order->id)
             ->assertOk();
     }
 

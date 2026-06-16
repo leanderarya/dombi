@@ -11,6 +11,7 @@ export default function CurrentLocationButton({ onLocation }: Props) {
     function handleClick() {
         if (!navigator.geolocation) {
             setError('Geolocation tidak didukung browser ini.');
+
             return;
         }
 
@@ -24,6 +25,7 @@ export default function CurrentLocationButton({ onLocation }: Props) {
             },
             (err) => {
                 setLoading(false);
+
                 switch (err.code) {
                     case err.PERMISSION_DENIED:
                         setError('Izin lokasi ditolak. Aktifkan di pengaturan browser.');

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
 use App\Models\User;
 use App\Support\OperationalLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;

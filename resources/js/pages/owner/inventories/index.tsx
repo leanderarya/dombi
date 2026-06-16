@@ -47,6 +47,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                         render: (row: any) => {
                             const familyName = row.variant?.family?.name;
                             const variantName = row.variant?.name ?? row.product?.name ?? '-';
+
                             return (
                                 <div>
                                     {familyName && <div className="text-[11px] text-slate-400">{familyName}</div>}
@@ -73,6 +74,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                             const available = row.current_stock - row.reserved_stock;
                             const isCritical = available <= 0;
                             const isLow = available <= row.minimum_stock;
+
                             return <span className={isCritical ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-slate-900'}>{available}</span>;
                         },
                     },
@@ -83,6 +85,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                             const available = row.current_stock - row.reserved_stock;
                             const isCritical = available <= 0;
                             const isLow = available <= row.minimum_stock;
+
                             return (
                                 <StatusBadge variant={isCritical ? 'danger' : isLow ? 'warning' : 'success'} size="sm">
                                     {isCritical ? 'Kritis' : isLow ? 'Rendah' : 'Sehat'}
@@ -107,6 +110,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
 
 function KpiMini({ label, value, color }: { label: string; value: number; color?: string }) {
     const textColor = color === 'red' ? 'text-red-600' : color === 'amber' ? 'text-amber-600' : color === 'blue' ? 'text-blue-600' : 'text-slate-900';
+
     return (
         <div className="rounded-lg border border-slate-200 bg-white p-2.5">
             <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</div>

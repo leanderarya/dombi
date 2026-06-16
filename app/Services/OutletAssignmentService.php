@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Outlet;
+use Illuminate\Support\Collection;
 
 class OutletAssignmentService
 {
@@ -12,15 +13,40 @@ class OutletAssignmentService
     }
 
     /**
-     * @return \Illuminate\Support\Collection<int, Outlet>
+     * @return Collection<int, Outlet>
      */
-    public function findCandidateOutlets(?float $lat, ?float $lng, array $items): \Illuminate\Support\Collection
+    public function findCandidateOutlets(?float $lat, ?float $lng, array $items): Collection
     {
         $outlets = Outlet::query()
-            ->where('status', 'active')
+            ->active()
             ->with('inventories')
             ->get();
 
+        // Filter out holidays
+        $today = now()->toDateString();
+        $outlets = $outlets->reject(function (Outlet $outlet) use ($today) {
+            return $outlet->holidays()
+                ->where('start_date', '<=', $today)
+                ->where('end_date', '>=', $today)
+                ->exists();
+        });
+
+        // Filter out closed hours
+        $currentTime = now()->format('H:i:s');
+        $currentDay = (int) now()->format('w'); // 0=Sunday
+        $outlets = $outlets->reject(function (Outlet $outlet) use ($currentTime, $currentDay) {
+            $hours = $outlet->operatingHours()->where('day_of_week', $currentDay)->first();
+            if ($hours && $hours->is_closed) {
+                return true;
+            }
+            if ($hours && ! $hours->isOpenAt($currentTime)) {
+                return true;
+            }
+
+            return false;
+        });
+
+        // Sort by distance if location available
         if ($lat !== null && $lng !== null) {
             $outlets = $outlets
                 ->sortBy(fn (Outlet $outlet): float => $outlet->latitude !== null && $outlet->longitude !== null
@@ -29,18 +55,28 @@ class OutletAssignmentService
                 ->values();
         }
 
-        return $outlets->filter(fn (Outlet $outlet): bool => $this->outletHasEnoughStock($outlet, $items));
+        // Filter by delivery radius (if applicable) and stock
+        return $outlets->filter(function (Outlet $outlet) use ($lat, $lng, $items) {
+            // Check delivery radius
+            if ($lat !== null && $lng !== null && $outlet->delivery_radius_km && $outlet->latitude && $outlet->longitude) {
+                $distance = $this->calculateDistance($lat, $lng, (float) $outlet->latitude, (float) $outlet->longitude);
+                if ($distance > $outlet->delivery_radius_km) {
+                    return false;
+                }
+            }
+
+            return $this->outletHasEnoughStock($outlet, $items);
+        });
     }
 
     public function outletHasEnoughStock(Outlet $outlet, array $items): bool
     {
-        // Key by product_variant_id for variant-level stock checking
-        $inventories = $outlet->inventories->keyBy('product_variant_id');
+        // Only check active inventories
+        $inventories = $outlet->inventories->where('is_active', true)->keyBy('product_variant_id');
 
         foreach ($items as $item) {
             $variantId = (int) ($item['product_variant_id'] ?? 0);
             if (! $variantId) {
-                // Skip items without variant_id (legacy compatibility)
                 continue;
             }
 

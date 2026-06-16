@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
-import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowLeft, Shield } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface Props {
     phone: string;
@@ -24,8 +24,12 @@ export default function CheckoutVerifyOtp({ phone, otpLength, ttlSeconds }: Prop
 
     // Countdown timer
     useEffect(() => {
-        if (countdown <= 0) return;
+        if (countdown <= 0) {
+return;
+}
+
         const timer = setInterval(() => setCountdown((prev) => Math.max(0, prev - 1)), 1000);
+
         return () => clearInterval(timer);
     }, [countdown]);
 
@@ -97,7 +101,9 @@ export default function CheckoutVerifyOtp({ phone, otpLength, ttlSeconds }: Prop
     }, [otpLength]);
 
     const handleInput = (index: number, value: string) => {
-        if (!/^\d*$/.test(value)) return;
+        if (!/^\d*$/.test(value)) {
+return;
+}
 
         const newCode = [...code];
         newCode[index] = value.slice(-1);
@@ -117,12 +123,17 @@ export default function CheckoutVerifyOtp({ phone, otpLength, ttlSeconds }: Prop
     const handlePaste = (e: React.ClipboardEvent) => {
         e.preventDefault();
         const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, otpLength);
-        if (pasted.length === 0) return;
+
+        if (pasted.length === 0) {
+return;
+}
 
         const newCode = [...code];
+
         for (let i = 0; i < pasted.length; i++) {
             newCode[i] = pasted[i];
         }
+
         setCode(newCode);
 
         const nextEmpty = newCode.findIndex((c) => c === '');
@@ -171,7 +182,9 @@ export default function CheckoutVerifyOtp({ phone, otpLength, ttlSeconds }: Prop
                         {code.map((digit, index) => (
                             <input
                                 key={index}
-                                ref={(el) => { inputRefs.current[index] = el; }}
+                                ref={(el) => {
+ inputRefs.current[index] = el; 
+}}
                                 type="tel"
                                 inputMode="numeric"
                                 maxLength={1}

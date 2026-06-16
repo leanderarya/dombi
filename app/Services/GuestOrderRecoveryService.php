@@ -9,6 +9,7 @@ use App\Support\PhoneNormalizer;
 class GuestOrderRecoveryService
 {
     private const MAX_ORDERS = 10;
+
     private const MAX_DAYS = 30;
 
     /**

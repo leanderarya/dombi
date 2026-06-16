@@ -13,8 +13,13 @@ export default function UpdateBanner() {
         const checkVersion = async () => {
             try {
                 const res = await fetch('/api/version');
-                if (!res.ok) return;
+
+                if (!res.ok) {
+return;
+}
+
                 const data = await res.json();
+
                 if (buildHash === null) {
                     buildHash = data.build;
                 } else if (data.build && data.build !== buildHash) {
@@ -36,7 +41,9 @@ export default function UpdateBanner() {
         };
     }, []);
 
-    if (!updateAvailable) return null;
+    if (!updateAvailable) {
+return null;
+}
 
     return (
         <div className="fixed inset-x-0 bottom-0 z-50 border-t border-emerald-200 bg-emerald-50 px-4 py-3 text-center shadow-lg safe-bottom">

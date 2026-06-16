@@ -32,7 +32,7 @@ class GuestReorderAccessTest extends TestCase
         ])->assertOk()->assertJson(['found' => true]);
 
         // Step 2: Restore cart (should work without auth)
-        $this->get('/customer/orders/' . $order->id . '/restore-cart')
+        $this->get('/customer/orders/'.$order->id.'/restore-cart')
             ->assertRedirect('/customer/checkout')
             ->assertSessionHas('success');
 
@@ -54,7 +54,7 @@ class GuestReorderAccessTest extends TestCase
         ])->assertOk();
 
         // Repeat order (POST)
-        $this->post('/customer/orders/' . $order->id . '/repeat')
+        $this->post('/customer/orders/'.$order->id.'/repeat')
             ->assertRedirect('/customer/checkout')
             ->assertSessionHas('success');
     }
@@ -84,7 +84,7 @@ class GuestReorderAccessTest extends TestCase
         $order = $context['order'];
 
         // No recovery — direct access should redirect to login
-        $this->get('/customer/orders/' . $order->id . '/restore-cart')
+        $this->get('/customer/orders/'.$order->id.'/restore-cart')
             ->assertRedirect('/login');
     }
 
@@ -100,7 +100,7 @@ class GuestReorderAccessTest extends TestCase
         ])->assertOk();
 
         // Try to reorder customer 2's order — should be forbidden
-        $this->get('/customer/orders/' . $context2['order']->id . '/restore-cart')
+        $this->get('/customer/orders/'.$context2['order']->id.'/restore-cart')
             ->assertForbidden();
     }
 
@@ -115,7 +115,7 @@ class GuestReorderAccessTest extends TestCase
         ])->assertOk()->assertJson(['found' => false]);
 
         // No session data stored — should redirect to login
-        $this->get('/customer/orders/' . $context['order']->id . '/restore-cart')
+        $this->get('/customer/orders/'.$context['order']->id.'/restore-cart')
             ->assertRedirect('/login');
     }
 
@@ -126,7 +126,7 @@ class GuestReorderAccessTest extends TestCase
         $context = $this->createOrderContext('completed');
 
         $this->actingAs($context['user'])
-            ->get('/customer/orders/' . $context['order']->id . '/restore-cart')
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart')
             ->assertRedirect('/customer/checkout')
             ->assertSessionHas('success');
     }
@@ -136,7 +136,7 @@ class GuestReorderAccessTest extends TestCase
         $context = $this->createOrderContext('completed');
 
         $this->actingAs($context['user'])
-            ->post('/customer/orders/' . $context['order']->id . '/repeat')
+            ->post('/customer/orders/'.$context['order']->id.'/repeat')
             ->assertRedirect('/customer/checkout')
             ->assertSessionHas('success');
     }
@@ -149,7 +149,7 @@ class GuestReorderAccessTest extends TestCase
         $otherUser = User::factory()->create(['role' => 'customer', 'is_active' => true]);
 
         $this->actingAs($otherUser)
-            ->get('/customer/orders/' . $context['order']->id . '/restore-cart')
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart')
             ->assertForbidden();
     }
 
@@ -174,7 +174,7 @@ class GuestReorderAccessTest extends TestCase
         ]);
 
         // Should redirect to login (expired)
-        $this->get('/customer/orders/' . $order->id . '/restore-cart')
+        $this->get('/customer/orders/'.$order->id.'/restore-cart')
             ->assertRedirect('/login');
     }
 
@@ -192,7 +192,7 @@ class GuestReorderAccessTest extends TestCase
         ])->assertOk();
 
         // Restore cart
-        $response = $this->get('/customer/orders/' . $order->id . '/restore-cart');
+        $response = $this->get('/customer/orders/'.$order->id.'/restore-cart');
         $response->assertRedirect('/customer/checkout');
 
         // Verify cart has items
@@ -216,7 +216,7 @@ class GuestReorderAccessTest extends TestCase
         ])->assertOk();
 
         // Restore cart — should redirect to tracking with error (no items restorable)
-        $this->get('/customer/orders/' . $order->id . '/restore-cart')
+        $this->get('/customer/orders/'.$order->id.'/restore-cart')
             ->assertRedirect(route('track', ['token' => $order->recovery_token]))
             ->assertSessionHas('error');
     }
@@ -235,7 +235,7 @@ class GuestReorderAccessTest extends TestCase
         ])->assertOk()->assertJson(['found' => true]);
 
         // Should be able to reorder
-        $this->get('/customer/orders/' . $order->id . '/restore-cart')
+        $this->get('/customer/orders/'.$order->id.'/restore-cart')
             ->assertRedirect('/customer/checkout');
     }
 
@@ -265,7 +265,7 @@ class GuestReorderAccessTest extends TestCase
 
         $product = Product::create([
             'name' => 'Test Product',
-            'slug' => 'test-product-' . uniqid(),
+            'slug' => 'test-product-'.uniqid(),
             'unit' => 'botol',
             'price' => 25000,
             'is_active' => true,
@@ -297,7 +297,7 @@ class GuestReorderAccessTest extends TestCase
         $order = Order::create([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'DOMBI-GUEST-' . strtoupper(uniqid()),
+            'order_code' => 'DOMBI-GUEST-'.strtoupper(uniqid()),
             'status' => $status,
             'fulfillment_type' => 'pickup',
             'subtotal' => 50000,
