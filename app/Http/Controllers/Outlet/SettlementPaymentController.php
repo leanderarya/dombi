@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
 use App\Models\SettlementPayment;
+use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,7 +30,7 @@ class SettlementPaymentController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, NotificationService $notificationService): RedirectResponse
     {
         $user = $request->user();
         $outlet = $user->outlet;
@@ -41,16 +42,26 @@ class SettlementPaymentController extends Controller
             'reference_number' => ['required', 'string', 'max:100', 'unique:settlement_payments,reference_number'],
             'payment_date' => ['required', 'date', 'before_or_equal:today'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'proof_image' => ['nullable', 'image', 'max:2048'],
         ]);
 
-        SettlementPayment::create([
+        $proofPath = null;
+        if ($request->hasFile('proof_image')) {
+            $proofPath = $request->file('proof_image')->store('payment-proofs', 'public');
+        }
+
+        $payment = SettlementPayment::create([
             'outlet_id' => $outlet->id,
             'reference_number' => $validated['reference_number'],
             'payment_date' => $validated['payment_date'],
             'amount' => $validated['amount'],
+            'proof_image' => $proofPath,
             'notes' => $validated['notes'] ?? null,
             'status' => SettlementPayment::STATUS_PENDING,
         ]);
+
+        $payment->load('outlet');
+        $notificationService->notifyPaymentSubmitted($payment);
 
         return redirect()->route('outlet.settlement-payments.index')
             ->with('success', 'Pembayaran berhasil dikirim. Menunggu verifikasi owner.');

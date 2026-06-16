@@ -1,4 +1,4 @@
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency, formatDate } from '@/lib/format';
 
@@ -9,6 +9,7 @@ interface Payment {
     amount: number;
     status: string;
     notes: string | null;
+    proof_image: string | null;
     rejection_reason: string | null;
     verifier: { name: string } | null;
     verified_at: string | null;
@@ -24,21 +25,43 @@ interface Props {
 
 export default function OutletSettlementPayments({ payments }: Props) {
     const [showForm, setShowForm] = useState(false);
-
-    const { data, setData, post, processing, errors, reset } = useForm({
-        amount: '',
-        reference_number: '',
-        payment_date: new Date().toISOString().split('T')[0],
-        notes: '',
-    });
+    const [amount, setAmount] = useState('');
+    const [referenceNumber, setReferenceNumber] = useState('');
+    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+    const [notes, setNotes] = useState('');
+    const [proofFile, setProofFile] = useState<File | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/outlet/settlement-payments', {
+        setSaving(true);
+        setErrors({});
+
+        const formData = new FormData();
+        formData.append('amount', amount);
+        formData.append('reference_number', referenceNumber);
+        formData.append('payment_date', paymentDate);
+
+        if (notes) {
+            formData.append('notes', notes);
+        }
+
+        if (proofFile) {
+            formData.append('proof_image', proofFile);
+        }
+
+        router.post('/outlet/settlement-payments', formData, {
             onSuccess: () => {
-                reset();
+                setAmount('');
+                setReferenceNumber('');
+                setPaymentDate(new Date().toISOString().split('T')[0]);
+                setNotes('');
+                setProofFile(null);
                 setShowForm(false);
             },
+            onError: (errs) => setErrors(errs),
+            onFinish: () => setSaving(false),
         });
     };
 
@@ -79,8 +102,8 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                 <label className="mb-1 block text-xs font-medium text-zinc-500">Jumlah (Rp)</label>
                                 <input
                                     type="number"
-                                    value={data.amount}
-                                    onChange={(e) => setData('amount', e.target.value)}
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
                                     min="1"
                                     required
                                     className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
@@ -93,8 +116,8 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                 <label className="mb-1 block text-xs font-medium text-zinc-500">Nomor Referensi</label>
                                 <input
                                     type="text"
-                                    value={data.reference_number}
-                                    onChange={(e) => setData('reference_number', e.target.value)}
+                                    value={referenceNumber}
+                                    onChange={(e) => setReferenceNumber(e.target.value)}
                                     required
                                     maxLength={100}
                                     className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
@@ -107,8 +130,8 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                 <label className="mb-1 block text-xs font-medium text-zinc-500">Tanggal Pembayaran</label>
                                 <input
                                     type="date"
-                                    value={data.payment_date}
-                                    onChange={(e) => setData('payment_date', e.target.value)}
+                                    value={paymentDate}
+                                    onChange={(e) => setPaymentDate(e.target.value)}
                                     required
                                     max={new Date().toISOString().split('T')[0]}
                                     className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
@@ -119,8 +142,8 @@ export default function OutletSettlementPayments({ payments }: Props) {
                             <div>
                                 <label className="mb-1 block text-xs font-medium text-zinc-500">Catatan (opsional)</label>
                                 <textarea
-                                    value={data.notes}
-                                    onChange={(e) => setData('notes', e.target.value)}
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
                                     maxLength={500}
                                     rows={2}
                                     className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
@@ -128,12 +151,23 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                 />
                             </div>
 
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-zinc-500">Bukti Transfer (opsional)</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                />
+                                {errors.proof_image && <p className="mt-1 text-xs text-red-600">{errors.proof_image}</p>}
+                            </div>
+
                             <button
                                 type="submit"
-                                disabled={processing}
+                                disabled={saving}
                                 className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                             >
-                                {processing ? 'Mengirim...' : 'Kirim Pembayaran'}
+                                {saving ? 'Mengirim...' : 'Kirim Pembayaran'}
                             </button>
                         </div>
                     </form>
@@ -160,6 +194,13 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                 </div>
                                 {payment.notes && (
                                     <div className="mt-2 text-xs text-zinc-500">{payment.notes}</div>
+                                )}
+                                {payment.proof_image && (
+                                    <div className="mt-2">
+                                        <a href={`/storage/${payment.proof_image}`} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-600 underline">
+                                            Lihat Bukti Transfer
+                                        </a>
+                                    </div>
                                 )}
                                 {payment.rejection_reason && (
                                     <div className="mt-2 rounded-lg bg-red-50 p-2 text-xs text-red-700">
