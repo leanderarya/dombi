@@ -17,7 +17,12 @@ class CancelOrderRequest extends FormRequest
             return false;
         }
 
-        // Authenticated customer must own the order
+        // Owner can always cancel
+        if ($user && $user->isOwner()) {
+            return true;
+        }
+
+        // Customer can only cancel their own orders
         if ($user && $user->isCustomer()) {
             return $order->customer_id === $user->customer?->id;
         }
