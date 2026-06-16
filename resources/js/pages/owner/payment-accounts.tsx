@@ -1,5 +1,6 @@
-import { Head, useForm, router } from '@inertiajs/react';
+import { useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
 
 interface PaymentAccount {
     id: number;
@@ -63,10 +64,8 @@ export default function PaymentAccounts({ accounts }: Props) {
     };
 
     return (
-        <>
-            <Head title="Rekening Pembayaran" />
-
-            <div className="p-4">
+        <OwnerPageShell title="Rekening Pembayaran" subtitle="Kelola rekening bank untuk setoran outlet">
+            <div>
                 <div className="mb-4 flex items-center justify-between">
                     <h1 className="text-lg font-bold text-slate-900">Rekening Pembayaran</h1>
                     <button
@@ -188,6 +187,6 @@ export default function PaymentAccounts({ accounts }: Props) {
                     )}
                 </div>
             </div>
-        </>
+        </OwnerPageShell>
     );
 }
