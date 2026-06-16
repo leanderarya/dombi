@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
 use App\Models\OutletPayable;
+use App\Models\PaymentAccount;
 use App\Models\SettlementPayment;
 use App\Services\SettlementReconciliationService;
 use App\Services\SettlementService;
@@ -76,6 +77,7 @@ class SettlementController extends Controller
             'reconciliation' => $reconciliation,
             'payments' => $payments,
             'timeline' => $timeline,
+            'paymentAccounts' => PaymentAccount::active()->orderBy('bank_name')->get(),
             'period' => $period,
             'periodRange' => [
                 'from' => $from->toDateString(),

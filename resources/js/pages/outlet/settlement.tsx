@@ -1,13 +1,13 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { ChartColumn } from 'lucide-react';
 import { useState } from 'react';
-import { formatCurrency, formatDate } from '@/lib/format';
-import OutletLayout from '@/layouts/outlet-layout';
+import BottomSheet from '@/components/ui/bottom-sheet';
+import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
-import BottomSheet from '@/components/ui/bottom-sheet';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
-import EmptyState from '@/components/ui/empty-state';
-import { ChartColumn } from 'lucide-react';
+import OutletLayout from '@/layouts/outlet-layout';
+import { formatCurrency, formatDate } from '@/lib/format';
 
 interface TopProduct {
     product_name: string;
@@ -62,11 +62,19 @@ interface TimelineEntry {
     created_at: string;
 }
 
+interface PaymentAccount {
+    id: number;
+    bank_name: string;
+    account_number: string;
+    account_holder: string;
+}
+
 interface Props {
     summary: SettlementSummary;
     reconciliation: Reconciliation;
     payments: Payment[];
     timeline: TimelineEntry[];
+    paymentAccounts: PaymentAccount[];
     period: string;
     periodRange: { from: string; to: string };
 }
@@ -89,7 +97,7 @@ const statusVariants: Record<string, 'success' | 'warning' | 'danger'> = {
     rejected: 'danger',
 };
 
-export default function OutletSettlement({ summary, reconciliation, payments, timeline, period }: Props) {
+export default function OutletSettlement({ summary, reconciliation, payments, timeline, paymentAccounts, period }: Props) {
     const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
 
     const handlePeriodChange = (newPeriod: string) => {
@@ -147,6 +155,22 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
                     >
                         Ajukan Pembayaran
                     </button>
+                </div>
+            )}
+
+            {/* Info Rekening */}
+            {paymentAccounts.length > 0 && (
+                <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
+                    <h2 className="mb-3 text-sm font-semibold text-slate-900">Info Rekening Tujuan</h2>
+                    <div className="space-y-2">
+                        {paymentAccounts.map((account) => (
+                            <div key={account.id} className="rounded-lg bg-zinc-50 p-3">
+                                <div className="text-sm font-medium text-slate-900">{account.bank_name}</div>
+                                <div className="text-xs text-zinc-600">{account.account_number}</div>
+                                <div className="text-xs text-zinc-500">a.n. {account.account_holder}</div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 
