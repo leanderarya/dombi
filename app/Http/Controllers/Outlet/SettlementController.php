@@ -3,23 +3,15 @@
 namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
-use App\Models\OutletPayable;
 use App\Models\PaymentAccount;
+use App\Models\Settlement;
 use App\Models\SettlementPayment;
-use App\Services\SettlementReconciliationService;
-use App\Services\SettlementService;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class SettlementController extends Controller
 {
-    public function __construct(
-        private readonly SettlementService $settlementService,
-        private readonly SettlementReconciliationService $reconciliationService,
-    ) {}
-
     public function index(Request $request): Response
     {
         $user = $request->user();
@@ -27,11 +19,29 @@ class SettlementController extends Controller
 
         abort_unless($outlet, 403);
 
-        $period = $request->string('period', 'month')->toString();
-        [$from, $to] = $this->resolvePeriod($period, $request);
+        // Use settlements table as single source of truth (same as owner page)
+        $settlements = Settlement::where('outlet_id', $outlet->id)->get();
 
-        $summary = $this->settlementService->getOutletSummary($outlet->id, $from, $to);
-        $reconciliation = $this->reconciliationService->getOutletReconciliation($outlet->id, $from, $to);
+        // Calculate totals from settlements (all-time, same as owner)
+        $totalDue = (float) $settlements->sum('amount_due');
+        $totalPaid = (float) $settlements->sum('paid_amount');
+        $totalAdjustment = (float) $settlements->sum('adjustment_amount');
+        $totalOutstanding = (float) $settlements->sum(fn ($s) => $s->outstanding_amount);
+
+        // Verified payments from settlement_payments table
+        $verifiedPayments = SettlementPayment::where('outlet_id', $outlet->id)
+            ->where('status', SettlementPayment::STATUS_VERIFIED)
+            ->sum('amount');
+
+        // Pending payments
+        $pendingPayments = SettlementPayment::where('outlet_id', $outlet->id)
+            ->where('status', SettlementPayment::STATUS_PENDING)
+            ->sum('amount');
+
+        // Rejected payments
+        $rejectedPayments = SettlementPayment::where('outlet_id', $outlet->id)
+            ->where('status', SettlementPayment::STATUS_REJECTED)
+            ->sum('amount');
 
         // Recent payments (last 10, all statuses)
         $payments = SettlementPayment::query()
@@ -52,25 +62,49 @@ class SettlementController extends Controller
                 'verified_at' => $p->verified_at?->toISOString(),
             ]);
 
-        // Timeline: recent payables (sales, settlements, adjustments)
-        $timeline = OutletPayable::query()
-            ->where('outlet_id', $outlet->id)
-            ->whereBetween('created_at', [$from, $to])
-            ->latest()
-            ->limit(20)
-            ->get()
-            ->map(fn ($p) => [
-                'id' => $p->id,
-                'type' => $p->type,
-                'amount' => (float) $p->amount,
-                'center_share' => (float) $p->center_share,
-                'outlet_margin' => (float) $p->outlet_margin,
-                'notes' => $p->notes,
-                'created_at' => $p->created_at->toISOString(),
-            ]);
+        // Last payment info
+        $lastPayment = SettlementPayment::where('outlet_id', $outlet->id)
+            ->where('status', SettlementPayment::STATUS_VERIFIED)
+            ->latest('payment_date')
+            ->first();
 
-        // Reconciliation is the single source of truth for outstanding
-        // (already includes adjustments from SettlementReconciliationService)
+        // Build summary matching frontend interface
+        $summary = [
+            'gross_revenue' => $totalDue, // amount_due represents the obligation
+            'center_share' => $totalDue,
+            'outlet_margin' => 0,
+            'settled_amount' => $totalPaid,
+            'outstanding_amount' => $totalOutstanding,
+            'units_sold' => 0,
+            'orders_count' => $settlements->count(),
+            'top_products' => [],
+        ];
+
+        // Build reconciliation matching frontend interface
+        $reconciliation = [
+            'center_share' => $totalDue,
+            'verified_payments' => (float) $verifiedPayments,
+            'pending_payments' => (float) $pendingPayments,
+            'rejected_payments' => (float) $rejectedPayments,
+            'outstanding' => $totalOutstanding,
+            'adjustments' => $totalAdjustment,
+            'last_payment' => $lastPayment ? [
+                'date' => $lastPayment->payment_date->toDateString(),
+                'amount' => (float) $lastPayment->amount,
+                'reference' => $lastPayment->reference_number,
+            ] : null,
+        ];
+
+        // Timeline from settlements (instead of outlet_payables)
+        $timeline = $settlements->sortByDesc('period_date')->take(20)->map(fn ($s) => [
+            'id' => $s->id,
+            'type' => 'settlement',
+            'amount' => (float) $s->amount_due,
+            'center_share' => (float) $s->amount_due,
+            'outlet_margin' => 0,
+            'notes' => "Settlement periode {$s->period_date->format('d/m/Y')}",
+            'created_at' => $s->created_at->toISOString(),
+        ]);
 
         return Inertia::render('outlet/settlement', [
             'summary' => $summary,
@@ -78,27 +112,12 @@ class SettlementController extends Controller
             'payments' => $payments,
             'timeline' => $timeline,
             'paymentAccounts' => PaymentAccount::active()->orderBy('bank_name')->get(),
-            'period' => $period,
+            'period' => 'all',
             'periodRange' => [
-                'from' => $from->toDateString(),
-                'to' => $to->toDateString(),
+                'from' => $settlements->min('period_date')?->toDateString() ?? now()->toDateString(),
+                'to' => $settlements->max('period_date')?->toDateString() ?? now()->toDateString(),
             ],
         ]);
     }
 
-    private function resolvePeriod(string $period, Request $request): array
-    {
-        [$from, $to] = match ($period) {
-            'today' => [now()->startOfDay(), now()->endOfDay()],
-            'week' => [now()->startOfWeek(), now()->endOfWeek()],
-            'month' => [now()->startOfMonth(), now()->endOfMonth()],
-            'custom' => [
-                Carbon::parse($request->string('from', now()->startOfMonth()->toDateString())),
-                Carbon::parse($request->string('to', now()->toDateString()))->endOfDay(),
-            ],
-            default => [now()->startOfMonth(), now()->endOfMonth()],
-        };
-
-        return [Carbon::instance($from), Carbon::instance($to)];
-    }
 }
