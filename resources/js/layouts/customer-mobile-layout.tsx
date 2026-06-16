@@ -1,4 +1,3 @@
-import { usePage } from '@inertiajs/react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import ActiveOrderBar from '@/components/customer/active-order-bar';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
@@ -6,6 +5,7 @@ import CustomerLocationBootstrap from '@/components/customer/customer-location-b
 import CustomerTopBar from '@/components/customer/customer-top-bar';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import OfflineBanner from '@/components/offline-banner';
+import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useCart } from '@/lib/use-cart';
 
 interface Props extends PropsWithChildren {
@@ -18,7 +18,7 @@ interface Props extends PropsWithChildren {
 }
 
 export default function CustomerMobileLayout({ children, activeOrder, topAddress, footerSlot, hideTopBar = false, hideCartBar = false, hideBottomNav = false }: Props) {
-    const { flash } = usePage<any>().props;
+    useFlashToast();
     const { totalItems } = useCart();
 
     const showCartBar = !hideCartBar && !footerSlot && !activeOrder && totalItems > 0;
@@ -31,11 +31,6 @@ export default function CustomerMobileLayout({ children, activeOrder, topAddress
             {!hideTopBar && <CustomerTopBar addressOverride={topAddress} />}
 
             <main className={`mx-auto max-w-lg px-4 pt-5 ${hasFloatingBar ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]' : 'pb-[calc(5rem+env(safe-area-inset-bottom))]'}`}>
-                {flash?.success && (
-                    <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
-                        {flash.success}
-                    </div>
-                )}
                 {children}
             </main>
 

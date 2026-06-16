@@ -6,6 +6,7 @@ import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
 import OfflineBanner from '@/components/offline-banner';
 import UpdateBanner from '@/components/update-banner';
+import { useFlashToast } from '@/hooks/use-flash-toast';
 
 interface NavGroup {
     label: string;
@@ -74,8 +75,9 @@ const navGroups: NavGroup[] = [
 ];
 
 export default function OwnerLayout({ children }: PropsWithChildren) {
+    useFlashToast();
     const page = usePage<any>();
-    const { auth, flash, ownerOperationalCounts } = page.props;
+    const { auth, ownerOperationalCounts } = page.props;
     const url = page.url;
     const pendingCounts = ownerOperationalCounts ?? { pendingReturns: 0, pendingExchanges: 0 };
     const [notificationOpen, setNotificationOpen] = useState(false);
@@ -208,7 +210,6 @@ return item.isActive(url);
             {/* Main content */}
             <main className="pl-56">
                 <div className="mx-auto max-w-[1400px] px-6 py-5">
-                    {flash?.success && <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800">{flash.success}</div>}
                     {children}
                 </div>
             </main>

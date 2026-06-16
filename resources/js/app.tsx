@@ -1,5 +1,6 @@
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
+import { Toaster } from 'sonner';
 import DevToolbar from '@/components/dev-toolbar';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
@@ -15,6 +16,7 @@ createInertiaApp({
         root.render(
             <>
                 <App {...props} />
+                <Toaster position="top-center" richColors closeButton />
                 {(props.initialPage.props.dev as Record<string, unknown>)?.isLocal && (
                     <DevToolbar
                         currentRole={(props.initialPage.props.dev as Record<string, unknown>).currentRole as string | null}

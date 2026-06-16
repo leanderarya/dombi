@@ -1,6 +1,6 @@
-import { usePage } from '@inertiajs/react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import OfflineBanner from '@/components/offline-banner';
+import { useFlashToast } from '@/hooks/use-flash-toast';
 
 interface Props extends PropsWithChildren {
     /** Optional bottom navigation component */
@@ -12,7 +12,7 @@ interface Props extends PropsWithChildren {
 }
 
 export default function MobileRoleLayout({ children, bottomNav, footerSlot, hideBottomNav = false }: Props) {
-    const { flash } = usePage<any>().props;
+    useFlashToast();
     const hasFloatingBar = !!footerSlot;
 
     return (
@@ -20,11 +20,6 @@ export default function MobileRoleLayout({ children, bottomNav, footerSlot, hide
             <OfflineBanner />
 
             <main className={`mx-auto max-w-lg px-4 pt-4 ${hasFloatingBar ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]' : 'pb-[calc(5rem+env(safe-area-inset-bottom))]'}`}>
-                {flash?.success && (
-                    <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
-                        {flash.success}
-                    </div>
-                )}
                 {children}
             </main>
 

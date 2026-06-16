@@ -1,6 +1,7 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, Copy, Minus, Plus, Search } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import PricingEditModal from '@/components/owner/pricing-edit-modal';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
@@ -48,6 +49,11 @@ export default function OutletPricing({ outlet, prices, otherOutlets }: Props) {
     const [page, setPage] = useState(1);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedRow, setSelectedRow] = useState<PriceRow | null>(null);
+
+    // Show warning flash as toast
+    useEffect(() => {
+        if (flash?.warning) toast.warning(flash.warning);
+    }, [flash?.warning]);
     const [saving, setSaving] = useState(false);
     const [bulkOpen, setBulkOpen] = useState(false);
     const [bulkAmount, setBulkAmount] = useState('');
@@ -211,18 +217,6 @@ return 'text-amber-600';
             subtitle="Atur harga jual produk untuk outlet ini"
             backHref="/owner/pricing"
         >
-            {/* Flash messages */}
-            {flash?.success && (
-                <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm font-medium text-emerald-800">
-                    {flash.success}
-                </div>
-            )}
-            {flash?.warning && (
-                <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-800">
-                    {flash.warning}
-                </div>
-            )}
-
             {/* Toolbar */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 <div className="relative flex-1 min-w-[140px]">
