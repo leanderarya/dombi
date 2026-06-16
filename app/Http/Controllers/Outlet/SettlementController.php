@@ -62,6 +62,11 @@ class SettlementController extends Controller
                 'verified_at' => $p->verified_at?->toISOString(),
             ]);
 
+        // Check if outlet has pending payment (to block new submissions)
+        $hasPendingPayment = SettlementPayment::where('outlet_id', $outlet->id)
+            ->where('status', SettlementPayment::STATUS_PENDING)
+            ->exists();
+
         // Last payment info
         $lastPayment = SettlementPayment::where('outlet_id', $outlet->id)
             ->where('status', SettlementPayment::STATUS_VERIFIED)
@@ -112,6 +117,7 @@ class SettlementController extends Controller
             'payments' => $payments,
             'timeline' => $timeline,
             'paymentAccounts' => PaymentAccount::active()->orderBy('bank_name')->get(),
+            'hasPendingPayment' => $hasPendingPayment,
             'period' => 'all',
             'periodRange' => [
                 'from' => $settlements->min('period_date')?->toDateString() ?? now()->toDateString(),

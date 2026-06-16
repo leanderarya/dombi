@@ -37,6 +37,15 @@ class SettlementPaymentController extends Controller
 
         abort_unless($outlet, 403);
 
+        // Block if there's already a pending payment
+        $hasPending = SettlementPayment::where('outlet_id', $outlet->id)
+            ->where('status', SettlementPayment::STATUS_PENDING)
+            ->exists();
+
+        if ($hasPending) {
+            return back()->with('error', 'Anda sudah memiliki pembayaran yang menunggu verifikasi. Silakan tunggu hingga pembayaran sebelumnya diverifikasi.');
+        }
+
         $validated = $request->validate([
             'amount' => ['required', 'numeric', 'min:1'],
             'reference_number' => ['required', 'string', 'max:100', 'unique:settlement_payments,reference_number'],
