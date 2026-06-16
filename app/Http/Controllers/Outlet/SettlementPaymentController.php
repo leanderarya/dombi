@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
+use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
@@ -59,8 +60,14 @@ class SettlementPaymentController extends Controller
             $proofPath = $request->file('proof_image')->store('payment-proofs', 'public');
         }
 
+        $settlement = Settlement::where('outlet_id', $outlet->id)
+            ->where('status', '!=', Settlement::STATUS_PAID)
+            ->orderBy('due_date', 'asc')
+            ->first();
+
         $payment = SettlementPayment::create([
             'outlet_id' => $outlet->id,
+            'settlement_id' => $settlement?->id,
             'reference_number' => $validated['reference_number'],
             'payment_date' => $validated['payment_date'],
             'amount' => $validated['amount'],
