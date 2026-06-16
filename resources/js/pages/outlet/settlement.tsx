@@ -160,8 +160,7 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
 
             {/* Info Rekening */}
             {paymentAccounts.length > 0 && (
-                <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
-                    <h2 className="mb-3 text-sm font-semibold text-slate-900">Info Rekening Tujuan</h2>
+                <SectionCard label="Info Rekening Tujuan" className="mb-4">
                     <div className="space-y-2">
                         {paymentAccounts.map((account) => (
                             <div key={account.id} className="rounded-lg bg-zinc-50 p-3">
@@ -171,7 +170,7 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
                             </div>
                         ))}
                     </div>
-                </div>
+                </SectionCard>
             )}
 
             {/* Outstanding Breakdown Card */}
