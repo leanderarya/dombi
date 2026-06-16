@@ -228,7 +228,7 @@ Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->g
     Route::post('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtpSubmit'])->name('checkout.verify-otp.submit');
     Route::post('/checkout/send-otp', [CustomerCheckoutController::class, 'sendOtp'])->name('checkout.send-otp');
     Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
-    Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->name('checkout.submit');
+    Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->middleware('throttle:checkout')->name('checkout.submit');
     Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
     Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
