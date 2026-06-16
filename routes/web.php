@@ -98,12 +98,36 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
     Route::get('/dashboard', OwnerDashboardController::class)->name('dashboard');
     Route::get('/profile', OwnerProfileController::class)->name('profile');
     Route::resource('outlets', OwnerOutletController::class);
+    Route::put('outlets/{outlet}/archive', [OwnerOutletController::class, 'archive'])->name('outlets.archive');
+    Route::get('outlets/{outlet}/operating-hours', [App\Http\Controllers\Owner\OutletOperatingHoursController::class, 'index'])->name('outlets.operating-hours.index');
+    Route::put('outlets/{outlet}/operating-hours', [App\Http\Controllers\Owner\OutletOperatingHoursController::class, 'bulkUpdate'])->name('outlets.operating-hours.bulk-update');
+    Route::post('outlets/{outlet}/holidays', [App\Http\Controllers\Owner\OutletHolidayController::class, 'store'])->name('outlets.holidays.store');
+    Route::put('outlets/{outlet}/holidays/{holiday}', [App\Http\Controllers\Owner\OutletHolidayController::class, 'update'])->name('outlets.holidays.update');
+    Route::delete('outlets/{outlet}/holidays/{holiday}', [App\Http\Controllers\Owner\OutletHolidayController::class, 'destroy'])->name('outlets.holidays.destroy');
+    Route::get('outlets/{outlet}/products', [App\Http\Controllers\Owner\OutletProductController::class, 'index'])->name('outlets.products.index');
+    Route::get('outlets/{outlet}/products/available', [App\Http\Controllers\Owner\OutletProductController::class, 'availableProducts'])->name('outlets.products.available');
+    Route::post('outlets/{outlet}/products', [App\Http\Controllers\Owner\OutletProductController::class, 'addProducts'])->name('outlets.products.add');
+    Route::put('outlets/{outlet}/products/{variantId}/toggle', [App\Http\Controllers\Owner\OutletProductController::class, 'toggle'])->name('outlets.products.toggle');
+    Route::delete('outlets/{outlet}/products/{variantId}', [App\Http\Controllers\Owner\OutletProductController::class, 'remove'])->name('outlets.products.remove');
+    Route::post('outlets/{outlet}/products/bulk-assign', [App\Http\Controllers\Owner\OutletProductController::class, 'bulkAssign'])->name('outlets.products.bulk-assign');
+    Route::post('outlets/{outlet}/restock', [App\Http\Controllers\Owner\OutletProductController::class, 'restock'])->name('outlets.products.restock');
     Route::resource('products', OwnerProductController::class)->except(['show']);
 
     // Product Families & Variants
     Route::resource('product-families', App\Http\Controllers\Owner\ProductFamilyController::class)->except(['create', 'edit', 'destroy']);
     Route::post('product-families/{family}/variants', [App\Http\Controllers\Owner\ProductVariantController::class, 'store'])->name('product-families.variants.store');
     Route::put('variants/{variant}', [App\Http\Controllers\Owner\ProductVariantController::class, 'update'])->name('variants.update');
+
+    // Pricing
+    Route::get('pricing', [App\Http\Controllers\Owner\PricingController::class, 'index'])->name('pricing.index');
+    Route::get('pricing/master', [App\Http\Controllers\Owner\PricingController::class, 'master'])->name('pricing.master');
+    Route::patch('pricing/master/{variant}', [App\Http\Controllers\Owner\PricingController::class, 'updateCenterPrice'])->name('pricing.master.update');
+    Route::get('pricing/master/{variant}/impact', [App\Http\Controllers\Owner\PricingController::class, 'getImpact'])->name('pricing.master.impact');
+    Route::get('pricing/history', [App\Http\Controllers\Owner\PricingController::class, 'history'])->name('pricing.history');
+    Route::get('pricing/outlets/{outlet}', [App\Http\Controllers\Owner\PricingController::class, 'show'])->name('pricing.outlets.show');
+    Route::patch('pricing/outlets/{outlet}/variants/{variant}', [App\Http\Controllers\Owner\PricingController::class, 'update'])->name('pricing.outlets.variants.update');
+    Route::post('pricing/outlets/{outlet}/bulk-update', [App\Http\Controllers\Owner\PricingController::class, 'bulkUpdate'])->name('pricing.outlets.bulk-update');
+    Route::post('pricing/outlets/{outlet}/copy', [App\Http\Controllers\Owner\PricingController::class, 'copy'])->name('pricing.outlets.copy');
 
     Route::get('inventories', [OwnerInventoryController::class, 'index'])->name('inventories.index');
     Route::get('inventories/create', [OwnerInventoryController::class, 'create'])->name('inventories.create');
@@ -128,15 +152,21 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
     Route::get('distributions/{distribution}', [OwnerStockDistributionController::class, 'show'])->name('distributions.show');
     Route::post('distributions/{distribution}/mark-shipped', [OwnerStockDistributionController::class, 'markShipped'])->name('distributions.mark-shipped');
 
-    // Settlement
-    Route::get('settlement', [App\Http\Controllers\Owner\SettlementController::class, 'index'])->name('settlement.index');
-    Route::get('settlement/collection', [App\Http\Controllers\Owner\SettlementController::class, 'collection'])->name('settlement.collection');
-    Route::get('settlement/outlet/{outletId}', [App\Http\Controllers\Owner\SettlementController::class, 'outlet'])->name('settlement.outlet');
-
     // Settlement Payments
     Route::get('settlement-payments', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
     Route::post('settlement-payments/{payment}/verify', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'verify'])->name('settlement-payments.verify');
     Route::post('settlement-payments/{payment}/reject', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'reject'])->name('settlement-payments.reject');
+    Route::post('settlement-payments/bulk-verify', [App\Http\Controllers\Owner\SettlementPaymentController::class, 'bulkVerify'])->name('settlement-payments.bulk-verify');
+
+    // Finance
+    Route::get('finance', [App\Http\Controllers\Owner\FinanceSettlementController::class, 'dashboard'])->name('finance.dashboard');
+    Route::get('finance/settlements/{outlet}', [App\Http\Controllers\Owner\FinanceSettlementController::class, 'outletDetail'])->name('finance.settlements.outlet');
+    Route::post('finance/settlements/{outlet}/payments', [App\Http\Controllers\Owner\FinanceSettlementController::class, 'recordPayment'])->name('finance.settlements.payments');
+    Route::post('finance/settlements/{outlet}/send-invoice', [App\Http\Controllers\Owner\FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
+
+    // Payment Accounts
+    Route::resource('payment-accounts', \App\Http\Controllers\Owner\PaymentAccountController::class)
+        ->only(['index', 'store', 'update', 'destroy']);
 
     // Returns
     Route::get('returns', [OwnerReturnController::class, 'index'])->name('returns.index');
