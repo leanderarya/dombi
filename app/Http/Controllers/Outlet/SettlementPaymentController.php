@@ -63,7 +63,7 @@ class SettlementPaymentController extends Controller
         $payment->load('outlet');
         $notificationService->notifyPaymentSubmitted($payment);
 
-        return redirect()->route('outlet.settlement-payments.index')
-            ->with('success', 'Pembayaran berhasil dikirim. Menunggu verifikasi owner.');
+        return back()
+            ->with('success', 'Berhasil dikirim. Terimakasih sudah melakukan pembayaran.');
     }
 }
