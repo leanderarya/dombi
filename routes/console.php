@@ -31,6 +31,15 @@ Schedule::command('couriers:auto-offline')
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/auto-offline.log'));
 
+// ─── SETTLEMENT REMINDERS ─────────────────────────────────────────
+
+Schedule::command('settlement:send-reminders')
+    ->daily()
+    ->at('08:00')
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/settlement-reminders.log'));
+
 // ─── BACKUPS ────────────────────────────────────────────────────────
 
 Schedule::command('backup:clean')
