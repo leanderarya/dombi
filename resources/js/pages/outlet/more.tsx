@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { RotateCcw, Repeat2, PackagePlus, Truck, Receipt } from 'lucide-react';
+import { RotateCcw, Repeat2, PackagePlus, Truck, Receipt, BarChart3, FileText } from 'lucide-react';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
@@ -12,6 +12,22 @@ interface Props {
 }
 
 const features = [
+    {
+        href: '/outlet/analytics',
+        icon: BarChart3,
+        title: 'Analitik Performa',
+        description: 'Grafik penjualan, produk terlaris, trend revenue',
+        badgeKey: null,
+        color: 'bg-cyan-50 text-cyan-600',
+    },
+    {
+        href: '/outlet/reports',
+        icon: FileText,
+        title: 'Laporan Penjualan',
+        description: 'Export laporan penjualan ke CSV',
+        badgeKey: null,
+        color: 'bg-indigo-50 text-indigo-600',
+    },
     {
         href: '/outlet/returns',
         icon: RotateCcw,
@@ -84,7 +100,7 @@ export default function OutletMore({ pendingReturns, pendingExchanges, pendingRe
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-bold text-slate-900">{feature.title}</span>
-                                    {count > 0 && (
+                                    {feature.badgeKey && count > 0 && (
                                         <StatusBadge variant="warning" size="sm">{count}</StatusBadge>
                                     )}
                                 </div>

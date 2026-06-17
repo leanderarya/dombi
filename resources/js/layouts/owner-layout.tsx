@@ -68,6 +68,7 @@ const navGroups: NavGroup[] = [
         label: 'Analitik',
         icon: <AnalyticsIcon />,
         items: [
+            { href: '/owner/analytics', label: 'Dashboard Analitik' },
             { href: '/owner/stock-movements', label: 'Audit Trail' },
             { href: '/owner/reports', label: 'Laporan' },
         ],
