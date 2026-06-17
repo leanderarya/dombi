@@ -77,6 +77,9 @@ class ExchangeController extends Controller
         return redirect()->route('owner.exchanges.show', $exchangeRequest)->with('success', 'Exchange request rejected.');
     }
 
+    /**
+     * Optional: not called from the UI. Kept for API flexibility.
+     */
     public function markPreparing(Request $request, ExchangeRequest $exchangeRequest, ExchangeService $service): RedirectResponse
     {
         $service->markPreparing($exchangeRequest, $request->user());

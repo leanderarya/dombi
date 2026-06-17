@@ -117,6 +117,11 @@ class ExchangeService
         });
     }
 
+    /**
+     * Optional step: transitions approved → preparing.
+     * Not used by the current UI (markShipped accepts both approved and preparing).
+     * Kept for API flexibility — callers may use this if a preparing workflow is needed.
+     */
     public function markPreparing(ExchangeRequest $exchange, User $owner): ExchangeRequest
     {
         return DB::transaction(function () use ($exchange, $owner) {
