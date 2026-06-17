@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\InsufficientStockException;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\OutletInventory;
 use App\Models\ProductVariant;
@@ -14,26 +15,9 @@ use Illuminate\Validation\ValidationException;
 
 class InventoryService
 {
-    public function hasEnoughStock(int $outletId, array $items): bool
-    {
-        foreach ($items as $item) {
-            $variantId = (int) ($item['product_variant_id'] ?? 0);
-            if (! $variantId) {
-                continue;
-            }
-
-            $inventory = OutletInventory::query()
-                ->where('outlet_id', $outletId)
-                ->where('product_variant_id', $variantId)
-                ->first();
-
-            if (! $inventory || ($inventory->current_stock - $inventory->reserved_stock) < (int) $item['quantity']) {
-                return false;
-            }
-        }
-
-        return true;
-    }
+    public function __construct(
+        private readonly NotificationService $notificationService
+    ) {}
 
     public function reserveStock(int $outletId, array $items, Order $order): void
     {
@@ -151,6 +135,8 @@ class InventoryService
                     'created_by' => Auth::id(),
                 ]);
 
+                $this->checkAndNotifyLowStock($order->outlet_id, $inventory, $variantId);
+
                 continue;
             }
 
@@ -173,6 +159,8 @@ class InventoryService
                 'notes' => 'Release reserved '.$order->order_code,
                 'created_by' => Auth::id(),
             ]);
+
+            $this->checkAndNotifyLowStock($order->outlet_id, $inventory, $variantId);
         }
     }
 
@@ -233,6 +221,8 @@ class InventoryService
                 'notes' => 'Selesai order '.$order->order_code,
                 'created_by' => Auth::id(),
             ]);
+
+            $this->checkAndNotifyLowStock($order->outlet_id, $inventory, $variantId);
         }
     }
 
@@ -284,5 +274,37 @@ class InventoryService
             'notes' => $notes,
             'created_by' => Auth::id(),
         ]);
+    }
+
+    private function checkAndNotifyLowStock(int $outletId, OutletInventory $inventory, int $variantId): void
+    {
+        if ($inventory->minimum_stock <= 0) {
+            return;
+        }
+
+        $availableStock = $inventory->current_stock - $inventory->reserved_stock;
+        if ($availableStock > $inventory->minimum_stock) {
+            return;
+        }
+
+        $recentNotification = Notification::where('type', NotificationService::LOW_STOCK)
+            ->where('entity_type', 'outlet')
+            ->where('entity_id', $outletId)
+            ->where('created_at', '>', now()->subDay())
+            ->exists();
+
+        if ($recentNotification) {
+            return;
+        }
+
+        $variant = ProductVariant::find($variantId);
+        $productName = $variant?->full_name ?? "Product #{$variantId}";
+
+        $this->notificationService->notifyLowStock(
+            $outletId,
+            $productName,
+            $availableStock,
+            $inventory->minimum_stock
+        );
     }
 }
