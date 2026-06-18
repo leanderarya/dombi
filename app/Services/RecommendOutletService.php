@@ -13,21 +13,26 @@ class RecommendOutletService
 
     public function recommend(?float $latitude, ?float $longitude, array $items): array
     {
+        // If no items, just return nearest outlets by distance
         if (count($items) === 0) {
+            $outlets = Outlet::query()
+                ->where('status', 'active')
+                ->get();
+
+            $sorted = $this->sortOutlets($outlets, $latitude, $longitude)
+                ->values()
+                ->map(fn (Outlet $outlet) => $this->formatOutlet($outlet, $latitude, $longitude))
+                ->all();
+
             return [
-                'recommended' => null,
-                'alternatives' => [],
+                'recommended' => $sorted[0] ?? null,
+                'alternatives' => $sorted,
             ];
         }
 
-        $availableOutlets = Outlet::query()
-            ->where('status', 'active')
-            ->with('inventories')
-            ->get()
-            ->filter(fn (Outlet $outlet): bool => $this->outletAssignmentService->outletHasEnoughStock($outlet, $items))
-            ->values();
+        $candidateOutlets = $this->outletAssignmentService->findCandidateOutlets($latitude, $longitude, $items);
 
-        $sorted = $this->sortOutlets($availableOutlets, $latitude, $longitude)
+        $sorted = $this->sortOutlets($candidateOutlets, $latitude, $longitude)
             ->values()
             ->map(fn (Outlet $outlet) => $this->formatOutlet($outlet, $latitude, $longitude))
             ->all();
