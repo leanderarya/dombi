@@ -14,9 +14,9 @@ export default function ProductImage({ name, size = 'md', className = '' }: Prod
     ];
     const colorIndex = name.length % colors.length;
     const sizeClasses = {
-        sm: 'h-10 w-10 text-sm',
-        md: 'h-16 w-16 text-2xl',
-        lg: 'h-24 w-24 text-3xl',
+        sm: 'h-12 w-12 text-lg',
+        md: 'h-20 w-20 text-3xl',
+        lg: 'h-28 w-28 text-4xl',
     };
 
     return (

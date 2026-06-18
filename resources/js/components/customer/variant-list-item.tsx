@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
 import { memo, useState } from 'react';
 import ProductImage from '@/components/customer/product-image';
+import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
@@ -26,9 +27,10 @@ interface Props {
     displayPrice: number;
     displayLabel: string;
     onQuickAdd?: () => void;
+    loading?: boolean;
 }
 
-const VariantListItem = memo(function VariantListItem({ variant, familyId, familyName, familyDescription, familyBrand, displayPrice, displayLabel, onQuickAdd }: Props) {
+const VariantListItem = memo(function VariantListItem({ variant, familyId, familyName, familyDescription, familyBrand, displayPrice, displayLabel, onQuickAdd, loading }: Props) {
     const [adding, setAdding] = useState(false);
     const [toast, setToast] = useState(false);
     const cart = useCart();
@@ -87,22 +89,28 @@ return;
     return (
         <Link
             href={`/customer/products/${familyId}`}
-            className="flex items-center gap-3.5 bg-white py-4 active:bg-zinc-50"
+            className="flex items-center gap-3.5 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-zinc-50"
         >
             {/* Image */}
             <div className="relative shrink-0">
-                <ProductImage name={variant.name} size="md" />
-                {/* Favorite button */}
-                <button
-                    type="button"
-                    onClick={handleFavorite}
-                    className="absolute right-1.5 top-1.5 flex h-11 w-11 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm"
-                    aria-label={isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'}
-                >
-                    <Heart
-                        className={`h-3.5 w-3.5 ${isFav ? 'fill-red-500 text-red-500' : 'text-zinc-400'}`}
-                    />
-                </button>
+                {loading ? (
+                    <Skeleton className="h-16 w-16 rounded-xl" />
+                ) : (
+                    <>
+                        <ProductImage name={variant.name} size="md" />
+                        {/* Favorite button */}
+                        <button
+                            type="button"
+                            onClick={handleFavorite}
+                            className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-white shadow-sm"
+                            aria-label={isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'}
+                        >
+                            <Heart
+                                className={`h-3.5 w-3.5 ${isFav ? 'fill-red-500 text-red-500' : 'text-zinc-400'}`}
+                            />
+                        </button>
+                    </>
+                )}
             </div>
 
             {/* Info */}
