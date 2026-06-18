@@ -81,26 +81,25 @@ export default function Home({ customerName, activeOrders }: any) {
         setPickupLoading(true);
         setPickupOutletName(null);
 
+        let outletName: string | null = null;
+
         try {
-            let outletName = nearestOutlet?.name;
-
-            if (!outletName) {
-                const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-                });
-                const response = await fetch(`/customer/checkout/pickup-outlets?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}`);
-                const data = await response.json();
-                outletName = data.recommended?.name;
-            }
-
-            if (outletName) {
-                setPickupOutletName(outletName);
-            }
+            // Always try to fetch nearest outlet
+            const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
+            });
+            const response = await fetch(`/customer/checkout/pickup-outlets?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}`);
+            const data = await response.json();
+            outletName = data.recommended?.name ?? null;
         } catch {
-            // Silently fail
+            // Geolocation failed - use cached or fallback
+            outletName = nearestOutlet?.name ?? null;
         }
 
-        // Navigate after 3 seconds (separate setTimeout so overlay stays visible)
+        // Show outlet name or fallback
+        setPickupOutletName(outletName ?? 'Outlet Dombi');
+
+        // Navigate after 3 seconds
         setTimeout(() => {
             router.get('/customer/products');
         }, 3000);
