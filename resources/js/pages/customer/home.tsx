@@ -35,7 +35,6 @@ export default function Home({ customerName, activeOrders }: any) {
     const [slideIndex, setSlideIndex] = useState(0);
     const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
     const [nearestOutlet, setNearestOutlet] = useState<{ name: string; distance_km: number } | null>(null);
-    const [locationLoading, setLocationLoading] = useState(false);
     const [pickupLoading, setPickupLoading] = useState(false);
     const [pickupOutletName, setPickupOutletName] = useState<string | null>(null);
 
@@ -50,11 +49,8 @@ export default function Home({ customerName, activeOrders }: any) {
 
     // Auto-detect location and fetch nearest outlet
     useEffect(() => {
-        if (!navigator.geolocation) {
-return;
-}
+        if (!navigator.geolocation) return;
 
-        setLocationLoading(true);
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 try {
@@ -68,15 +64,12 @@ return;
                             distance_km: data.recommended.distance_km,
                         });
                     }
-                } catch (error) {
+                } catch {
                     // Silently fail - not critical
-                } finally {
-                    setLocationLoading(false);
                 }
             },
             () => {
                 // Permission denied or error - not critical
-                setLocationLoading(false);
             },
             { enableHighAccuracy: false, timeout: 5000 }
         );
@@ -373,7 +366,7 @@ return;
             {/* Pickup Loading Overlay */}
             {pickupLoading && (
                 <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-emerald-600 to-emerald-700">
-                    <div className="mb-6 h-10 w-10 animate-spin rounded-full border-3 border-white/30 border-t-white" />
+                    <div className="mb-6 h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                     {pickupOutletName ? (
                         <div className="text-center">
                             <div className="text-[11px] font-bold uppercase tracking-widest text-emerald-200">Outlet Terdekat</div>
