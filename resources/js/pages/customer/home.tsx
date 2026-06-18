@@ -15,15 +15,15 @@ const HERO_SLIDES = [
     {
         title: 'Delivery Mudah',
         subtitle: 'Pesanan dikirim langsung ke rumah Anda',
-        cta: null,
-        ctaHref: null,
+        cta: 'Pesan Sekarang',
+        ctaHref: '/customer/products',
         gradient: 'from-emerald-700 via-emerald-600 to-emerald-500',
     },
     {
         title: 'Pickup Cepat',
         subtitle: 'Ambil langsung tanpa antre',
-        cta: null,
-        ctaHref: null,
+        cta: 'Pesan Sekarang',
+        ctaHref: '/customer/products',
         gradient: 'from-teal-600 via-emerald-500 to-emerald-400',
     },
 ];
@@ -36,6 +36,8 @@ export default function Home({ customerName, activeOrders }: any) {
     const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
     const [nearestOutlet, setNearestOutlet] = useState<{ name: string; distance_km: number } | null>(null);
     const [locationLoading, setLocationLoading] = useState(false);
+    const [pickupLoading, setPickupLoading] = useState(false);
+    const [pickupOutletName, setPickupOutletName] = useState<string | null>(null);
 
     // Auto-rotate hero slides
     useEffect(() => {
@@ -82,9 +84,34 @@ return;
 
     const activeOrder = activeOrders?.[0] ?? null;
 
-    const handlePickup = useCallback(() => {
-        router.get('/customer/products');
-    }, []);
+    const handlePickup = useCallback(async () => {
+        setPickupLoading(true);
+
+        try {
+            let outletName = nearestOutlet?.name;
+
+            if (!outletName) {
+                const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000 });
+                });
+                const response = await fetch(`/customer/checkout/pickup-outlets?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}`);
+                const data = await response.json();
+                outletName = data.recommended?.name || 'Outlet Dombi';
+            }
+
+            setPickupOutletName(outletName);
+
+            // Show outlet name briefly before navigating
+            await new Promise(r => setTimeout(r, 1200));
+
+            router.get('/customer/products');
+        } catch {
+            // Fallback: go directly to products
+            router.get('/customer/products');
+        } finally {
+            setPickupLoading(false);
+        }
+    }, [nearestOutlet]);
 
     const handleDelivery = useCallback(() => {
         if (!isLoggedIn || !hasLinkedCustomer) {
@@ -148,8 +175,33 @@ return;
                 </div>
             </section>
 
-            {/* SECTION 2 — ACCOUNT SUMMARY */}
-            <section className="mt-5">
+            {/* SECTION 2 — PESAN SEKARANG */}
+            <section className="mt-6">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Pesan Sekarang</h2>
+                <div className="mt-3 grid grid-cols-2 gap-3">
+                    <button
+                        type="button"
+                        onClick={handlePickup}
+                        className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 active:bg-emerald-100"
+                    >
+                        <Store className="h-6 w-6 text-emerald-600" />
+                        <div className="text-sm font-bold text-emerald-700">Ambil di Outlet</div>
+                        <div className="text-xs text-emerald-600">Tanpa antre</div>
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleDelivery}
+                        className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 active:bg-emerald-100"
+                    >
+                        <Truck className="h-6 w-6 text-emerald-600" />
+                        <div className="text-sm font-bold text-emerald-700">Kurir Dombi</div>
+                        <div className="text-xs text-emerald-600">Diantar ke rumah</div>
+                    </button>
+                </div>
+            </section>
+
+            {/* SECTION 3 — ACCOUNT SUMMARY */}
+            <section className="mt-6">
                 {isLoggedIn ? (
                     <Link
                         href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
@@ -194,7 +246,7 @@ return;
 
             {/* SECTION 2.5 — NEAREST OUTLET */}
             {nearestOutlet && (
-                <section className="mt-4">
+                <section className="mt-6">
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                         <div className="flex items-center gap-3">
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100">
@@ -209,31 +261,6 @@ return;
                     </div>
                 </section>
             )}
-
-            {/* SECTION 3 — PESAN SEKARANG */}
-            <section className="mt-6">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Pesan Sekarang</h2>
-                <div className="mt-3 grid grid-cols-2 gap-3">
-                    <button
-                        type="button"
-                        onClick={handlePickup}
-                        className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 active:bg-emerald-100"
-                    >
-                        <Store className="h-6 w-6 text-emerald-600" />
-                        <div className="text-sm font-bold text-emerald-700">Ambil di Outlet</div>
-                        <div className="text-xs text-emerald-600">Tanpa antre</div>
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleDelivery}
-                        className="flex flex-col items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 p-4 active:bg-blue-100"
-                    >
-                        <Truck className="h-6 w-6 text-blue-600" />
-                        <div className="text-sm font-bold text-blue-700">Kurir Dombi</div>
-                        <div className="text-xs text-blue-600">Diantar ke rumah</div>
-                    </button>
-                </div>
-            </section>
 
             {/* SECTION 4 — YANG MENARIK DI DOMBI */}
             <section className="mt-6">
@@ -342,6 +369,21 @@ return;
                 open={deliverySheetOpen}
                 onClose={() => setDeliverySheetOpen(false)}
             />
+
+            {/* Pickup Loading Overlay */}
+            {pickupLoading && (
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-emerald-600">
+                    <div className="mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    {pickupOutletName ? (
+                        <>
+                            <div className="text-lg font-semibold text-white">{pickupOutletName}</div>
+                            <div className="mt-1 text-sm text-emerald-100">Menuju produk...</div>
+                        </>
+                    ) : (
+                        <div className="text-sm text-emerald-100">Mencari outlet terdekat...</div>
+                    )}
+                </div>
+            )}
         </CustomerMobileLayout>
     );
 }
