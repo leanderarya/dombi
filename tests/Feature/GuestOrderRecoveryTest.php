@@ -114,7 +114,7 @@ class GuestOrderRecoveryTest extends TestCase
         ])->assertUnprocessable();
     }
 
-    public function test_recovery_with_phone_only_returns_orders(): void
+    public function test_recovery_with_phone_only_requires_verification(): void
     {
         $customer = $this->createCustomerWithOrders();
 
@@ -123,14 +123,14 @@ class GuestOrderRecoveryTest extends TestCase
         ])->assertOk()
             ->assertJson([
                 'found' => true,
-                'customer_name' => 'Test Customer',
+                'requires_verification' => true,
             ])
             ->assertJsonStructure([
                 'found',
-                'customer_name',
-                'active_orders',
-                'recent_orders',
-            ]);
+                'requires_verification',
+                'message',
+            ])
+            ->assertJsonMissing(['customer_name', 'customer_id', 'active_orders', 'recent_orders']);
     }
 
     public function test_recovery_with_phone_only_returns_empty_for_unknown_phone(): void
@@ -140,9 +140,8 @@ class GuestOrderRecoveryTest extends TestCase
         ])->assertOk()
             ->assertJson([
                 'found' => false,
-                'active_orders' => [],
-                'recent_orders' => [],
-            ]);
+            ])
+            ->assertJsonMissing(['requires_verification']);
     }
 
     public function test_recovery_with_phone_only_normalizes_formats(): void
@@ -431,7 +430,7 @@ class GuestOrderRecoveryTest extends TestCase
             ->assertOk();
     }
 
-    public function test_phone_only_recovery_includes_recovery_token(): void
+    public function test_phone_only_recovery_does_not_expose_order_data(): void
     {
         $customer = $this->createCustomerWithOrders();
 
@@ -441,8 +440,11 @@ class GuestOrderRecoveryTest extends TestCase
 
         $data = $response->json();
         $this->assertTrue($data['found']);
-        $this->assertArrayHasKey('recovery_token', $data['active_orders'][0]);
-        $this->assertNotEmpty($data['active_orders'][0]['recovery_token']);
+        $this->assertTrue($data['requires_verification']);
+        $this->assertArrayNotHasKey('active_orders', $data);
+        $this->assertArrayNotHasKey('recent_orders', $data);
+        $this->assertArrayNotHasKey('recovery_token', $data);
+        $this->assertArrayNotHasKey('customer_id', $data);
     }
 
     private function createCustomerWithOrders(): Customer

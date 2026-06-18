@@ -45,6 +45,11 @@ class OrderController extends Controller
 
     public function cancel(CancelOrderRequest $request, Order $order, OrderStatusService $orderStatusService): RedirectResponse
     {
+        $user = $request->user();
+        if ($user->role === 'customer' && $order->customer_id !== $user->customer?->id) {
+            abort(403);
+        }
+
         $validated = $request->validated();
         $orderStatusService->cancelByCustomer($order, $validated['reason'], $validated['note'] ?? null);
 

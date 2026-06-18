@@ -48,7 +48,9 @@ export default function Home({ customerName, activeOrders }: any) {
 
     // Auto-detect location and fetch nearest outlet
     useEffect(() => {
-        if (!navigator.geolocation) return;
+        if (!navigator.geolocation) {
+return;
+}
 
         setLocationLoading(true);
         navigator.geolocation.getCurrentPosition(
@@ -57,6 +59,7 @@ export default function Home({ customerName, activeOrders }: any) {
                     const { latitude, longitude } = position.coords;
                     const response = await fetch(`/customer/checkout/pickup-outlets?latitude=${latitude}&longitude=${longitude}`);
                     const data = await response.json();
+
                     if (data.recommended) {
                         setNearestOutlet({
                             name: data.recommended.name,
@@ -150,29 +153,29 @@ export default function Home({ customerName, activeOrders }: any) {
                 {isLoggedIn ? (
                     <Link
                         href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
-                        className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 active:bg-emerald-50"
+                        className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm active:bg-emerald-50"
                     >
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
                             <User className="h-5 w-5 text-emerald-600" />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <div className="text-sm font-semibold text-slate-900">
+                            <div className="text-sm font-semibold text-zinc-900">
                                 Halo, {customerName ?? auth.user.name}
                             </div>
-                            <div className="mt-0.5 text-xs text-slate-500">
+                            <div className="mt-0.5 text-xs text-zinc-500">
                                 {activeOrder
                                     ? `Pesanan Aktif · ${activeOrder.order_code}`
                                     : 'Belum Ada Pesanan Aktif'}
                             </div>
                         </div>
-                        <svg className="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="h-4 w-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                     </Link>
                 ) : (
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3">
-                        <div className="text-sm font-semibold text-slate-900">Masuk untuk fitur penuh</div>
-                        <div className="mt-0.5 text-xs text-slate-500">Lacak pesanan, simpan alamat, dan lebih banyak lagi.</div>
+                        <div className="text-sm font-semibold text-zinc-900">Masuk untuk fitur penuh</div>
+                        <div className="mt-0.5 text-xs text-zinc-500">Lacak pesanan, simpan alamat, dan lebih banyak lagi.</div>
                         <a
                             href="/auth/google"
                             className="mt-3 flex min-h-[40px] items-center justify-center gap-2 rounded-lg bg-emerald-600 text-xs font-bold text-white active:bg-emerald-700"
@@ -198,9 +201,9 @@ export default function Home({ customerName, activeOrders }: any) {
                                 <MapPin className="h-5 w-5 text-emerald-600" />
                             </div>
                             <div>
-                                <div className="text-[11px] font-medium text-emerald-600">Outlet Terdekat</div>
+                                <div className="text-xs font-medium text-emerald-600">Outlet Terdekat</div>
                                 <div className="text-sm font-bold text-emerald-700">{nearestOutlet.name}</div>
-                                <div className="text-[10px] text-emerald-600">{nearestOutlet.distance_km} km dari lokasi Anda</div>
+                                <div className="text-xs text-emerald-600">{nearestOutlet.distance_km} km dari lokasi Anda</div>
                             </div>
                         </div>
                     </div>
@@ -209,7 +212,7 @@ export default function Home({ customerName, activeOrders }: any) {
 
             {/* SECTION 3 — PESAN SEKARANG */}
             <section className="mt-6">
-                <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pesan Sekarang</h2>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Pesan Sekarang</h2>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                     <button
                         type="button"
@@ -218,7 +221,7 @@ export default function Home({ customerName, activeOrders }: any) {
                     >
                         <Store className="h-6 w-6 text-emerald-600" />
                         <div className="text-sm font-bold text-emerald-700">Ambil di Outlet</div>
-                        <div className="text-[10px] text-emerald-600">Tanpa antre</div>
+                        <div className="text-xs text-emerald-600">Tanpa antre</div>
                     </button>
                     <button
                         type="button"
@@ -227,76 +230,76 @@ export default function Home({ customerName, activeOrders }: any) {
                     >
                         <Truck className="h-6 w-6 text-blue-600" />
                         <div className="text-sm font-bold text-blue-700">Kurir Dombi</div>
-                        <div className="text-[10px] text-blue-600">Diantar ke rumah</div>
+                        <div className="text-xs text-blue-600">Diantar ke rumah</div>
                     </button>
                 </div>
             </section>
 
             {/* SECTION 4 — YANG MENARIK DI DOMBI */}
             <section className="mt-6">
-                <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Yang Menarik di Dombi</h2>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Yang Menarik di Dombi</h2>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                     <Link
                         href="/customer/products"
-                        className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-emerald-50"
+                        className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-emerald-50"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
                             <Milk className="h-5 w-5 text-emerald-600" />
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-slate-900">Produk Segar</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Susu kambing pilihan setiap hari</div>
+                            <div className="text-sm font-bold text-zinc-900">Produk Segar</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Susu kambing pilihan setiap hari</div>
                         </div>
                     </Link>
 
                     <Link
                         href="/customer/products"
-                        className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-emerald-50"
+                        className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-emerald-50"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
                             <MapPinned className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-slate-900">Outlet Terdekat</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Pesanan diproses dari outlet terbaik</div>
+                            <div className="text-sm font-bold text-zinc-900">Outlet Terdekat</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Pesanan diproses dari outlet terbaik</div>
                         </div>
                     </Link>
 
                     {isLoggedIn ? (
                         <Link
                             href="/customer/orders"
-                            className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-emerald-50"
+                            className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-emerald-50"
                         >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
                                 <Package className="h-5 w-5 text-amber-600" />
                             </div>
                             <div>
-                                <div className="text-sm font-bold text-slate-900">Riwayat Pesanan</div>
-                                <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Lihat pesanan sebelumnya</div>
+                                <div className="text-sm font-bold text-zinc-900">Riwayat Pesanan</div>
+                                <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Lihat pesanan sebelumnya</div>
                             </div>
                         </Link>
                     ) : (
                         <a
                             href="/auth/google"
-                            className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4 active:bg-emerald-50"
+                            className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-emerald-50"
                         >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
                                 <Package className="h-5 w-5 text-amber-600" />
                             </div>
                             <div>
-                                <div className="text-sm font-bold text-slate-900">Riwayat Pesanan</div>
-                                <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Login untuk melihat pesanan</div>
+                                <div className="text-sm font-bold text-zinc-900">Riwayat Pesanan</div>
+                                <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Login untuk melihat pesanan</div>
                             </div>
                         </a>
                     )}
 
-                    <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50">
                             <ShieldCheck className="h-5 w-5 text-purple-600" />
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-slate-900">Kualitas Terjamin</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-slate-500">Diproses dengan standar kualitas Dombi</div>
+                            <div className="text-sm font-bold text-zinc-900">Kualitas Terjamin</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Diproses dengan standar kualitas Dombi</div>
                         </div>
                     </div>
                 </div>
@@ -308,16 +311,16 @@ export default function Home({ customerName, activeOrders }: any) {
                     href="https://wa.me/6281111111111"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white px-4 py-4 active:bg-emerald-50"
+                    className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-white px-4 py-4 shadow-sm active:bg-emerald-50"
                 >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
                         <MessageCircle className="h-6 w-6 text-emerald-600" />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold text-slate-900">Butuh Bantuan?</div>
-                        <div className="mt-0.5 text-xs text-slate-500">Hubungi tim Dombi via WhatsApp</div>
+                        <div className="text-sm font-bold text-zinc-900">Butuh Bantuan?</div>
+                        <div className="mt-0.5 text-xs text-zinc-500">Hubungi tim Dombi via WhatsApp</div>
                     </div>
-                    <svg className="h-4 w-4 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="h-4 w-4 shrink-0 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                 </a>
@@ -325,11 +328,11 @@ export default function Home({ customerName, activeOrders }: any) {
 
             {/* SECTION 6 — TRUST */}
             <section className="mt-6 mb-4">
-                <div className="flex items-center justify-center gap-3 text-[10px] text-slate-400">
+                <div className="flex items-center justify-center gap-3 text-xs text-zinc-400">
                     <span>Sertifikasi Halal</span>
-                    <span className="h-3 w-px bg-slate-200" />
+                    <span className="h-3 w-px bg-zinc-200" />
                     <span>Izin Usaha</span>
-                    <span className="h-3 w-px bg-slate-200" />
+                    <span className="h-3 w-px bg-zinc-200" />
                     <span>Dombi 2024</span>
                 </div>
             </section>

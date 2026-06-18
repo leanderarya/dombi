@@ -59,4 +59,12 @@ class ProductFamilyController extends Controller
 
         return redirect()->back()->with('success', 'Product family updated.');
     }
+
+    public function destroy(ProductFamily $family): RedirectResponse
+    {
+        $family->delete();
+
+        return redirect()->route('owner.product-families.index')
+            ->with('success', 'Product family berhasil dihapus.');
+    }
 }

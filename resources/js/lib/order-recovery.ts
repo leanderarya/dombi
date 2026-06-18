@@ -153,13 +153,29 @@ export function useOrderRecovery() {
     };
 }
 
-export async function recoverOrders(phone: string): Promise<{
+export async function recoverOrders(
+    phone: string,
+    recoveryToken?: string,
+    orderCode?: string,
+): Promise<{
     found: boolean;
+    requires_verification?: boolean;
+    message?: string;
     customer_name?: string;
-    active_orders: any[];
-    recent_orders: any[];
+    active_orders?: any[];
+    recent_orders?: any[];
 }> {
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    const body: Record<string, string> = { phone };
+
+    if (recoveryToken) {
+body.recovery_token = recoveryToken;
+}
+
+    if (orderCode) {
+body.order_code = orderCode;
+}
 
     const response = await fetch('/customer/orders/recovery', {
         method: 'POST',
@@ -169,12 +185,12 @@ export async function recoverOrders(phone: string): Promise<{
             'X-Requested-With': 'XMLHttpRequest',
             ...(token ? { 'X-CSRF-TOKEN': token } : {}),
         },
-        body: JSON.stringify({ phone }),
+        body: JSON.stringify(body),
         credentials: 'same-origin',
     });
 
     if (!response.ok) {
-        return { found: false, active_orders: [], recent_orders: [] };
+        return { found: false };
     }
 
     return response.json();

@@ -112,7 +112,7 @@ export default function Welcome() {
                     <button
                         type="button"
                         onClick={handleGuestMode}
-                        className="flex h-12 w-full items-center justify-center text-sm font-semibold text-slate-400 active:text-slate-600"
+                        className="flex h-12 w-full items-center justify-center text-sm font-semibold text-slate-600 underline active:text-slate-800"
                     >
                         Lewati Tahap Ini
                     </button>

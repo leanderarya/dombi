@@ -1,10 +1,10 @@
 import { router, useForm } from '@inertiajs/react';
+import { Package, Search, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-react';
 import { useState, useCallback, useMemo } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
-import { Package, Search, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-react';
 
 interface Variant {
     id: number;
@@ -58,8 +58,12 @@ export default function ProductFamilyShow({ family }: Props) {
     });
 
     const filteredVariants = useMemo(() => {
-        if (!search) return family.variants;
+        if (!search) {
+return family.variants;
+}
+
         const q = search.toLowerCase();
+
         return family.variants.filter((v) =>
             v.name.toLowerCase().includes(q) ||
             (v.sku?.toLowerCase().includes(q) ?? false) ||
@@ -89,7 +93,10 @@ export default function ProductFamilyShow({ family }: Props) {
 
     const handleUpdateVariant = useCallback((e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingVariant) return;
+
+        if (!editingVariant) {
+return;
+}
 
         variantForm.put(`/owner/variants/${editingVariant.id}`, {
             onSuccess: () => {
@@ -238,6 +245,7 @@ export default function ProductFamilyShow({ family }: Props) {
                         if (editingVariant) {
                             cancelForm();
                         }
+
                         setShowVariantForm(!showVariantForm);
                     }}
                     className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-xs font-bold text-white hover:bg-emerald-700"

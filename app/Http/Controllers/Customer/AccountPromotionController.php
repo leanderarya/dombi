@@ -23,6 +23,14 @@ class AccountPromotionController extends Controller
             'password' => ['required', 'string', Password::min(8), 'confirmed'],
         ]);
 
+        $verifiedPhone = session('otp_verified_phone');
+        if (! $verifiedPhone || $verifiedPhone !== $validated['phone']) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Silakan verifikasi nomor HP terlebih dahulu.',
+            ], 422);
+        }
+
         // Check if user already exists
         $existingUser = User::where('phone', $validated['phone'])->first();
         if ($existingUser) {

@@ -43,7 +43,7 @@ export default function Dialog({ open, onClose, title, children, maxWidth = 'max
                     <h2 className="text-base font-semibold text-slate-900">{title}</h2>
                     <button
                         onClick={onClose}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 active:bg-zinc-100 active:text-zinc-600"
                     >
                         <X className="h-5 w-5" />
                     </button>

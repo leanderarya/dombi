@@ -54,4 +54,22 @@ class ProductVariantController extends Controller
 
         return redirect()->back()->with('success', 'Variant updated.');
     }
+
+    public function destroy(ProductVariant $variant): RedirectResponse
+    {
+        $familyId = $variant->product_family_id;
+        $variant->delete();
+
+        return redirect()->route('owner.product-families.show', $familyId)
+            ->with('success', 'Variant berhasil dihapus.');
+    }
+
+    public function toggle(ProductVariant $variant): RedirectResponse
+    {
+        $variant->update(['is_active' => ! $variant->is_active]);
+        $status = $variant->is_active ? 'diaktifkan' : 'dinonaktifkan';
+
+        return redirect()->back()
+            ->with('success', "Variant berhasil {$status}.");
+    }
 }

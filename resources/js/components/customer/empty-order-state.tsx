@@ -12,7 +12,7 @@ const content = {
         description: 'Pesanan yang kamu buat akan muncul di sini.',
         showCta: true,
         ctaLabel: 'Pesan Sekarang',
-        ctaHref: '/customer/checkout',
+        ctaHref: '/customer/products',
     },
     'no-active': {
         icon: CheckCircle,
@@ -36,7 +36,7 @@ export default function EmptyOrderState({ type = 'no-orders' }: Props) {
     const { icon: Icon, title, description, showCta, ctaLabel, ctaHref } = content[type];
 
     return (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-zinc-100 bg-white py-12 text-center">
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-zinc-200 bg-white py-12 text-center shadow-sm">
             <Icon className="h-10 w-10 text-slate-300" />
             <p className="mt-3 text-sm font-semibold text-slate-700">{title}</p>
             <p className="mt-1 text-xs text-slate-400">{description}</p>

@@ -6,7 +6,7 @@ const navItems = [
     { href: '/owner/orders', label: 'Pesanan', icon: Package },
     { href: '/owner/deliveries', label: 'Pengiriman', icon: Truck },
     { href: '/owner/finance', label: 'Keuangan', icon: DollarSign },
-    { href: '/owner/more', label: 'Lainnya', icon: MoreHorizontal, match: ['/owner/more', '/owner/returns', '/owner/exchanges', '/owner/outlets', '/owner/products', '/owner/pricing', '/owner/inventories', '/owner/restocks', '/owner/distributions', '/owner/analytics', '/owner/stock-movements', '/owner/reports', '/owner/settlement-payments', '/owner/payment-accounts'] },
+    { href: '/owner/more', label: 'Lainnya', icon: MoreHorizontal, match: ['/owner/more', '/owner/returns', '/owner/exchanges', '/owner/outlets', '/owner/products', '/owner/product-families', '/owner/pricing', '/owner/inventories', '/owner/restocks', '/owner/distributions', '/owner/analytics', '/owner/stock-movements', '/owner/reports', '/owner/settlement-payments', '/owner/payment-accounts'] },
 ];
 
 export default function OwnerMobileNav() {

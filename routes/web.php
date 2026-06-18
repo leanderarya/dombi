@@ -236,20 +236,20 @@ Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->g
     Route::get('/checkout/customer-lookup', [CustomerCheckoutController::class, 'lookupCustomer'])->middleware('throttle:lookup')->name('checkout.customer.lookup');
     Route::get('/checkout/login-prompt', fn () => Inertia::render('customer/checkout/login-prompt'))->name('checkout.login-prompt');
     Route::get('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtp'])->name('checkout.verify-otp');
-    Route::post('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtpSubmit'])->name('checkout.verify-otp.submit');
-    Route::post('/checkout/send-otp', [CustomerCheckoutController::class, 'sendOtp'])->name('checkout.send-otp');
+    Route::post('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtpSubmit'])->middleware('throttle:10,1')->name('checkout.verify-otp.submit');
+    Route::post('/checkout/send-otp', [CustomerCheckoutController::class, 'sendOtp'])->middleware('throttle:5,1')->name('checkout.send-otp');
     Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
     Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->middleware('throttle:checkout')->name('checkout.submit');
     Route::post('/orders', [CustomerOrderController::class, 'store'])->middleware('throttle:checkout')->name('orders.store');
     Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
     Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
-    Route::post('/register', AccountPromotionController::class)->name('register');
+    Route::post('/register', AccountPromotionController::class)->middleware('throttle:3,1')->name('register');
 
     // Phone verification for Google Sign-In users
     Route::get('/verify-phone', [SocialAuthController::class, 'showVerifyPhone'])->name('verify-phone');
-    Route::post('/verify-phone/send-otp', [SocialAuthController::class, 'sendPhoneOtp'])->name('verify-phone.send-otp');
-    Route::post('/verify-phone/verify', [SocialAuthController::class, 'verifyPhone'])->name('verify-phone.verify');
+    Route::post('/verify-phone/send-otp', [SocialAuthController::class, 'sendPhoneOtp'])->middleware('throttle:5,1')->name('verify-phone.send-otp');
+    Route::post('/verify-phone/verify', [SocialAuthController::class, 'verifyPhone'])->middleware('throttle:10,1')->name('verify-phone.verify');
 });
 
 Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
@@ -277,6 +277,7 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     Route::post('/orders/{order}/status', [OutletOrderController::class, 'updateStatus'])->name('orders.status');
     Route::post('/orders/{order}/reject', [OutletOrderController::class, 'reject'])->name('orders.reject');
     Route::post('/orders/{order}/assign-courier', [OutletOrderController::class, 'assignCourier'])->name('orders.assign-courier');
+    Route::post('/orders/{order}/complete-pickup', [OutletOrderController::class, 'completePickup'])->name('orders.complete-pickup');
     Route::get('/restocks', [OutletRestockController::class, 'index'])->name('restocks.index');
     Route::get('/restocks/create', [OutletRestockController::class, 'create'])->name('restocks.create');
     Route::post('/restocks', [OutletRestockController::class, 'store'])->name('restocks.store');

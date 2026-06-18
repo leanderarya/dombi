@@ -21,8 +21,8 @@ export default function CustomerBottomNav() {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold ${
-                                active ? 'text-emerald-700' : 'text-slate-400'
+                            className={`flex flex-col items-center justify-center gap-0.5 text-xs font-semibold ${
+                                active ? 'text-emerald-700' : 'text-zinc-400'
                             }`}
                         >
                             <Icon active={active} />

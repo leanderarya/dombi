@@ -13,7 +13,8 @@ class GuestOrderRecoveryService
     private const MAX_DAYS = 30;
 
     /**
-     * Recover orders using phone + recovery_token OR phone + order_code OR phone only.
+     * Recover orders using phone + recovery_token OR phone + order_code.
+     * Phone-only lookup returns minimal response requiring second-factor verification.
      */
     public function recover(string $phone, ?string $recoveryToken = null, ?string $orderCode = null): array
     {
@@ -31,7 +32,16 @@ class GuestOrderRecoveryService
             return $this->notFoundResponse();
         }
 
-        // If recovery_token or order_code provided, verify it matches this customer
+        // Phone-only: do NOT expose any order data — require second factor
+        if (! $recoveryToken && ! $orderCode) {
+            return [
+                'found' => true,
+                'requires_verification' => true,
+                'message' => 'Masukkan kode pesanan atau recovery token untuk melihat data pesanan.',
+            ];
+        }
+
+        // Verify second factor matches an order for this customer
         if ($recoveryToken) {
             $order = Order::query()
                 ->where('customer_id', $customer->id)
@@ -41,7 +51,7 @@ class GuestOrderRecoveryService
             if (! $order) {
                 return $this->notFoundResponse();
             }
-        } elseif ($orderCode) {
+        } else {
             $order = Order::query()
                 ->where('customer_id', $customer->id)
                 ->where('order_code', strtoupper($orderCode))
@@ -51,8 +61,6 @@ class GuestOrderRecoveryService
                 return $this->notFoundResponse();
             }
         }
-
-        // Phone-only lookup is allowed — return all orders for this customer
 
         $activeOrders = Order::query()
             ->where('customer_id', $customer->id)

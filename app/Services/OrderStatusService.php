@@ -204,6 +204,50 @@ class OrderStatusService
         });
     }
 
+    public function completePickup(Order $order, User $user): Order
+    {
+        if ($order->fulfillment_type !== 'pickup') {
+            throw ValidationException::withMessages([
+                'fulfillment_type' => 'Hanya pesanan pickup yang bisa diselesaikan dengan cara ini.',
+            ]);
+        }
+
+        if ($order->status !== Order::STATUS_READY_FOR_PICKUP) {
+            throw ValidationException::withMessages([
+                'status' => 'Pesanan harus dalam status siap diambil.',
+            ]);
+        }
+
+        return DB::transaction(function () use ($order, $user): Order {
+            $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
+            $fromStatus = $order->status;
+
+            $order->update([
+                'status' => Order::STATUS_COMPLETED,
+                'completed_at' => now(),
+            ]);
+
+            $order->statusHistories()->create([
+                'from_status' => $fromStatus,
+                'to_status' => Order::STATUS_COMPLETED,
+                'notes' => 'Pesanan diambil customer',
+                'changed_by' => $user->id,
+                'changed_by_type' => $user->role ?? 'outlet',
+                'created_at' => now(),
+            ]);
+
+            $this->settlementService->recordSale($order->fresh('items'));
+            if ($order->outlet_id) {
+                $outlet = Outlet::find($order->outlet_id);
+                if ($outlet) {
+                    $this->settlementGeneratorService->generateForOutlet($outlet, now());
+                }
+            }
+
+            return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
+        });
+    }
+
     public function expireOrder(Order $order): Order
     {
         return DB::transaction(function () use ($order): Order {

@@ -40,11 +40,12 @@ class PhoneVerificationService
         $request->session()->put(self::SESSION_KEY_ATTEMPTS, 0);
         $request->session()->forget(self::SESSION_KEY_VERIFIED);
 
-        // Log OTP for development — replace with SMS gateway in production
-        logger()->info('Phone verification OTP generated', [
-            'phone' => $phone,
-            'code' => $code,
-        ]);
+        if (app()->isLocal()) {
+            logger()->info('Phone verification OTP generated', [
+                'phone' => $phone,
+                'code' => $code,
+            ]);
+        }
 
         return $code;
     }

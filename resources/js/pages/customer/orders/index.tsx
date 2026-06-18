@@ -7,6 +7,7 @@ import OrderFilterChips from '@/components/customer/order-filter-chips';
 import OrderHistoryCard from '@/components/customer/order-history-card';
 import RecoverySheet from '@/components/customer/recovery-sheet';
 import Pagination from '@/components/pagination';
+import { SkeletonList } from '@/components/ui/skeleton';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { maskPhone, recoverOrders, useOrderRecovery } from '@/lib/order-recovery';
 
@@ -23,6 +24,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
     const { hasRecovery, phone, maskedPhone, saveRecovery, clearRecovery } = useOrderRecovery();
     const [filter, setFilter] = useState('all');
     const [recoverySheetOpen, setRecoverySheetOpen] = useState(false);
+    const [recoveryLoading, setRecoveryLoading] = useState(false);
     const [recoveredActive, setRecoveredActive] = useState<any[] | null>(null);
     const [recoveredHistory, setRecoveredHistory] = useState<any[] | null>(null);
 
@@ -138,12 +140,19 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
                 </>
             )}
 
+            {/* STATE: Loading recovery */}
+            {recoveryLoading && (
+                <div className="px-4">
+                    <SkeletonList count={3} />
+                </div>
+            )}
+
             {/* STATE: Empty — no data, no recovery candidate */}
             {viewState === 'empty' && (
                 <div className="mt-8 flex flex-col items-center px-4 text-center">
                     <EmptyOrderState type="no-orders" />
 
-                    <div className="mt-8 w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5">
+                    <div className="mt-8 w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
                         <p className="text-sm font-semibold text-slate-900">Tidak menemukan pesanan?</p>
                         <p className="mt-1 text-xs text-slate-500">Masukkan nomor WhatsApp yang digunakan saat memesan.</p>
                         <button
@@ -167,6 +176,7 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
             <RecoverySheet
                 open={recoverySheetOpen}
                 onClose={() => setRecoverySheetOpen(false)}
+                onLoadingChange={setRecoveryLoading}
                 onRecovered={(result) => {
                     setRecoveredActive(result.active_orders);
                     setRecoveredHistory(result.recent_orders);

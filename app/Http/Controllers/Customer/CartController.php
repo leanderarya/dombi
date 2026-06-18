@@ -18,7 +18,7 @@ class CartController extends Controller
     {
         $validated = $request->validate([
             'product_variant_id' => ['required', 'integer', Rule::exists('product_variants', 'id')->where('is_active', true)],
-            'quantity' => ['required', 'integer', 'min:1'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:999'],
         ]);
 
         $variantId = (int) $validated['product_variant_id'];

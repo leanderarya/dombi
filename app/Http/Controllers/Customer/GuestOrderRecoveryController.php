@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Services\GuestOrderRecoveryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,20 +24,25 @@ class GuestOrderRecoveryController extends Controller
             $validated['order_code'] ?? null,
         );
 
-        // Store recovery session for guest reorder authorization
-        // Only when a second factor (token or order code) was verified — not phone-only lookups
-        $hasVerification = ! empty($validated['recovery_token']) || ! empty($validated['order_code']);
-        if ($hasVerification && $result['found'] && ! auth()->check()) {
-            $orderIds = collect($result['active_orders'])->pluck('id')
-                ->merge(collect($result['recent_orders'])->pluck('id'))
-                ->filter()
-                ->values()
-                ->all();
+        // Store recovery session only when second factor was verified
+        if (! empty($result['customer_id']) && empty($result['requires_verification']) && ! auth()->check()) {
+            $verifiedOrderIds = [];
+            if ($validated['recovery_token'] ?? null) {
+                $order = Order::where('recovery_token', $validated['recovery_token'])->first();
+                if ($order) {
+                    $verifiedOrderIds[] = $order->id;
+                }
+            } elseif ($validated['order_code'] ?? null) {
+                $order = Order::where('order_code', $validated['order_code'])->first();
+                if ($order) {
+                    $verifiedOrderIds[] = $order->id;
+                }
+            }
 
-            if (! empty($orderIds) && ! empty($result['customer_id'])) {
+            if (! empty($verifiedOrderIds)) {
                 session()->put('guest_recovery', [
                     'customer_id' => $result['customer_id'],
-                    'order_ids' => $orderIds,
+                    'order_ids' => $verifiedOrderIds,
                     'recovery_verified_at' => now()->toISOString(),
                 ]);
             }

@@ -509,7 +509,6 @@ class CheckoutController extends Controller
             'customer' => $customer ? [
                 'name' => $customer->name,
                 'phone_number' => $phone,
-                'previous_address' => $customer->addresses->first(),
             ] : null,
         ]);
     }

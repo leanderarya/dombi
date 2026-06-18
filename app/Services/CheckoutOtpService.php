@@ -40,12 +40,13 @@ class CheckoutOtpService
         $request->session()->put(self::SESSION_KEY_OTP_ATTEMPTS, 0);
         $request->session()->forget(self::SESSION_KEY_OTP_VERIFIED);
 
-        // Log OTP for development — replace with SMS gateway in production
-        logger()->info('Checkout OTP generated', [
-            'phone' => $phone,
-            'code' => $code,
-            'expires_at' => $request->session()->get(self::SESSION_KEY_OTP_EXPIRES),
-        ]);
+        if (app()->isLocal()) {
+            logger()->info('Checkout OTP generated', [
+                'phone' => $phone,
+                'code' => $code,
+                'expires_at' => $request->session()->get(self::SESSION_KEY_OTP_EXPIRES),
+            ]);
+        }
 
         return $code;
     }

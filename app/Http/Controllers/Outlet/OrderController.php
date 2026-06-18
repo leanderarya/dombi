@@ -63,6 +63,19 @@ class OrderController extends Controller
         return redirect()->route('outlet.orders.show', $order)->with('success', 'Pesanan berhasil ditolak.');
     }
 
+    public function completePickup(Request $request, Order $order, OrderStatusService $statusService): RedirectResponse
+    {
+        $user = $request->user();
+        $outlet = $user->outlet;
+
+        abort_unless($outlet && $order->outlet_id === $outlet->id, 403);
+
+        $statusService->completePickup($order, $user);
+
+        return redirect()->route('outlet.orders.show', $order)
+            ->with('success', 'Pesanan berhasil diserahkan ke customer.');
+    }
+
     public function assignCourier(AssignCourierRequest $request, Order $order, DeliveryService $deliveryService): RedirectResponse
     {
         $courier = User::findOrFail($request->integer('courier_id'));

@@ -36,7 +36,7 @@ class StoreOrderRequest extends FormRequest
             'delivery_notes' => ['nullable', 'string', 'max:1000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('is_active', true)],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
             'notes' => ['nullable', 'string'],
         ];
     }

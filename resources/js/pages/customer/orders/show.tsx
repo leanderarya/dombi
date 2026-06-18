@@ -95,7 +95,7 @@ return;
 
                 {/* Tracking Code */}
                 {order.recovery_token && (
-                    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
                         <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kode Pelacakan</div>
                         <div className="mt-2 flex items-center gap-3">
                             <div className="flex-1">
@@ -168,7 +168,7 @@ return;
 
                 {/* Expired Reason */}
                 {isExpired && (
-                    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="mt-4 rounded-2xl border border-zinc-200 bg-slate-50 p-4 shadow-sm">
                         <div className="flex items-center gap-2">
                             <XCircle className="h-4 w-4 text-slate-500" />
                             <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Pesanan Kadaluarsa</div>
@@ -179,7 +179,7 @@ return;
 
                 {/* Courier Card */}
                 {order.delivery?.courier && (
-                    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
                         <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kurir</div>
                         <div className="mt-2 flex items-center gap-3">
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">
@@ -200,7 +200,7 @@ return;
 
                 {/* Delivery Address */}
                 {order.fulfillment_type !== 'pickup' && (
-                    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                    <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
                         <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Alamat Pengiriman</div>
                         <div className="mt-2 text-sm font-medium text-slate-900">{order.customer_name}</div>
                         <div className="mt-0.5 text-xs text-slate-500">{order.customer_phone}</div>

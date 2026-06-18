@@ -55,7 +55,7 @@ class StockMovement extends Model
 
     public function getReferenceDescriptionAttribute(): string
     {
-        if (!$this->reference_type || !$this->reference_id) {
+        if (! $this->reference_type || ! $this->reference_id) {
             return '-';
         }
 
