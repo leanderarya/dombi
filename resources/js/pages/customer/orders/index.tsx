@@ -153,12 +153,12 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
                     <EmptyOrderState type="no-orders" />
 
                     <div className="mt-8 w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-                        <p className="text-sm font-semibold text-slate-900">Tidak menemukan pesanan?</p>
-                        <p className="mt-1 text-xs text-slate-500">Masukkan nomor WhatsApp yang digunakan saat memesan.</p>
+                        <p className="text-sm font-semibold text-slate-900">Pernah pesan sebelumnya?</p>
+                        <p className="mt-1 text-xs text-slate-500">Cari pesananmu menggunakan nomor WhatsApp yang dipakai saat memesan.</p>
                         <button
                             type="button"
                             onClick={() => setRecoverySheetOpen(true)}
-                            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-bold text-white active:bg-slate-800"
+                            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 text-sm font-bold text-white active:bg-emerald-800"
                         >
                             <Search className="h-4 w-4" />
                             Cari Pesanan Saya
