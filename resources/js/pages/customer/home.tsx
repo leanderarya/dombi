@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { HelpCircle, MapPin, MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Truck, User } from 'lucide-react';
+import { MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Truck, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
@@ -32,8 +32,8 @@ export default function Home({ customerName, activeOrders }: any) {
     const { auth } = usePage<any>().props;
     const isLoggedIn = !!auth?.user;
     const hasLinkedCustomer = !!auth?.user?.customer;
-    const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
     const [slideIndex, setSlideIndex] = useState(0);
+    const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
 
     // Auto-rotate hero slides
     useEffect(() => {
@@ -44,27 +44,19 @@ export default function Home({ customerName, activeOrders }: any) {
         return () => clearInterval(timer);
     }, []);
 
+    const activeOrder = activeOrders?.[0] ?? null;
+
     const handlePickup = useCallback(() => {
-        router.post('/customer/fulfillment-draft', { fulfillment_type: 'pickup' });
+        router.get('/customer/checkout');
     }, []);
 
     const handleDelivery = useCallback(() => {
-        if (!isLoggedIn) {
+        if (!isLoggedIn || !hasLinkedCustomer) {
             setDeliverySheetOpen(true);
-
-            return;
+        } else {
+            router.get('/customer/checkout');
         }
-
-        if (!hasLinkedCustomer) {
-            router.visit('/customer/verify-phone');
-
-            return;
-        }
-
-        router.post('/customer/fulfillment-draft', { fulfillment_type: 'delivery_dombi' });
     }, [isLoggedIn, hasLinkedCustomer]);
-
-    const activeOrder = activeOrders?.[0] ?? null;
 
     return (
         <CustomerMobileLayout>
@@ -171,31 +163,20 @@ export default function Home({ customerName, activeOrders }: any) {
                     <button
                         type="button"
                         onClick={handlePickup}
-                        className="group flex flex-col items-start rounded-xl border-2 border-emerald-200 bg-white p-5 text-left transition-all active:scale-[0.98] active:border-emerald-400 active:bg-emerald-50/50"
+                        className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 active:bg-emerald-100"
                     >
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 transition-colors group-active:bg-emerald-100">
-                            <Store className="h-6 w-6 text-emerald-600" />
-                        </div>
-                        <div className="mt-4 text-base font-bold text-slate-900">Pickup</div>
-                        <div className="mt-1 text-xs leading-relaxed text-slate-500">
-                            Ambil langsung di outlet terdekat
-                        </div>
-                        <div className="mt-4 text-xs font-bold text-emerald-700">Pilih Pickup</div>
+                        <Store className="h-6 w-6 text-emerald-600" />
+                        <div className="text-sm font-bold text-emerald-700">Ambil di Outlet</div>
+                        <div className="text-[10px] text-emerald-600">Tanpa antre</div>
                     </button>
-
                     <button
                         type="button"
                         onClick={handleDelivery}
-                        className="group flex flex-col items-start rounded-xl border-2 border-blue-200 bg-white p-5 text-left transition-all active:scale-[0.98] active:border-blue-400 active:bg-blue-50/50"
+                        className="flex flex-col items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 p-4 active:bg-blue-100"
                     >
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 transition-colors group-active:bg-blue-100">
-                            <Truck className="h-6 w-6 text-blue-600" />
-                        </div>
-                        <div className="mt-4 text-base font-bold text-slate-900">Delivery</div>
-                        <div className="mt-1 text-xs leading-relaxed text-slate-500">
-                            Dikirim ke alamat Anda
-                        </div>
-                        <div className="mt-4 text-xs font-bold text-blue-700">Pilih Delivery</div>
+                        <Truck className="h-6 w-6 text-blue-600" />
+                        <div className="text-sm font-bold text-blue-700">Kurir Dombi</div>
+                        <div className="text-[10px] text-blue-600">Diantar ke rumah</div>
                     </button>
                 </div>
             </section>
@@ -302,7 +283,11 @@ export default function Home({ customerName, activeOrders }: any) {
                 </div>
             </section>
 
-            <DeliveryLoginSheet open={deliverySheetOpen} onClose={() => setDeliverySheetOpen(false)} />
+            {/* Delivery Login Sheet */}
+            <DeliveryLoginSheet
+                open={deliverySheetOpen}
+                onClose={() => setDeliverySheetOpen(false)}
+            />
         </CustomerMobileLayout>
     );
 }
