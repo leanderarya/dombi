@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
 import { memo, useState } from 'react';
+import ProductImage from '@/components/customer/product-image';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
@@ -89,13 +90,13 @@ return;
             className="flex items-center gap-3.5 bg-white py-4 active:bg-zinc-50"
         >
             {/* Image */}
-            <div className="relative flex h-[88px] w-[88px] shrink-0 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-emerald-50 to-zinc-50">
-                <span className="text-4xl">&#129371;</span>
+            <div className="relative shrink-0">
+                <ProductImage name={variant.name} size="md" />
                 {/* Favorite button */}
                 <button
                     type="button"
                     onClick={handleFavorite}
-                    className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm"
+                    className="absolute right-1.5 top-1.5 flex h-11 w-11 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm"
                     aria-label={isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'}
                 >
                     <Heart
@@ -106,23 +107,23 @@ return;
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-                <div className="text-[15px] font-semibold leading-tight text-slate-900">
+                <div className="text-sm font-medium text-zinc-900">
                     {displayLabel}
                 </div>
-                <div className="mt-1 text-[13px] text-zinc-500 leading-snug">
-                    {familyDescription || (familyBrand ? `${familyBrand} ${variant.name}` : variant.name)}
+                <div className="mt-0.5 text-base font-semibold text-zinc-900 tabular-nums">
+                    {formatCurrency(displayPrice)}
                 </div>
-                <div className="mt-1.5 flex items-center gap-2">
-                    <span className="text-[15px] font-bold tabular-nums text-emerald-700">
-                        {formatCurrency(displayPrice)}
-                    </span>
-                </div>
+                {variant.available_stock !== undefined && (
+                    <div className="mt-0.5 text-xs text-zinc-500">
+                        Stok: {variant.available_stock}
+                    </div>
+                )}
             </div>
 
             {/* Quick Add / Toast */}
             <div className="shrink-0">
                 {toast ? (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
                         <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
@@ -132,7 +133,7 @@ return;
                         type="button"
                         onClick={handleQuickAdd}
                         disabled={adding || isOutOfStock}
-                        className={`flex h-9 w-9 items-center justify-center rounded-full transition-all active:scale-90 disabled:opacity-40 ${
+                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all active:scale-90 disabled:opacity-40 ${
                             isOutOfStock
                                 ? 'bg-zinc-100 text-zinc-400'
                                 : 'bg-emerald-600 text-white active:bg-emerald-700'
