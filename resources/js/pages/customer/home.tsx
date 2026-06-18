@@ -3,6 +3,7 @@ import { MapPin, MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Tr
 import { useCallback, useEffect, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { useCustomerLocation, syncCustomerLocationDraft } from '@/lib/customer-location';
 
 const HERO_SLIDES = [
     {
@@ -37,6 +38,7 @@ export default function Home({ customerName, activeOrders }: any) {
     const [nearestOutlet, setNearestOutlet] = useState<{ name: string; distance_km: number } | null>(null);
     const [pickupLoading, setPickupLoading] = useState(false);
     const [pickupOutletName, setPickupOutletName] = useState<string | null>(null);
+    const { saveLocation } = useCustomerLocation();
 
     // Auto-rotate hero slides
     useEffect(() => {
@@ -55,6 +57,21 @@ export default function Home({ customerName, activeOrders }: any) {
             async (position) => {
                 try {
                     const { latitude, longitude } = position.coords;
+
+                    // Save location to localStorage
+                    saveLocation({
+                        latitude,
+                        longitude,
+                        timestamp: Date.now(),
+                    });
+
+                    // Sync location to server session for checkout
+                    syncCustomerLocationDraft({
+                        latitude,
+                        longitude,
+                        timestamp: Date.now(),
+                    });
+
                     const response = await fetch(`/customer/checkout/pickup-outlets?latitude=${latitude}&longitude=${longitude}`);
                     const data = await response.json();
 
@@ -73,7 +90,7 @@ export default function Home({ customerName, activeOrders }: any) {
             },
             { enableHighAccuracy: false, timeout: 5000 }
         );
-    }, []);
+    }, [saveLocation]);
 
     const activeOrder = activeOrders?.[0] ?? null;
 
@@ -81,10 +98,19 @@ export default function Home({ customerName, activeOrders }: any) {
         setPickupLoading(true);
         setPickupOutletName(null);
 
+        // Use cached nearest outlet if available
+        if (nearestOutlet?.name) {
+            setPickupOutletName(nearestOutlet.name);
+            setTimeout(() => {
+                router.get('/customer/products');
+            }, 3000);
+            return;
+        }
+
+        // Otherwise fetch from API
         let outletName: string | null = null;
 
         try {
-            // Always try to fetch nearest outlet
             const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
                 navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
             });
@@ -92,14 +118,11 @@ export default function Home({ customerName, activeOrders }: any) {
             const data = await response.json();
             outletName = data.recommended?.name ?? null;
         } catch {
-            // Geolocation failed - use cached or fallback
-            outletName = nearestOutlet?.name ?? null;
+            // Geolocation failed
         }
 
-        // Show outlet name or fallback
         setPickupOutletName(outletName ?? 'Outlet Dombi');
 
-        // Navigate after 3 seconds
         setTimeout(() => {
             router.get('/customer/products');
         }, 3000);
