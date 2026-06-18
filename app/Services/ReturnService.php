@@ -16,9 +16,9 @@ use Illuminate\Validation\ValidationException;
 
 class ReturnService
 {
-    public function createRequest(Outlet $outlet, User $requester, array $data): ReturnRequest
+    public function createRequest(Outlet $outlet, User $requester, array $data, array $evidenceImages = []): ReturnRequest
     {
-        return DB::transaction(function () use ($outlet, $requester, $data) {
+        return DB::transaction(function () use ($outlet, $requester, $data, $evidenceImages) {
             $totalValue = 0;
             $items = [];
             $this->assertOutletHasAvailableStock($outlet, $data['items']);
@@ -36,10 +36,16 @@ class ReturnService
                 ];
             }
 
+            $evidencePaths = [];
+            foreach ($evidenceImages as $image) {
+                $evidencePaths[] = $image->store('return-evidence', 'public');
+            }
+
             $return = ReturnRequest::create([
                 'outlet_id' => $outlet->id,
                 'requested_by' => $requester->id,
                 'reason' => $data['reason'],
+                'evidence_images' => $evidencePaths,
                 'notes' => $data['notes'] ?? null,
                 'status' => ReturnRequest::STATUS_SUBMITTED,
                 'total_value' => $totalValue,
@@ -54,6 +60,24 @@ class ReturnService
             app(NotificationService::class)->notifyReturnRequestCreated($return->fresh(['outlet', 'items.variant.family']));
 
             return $return->load(['items.variant', 'outlet', 'requester']);
+        });
+    }
+
+    public function cancelRequest(ReturnRequest $return, User $user, string $reason): ReturnRequest
+    {
+        return DB::transaction(function () use ($return, $user, $reason) {
+            if (! $return->isSubmitted()) {
+                throw ValidationException::withMessages([
+                    'status' => ['Only submitted requests can be cancelled.'],
+                ]);
+            }
+
+            $from = $return->status;
+            $return->update(['status' => ReturnRequest::STATUS_CANCELLED]);
+
+            $this->recordHistory($return, $from, ReturnRequest::STATUS_CANCELLED, $user->id, $reason);
+
+            return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
         });
     }
 
@@ -75,6 +99,8 @@ class ReturnService
             ]);
 
             $this->recordHistory($return, $from, ReturnRequest::STATUS_APPROVED, $owner->id, $notes);
+
+            app(NotificationService::class)->notifyReturnApproved($return);
 
             return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
         });
@@ -98,6 +124,8 @@ class ReturnService
             ]);
 
             $this->recordHistory($return, $from, ReturnRequest::STATUS_REJECTED, $owner->id, $reason);
+
+            app(NotificationService::class)->notifyReturnRejected($return, $reason);
 
             return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
         });
@@ -127,6 +155,8 @@ class ReturnService
 
             $this->recordHistory($return, $from, ReturnRequest::STATUS_RECEIVED_AT_CENTER, $owner->id, $notes);
 
+            app(NotificationService::class)->notifyReturnReceived($return);
+
             return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
         });
     }
@@ -150,6 +180,8 @@ class ReturnService
             ]);
 
             $this->recordHistory($return, $from, ReturnRequest::STATUS_COMPLETED, $owner->id, $notes);
+
+            app(NotificationService::class)->notifyReturnCompleted($return);
 
             return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
         });

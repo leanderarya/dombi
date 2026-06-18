@@ -6,7 +6,6 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletPayable;
-use App\Models\SettlementPeriod;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -148,72 +147,5 @@ class SettlementService
             ->sum('amount');
 
         return (float) $sales - (float) $settlements + (float) $adjustments;
-    }
-
-    /**
-     * Record a settlement payment from outlet to center.
-     */
-    public function recordSettlement(int $outletId, float $amount, ?string $notes = null, ?int $createdBy = null): OutletPayable
-    {
-        return OutletPayable::create([
-            'outlet_id' => $outletId,
-            'type' => 'settlement',
-            'amount' => -$amount, // Negative because it reduces payable
-            'center_share' => 0,
-            'outlet_margin' => 0,
-            'notes' => $notes ?? 'Settlement payment',
-            'created_by' => $createdBy,
-        ]);
-    }
-
-    /**
-     * Recalculate settlement period aggregates.
-     */
-    public function recalculatePeriod(int $outletId, string $periodType, Carbon $periodStart): SettlementPeriod
-    {
-        $periodEnd = match ($periodType) {
-            'daily' => $periodStart->copy()->endOfDay(),
-            'weekly' => $periodStart->copy()->endOfWeek(),
-            'monthly' => $periodStart->copy()->endOfMonth(),
-            default => $periodStart->copy()->endOfDay(),
-        };
-
-        $payables = OutletPayable::query()
-            ->where('outlet_id', $outletId)
-            ->where('type', 'sale')
-            ->whereBetween('created_at', [$periodStart, $periodEnd])
-            ->get();
-
-        $orderIds = $payables->pluck('order_id')->filter();
-        $unitsSold = OrderItem::whereIn('order_id', $orderIds)->sum('quantity');
-
-        $grossRevenue = $payables->sum('amount');
-        $centerShare = $payables->sum('center_share');
-        $outletMargin = $payables->sum('outlet_margin');
-
-        $settledAmount = OutletPayable::query()
-            ->where('outlet_id', $outletId)
-            ->where('type', 'settlement')
-            ->whereBetween('created_at', [$periodStart, $periodEnd])
-            ->sum('amount');
-
-        return SettlementPeriod::updateOrCreate(
-            [
-                'outlet_id' => $outletId,
-                'period_type' => $periodType,
-                'period_start' => $periodStart->toDateString(),
-            ],
-            [
-                'period_end' => $periodEnd->toDateString(),
-                'orders_count' => $payables->count(),
-                'units_sold' => $unitsSold,
-                'gross_revenue' => $grossRevenue,
-                'center_share' => $centerShare,
-                'outlet_margin' => $outletMargin,
-                'settled_amount' => abs((float) $settledAmount),
-                'outstanding_amount' => (float) $centerShare - abs((float) $settledAmount),
-                'calculated_at' => now(),
-            ]
-        );
     }
 }

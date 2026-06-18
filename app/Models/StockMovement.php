@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class StockMovement extends Model
 {
@@ -45,5 +46,21 @@ class StockMovement extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function reference(): MorphTo
+    {
+        return $this->morphTo();
+    }
+
+    public function getReferenceDescriptionAttribute(): string
+    {
+        if (!$this->reference_type || !$this->reference_id) {
+            return '-';
+        }
+
+        $class = class_basename($this->reference_type);
+
+        return "{$class} #{$this->reference_id}";
     }
 }

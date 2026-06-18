@@ -52,7 +52,9 @@ export default function OutletPricing({ outlet, prices, otherOutlets }: Props) {
 
     // Show warning flash as toast
     useEffect(() => {
-        if (flash?.warning) toast.warning(flash.warning);
+        if (flash?.warning) {
+toast.warning(flash.warning);
+}
     }, [flash?.warning]);
     const [saving, setSaving] = useState(false);
     const [bulkOpen, setBulkOpen] = useState(false);

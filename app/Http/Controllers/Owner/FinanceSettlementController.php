@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinanceSettlementController extends Controller
 {
@@ -299,5 +300,43 @@ class FinanceSettlementController extends Controller
         }
 
         return back()->with('success', 'Tagihan berhasil dikirim.');
+    }
+
+    /**
+     * Export settlement data as CSV.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $settlements = Settlement::with('outlet:id,name')
+            ->orderBy('period_date', 'desc')
+            ->get();
+
+        $filename = 'settlements-'.now()->format('Y-m-d').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ];
+
+        $callback = function () use ($settlements) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['Outlet', 'Periode', 'Jatuh Tempo', 'Total Tagihan', 'Sudah Dibayar', 'Sisa', 'Status']);
+
+            foreach ($settlements as $s) {
+                fputcsv($file, [
+                    $s->outlet->name,
+                    $s->period_date->format('d/m/Y'),
+                    $s->due_date->format('d/m/Y'),
+                    $s->amount_due,
+                    $s->paid_amount,
+                    $s->outstanding_amount,
+                    $s->status,
+                ]);
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

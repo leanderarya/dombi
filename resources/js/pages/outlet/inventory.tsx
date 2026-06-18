@@ -1,12 +1,13 @@
-import { Head, Link } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle, Package } from 'lucide-react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { AlertTriangle, CheckCircle, ClipboardCheck, Package } from 'lucide-react';
+import { useState } from 'react';
+import BottomSheet from '@/components/ui/bottom-sheet';
 import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
 export default function OutletInventory({ outlet, inventories }: any) {
-    // Group by family
     const familyGroups = new Map<number, { family: any; items: any[] }>();
     const noFamilyItems: any[] = [];
 
@@ -27,7 +28,6 @@ export default function OutletInventory({ outlet, inventories }: any) {
         }
     }
 
-    // Categorize families by worst health status
     const familyHealth = new Map<number, 'danger' | 'warning' | 'success'>();
 
     for (const [familyId, group] of familyGroups) {
@@ -37,11 +37,11 @@ export default function OutletInventory({ outlet, inventories }: any) {
             const available = item.current_stock - item.reserved_stock;
 
             if (available <= 0) {
- worst = 'danger'; break; 
+ worst = 'danger'; break;
 }
 
             if (available <= item.minimum_stock) {
- worst = 'warning'; 
+ worst = 'warning';
 }
         }
 
@@ -174,22 +174,105 @@ function SummaryCard({ label, value, variant }: { label: string; value: number; 
 }
 
 function InventoryRow({ item, variant }: { item: any; variant: 'danger' | 'warning' | 'success' }) {
+    const [showOpname, setShowOpname] = useState(false);
     const available = item.current_stock - item.reserved_stock;
     const displayName = item.variant?.name ?? item.product?.name ?? '-';
 
     return (
-        <div className="flex items-center justify-between rounded-lg border border-zinc-100 bg-white p-3">
-            <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-900">{displayName}</span>
-                    <StatusBadge variant={variant} size="sm">
-                        {variant === 'danger' ? 'Kritis' : variant === 'warning' ? 'Rendah' : 'Sehat'}
-                    </StatusBadge>
+        <>
+            <div className="flex items-center justify-between rounded-lg border border-zinc-100 bg-white p-3">
+                <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-slate-900">{displayName}</span>
+                        <StatusBadge variant={variant} size="sm">
+                            {variant === 'danger' ? 'Kritis' : variant === 'warning' ? 'Rendah' : 'Sehat'}
+                        </StatusBadge>
+                    </div>
+                    <div className="mt-0.5 text-xs text-slate-500">
+                        Tersedia: {available} · Min: {item.minimum_stock}
+                    </div>
                 </div>
-                <div className="mt-0.5 text-xs text-slate-500">
-                    Tersedia: {available} · Min: {item.minimum_stock}
-                </div>
+                <button
+                    type="button"
+                    onClick={() => setShowOpname(true)}
+                    className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 active:bg-slate-100 active:text-emerald-600"
+                    title="Stock Opname"
+                >
+                    <ClipboardCheck className="h-4 w-4" />
+                </button>
             </div>
-        </div>
+
+            <OpnameSheet
+                open={showOpname}
+                onClose={() => setShowOpname(false)}
+                item={item}
+                displayName={displayName}
+            />
+        </>
+    );
+}
+
+function OpnameSheet({ open, onClose, item, displayName }: { open: boolean; onClose: () => void; item: any; displayName: string }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        product_variant_id: item.product_variant_id ?? item.variant_id ?? '',
+        actual_count: '',
+        notes: '',
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        post('/outlet/inventory/opname', {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset();
+                onClose();
+            },
+        });
+    };
+
+    return (
+        <BottomSheet open={open} onClose={onClose} title="Stock Opname">
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                    <span className="text-xs text-slate-500">Produk</span>
+                    <p className="text-sm font-medium text-slate-900">{displayName}</p>
+                    <p className="text-xs text-slate-500">Stok sistem: {item.current_stock}</p>
+                </div>
+
+                <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">Jumlah Aktual</label>
+                    <input
+                        type="number"
+                        min="0"
+                        value={data.actual_count}
+                        onChange={(e) => setData('actual_count', e.target.value)}
+                        className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        placeholder="Masukkan jumlah hasil hitung"
+                        autoFocus
+                    />
+                    {errors.actual_count && <p className="mt-1 text-xs text-red-500">{errors.actual_count}</p>}
+                </div>
+
+                <div>
+                    <label className="mb-1 block text-xs font-medium text-slate-700">Catatan (opsional)</label>
+                    <textarea
+                        value={data.notes}
+                        onChange={(e) => setData('notes', e.target.value)}
+                        rows={2}
+                        className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                        placeholder="Alasan penyesuaian stok"
+                    />
+                    {errors.notes && <p className="mt-1 text-xs text-red-500">{errors.notes}</p>}
+                </div>
+
+                <button
+                    type="submit"
+                    disabled={processing}
+                    className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-semibold text-white active:bg-emerald-800 disabled:opacity-50"
+                >
+                    {processing ? 'Menyimpan...' : 'Simpan Opname'}
+                </button>
+            </form>
+        </BottomSheet>
     );
 }

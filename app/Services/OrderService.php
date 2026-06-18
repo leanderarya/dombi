@@ -23,6 +23,7 @@ class OrderService
         private readonly OutletAssignmentService $outletAssignmentService,
         private readonly InventoryService $inventoryService,
         private readonly PricingService $pricingService,
+        private readonly NotificationService $notificationService,
     ) {}
 
     public function createCustomerOrder(Customer $customer, array $payload): Order
@@ -126,6 +127,8 @@ class OrderService
             'changed_by_type' => 'customer',
             'created_at' => now(),
         ]);
+
+        $this->notificationService->notifyOrderCreated($order);
 
         return $order->load(['outlet', 'items.product']);
     }

@@ -8,6 +8,7 @@ use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\RestockRequest;
+use App\Models\Settlement;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -116,5 +117,82 @@ class ReportController extends Controller
         }, $filename, [
             'Content-Type' => 'text/csv',
         ]);
+    }
+
+    public function exportOrders(Request $request): StreamedResponse
+    {
+        $period = $request->string('period', 'month')->toString();
+        [$from, $to] = $this->resolvePeriod($period);
+
+        $orders = Order::where('status', 'completed')
+            ->whereBetween('created_at', [$from, $to])
+            ->with(['outlet:id,name', 'items'])
+            ->latest()
+            ->get();
+
+        $filename = 'orders-'.$from->format('Y-m-d').'-'.$to->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($orders): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Tanggal', 'Order Code', 'Outlet', 'Customer', 'Total', 'Items']);
+
+            foreach ($orders as $order) {
+                fputcsv($handle, [
+                    $order->created_at->format('d/m/Y'),
+                    $order->order_code,
+                    $order->outlet->name,
+                    $order->customer_name,
+                    $order->total,
+                    $order->items->count(),
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    public function exportSettlements(Request $request): StreamedResponse
+    {
+        $period = $request->string('period', 'month')->toString();
+        [$from, $to] = $this->resolvePeriod($period);
+
+        $settlements = Settlement::whereBetween('period_date', [$from, $to])
+            ->with('outlet:id,name')
+            ->get();
+
+        $filename = 'settlements-'.$from->format('Y-m-d').'-'.$to->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($settlements): void {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Outlet', 'Periode', 'Jatuh Tempo', 'Tagihan', 'Dibayar', 'Sisa', 'Status']);
+
+            foreach ($settlements as $s) {
+                fputcsv($handle, [
+                    $s->outlet->name,
+                    $s->period_date->format('d/m/Y'),
+                    $s->due_date->format('d/m/Y'),
+                    $s->amount_due,
+                    $s->paid_amount,
+                    $s->outstanding_amount,
+                    $s->status,
+                ]);
+            }
+
+            fclose($handle);
+        }, $filename, [
+            'Content-Type' => 'text/csv',
+        ]);
+    }
+
+    private function resolvePeriod(string $period): array
+    {
+        return match ($period) {
+            'today' => [now()->startOfDay(), now()->endOfDay()],
+            'week' => [now()->startOfWeek(), now()->endOfWeek()],
+            'month' => [now()->startOfMonth(), now()->endOfMonth()],
+            default => [now()->startOfMonth(), now()->endOfMonth()],
+        };
     }
 }

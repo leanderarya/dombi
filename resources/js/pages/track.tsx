@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Clock, Copy, MessageCircle, Package, RotateCcw, Share2, Truck, UserCheck, XCircle, CheckCircle2, Circle } from 'lucide-react';
 import { useState } from 'react';
+import OrderStatusBadge from '@/components/order-status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 type HistoryItem = {
@@ -145,7 +146,7 @@ export default function TrackPage({ order, found, notifications = [], canCreateA
             <main className={`mx-auto max-w-lg px-4 py-4 ${isTerminal ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]' : 'pb-[calc(2rem+env(safe-area-inset-bottom))]'}`}>
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <StatusBadge status={order.status} />
+                    <OrderStatusBadge status={order.status} />
                 </div>
 
                 {/* Public Tracking Link */}
@@ -362,49 +363,6 @@ export default function TrackPage({ order, found, notifications = [], canCreateA
     );
 }
 
-function StatusBadge({ status }: { status: string }) {
-    const labels: Record<string, string> = {
-        pending: 'Menunggu Konfirmasi',
-        pending_confirmation: 'Menunggu Konfirmasi',
-        confirmed: 'Diterima Outlet',
-        preparing: 'Sedang Disiapkan',
-        ready_for_pickup: 'Siap Diambil',
-        picked_up: 'Sudah Diambil Kurir',
-        delivering: 'Dalam Perjalanan',
-        completed: 'Selesai',
-        cancelled: 'Dibatalkan',
-        cancelled_by_customer: 'Dibatalkan Customer',
-        cancelled_by_outlet: 'Dibatalkan Outlet',
-        rejected_by_outlet: 'Ditolak Outlet',
-        failed: 'Gagal',
-        failed_delivery: 'Pengiriman Gagal',
-        expired: 'Kadaluarsa',
-    };
-
-    const tones: Record<string, string> = {
-        pending: 'bg-amber-50 text-amber-800 ring-amber-200',
-        pending_confirmation: 'bg-amber-50 text-amber-800 ring-amber-200',
-        confirmed: 'bg-blue-50 text-blue-800 ring-blue-200',
-        preparing: 'bg-orange-50 text-orange-800 ring-orange-200',
-        ready_for_pickup: 'bg-purple-50 text-purple-800 ring-purple-200',
-        picked_up: 'bg-blue-50 text-blue-800 ring-blue-200',
-        delivering: 'bg-indigo-50 text-indigo-800 ring-indigo-200',
-        completed: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
-        cancelled: 'bg-red-50 text-red-800 ring-red-200',
-        cancelled_by_customer: 'bg-red-50 text-red-800 ring-red-200',
-        cancelled_by_outlet: 'bg-red-50 text-red-800 ring-red-200',
-        rejected_by_outlet: 'bg-red-50 text-red-800 ring-red-200',
-        failed: 'bg-red-50 text-red-800 ring-red-200',
-        failed_delivery: 'bg-red-50 text-red-800 ring-red-200',
-        expired: 'bg-slate-50 text-slate-800 ring-slate-200',
-    };
-
-    return (
-        <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1 ${tones[status] ?? 'bg-slate-50 text-slate-800 ring-slate-200'}`}>
-            {labels[status] ?? status}
-        </span>
-    );
-}
 
 function getStepsForFulfillment(fulfillmentType: string) {
     if (fulfillmentType === 'pickup') {

@@ -8,6 +8,8 @@ use App\Http\Requests\Courier\RejectAssignmentRequest;
 use App\Http\Requests\Courier\UpdateDeliveryStatusRequest;
 use App\Models\Delivery;
 use App\Services\DeliveryService;
+use App\Services\RoutingService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -155,5 +157,42 @@ class DeliveryController extends Controller
         );
 
         return redirect()->route('courier.deliveries.show', $delivery)->with('success', 'Mengembalikan pesanan ke outlet.');
+    }
+
+    public function getOptimizedRoute(Request $request, RoutingService $routingService): JsonResponse
+    {
+        $user = $request->user();
+        abort_unless($user->role === 'courier', 403);
+
+        $deliveries = Delivery::where('courier_id', $user->id)
+            ->whereIn('status', ['waiting_pickup', 'picked_up'])
+            ->with('order')
+            ->get();
+
+        if ($deliveries->isEmpty()) {
+            return response()->json([
+                'route' => [],
+                'summary' => ['total_distance_km' => 0, 'estimated_minutes' => 0, 'stops' => 0],
+            ]);
+        }
+
+        $startLat = $deliveries->first()->order->latitude ?? -7.0568;
+        $startLng = $deliveries->first()->order->longitude ?? 110.4381;
+
+        $optimizedRoute = $routingService->calculateOptimizedRoute($deliveries->all(), $startLat, $startLng);
+        $summary = $routingService->getRouteSummary($optimizedRoute, $startLat, $startLng);
+
+        return response()->json([
+            'route' => collect($optimizedRoute)->map(fn ($d) => [
+                'id' => $d->id,
+                'order_code' => $d->order->order_code,
+                'customer_name' => $d->order->customer_name,
+                'address' => $d->order->customer_address,
+                'latitude' => $d->order->latitude,
+                'longitude' => $d->order->longitude,
+                'status' => $d->status,
+            ]),
+            'summary' => $summary,
+        ]);
     }
 }

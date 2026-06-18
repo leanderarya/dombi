@@ -9,6 +9,10 @@ use Carbon\CarbonInterface;
 
 class SettlementGeneratorService
 {
+    public function __construct(
+        private readonly NotificationService $notificationService,
+    ) {}
+
     /**
      * Generate or update settlement for a specific outlet on a specific date.
      * Called when an order is completed.
@@ -45,6 +49,10 @@ class SettlementGeneratorService
                 'notes' => "Settlement untuk {$outlet->name} tanggal {$periodDate}",
             ],
         );
+
+        if ($settlement->wasRecentlyCreated) {
+            $this->notificationService->notifySettlementGenerated($settlement);
+        }
 
         return $settlement;
     }

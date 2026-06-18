@@ -286,15 +286,7 @@ class DeliveryService
 
             $this->recordHistory($delivery, 'failed', $resolution, $resolver, $resolver->isOwner() ? 'owner' : 'outlet', $notes ?? "Resolved: {$resolution}");
 
-            match ($resolution) {
-                'retry_delivery' => $this->handleRetryDelivery($order, $resolver),
-                'returned_to_outlet' => $this->handleReturnedToOutlet($order, $resolver),
-                'cancelled_and_released' => $this->handleCancelledAndReleased($order, $resolver),
-            };
-
-            OperationalLog::deliveryResolved($delivery->id, $resolution, $resolver->id);
-
-            // Write resolution audit log
+            // Write resolution audit log before resolution handler (delivery may be deleted for retry)
             $retryCount = DeliveryResolutionLog::where('order_id', $order->id)->count();
             $inventoryEffect = match ($resolution) {
                 'retry_delivery' => 'Reserved stock preserved — delivery will be retried',
@@ -314,6 +306,14 @@ class DeliveryService
                 'inventory_effect' => $inventoryEffect,
                 'created_at' => now(),
             ]);
+
+            match ($resolution) {
+                'retry_delivery' => $this->handleRetryDelivery($order, $resolver),
+                'returned_to_outlet' => $this->handleReturnedToOutlet($order, $resolver),
+                'cancelled_and_released' => $this->handleCancelledAndReleased($order, $resolver),
+            };
+
+            OperationalLog::deliveryResolved($delivery->id, $resolution, $resolver->id);
 
             // For retry_delivery, the delivery is deleted so we can't fresh() it
             if ($resolution === 'retry_delivery') {

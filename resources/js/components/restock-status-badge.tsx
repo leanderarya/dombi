@@ -1,15 +1,15 @@
 import { getRestockStatus } from '@/lib/status-labels';
 
 const styles: Record<string, string> = {
-    requested: 'bg-yellow-100 text-yellow-800',
-    rejected: 'bg-red-100 text-red-800',
-    preparing: 'bg-purple-100 text-purple-800',
-    shipped: 'bg-indigo-100 text-indigo-800',
-    completed: 'bg-green-100 text-green-800',
+    requested: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/10',
+    rejected: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/10',
+    preparing: 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/10',
+    shipped: 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/10',
+    completed: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/10',
 };
 
 export default function RestockStatusBadge({ status }: { status: string }) {
     const { label } = getRestockStatus(status);
 
-    return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${styles[status] ?? styles.requested}`}>{label}</span>;
+    return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ${styles[status] ?? styles.requested}`}>{label}</span>;
 }

@@ -108,12 +108,6 @@ class OrderStatusService
 
     public function rejectOrder(Order $order, string $reason, ?string $note, User $actor): Order
     {
-        if (! $order->isPendingConfirmation()) {
-            throw ValidationException::withMessages([
-                'status' => 'Hanya pesanan yang menunggu konfirmasi yang bisa ditolak.',
-            ]);
-        }
-
         if (! in_array($reason, self::REJECTION_REASONS, true)) {
             throw ValidationException::withMessages([
                 'reason' => 'Alasan penolakan tidak valid.',
@@ -163,12 +157,6 @@ class OrderStatusService
 
     public function cancelByCustomer(Order $order, string $reason, ?string $note): Order
     {
-        if (! $order->isPendingConfirmation()) {
-            throw ValidationException::withMessages([
-                'status' => 'Hanya pesanan yang menunggu konfirmasi yang bisa dibatalkan.',
-            ]);
-        }
-
         if (! in_array($reason, self::CANCELLATION_REASONS, true)) {
             throw ValidationException::withMessages([
                 'reason' => 'Alasan pembatalan tidak valid.',

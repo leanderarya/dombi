@@ -1,9 +1,8 @@
-import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import OrderStatusBadge from '@/components/order-status-badge';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
-import OwnerLayout from '@/layouts/owner-layout';
 import { formatDate } from '@/lib/format';
 
 export default function OwnerDeliveryShow({ delivery }: any) {
@@ -12,16 +11,13 @@ export default function OwnerDeliveryShow({ delivery }: any) {
     const [resolveOpen, setResolveOpen] = useState(false);
 
     return (
-        <OwnerLayout>
-            <Head title={order.order_code} />
-            <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                    <h1 className="text-2xl font-semibold">{order.order_code}</h1>
-                    <p className="mt-1 text-sm text-zinc-500">Kurir: {delivery.courier?.name ?? '-'}</p>
-                </div>
-                <div className="flex gap-2"><OrderStatusBadge status={order.status} /><DeliveryStatusBadge status={delivery.status} /></div>
-            </div>
-            <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_360px]">
+        <OwnerPageShell
+            title={`Pengiriman #${delivery.id}`}
+            subtitle={order.order_code}
+            backHref="/owner/deliveries"
+            headerRight={<div className="flex gap-2"><OrderStatusBadge status={order.status} /><DeliveryStatusBadge status={delivery.status} /></div>}
+        >
+            <div className="grid gap-5 lg:grid-cols-[1fr_360px]">
                 <div className="space-y-5">
                     <section className="rounded-lg border bg-white p-5">
                         <h2 className="font-semibold">Item</h2>
@@ -78,6 +74,6 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                 </aside>
             </div>
             <ResolveDeliverySheet delivery={delivery} open={resolveOpen} onClose={() => setResolveOpen(false)} />
-        </OwnerLayout>
+        </OwnerPageShell>
     );
 }

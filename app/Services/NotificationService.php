@@ -60,7 +60,25 @@ class NotificationService
 
     public const RETURN_REQUEST_CREATED = 'inventory.return_request_created';
 
+    public const RETURN_APPROVED = 'return.approved';
+
+    public const RETURN_REJECTED = 'return.rejected';
+
+    public const RETURN_RECEIVED = 'return.received';
+
+    public const RETURN_COMPLETED = 'return.completed';
+
     public const EXCHANGE_REQUEST_CREATED = 'inventory.exchange_request_created';
+
+    public const EXCHANGE_APPROVED = 'exchange.approved';
+
+    public const EXCHANGE_REJECTED = 'exchange.rejected';
+
+    public const EXCHANGE_SHIPPED = 'exchange.shipped';
+
+    public const EXCHANGE_RECEIVED = 'exchange.received';
+
+    public const EXCHANGE_COMPLETED = 'exchange.completed';
 
     // System notifications
     public const SLA_VIOLATION = 'system.sla_violation';
@@ -639,6 +657,220 @@ class NotificationService
         }
     }
 
+    // ─── RETURN STATUS NOTIFICATIONS ─────────────────────────────────
+
+    public function notifyReturnApproved(ReturnRequest $return): void
+    {
+        $return->loadMissing(['outlet', 'items.variant.family']);
+
+        $outletUser = $this->getOutletUser($return->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::RETURN_APPROVED,
+                title: 'Return Disetujui',
+                message: "Return #{$return->id} dari outlet {$return->outlet->name} telah disetujui.",
+                data: [
+                    'return_request_id' => $return->id,
+                    'outlet_id' => $return->outlet_id,
+                ],
+                entityType: 'return_request',
+                entityId: $return->id
+            );
+        }
+    }
+
+    public function notifyReturnRejected(ReturnRequest $return, string $reason): void
+    {
+        $return->loadMissing(['outlet']);
+
+        $outletUser = $this->getOutletUser($return->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::RETURN_REJECTED,
+                title: 'Return Ditolak',
+                message: "Return #{$return->id} ditolak. Alasan: {$reason}",
+                data: [
+                    'return_request_id' => $return->id,
+                    'outlet_id' => $return->outlet_id,
+                    'reason' => $reason,
+                ],
+                entityType: 'return_request',
+                entityId: $return->id
+            );
+        }
+    }
+
+    public function notifyReturnReceived(ReturnRequest $return): void
+    {
+        $return->loadMissing(['outlet']);
+
+        $outletUser = $this->getOutletUser($return->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::RETURN_RECEIVED,
+                title: 'Return Diterima di Pusat',
+                message: "Return #{$return->id} telah diterima di pusat.",
+                data: [
+                    'return_request_id' => $return->id,
+                    'outlet_id' => $return->outlet_id,
+                ],
+                entityType: 'return_request',
+                entityId: $return->id
+            );
+        }
+    }
+
+    public function notifyReturnCompleted(ReturnRequest $return): void
+    {
+        $return->loadMissing(['outlet']);
+
+        $outletUser = $this->getOutletUser($return->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::RETURN_COMPLETED,
+                title: 'Return Selesai',
+                message: "Return #{$return->id} telah selesai diproses.",
+                data: [
+                    'return_request_id' => $return->id,
+                    'outlet_id' => $return->outlet_id,
+                    'total_value' => $return->total_value,
+                ],
+                entityType: 'return_request',
+                entityId: $return->id
+            );
+        }
+    }
+
+    // ─── EXCHANGE STATUS NOTIFICATIONS ───────────────────────────────
+
+    public function notifyExchangeApproved(ExchangeRequest $exchange): void
+    {
+        $exchange->loadMissing(['outlet']);
+
+        $outletUser = $this->getOutletUser($exchange->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::EXCHANGE_APPROVED,
+                title: 'Exchange Disetujui',
+                message: "Exchange #{$exchange->id} telah disetujui.",
+                data: [
+                    'exchange_request_id' => $exchange->id,
+                    'outlet_id' => $exchange->outlet_id,
+                ],
+                entityType: 'exchange_request',
+                entityId: $exchange->id
+            );
+        }
+    }
+
+    public function notifyExchangeRejected(ExchangeRequest $exchange, string $reason): void
+    {
+        $exchange->loadMissing(['outlet']);
+
+        $outletUser = $this->getOutletUser($exchange->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::EXCHANGE_REJECTED,
+                title: 'Exchange Ditolak',
+                message: "Exchange #{$exchange->id} ditolak. Alasan: {$reason}",
+                data: [
+                    'exchange_request_id' => $exchange->id,
+                    'outlet_id' => $exchange->outlet_id,
+                    'reason' => $reason,
+                ],
+                entityType: 'exchange_request',
+                entityId: $exchange->id
+            );
+        }
+    }
+
+    public function notifyExchangeShipped(ExchangeRequest $exchange): void
+    {
+        $exchange->loadMissing(['outlet']);
+
+        $outletUser = $this->getOutletUser($exchange->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::EXCHANGE_SHIPPED,
+                title: 'Exchange Dikirim',
+                message: "Barang pengganti untuk Exchange #{$exchange->id} sedang dikirim ke outlet.",
+                data: [
+                    'exchange_request_id' => $exchange->id,
+                    'outlet_id' => $exchange->outlet_id,
+                ],
+                entityType: 'exchange_request',
+                entityId: $exchange->id
+            );
+        }
+    }
+
+    public function notifyExchangeReceived(ExchangeRequest $exchange): void
+    {
+        $exchange->loadMissing(['outlet']);
+
+        foreach ($this->getOwners() as $ownerId) {
+            $this->create(
+                userType: 'owner',
+                userId: $ownerId,
+                customerId: null,
+                type: self::EXCHANGE_RECEIVED,
+                title: 'Exchange Diterima Outlet',
+                message: "Exchange #{$exchange->id} telah diterima oleh outlet {$exchange->outlet->name}.",
+                data: [
+                    'exchange_request_id' => $exchange->id,
+                    'outlet_id' => $exchange->outlet_id,
+                ],
+                entityType: 'exchange_request',
+                entityId: $exchange->id
+            );
+        }
+    }
+
+    public function notifyExchangeCompleted(ExchangeRequest $exchange): void
+    {
+        $exchange->loadMissing(['outlet']);
+
+        $outletUser = $this->getOutletUser($exchange->outlet_id);
+        if ($outletUser) {
+            $this->create(
+                userType: 'outlet',
+                userId: $outletUser->id,
+                customerId: null,
+                type: self::EXCHANGE_COMPLETED,
+                title: 'Exchange Selesai',
+                message: "Exchange #{$exchange->id} telah selesai diproses.",
+                data: [
+                    'exchange_request_id' => $exchange->id,
+                    'outlet_id' => $exchange->outlet_id,
+                    'exchange_value' => $exchange->exchange_value,
+                ],
+                entityType: 'exchange_request',
+                entityId: $exchange->id
+            );
+        }
+    }
+
     // ─── SYSTEM NOTIFICATIONS ────────────────────────────────────────
 
     public function notifyCourierOffline(User $courier): void
@@ -780,17 +1012,30 @@ class NotificationService
         array $data = [],
         ?string $entityType = null,
         ?int $entityId = null
-    ): Notification {
-        return Notification::create([
-            'user_type' => $userType,
-            'user_id' => $userId,
-            'customer_id' => $customerId,
-            'type' => $type,
-            'title' => $title,
-            'message' => $message,
-            'data' => $data ?: null,
-            'entity_type' => $entityType,
-            'entity_id' => $entityId,
-        ]);
+    ): ?Notification {
+        try {
+            return Notification::create([
+                'user_type' => $userType,
+                'user_id' => $userId,
+                'customer_id' => $customerId,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+                'data' => $data ?: null,
+                'entity_type' => $entityType,
+                'entity_id' => $entityId,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error("Failed to create notification: {$e->getMessage()}", [
+                'type' => $type,
+                'user_type' => $userType,
+                'user_id' => $userId,
+                'customer_id' => $customerId,
+                'entity_type' => $entityType,
+                'entity_id' => $entityId,
+            ]);
+
+            return null;
+        }
     }
 }

@@ -21,6 +21,8 @@ class ReturnRequest extends Model
 
     const STATUS_COMPLETED = 'completed';
 
+    const STATUS_CANCELLED = 'cancelled';
+
     const ALL_STATUSES = [
         self::STATUS_DRAFT,
         self::STATUS_SUBMITTED,
@@ -28,6 +30,7 @@ class ReturnRequest extends Model
         self::STATUS_REJECTED,
         self::STATUS_RECEIVED_AT_CENTER,
         self::STATUS_COMPLETED,
+        self::STATUS_CANCELLED,
     ];
 
     const REASONS = [
@@ -42,6 +45,7 @@ class ReturnRequest extends Model
         'outlet_id',
         'requested_by',
         'reason',
+        'evidence_images',
         'notes',
         'status',
         'reviewed_by',
@@ -54,6 +58,7 @@ class ReturnRequest extends Model
     ];
 
     protected $casts = [
+        'evidence_images' => 'array',
         'reviewed_at' => 'datetime',
         'received_at' => 'datetime',
         'total_value' => 'decimal:2',
@@ -122,6 +127,11 @@ class ReturnRequest extends Model
     public function isCompleted(): bool
     {
         return $this->status === self::STATUS_COMPLETED;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
     }
 
     public function reasonLabel(): string

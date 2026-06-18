@@ -89,10 +89,27 @@ class ReturnController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_variant_id' => 'required|integer|exists:product_variants,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'evidence_images' => 'nullable|array|max:5',
+            'evidence_images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        $service->createRequest($outlet, $request->user(), $validated);
+        $evidenceImages = $request->file('evidence_images', []);
+        $service->createRequest($outlet, $request->user(), $validated, $evidenceImages);
 
         return redirect()->route('outlet.returns.index')->with('success', 'Return request submitted.');
+    }
+
+    public function cancel(Request $request, ReturnRequest $returnRequest, ReturnService $service): RedirectResponse
+    {
+        $outlet = $request->user()->outlet;
+        abort_unless($outlet && $outlet->id === $returnRequest->outlet_id, 403);
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $service->cancelRequest($returnRequest, $request->user(), $request->reason);
+
+        return redirect()->route('outlet.returns.show', $returnRequest)->with('success', 'Return request cancelled.');
     }
 }

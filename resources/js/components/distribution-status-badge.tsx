@@ -1,13 +1,13 @@
 import { getDistributionStatus } from '@/lib/status-labels';
 
 const styles: Record<string, string> = {
-    preparing: 'bg-purple-100 text-purple-800',
-    shipped: 'bg-indigo-100 text-indigo-800',
-    completed: 'bg-green-100 text-green-800',
+    preparing: 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/10',
+    shipped: 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/10',
+    completed: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/10',
 };
 
 export default function DistributionStatusBadge({ status }: { status: string }) {
     const { label } = getDistributionStatus(status);
 
-    return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${styles[status] ?? styles.preparing}`}>{label}</span>;
+    return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ${styles[status] ?? styles.preparing}`}>{label}</span>;
 }

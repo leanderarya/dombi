@@ -15,6 +15,9 @@ class ConfirmDistributionReceivedRequest extends FormRequest
 
     public function rules(): array
     {
-        return [];
+        return [
+            'received_notes' => ['nullable', 'string', 'max:500'],
+            'damage_notes' => ['nullable', 'string', 'max:500'],
+        ];
     }
 }

@@ -17,14 +17,17 @@ use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\DevRoleSwitcherController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Outlet\AnalyticsController as OutletAnalyticsController;
 use App\Http\Controllers\Outlet\DashboardController;
 use App\Http\Controllers\Outlet\DeliveryController as OutletDeliveryController;
 use App\Http\Controllers\Outlet\ExchangeController as OutletExchangeController;
 use App\Http\Controllers\Outlet\InventoryController as OutletInventoryController;
 use App\Http\Controllers\Outlet\OrderController as OutletOrderController;
+use App\Http\Controllers\Outlet\ReportController as OutletReportController;
 use App\Http\Controllers\Outlet\RestockController as OutletRestockController;
 use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
 use App\Http\Controllers\Outlet\SettlementController;
+use App\Http\Controllers\Owner\AnalyticsController as OwnerAnalyticsController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\DeliveryBoardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
@@ -116,6 +119,7 @@ Route::get('/dashboard', DashboardRedirectController::class)
 
 Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->name('owner.')->group(function (): void {
     Route::get('/dashboard', OwnerDashboardController::class)->name('dashboard');
+    Route::get('/analytics', [OwnerAnalyticsController::class, 'index'])->name('analytics.index');
     Route::get('/profile', OwnerProfileController::class)->name('profile');
     Route::resource('outlets', OwnerOutletController::class);
     Route::put('outlets/{outlet}/archive', [OwnerOutletController::class, 'archive'])->name('outlets.archive');
@@ -164,6 +168,8 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
     Route::get('stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
     Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('reports/export-csv', [ReportController::class, 'exportCsv'])->middleware('throttle:export')->name('reports.export-csv');
+    Route::get('reports/orders/export', [ReportController::class, 'exportOrders'])->name('reports.orders.export');
+    Route::get('reports/settlements/export', [ReportController::class, 'exportSettlements'])->name('reports.settlements.export');
     Route::get('restocks', [OwnerRestockController::class, 'index'])->name('restocks.index');
     Route::get('restocks/{restockRequest}', [OwnerRestockController::class, 'show'])->name('restocks.show');
     Route::post('restocks/{restockRequest}/approve', [OwnerRestockController::class, 'approve'])->name('restocks.approve');
@@ -180,6 +186,7 @@ Route::middleware(['auth', 'role:owner', 'password.changed'])->prefix('owner')->
 
     // Finance
     Route::get('finance', [FinanceSettlementController::class, 'dashboard'])->name('finance.dashboard');
+    Route::get('finance/settlements/export', [FinanceSettlementController::class, 'export'])->name('finance.settlements.export');
     Route::get('finance/settlements/{outlet}', [FinanceSettlementController::class, 'outletDetail'])->name('finance.settlements.outlet');
     Route::post('finance/settlements/{outlet}/payments', [FinanceSettlementController::class, 'recordPayment'])->name('finance.settlements.payments');
     Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
@@ -257,6 +264,7 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/more', [DashboardController::class, 'more'])->name('more');
     Route::get('/inventory', OutletInventoryController::class)->name('inventory');
+    Route::post('/inventory/opname', [OutletInventoryController::class, 'opname'])->name('inventory.opname');
     Route::get('/deliveries', [OutletDeliveryController::class, 'index'])->name('deliveries.index');
     Route::get('/deliveries/{delivery}', [OutletDeliveryController::class, 'show'])->name('deliveries.show');
     Route::post('/deliveries/{delivery}/confirm-return', [OutletDeliveryController::class, 'confirmReturn'])->name('deliveries.confirm-return');
@@ -283,6 +291,7 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     Route::get('/returns/create', [OutletReturnController::class, 'create'])->name('returns.create');
     Route::post('/returns', [OutletReturnController::class, 'store'])->name('returns.store');
     Route::get('/returns/{returnRequest}', [OutletReturnController::class, 'show'])->name('returns.show');
+    Route::post('/returns/{returnRequest}/cancel', [OutletReturnController::class, 'cancel'])->name('returns.cancel');
 
     // Exchanges
     Route::get('/exchanges', [OutletExchangeController::class, 'index'])->name('exchanges.index');
@@ -290,11 +299,20 @@ Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')
     Route::post('/exchanges', [OutletExchangeController::class, 'store'])->name('exchanges.store');
     Route::get('/exchanges/{exchangeRequest}', [OutletExchangeController::class, 'show'])->name('exchanges.show');
     Route::post('/exchanges/{exchangeRequest}/confirm-received', [OutletExchangeController::class, 'confirmReceived'])->name('exchanges.confirm-received');
+    Route::post('/exchanges/{exchangeRequest}/cancel', [OutletExchangeController::class, 'cancel'])->name('exchanges.cancel');
+
+    // Analytics
+    Route::get('/analytics', [OutletAnalyticsController::class, 'index'])->name('analytics.index');
+
+    // Reports
+    Route::get('/reports', [OutletReportController::class, 'index'])->name('reports.index');
+    Route::get('/reports/sales/export', [OutletReportController::class, 'export'])->name('reports.sales.export');
 });
 
 Route::middleware(['auth', 'role:courier', 'password.changed'])->prefix('courier')->name('courier.')->group(function (): void {
     Route::get('/dashboard', App\Http\Controllers\Courier\DashboardController::class)->name('dashboard');
     Route::get('/deliveries', [CourierDeliveryController::class, 'index'])->name('deliveries.index');
+    Route::get('/deliveries/optimized-route', [CourierDeliveryController::class, 'getOptimizedRoute'])->name('deliveries.optimized-route');
     Route::get('/deliveries/{delivery}', [CourierDeliveryController::class, 'show'])->name('deliveries.show');
     Route::post('/deliveries/{delivery}/confirm-pickup', [CourierDeliveryController::class, 'confirmPickup'])->name('deliveries.confirm-pickup');
     Route::post('/deliveries/{delivery}/start-delivery', [CourierDeliveryController::class, 'startDelivery'])->name('deliveries.start-delivery');

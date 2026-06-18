@@ -1,5 +1,9 @@
-import { Head, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
+import { Receipt } from 'lucide-react';
 import { useState } from 'react';
+import EmptyState from '@/components/ui/empty-state';
+import StatusBadge from '@/components/ui/status-badge';
+import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 interface Payment {
@@ -71,16 +75,14 @@ export default function OutletSettlementPayments({ payments }: Props) {
         rejected: 'Ditolak',
     };
 
-    const statusColors: Record<string, string> = {
-        pending_verification: 'bg-amber-50 text-amber-800',
-        verified: 'bg-emerald-50 text-emerald-800',
-        rejected: 'bg-red-50 text-red-800',
+    const statusVariants: Record<string, 'success' | 'warning' | 'danger'> = {
+        pending_verification: 'warning',
+        verified: 'success',
+        rejected: 'danger',
     };
 
     return (
-        <>
-            <Head title="Pembayaran Settlement" />
-
+        <OutletLayout title="Riwayat Pembayaran" subtitle="Daftar pembayaran yang sudah dikirim">
             <div className="p-4">
                 <div className="mb-4 flex items-center justify-between">
                     <h1 className="text-lg font-bold text-slate-900">Pembayaran Settlement</h1>
@@ -176,9 +178,11 @@ export default function OutletSettlementPayments({ payments }: Props) {
                 {/* Payment List */}
                 <div className="space-y-2">
                     {payments.data.length === 0 ? (
-                        <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center">
-                            <p className="text-sm text-zinc-500">Belum ada pembayaran</p>
-                        </div>
+                        <EmptyState
+                            icon={<Receipt className="h-8 w-8 text-slate-400" />}
+                            title="Belum ada pembayaran"
+                            description="Riwayat pembayaran Anda akan muncul di sini"
+                        />
                     ) : (
                         payments.data.map((payment) => (
                             <div key={payment.id} className="rounded-xl border border-zinc-200 bg-white p-4">
@@ -188,9 +192,9 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                         <div className="text-xs text-zinc-500">{payment.reference_number}</div>
                                         <div className="text-xs text-zinc-400">{formatDate(payment.payment_date)}</div>
                                     </div>
-                                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${statusColors[payment.status]}`}>
+                                    <StatusBadge variant={statusVariants[payment.status]}>
                                         {statusLabels[payment.status]}
-                                    </span>
+                                    </StatusBadge>
                                 </div>
                                 {payment.notes && (
                                     <div className="mt-2 text-xs text-zinc-500">{payment.notes}</div>
@@ -236,6 +240,6 @@ export default function OutletSettlementPayments({ payments }: Props) {
                     </div>
                 )}
             </div>
-        </>
+        </OutletLayout>
     );
 }

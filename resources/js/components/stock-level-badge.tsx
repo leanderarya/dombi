@@ -13,13 +13,13 @@ export function stockLevel(currentStock: number, reservedStock: number, minimumS
 }
 
 const styles: Record<string, string> = {
-    healthy: 'bg-green-100 text-green-800',
-    low: 'bg-yellow-100 text-yellow-800',
-    critical: 'bg-red-100 text-red-800',
+    healthy: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/10',
+    low: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/10',
+    critical: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-600/10',
 };
 
 export default function StockLevelBadge({ currentStock, reservedStock, minimumStock }: { currentStock: number; reservedStock: number; minimumStock: number }) {
     const level = stockLevel(currentStock, reservedStock, minimumStock);
 
-    return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${styles[level]}`}>{level.replace('_', ' ')}</span>;
+    return <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ${styles[level]}`}>{level.replace('_', ' ')}</span>;
 }

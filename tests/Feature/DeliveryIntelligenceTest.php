@@ -370,9 +370,17 @@ class DeliveryIntelligenceTest extends TestCase
         $intelligence = app(DeliveryIntelligenceService::class);
         $order = $this->makeOrder($ctx);
 
+        $delivery = Delivery::create([
+            'order_id' => $order->id,
+            'courier_id' => $ctx['courier']->id,
+            'status' => 'failed',
+            'assigned_by' => $ctx['owner']->id,
+            'assigned_at' => now()->subHours(3),
+        ]);
+
         DeliveryResolutionLog::create([
             'order_id' => $order->id,
-            'delivery_id' => 1,
+            'delivery_id' => $delivery->id,
             'resolution_type' => 'retry_delivery',
             'resolved_by' => $ctx['owner']->id,
             'resolution_notes' => 'First retry',
@@ -383,9 +391,10 @@ class DeliveryIntelligenceTest extends TestCase
             'created_at' => now()->subHours(2),
         ]);
 
+        // After retry, old delivery is deleted — use null for delivery_id
         DeliveryResolutionLog::create([
             'order_id' => $order->id,
-            'delivery_id' => 2,
+            'delivery_id' => null,
             'resolution_type' => 'retry_delivery',
             'resolved_by' => $ctx['owner']->id,
             'resolution_notes' => 'Second retry',
@@ -411,7 +420,7 @@ class DeliveryIntelligenceTest extends TestCase
         for ($i = 1; $i <= 3; $i++) {
             DeliveryResolutionLog::create([
                 'order_id' => $order->id,
-                'delivery_id' => $i,
+                'delivery_id' => null,
                 'resolution_type' => 'retry_delivery',
                 'resolved_by' => $ctx['owner']->id,
                 'resolution_notes' => "Retry $i",
@@ -438,7 +447,7 @@ class DeliveryIntelligenceTest extends TestCase
 
         DeliveryResolutionLog::create([
             'order_id' => $order->id,
-            'delivery_id' => 1,
+            'delivery_id' => null,
             'resolution_type' => 'retry_delivery',
             'resolved_by' => $ctx['owner']->id,
             'resolution_notes' => 'First retry',

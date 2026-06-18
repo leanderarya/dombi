@@ -71,7 +71,8 @@ class RestockController extends Controller
 
     public function confirmReceived(ConfirmDistributionReceivedRequest $request, StockDistribution $distribution, RestockService $restockService): RedirectResponse
     {
-        $restockService->confirmReceived($distribution, $request->user());
+        $validated = $request->validated();
+        $restockService->confirmReceived($distribution, $request->user(), $validated['received_notes'] ?? null, $validated['damage_notes'] ?? null);
 
         return redirect()->back()->with('success', 'Stok diterima dan inventory diperbarui.');
     }

@@ -215,9 +215,9 @@ class RestockService
         });
     }
 
-    public function confirmReceived(StockDistribution $distribution, User $outletUser): StockDistribution
+    public function confirmReceived(StockDistribution $distribution, User $outletUser, ?string $receivedNotes = null, ?string $damageNotes = null): StockDistribution
     {
-        return DB::transaction(function () use ($distribution, $outletUser): StockDistribution {
+        return DB::transaction(function () use ($distribution, $outletUser, $receivedNotes, $damageNotes): StockDistribution {
             $distribution = StockDistribution::query()
                 ->lockForUpdate()
                 ->with(['items', 'restockRequest'])
@@ -278,6 +278,8 @@ class RestockService
                 'status' => 'completed',
                 'received_by' => $outletUser->id,
                 'received_at' => now(),
+                'received_notes' => $receivedNotes,
+                'damage_notes' => $damageNotes,
             ]);
 
             $distribution->restockRequest?->update(['status' => 'completed']);

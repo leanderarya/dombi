@@ -3,6 +3,7 @@ import { useState } from 'react';
 import InvoiceModal from '@/components/owner/invoice-modal';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import PaymentModal from '@/components/owner/settlement-payment-modal';
+import DataTable from '@/components/ui/data-table';
 import { formatCurrency } from '@/lib/format';
 
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
@@ -22,11 +23,51 @@ function getOverdueLabel(dueDate: string): string | null {
     const diff = Math.floor((now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diff <= 0) {
-return null;
-}
+        return null;
+    }
 
     return `${diff} Hari`;
 }
+
+const settlementColumns = [
+    { key: 'period_date', label: 'Periode', className: 'text-slate-600' },
+    {
+        key: 'amount_due',
+        label: 'Tagihan',
+        className: 'text-right tabular-nums font-semibold',
+        render: (row: any) => formatCurrency(row.amount_due),
+    },
+    {
+        key: 'paid_amount',
+        label: 'Dibayar',
+        className: 'text-right tabular-nums text-emerald-600',
+        render: (row: any) => formatCurrency(row.paid_amount),
+    },
+    {
+        key: 'outstanding',
+        label: 'Sisa',
+        className: 'text-right tabular-nums font-semibold text-red-600',
+        render: (row: any) => formatCurrency(Math.max(0, row.outstanding)),
+    },
+    { key: 'due_date', label: 'Jatuh Tempo', className: 'text-slate-600' },
+    {
+        key: 'status',
+        label: 'Status',
+        render: (row: any) => {
+            const badge = STATUS_CONFIG[row.status] ?? STATUS_CONFIG.generated;
+            const overdueLabel = getOverdueLabel(row.due_date);
+
+            return (
+                <div className="flex items-center gap-2">
+                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${badge.className}`}>{badge.label}</span>
+                    {overdueLabel && (
+                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">{overdueLabel}</span>
+                    )}
+                </div>
+            );
+        },
+    },
+];
 
 export default function OutletAccountStatement({ outlet, settlements, summary, unpaidBreakdown }: any) {
     const [paymentOpen, setPaymentOpen] = useState(false);
@@ -103,57 +144,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                 <div className="px-4 py-3">
                     <h2 className="text-base font-semibold text-slate-900">Daftar Tagihan</h2>
                 </div>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-slate-100 bg-slate-50">
-                                <th className="px-4 py-3 text-left font-medium text-slate-500">Periode</th>
-                                <th className="px-4 py-3 text-right font-medium text-slate-500">Tagihan</th>
-                                <th className="px-4 py-3 text-right font-medium text-slate-500">Dibayar</th>
-                                <th className="px-4 py-3 text-right font-medium text-slate-500">Sisa</th>
-                                <th className="px-4 py-3 text-left font-medium text-slate-500">Jatuh Tempo</th>
-                                <th className="px-4 py-3 text-left font-medium text-slate-500">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {settlements.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-4 py-8 text-center text-sm text-slate-400">
-                                        Tidak ada tagihan.
-                                    </td>
-                                </tr>
-                            ) : (
-                                settlements.map((s: any) => {
-                                    const badge = STATUS_CONFIG[s.status] ?? STATUS_CONFIG.generated;
-                                    const remaining = Math.max(0, s.outstanding);
-                                    const overdueLabel = getOverdueLabel(s.due_date);
-
-                                    return (
-                                        <tr key={s.id} className="border-b border-slate-50 last:border-0">
-                                            <td className="px-4 py-3 text-slate-600">{s.period_date}</td>
-                                            <td className="px-4 py-3 text-right tabular-nums font-semibold">{formatCurrency(s.amount_due)}</td>
-                                            <td className="px-4 py-3 text-right tabular-nums text-emerald-600">{formatCurrency(s.paid_amount)}</td>
-                                            <td className="px-4 py-3 text-right tabular-nums font-semibold text-red-600">{formatCurrency(remaining)}</td>
-                                            <td className="px-4 py-3 text-slate-600">{s.due_date}</td>
-                                            <td className="px-4 py-3">
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${badge.className}`}>
-                                                        {badge.label}
-                                                    </span>
-                                                    {overdueLabel && (
-                                                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">
-                                                            {overdueLabel}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    );
-                                })
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                <DataTable columns={settlementColumns} data={settlements} rowKey="id" emptyMessage="Tidak ada tagihan." />
             </section>
 
             {/* Payment Modal — sends to outlet-level endpoint with FIFO */}

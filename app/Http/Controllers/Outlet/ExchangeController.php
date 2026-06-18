@@ -113,4 +113,18 @@ class ExchangeController extends Controller
 
         return redirect()->route('outlet.exchanges.show', $exchangeRequest)->with('success', 'Exchange confirmed as received.');
     }
+
+    public function cancel(Request $request, ExchangeRequest $exchangeRequest, ExchangeService $service): RedirectResponse
+    {
+        $outlet = $request->user()->outlet;
+        abort_unless($outlet && $outlet->id === $exchangeRequest->outlet_id, 403);
+
+        $request->validate([
+            'reason' => 'required|string|max:1000',
+        ]);
+
+        $service->cancelRequest($exchangeRequest, $request->user(), $request->reason);
+
+        return redirect()->route('outlet.exchanges.show', $exchangeRequest)->with('success', 'Exchange request cancelled.');
+    }
 }

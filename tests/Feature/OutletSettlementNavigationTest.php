@@ -10,7 +10,6 @@ use App\Models\ProductVariant;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 

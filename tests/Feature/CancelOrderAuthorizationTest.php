@@ -63,7 +63,7 @@ class CancelOrderAuthorizationTest extends TestCase
         return Order::forceCreate([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'ORD-' . uniqid(),
+            'order_code' => 'ORD-'.uniqid(),
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'subtotal' => 10000,
             'delivery_fee' => 5000,

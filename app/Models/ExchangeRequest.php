@@ -22,6 +22,8 @@ class ExchangeRequest extends Model
 
     const STATUS_COMPLETED = 'completed';
 
+    const STATUS_CANCELLED = 'cancelled';
+
     const ALL_STATUSES = [
         self::STATUS_SUBMITTED,
         self::STATUS_APPROVED,
@@ -30,6 +32,7 @@ class ExchangeRequest extends Model
         self::STATUS_SHIPPED,
         self::STATUS_RECEIVED,
         self::STATUS_COMPLETED,
+        self::STATUS_CANCELLED,
     ];
 
     protected $fillable = [
@@ -131,5 +134,10 @@ class ExchangeRequest extends Model
     public function isCompleted(): bool
     {
         return $this->status === self::STATUS_COMPLETED;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
     }
 }

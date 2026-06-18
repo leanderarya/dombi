@@ -8,8 +8,16 @@ import { formatCurrency } from '@/lib/format';
 
 const statusLabels: Record<string, string> = { pending: 'Tertunda', confirmed: 'Dikonfirmasi', preparing: 'Disiapkan', ready_for_pickup: 'Siap', delivering: 'Dikirim', completed: 'Selesai', cancelled: 'Dibatalkan', failed: 'Gagal', waiting_pickup: 'Menunggu', retry_delivery: 'Coba Ulang', returned_to_outlet: 'Dikembalikan', cancelled_and_released: 'Dilepas' };
 
+const periods = [
+    { key: 'today', label: 'Hari Ini' },
+    { key: 'week', label: 'Minggu Ini' },
+    { key: 'month', label: 'Bulan Ini' },
+];
+
 export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStatus, outlets, filters }: any) {
     const [filterOpen, setFilterOpen] = useState(false);
+    const [period, setPeriod] = useState('month');
+    const [exporting, setExporting] = useState<string | null>(null);
 
     function handleFilter(key: string, value: string) {
         router.get('/owner/reports', { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
@@ -19,19 +27,26 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
         const params = new URLSearchParams();
 
         if (filters.date_from) {
-params.set('date_from', filters.date_from);
-}
+            params.set('date_from', filters.date_from);
+        }
 
         if (filters.date_to) {
-params.set('date_to', filters.date_to);
-}
+            params.set('date_to', filters.date_to);
+        }
 
         if (filters.outlet_id) {
-params.set('outlet_id', String(filters.outlet_id));
-}
+            params.set('outlet_id', String(filters.outlet_id));
+        }
 
         window.location.href = `/owner/reports/export-csv?${params.toString()}`;
     }
+
+    const handleExportReport = (type: string) => {
+        setExporting(type);
+        router.get(`/owner/reports/${type}/export?period=${period}`, {}, {
+            onFinish: () => setExporting(null),
+        });
+    };
 
     return (
         <OwnerPageShell
@@ -49,6 +64,50 @@ params.set('outlet_id', String(filters.outlet_id));
             <div className="flex gap-2">
                 <input type="date" className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px]" value={filters.date_from} onChange={(e) => handleFilter('date_from', e.target.value)} />
                 <input type="date" className="flex-1 rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-[11px]" value={filters.date_to} onChange={(e) => handleFilter('date_to', e.target.value)} />
+            </div>
+
+            {/* Period Selector */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                {periods.map((p) => (
+                    <button
+                        key={p.key}
+                        onClick={() => setPeriod(p.key)}
+                        className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                            period === p.key
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-zinc-100 text-zinc-600 active:bg-zinc-200'
+                        }`}
+                    >
+                        {p.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* Export Cards */}
+            <div className="space-y-3">
+                <div className="rounded-xl border border-zinc-200 bg-white p-4">
+                    <div className="text-sm font-semibold text-slate-900 mb-1">Laporan Orders</div>
+                    <p className="text-xs text-zinc-500 mb-3">Download data order completed</p>
+                    <button
+                        onClick={() => handleExportReport('orders')}
+                        disabled={exporting === 'orders'}
+                        className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white active:bg-emerald-700 disabled:opacity-50"
+                    >
+                        {exporting === 'orders' ? 'Mengexport...' : 'Download CSV'}
+                    </button>
+                </div>
+
+                <div className="rounded-xl border border-zinc-200 bg-white p-4">
+                    <div className="text-sm font-semibold text-slate-900 mb-1">Laporan Settlements</div>
+                    <p className="text-xs text-zinc-500 mb-3">Download data settlement outlet</p>
+                    <button
+                        onClick={() => handleExportReport('settlements')}
+                        disabled={exporting === 'settlements'}
+                        className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white active:bg-emerald-700 disabled:opacity-50"
+                    >
+                        {exporting === 'settlements' ? 'Mengexport...' : 'Download CSV'}
+                    </button>
+                </div>
             </div>
 
             {/* KPI Grid */}

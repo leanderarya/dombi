@@ -6,13 +6,13 @@ use App\Models\ExchangeRequest;
 use App\Models\ExchangeRequestItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\OutletPayable;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
+use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -76,20 +76,22 @@ class OwnerDashboardDecisionCenterTest extends TestCase
             'status' => SettlementPayment::STATUS_PENDING,
         ]);
 
-        OutletPayable::create([
+        Settlement::create([
             'outlet_id' => $context['outletA']->id,
-            'type' => 'sale',
-            'amount' => 180000,
-            'center_share' => 180000,
-            'outlet_margin' => 20000,
+            'period_date' => now()->toDateString(),
+            'sales_amount' => 200000,
+            'amount_due' => 180000,
+            'due_date' => now()->addDays(7)->toDateString(),
+            'status' => Settlement::STATUS_GENERATED,
         ]);
 
-        OutletPayable::create([
+        Settlement::create([
             'outlet_id' => $context['outletB']->id,
-            'type' => 'sale',
-            'amount' => 250000,
-            'center_share' => 250000,
-            'outlet_margin' => 30000,
+            'period_date' => now()->toDateString(),
+            'sales_amount' => 280000,
+            'amount_due' => 250000,
+            'due_date' => now()->addDays(7)->toDateString(),
+            'status' => Settlement::STATUS_GENERATED,
         ]);
 
         $this->actingAs($context['owner'])
@@ -120,20 +122,22 @@ class OwnerDashboardDecisionCenterTest extends TestCase
     {
         $context = $this->makeContext();
 
-        OutletPayable::create([
+        Settlement::create([
             'outlet_id' => $context['outletA']->id,
-            'type' => 'sale',
-            'amount' => 120000,
-            'center_share' => 120000,
-            'outlet_margin' => 10000,
+            'period_date' => now()->toDateString(),
+            'sales_amount' => 140000,
+            'amount_due' => 120000,
+            'due_date' => now()->addDays(7)->toDateString(),
+            'status' => Settlement::STATUS_GENERATED,
         ]);
 
-        OutletPayable::create([
+        Settlement::create([
             'outlet_id' => $context['outletB']->id,
-            'type' => 'sale',
-            'amount' => 350000,
-            'center_share' => 350000,
-            'outlet_margin' => 20000,
+            'period_date' => now()->toDateString(),
+            'sales_amount' => 370000,
+            'amount_due' => 350000,
+            'due_date' => now()->addDays(7)->toDateString(),
+            'status' => Settlement::STATUS_GENERATED,
         ]);
 
         RestockRequest::create([
@@ -157,26 +161,29 @@ class OwnerDashboardDecisionCenterTest extends TestCase
     {
         $context = $this->makeContext();
 
-        OutletPayable::create([
+        Settlement::create([
             'outlet_id' => $context['outletA']->id,
-            'type' => 'sale',
-            'amount' => 100000,
-            'center_share' => 100000,
-            'outlet_margin' => 10000,
+            'period_date' => now()->toDateString(),
+            'sales_amount' => 110000,
+            'amount_due' => 100000,
+            'due_date' => now()->addDays(7)->toDateString(),
+            'status' => Settlement::STATUS_GENERATED,
         ]);
 
-        OutletPayable::create([
+        Settlement::create([
             'outlet_id' => $context['outletB']->id,
-            'type' => 'sale',
-            'amount' => 220000,
-            'center_share' => 220000,
-            'outlet_margin' => 15000,
+            'period_date' => now()->toDateString(),
+            'sales_amount' => 235000,
+            'amount_due' => 220000,
+            'due_date' => now()->addDays(7)->toDateString(),
+            'status' => Settlement::STATUS_GENERATED,
         ]);
 
         $this->actingAs($context['owner'])
             ->get('/owner/dashboard')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
+                ->has('settlementAlerts', 2)
                 ->where('settlementAlerts.0.outlet.name', 'Outlet Banyumanik')
                 ->where('settlementAlerts.0.outstandingAmount', 220000)
                 ->where('settlementAlerts.1.outlet.name', 'Outlet Tembalang')
@@ -205,12 +212,13 @@ class OwnerDashboardDecisionCenterTest extends TestCase
         $context = $this->makeContext();
 
         // outletB has no pending issues, no critical stocks, and outstanding < 100k
-        OutletPayable::create([
+        Settlement::create([
             'outlet_id' => $context['outletB']->id,
-            'type' => 'sale',
-            'amount' => 50000,
-            'center_share' => 50000,
-            'outlet_margin' => 5000,
+            'period_date' => now()->toDateString(),
+            'sales_amount' => 55000,
+            'amount_due' => 50000,
+            'due_date' => now()->addDays(7)->toDateString(),
+            'status' => Settlement::STATUS_GENERATED,
         ]);
 
         $this->actingAs($context['owner'])

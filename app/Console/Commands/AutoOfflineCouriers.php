@@ -18,26 +18,22 @@ class AutoOfflineCouriers extends Command
         $hours = config('delivery.auto_offline.hours', 4);
         $threshold = now()->subHours($hours);
 
+        $activeDeliveryCourierIds = Delivery::whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
+            ->pluck('courier_id')
+            ->unique();
+
         $couriers = User::where('role', 'courier')
             ->where('is_online', true)
             ->where(function ($query) use ($threshold) {
                 $query->where('last_activity_at', '<', $threshold)
                     ->orWhereNull('last_activity_at');
             })
+            ->whereNotIn('id', $activeDeliveryCourierIds)
             ->get();
 
         $offlined = 0;
 
         foreach ($couriers as $courier) {
-            // Don't offline couriers with active deliveries
-            $hasActive = Delivery::where('courier_id', $courier->id)
-                ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
-                ->exists();
-
-            if ($hasActive) {
-                continue;
-            }
-
             $courier->goOffline();
 
             OperationalLog::operationalError('Courier auto-offlined due to inactivity', [

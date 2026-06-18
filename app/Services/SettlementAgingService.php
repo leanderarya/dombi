@@ -34,7 +34,7 @@ class SettlementAgingService
             return 0;
         }
 
-        return max(0, (int) Carbon::parse($dueDate)->diffInDays(now(), false));
+        return (int) Carbon::parse($dueDate)->diffInDays(now(), false);
     }
 
     public function calculateAgingStatus(?string $dueDate, float $remainingAmount): string
@@ -49,7 +49,11 @@ class SettlementAgingService
 
         $days = $this->calculateDaysOverdue($dueDate);
 
-        if ($days <= 0) {
+        if ($days === 0) {
+            return self::DUE_TODAY;
+        }
+
+        if ($days < 0) {
             return self::CURRENT;
         }
 
@@ -123,12 +127,12 @@ class SettlementAgingService
      */
     public function getAgingSummary(): array
     {
-        $rows = DB::table('outlet_payables')
+        $rows = DB::table('settlements')
             ->selectRaw("
                 outlet_id,
-                SUM(CASE WHEN type = 'sale' THEN center_share ELSE 0 END) as total_center_share,
-                SUM(CASE WHEN type = 'sale' AND remaining_amount > 0 THEN remaining_amount ELSE 0 END) as total_remaining,
-                MIN(CASE WHEN type = 'sale' AND remaining_amount > 0 THEN due_date END) as earliest_due_date
+                SUM(amount_due) as total_amount_due,
+                SUM(CASE WHEN status != 'paid' THEN (amount_due - paid_amount - adjustment_amount) ELSE 0 END) as total_remaining,
+                MIN(CASE WHEN status != 'paid' THEN due_date END) as earliest_due_date
             ")
             ->groupBy('outlet_id')
             ->get();
@@ -141,8 +145,6 @@ class SettlementAgingService
             self::OVERDUE_15_30 => ['count' => 0, 'amount' => 0],
             self::OVERDUE_30_PLUS => ['count' => 0, 'amount' => 0],
         ];
-
-        $today = now()->toDateString();
 
         foreach ($rows as $row) {
             $remaining = (float) $row->total_remaining;
@@ -184,11 +186,11 @@ class SettlementAgingService
         }
 
         // Collection rate
-        $totals = DB::table('outlet_payables')
-            ->selectRaw("
-                SUM(CASE WHEN type = 'sale' THEN center_share ELSE 0 END) as total_sales,
-                SUM(CASE WHEN type = 'sale' THEN paid_amount ELSE 0 END) as total_paid
-            ")
+        $totals = DB::table('settlements')
+            ->selectRaw('
+                SUM(amount_due) as total_sales,
+                SUM(paid_amount) as total_paid
+            ')
             ->first();
 
         $collectionRate = $this->calculateCollectionRate(
@@ -213,10 +215,10 @@ class SettlementAgingService
      */
     public function getOutletAgingStatus(int $outletId): array
     {
-        $row = DB::table('outlet_payables')
+        $row = DB::table('settlements')
             ->selectRaw("
-                SUM(CASE WHEN type = 'sale' AND remaining_amount > 0 THEN remaining_amount ELSE 0 END) as total_remaining,
-                MIN(CASE WHEN type = 'sale' AND remaining_amount > 0 THEN due_date END) as earliest_due_date
+                SUM(CASE WHEN status != 'paid' THEN (amount_due - paid_amount - adjustment_amount) ELSE 0 END) as total_remaining,
+                MIN(CASE WHEN status != 'paid' THEN due_date END) as earliest_due_date
             ")
             ->where('outlet_id', $outletId)
             ->first();

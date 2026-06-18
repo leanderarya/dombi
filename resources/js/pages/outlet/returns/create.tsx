@@ -1,5 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
@@ -8,9 +8,12 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
         reason: '',
         notes: '',
         items: [] as { product_variant_id: number; quantity: number }[],
+        evidence_images: [] as File[],
     });
 
     const [selectedVariants, setSelectedVariants] = useState<Map<number, number>>(new Map());
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const selectedSummary = Array.from(selectedVariants.entries()).reduce(
         (summary, [variantId, quantity]) => {
             const variant = variants.find((v: any) => v.id === variantId);
@@ -44,6 +47,28 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
         next.set(variantId, Math.min(maxQty, Math.max(1, qty)));
         setSelectedVariants(next);
         form.setData('items', Array.from(next.entries()).map(([id, q]) => ({ product_variant_id: id, quantity: q })));
+    };
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = Array.from(e.target.files || []);
+
+        if (files.length + form.data.evidence_images.length > 5) {
+            alert('Maksimal 5 foto');
+
+            return;
+        }
+
+        const newImages = [...form.data.evidence_images, ...files];
+        form.setData('evidence_images', newImages);
+        const newPreviews = files.map((file) => URL.createObjectURL(file));
+        setImagePreviews((prev) => [...prev, ...newPreviews]);
+    };
+
+    const removeImage = (index: number) => {
+        const newImages = form.data.evidence_images.filter((_, i) => i !== index);
+        form.setData('evidence_images', newImages);
+        URL.revokeObjectURL(imagePreviews[index]);
+        setImagePreviews((prev) => prev.filter((_, i) => i !== index));
     };
 
     const handleSubmit = () => {
@@ -81,6 +106,46 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                         className="mt-2 w-full rounded-xl border border-zinc-200 p-3 text-sm"
                         rows={3}
                     />
+                </div>
+
+                {/* Evidence Photos */}
+                <div className="mt-4">
+                    <label className="text-sm font-semibold text-slate-900">Foto Bukti (Opsional)</label>
+                    <p className="mt-1 text-xs text-zinc-500">Upload foto kerusakan/masalah barang (maks. 5 foto)</p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                        {imagePreviews.map((preview, index) => (
+                            <div key={index} className="relative h-20 w-20 overflow-hidden rounded-lg border border-zinc-200">
+                                <img src={preview} alt={`Bukti ${index + 1}`} className="h-full w-full object-cover" />
+                                <button
+                                    type="button"
+                                    onClick={() => removeImage(index)}
+                                    className="absolute right-0 top-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
+                        {form.data.evidence_images.length < 5 && (
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="flex h-20 w-20 items-center justify-center rounded-lg border-2 border-dashed border-zinc-300 text-zinc-400"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/jpg"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="hidden"
+                    />
+                    {form.errors.evidence_images && <div className="mt-1 text-xs text-red-600">{form.errors.evidence_images}</div>}
                 </div>
 
                 {/* Variant Selection */}

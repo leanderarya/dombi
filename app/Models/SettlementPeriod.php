@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SettlementPeriod extends Model
 {
     protected $fillable = [
-        'outlet_id', 'period_type', 'period_start', 'period_end',
+        'outlet_id', 'period_type', 'period_start', 'period_end', 'due_date',
         'orders_count', 'units_sold', 'gross_revenue', 'center_share',
         'outlet_margin', 'settled_amount', 'outstanding_amount', 'calculated_at',
     ];

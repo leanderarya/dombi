@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\PaymentAccount;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,8 +20,13 @@ class SettlementController extends Controller
 
         abort_unless($outlet, 403);
 
+        $period = $request->string('period', 'month')->toString();
+        [$from, $to] = $this->resolvePeriod($period, $request);
+
         // Use settlements table as single source of truth (same as owner page)
-        $settlements = Settlement::where('outlet_id', $outlet->id)->get();
+        $settlements = Settlement::where('outlet_id', $outlet->id)
+            ->whereBetween('period_date', [$from, $to])
+            ->get();
 
         // Calculate totals from settlements (all-time, same as owner)
         $totalDue = (float) $settlements->sum('amount_due');
@@ -118,12 +124,25 @@ class SettlementController extends Controller
             'timeline' => $timeline,
             'paymentAccounts' => PaymentAccount::active()->orderBy('bank_name')->get(),
             'hasPendingPayment' => $hasPendingPayment,
-            'period' => 'all',
+            'period' => $period,
             'periodRange' => [
-                'from' => $settlements->min('period_date')?->toDateString() ?? now()->toDateString(),
-                'to' => $settlements->max('period_date')?->toDateString() ?? now()->toDateString(),
+                'from' => $from->toDateString(),
+                'to' => $to->toDateString(),
             ],
         ]);
     }
 
+    private function resolvePeriod(string $period, Request $request): array
+    {
+        return match ($period) {
+            'today' => [now()->startOfDay(), now()->endOfDay()],
+            'week' => [now()->startOfWeek(), now()->endOfWeek()],
+            'month' => [now()->startOfMonth(), now()->endOfMonth()],
+            'custom' => [
+                Carbon::parse($request->string('from', now()->startOfMonth()->toDateString())),
+                Carbon::parse($request->string('to', now()->toDateString()))->endOfDay(),
+            ],
+            default => [now()->startOfMonth(), now()->endOfMonth()],
+        };
+    }
 }

@@ -30,6 +30,11 @@ class ExchangeService
                         'return_request_id' => ['Return terkait tidak tersedia untuk outlet ini.'],
                     ]);
                 }
+                if (! in_array($return->status, [ReturnRequest::STATUS_APPROVED, ReturnRequest::STATUS_RECEIVED_AT_CENTER], true)) {
+                    throw ValidationException::withMessages([
+                        'return_request_id' => ['Return terkait harus disetujui atau sudah diterima di pusat.'],
+                    ]);
+                }
                 $returnValue = $return->total_value;
             }
 
@@ -71,6 +76,24 @@ class ExchangeService
         });
     }
 
+    public function cancelRequest(ExchangeRequest $exchange, User $user, string $reason): ExchangeRequest
+    {
+        return DB::transaction(function () use ($exchange, $user, $reason) {
+            if (! $exchange->isSubmitted()) {
+                throw ValidationException::withMessages([
+                    'status' => ['Only submitted exchange requests can be cancelled.'],
+                ]);
+            }
+
+            $from = $exchange->status;
+            $exchange->update(['status' => ExchangeRequest::STATUS_CANCELLED]);
+
+            $this->recordHistory($exchange, $from, ExchangeRequest::STATUS_CANCELLED, $user->id, $reason);
+
+            return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
+        });
+    }
+
     public function approveRequest(ExchangeRequest $exchange, User $owner, ?string $notes = null): ExchangeRequest
     {
         return DB::transaction(function () use ($exchange, $owner, $notes) {
@@ -89,6 +112,8 @@ class ExchangeService
             ]);
 
             $this->recordHistory($exchange, $from, ExchangeRequest::STATUS_APPROVED, $owner->id, $notes);
+
+            app(NotificationService::class)->notifyExchangeApproved($exchange);
 
             return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
         });
@@ -112,6 +137,8 @@ class ExchangeService
             ]);
 
             $this->recordHistory($exchange, $from, ExchangeRequest::STATUS_REJECTED, $owner->id, $reason);
+
+            app(NotificationService::class)->notifyExchangeRejected($exchange, $reason);
 
             return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
         });
@@ -166,6 +193,8 @@ class ExchangeService
 
             $this->recordHistory($exchange, $from, ExchangeRequest::STATUS_SHIPPED, $owner->id);
 
+            app(NotificationService::class)->notifyExchangeShipped($exchange);
+
             return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
         });
     }
@@ -196,6 +225,8 @@ class ExchangeService
 
             $this->recordHistory($exchange, $from, ExchangeRequest::STATUS_RECEIVED, $outletUser->id, $notes);
 
+            app(NotificationService::class)->notifyExchangeReceived($exchange);
+
             return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
         });
     }
@@ -224,6 +255,8 @@ class ExchangeService
             ]);
 
             $this->recordHistory($exchange, $from, ExchangeRequest::STATUS_COMPLETED, $owner->id);
+
+            app(NotificationService::class)->notifyExchangeCompleted($exchange);
 
             return $exchange->fresh()->load(['items.variant', 'outlet', 'requester']);
         });

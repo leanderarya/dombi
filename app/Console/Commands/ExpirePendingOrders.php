@@ -22,8 +22,12 @@ class ExpirePendingOrders extends Command
             ->where('confirmation_expires_at', '<', now())
             ->chunkById(50, function ($orders) use ($orderStatusService, &$expiredCount): void {
                 foreach ($orders as $order) {
-                    $orderStatusService->expireOrder($order);
-                    $expiredCount++;
+                    try {
+                        $orderStatusService->expireOrder($order);
+                        $expiredCount++;
+                    } catch (\Throwable $e) {
+                        \Log::error("Failed to expire order {$order->id}: {$e->getMessage()}");
+                    }
                 }
             });
 

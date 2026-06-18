@@ -3,11 +3,9 @@
 namespace App\Services;
 
 use App\Models\Outlet;
-use App\Models\OutletPayable;
+use App\Models\Settlement;
 use App\Models\SettlementPayment;
-use App\Models\SettlementPeriod;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
 
 class SettlementReconciliationService
 {
@@ -19,12 +17,12 @@ class SettlementReconciliationService
         $from = $from ?? now()->startOfMonth();
         $to = $to ?? now()->endOfDay();
 
-        // Center share from sales only (matching SettlementService::getOutletSummary logic)
-        $centerShare = OutletPayable::query()
+        // Center share from settlements (amount_due represents the obligation)
+        $centerShare = (float) Settlement::query()
             ->where('outlet_id', $outletId)
-            ->where('type', 'sale')
-            ->whereBetween('created_at', [$from, $to])
-            ->sum('center_share');
+            ->whereDate('period_date', '>=', $from->toDateString())
+            ->whereDate('period_date', '<=', $to->toDateString())
+            ->sum('amount_due');
 
         // Verified payments
         $verifiedPayments = SettlementPayment::query()
@@ -47,11 +45,11 @@ class SettlementReconciliationService
             ->sum('amount');
 
         // Adjustments (returns + exchanges) for this period
-        $adjustments = (float) OutletPayable::query()
+        $adjustments = (float) Settlement::query()
             ->where('outlet_id', $outletId)
-            ->where('type', 'adjustment')
-            ->whereBetween('created_at', [$from, $to])
-            ->sum('amount');
+            ->whereDate('period_date', '>=', $from->toDateString())
+            ->whereDate('period_date', '<=', $to->toDateString())
+            ->sum('adjustment_amount');
 
         $outstanding = (float) $centerShare - (float) $verifiedPayments + $adjustments;
 
@@ -160,24 +158,23 @@ class SettlementReconciliationService
      */
     public function getOverdueOutlets(): array
     {
-        $overduePeriods = SettlementPeriod::query()
-            ->where('outstanding_amount', '>', 0)
-            ->where('due_date', '<', now()->toDateString())
+        $overdueSettlements = Settlement::query()
+            ->where('status', Settlement::STATUS_OVERDUE)
             ->with('outlet')
             ->get()
             ->groupBy('outlet_id');
 
         $overdue = [];
-        foreach ($overduePeriods as $outletId => $periods) {
-            $outstanding = $periods->sum('outstanding_amount');
-            $oldestDue = $periods->min('due_date');
+        foreach ($overdueSettlements as $outletId => $settlements) {
+            $outstanding = $settlements->sum(fn ($s) => (float) $s->outstanding_amount);
+            $oldestDue = $settlements->min('due_date');
             $daysOverdue = Carbon::parse($oldestDue)->diffInDays(now());
 
-            $outlet = $periods->first()->outlet;
+            $outlet = $settlements->first()->outlet;
             $overdue[] = [
-                'outlet' => ['id' => $outletId, 'name' => $outlet->name],
+                'outlet' => ['id' => (int) $outletId, 'name' => $outlet->name],
                 'outstanding' => (float) $outstanding,
-                'oldest_due_date' => $oldestDue,
+                'oldest_due_date' => $oldestDue instanceof Carbon ? $oldestDue->toDateString() : $oldestDue,
                 'days_overdue' => $daysOverdue,
             ];
         }
@@ -244,17 +241,20 @@ class SettlementReconciliationService
                 continue;
             }
 
-            // Calculate days overdue: find oldest unpaid sale
-            $oldestUnpaid = OutletPayable::query()
+            // Calculate days overdue: find oldest unpaid settlement
+            $oldestUnpaid = Settlement::query()
                 ->where('outlet_id', $row['outlet']['id'])
-                ->where('type', 'sale')
-                ->where('center_share', '>', 0)
-                ->oldest()
+                ->where('status', '!=', Settlement::STATUS_PAID)
+                ->where('amount_due', '>', 0)
+                ->orderBy('due_date', 'asc')
                 ->first();
 
             $daysOverdue = 0;
             if ($oldestUnpaid) {
-                $daysOverdue = (int) $oldestUnpaid->created_at->diffInDays(now());
+                $daysOverdue = $oldestUnpaid->due_date
+                    ? (int) $oldestUnpaid->due_date->diffInDays(now(), false)
+                    : 0;
+                $daysOverdue = max(0, $daysOverdue);
             }
 
             $priorityList[] = [
@@ -301,15 +301,16 @@ class SettlementReconciliationService
             ->values()
             ->toArray();
 
-        // Margin ranking
-        $settlementService = app(SettlementService::class);
+        // Margin ranking (from settlements table)
         $rankByMargin = [];
         foreach ($outlets as $outlet) {
-            $summary = $settlementService->getOutletSummary($outlet->id);
+            $outletSettlements = Settlement::where('outlet_id', $outlet->id)->get();
+            $grossRevenue = (float) $outletSettlements->sum('sales_amount');
+            $outletMargin = $grossRevenue - (float) $outletSettlements->sum('amount_due');
             $rankByMargin[] = [
                 'outlet' => ['id' => $outlet->id, 'name' => $outlet->name],
-                'outlet_margin' => $summary['outlet_margin'],
-                'gross_revenue' => $summary['gross_revenue'],
+                'outlet_margin' => $outletMargin,
+                'gross_revenue' => $grossRevenue,
             ];
         }
         usort($rankByMargin, fn ($a, $b) => $b['outlet_margin'] <=> $a['outlet_margin']);

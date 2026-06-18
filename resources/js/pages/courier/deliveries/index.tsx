@@ -30,6 +30,7 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
 
     const fetchOptimizedRoute = async () => {
         setLoadingRoute(true);
+
         try {
             const response = await fetch('/courier/deliveries/optimized-route');
             const data = await response.json();
