@@ -386,34 +386,82 @@ export default function CustomerNotifications({ notifications }: Props) {
 
 ---
 
-## Sprint 3: Checkout Simplification (P2) - 5 days
+## Sprint 3: Checkout UX Improvement (P2) - 5 days
 
-### Task 8: Simplify Checkout to 1-Page
+### Task 8: Improve Checkout Step 2 UX
+
+**Goal:** Reduce friction in the customer info/address step for delivery users
 
 **Files:**
-- Modify: `resources/js/pages/customer/checkout/index.tsx`
+- Modify: `resources/js/pages/customer/checkout/customer.tsx`
+- Modify: `resources/js/components/customer/location-search-panel.tsx`
+- Modify: `resources/js/components/customer/pickup-outlet-selector.tsx`
 
-- [ ] **Step 1: Merge all steps into single scrollable page**
+**Current Issues:**
+1. `LocationSearchPanel` terlalu kompleks (search + map + detail + landmark dalam 1 view)
+2. Guest tidak bisa delivery (diblock login sheet)
+3. Returning customer harus isi ulang jika location belum tersimpan
 
-Combine cart review, customer info, and payment into one page with sections.
+- [ ] **Step 1: Auto-advance untuk returning user**
 
-- [ ] **Step 2: Add sticky order summary footer**
+Jika name, phone, dan location sudah tersimpan, tampilkan summary card dengan tombol "Edit" untuk expand:
 
 ```tsx
-<div className="fixed bottom-0 left-0 right-0 z-50 border-t border-zinc-200 bg-white px-4 py-3">
-    <div className="mx-auto max-w-lg">
-        <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-zinc-600">{cartCount} item</span>
-            <span className="text-lg font-bold text-slate-900">{formatCurrency(total)}</span>
+// Di customer.tsx, tambah logic auto-advance
+const isReturningUser = customerName && phoneNumber && savedLocation;
+
+{isReturningUser && !showFullForm ? (
+    <div className="rounded-xl border border-zinc-200 bg-white p-4">
+        <div className="flex items-center justify-between">
+            <div>
+                <div className="text-sm font-semibold text-slate-900">{customerName}</div>
+                <div className="text-xs text-zinc-500">{phoneNumber}</div>
+                <div className="text-xs text-zinc-400 mt-1">{savedLocation.address}</div>
+            </div>
+            <button onClick={() => setShowFullForm(true)} className="text-xs font-medium text-emerald-600">
+                Edit
+            </button>
         </div>
-        <button className="w-full rounded-lg bg-emerald-600 py-3 text-sm font-bold text-white">
-            Buat Pesanan
-        </button>
+    </div>
+) : (
+    // Full form with LocationSearchPanel
+)}
+```
+
+- [ ] **Step 2: Merge address detail fields**
+
+Gabungkan "Detail Alamat" dan "Patokan" ke dalam 1 card yang sama dengan map pin, bukan card terpisah:
+
+```tsx
+// Di location-search-panel.tsx, setelah map pin section
+<div className="rounded-xl border border-zinc-200 bg-white p-4 mt-3">
+    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Detail Lokasi</div>
+    <div className="space-y-3">
+        <div>
+            <label className="mb-1 block text-xs font-medium text-zinc-500">Detail Alamat</label>
+            <input ... />
+        </div>
+        <div>
+            <label className="mb-1 block text-xs font-medium text-zinc-500">Patokan / Ciri Rumah</label>
+            <input ... />
+        </div>
     </div>
 </div>
 ```
 
-- [ ] **Step 3: Test and commit**
+- [ ] **Step 3: Guest delivery flow**
+
+Hapus blocking login sheet. Biarkan guest isi form delivery, login diminta di payment step:
+
+```tsx
+// Di customer.tsx, hapus DeliveryLoginSheet blocking
+// Guest bisa isi form delivery, tapi saat submit ke payment:
+if (!user && fulfillment === 'delivery') {
+    // Show login prompt di payment step, bukan di Step 2
+}
+```
+
+- [ ] **Step 4: Test and commit**
 
 ---
 
@@ -501,5 +549,5 @@ After completing all tasks:
 |--------|-------|------|
 | Sprint 1 (P0) | Search, fulfillment choice, product images | 4d |
 | Sprint 2 (P1) | Real-time tracking, ETA, courier contact, notifications | 7d |
-| Sprint 3 (P2) | Checkout simplification, address autocomplete | 5d |
+| Sprint 3 (P2) | Checkout Step 2 UX, address autocomplete | 5d |
 | **Total** | | **16d** |
