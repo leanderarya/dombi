@@ -22,6 +22,12 @@ class DeliveryService
 
     public function assignCourier(Order $order, User $courier, User $assignedBy, bool $overrideCapacity = false, ?string $overrideReason = null): Delivery
     {
+        if ($order->fulfillment_type === 'pickup') {
+            throw ValidationException::withMessages([
+                'courier_id' => 'Pesanan pickup tidak memerlukan kurir.',
+            ]);
+        }
+
         return DB::transaction(function () use ($order, $courier, $assignedBy, $overrideCapacity, $overrideReason): Delivery {
             $order = Order::query()->lockForUpdate()->with('delivery')->findOrFail($order->id);
 
