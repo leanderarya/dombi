@@ -118,7 +118,12 @@ return;
                 <div className="text-sm font-medium text-zinc-900">
                     {displayLabel}
                 </div>
-                <div className="mt-0.5 text-base font-semibold text-zinc-900 tabular-nums">
+                {familyDescription && (
+                    <div className="mt-0.5 text-xs text-zinc-400 line-clamp-1">
+                        {familyDescription}
+                    </div>
+                )}
+                <div className="mt-1 text-base font-semibold text-zinc-900 tabular-nums">
                     {formatCurrency(displayPrice)}
                 </div>
                 {variant.available_stock !== undefined && (
