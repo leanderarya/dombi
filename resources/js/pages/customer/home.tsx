@@ -95,15 +95,15 @@ export default function Home({ customerName, activeOrders }: any) {
 
             if (outletName) {
                 setPickupOutletName(outletName);
-                // Tampilkan nama outlet selama 3 detik agar customer tahu outlet tujuan
-                await new Promise(r => setTimeout(r, 3000));
             }
-
-            // Use window.location for full page load (preserves overlay)
-            window.location.href = '/customer/products';
         } catch {
-            window.location.href = '/customer/products';
+            // Silently fail
         }
+
+        // Navigate after 3 seconds (separate setTimeout so overlay stays visible)
+        setTimeout(() => {
+            router.get('/customer/products');
+        }, 3000);
     }, [nearestOutlet]);
 
     const handleDelivery = useCallback(() => {
