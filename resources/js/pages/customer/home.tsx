@@ -86,27 +86,27 @@ return;
 
     const handlePickup = useCallback(async () => {
         setPickupLoading(true);
+        setPickupOutletName(null);
 
         try {
             let outletName = nearestOutlet?.name;
 
             if (!outletName) {
                 const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 3000 });
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
                 });
                 const response = await fetch(`/customer/checkout/pickup-outlets?latitude=${pos.coords.latitude}&longitude=${pos.coords.longitude}`);
                 const data = await response.json();
-                outletName = data.recommended?.name || 'Outlet Dombi';
+                outletName = data.recommended?.name;
             }
 
-            setPickupOutletName(outletName);
-
-            // Show outlet name briefly before navigating
-            await new Promise(r => setTimeout(r, 1200));
+            if (outletName) {
+                setPickupOutletName(outletName);
+                await new Promise(r => setTimeout(r, 1500));
+            }
 
             router.get('/customer/products');
         } catch {
-            // Fallback: go directly to products
             router.get('/customer/products');
         } finally {
             setPickupLoading(false);
@@ -372,15 +372,18 @@ return;
 
             {/* Pickup Loading Overlay */}
             {pickupLoading && (
-                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-emerald-600">
-                    <div className="mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-emerald-600 to-emerald-700">
+                    <div className="mb-6 h-10 w-10 animate-spin rounded-full border-3 border-white/30 border-t-white" />
                     {pickupOutletName ? (
-                        <>
-                            <div className="text-lg font-semibold text-white">{pickupOutletName}</div>
-                            <div className="mt-1 text-sm text-emerald-100">Menuju produk...</div>
-                        </>
+                        <div className="text-center">
+                            <div className="text-[11px] font-bold uppercase tracking-widest text-emerald-200">Outlet Terdekat</div>
+                            <div className="mt-2 text-2xl font-bold text-white">{pickupOutletName}</div>
+                            <div className="mt-3 text-sm text-emerald-100">Menuju produk...</div>
+                        </div>
                     ) : (
-                        <div className="text-sm text-emerald-100">Mencari outlet terdekat...</div>
+                        <div className="text-center">
+                            <div className="text-sm font-medium text-emerald-100">Mencari outlet terdekat dari lokasi Anda</div>
+                        </div>
                     )}
                 </div>
             )}
