@@ -189,7 +189,7 @@ return;
                     </div>
                 </header>
 
-                <main className="mx-auto max-w-lg px-4 pt-4 pb-40">
+                <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
                     {/* Toast */}
                     {toast && (
                         <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
@@ -211,8 +211,8 @@ return;
                     )}
 
                     {/* Product Image */}
-                    <div className="mb-5 flex h-52 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-zinc-50">
-                        <span className="text-7xl">&#129371;</span>
+                    <div className="mb-5 flex h-72 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-zinc-50">
+                        <span className="text-8xl">&#129371;</span>
                     </div>
 
                     {/* Product Name */}
@@ -347,6 +347,37 @@ return;
                         </section>
                     )}
 
+                    {/* Quantity */}
+                    {selectedVariant && (
+                        <section className="mt-6">
+                            <h3 className="text-sm font-semibold text-slate-900">Jumlah</h3>
+                            <div className="mt-3 flex items-center gap-4">
+                                <div className="flex items-center rounded-xl border border-zinc-200 bg-white">
+                                    <button
+                                        onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                                        className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-l-xl"
+                                    >
+                                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                            <path strokeLinecap="round" d="M5 12h14" />
+                                        </svg>
+                                    </button>
+                                    <span className="w-12 text-center text-sm font-bold text-slate-900">{quantity}</span>
+                                    <button
+                                        onClick={() => setQuantity(quantity + 1)}
+                                        className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-r-xl"
+                                    >
+                                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                            <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                <span className="text-sm text-zinc-500">
+                                    Total <span className="font-bold text-slate-900">{formatCurrency(selectedVariant.selling_price * quantity)}</span>
+                                </span>
+                            </div>
+                        </section>
+                    )}
+
                     {/* Other Products */}
                     {otherFamilies.length > 0 && (
                         <section className="mt-8">
@@ -381,39 +412,17 @@ return;
                 {/* Sticky CTA */}
                 {selectedVariant && (
                     <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-200 bg-white/95 backdrop-blur pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
-                        <div className="mx-auto flex max-w-lg items-center gap-3 px-4">
-                            {/* Quantity Stepper */}
-                            <div className="flex items-center rounded-xl border border-zinc-200 bg-white">
-                                <button
-                                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                    className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-l-xl"
-                                >
-                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                        <path strokeLinecap="round" d="M5 12h14" />
-                                    </svg>
-                                </button>
-                                <span className="w-10 text-center text-sm font-bold text-slate-900">{quantity}</span>
-                                <button
-                                    onClick={() => setQuantity(quantity + 1)}
-                                    className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-r-xl"
-                                >
-                                    <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                        <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {/* Add Button */}
+                        <div className="mx-auto max-w-lg px-4">
                             <button
                                 onClick={handleAddToCart}
                                 disabled={adding || isOutOfStock}
-                                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white active:bg-emerald-700 shadow-sm disabled:opacity-60"
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white active:bg-emerald-700 shadow-sm disabled:opacity-60"
                             >
                                 {isOutOfStock ? (
                                     <span>Habis</span>
                                 ) : (
                                     <>
-                                        <span>{adding ? 'Menambahkan...' : 'Tambah'}</span>
+                                        <span>{adding ? 'Menambahkan...' : 'Tambah ke Keranjang'}</span>
                                         <span className="text-white/80">&middot;</span>
                                         <span>{formatCurrency(selectedVariant.selling_price * quantity)}</span>
                                     </>
