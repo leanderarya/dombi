@@ -382,7 +382,7 @@ return;
                     {otherFamilies.length > 0 && (
                         <section className="mt-8">
                             <h3 className="text-sm font-semibold text-slate-900">Produk Lainnya</h3>
-                            <div className="mt-3 flex gap-3 overflow-x-auto pb-2 -mx-4 px-4">
+                            <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-none pb-2 -mx-4 px-4">
                                 {otherFamilies.map((other) => {
                                     const minPrice = Math.min(...(other.variants?.map((v) => v.selling_price) ?? [0]));
 
