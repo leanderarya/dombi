@@ -1,17 +1,31 @@
-import { Head, Link, usePage } from '@inertiajs/react';
-import { HelpCircle, Info, MapPin, Package } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { HelpCircle, Info, LogOut, MapPin, Package } from 'lucide-react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 
 export default function Profile({ defaultAddress }: any) {
-    const { appVersion } = usePage<any>().props;
+    const { auth, appVersion } = usePage<any>().props;
+    const user = auth?.user;
+
+    const initials = user?.name
+        ?.split(' ')
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) ?? 'U';
 
     return (
         <CustomerMobileLayout hideTopBar>
             <Head title="Pengaturan" />
 
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-zinc-900">Pengaturan</h1>
+            {/* User Info */}
+            <div className="flex items-center gap-3">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+                    {initials}
+                </div>
+                <div className="min-w-0 flex-1">
+                    <h1 className="truncate text-xl font-semibold text-zinc-900">{user?.name ?? 'Pengguna'}</h1>
+                    {user?.email && <p className="truncate text-sm text-zinc-500">{user.email}</p>}
+                </div>
             </div>
 
             {/* Default Address */}
@@ -49,8 +63,17 @@ export default function Profile({ defaultAddress }: any) {
                 </div>
             </section>
 
+            {/* Logout */}
+            <button
+                onClick={() => router.post('/logout')}
+                className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 active:scale-[0.98] active:bg-red-100"
+            >
+                <LogOut className="h-4 w-4" />
+                Logout
+            </button>
+
             {/* Version */}
-            <p className="mt-8 text-center text-xs text-zinc-400">Versi {appVersion ?? '1.0.0'}</p>
+            <p className="mt-4 mb-4 text-center text-xs text-zinc-400">Versi {appVersion ?? '1.0.0'}</p>
         </CustomerMobileLayout>
     );
 }

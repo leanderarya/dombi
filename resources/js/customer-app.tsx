@@ -1,0 +1,38 @@
+import { createInertiaApp } from '@inertiajs/react';
+import { createRoot } from 'react-dom/client';
+import { Toaster } from 'sonner';
+
+const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
+
+createInertiaApp({
+    title: (title) => (title ? `${title} - ${appName}` : appName),
+    progress: {
+        color: '#047857',
+    },
+    resolve: (name) => {
+        const pages = import.meta.glob('./pages/customer/**/*.tsx', { eager: true });
+        const page = pages[`./pages/${name}.tsx`];
+        if (!page) {
+            throw new Error(`Page not found: ${name}`);
+        }
+        return page;
+    },
+    setup({ el, App, props }) {
+        const root = createRoot(el!);
+        root.render(
+            <>
+                <App {...props} />
+                <Toaster position="top-center" richColors closeButton />
+            </>
+        );
+    },
+});
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+            // SW registration failed - non-critical
+        });
+    });
+}

@@ -122,7 +122,7 @@ class OrderController extends Controller
             $message .= ' '.implode(' ', $result['warnings']);
         }
 
-        return redirect()->route('customer.checkout')
+        return redirect()->route('customer.checkout.index')
             ->with('success', $message);
     }
 }

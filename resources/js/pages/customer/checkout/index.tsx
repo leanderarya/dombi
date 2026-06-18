@@ -105,11 +105,6 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
             <Head title="Checkout" />
             <StepHeader title="Checkout" step="1 dari 3" backHref="/customer/products" />
 
-            <section className="mt-5">
-                <h1 className="text-xl font-semibold text-slate-900">Pesanan Anda</h1>
-                <p className="mt-1 text-sm text-slate-500">Periksa item dan pilih metode pengambilan sebelum melanjutkan.</p>
-            </section>
-
             {items.length === 0 ? (
                 <section className="mt-6 rounded-xl border border-slate-200 bg-white p-5 text-center">
                     <p className="text-sm font-semibold text-slate-900">Belum ada produk di keranjang</p>
@@ -134,7 +129,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     </section>
 
                     <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                        <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                        <div className="flex items-center justify-between text-sm font-medium text-zinc-700">
                             <span>Subtotal</span>
                             <span>{itemCount} item</span>
                         </div>
@@ -235,14 +230,14 @@ function FulfillmentCard({ active, title, icon, description, onClick, detail }: 
 
 function StepHeader({ title, step, backHref }: { title: string; step: string; backHref: string }) {
     return (
-        <header className="-mx-4 -mt-5 border-b border-slate-200 bg-white px-4 py-3">
+        <header className="border-b border-slate-200 bg-white px-4 py-3">
             <div className="mx-auto flex max-w-lg items-center justify-between">
                 <button onClick={() => router.visit(backHref)} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 active:bg-slate-100">
                     <span className="text-xl">&#8249;</span>
                 </button>
                 <div className="text-center">
                     <h1 className="text-base font-semibold text-slate-900">{title}</h1>
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{step}</p>
+                    <p className="text-sm font-medium text-zinc-700">{step}</p>
                 </div>
                 <div className="h-10 w-10" />
             </div>

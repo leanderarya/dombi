@@ -24,6 +24,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
+            'customer.inertia' => \App\Http\Middleware\CustomerInertiaRoot::class,
+            'internal.inertia' => \App\Http\Middleware\InternalInertiaRoot::class,
             'guest.or.customer' => AllowGuestOrCustomer::class,
             'customer.or.recovered' => AllowCustomerOrRecoveredGuest::class,
             'role' => RoleMiddleware::class,

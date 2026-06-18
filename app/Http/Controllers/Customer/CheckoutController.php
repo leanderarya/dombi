@@ -119,7 +119,7 @@ class CheckoutController extends Controller
 
         // If no fulfillment_type provided, just store items and go to checkout step 1
         if (empty($validated['fulfillment_type'])) {
-            return redirect()->route('customer.checkout');
+            return redirect()->route('customer.checkout.index');
         }
 
         // Full submission with fulfillment, store and go to step 2
@@ -407,7 +407,7 @@ class CheckoutController extends Controller
         $cart = $request->session()->get('checkout.cart');
 
         if (! in_array($fulfillmentType, self::FULFILLMENT_TYPES, true)) {
-            return redirect()->route('customer.checkout')->withErrors(['fulfillment_type' => 'Pilih metode pengambilan terlebih dahulu.']);
+            return redirect()->route('customer.checkout.index')->withErrors(['fulfillment_type' => 'Pilih metode pengambilan terlebih dahulu.']);
         }
 
         if (! $customer) {
@@ -428,7 +428,7 @@ class CheckoutController extends Controller
         }
 
         if (! is_array($cart) || count($cart) === 0) {
-            return redirect()->route('customer.checkout')->withErrors(['items' => 'Pilih produk terlebih dahulu.']);
+            return redirect()->route('customer.checkout.index')->withErrors(['items' => 'Pilih produk terlebih dahulu.']);
         }
 
         $validated = $request->validate([
