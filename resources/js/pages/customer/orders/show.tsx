@@ -5,6 +5,7 @@ import OrderSummaryCard from '@/components/customer/order-summary-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import StickyOrderActions from '@/components/customer/sticky-order-actions';
 import OfflineBanner from '@/components/offline-banner';
+import Dialog from '@/components/ui/dialog';
 import { orderStatusLabel, orderStatusTone, activeOrderStatuses } from '@/lib/customer-status';
 import { formatDate } from '@/lib/format';
 import { useOrderRecovery } from '@/lib/order-recovery';
@@ -16,7 +17,7 @@ export default function OrderShow({ order, cancellationReasons = [] }: any) {
     const isExpired = order.status === 'expired';
     const { addOrder } = useOrderRecovery();
     const [copied, setCopied] = useState(false);
-    const [showCancelSheet, setShowCancelSheet] = useState(false);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
     const cancelForm = useForm({
         reason: '',
@@ -57,7 +58,7 @@ return;
 
     function handleCancel() {
         cancelForm.post(`/customer/orders/${order.id}/cancel`, {
-            onSuccess: () => setShowCancelSheet(false),
+            onSuccess: () => setCancelDialogOpen(false),
         });
     }
 
@@ -229,7 +230,7 @@ return;
                     <div className="mt-4">
                         <button
                             type="button"
-                            onClick={() => setShowCancelSheet(true)}
+                            onClick={() => setCancelDialogOpen(true)}
                             className="flex h-11 w-full items-center justify-center rounded-xl border border-red-200 text-sm font-semibold text-red-600 active:bg-red-50"
                         >
                             Batalkan Pesanan
@@ -251,69 +252,54 @@ return;
             {/* Sticky Bottom Actions */}
             <StickyOrderActions orderId={order.id} showReorder={isTerminal} />
 
-            {/* Cancel Sheet */}
-            {showCancelSheet && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40" onClick={() => setShowCancelSheet(false)}>
-                    <div
-                        className="flex w-full max-w-lg flex-col rounded-t-3xl bg-white px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div className="mx-auto h-1.5 w-10 rounded-full bg-slate-200" />
-                        <div className="mt-3 flex items-center justify-between">
-                            <h2 className="text-[15px] font-semibold text-slate-900">Batalkan Pesanan</h2>
-                            <button type="button" onClick={() => setShowCancelSheet(false)} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 active:bg-slate-100">
-                                <XCircle className="h-4 w-4" />
-                            </button>
-                        </div>
+            {/* Cancel Dialog */}
+            <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} title="Batalkan Pesanan">
+                <p className="text-sm text-slate-500">Pilih alasan pembatalan.</p>
 
-                        <p className="mt-2 text-sm text-slate-500">Pilih alasan pembatalan.</p>
-
-                        <div className="mt-4 space-y-2">
-                            {cancellationReasons.map((reason: string) => (
-                                <button
-                                    key={reason}
-                                    type="button"
-                                    onClick={() => cancelForm.setData('reason', reason)}
-                                    className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
-                                        cancelForm.data.reason === reason
-                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                                            : 'border-slate-200 text-slate-700 active:bg-slate-50'
-                                    }`}
-                                >
-                                    {reason}
-                                </button>
-                            ))}
-                        </div>
-
-                        {cancelForm.data.reason === 'Lainnya' && (
-                            <div className="mt-3">
-                                <textarea
-                                    value={cancelForm.data.note}
-                                    onChange={(e) => cancelForm.setData('note', e.target.value)}
-                                    placeholder="Jelaskan alasan pembatalan..."
-                                    className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
-                                />
-                            </div>
-                        )}
-
-                        {cancelForm.errors.reason && (
-                            <p className="mt-2 text-xs text-red-600">{cancelForm.errors.reason}</p>
-                        )}
-                        {cancelForm.errors.note && (
-                            <p className="mt-1 text-xs text-red-600">{cancelForm.errors.note}</p>
-                        )}
-
+                <div className="mt-4 space-y-2">
+                    {cancellationReasons.map((reason: string) => (
                         <button
+                            key={reason}
                             type="button"
-                            onClick={handleCancel}
-                            disabled={!cancelForm.data.reason || cancelForm.processing}
-                            className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:bg-red-700 disabled:bg-slate-300"
+                            onClick={() => cancelForm.setData('reason', reason)}
+                            className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
+                                cancelForm.data.reason === reason
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                    : 'border-slate-200 text-slate-700 active:bg-slate-50'
+                            }`}
                         >
-                            {cancelForm.processing ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                            {reason}
                         </button>
-                    </div>
+                    ))}
                 </div>
-            )}
+
+                {cancelForm.data.reason === 'Lainnya' && (
+                    <div className="mt-3">
+                        <textarea
+                            value={cancelForm.data.note}
+                            onChange={(e) => cancelForm.setData('note', e.target.value)}
+                            placeholder="Jelaskan alasan pembatalan..."
+                            className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                        />
+                    </div>
+                )}
+
+                {cancelForm.errors.reason && (
+                    <p className="mt-2 text-xs text-red-600">{cancelForm.errors.reason}</p>
+                )}
+                {cancelForm.errors.note && (
+                    <p className="mt-1 text-xs text-red-600">{cancelForm.errors.note}</p>
+                )}
+
+                <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={!cancelForm.data.reason || cancelForm.processing}
+                    className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:bg-red-700 disabled:bg-slate-300"
+                >
+                    {cancelForm.processing ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                </button>
+            </Dialog>
         </div>
     );
 }
