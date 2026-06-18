@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Phone, Search } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { ArrowLeft, Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import ActiveOrderCard from '@/components/customer/active-order-card';
 import EmptyOrderState from '@/components/customer/empty-order-state';
 import OrderFilterChips from '@/components/customer/order-filter-chips';
@@ -17,7 +17,7 @@ const filterOptions = [
     { key: 'failed', label: 'Gagal' },
 ];
 
-type ViewState = 'candidate' | 'recovered' | 'empty';
+type ViewState = 'recovered' | 'empty';
 
 export default function OrdersIndex({ activeOrders, historyOrders }: any) {
     const { hasRecovery, phone, maskedPhone, saveRecovery, clearRecovery } = useOrderRecovery();
@@ -25,40 +25,16 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
     const [recoverySheetOpen, setRecoverySheetOpen] = useState(false);
     const [recoveredActive, setRecoveredActive] = useState<any[] | null>(null);
     const [recoveredHistory, setRecoveredHistory] = useState<any[] | null>(null);
-    const [recoveryLoading, setRecoveryLoading] = useState(false);
 
     const hasServerOrders = (activeOrders && activeOrders.length > 0) || (historyOrders?.data && historyOrders.data.length > 0);
     const hasRecoveredOrders = recoveredActive !== null;
 
     const viewState: ViewState = hasServerOrders || hasRecoveredOrders
         ? 'recovered'
-        : hasRecovery && phone
-            ? 'candidate'
-            : 'empty';
+        : 'empty';
 
     const displayActive = recoveredActive ?? activeOrders ?? [];
     const displayHistory = recoveredHistory ?? historyOrders?.data ?? [];
-
-    const doRecovery = useCallback(async (phoneNumber: string) => {
-        setRecoveryLoading(true);
-
-        try {
-            const result = await recoverOrders(phoneNumber);
-
-            if (result.found) {
-                const orderCodes = [...result.active_orders, ...result.recent_orders].map((o: any) => o.order_code);
-                saveRecovery(phoneNumber, orderCodes);
-                setRecoveredActive(result.active_orders);
-                setRecoveredHistory(result.recent_orders);
-            } else {
-                clearRecovery();
-            }
-        } catch {
-            // Silently fail
-        } finally {
-            setRecoveryLoading(false);
-        }
-    }, [saveRecovery, clearRecovery]);
 
     const filteredHistory = useMemo(() => {
         if (filter === 'all') {
@@ -104,49 +80,6 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
             </header>
 
             <div className={viewState === 'recovered' && (hasActiveOrders || hasHistory) ? 'h-26' : 'h-16'} />
-
-            {/* STATE: Recovery candidate — show confirmation before fetching */}
-            {viewState === 'candidate' && !recoveryLoading && (
-                <div className="mt-4 px-1">
-                    <div className="rounded-xl border border-slate-200 bg-white p-5">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                                <Phone className="h-5 w-5 text-emerald-600" />
-                            </div>
-                            <div>
-                                <div className="text-sm font-semibold text-slate-900">Pesanan Terakhir Ditemukan</div>
-                                <div className="mt-0.5 text-xs text-slate-500">{maskedPhone}</div>
-                            </div>
-                        </div>
-                        <div className="mt-4 space-y-2">
-                            <button
-                                type="button"
-                                onClick={() => doRecovery(phone!)}
-                                className="flex h-11 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
-                            >
-                                Lihat Pesanan
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    clearRecovery();
-                                    setRecoverySheetOpen(true);
-                                }}
-                                className="flex h-11 w-full items-center justify-center rounded-xl border border-slate-200 text-sm font-semibold text-slate-700 active:bg-slate-50"
-                            >
-                                Gunakan Nomor Lain
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Recovery loading */}
-            {recoveryLoading && (
-                <div className="flex items-center justify-center py-12">
-                    <div className="text-sm text-slate-500">Mencari pesanan...</div>
-                </div>
-            )}
 
             {/* STATE: Recovered — show orders with info card */}
             {viewState === 'recovered' && !recoveryLoading && (
