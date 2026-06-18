@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import BottomSheet from '@/components/ui/bottom-sheet';
+import Dialog from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
@@ -84,12 +84,8 @@ return;
         : familyName;
 
     return (
-        <BottomSheet open={open} onClose={onClose}>
+        <Dialog open={open} onClose={onClose} title={title}>
             <div className="space-y-5">
-                {/* Header */}
-                <div>
-                    <h3 className="text-base font-semibold text-slate-900">{title}</h3>
-                </div>
 
                 {/* Size Options */}
                 <div className="space-y-2">
@@ -165,6 +161,6 @@ return;
                     </div>
                 )}
             </div>
-        </BottomSheet>
+        </Dialog>
     );
 }
