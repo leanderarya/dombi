@@ -95,8 +95,8 @@ export default function Home({ customerName, activeOrders }: any) {
 
             if (outletName) {
                 setPickupOutletName(outletName);
-                // Wait for user to see outlet name
-                await new Promise(r => setTimeout(r, 1500));
+                // Tampilkan nama outlet selama 3 detik agar customer tahu outlet tujuan
+                await new Promise(r => setTimeout(r, 3000));
             }
 
             // Use window.location for full page load (preserves overlay)
