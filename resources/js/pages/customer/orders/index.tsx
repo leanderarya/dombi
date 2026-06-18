@@ -139,7 +139,7 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
             )}
 
             {/* STATE: Empty — no data, no recovery candidate */}
-            {viewState === 'empty' && !recoveryLoading && (
+            {viewState === 'empty' && (
                 <div className="mt-8 flex flex-col items-center px-4 text-center">
                     <EmptyOrderState type="no-orders" />
 
