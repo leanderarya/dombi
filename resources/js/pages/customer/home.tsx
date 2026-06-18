@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Truck, User } from 'lucide-react';
+import { MapPin, MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Truck, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
@@ -34,6 +34,8 @@ export default function Home({ customerName, activeOrders }: any) {
     const hasLinkedCustomer = !!auth?.user?.customer;
     const [slideIndex, setSlideIndex] = useState(0);
     const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
+    const [nearestOutlet, setNearestOutlet] = useState<{ name: string; distance_km: number } | null>(null);
+    const [locationLoading, setLocationLoading] = useState(false);
 
     // Auto-rotate hero slides
     useEffect(() => {
@@ -44,17 +46,48 @@ export default function Home({ customerName, activeOrders }: any) {
         return () => clearInterval(timer);
     }, []);
 
+    // Auto-detect location and fetch nearest outlet
+    useEffect(() => {
+        if (!navigator.geolocation) return;
+
+        setLocationLoading(true);
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                try {
+                    const { latitude, longitude } = position.coords;
+                    const response = await fetch(`/customer/checkout/pickup-outlets?latitude=${latitude}&longitude=${longitude}`);
+                    const data = await response.json();
+                    if (data.recommended) {
+                        setNearestOutlet({
+                            name: data.recommended.name,
+                            distance_km: data.recommended.distance_km,
+                        });
+                    }
+                } catch (error) {
+                    // Silently fail - not critical
+                } finally {
+                    setLocationLoading(false);
+                }
+            },
+            () => {
+                // Permission denied or error - not critical
+                setLocationLoading(false);
+            },
+            { enableHighAccuracy: false, timeout: 5000 }
+        );
+    }, []);
+
     const activeOrder = activeOrders?.[0] ?? null;
 
     const handlePickup = useCallback(() => {
-        router.get('/customer/checkout');
+        router.get('/customer/products');
     }, []);
 
     const handleDelivery = useCallback(() => {
         if (!isLoggedIn || !hasLinkedCustomer) {
             setDeliverySheetOpen(true);
         } else {
-            router.get('/customer/checkout');
+            router.get('/customer/products');
         }
     }, [isLoggedIn, hasLinkedCustomer]);
 
@@ -155,6 +188,24 @@ export default function Home({ customerName, activeOrders }: any) {
                     </div>
                 )}
             </section>
+
+            {/* SECTION 2.5 — NEAREST OUTLET */}
+            {nearestOutlet && (
+                <section className="mt-4">
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                                <MapPin className="h-5 w-5 text-emerald-600" />
+                            </div>
+                            <div>
+                                <div className="text-[11px] font-medium text-emerald-600">Outlet Terdekat</div>
+                                <div className="text-sm font-bold text-emerald-700">{nearestOutlet.name}</div>
+                                <div className="text-[10px] text-emerald-600">{nearestOutlet.distance_km} km dari lokasi Anda</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* SECTION 3 — PESAN SEKARANG */}
             <section className="mt-6">
