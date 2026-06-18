@@ -53,7 +53,16 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                         >
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0 flex-1">
-                                    <div className="text-sm font-bold tabular-nums text-slate-900">{order.order_code}</div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="text-sm font-bold tabular-nums text-slate-900">{order.order_code}</div>
+                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                            order.fulfillment_type === 'pickup'
+                                                ? 'bg-blue-50 text-blue-700'
+                                                : 'bg-purple-50 text-purple-700'
+                                        }`}>
+                                            {order.fulfillment_type === 'pickup' ? 'Pickup' : 'Delivery'}
+                                        </span>
+                                    </div>
                                     <div className="mt-0.5 text-sm text-slate-600">{order.customer_name}</div>
                                 </div>
                                 <OrderStatusBadge status={order.status} />
