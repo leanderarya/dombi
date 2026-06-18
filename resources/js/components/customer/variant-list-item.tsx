@@ -119,7 +119,7 @@ return;
                     {displayLabel}
                 </div>
                 {familyDescription && (
-                    <div className="mt-0.5 text-xs text-zinc-400 line-clamp-1">
+                    <div className="mt-0.5 text-xs text-zinc-400 line-clamp-2">
                         {familyDescription}
                     </div>
                 )}

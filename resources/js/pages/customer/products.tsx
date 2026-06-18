@@ -1,8 +1,10 @@
 import { Head } from '@inertiajs/react';
-import { useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import SizeSelectorSheet from '@/components/customer/size-selector-sheet';
 import VariantListItem from '@/components/customer/variant-list-item';
 import FilterChips from '@/components/ui/filter-chips';
+import { Skeleton, SkeletonList } from '@/components/ui/skeleton';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { sizeToMl } from '@/lib/size';
 
@@ -50,11 +52,18 @@ interface Props {
 }
 
 export default function Products({ families }: Props) {
+    const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
     const [sheetOpen, setSheetOpen] = useState(false);
     const [sheetVariants, setSheetVariants] = useState<Variant[]>([]);
     const [sheetFlavorName, setSheetFlavorName] = useState('');
     const [sheetFamilyName, setSheetFamilyName] = useState('');
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setLoading(false), 300);
+        return () => clearTimeout(timer);
+    }, []);
 
     // Build category chips from families
     const filterOptions = useMemo(() => {
@@ -67,14 +76,28 @@ export default function Products({ families }: Props) {
         return options;
     }, [families]);
 
+    // Filter families by search query (matches family name or variant name)
+    const filteredFamilies = useMemo(() => {
+        if (!search) {
+return families;
+}
+
+        const q = search.toLowerCase();
+
+        return families.filter(f =>
+            f.name.toLowerCase().includes(q) ||
+            f.variants.some(v => v.name.toLowerCase().includes(q))
+        );
+    }, [families, search]);
+
     // Group variants by flavor within each family, then group families into sections
     const familySections = useMemo(() => {
         const sections: FamilySection[] = [];
 
-        for (const family of families) {
+        for (const family of filteredFamilies) {
             if (activeFilter !== 'all' && String(family.id) !== activeFilter) {
-continue;
-}
+                continue;
+            }
 
             const activeVariants = (family.variants ?? []).filter(
                 (v) => v.is_active,
@@ -133,7 +156,7 @@ continue;
         }
 
         return sections;
-    }, [families, activeFilter]);
+    }, [filteredFamilies, activeFilter]);
 
     // Count total products in active filter
     const productCount = useMemo(() => {
@@ -160,9 +183,23 @@ continue;
             <Head title="Produk" />
 
             <div className="px-4 pt-4">
-                <h1 className="text-[22px] leading-7 font-bold text-slate-950">
+                <h1 className="text-xl font-semibold text-zinc-900">
                     Produk
                 </h1>
+            </div>
+
+            {/* Search Input */}
+            <div className="sticky top-0 z-10 bg-[#fbf9f7] px-4 py-3">
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Cari produk..."
+                        className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pl-10 pr-4 text-sm"
+                    />
+                </div>
             </div>
 
             {/* Category Chips */}
@@ -176,19 +213,42 @@ continue;
 
             {/* Product Count */}
             <div className="mt-3 px-4">
-                <p className="text-xs text-zinc-500">{productCount} Produk</p>
+                <p className="text-xs text-zinc-500">{loading ? '...' : `${productCount} Produk`}</p>
             </div>
 
-            {/* Family Sections */}
+            {/* Family Sections or Skeleton */}
             <div className="mt-2 px-4">
-                {familySections.map((section, sectionIndex) => (
+                {loading ? (
+                    <div className="space-y-6">
+                        {[1, 2, 3].map((i) => (
+                            <div key={i}>
+                                <Skeleton className="h-5 w-1/3 mb-2" />
+                                <div className="h-px bg-zinc-200" />
+                                <div className="space-y-3 mt-3">
+                                    {[1, 2].map((j) => (
+                                        <div key={j} className="flex items-center gap-3.5 py-4">
+                                            <Skeleton className="h-16 w-16 rounded-xl shrink-0" />
+                                            <div className="flex-1 space-y-2">
+                                                <Skeleton className="h-4 w-2/3" />
+                                                <Skeleton className="h-5 w-1/3" />
+                                            </div>
+                                            <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <>
+                        {familySections.map((section, sectionIndex) => (
                     <div
                         key={section.familyId}
                         className={sectionIndex > 0 ? 'mt-8' : ''}
                     >
                         {/* Family Section Header */}
                         <div className="flex items-baseline justify-between pb-2">
-                            <h2 className="text-[15px] font-bold text-slate-900">
+                            <h2 className="text-sm font-bold text-zinc-900">
                                 {section.familyName}
                             </h2>
                             <span className="text-xs text-zinc-400">
@@ -199,8 +259,8 @@ continue;
                         {/* Divider */}
                         <div className="h-px bg-zinc-200" />
 
-                        {/* Variant Rows */}
-                        <div className="divide-y divide-zinc-100">
+                        {/* Variant Cards */}
+                        <div className="mt-3 space-y-3">
                             {section.flavorGroups.map((group) => (
                                 <VariantListItem
                                     key={`${group.familyId}-${group.flavor ?? 'default'}`}
@@ -221,13 +281,15 @@ continue;
                         </div>
                     </div>
                 ))}
+                    </>
+                )}
             </div>
 
             {/* Empty State */}
-            {familySections.length === 0 && (
+            {!loading && familySections.length === 0 && (
                 <div className="mt-12 flex flex-col items-center px-4 text-center">
                     <span className="text-4xl">&#129371;</span>
-                    <p className="mt-3 text-sm font-semibold text-slate-900">
+                    <p className="mt-3 text-sm font-semibold text-zinc-900">
                         Belum ada produk
                     </p>
                     <p className="mt-1 text-xs text-zinc-500">
