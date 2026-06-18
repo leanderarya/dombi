@@ -102,14 +102,14 @@ return;
 
             if (outletName) {
                 setPickupOutletName(outletName);
+                // Wait for user to see outlet name
                 await new Promise(r => setTimeout(r, 1500));
             }
 
-            router.get('/customer/products');
+            // Use window.location for full page load (preserves overlay)
+            window.location.href = '/customer/products';
         } catch {
-            router.get('/customer/products');
-        } finally {
-            setPickupLoading(false);
+            window.location.href = '/customer/products';
         }
     }, [nearestOutlet]);
 
