@@ -28,7 +28,9 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
     const isPending = order.status === 'pending_confirmation';
     const isConfirmed = order.status === 'confirmed';
     const isPreparing = order.status === 'preparing';
-    const isReadyForPickup = order.status === 'ready_for_pickup' && !order.delivery;
+    const isDeliveryOrder = order.fulfillment_type !== 'pickup';
+    const isReadyForPickup = order.status === 'ready_for_pickup' && !order.delivery && isDeliveryOrder;
+    const isReadyForCustomerPickup = order.status === 'ready_for_pickup' && order.fulfillment_type === 'pickup';
 
     // Build sticky actions
     const actions = [];
@@ -113,6 +115,19 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                         {assignForm.errors.courier_id && <div className="text-xs text-red-600">{assignForm.errors.courier_id}</div>}
                         <button className="w-full rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white active:bg-emerald-800">Assign Kurir</button>
                     </form>
+                ) : isReadyForCustomerPickup ? (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                        <div className="text-sm font-semibold text-emerald-700">Siap Diambil Customer</div>
+                        <div className="mt-1 text-xs text-emerald-600">
+                            Pesanan sudah siap. Serahkan ke customer saat datang mengambil.
+                        </div>
+                        <button
+                            onClick={() => router.post(`/outlet/orders/${order.id}/complete-pickup`)}
+                            className="mt-3 w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white active:bg-emerald-700"
+                        >
+                            Serahkan ke Customer
+                        </button>
+                    </div>
                 ) : (
                     <div className="mt-2 text-sm text-zinc-500">Delivery tersedia setelah siap diambil.</div>
                 )}
