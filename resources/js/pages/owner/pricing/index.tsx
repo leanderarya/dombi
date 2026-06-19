@@ -30,25 +30,21 @@ export default function PricingIndex({ outlets, kpis }: Props) {
                 <OwnerKpiCard
                     label="Total Produk"
                     value={kpis.total_variants}
-                    tone="neutral"
                     icon={<Package className="h-5 w-5" />}
                 />
                 <OwnerKpiCard
                     label="Total Outlet"
                     value={kpis.total_outlets}
-                    tone="neutral"
                     icon={<Store className="h-5 w-5" />}
                 />
                 <OwnerKpiCard
                     label="Harga Bervariasi"
                     value={kpis.total_overrides}
-                    tone={kpis.total_overrides > 0 ? 'warning' : 'neutral'}
                     icon={<DollarSign className="h-5 w-5" />}
                 />
                 <OwnerKpiCard
                     label="Margin Terendah"
                     value={formatCurrency(kpis.lowest_margin)}
-                    tone={kpis.lowest_margin < 0 ? 'danger' : kpis.lowest_margin < 5000 ? 'warning' : 'neutral'}
                     icon={<TrendingUp className="h-5 w-5" />}
                 />
             </section>

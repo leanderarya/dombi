@@ -106,29 +106,21 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
                 <OwnerKpiCard
                     label="Belum Masuk"
                     value={formatCurrency(kpis.outstandingAmount)}
-                    tone="danger"
-                    href="/owner/finance"
                     icon={<Wallet className="h-5 w-5" />}
                 />
                 <OwnerKpiCard
                     label="Menunggu Persetujuan"
                     value={kpis.approvalsNeeded}
-                    tone="warning"
-                    href="/owner/restocks?status=requested"
                     icon={<CheckCircle2 className="h-5 w-5" />}
                 />
                 <OwnerKpiCard
                     label="Outlet Perlu Perhatian"
                     value={kpis.outletsNeedingAttention}
-                    tone="neutral"
-                    href="#outlet-attention"
                     icon={<AlertCircle className="h-5 w-5" />}
                 />
                 <OwnerKpiCard
                     label="Stok Pusat Kritis"
                     value={kpis.criticalCenterSkus}
-                    tone={kpis.criticalCenterSkus > 0 ? 'danger' : 'neutral'}
-                    href="/owner/inventories"
                     icon={<Box className="h-5 w-5" />}
                 />
             </section>
