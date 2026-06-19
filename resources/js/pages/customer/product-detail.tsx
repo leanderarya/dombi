@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
@@ -81,7 +82,6 @@ function ProductDetailInner({ family, otherFamilies = [] }: Props) {
     const [overriddenFlavor, setOverriddenFlavor] = useState<string | null>(null);
     const [overriddenSize, setOverriddenSize] = useState<string | null>(null);
     const [quantity, setQuantity] = useState(1);
-    const [toast, setToast] = useState<{ message: string; variantName: string } | null>(null);
     const [adding, setAdding] = useState(false);
 
     if (familyIdRef.current !== family.id) {
@@ -125,9 +125,7 @@ parts.push(effectiveSize);
     }, [effectiveFlavor, effectiveSize]);
 
     const handleAddToCart = async () => {
-        if (!selectedVariant || adding || isOutOfStock) {
-return;
-}
+        if (!selectedVariant || adding || isOutOfStock) return;
 
         setAdding(true);
 
@@ -154,17 +152,34 @@ return;
                 const label = data.item?.variant_name
                     ? `${data.item.name} ${data.item.variant_name}`
                     : data.item?.name ?? 'Produk';
-                setToast({ message: `${label} ditambahkan ke keranjang.`, variantName: label });
+                toast.success(`${label} ditambahkan ke keranjang`, {
+                    action: {
+                        label: 'Lihat Keranjang',
+                        onClick: () => router.get('/customer/checkout'),
+                    },
+                    duration: 3000,
+                });
             } else {
-                setToast({ message: 'Produk ditambahkan ke keranjang.', variantName: '' });
+                toast.success('Produk ditambahkan ke keranjang', {
+                    action: {
+                        label: 'Lihat Keranjang',
+                        onClick: () => router.get('/customer/checkout'),
+                    },
+                    duration: 3000,
+                });
             }
         } catch {
-            setToast({ message: 'Produk ditambahkan ke keranjang.', variantName: '' });
+            toast.success('Produk ditambahkan ke keranjang', {
+                action: {
+                    label: 'Lihat Keranjang',
+                    onClick: () => router.get('/customer/checkout'),
+                },
+                duration: 3000,
+            });
         }
 
         setAdding(false);
         setQuantity(1);
-        setTimeout(() => setToast(null), 4000);
     };
 
     return (
@@ -199,26 +214,6 @@ return;
                 </header>
 
                 <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
-                    {/* Toast */}
-                    {toast && (
-                        <div className="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3">
-                            <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2">
-                                    <svg className="h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span className="text-sm font-medium text-emerald-800">{toast.message}</span>
-                                </div>
-                                <Link
-                                    href="/customer/checkout"
-                                    className="shrink-0 text-xs font-bold text-emerald-700 active:text-emerald-900"
-                                >
-                                    Lihat Keranjang
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-
                     {/* Product Image */}
                     <div className="mb-5 flex h-72 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-zinc-50">
                         <span className="text-8xl">&#129371;</span>
