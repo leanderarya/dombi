@@ -62,10 +62,7 @@ Route::middleware(['customer.inertia'])->group(function (): void {
             return redirect()->route('dashboard');
         }
 
-        if (session('guest_mode')) {
-            return app()->call(CustomerHomeController::class);
-        }
-
+        // Always show welcome page for unauthenticated users
         return Inertia::render('customer/welcome');
     })->name('home');
 
