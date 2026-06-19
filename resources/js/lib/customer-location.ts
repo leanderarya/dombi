@@ -156,17 +156,25 @@ export function useCustomerLocation() {
 }
 
 export async function syncCustomerLocationDraft(location: CustomerLocation): Promise<void> {
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    try {
+        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-    await fetch('/customer/location', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            ...(token ? { 'X-CSRF-TOKEN': token } : {}),
-        },
-        body: JSON.stringify(location),
-        credentials: 'same-origin',
-    }).catch(() => null);
+        const response = await fetch('/customer/location', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                ...(token ? { 'X-CSRF-TOKEN': token } : {}),
+            },
+            body: JSON.stringify(location),
+            credentials: 'same-origin',
+        });
+
+        if (!response.ok) {
+            console.warn('Failed to sync location to server:', response.status);
+        }
+    } catch (error) {
+        console.warn('Failed to sync location to server:', error);
+    }
 }
