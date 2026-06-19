@@ -51,7 +51,7 @@ const navGroups: NavGroup[] = [
         icon: <MasterDataIcon />,
         items: [
             { href: '/owner/outlets', label: 'Outlet' },
-            { href: '/owner/products', label: 'Produk' },
+            { href: '/owner/products', label: 'Produk', isActive: (url: string) => url.startsWith('/owner/products') || url.startsWith('/owner/product-families') },
             { href: '/owner/pricing/master', label: 'Harga Pusat', isActive: (url: string) => url === '/owner/pricing/master' },
             { href: '/owner/pricing', label: 'Harga Outlet', isActive: (url: string) => url === '/owner/pricing' || url.startsWith('/owner/pricing/outlet') },
             { href: '/owner/pricing/history', label: 'Riwayat Harga', isActive: (url: string) => url === '/owner/pricing/history' },
