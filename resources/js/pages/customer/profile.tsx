@@ -5,6 +5,7 @@ import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 export default function Profile({ defaultAddress }: any) {
     const { auth, appVersion } = usePage<any>().props;
     const user = auth?.user;
+    const isLoggedIn = !!auth?.user;
 
     const initials = user?.name
         ?.split(' ')
@@ -64,13 +65,15 @@ export default function Profile({ defaultAddress }: any) {
             </section>
 
             {/* Logout */}
-            <button
-                onClick={() => router.post('/logout')}
-                className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 active:scale-[0.98] active:bg-red-100"
-            >
-                <LogOut className="h-4 w-4" />
-                Logout
-            </button>
+            {isLoggedIn && (
+                <button
+                    onClick={() => router.post('/logout')}
+                    className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 active:scale-[0.98] active:bg-red-100"
+                >
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                </button>
+            )}
 
             {/* Version */}
             <p className="mt-4 mb-4 text-center text-xs text-zinc-400">Versi {appVersion ?? '1.0.0'}</p>

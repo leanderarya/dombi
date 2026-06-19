@@ -1,5 +1,7 @@
 # Dombi - Deployment Workflow (Hostinger)
 
+## Production Setup
+
 ## Quick Deploy Steps
 
 ### 1. Pull Latest Changes (Lokal)
@@ -117,6 +119,8 @@ Via Hostinger Control Panel → Advanced → Cron Jobs:
 
 ## Verification Checklist
 
+### Health Check
+
 - [ ] Homepage loads: `https://lightcyan-mink-255361.hostingersite.com/`
 - [ ] Login works: `/login`
 - [ ] Customer flow: browse → checkout → order
@@ -128,6 +132,17 @@ Via Hostinger Control Panel → Advanced → Cron Jobs:
 ---
 
 ## Troubleshooting
+
+### Rollback
+
+If critical issues are found after deployment:
+
+```bash
+# Revert to previous version
+git checkout HEAD~1
+npm run build
+# Upload previous build to server
+```
 
 ### 500 Error
 

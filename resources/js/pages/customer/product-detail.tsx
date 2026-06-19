@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { ShoppingCart } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
@@ -186,6 +187,14 @@ return;
                             <div className="text-sm font-semibold text-slate-900 truncate">{family.name}</div>
                             {family.brand && <div className="text-xs text-zinc-500">{family.brand}</div>}
                         </div>
+                        <Link href="/customer/checkout" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
+                            <ShoppingCart className="h-5 w-5" />
+                            {cart.totalItems > 0 && (
+                                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                                    {cart.totalItems > 9 ? '9+' : cart.totalItems}
+                                </span>
+                            )}
+                        </Link>
                     </div>
                 </header>
 

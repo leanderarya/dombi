@@ -8,7 +8,7 @@ interface Props {
 const content = {
     'no-orders': {
         icon: Package,
-        title: '☕ Yuk pesan susu kambing favoritmu',
+        title: 'Yuk pesan susu kambing favoritmu',
         description: 'Belum ada pesanan aktif saat ini. Mulai pesan dan nikmati kesegarannya!',
         showCta: true,
         ctaLabel: 'Lihat Menu',
