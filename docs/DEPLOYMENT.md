@@ -1,148 +1,178 @@
-# Dombi — Deployment & Operations Guide
+# Dombi - Deployment Workflow (Hostinger)
 
-## Architecture Overview
+## Quick Deploy Steps
 
-Dombi is a goat milk distribution operational system built with:
-- **Backend**: Laravel 11 + MySQL
-- **Frontend**: Inertia.js + React + TypeScript + Tailwind CSS
-- **Mobile**: PWA (installable, offline-capable)
-- **Roles**: Owner, Outlet, Courier, Customer
-
-## Inventory Flow
-
-```
-Order Created → reserved_stock ↑ (current_stock unchanged)
-Delivery Completed → current_stock ↓, reserved_stock ↓
-Order Cancelled → reserved_stock ↓
-Restock Received → current_stock ↑
-```
-
-All stock mutations are atomic (DB::transaction + lockForUpdate).
-
-## Production Setup
-
-### Requirements
-- PHP 8.2+
-- MySQL 8.0+
-- Node.js 20+
-- Composer 2.x
-
-### Deployment Steps
+### 1. Pull Latest Changes (Lokal)
 
 ```bash
-# 1. Pull latest code
+cd /Users/aryaajisadda/Herd/dombi
 git pull origin main
+```
 
-# 2. Install dependencies
-composer install --no-dev --optimize-autoloader
-npm ci
+### 2. Build Frontend (Lokal)
 
-# 3. Build frontend
+```bash
 npm run build
-
-# 4. Run migrations
-php artisan migrate --force
-
-# 5. Cache config/routes/views
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-
-# 6. Restart queue workers (if using)
-php artisan queue:restart
 ```
 
-### Environment Variables (Production)
+Output: `public/build/` folder
 
-```env
-APP_ENV=production
-APP_DEBUG=false
-APP_URL=https://your-domain.com
-APP_VERSION=1.x.x
+### 3. Upload ke Server
 
-DB_CONNECTION=mysql
-SESSION_DRIVER=database
-CACHE_STORE=database
-QUEUE_CONNECTION=database
+Upload `public/build/` folder ke `/public_html/public/build/` via:
+- Hostinger File Manager
+- FTP/SFTP
+- rsync (jika ada SSH access)
 
-LOG_CHANNEL=stack
-LOG_STACK=daily
-LOG_LEVEL=warning
-```
+### 4. Upload Backend Changes (jika ada file PHP yang berubah)
 
-### Health Check
+Upload file PHP yang berubah ke server, sesuai path structure.
 
-- `GET /api/health` — Returns 200 if healthy, 503 if degraded
-- `GET /api/version` — Returns current app version + build timestamp
-- `GET /api/status` — Detailed system info (owner-only, requires auth)
-
-## Rollback Procedure
+### 5. Clear Cache di Server
 
 ```bash
-# 1. Revert code
-git checkout <previous-tag>
-
-# 2. Reinstall
-composer install --no-dev --optimize-autoloader
-npm ci && npm run build
-
-# 3. Rollback migration (if needed)
-php artisan migrate:rollback --step=1
-
-# 4. Re-cache
-php artisan config:cache && php artisan route:cache
+/opt/alt/php83/usr/bin/php artisan config:cache
+/opt/alt/php83/usr/bin/php artisan route:cache
+/opt/alt/php83/usr/bin/php artisan view:cache
 ```
 
-## Operational Recovery
+---
 
-### Inventory Mismatch
-1. Go to Owner → Inventory → Edit
-2. Set correct `current_stock` with reason in notes
-3. System validates: `current_stock >= reserved_stock`
-4. All adjustments logged in Audit Trail
+## Full Deployment (Pertama Kali / Reset)
 
-### Failed Delivery
-1. Go to Owner → Deliveries → filter "failed"
-2. Choose resolution:
-   - **Retry**: Order goes back to ready_for_pickup
-   - **Return to Outlet**: Order goes back to preparing
-   - **Cancel & Release**: Reserved stock released, order cancelled
+### Step 1: Upload Semua File
 
-### Database Backup
+Upload seluruh project ke `/public_html/` kecuali:
+- `node_modules/`
+- `.git/`
+- `tests/`
+- `.env.example`
+
+### Step 2: Setup Environment
 
 ```bash
-# Daily backup
-mysqldump -u root -p dombi > backup_$(date +%Y%m%d).sql
+# Copy .env.production ke .env
+cp .env.production .env
 
-# Restore
-mysql -u root -p dombi < backup_YYYYMMDD.sql
-php artisan migrate
+# Edit .env dengan credentials Hostinger
+# - DB_DATABASE, DB_USERNAME, DB_PASSWORD
+# - APP_URL=https://lightcyan-mink-255361.hostingersite.com
+# - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 ```
 
-## Rate Limits
+### Step 3: Install Dependencies
 
-| Action | Limit |
-|--------|-------|
-| Login | 5/min per IP |
-| Checkout | 3/min per user |
-| Stock Adjustment | 10/min per user |
-| CSV Export | 5/min per user |
-| Sensitive Actions | 10/min per user |
+```bash
+/opt/alt/php83/usr/bin/php /opt/alt/php83/usr/bin/composer install --optimize-autoloader --no-dev
+```
 
-## PWA Update Flow
+### Step 4: Generate APP_KEY (jika belum ada)
 
-1. New deploy updates `public/build/manifest.json` timestamp
-2. Frontend polls `/api/version` every 5 minutes
-3. If build hash changes → "Versi baru tersedia" banner appears
-4. User clicks "Refresh" → page reloads with new assets
-5. Service worker activates new cache on next visit
+```bash
+/opt/alt/php83/usr/bin/php artisan key:generate
+```
+
+### Step 5: Run Migrations
+
+```bash
+/opt/alt/php83/usr/bin/php artisan migrate --force
+```
+
+### Step 6: Seed Database
+
+```bash
+/opt/alt/php83/usr/bin/php artisan db:seed --force
+```
+
+### Step 7: Create Storage Symlink
+
+```bash
+/opt/alt/php83/usr/bin/php artisan storage:link
+```
+
+### Step 8: Cache Configuration
+
+```bash
+/opt/alt/php83/usr/bin/php artisan config:cache
+/opt/alt/php83/usr/bin/php artisan route:cache
+/opt/alt/php83/usr/bin/php artisan view:cache
+```
+
+### Step 9: Set Permissions
+
+```bash
+chmod -R 755 storage/
+chmod -R 755 bootstrap/cache/
+```
+
+### Step 10: Setup Cron Job
+
+Via Hostinger Control Panel → Advanced → Cron Jobs:
+
+```
+* * * * * cd /home/username/public_html && /opt/alt/php83/usr/bin/php artisan schedule:run >> /dev/null 2>&1
+```
+
+---
+
+## Verification Checklist
+
+- [ ] Homepage loads: `https://lightcyan-mink-255361.hostingersite.com/`
+- [ ] Login works: `/login`
+- [ ] Customer flow: browse → checkout → order
+- [ ] Owner dashboard: `/owner/dashboard`
+- [ ] Outlet dashboard: `/outlet/dashboard`
+- [ ] Courier dashboard: `/courier/dashboard`
+- [ ] No errors in `storage/logs/laravel.log`
+
+---
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| 503 on health check | Check DB connection, run `php artisan migrate` |
-| Stale frontend | Clear browser cache, or wait for update banner |
-| Stock mismatch | Use Owner → Inventory → Edit with notes |
-| Failed delivery stuck | Use Owner → Deliveries → Resolve |
-| Login rate limited | Wait 1 minute, or check IP |
+### 500 Error
+
+```bash
+# Check error log
+tail -f storage/logs/laravel.log
+
+# Clear all cache
+/opt/alt/php83/usr/bin/php artisan cache:clear
+/opt/alt/php83/usr/bin/php artisan config:clear
+/opt/alt/php83/usr/bin/php artisan route:clear
+/opt/alt/php83/usr/bin/php artisan view:clear
+
+# Re-cache
+/opt/alt/php83/usr/bin/php artisan config:cache
+/opt/alt/php83/usr/bin/php artisan route:cache
+```
+
+### Assets Not Loading
+
+```bash
+# Verify build folder exists
+ls -la public/build/
+
+# Clear browser cache
+# Verify .env APP_URL is correct
+```
+
+### Database Connection Failed
+
+```bash
+# Check .env database credentials
+cat .env | grep DB_
+
+# Test connection
+/opt/alt/php83/usr/bin/php artisan tinker --execute="DB::connection()->getPdo(); echo 'Connected';"
+```
+
+---
+
+## Akun Demo
+
+| Role | Email | Password |
+|------|-------|----------|
+| Owner | `owner@example.com` | `password` |
+| Outlet Tembalang | `outlet.tembalang@example.com` | `password` |
+| Outlet Banyumanik | `outlet.banyumanik@example.com` | `password` |
+| Courier | `courier@example.com` | `password` |
