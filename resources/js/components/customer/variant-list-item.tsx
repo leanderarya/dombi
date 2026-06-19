@@ -3,7 +3,6 @@ import { Heart } from 'lucide-react';
 import { memo, useState } from 'react';
 import ProductImage from '@/components/customer/product-image';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCartConfirmation } from '@/contexts/cart-confirmation-context';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
@@ -33,9 +32,9 @@ interface Props {
 
 const VariantListItem = memo(function VariantListItem({ variant, familyId, familyName, familyDescription, familyBrand, displayPrice, displayLabel, onQuickAdd, loading }: Props) {
     const [adding, setAdding] = useState(false);
+    const [toast, setToast] = useState(false);
     const cart = useCart();
     const { isFavorite, toggle } = useFavorites();
-    const { showConfirmation } = useCartConfirmation();
 
     const isFav = isFavorite(variant.id);
     const isOutOfStock = variant.stock_status === 'out_of_stock';
@@ -77,12 +76,8 @@ return;
         }
 
         setAdding(false);
-        showConfirmation({
-            productName: familyName,
-            variantName: variant.name,
-            quantity: 1,
-            price: variant.selling_price,
-        });
+        setToast(true);
+        setTimeout(() => setToast(false), 2000);
     };
 
     const handleFavorite = (e: React.MouseEvent) => {
@@ -138,29 +133,37 @@ return;
                 )}
             </div>
 
-            {/* Quick Add */}
+            {/* Quick Add / Toast */}
             <div className="shrink-0">
-                <button
-                    type="button"
-                    onClick={handleQuickAdd}
-                    disabled={adding || isOutOfStock}
-                    className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all active:scale-90 disabled:opacity-40 ${
-                        isOutOfStock
-                            ? 'bg-zinc-100 text-zinc-400'
-                            : 'bg-emerald-600 text-white active:bg-emerald-700'
-                    }`}
-                    aria-label={isOutOfStock ? 'Habis' : 'Tambah ke keranjang'}
-                >
-                    {isOutOfStock ? (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" d="M18 12H6" />
+                {toast ? (
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
+                        <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
-                    ) : (
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" d="M12 5v14M5 12h14" />
-                        </svg>
-                    )}
-                </button>
+                    </div>
+                ) : (
+                    <button
+                        type="button"
+                        onClick={handleQuickAdd}
+                        disabled={adding || isOutOfStock}
+                        className={`flex h-9 w-9 items-center justify-center rounded-lg transition-all active:scale-90 disabled:opacity-40 ${
+                            isOutOfStock
+                                ? 'bg-zinc-100 text-zinc-400'
+                                : 'bg-emerald-600 text-white active:bg-emerald-700'
+                        }`}
+                        aria-label={isOutOfStock ? 'Habis' : 'Tambah ke keranjang'}
+                    >
+                        {isOutOfStock ? (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" d="M18 12H6" />
+                            </svg>
+                        ) : (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                            </svg>
+                        )}
+                    </button>
+                )}
             </div>
         </Link>
     );
