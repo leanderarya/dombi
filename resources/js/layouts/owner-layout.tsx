@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type {ReactNode} from 'react';
 import type { PropsWithChildren } from 'react';
 import NotificationBell from '@/components/notification-bell';
@@ -98,26 +98,21 @@ return item.isActive(url);
         return url === item.href || url.startsWith(item.href + '/');
     };
 
-    const [expandedGroups, setExpandedGroups] = useState<Set<string>>(() => {
-        const active = navGroups.find((g) => g.items.some((item) => isItemActive(item)));
+    // Track manually toggled groups
+    const [manualGroups, setManualGroups] = useState<Set<string>>(new Set());
 
-        return new Set(active ? [active.label] : []);
-    });
-
-    // Auto-expand group that contains active item when URL changes
-    useEffect(() => {
+    // Compute final expanded groups: always include active group + manual toggles
+    const expandedGroups = useMemo(() => {
         const active = navGroups.find((g) => g.items.some((item) => isItemActive(item)));
+        const expanded = new Set(manualGroups);
         if (active) {
-            setExpandedGroups((prev) => {
-                const next = new Set(prev);
-                next.add(active.label);
-                return next;
-            });
+            expanded.add(active.label);
         }
-    }, [url]);
+        return expanded;
+    }, [url, manualGroups]);
 
     const toggleGroup = (label: string) => {
-        setExpandedGroups((prev) => {
+        setManualGroups((prev) => {
             const next = new Set(prev);
 
             if (next.has(label)) {
