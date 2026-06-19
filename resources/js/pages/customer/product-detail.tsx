@@ -1,7 +1,7 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
-import { toast } from 'sonner';
+import { useCartConfirmation } from '@/contexts/cart-confirmation-context';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
@@ -61,6 +61,7 @@ export default function ProductDetail({ family, otherFamilies = [] }: Props) {
 
 function ProductDetailInner({ family, otherFamilies = [] }: Props) {
     const cart = useCart();
+    const { showConfirmation } = useCartConfirmation();
 
     const flavors = useMemo(
         () => [...new Set(family.variants.map((v) => v.flavor).filter(Boolean))] as string[],
@@ -147,52 +148,19 @@ parts.push(effectiveSize);
                 credentials: 'same-origin',
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                const label = data.item?.variant_name
-                    ? `${data.item.name} ${data.item.variant_name}`
-                    : data.item?.name ?? 'Produk';
-                toast.success(`${label} ditambahkan ke keranjang`, {
-                    description: 'Klik untuk melihat keranjang Anda',
-                    action: {
-                        label: '🛒 Lihat Keranjang',
-                        onClick: () => router.get('/customer/checkout'),
-                    },
-                    duration: 4000,
-                    style: {
-                        background: '#ecfdf5',
-                        border: '1px solid #a7f3d0',
-                        color: '#065f46',
-                    },
-                });
-            } else {
-                toast.success('Produk ditambahkan ke keranjang', {
-                    description: 'Klik untuk melihat keranjang Anda',
-                    action: {
-                        label: '🛒 Lihat Keranjang',
-                        onClick: () => router.get('/customer/checkout'),
-                    },
-                    duration: 4000,
-                    style: {
-                        background: '#ecfdf5',
-                        border: '1px solid #a7f3d0',
-                        color: '#065f46',
-                    },
-                });
-            }
+            const data = response.ok ? await response.json() : null;
+
+            showConfirmation({
+                productName: data?.item?.name ?? family.name,
+                variantName: data?.item?.variant_name,
+                quantity: quantity,
+                price: selectedVariant.selling_price,
+            });
         } catch {
-            toast.success('Produk ditambahkan ke keranjang', {
-                description: 'Klik untuk melihat keranjang Anda',
-                action: {
-                    label: '🛒 Lihat Keranjang',
-                    onClick: () => router.get('/customer/checkout'),
-                },
-                duration: 4000,
-                style: {
-                    background: '#ecfdf5',
-                    border: '1px solid #a7f3d0',
-                    color: '#065f46',
-                },
+            showConfirmation({
+                productName: family.name,
+                quantity: quantity,
+                price: selectedVariant.selling_price,
             });
         }
 
