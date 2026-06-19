@@ -153,28 +153,46 @@ parts.push(effectiveSize);
                     ? `${data.item.name} ${data.item.variant_name}`
                     : data.item?.name ?? 'Produk';
                 toast.success(`${label} ditambahkan ke keranjang`, {
+                    description: 'Klik untuk melihat keranjang Anda',
                     action: {
-                        label: 'Lihat Keranjang',
+                        label: '🛒 Lihat Keranjang',
                         onClick: () => router.get('/customer/checkout'),
                     },
-                    duration: 3000,
+                    duration: 4000,
+                    style: {
+                        background: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
+                        color: '#065f46',
+                    },
                 });
             } else {
                 toast.success('Produk ditambahkan ke keranjang', {
+                    description: 'Klik untuk melihat keranjang Anda',
                     action: {
-                        label: 'Lihat Keranjang',
+                        label: '🛒 Lihat Keranjang',
                         onClick: () => router.get('/customer/checkout'),
                     },
-                    duration: 3000,
+                    duration: 4000,
+                    style: {
+                        background: '#ecfdf5',
+                        border: '1px solid #a7f3d0',
+                        color: '#065f46',
+                    },
                 });
             }
         } catch {
             toast.success('Produk ditambahkan ke keranjang', {
+                description: 'Klik untuk melihat keranjang Anda',
                 action: {
-                    label: 'Lihat Keranjang',
+                    label: '🛒 Lihat Keranjang',
                     onClick: () => router.get('/customer/checkout'),
                 },
-                duration: 3000,
+                duration: 4000,
+                style: {
+                    background: '#ecfdf5',
+                    border: '1px solid #a7f3d0',
+                    color: '#065f46',
+                },
             });
         }
 
