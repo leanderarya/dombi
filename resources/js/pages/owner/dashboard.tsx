@@ -1,7 +1,6 @@
 import { Link } from '@inertiajs/react';
 import {
     AlertCircle,
-    AlertTriangle,
     ArrowRight,
     Box,
     CheckCircle2,
@@ -16,7 +15,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
 import { formatCurrency } from '@/lib/format';
-import { stockSeverity, settlementSeverity, pendingSeverity } from '@/lib/severity';
+import { stockSeverity, pendingSeverity } from '@/lib/severity';
 import { usePolling } from '@/lib/use-polling';
 
 interface DashboardProps {
@@ -83,18 +82,18 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
     return (
         <OwnerPageShell title="Dasbor Keputusan" subtitle="Prioritas owner: menyetujui, menagih, dan mengelola risiko stok pusat">
             {/* Hero */}
-            <section className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-white p-6">
+            <section className="rounded-2xl border border-zinc-200 bg-white p-6">
                 <div className="flex items-start justify-between gap-6">
                     <div>
-                        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-600">Total Belum Masuk</div>
-                        <div className="mt-2 text-4xl font-semibold tabular-nums text-slate-950">
+                        <div className="text-sm text-zinc-500">Total Belum Masuk</div>
+                        <div className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
                             {formatCurrency(hero.outstandingAmount)}
                         </div>
-                        <p className="mt-2 max-w-xl text-sm text-slate-500">{hero.subtitle}</p>
+                        <p className="mt-1 max-w-xl text-sm text-zinc-400">{hero.subtitle}</p>
                     </div>
                     <Link
                         href={hero.ctaHref}
-                        className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800"
+                        className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
                     >
                         {hero.ctaLabel}
                         <ArrowRight className="h-4 w-4" />
@@ -103,7 +102,7 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
             </section>
 
             {/* KPI Strip */}
-            <section className="mt-6 grid grid-cols-2 gap-3 xl:grid-cols-4">
+            <section className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
                 <OwnerKpiCard
                     label="Belum Masuk"
                     value={formatCurrency(kpis.outstandingAmount)}
@@ -135,7 +134,7 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
             </section>
 
             {/* Two-column: Actions + Outlet Attention */}
-            <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <section className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <SectionCard label="Perlu Tindakan">
                     <div className="space-y-3">
                         <OwnerActionCard
@@ -177,7 +176,7 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
                     </div>
                 </SectionCard>
 
-                <SectionCard label="Outlet Perlu Perhatian" labelRight={<Link href="/owner/outlets" className="text-xs font-semibold text-emerald-700">Lihat Semua</Link>}>
+                <SectionCard label="Outlet Perlu Perhatian" labelRight={<Link href="/owner/outlets" className="text-xs font-semibold text-zinc-500 hover:text-zinc-700">Lihat Semua</Link>}>
                     <div id="outlet-attention">
                         <OutletAttentionList outlets={attentionOutlets} />
                     </div>
@@ -185,21 +184,21 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
             </section>
 
             {/* Two-column: Settlement Preview + Inventory Risks */}
-            <section className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-2">
+            <section className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <SectionCard
                     label="Belum Masuk"
-                    labelRight={<Link href="/owner/finance" className="text-xs font-semibold text-emerald-700">Lihat Semua</Link>}
+                    labelRight={<Link href="/owner/finance" className="text-xs font-semibold text-zinc-500 hover:text-zinc-700">Lihat Semua</Link>}
                 >
                     <div className="space-y-3">
                         {settlementAlerts.length > 0 ? settlementAlerts.map((item) => (
                             <Link
                                 key={item.outlet.id}
                                 href={item.detailHref}
-                                className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 transition-colors hover:border-emerald-200 hover:bg-emerald-50/40"
+                                className="flex items-center justify-between rounded-xl border border-zinc-100 px-4 py-3 transition-colors hover:bg-zinc-50"
                             >
                                 <div>
-                                    <div className="text-sm font-semibold text-slate-900">{item.outlet.name}</div>
-                                    <div className="mt-1 text-xs text-slate-500">
+                                    <div className="text-sm font-semibold text-zinc-900">{item.outlet.name}</div>
+                                    <div className="mt-1 text-xs text-zinc-400">
                                         {item.daysOverdue > 0 ? `${item.daysOverdue} hari terlambat` : 'Belum terselesaikan'}
                                     </div>
                                 </div>
@@ -220,7 +219,7 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
 
                 <SectionCard
                     label="Stok Pusat Kritis"
-                    labelRight={<Link href="/owner/inventories" className="text-xs font-semibold text-emerald-700">Lihat Inventaris</Link>}
+                    labelRight={<Link href="/owner/inventories" className="text-xs font-semibold text-zinc-500 hover:text-zinc-700">Lihat Inventaris</Link>}
                 >
                     <div className="space-y-3">
                         {inventoryRisks.length > 0 ? inventoryRisks.map((risk) => {
@@ -230,19 +229,19 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
                                 <Link
                                     key={risk.variant.id}
                                     href={risk.detailHref}
-                                    className="flex items-center justify-between rounded-xl border border-slate-200 px-4 py-3 transition-colors hover:border-emerald-200 hover:bg-emerald-50/40"
-                                >
-                                    <div>
-                                        <div className="text-sm font-semibold text-slate-900">{risk.variant.name}</div>
-                                        <div className="mt-1 text-xs text-slate-500">
-                                            Threshold {risk.threshold} · Kurang {risk.shortage}
+className="flex items-center justify-between rounded-xl border border-zinc-100 px-4 py-3 transition-colors hover:bg-zinc-50"
+                                    >
+                                        <div>
+                                            <div className="text-sm font-semibold text-zinc-900">{risk.variant.name}</div>
+                                            <div className="mt-1 text-xs text-zinc-400">
+                                                Threshold {risk.threshold} · Kurang {risk.shortage}
+                                            </div>
                                         </div>
-                                    </div>
                                     <div className="text-right">
                                         <div className={`text-sm font-semibold tabular-nums ${severity === 'critical' ? 'text-red-600' : severity === 'warning' ? 'text-amber-600' : 'text-slate-900'}`}>
                                             {risk.centerStock}
                                         </div>
-                                        <div className="text-[11px] text-slate-400">stok pusat</div>
+                                        <div className="text-[11px] text-zinc-400">stok pusat</div>
                                     </div>
                                 </Link>
                             );
