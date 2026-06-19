@@ -28,44 +28,71 @@ class DashboardController extends Controller
 
         $reconciliation = $reconciliationService->getOutletReconciliation($outlet->id);
 
+        $stats = [
+            'pendingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'pending_confirmation')->count(),
+            'preparingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'preparing')->count(),
+            'readyForPickupOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'ready_for_pickup')->count(),
+            'todayOrders' => Order::where('outlet_id', $outlet->id)->whereDate('created_at', today())->count(),
+            'lowStocks' => OutletInventory::where('outlet_id', $outlet->id)
+                ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
+                ->count(),
+            'pendingRestocks' => RestockRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['requested', 'preparing', 'shipped'])
+                ->count(),
+            'pendingReturns' => ReturnRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['submitted', 'approved'])
+                ->count(),
+            'pendingExchanges' => ExchangeRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['submitted', 'approved', 'preparing', 'shipped'])
+                ->count(),
+            'returnValue' => ReturnRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['submitted', 'approved', 'received_at_center'])
+                ->sum('total_value'),
+            'exchangeValue' => ExchangeRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['submitted', 'approved', 'preparing', 'shipped'])
+                ->sum('exchange_value'),
+        ];
+
+        $deliveryStats = [
+            'needsDispatch' => Order::where('outlet_id', $outlet->id)->where('status', 'ready_for_pickup')->whereDoesntHave('delivery')->count(),
+            'waitingPickup' => (clone $outletDeliveries)->where('status', 'waiting_pickup')->count(),
+            'inTransit' => (clone $outletDeliveries)->whereIn('status', ['picked_up', 'delivering'])->count(),
+            'failed' => (clone $outletDeliveries)->where('status', 'failed')->count(),
+            'completedToday' => (clone $outletDeliveries)->where('status', 'completed')->whereDate('updated_at', today())->count(),
+            'avgDispatchTime' => $this->avgDispatchTime($outlet->id),
+        ];
+
+        $hour = now()->hour;
+        $greeting = match (true) {
+            $hour < 12 => 'Selamat Pagi',
+            $hour < 17 => 'Selamat Siang',
+            default => 'Selamat Malam',
+        };
+
+        $pendingTasks = $stats['pendingOrders']
+            + $deliveryStats['failed']
+            + $stats['lowStocks'];
+
+        $orderQueue = [
+            'new' => $stats['pendingOrders'],
+            'preparing' => $stats['preparingOrders'],
+            'ready' => $stats['readyForPickupOrders'],
+            'waiting_courier' => Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
+                ->where('status', 'waiting_pickup')
+                ->count(),
+        ];
+
         return Inertia::render('outlet/dashboard', [
             'outlet' => $outlet,
-            'stats' => [
-                'pendingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'pending_confirmation')->count(),
-                'preparingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'preparing')->count(),
-                'readyForPickupOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'ready_for_pickup')->count(),
-                'todayOrders' => Order::where('outlet_id', $outlet->id)->whereDate('created_at', today())->count(),
-                'lowStocks' => OutletInventory::where('outlet_id', $outlet->id)
-                    ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
-                    ->count(),
-                'pendingRestocks' => RestockRequest::where('outlet_id', $outlet->id)
-                    ->whereIn('status', ['requested', 'preparing', 'shipped'])
-                    ->count(),
-                'pendingReturns' => ReturnRequest::where('outlet_id', $outlet->id)
-                    ->whereIn('status', ['submitted', 'approved'])
-                    ->count(),
-                'pendingExchanges' => ExchangeRequest::where('outlet_id', $outlet->id)
-                    ->whereIn('status', ['submitted', 'approved', 'preparing', 'shipped'])
-                    ->count(),
-                'returnValue' => ReturnRequest::where('outlet_id', $outlet->id)
-                    ->whereIn('status', ['submitted', 'approved', 'received_at_center'])
-                    ->sum('total_value'),
-                'exchangeValue' => ExchangeRequest::where('outlet_id', $outlet->id)
-                    ->whereIn('status', ['submitted', 'approved', 'preparing', 'shipped'])
-                    ->sum('exchange_value'),
-            ],
+            'stats' => $stats,
             'lowStockItems' => OutletInventory::with('product:id,name,unit')
                 ->where('outlet_id', $outlet->id)
                 ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
                 ->get(['id', 'product_id', 'current_stock', 'reserved_stock', 'minimum_stock']),
-            'deliveryStats' => [
-                'needsDispatch' => Order::where('outlet_id', $outlet->id)->where('status', 'ready_for_pickup')->whereDoesntHave('delivery')->count(),
-                'waitingPickup' => (clone $outletDeliveries)->where('status', 'waiting_pickup')->count(),
-                'inTransit' => (clone $outletDeliveries)->whereIn('status', ['picked_up', 'delivering'])->count(),
-                'failed' => (clone $outletDeliveries)->where('status', 'failed')->count(),
-                'completedToday' => (clone $outletDeliveries)->where('status', 'completed')->whereDate('updated_at', today())->count(),
-                'avgDispatchTime' => $this->avgDispatchTime($outlet->id),
-            ],
+            'deliveryStats' => $deliveryStats,
+            'greeting' => $greeting,
+            'pendingTasks' => $pendingTasks,
+            'orderQueue' => $orderQueue,
             'failureReasons' => (clone $outletDeliveries)
                 ->where('status', 'failed')
                 ->whereNotNull('failed_reason')
