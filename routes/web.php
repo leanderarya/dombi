@@ -63,7 +63,7 @@ Route::middleware(['customer.inertia'])->group(function (): void {
         }
 
         if (session('guest_mode')) {
-            return app(CustomerHomeController::class)();
+            return app()->call(CustomerHomeController::class);
         }
 
         return Inertia::render('customer/welcome');
