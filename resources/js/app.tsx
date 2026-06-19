@@ -2,6 +2,7 @@ import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 import DevToolbar from '@/components/dev-toolbar';
+import CartConfirmationProvider from '@/providers/cart-confirmation-provider';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
 
@@ -15,7 +16,9 @@ createInertiaApp({
 
         root.render(
             <>
-                <App {...props} />
+                <CartConfirmationProvider>
+                    <App {...props} />
+                </CartConfirmationProvider>
                 <Toaster position="top-center" richColors closeButton />
                 {(props.initialPage.props.dev as Record<string, unknown>)?.isLocal && (
                     <DevToolbar
