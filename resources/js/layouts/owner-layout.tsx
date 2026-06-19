@@ -129,7 +129,7 @@ return item.isActive(url);
             )}
 
             {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-50 w-56 border-r border-zinc-200 bg-white transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <aside className={`fixed inset-y-0 left-0 z-50 w-56 border-r border-zinc-200 bg-white transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
                 <div className="flex h-full flex-col">
                     {/* Brand */}
                     <div className="px-4 pt-5 pb-3">
