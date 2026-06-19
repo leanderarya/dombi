@@ -1,11 +1,10 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { useState  } from 'react';
+import { useEffect, useState } from 'react';
 import type {ReactNode} from 'react';
 import type { PropsWithChildren } from 'react';
 import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
 import OfflineBanner from '@/components/offline-banner';
-import OwnerMobileNav from '@/components/owner-mobile-nav';
 import UpdateBanner from '@/components/update-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 
@@ -103,6 +102,18 @@ return item.isActive(url);
 
         return new Set(active ? [active.label] : []);
     });
+
+    // Auto-expand group that contains active item when URL changes
+    useEffect(() => {
+        const active = navGroups.find((g) => g.items.some((item) => isItemActive(item)));
+        if (active) {
+            setExpandedGroups((prev) => {
+                const next = new Set(prev);
+                next.add(active.label);
+                return next;
+            });
+        }
+    }, [url]);
 
     const toggleGroup = (label: string) => {
         setExpandedGroups((prev) => {
