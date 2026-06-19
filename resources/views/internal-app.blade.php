@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @viteReactRefresh
-    @vite(['resources/css/app.css', 'resources/js/internal-app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+    @vite(['resources/css/app.css', 'resources/js/internal-app.tsx'])
     
     @inertiaHead
 </head>

@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
     @viteReactRefresh
-    @vite(['resources/css/app.css', 'resources/js/customer-app.tsx', "resources/js/pages/{$page['component']}.tsx"])
+    @vite(['resources/css/app.css', 'resources/js/customer-app.tsx'])
     
     @inertiaHead
 </head>
