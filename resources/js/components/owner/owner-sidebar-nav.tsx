@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState  } from 'react';
+import type {ReactNode} from 'react';
 
 interface NavItem {
     href: string;
@@ -33,25 +34,34 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
             setExpandedGroups((prev) => {
                 const next = new Set(prev);
                 next.add(activeGroup.label);
+
                 return next;
             });
         }
     }, [url, navGroups]);
 
     const isItemActive = (item: NavItem, currentUrl: string): boolean => {
-        if (!currentUrl) return false;
-        if (item.isActive) return item.isActive(currentUrl);
+        if (!currentUrl) {
+return false;
+}
+
+        if (item.isActive) {
+return item.isActive(currentUrl);
+}
+
         return currentUrl === item.href || currentUrl.startsWith(item.href + '/');
     };
 
     const toggleGroup = (label: string) => {
         setExpandedGroups((prev) => {
             const next = new Set(prev);
+
             if (next.has(label)) {
                 next.delete(label);
             } else {
                 next.add(label);
             }
+
             return next;
         });
     };
@@ -70,8 +80,8 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
                                 href={group.items[0].href}
                                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                                     isItemActive(group.items[0], url)
-                                        ? 'bg-emerald-50 text-emerald-800'
-                                        : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
+                                        ? 'bg-zinc-100 text-zinc-900'
+                                        : 'text-slate-600 hover:bg-zinc-50'
                                 }`}
                             >
                                 <span className="h-4 w-4 shrink-0">{group.icon}</span>
@@ -83,8 +93,8 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
                                     onClick={() => toggleGroup(group.label)}
                                     className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                                         hasActive
-                                            ? 'text-emerald-800'
-                                            : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-700'
+                                            ? 'text-zinc-900'
+                                            : 'text-slate-600 hover:bg-zinc-50'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">{group.icon}</span>
@@ -99,8 +109,8 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
                                                 href={item.href}
                                                 className={`block rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                                                     isItemActive(item, url)
-                                                        ? 'bg-emerald-50 text-emerald-800'
-                                                        : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-700'
+                                                        ? 'bg-zinc-100 text-zinc-900'
+                                                        : 'text-slate-500 hover:bg-zinc-50'
                                                 }`}
                                             >
                                                 <span className="flex items-center justify-between gap-2">
