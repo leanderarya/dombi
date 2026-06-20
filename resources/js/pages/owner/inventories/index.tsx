@@ -1,4 +1,6 @@
 import { Link, router } from '@inertiajs/react';
+import { AlertTriangle, Box, Lock, XCircle } from 'lucide-react';
+import OwnerKpiCard from '@/components/owner/owner-kpi-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import DataTable from '@/components/ui/data-table';
 import StatusBadge from '@/components/ui/status-badge';
@@ -24,11 +26,30 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
             }
         >
             {/* KPI Summary */}
-            <div className="mb-4 grid grid-cols-4 gap-2">
-                <KpiMini label="Total SKU" value={stats.totalSku} />
-                <KpiMini label="Stok Rendah" value={stats.lowStock} color="amber" />
-                <KpiMini label="Reserved" value={stats.totalReserved} color="blue" />
-                <KpiMini label="Kritis" value={stats.critical} color="red" />
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <OwnerKpiCard
+                    icon={<Box className="h-5 w-5" />}
+                    label="Total SKU"
+                    value={stats.totalSku}
+                />
+                <OwnerKpiCard
+                    icon={<AlertTriangle className="h-5 w-5" />}
+                    label="Stok Rendah"
+                    value={stats.lowStock}
+                    color="warning"
+                />
+                <OwnerKpiCard
+                    icon={<Lock className="h-5 w-5" />}
+                    label="Reserved"
+                    value={stats.totalReserved}
+                    color="info"
+                />
+                <OwnerKpiCard
+                    icon={<XCircle className="h-5 w-5" />}
+                    label="Kritis"
+                    value={stats.critical}
+                    color="danger"
+                />
             </div>
 
             <DataTable
@@ -105,16 +126,5 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                 emptyAction={{ label: 'Tambah Stok', href: '/owner/inventories/create' }}
             />
         </OwnerPageShell>
-    );
-}
-
-function KpiMini({ label, value, color }: { label: string; value: number; color?: string }) {
-    const textColor = color === 'red' ? 'text-red-600' : color === 'amber' ? 'text-amber-600' : color === 'blue' ? 'text-blue-600' : 'text-slate-900';
-
-    return (
-        <div className="rounded-lg border border-slate-200 bg-white p-2.5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
-            <div className={`mt-0.5 text-xl font-bold tabular-nums ${textColor}`}>{value}</div>
-        </div>
     );
 }

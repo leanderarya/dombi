@@ -1,11 +1,14 @@
 import { Link } from '@inertiajs/react';
 import {
     AlertCircle,
+    ArrowLeftRight,
     ArrowRight,
     Box,
     CheckCircle2,
+    CreditCard,
     Package,
     RefreshCw,
+    RotateCcw,
     Wallet,
 } from 'lucide-react';
 import OutletAttentionList from '@/components/owner/outlet-attention-list';
@@ -30,6 +33,10 @@ interface DashboardProps {
         approvalsNeeded: number;
         outletsNeedingAttention: number;
         criticalCenterSkus: number;
+        monthlyBilling?: number;
+        monthlyPayments?: number;
+        activeReturns?: number;
+        activeExchanges?: number;
     };
     actionRequired: {
         restocks: number;
@@ -122,6 +129,32 @@ export default function Dashboard({ hero, kpis, actionRequired, outletAttention,
                     label="Stok Pusat Kritis"
                     value={kpis.criticalCenterSkus}
                     icon={<Box className="h-5 w-5" />}
+                />
+            </section>
+
+            {/* Billing & Payment KPIs */}
+            <section className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
+                <OwnerKpiCard
+                    icon={<Wallet className="h-5 w-5" />}
+                    label="Tagihan Bulan Ini"
+                    value={formatCurrency(kpis.monthlyBilling ?? 0)}
+                />
+                <OwnerKpiCard
+                    icon={<CreditCard className="h-5 w-5" />}
+                    label="Pembayaran Diterima"
+                    value={formatCurrency(kpis.monthlyPayments ?? 0)}
+                />
+                <OwnerKpiCard
+                    icon={<RotateCcw className="h-5 w-5" />}
+                    label="Returns Aktif"
+                    value={kpis.activeReturns ?? 0}
+                    color={kpis.activeReturns > 0 ? 'warning' : 'success'}
+                />
+                <OwnerKpiCard
+                    icon={<ArrowLeftRight className="h-5 w-5" />}
+                    label="Exchanges Aktif"
+                    value={kpis.activeExchanges ?? 0}
+                    color={kpis.activeExchanges > 0 ? 'warning' : 'success'}
                 />
             </section>
 
