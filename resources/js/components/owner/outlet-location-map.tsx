@@ -89,13 +89,21 @@ return null;
         <div className="overflow-hidden rounded-xl border border-slate-300 bg-slate-100">
             {!readOnly && <MapSearchBox onSelect={(lat, lng) => onChange({ lat, lng })} />}
             <div className="h-[200px] w-full lg:h-[400px]">
-                <MapContainer center={center} zoom={marker ? MARKER_ZOOM : DEFAULT_ZOOM} className="h-full w-full" scrollWheelZoom={false} zoomControl={false} touchZoom>
+                <MapContainer
+                    center={[center.lat, center.lng]}
+                    zoom={DEFAULT_ZOOM}
+                    scrollWheelZoom={false}
+                    zoomControl={true}
+                    touchZoom={true}
+                    doubleClickZoom={true}
+                    className="h-full w-full"
+                >
                     <TileLayer
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    <MapFitBounds existingOutlets={existingOutlets} selectedMarker={marker} />
-                    <MapCenter position={center} zoom={marker ? MARKER_ZOOM : DEFAULT_ZOOM} />
+                    <MapFitBounds existingOutlets={existingOutlets} position={marker} />
+                    <MapCenter position={marker} />
                     {!readOnly && <MapClickHandler onChange={onChange} />}
 
                     {/* Existing outlet markers */}
@@ -253,37 +261,55 @@ function MapClickHandler({ onChange }: { onChange: (value: LatLng) => void }) {
     return null;
 }
 
-function MapCenter({ position, zoom }: { position: LatLng; zoom: number }) {
+function MapCenter({ position }: { position: LatLng | null }) {
     const map = useMap();
+    const isInitialMount = useRef(true);
 
     useEffect(() => {
-        map.setView(position, zoom, { animate: true });
-    }, [map, position.lat, position.lng, zoom]);
+        // Skip the first render to let MapFitBounds handle initial positioning
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+
+        if (position) {
+            map.setView([position.lat, position.lng], MARKER_ZOOM, { animate: true });
+        }
+    }, [map, position]);
 
     return null;
 }
 
-function MapFitBounds({ existingOutlets, selectedMarker }: { existingOutlets: ExistingOutlet[]; selectedMarker: LatLng | null }) {
+function MapFitBounds({ existingOutlets, position }: { existingOutlets: ExistingOutlet[]; position: LatLng | null }) {
     const map = useMap();
     const hasFitted = useRef(false);
 
     useEffect(() => {
-        if (hasFitted.current) {
-return;
-}
+        if (hasFitted.current) return;
 
-        const points: LatLng[] = existingOutlets.map((o) => ({ lat: Number(o.latitude), lng: Number(o.longitude) }));
+        // If we have a position (editing), zoom to it
+        if (position) {
+            map.setView([position.lat, position.lng], MARKER_ZOOM, { animate: false });
+            hasFitted.current = true;
+            return;
+        }
 
-        if (selectedMarker) {
-points.push(selectedMarker);
-}
-
-        if (points.length >= 2) {
-            const bounds = L.latLngBounds(points.map((p) => [p.lat, p.lng]));
-            map.fitBounds(bounds, { padding: [40, 40], maxZoom: MARKER_ZOOM });
+        // If we have existing outlets, fit bounds to show them all
+        if (existingOutlets.length >= 2) {
+            const bounds = L.latLngBounds(
+                existingOutlets.map(o => [parseFloat(o.latitude), parseFloat(o.longitude)])
+            );
+            map.fitBounds(bounds, { maxZoom: MARKER_ZOOM, padding: [40, 40] });
+            hasFitted.current = true;
+        } else if (existingOutlets.length === 1) {
+            map.setView(
+                [parseFloat(existingOutlets[0].latitude), parseFloat(existingOutlets[0].longitude)],
+                MARKER_ZOOM,
+                { animate: false }
+            );
             hasFitted.current = true;
         }
-    }, [map, existingOutlets, selectedMarker]);
+    }, [map, existingOutlets, position]);
 
     return null;
 }
