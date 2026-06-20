@@ -9,6 +9,31 @@
         'Public Sans', ui-sans-serif, system-ui, sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
         'Noto Color Emoji';
+
+    /* Neutral — slate (already dominant at 70%) */
+    --color-surface: #ffffff;
+    --color-surface-muted: var(--color-slate-50);
+    --color-border: var(--color-slate-200);
+    --color-border-strong: var(--color-slate-300);
+    --color-text: var(--color-slate-900);
+    --color-text-muted: var(--color-slate-500);
+    --color-text-subtle: var(--color-slate-400);
+
+    /* Brand */
+    --color-primary: var(--color-emerald-700);
+    --color-primary-hover: var(--color-emerald-800);
+    --color-primary-light: var(--color-emerald-50);
+
+    /* Semantic */
+    --color-success: var(--color-emerald-600);
+    --color-warning: var(--color-amber-600);
+    --color-danger: var(--color-red-600);
+    --color-info: var(--color-blue-600);
+
+    /* Radius */
+    --radius-card: 0.75rem;      /* rounded-xl */
+    --radius-control: 0.5rem;    /* rounded-lg: button & input */
+    --radius-chip: 0.375rem;     /* rounded-md: badge */
 }
 
 /* Mobile operational utilities */
