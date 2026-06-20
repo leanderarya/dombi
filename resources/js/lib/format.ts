@@ -47,27 +47,46 @@ return remainMins > 0 ? `${hours} jam ${remainMins} menit` : `${hours} jam`;
 }
 
 export function formatRelativeDate(value?: string | null): string {
-    if (!value) return '-';
+    if (!value) {
+return '-';
+}
 
     const now = new Date();
     const date = new Date(value);
     const diffMs = now.getTime() - date.getTime();
     const diffMinutes = Math.floor(diffMs / 60000);
 
-    if (diffMinutes < 1) return 'Baru saja';
-    if (diffMinutes < 60) return `${diffMinutes} menit lalu`;
+    if (diffMinutes < 1) {
+return 'Baru saja';
+}
+
+    if (diffMinutes < 60) {
+return `${diffMinutes} menit lalu`;
+}
 
     const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} jam lalu`;
+
+    if (diffHours < 24) {
+return `${diffHours} jam lalu`;
+}
 
     const diffDays = Math.floor(diffHours / 24);
-    if (diffDays < 7) return `${diffDays} hari lalu`;
+
+    if (diffDays < 7) {
+return `${diffDays} hari lalu`;
+}
 
     const diffWeeks = Math.floor(diffDays / 7);
-    if (diffWeeks < 5) return `${diffWeeks} minggu lalu`;
+
+    if (diffWeeks < 5) {
+return `${diffWeeks} minggu lalu`;
+}
 
     const diffMonths = Math.floor(diffDays / 30);
-    if (diffMonths < 12) return `${diffMonths} bulan lalu`;
+
+    if (diffMonths < 12) {
+return `${diffMonths} bulan lalu`;
+}
 
     return `${Math.floor(diffDays / 365)} tahun lalu`;
 }

@@ -1,4 +1,5 @@
-import { createContext, useContext, useCallback, useState, type ReactNode } from 'react';
+import { createContext, useContext, useCallback, useState  } from 'react';
+import type {ReactNode} from 'react';
 
 interface CartConfirmationData {
     productName: string;
@@ -18,9 +19,11 @@ const CartConfirmationContext = createContext<CartConfirmationContextType | null
 
 export function useCartConfirmation() {
     const context = useContext(CartConfirmationContext);
+
     if (!context) {
         throw new Error('useCartConfirmation must be used within CartConfirmationProvider');
     }
+
     return context;
 }
 

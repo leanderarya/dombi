@@ -17,11 +17,11 @@ export default function SectionCard({ children, label, labelRight, className = '
         <div>
             {(label || labelRight) && (
                 <div className="mb-2 flex items-center justify-between">
-                    {label && <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</h2>}
+                    {label && <h2 className="text-xs font-semibold uppercase tracking-wider text-zinc-400">{label}</h2>}
                     {labelRight}
                 </div>
             )}
-            <div className={`rounded-xl border border-zinc-200 bg-white ${noPadding ? '' : 'p-4'} ${className}`}>
+            <div className={`rounded-2xl border border-zinc-200 bg-white ${noPadding ? '' : 'p-5'} ${className}`}>
                 {children}
             </div>
         </div>

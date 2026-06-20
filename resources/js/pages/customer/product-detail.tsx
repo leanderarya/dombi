@@ -126,7 +126,9 @@ parts.push(effectiveSize);
     }, [effectiveFlavor, effectiveSize]);
 
     const handleAddToCart = async () => {
-        if (!selectedVariant || adding || isOutOfStock) return;
+        if (!selectedVariant || adding || isOutOfStock) {
+return;
+}
 
         setAdding(true);
 

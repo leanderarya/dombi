@@ -26,7 +26,7 @@ export default function OwnerActionCard({ href, icon, title, subtitle, metric, c
     return (
         <Link
             href={href}
-            className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 transition-all duration-150 hover:border-emerald-200 hover:bg-emerald-50/40 active:scale-[0.99]"
+            className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 transition-all duration-150 hover:bg-zinc-50"
         >
             <div className={`h-1.5 w-1.5 shrink-0 rounded-full ${config.indicator}`} />
 

@@ -51,7 +51,9 @@ export default function Home({ customerName, activeOrders }: any) {
 
     // Auto-detect location and fetch nearest outlet
     useEffect(() => {
-        if (!navigator.geolocation) return;
+        if (!navigator.geolocation) {
+return;
+}
 
         navigator.geolocation.getCurrentPosition(
             async (position) => {
@@ -104,6 +106,7 @@ export default function Home({ customerName, activeOrders }: any) {
             setTimeout(() => {
                 router.get('/customer/products');
             }, 3000);
+
             return;
         }
 

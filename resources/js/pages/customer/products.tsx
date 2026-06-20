@@ -62,6 +62,7 @@ export default function Products({ families }: Props) {
 
     useEffect(() => {
         const timer = setTimeout(() => setLoading(false), 300);
+
         return () => clearTimeout(timer);
     }, []);
 

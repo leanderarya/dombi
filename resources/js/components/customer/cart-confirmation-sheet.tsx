@@ -1,8 +1,8 @@
 import { router } from '@inertiajs/react';
 import { CheckCircle, ShoppingCart, ArrowRight } from 'lucide-react';
 import BottomSheet from '@/components/ui/bottom-sheet';
-import { formatCurrency } from '@/lib/format';
 import type { CartConfirmationData } from '@/contexts/cart-confirmation-context';
+import { formatCurrency } from '@/lib/format';
 
 interface Props {
     open: boolean;
@@ -11,7 +11,9 @@ interface Props {
 }
 
 export default function CartConfirmationSheet({ open, onClose, data }: Props) {
-    if (!data) return null;
+    if (!data) {
+return null;
+}
 
     const handleCheckout = () => {
         onClose();

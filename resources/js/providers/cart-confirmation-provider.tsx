@@ -1,6 +1,6 @@
-import { type ReactNode } from 'react';
-import { CartConfirmationContext, useCartConfirmationState } from '@/contexts/cart-confirmation-context';
+import type {ReactNode} from 'react';
 import CartConfirmationSheet from '@/components/customer/cart-confirmation-sheet';
+import { CartConfirmationContext, useCartConfirmationState } from '@/contexts/cart-confirmation-context';
 
 interface Props {
     children: ReactNode;
