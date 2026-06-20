@@ -23,9 +23,9 @@ interface NavGroup {
 
 const navGroups: NavGroup[] = [
     {
-        label: 'Dashboard',
+        label: 'Dasbor',
         icon: <DashboardIcon />,
-        items: [{ href: '/owner/dashboard', label: 'Dashboard' }],
+        items: [{ href: '/owner/dashboard', label: 'Dasbor' }],
     },
     {
         label: 'Operasional',
@@ -33,8 +33,8 @@ const navGroups: NavGroup[] = [
         items: [
             { href: '/owner/orders', label: 'Pesanan' },
             { href: '/owner/deliveries', label: 'Pengiriman' },
-            { href: '/owner/returns', label: 'Returns', badgeKey: 'pendingReturns' },
-            { href: '/owner/exchanges', label: 'Exchanges', badgeKey: 'pendingExchanges' },
+            { href: '/owner/returns', label: 'Pengembalian', badgeKey: 'pendingReturns' },
+            { href: '/owner/exchanges', label: 'Penukaran', badgeKey: 'pendingExchanges' },
         ],
     },
     {

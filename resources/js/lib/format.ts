@@ -1,5 +1,12 @@
-export function formatCurrency(value: number | string) {
-    return `Rp ${Number(value).toLocaleString('id-ID')}`;
+const idrFormatter = new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+});
+
+export function formatCurrency(value: number | string): string {
+    return idrFormatter.format(Number(value));
 }
 
 export function formatDistance(km: number | null | undefined): string {

@@ -3,7 +3,11 @@ import { AlertTriangle, Box, ChevronDown, ChevronUp, Lock, Search, XCircle } fro
 import { useMemo, useState } from 'react';
 import OwnerKpiCard from '@/components/owner/owner-kpi-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
+import { cn } from '@/lib/utils';
 
 export default function InventoriesIndex({ outletSections, stats }: any) {
     // Flatten all inventory items for desktop table
@@ -29,6 +33,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
     // Get unique outlets for filter dropdown
     const outlets = useMemo(() => {
         const unique = [...new Set(items.map((item: any) => item.outlet_name))];
+
         return unique.sort();
     }, [items]);
 
@@ -54,6 +59,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
         if (stockFilter !== 'all') {
             result = result.filter((item: any) => {
                 const available = item.current_stock - item.reserved_stock;
+
                 switch (stockFilter) {
                     case 'critical': return available <= 0;
                     case 'low': return available > 0 && available <= item.minimum_stock;
@@ -66,6 +72,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
         // Sort
         result.sort((a: any, b: any) => {
             let cmp = 0;
+
             switch (sortField) {
                 case 'outlet':
                     cmp = a.outlet_name.localeCompare(b.outlet_name);
@@ -80,6 +87,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                     cmp = (a.current_stock - a.reserved_stock) - (b.current_stock - b.reserved_stock);
                     break;
             }
+
             return sortDir === 'asc' ? cmp : -cmp;
         });
 
@@ -105,8 +113,9 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
     return (
         <OwnerPageShell
             title="Inventaris"
+            subtitle="Pantau stok semua outlet dan pusat"
             headerRight={
-                <Link href="/owner/inventories/create" className="flex h-9 items-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800">
+                <Link href="/owner/inventories/create" className={cn(buttonVariants({ variant: 'primary', size: 'md' }))}>
                     + Tambah Stok
                 </Link>
             }
@@ -141,61 +150,63 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
             {/* Filters */}
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
                 {/* Search */}
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
-                    <input
-                        type="text"
-                        placeholder="Cari outlet atau produk..."
-                        value={search}
-                        onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-                        className="w-full rounded-lg border border-zinc-300 pl-10 pr-4 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                    />
-                </div>
+                <Input
+                    icon={Search}
+                    type="text"
+                    placeholder="Cari outlet atau produk..."
+                    value={search}
+                    onChange={(e) => {
+                        setSearch(e.target.value); setCurrentPage(1);
+                    }}
+                    className="flex-1"
+                />
 
                 {/* Outlet filter */}
-                <select
+                <Select
                     value={outletFilter}
-                    onChange={(e) => { setOutletFilter(e.target.value); setCurrentPage(1); }}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-                >
-                    <option value="all">Semua Outlet</option>
-                    {outlets.map((outlet: string) => (
-                        <option key={outlet} value={outlet}>{outlet}</option>
-                    ))}
-                </select>
+                    onChange={(e) => {
+                        setOutletFilter(e.target.value); setCurrentPage(1);
+                    }}
+                    options={[
+                        { value: 'all', label: 'Semua Outlet' },
+                        ...outlets.map((outlet: string) => ({ value: outlet, label: outlet })),
+                    ]}
+                />
 
                 {/* Stock level filter */}
-                <select
+                <Select
                     value={stockFilter}
-                    onChange={(e) => { setStockFilter(e.target.value as any); setCurrentPage(1); }}
-                    className="rounded-lg border border-zinc-300 px-3 py-2 text-sm"
-                >
-                    <option value="all">Semua Stok</option>
-                    <option value="critical">Kritis (0)</option>
-                    <option value="low">Rendah</option>
-                    <option value="healthy">Sehat</option>
-                </select>
+                    onChange={(e) => {
+                        setStockFilter(e.target.value as any); setCurrentPage(1);
+                    }}
+                    options={[
+                        { value: 'all', label: 'Semua Stok' },
+                        { value: 'critical', label: 'Kritis (0)' },
+                        { value: 'low', label: 'Rendah' },
+                        { value: 'healthy', label: 'Sehat' },
+                    ]}
+                />
             </div>
 
             {/* Table */}
             {paginatedItems.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white py-12 text-center">
-                    <div className="text-slate-400"><Box className="h-8 w-8" /></div>
+                <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-surface py-12 text-center">
+                    <div className="text-text-subtle"><Box className="h-8 w-8" /></div>
                     <p className="mt-2 text-sm font-medium text-slate-600">
                         {search || outletFilter !== 'all' || stockFilter !== 'all' ? 'Tidak ada item yang cocok' : 'Belum ada inventaris'}
                     </p>
                     {!search && outletFilter === 'all' && stockFilter === 'all' && (
                         <div className="mt-3">
-                            <Link href="/owner/inventories/create" className="inline-flex min-h-[36px] items-center justify-center rounded-lg bg-emerald-700 px-4 text-xs font-semibold text-white">
+                            <Link href="/owner/inventories/create" className={cn(buttonVariants({ variant: 'primary', size: 'sm' }))}>
                                 Tambah Stok
                             </Link>
                         </div>
                     )}
                 </div>
             ) : (
-                <div className="overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+                <div className="overflow-x-auto rounded-xl border border-border bg-surface">
                     <table className="w-full text-sm">
-                        <thead className="bg-zinc-50 text-xs uppercase text-zinc-500">
+                        <thead className="bg-surface-muted text-xs uppercase text-text-muted">
                             <tr>
                                 <th
                                     className="cursor-pointer px-4 py-3 text-left hover:bg-zinc-100"
@@ -248,16 +259,16 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
 
                                 return (
                                     <tr key={row.id} className="transition-colors">
-                                        <td className="px-4 py-3 font-medium text-slate-900">{row.outlet_name}</td>
-                                        <td className="px-4 py-3 font-semibold text-slate-900">
+                                        <td className="px-4 py-3 font-medium text-text">{row.outlet_name}</td>
+                                        <td className="px-4 py-3 font-semibold text-text">
                                             <div>
-                                                {familyName && <div className="text-[11px] text-slate-400">{familyName}</div>}
+                                                {familyName && <div className="text-[11px] text-text-subtle">{familyName}</div>}
                                                 <div>{variantName}</div>
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-right tabular-nums">{row.current_stock}</td>
                                         <td className="px-4 py-3 text-right tabular-nums">{row.reserved_stock}</td>
-                                        <td className={`px-4 py-3 text-right font-bold tabular-nums ${isCritical ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-slate-900'}`}>
+                                        <td className={`px-4 py-3 text-right font-bold tabular-nums ${isCritical ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-text'}`}>
                                             {available}
                                         </td>
                                         <td className="px-4 py-3 text-center">
@@ -266,12 +277,13 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                                             </StatusBadge>
                                         </td>
                                         <td className="px-4 py-3 text-center">
-                                            <button
+                                            <Button
+                                                variant="secondary"
+                                                size="sm"
                                                 onClick={() => router.visit(`/owner/inventories/${row.id}/edit`)}
-                                                className="inline-flex min-h-[32px] items-center gap-1 rounded-md border border-zinc-200 px-2.5 text-[11px] font-semibold text-slate-700 transition-colors hover:bg-zinc-50"
                                             >
                                                 Edit
-                                            </button>
+                                            </Button>
                                         </td>
                                     </tr>
                                 );
@@ -283,25 +295,27 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-zinc-200 px-4 py-3 mt-4 rounded-xl border border-zinc-200 bg-white">
-                    <span className="text-sm text-zinc-500">
+                <div className="flex items-center justify-between border-t border-border px-4 py-3 mt-4 rounded-xl border border-border bg-surface">
+                    <span className="text-sm text-text-muted">
                         Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)} dari {filteredItems.length} item
                     </span>
                     <div className="flex gap-2">
-                        <button
+                        <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50"
                         >
                             Sebelumnya
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                            variant="secondary"
+                            size="sm"
                             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50"
                         >
                             Berikutnya
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

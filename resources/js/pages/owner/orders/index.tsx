@@ -1,9 +1,12 @@
 import { Head, router } from '@inertiajs/react';
+import { Search } from 'lucide-react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
 import DataTable from '@/components/ui/data-table';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
@@ -33,35 +36,35 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
     return (
         <OwnerPageShell
             title="Pesanan"
+            subtitle="Kelola semua pesanan dari semua outlet"
             headerRight={
                 <>
-                    <input
+                    <Input
+                        icon={Search}
                         defaultValue={filters.search ?? ''}
                         onBlur={(e) => setFilter('search', e.target.value)}
                         placeholder="Cari kode pesanan..."
-                        className="h-9 w-48 rounded-lg border border-zinc-200 px-3 text-sm"
+                        className="h-9 w-48"
                     />
-                    <select
+                    <Select
                         value={filters.status ?? ''}
                         onChange={(e) => setFilter('status', e.target.value)}
-                        className="h-9 rounded-lg border border-zinc-200 px-3 text-sm"
-                    >
-                        <option value="">Semua status</option>
-                        {statusFilters.slice(1).map((sf) => <option key={sf.key} value={sf.key}>{sf.label}</option>)}
-                    </select>
-                    <select
+                        options={statusFilters.slice(1).map((sf) => ({ value: sf.key, label: sf.label }))}
+                        placeholder="Semua status"
+                        className="h-9"
+                    />
+                    <Select
                         value={filters.outlet_id ?? ''}
                         onChange={(e) => setFilter('outlet_id', e.target.value)}
-                        className="h-9 rounded-lg border border-zinc-200 px-3 text-sm"
-                    >
-                        <option value="">Semua outlet</option>
-                        {outlets.map((o: any) => <option key={o.id} value={o.id}>{o.name}</option>)}
-                    </select>
-                    <input
+                        options={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                        placeholder="Semua outlet"
+                        className="h-9"
+                    />
+                    <Input
                         type="date"
                         value={filters.date ?? ''}
                         onChange={(e) => setFilter('date', e.target.value)}
-                        className="h-9 rounded-lg border border-zinc-200 px-3 text-sm"
+                        className="h-9"
                     />
                 </>
             }
@@ -73,7 +76,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         {
                             key: 'order_code',
                             label: 'Kode Pesanan',
-                            className: 'font-bold tabular-nums text-slate-900',
+                            className: 'font-bold tabular-nums text-text',
                         },
                         {
                             key: 'customer_name',
