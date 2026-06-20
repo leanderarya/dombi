@@ -93,7 +93,7 @@ Route::middleware(['customer.inertia'])->group(function (): void {
         Route::get('/products/{family}', [CustomerProductController::class, 'show'])->name('products.show');
         Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
         Route::post('/cart/remove', [CartController::class, 'removeItem'])->name('cart.remove');
-        Route::post('/cart/quantity', [CartController::class, 'updateQuantity'])->name('cart.quantity');
+        Route::post('/cart/quantity', [CartController::class, 'setQuantity'])->name('cart.quantity');
         Route::get('/checkout', [CustomerCheckoutController::class, 'index'])->name('checkout.index');
         Route::post('/checkout', [CustomerCheckoutController::class, 'storeIndex'])->name('checkout.store');
         Route::get('/checkout/customer', [CustomerCheckoutController::class, 'customer'])->name('checkout.customer');
