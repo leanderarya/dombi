@@ -1,6 +1,7 @@
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
+import { marginColor } from '@/lib/pricing-utils';
 
 interface Props {
     open: boolean;
@@ -56,7 +57,6 @@ return null;
 
     const numericValue = parseFloat(value) || 0;
     const margin = numericValue - centerPrice;
-    const marginPct = numericValue > 0 ? (margin / numericValue) * 100 : 0;
     const isNegativeMargin = margin < 0;
 
     const handleQuickAmount = (amount: number) => {
@@ -72,22 +72,6 @@ return;
 }
 
         onSave(numericValue);
-    };
-
-    const marginColor = () => {
-        if (marginPct > 20) {
-return 'text-emerald-600';
-}
-
-        if (marginPct >= 10) {
-return 'text-blue-600';
-}
-
-        if (marginPct >= 0) {
-return 'text-amber-600';
-}
-
-        return 'text-red-600';
     };
 
     return (
@@ -146,7 +130,7 @@ return 'text-amber-600';
                     {/* Margin Preview */}
                     <div className="mt-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
                         <span className="text-xs text-slate-500">Margin Outlet</span>
-                        <span className={`text-sm font-bold tabular-nums ${marginColor()}`}>
+                        <span className={`text-sm font-bold tabular-nums ${marginColor(margin, numericValue)}`}>
                             {formatCurrency(margin)} {formatMarginPercent(margin, numericValue)}
                         </span>
                     </div>

@@ -1,9 +1,10 @@
-import { Head, router } from '@inertiajs/react';
-import { Search } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { router } from '@inertiajs/react';
+import { ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
 import CenterPriceEditModal from '@/components/owner/center-price-edit-modal';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
+import { marginColor } from '@/lib/pricing-utils';
 
 interface VariantRow {
     variant_id: number;
@@ -33,6 +34,21 @@ export default function PricingMaster({ variants }: Props) {
     const [selectedVariant, setSelectedVariant] = useState<VariantRow | null>(null);
     const [impact, setImpact] = useState<ImpactData | null>(null);
     const [saving, setSaving] = useState(false);
+    const [sortField, setSortField] = useState<'name' | 'center_price' | 'selling_price' | 'margin'>('name');
+    const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const ITEMS_PER_PAGE = 20;
+
+    const toggleSort = (field: typeof sortField) => {
+        if (sortField === field) {
+            setSortDir((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortField(field);
+            setSortDir('asc');
+        }
+        setCurrentPage(1);
+    };
 
     const filtered = variants.filter((v) => {
         if (!search) {
@@ -79,23 +95,32 @@ return;
         });
     }, [selectedVariant]);
 
-    const marginColor = (margin: number, sellingPrice: number) => {
-        const pct = sellingPrice > 0 ? (margin / sellingPrice) * 100 : 0;
+    const sortedVariants = useMemo(() => {
+        return [...filtered].sort((a, b) => {
+            let cmp = 0;
+            switch (sortField) {
+                case 'name':
+                    cmp = a.name.localeCompare(b.name);
+                    break;
+                case 'center_price':
+                    cmp = a.center_price - b.center_price;
+                    break;
+                case 'selling_price':
+                    cmp = a.selling_price - b.selling_price;
+                    break;
+                case 'margin':
+                    cmp = a.margin - b.margin;
+                    break;
+            }
+            return sortDir === 'asc' ? cmp : -cmp;
+        });
+    }, [filtered, sortField, sortDir]);
 
-        if (pct > 20) {
-return 'text-emerald-600';
-}
-
-        if (pct >= 10) {
-return 'text-blue-600';
-}
-
-        if (pct >= 0) {
-return 'text-amber-600';
-}
-
-        return 'text-red-600';
-    };
+    const totalPages = Math.ceil(sortedVariants.length / ITEMS_PER_PAGE);
+    const paginatedVariants = sortedVariants.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE,
+    );
 
     return (
         <OwnerPageShell title="Harga Pusat" subtitle="Kelola harga pusat dan harga jual default">
@@ -119,15 +144,47 @@ return 'text-amber-600';
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-slate-100">
-                                <th className="px-4 py-3 text-left font-medium text-slate-500">Produk</th>
-                                <th className="px-4 py-3 text-right font-medium text-slate-500">Harga Pusat</th>
-                                <th className="px-4 py-3 text-right font-medium text-slate-500">Harga Default</th>
-                                <th className="px-4 py-3 text-right font-medium text-slate-500">Margin</th>
+                                <th
+                                    className="cursor-pointer px-4 py-3 text-left font-medium text-slate-500 hover:bg-zinc-100"
+                                    onClick={() => toggleSort('name')}
+                                >
+                                    <span className="inline-flex items-center gap-1">
+                                        Produk
+                                        {sortField === 'name' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                                    </span>
+                                </th>
+                                <th
+                                    className="cursor-pointer px-4 py-3 text-right font-medium text-slate-500 hover:bg-zinc-100"
+                                    onClick={() => toggleSort('center_price')}
+                                >
+                                    <span className="inline-flex items-center gap-1 justify-end">
+                                        Harga Pusat
+                                        {sortField === 'center_price' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                                    </span>
+                                </th>
+                                <th
+                                    className="cursor-pointer px-4 py-3 text-right font-medium text-slate-500 hover:bg-zinc-100"
+                                    onClick={() => toggleSort('selling_price')}
+                                >
+                                    <span className="inline-flex items-center gap-1 justify-end">
+                                        Harga Default
+                                        {sortField === 'selling_price' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                                    </span>
+                                </th>
+                                <th
+                                    className="cursor-pointer px-4 py-3 text-right font-medium text-slate-500 hover:bg-zinc-100"
+                                    onClick={() => toggleSort('margin')}
+                                >
+                                    <span className="inline-flex items-center gap-1 justify-end">
+                                        Margin
+                                        {sortField === 'margin' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                                    </span>
+                                </th>
                                 <th className="px-4 py-3 text-right font-medium text-slate-500">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filtered.map((v) => (
+                            {paginatedVariants.map((v) => (
                                 <tr key={v.variant_id} className="border-b border-slate-50 last:border-0">
                                     <td className="px-4 py-3">
                                         <div className="font-semibold text-slate-900">{v.name}</div>
@@ -155,12 +212,39 @@ return 'text-amber-600';
                         </tbody>
                     </table>
                 </div>
-                {filtered.length === 0 && (
+                {sortedVariants.length === 0 && (
                     <div className="p-8 text-center text-sm text-slate-500">
                         {search ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'}
                     </div>
                 )}
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between border-t border-zinc-200 px-4 py-3 mt-4 rounded-xl border border-slate-200 bg-white">
+                    <span className="text-sm text-zinc-500">
+                        Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, sortedVariants.length)} dari {sortedVariants.length} produk
+                    </span>
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50"
+                        >
+                            Sebelumnya
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50"
+                        >
+                            Berikutnya
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Center Price Edit Modal */}
             {selectedVariant && (

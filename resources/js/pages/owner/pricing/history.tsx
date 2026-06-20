@@ -1,4 +1,5 @@
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import Pagination from '@/components/pagination';
 import DataTable from '@/components/ui/data-table';
 import { formatCurrency, formatDate } from '@/lib/format';
 
@@ -13,12 +14,19 @@ interface AuditLog {
     created_at: string;
 }
 
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
 interface PaginatedLogs {
     data: AuditLog[];
     current_page: number;
     last_page: number;
     per_page: number;
     total: number;
+    links: PaginationLink[];
 }
 
 interface Props {
@@ -65,14 +73,7 @@ export default function PricingHistory({ logs }: Props) {
         <OwnerPageShell title="Riwayat Harga" subtitle="Lihat semua perubahan harga">
             <DataTable columns={columns} data={logs.data} rowKey="id" emptyMessage="Belum ada riwayat perubahan harga." />
 
-            {logs.last_page > 1 && (
-                <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-                    <span>
-                        Halaman {logs.current_page} dari {logs.last_page}
-                    </span>
-                    <span>{logs.total} total entri</span>
-                </div>
-            )}
+            {logs.links && logs.links.length > 3 && <Pagination links={logs.links} />}
         </OwnerPageShell>
     );
 }

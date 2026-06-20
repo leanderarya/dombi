@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import PricingEditModal from '@/components/owner/pricing-edit-modal';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
+import { marginColor } from '@/lib/pricing-utils';
 
 interface PriceRow {
     variant_id: number;
@@ -194,24 +195,6 @@ return;
             },
         });
     }, [copySource, outlet.id]);
-
-    const marginColor = (margin: number, sellingPrice: number) => {
-        const pct = sellingPrice > 0 ? (margin / sellingPrice) * 100 : 0;
-
-        if (pct > 20) {
-return 'text-emerald-600';
-}
-
-        if (pct >= 10) {
-return 'text-blue-600';
-}
-
-        if (pct >= 0) {
-return 'text-amber-600';
-}
-
-        return 'text-red-600';
-    };
 
     return (
         <OwnerPageShell
