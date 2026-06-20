@@ -2,28 +2,22 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Create a public landing page for Dombi that showcases the goat milk products and brand, matching the customer app design language
+**Goal:** Create a public landing page for Dombi that showcases goat milk products and brand, matching the customer app design language
 
-**Architecture:** New landing page route + controller + Inertia page, using existing design tokens and components
+**Architecture:** New landing page route + controller + Inertia page, using existing product data from database
 
 **Tech Stack:** Laravel 13, React 19, Inertia.js, Tailwind CSS, Lucide Icons
 
 ---
 
-## Design System Reference
+## Product Data (from ProductCatalogSeeder)
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| Background | `#fbf9f7` (warm cream) | Page background |
-| Primary | `emerald-600` (#059669) | Buttons, CTAs |
-| Primary Dark | `emerald-700` (#047857) | Active states |
-| Text Primary | `zinc-900` (#18181b) | Headings, body |
-| Text Secondary | `zinc-500` (#71717a) | Descriptions |
-| Border | `zinc-200` (#e4e4e7) | Cards, inputs |
-| Card BG | `white` | Card backgrounds |
-| Font | `Public Sans` 400/500/600/700 | Typography |
-| Radius | `rounded-2xl` (16px) | Cards |
-| Shadow | `shadow-sm` | Subtle depth |
+| Family | Brand | Variants | Price Range |
+|--------|-------|----------|-------------|
+| Domilk Original | Domilk | Original 250ml, 1L | Rp12.000 - Rp42.000 |
+| Domilk Premium Taste | Domilk | Coklat, Vanilla, Stroberi, Coffee (250ml, 1L) | Rp15.000 - Rp48.000 |
+| Biogoat | Biogoat | Original 250ml, 1L | Rp13.000 - Rp45.000 |
+| Raw Milk by Domilk | Domilk | Fresh 1L | Rp30.000 |
 
 ---
 
@@ -33,7 +27,8 @@
 |------|--------|---------|
 | `routes/web.php` | Modify | Add landing page route |
 | `app/Http/Controllers/LandingController.php` | Create | Controller for landing page |
-| `resources/js/pages/landing.tsx` | Create | Landing page component |
+| `resources/js/pages/landing.tsx` | Create | Main landing page |
+| `resources/js/components/landing/header.tsx` | Create | Sticky header |
 | `resources/js/components/landing/hero-section.tsx` | Create | Hero section |
 | `resources/js/components/landing/benefits-section.tsx` | Create | Benefits section |
 | `resources/js/components/landing/products-section.tsx` | Create | Products showcase |
@@ -58,7 +53,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProductFamily;
-use App\Models\ProductVariant;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -70,7 +64,6 @@ class LandingController extends Controller
             ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('selling_price')])
             ->where('is_active', true)
             ->orderBy('name')
-            ->limit(6)
             ->get();
 
         return Inertia::render('landing', [
@@ -82,9 +75,10 @@ class LandingController extends Controller
 
 - [ ] **Step 2: Add route**
 
+Add to `routes/web.php` BEFORE the customer.inertia group:
+
 ```php
-// In routes/web.php, add BEFORE the customer.inertia group:
-Route::get('/landing', LandingController::class)->name('landing');
+Route::get('/landing', \App\Http\Controllers\LandingController::class)->name('landing');
 ```
 
 - [ ] **Step 3: Commit**
@@ -105,6 +99,7 @@ git commit -m "feat: add landing page controller and route"
 
 ```tsx
 import { Head } from '@inertiajs/react';
+import Header from '@/components/landing/header';
 import HeroSection from '@/components/landing/hero-section';
 import BenefitsSection from '@/components/landing/benefits-section';
 import ProductsSection from '@/components/landing/products-section';
@@ -122,6 +117,7 @@ export default function Landing({ products }: Props) {
         <>
             <Head title="Dombi - Susu Kambing Segar" />
             <div className="min-h-screen bg-[#fbf9f7]">
+                <Header />
                 <HeroSection />
                 <BenefitsSection />
                 <ProductsSection products={products} />
@@ -135,7 +131,7 @@ export default function Landing({ products }: Props) {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 2: Commit**
 
 ```bash
 git add resources/js/pages/landing.tsx
@@ -144,7 +140,46 @@ git commit -m "feat: create landing page component"
 
 ---
 
-### Task 3: Create Hero Section
+### Task 3: Create Header Component
+
+**Files:**
+- Create: `resources/js/components/landing/header.tsx`
+
+- [ ] **Step 1: Create header**
+
+```tsx
+import { Link } from '@inertiajs/react';
+
+export default function Header() {
+    return (
+        <header className="sticky top-0 z-50 border-b border-zinc-200 bg-white/95 backdrop-blur">
+            <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+                <Link href="/landing" className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white">D</div>
+                    <span className="text-lg font-bold text-zinc-900">Dombi</span>
+                </Link>
+                <Link
+                    href="/customer/products"
+                    className="rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm active:bg-emerald-700"
+                >
+                    Pesan Sekarang
+                </Link>
+            </div>
+        </header>
+    );
+}
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add resources/js/components/landing/header.tsx
+git commit -m "feat: create landing page header component"
+```
+
+---
+
+### Task 4: Create Hero Section
 
 **Files:**
 - Create: `resources/js/components/landing/hero-section.tsx`
@@ -195,7 +230,7 @@ git commit -m "feat: create landing page hero section"
 
 ---
 
-### Task 4: Create Benefits Section
+### Task 5: Create Benefits Section
 
 **Files:**
 - Create: `resources/js/components/landing/benefits-section.tsx`
@@ -267,20 +302,33 @@ git commit -m "feat: create landing page benefits section"
 
 ---
 
-### Task 5: Create Products Section
+### Task 6: Create Products Section
 
 **Files:**
 - Create: `resources/js/components/landing/products-section.tsx`
 
-- [ ] **Step 1: Create products section**
+- [ ] **Step 1: Create products section with real product data**
 
 ```tsx
 import { Link } from '@inertiajs/react';
-import ProductImage from '@/components/customer/product-image';
 import { formatCurrency } from '@/lib/format';
 
+interface Variant {
+    id: number;
+    name: string;
+    selling_price: number;
+}
+
+interface ProductFamily {
+    id: number;
+    name: string;
+    brand: string | null;
+    description: string | null;
+    variants: Variant[];
+}
+
 interface Props {
-    products: any[];
+    products: ProductFamily[];
 }
 
 export default function ProductsSection({ products }: Props) {
@@ -290,7 +338,7 @@ export default function ProductsSection({ products }: Props) {
                 <div className="mb-6 flex items-center justify-between">
                     <h2 className="text-xl font-bold text-zinc-900">Produk Kami</h2>
                     <Link href="/customer/products" className="text-sm font-medium text-emerald-600">
-                        Lihat Semua
+                        Lihat Semua →
                     </Link>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -308,7 +356,7 @@ export default function ProductsSection({ products }: Props) {
                                     <span className="text-4xl">🐐</span>
                                 </div>
                                 <div className="text-sm font-semibold text-zinc-900">{family.name}</div>
-                                <div className="mt-0.5 text-xs text-zinc-500">{variant.name}</div>
+                                <div className="mt-0.5 text-xs text-zinc-500">{family.brand}</div>
                                 <div className="mt-2 text-base font-bold text-emerald-700">
                                     {formatCurrency(variant.selling_price)}
                                 </div>
@@ -326,12 +374,12 @@ export default function ProductsSection({ products }: Props) {
 
 ```bash
 git add resources/js/components/landing/products-section.tsx
-git commit -m "feat: create landing page products section"
+git commit -m "feat: create landing page products section with real product data"
 ```
 
 ---
 
-### Task 6: Create Steps Section
+### Task 7: Create Steps Section
 
 **Files:**
 - Create: `resources/js/components/landing/steps-section.tsx`
@@ -339,26 +387,21 @@ git commit -m "feat: create landing page products section"
 - [ ] **Step 1: Create steps section**
 
 ```tsx
-import { ShoppingCart, CreditCard, Package } from 'lucide-react';
-
 const steps = [
     {
-        icon: ShoppingCart,
         step: '1',
         title: 'Pilih Produk',
-        description: 'Pilih susu kambing favorit Anda',
+        description: 'Pilih susu kambing favorit Anda dari katalog kami',
     },
     {
-        icon: CreditCard,
         step: '2',
         title: 'Checkout',
         description: 'Pilih pickup atau delivery, bayar dengan mudah',
     },
     {
-        icon: Package,
         step: '3',
         title: 'Terima Pesanan',
-        description: 'Pesanan diantar atau ambil di outlet',
+        description: 'Pesanan diantar ke rumah atau ambil di outlet',
     },
 ];
 
@@ -370,20 +413,17 @@ export default function StepsSection() {
                     Cara Pemesanan
                 </h2>
                 <div className="space-y-4">
-                    {steps.map((step) => {
-                        const Icon = step.icon;
-                        return (
-                            <div key={step.step} className="flex items-center gap-4">
-                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
-                                    {step.step}
-                                </div>
-                                <div>
-                                    <div className="text-sm font-semibold text-zinc-900">{step.title}</div>
-                                    <div className="text-xs text-zinc-500">{step.description}</div>
-                                </div>
+                    {steps.map((step) => (
+                        <div key={step.step} className="flex items-center gap-4">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white">
+                                {step.step}
                             </div>
-                        );
-                    })}
+                            <div>
+                                <div className="text-sm font-semibold text-zinc-900">{step.title}</div>
+                                <div className="text-xs text-zinc-500">{step.description}</div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </div>
         </section>
@@ -400,7 +440,7 @@ git commit -m "feat: create landing page steps section"
 
 ---
 
-### Task 7: Create Testimonials Section
+### Task 8: Create Testimonials Section
 
 **Files:**
 - Create: `resources/js/components/landing/testimonials-section.tsx`
@@ -465,7 +505,7 @@ git commit -m "feat: create landing page testimonials section"
 
 ---
 
-### Task 8: Create About Section
+### Task 9: Create About Section
 
 **Files:**
 - Create: `resources/js/components/landing/about-section.tsx`
@@ -506,7 +546,7 @@ git commit -m "feat: create landing page about section"
 
 ---
 
-### Task 9: Create Footer Section
+### Task 10: Create Footer Section
 
 **Files:**
 - Create: `resources/js/components/landing/footer-section.tsx`
@@ -569,11 +609,12 @@ After completing all tasks:
 |------|-------------|------|
 | 1 | Controller & Route | 0.5d |
 | 2 | Landing page component | 0.5d |
-| 3 | Hero section | 0.5d |
-| 4 | Benefits section | 0.5d |
-| 5 | Products section | 0.5d |
-| 6 | Steps section | 0.5d |
-| 7 | Testimonials section | 0.5d |
-| 8 | About section | 0.5d |
-| 9 | Footer section | 0.5d |
-| **Total** | | **4.5d** |
+| 3 | Header component | 0.5d |
+| 4 | Hero section | 0.5d |
+| 5 | Benefits section | 0.5d |
+| 6 | Products section | 0.5d |
+| 7 | Steps section | 0.5d |
+| 8 | Testimonials section | 0.5d |
+| 9 | About section | 0.5d |
+| 10 | Footer section | 0.5d |
+| **Total** | | **5d** |
