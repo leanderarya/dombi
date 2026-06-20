@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Inbox } from 'lucide-react';
+import EmptyState from '@/components/ui/empty-state';
 
 interface Column<T> {
     key: string;
@@ -35,7 +36,7 @@ interface Props<T> {
 
 const actionVariants = {
     primary: 'bg-emerald-700 text-white hover:bg-emerald-800',
-    secondary: 'border border-zinc-200 text-slate-700 hover:bg-zinc-50',
+    secondary: 'border border-border text-slate-700 hover:bg-surface-muted',
     danger: 'border border-red-200 text-red-700 hover:bg-red-50',
 };
 
@@ -51,41 +52,32 @@ export default function DataTable<T extends Record<string, any>>({
 }: Props<T>) {
     if (data.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white py-12 text-center">
-                <div className="text-slate-400"><Inbox className="h-8 w-8" /></div>
-                <p className="mt-2 text-sm font-medium text-slate-600">{emptyMessage}</p>
-                {emptyAction && (
-                    <div className="mt-3">
-                        {emptyAction.href ? (
-                            <a href={emptyAction.href} className="inline-flex min-h-[36px] items-center justify-center rounded-lg bg-emerald-700 px-4 text-xs font-semibold text-white">
-                                {emptyAction.label}
-                            </a>
-                        ) : (
-                            <button onClick={emptyAction.onClick} className="inline-flex min-h-[36px] items-center justify-center rounded-lg bg-emerald-700 px-4 text-xs font-semibold text-white">
-                                {emptyAction.label}
-                            </button>
-                        )}
-                    </div>
-                )}
+            <div className="rounded-xl border border-border bg-surface">
+                <EmptyState
+                    icon={<Inbox className="h-8 w-8" />}
+                    title={emptyMessage}
+                    description="Belum ada data yang tersedia"
+                    action={emptyAction ? { label: emptyAction.label, href: emptyAction.href, onClick: emptyAction.onClick } : undefined}
+                />
             </div>
         );
     }
 
     return (
-        <div className={`overflow-x-auto rounded-xl border border-zinc-200 bg-white ${className}`}>
+        <div className={`overflow-x-auto rounded-xl border border-border bg-surface ${className}`}>
             <table className="w-full text-sm">
                 <thead>
-                    <tr className="border-b border-zinc-100 bg-zinc-50/50">
+                    <tr className="border-b border-zinc-100 bg-surface-muted/50">
                         {columns.map((col) => (
                             <th
                                 key={col.key}
-                                className={`px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-slate-400 ${col.className ?? ''}`}
+                                className={`px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-text-subtle ${col.className ?? ''}`}
                             >
                                 {col.label}
                             </th>
                         ))}
                         {actions && actions.length > 0 && (
-                            <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                            <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-text-subtle">
                                 Aksi
                             </th>
                         )}
@@ -95,7 +87,7 @@ export default function DataTable<T extends Record<string, any>>({
                     {data.map((row) => (
                         <tr
                             key={row[rowKey]}
-                            className={`transition-colors ${onRowClick ? 'cursor-pointer hover:bg-zinc-50/50' : ''}`}
+                            className={`transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface-muted/50' : ''}`}
                             onClick={() => onRowClick?.(row)}
                         >
                             {columns.map((col) => (

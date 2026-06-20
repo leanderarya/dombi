@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { cn } from '@/lib/utils';
 
 type KpiColor = 'success' | 'warning' | 'danger' | 'info';
 
@@ -15,25 +16,42 @@ interface Props {
     icon?: ReactNode;
     trend?: string;
     color?: KpiColor;
+    className?: string;
 }
 
-export default function OwnerKpiCard({ label, value, icon, trend, color }: Props) {
+export default function OwnerKpiCard({ label, value, icon, trend, color, className }: Props) {
     return (
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
+        <div className={cn('rounded-xl border border-border bg-surface p-4 transition-colors hover:border-border-strong', className)}>
             <div className="flex items-center gap-2">
                 {icon && (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted">
                         {icon}
                     </div>
                 )}
-                <div className="text-xs font-medium text-zinc-500">{label}</div>
+                <div className="text-xs font-medium text-text-muted">{label}</div>
             </div>
-            <div className={`mt-3 text-2xl font-semibold tabular-nums ${color ? colorClasses[color] : 'text-zinc-900'}`}>
+            <div className={`mt-3 text-2xl font-bold tabular-nums tracking-tight ${color ? colorClasses[color] : 'text-text'}`}>
                 {value}
             </div>
             {trend && (
-                <div className="mt-1 text-xs text-zinc-400">{trend}</div>
+                <div className="mt-1 text-xs text-text-subtle">{trend}</div>
             )}
+        </div>
+    );
+}
+
+interface OwnerKpiCardSkeletonProps {
+    className?: string;
+}
+
+export function OwnerKpiCardSkeleton({ className }: OwnerKpiCardSkeletonProps) {
+    return (
+        <div className={cn('rounded-xl border border-border bg-surface p-4', className)}>
+            <div className="flex items-center gap-3">
+                <div className="h-8 w-8 animate-pulse rounded-lg bg-surface-muted" />
+                <div className="h-4 w-24 animate-pulse rounded bg-surface-muted" />
+            </div>
+            <div className="mt-3 h-8 w-32 animate-pulse rounded bg-surface-muted" />
         </div>
     );
 }
