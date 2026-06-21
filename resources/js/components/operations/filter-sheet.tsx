@@ -125,7 +125,7 @@ function FilterPill({ label, active, onClick }: { label: string; active: boolean
     return (
         <button
             onClick={onClick}
-            className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-150 active:scale-[0.95] ${
+            className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all duration-150 active:opacity-80 ${
                 active ? 'bg-slate-900 text-white' : 'border border-slate-200 bg-white text-slate-600'
             }`}
         >

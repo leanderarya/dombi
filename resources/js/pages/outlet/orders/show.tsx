@@ -1,4 +1,5 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { getOrderStatus } from '@/lib/status-labels';
 import { MapPin, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
@@ -177,7 +178,7 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                 <div className="mt-2 space-y-3">
                     {order.status_histories.map((history: any) => (
                         <div key={history.id} className="border-l-2 border-emerald-200 pl-3">
-                            <div className="text-sm font-medium">{history.to_status.replaceAll('_', ' ')}</div>
+                            <div className="text-sm font-medium">{getOrderStatus(history.to_status).label}</div>
                             <div className="text-xs text-zinc-500">{history.notes}</div>
                             {history.reason && <div className="text-xs text-zinc-400">Alasan: {history.reason}</div>}
                             <div className="text-xs text-zinc-400">{new Date(history.created_at).toLocaleString('id-ID')} {history.actor ? `oleh ${history.actor.name}` : ''}</div>

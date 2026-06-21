@@ -68,7 +68,7 @@ export default function Profile({ defaultAddress }: any) {
             {isLoggedIn && (
                 <button
                     onClick={() => router.post('/logout')}
-                    className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 active:scale-[0.98] active:bg-red-100"
+                    className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 active:opacity-80 active:bg-red-100"
                 >
                     <LogOut className="h-4 w-4" />
                     Logout

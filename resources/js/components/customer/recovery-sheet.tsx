@@ -152,7 +152,7 @@ handleRecover();
                         type="button"
                         onClick={handleRecover}
                         disabled={loading || phone.trim().length < 8}
-                        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-emerald-700 disabled:bg-slate-300 disabled:active:scale-100"
+                        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700 disabled:bg-slate-300 "
                     >
                         <Search className="h-4 w-4" />
                         {loading ? 'Mencari...' : 'Cari Pesanan'}
@@ -213,7 +213,7 @@ handleVerify();
                         type="button"
                         onClick={handleVerify}
                         disabled={loading || (!orderCode.trim() && !recoveryToken.trim())}
-                        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-emerald-700 disabled:bg-slate-300 disabled:active:scale-100"
+                        className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700 disabled:bg-slate-300 "
                     >
                         {loading ? 'Memverifikasi...' : 'Verifikasi'}
                     </button>

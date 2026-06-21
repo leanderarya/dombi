@@ -148,7 +148,7 @@ export default function PickupOutletSelector({ items, initialRecommendations, se
                                     key={outlet.id}
                                     type="button"
                                     onClick={() => onSelect(outlet.id)}
-                                    className={`w-full rounded-xl border p-4 text-left transition-all active:scale-[0.98] ${
+                                    className={`w-full rounded-xl border p-4 text-left transition-all active:opacity-80 ${
                                         active ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'
                                     }`}
                                 >

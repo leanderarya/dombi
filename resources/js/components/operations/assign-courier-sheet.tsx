@@ -116,7 +116,7 @@ return;
                                             key={courier.id}
                                             type="button"
                                             onClick={() => setSelectedCourier(courier.id)}
-                                            className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-150 active:scale-[0.98] ${
+                                            className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-150 active:opacity-80 ${
                                                 isSelected ? 'border-emerald-300 bg-emerald-50/30' : 'border-slate-200 bg-white'
                                             } ${isBusy ? 'opacity-60' : ''}`}
                                         >
@@ -148,14 +148,14 @@ return;
 
                     {/* Actions */}
                     <div className="mt-4 flex gap-2">
-                        <button type="button" onClick={onClose} className="flex min-h-[48px] flex-1 items-center justify-center rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
+                        <button type="button" onClick={onClose} className="flex min-h-[48px] flex-1 items-center justify-center rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 transition-all duration-150 active:opacity-80 active:bg-slate-50">
                             Batal
                         </button>
                         <button
                             type="button"
                             onClick={handleSubmit}
                             disabled={!selectedCourier || form.processing}
-                            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white transition-all duration-150 active:scale-[0.98] active:bg-emerald-800 disabled:bg-slate-300"
+                            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white transition-all duration-150 active:opacity-80 active:bg-emerald-800 disabled:bg-slate-300"
                         >
                             {form.processing ? 'Assigning...' : 'Assign Courier'}
                         </button>

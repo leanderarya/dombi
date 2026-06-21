@@ -140,7 +140,7 @@ return;
                                 href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 min-h-[44px] text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-blue-700"
+                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 min-h-[44px] text-sm font-bold text-white transition-all active:opacity-80 active:bg-blue-700"
                             >
                                 <Navigation className="h-4 w-4" />
                                 Navigasi ke Outlet
@@ -170,7 +170,7 @@ return;
                         {order.outlet.phone && (
                             <a
                                 href={`tel:${order.outlet.phone}`}
-                                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 min-h-[44px] text-sm font-semibold text-blue-700 transition-all active:scale-[0.98] active:bg-blue-100"
+                                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 min-h-[44px] text-sm font-semibold text-blue-700 transition-all active:opacity-80 active:bg-blue-100"
                             >
                                 <Phone className="h-4 w-4" />
                                 Hubungi Outlet

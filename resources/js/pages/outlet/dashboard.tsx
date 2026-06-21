@@ -39,7 +39,7 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
             {/* QR Scan — primary action, prominent */}
             <Link
                 href="/outlet/scan"
-                className="mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-br from-primary to-primary-hover p-5 text-white shadow-md transition-all active:scale-[0.99]"
+                className="mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-br from-primary to-primary-hover p-5 text-white shadow-md transition-all active:opacity-80"
             >
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
                     <QrCode className="h-6 w-6" />
@@ -186,7 +186,7 @@ function StatCell({ label, value, alert }: { label: string; value: number; alert
 
 function QuickAction({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
     return (
-        <Link href={href} className="group flex flex-col items-center gap-1.5 rounded-xl border border-border bg-white p-3 transition-all hover:border-border-strong hover:shadow-sm active:scale-[0.98]">
+        <Link href={href} className="group flex flex-col items-center gap-1.5 rounded-xl border border-border bg-white p-3 transition-all hover:border-border-strong hover:shadow-sm active:opacity-80">
             <div className="text-text-muted transition-colors group-hover:text-primary">{icon}</div>
             <div className="text-[11px] font-medium text-text-subtle">{label}</div>
         </Link>

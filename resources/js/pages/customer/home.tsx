@@ -170,7 +170,7 @@ return;
                         {HERO_SLIDES[slideIndex].cta && (
                             <Link
                                 href={HERO_SLIDES[slideIndex].ctaHref!}
-                                className="mt-5 min-h-[44px] rounded-full bg-white px-6 py-2.5 text-sm font-bold text-emerald-700 shadow-lg transition-all active:scale-95"
+                                className="mt-5 min-h-[44px] rounded-full bg-white px-6 py-2.5 text-sm font-bold text-emerald-700 shadow-lg transition-all active:opacity-80"
                             >
                                 {HERO_SLIDES[slideIndex].cta}
                             </Link>
@@ -200,7 +200,7 @@ return;
                     <button
                         type="button"
                         onClick={handlePickup}
-                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98] active:bg-emerald-100"
+                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:opacity-80 active:bg-emerald-100"
                     >
                         <div className="transition-transform duration-200 group-hover:scale-105">
                             <Store className="h-6 w-6 text-emerald-600" />
@@ -211,7 +211,7 @@ return;
                     <button
                         type="button"
                         onClick={handleDelivery}
-                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98] active:bg-emerald-100"
+                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:opacity-80 active:bg-emerald-100"
                     >
                         <div className="transition-transform duration-200 group-hover:scale-105">
                             <Truck className="h-6 w-6 text-emerald-600" />
@@ -227,7 +227,7 @@ return;
                 {isLoggedIn ? (
                     <Link
                         href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
-                        className="group flex items-center gap-3 rounded-2xl border border-border bg-white px-4 py-3 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
+                        className="group flex items-center gap-3 rounded-2xl border border-border bg-white px-4 py-3 transition-all duration-200 hover:shadow-sm active:opacity-80"
                     >
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
                             <User className="h-5 w-5 text-emerald-600" />
@@ -252,7 +252,7 @@ return;
                         <div className="mt-0.5 text-xs text-text-muted">Lacak pesanan, simpan alamat, dan lebih banyak lagi.</div>
                         <a
                             href="/auth/google"
-                            className="mt-3 flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary text-xs font-bold text-white transition-all active:scale-[0.98] active:bg-primary-hover"
+                            className="mt-3 flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary text-xs font-bold text-white transition-all active:opacity-80 active:bg-primary-hover"
                         >
                             <svg className="h-4 w-4" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -272,7 +272,7 @@ return;
                 <div className="mt-3 grid grid-cols-2 gap-3">
                     <Link
                         href="/customer/products"
-                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
+                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
                             <Milk className="h-5 w-5 text-emerald-600" />
@@ -285,7 +285,7 @@ return;
 
                     <Link
                         href="/customer/products"
-                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
+                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 transition-transform duration-200 group-hover:scale-105">
                             <MapPinned className="h-5 w-5 text-blue-600" />
@@ -299,7 +299,7 @@ return;
                     {isLoggedIn ? (
                         <Link
                             href="/customer/orders"
-                            className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
+                            className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                         >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
                                 <Package className="h-5 w-5 text-amber-600" />
@@ -312,7 +312,7 @@ return;
                     ) : (
                         <a
                             href="/auth/google"
-                            className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
+                            className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                         >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
                                 <Package className="h-5 w-5 text-amber-600" />
@@ -342,7 +342,7 @@ return;
                     href="https://wa.me/6281111111111"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex items-center gap-4 rounded-2xl border border-border bg-white px-4 py-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
+                    className="group flex items-center gap-4 rounded-2xl border border-border bg-white px-4 py-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                 >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
                         <MessageCircle className="h-6 w-6 text-emerald-600" />

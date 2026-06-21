@@ -33,7 +33,7 @@ export default function CheckoutItemCard({ name, price, quantity, image, onQuant
                 <button
                     type="button"
                     onClick={() => quantity > 1 ? onQuantityChange(quantity - 1) : onRemove()}
-                    className="flex h-8 w-8 items-center justify-center rounded-l-lg border border-zinc-200 text-sm font-semibold text-slate-600 transition-transform active:scale-90 active:bg-zinc-50"
+                    className="flex h-8 w-8 items-center justify-center rounded-l-lg border border-zinc-200 text-sm font-semibold text-slate-600 transition-transform active:opacity-80 active:bg-zinc-50"
                     aria-label="Kurangi"
                 >
                     −
@@ -44,7 +44,7 @@ export default function CheckoutItemCard({ name, price, quantity, image, onQuant
                 <button
                     type="button"
                     onClick={() => onQuantityChange(quantity + 1)}
-                    className="flex h-8 w-8 items-center justify-center rounded-r-lg border border-emerald-600 bg-emerald-600 text-sm font-semibold text-white transition-transform active:scale-90 active:bg-emerald-700"
+                    className="flex h-8 w-8 items-center justify-center rounded-r-lg border border-emerald-600 bg-emerald-600 text-sm font-semibold text-white transition-transform active:opacity-80 active:bg-emerald-700"
                     aria-label="Tambah"
                 >
                     +

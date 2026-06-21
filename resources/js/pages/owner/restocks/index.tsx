@@ -40,7 +40,7 @@ export default function OwnerRestocksIndex({ restocks, outlets, filters, statusO
             ) : (
                 <div className="space-y-2">
                     {restocks.data.map((r: any) => (
-                        <Link key={r.id} href={`/owner/restocks/${r.id}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
+                        <Link key={r.id} href={`/owner/restocks/${r.id}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 transition-all duration-150 active:opacity-80 active:bg-slate-50">
                             <div>
                                 <div className="text-sm font-bold text-slate-900">#{r.id}</div>
                                 <div className="mt-0.5 text-xs text-slate-500">{r.outlet.name} · {r.items.length} items</div>

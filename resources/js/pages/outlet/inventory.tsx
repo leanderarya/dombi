@@ -67,7 +67,7 @@ export default function OutletInventory({ outlet, inventories }: any) {
                 </div>
                 <Link
                     href="/outlet/restocks/create"
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all active:bg-primary-hover active:scale-[0.95]"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all active:bg-primary-hover active:opacity-80"
                     title="Request Restock"
                 >
                     <Plus className="h-5 w-5" />

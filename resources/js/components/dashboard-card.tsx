@@ -29,7 +29,7 @@ export default function DashboardCard({ label, value, helper, href, color, urgen
         </>
     );
 
-    const className = `rounded-xl border p-3 shadow-sm ${base} ${urgent ? 'ring-2 ring-amber-300' : ''} active:scale-[0.97] transition-transform`;
+    const className = `rounded-xl border p-3 shadow-sm ${base} ${urgent ? 'ring-2 ring-amber-300' : ''} active:opacity-80 transition-transform`;
 
     if (href) {
         return <Link href={href} className={className}>{content}</Link>;

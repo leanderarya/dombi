@@ -33,7 +33,7 @@ export default function StickyActionBar({ actions, leading }: Props) {
                         type={action.type ?? 'button'}
                         onClick={action.onClick}
                         disabled={action.disabled ?? action.loading}
-                        className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-all active:scale-[0.98] disabled:active:scale-100 ${variantStyles[action.variant ?? 'primary']}`}
+                        className={`flex min-h-12 w-full items-center justify-center gap-2 rounded-lg text-sm font-bold transition-all active:opacity-80  ${variantStyles[action.variant ?? 'primary']}`}
                     >
                         {action.loading ? (
                             <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />

@@ -31,7 +31,7 @@ export default function DeliveryCard({ item, onAssignCourier, onResolve }: Props
     const needsAssignment = item.status === 'waiting_assignment';
 
     return (
-        <div className={`rounded-lg border bg-white p-3 transition-all duration-150 active:scale-[0.98] ${isFailed ? 'border-red-200 bg-red-50/30' : 'border-slate-200'}`}>
+        <div className={`rounded-lg border bg-white p-3 transition-all duration-150 active:opacity-80 ${isFailed ? 'border-red-200 bg-red-50/30' : 'border-slate-200'}`}>
             <Link href={href} className="block">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">

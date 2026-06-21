@@ -147,7 +147,7 @@ export default function AddressForm({ data, errors, processing, setData, onSubmi
                 <button
                     type="submit"
                     disabled={processing}
-                    className="flex min-h-12 flex-1 items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white transition-transform active:scale-[0.97] active:bg-emerald-800 disabled:bg-zinc-300"
+                    className="flex min-h-12 flex-1 items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white transition-transform active:opacity-80 active:bg-emerald-800 disabled:bg-zinc-300"
                 >
                     {processing ? 'Menyimpan...' : submitLabel}
                 </button>

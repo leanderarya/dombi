@@ -8,7 +8,7 @@ export function HeaderIconButton({ onClick, children, label }: { onClick?: () =>
         <button
             onClick={onClick}
             aria-label={label}
-            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-all duration-150 active:scale-[0.98] active:bg-slate-50"
+            className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-500 transition-all duration-150 active:opacity-80 active:bg-slate-50"
         >
             {children}
         </button>

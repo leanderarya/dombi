@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { getDeliveryStatus } from '@/lib/status-labels';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import DeliveryTimeline from '@/components/operations/delivery-timeline';
@@ -76,7 +77,7 @@ export default function OutletDeliveryShow({ delivery }: any) {
                     <div className="flex items-center gap-2">
                         <StatusBadge variant="warning" size="sm">Resolusi</StatusBadge>
                     </div>
-                    <p className="mt-1 text-sm text-slate-700">{delivery.resolution_status.replaceAll('_', ' ')}</p>
+                    <p className="mt-1 text-sm text-slate-700">{getDeliveryStatus(delivery.resolution_status).label}</p>
                     {delivery.resolution_notes && <p className="mt-1 text-xs text-slate-500">{delivery.resolution_notes}</p>}
                 </SectionCard>
             )}

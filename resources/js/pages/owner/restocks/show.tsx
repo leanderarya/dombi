@@ -158,7 +158,7 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
                 <button
                     type="button"
                     onClick={() => router.post(`/owner/distributions/${distribution.id}/mark-shipped`)}
-                    className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white transition-all duration-150 active:scale-[0.98]"
+                    className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white transition-all duration-150 active:opacity-80"
                 >
                     Tandai Dikirim
                 </button>
@@ -235,7 +235,7 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
                     className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                 />
                 {form.errors.items && <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700">{form.errors.items}</div>}
-                <button disabled={form.processing} className="min-h-[48px] w-full rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white transition-all duration-150 active:scale-[0.98] disabled:opacity-60">
+                <button disabled={form.processing} className="min-h-[48px] w-full rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white transition-all duration-150 active:opacity-80 disabled:opacity-60">
                     Setujui & Buat Distribusi
                 </button>
             </form>
@@ -262,7 +262,7 @@ function RejectPanel({ restock, form }: any) {
                     className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
                 />
                 {form.errors.rejected_reason && <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700">{form.errors.rejected_reason}</div>}
-                <button disabled={form.processing} className="min-h-[48px] w-full rounded-lg border border-red-200 px-4 text-sm font-bold text-red-700 transition-all duration-150 active:scale-[0.98] disabled:opacity-60">
+                <button disabled={form.processing} className="min-h-[48px] w-full rounded-lg border border-red-200 px-4 text-sm font-bold text-red-700 transition-all duration-150 active:opacity-80 disabled:opacity-60">
                     Tolak
                 </button>
             </form>

@@ -97,7 +97,7 @@ export default function Welcome() {
                     {/* Primary: Google Login */}
                     <a
                         href="/auth/google"
-                        className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-200/50 transition-all active:scale-[0.98] active:bg-emerald-700"
+                        className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-200/50 transition-all active:opacity-80 active:bg-emerald-700"
                     >
                         <svg className="h-5 w-5" viewBox="0 0 24 24">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />

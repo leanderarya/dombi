@@ -57,7 +57,7 @@ export default function PricingIndex({ outlets, kpis }: Props) {
                         <Link
                             key={outlet.id}
                             href={`/owner/pricing/outlets/${outlet.id}`}
-                            className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-emerald-200 hover:bg-emerald-50/30 active:scale-[0.99]"
+                            className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-emerald-200 hover:bg-emerald-50/30 active:opacity-80"
                         >
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
                                 <Store className="h-6 w-6 text-emerald-600" />

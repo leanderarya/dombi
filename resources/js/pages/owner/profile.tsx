@@ -25,7 +25,7 @@ export default function OwnerProfile() {
                     <InfoBox label="Version" value={appVersion ?? '1.0.0'} />
                 </div>
 
-                <button onClick={() => router.post('/logout')} className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 active:scale-[0.98] active:bg-red-100">
+                <button onClick={() => router.post('/logout')} className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-2xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 active:opacity-80 active:bg-red-100">
                     Logout
                 </button>
             </div>

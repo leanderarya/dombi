@@ -65,7 +65,7 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                             <Link
                                 key={order.id}
                                 href={`/outlet/orders/${order.id}`}
-                                className={`group block rounded-xl border bg-white p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.99] ${
+                                className={`group block rounded-xl border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80 ${
                                     isPending ? 'border-amber-200' : 'border-border hover:border-border-strong'
                                 }`}
                             >

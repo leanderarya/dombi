@@ -8,7 +8,7 @@ export default function LoadingButton({ loading, children, disabled, className =
         <button
             {...props}
             disabled={disabled || loading}
-            className={`relative inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-all active:scale-[0.97] disabled:opacity-60 ${className}`}
+            className={`relative inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-medium transition-all active:opacity-80 disabled:opacity-60 ${className}`}
         >
             {loading && (
                 <span className="absolute inset-0 flex items-center justify-center">

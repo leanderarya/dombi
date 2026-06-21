@@ -161,7 +161,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
                                 type="button"
                                 onClick={handleUseCurrentLocation}
                                 disabled={loadingCurrent}
-                                className="flex h-14 w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white px-4 transition-all active:scale-[0.98] active:bg-slate-50 disabled:opacity-60"
+                                className="flex h-14 w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white px-4 transition-all active:opacity-80 active:bg-slate-50 disabled:opacity-60"
                             >
                                 <LocateFixed className="h-5 w-5 shrink-0 text-emerald-600" />
                                 <span className="text-sm font-semibold text-slate-900">
@@ -172,7 +172,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
                             <button
                                 type="button"
                                 onClick={() => setMode('manual')}
-                                className="flex h-14 w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white px-4 transition-all active:scale-[0.98] active:bg-slate-50"
+                                className="flex h-14 w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white px-4 transition-all active:opacity-80 active:bg-slate-50"
                             >
                                 <Search className="h-5 w-5 shrink-0 text-slate-500" />
                                 <span className="text-sm font-semibold text-slate-900">Cari Alamat Manual</span>
@@ -259,7 +259,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
                                 type="button"
                                 onClick={confirmManualLocation}
                                 disabled={!draft || draft.latitude === null || draft.longitude === null}
-                                className="flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-emerald-700 disabled:bg-slate-300 disabled:active:scale-100"
+                                className="flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700 disabled:bg-slate-300 "
                             >
                                 Simpan Lokasi
                             </button>

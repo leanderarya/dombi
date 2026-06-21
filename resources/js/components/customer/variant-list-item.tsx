@@ -146,7 +146,7 @@ return;
                         type="button"
                         onClick={handleQuickAdd}
                         disabled={adding || isOutOfStock}
-                        className={`flex h-11 w-11 items-center justify-center rounded-lg transition-all active:scale-90 disabled:opacity-40 ${
+                        className={`flex h-11 w-11 items-center justify-center rounded-lg transition-all active:opacity-80 disabled:opacity-40 ${
                             isOutOfStock
                                 ? 'bg-zinc-100 text-zinc-400'
                                 : 'bg-emerald-600 text-white active:bg-emerald-700'

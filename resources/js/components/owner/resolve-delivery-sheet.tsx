@@ -142,7 +142,7 @@ return null;
                                 return (
                                     <label
                                         key={opt.value}
-                                        className={`block rounded-lg border p-3 transition-all duration-150 active:scale-[0.98] ${
+                                        className={`block rounded-lg border p-3 transition-all duration-150 active:opacity-80 ${
                                             isSelected
                                                 ? opt.destructive ? 'border-red-300 bg-red-50/30' : 'border-emerald-300 bg-emerald-50/20'
                                                 : 'border-slate-200'
@@ -196,7 +196,7 @@ return null;
                         <button
                             type="submit"
                             disabled={!form.data.resolution || !form.data.resolution_notes || form.processing}
-                            className={`mt-3 flex min-h-[48px] w-full items-center justify-center rounded-lg text-sm font-bold transition-all duration-150 active:scale-[0.98] disabled:opacity-40 ${
+                            className={`mt-3 flex min-h-[48px] w-full items-center justify-center rounded-lg text-sm font-bold transition-all duration-150 active:opacity-80 disabled:opacity-40 ${
                                 isDestructive ? 'bg-red-600 text-white' : 'bg-emerald-700 text-white'
                             }`}
                         >

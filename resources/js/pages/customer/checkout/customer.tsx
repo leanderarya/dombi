@@ -339,7 +339,7 @@ function StepButton({ label, disabled, processing, onClick }: { label: string; d
                     type="button"
                     onClick={onClick}
                     disabled={disabled}
-                    className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-emerald-700 disabled:bg-slate-300 disabled:active:scale-100"
+                    className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700 disabled:bg-slate-300 "
                 >
                     {processing ? 'Memproses...' : label}
                 </button>

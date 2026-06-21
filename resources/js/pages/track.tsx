@@ -252,7 +252,7 @@ function NotFoundState() {
                 </div>
                 <h1 className="mt-4 text-lg font-semibold text-text">Pesanan Tidak Ditemukan</h1>
                 <p className="mt-2 text-sm text-text-muted">Kode pelacakan tidak valid atau pesanan sudah tidak tersedia.</p>
-                <a href="/customer/home" className="mt-6 flex min-h-11 items-center rounded-xl bg-primary px-6 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-primary-hover">
+                <a href="/customer/home" className="mt-6 flex min-h-11 items-center rounded-xl bg-primary px-6 text-sm font-bold text-white transition-all active:opacity-80 active:bg-primary-hover">
                     Kembali ke Beranda
                 </a>
             </div>
@@ -525,7 +525,7 @@ function PickupInfoCard({ outlet, orderCode, isReadyForPickup }: {
             <button
                 type="button"
                 onClick={openMaps}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-blue-700"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition-all active:opacity-80 active:bg-blue-700"
             >
                 <Navigation className="h-4 w-4" />
                 Navigasi ke Outlet
@@ -554,7 +554,7 @@ function PickupInfoCard({ outlet, orderCode, isReadyForPickup }: {
             {outlet.phone && (
                 <a
                     href={`tel:${outlet.phone}`}
-                    className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-sm font-semibold text-blue-700 transition-all active:scale-[0.98] active:bg-blue-100"
+                    className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-sm font-semibold text-blue-700 transition-all active:opacity-80 active:bg-blue-100"
                 >
                     <Phone className="h-4 w-4" />
                     Hubungi Outlet
@@ -682,7 +682,7 @@ function TrackingLinkCard({ trackingUrl, copied, onCopy, onShare, onWhatsApp }: 
                 <button
                     type="button"
                     onClick={onCopy}
-                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-bold text-text transition-all active:scale-[0.98] active:bg-surface-muted"
+                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-bold text-text transition-all active:opacity-80 active:bg-surface-muted"
                 >
                     <Copy className="h-3.5 w-3.5" />
                     {copied ? 'Tersalin' : 'Salin'}
@@ -690,7 +690,7 @@ function TrackingLinkCard({ trackingUrl, copied, onCopy, onShare, onWhatsApp }: 
                 <button
                     type="button"
                     onClick={onShare}
-                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-white transition-all active:scale-[0.98] active:bg-primary-hover"
+                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-white transition-all active:opacity-80 active:bg-primary-hover"
                 >
                     <Share2 className="h-3.5 w-3.5" />
                     Share
@@ -698,7 +698,7 @@ function TrackingLinkCard({ trackingUrl, copied, onCopy, onShare, onWhatsApp }: 
                 <button
                     type="button"
                     onClick={onWhatsApp}
-                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 transition-all active:scale-[0.98] active:bg-emerald-100"
+                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 transition-all active:opacity-80 active:bg-emerald-100"
                 >
                     <MessageCircle className="h-3.5 w-3.5" />
                     WA
@@ -771,7 +771,7 @@ function StickyBottomBar({ isPickup, status, statusConfig, outletPhone }: {
                         <a
                             href={`tel:${outletPhone}`}
                             className={cn(
-                                "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all active:scale-[0.98]",
+                                "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all active:opacity-80",
                                 `bg-${accentColor}-100 text-${accentColor}-700`
                             )}
                         >
@@ -805,7 +805,7 @@ function TerminalCTA({ orderId, isCancelled, isRejected }: {
                 {!isCancelled && !isRejected && (
                     <a
                         href={`/customer/orders/${orderId}/restore-cart`}
-                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-primary-hover"
+                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white transition-all active:opacity-80 active:bg-primary-hover"
                     >
                         <RotateCcw className="h-4 w-4" />
                         Pesan Lagi
@@ -878,7 +878,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                 <button
                     type="button"
                     onClick={() => setShowForm(true)}
-                    className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-emerald-700"
+                    className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700"
                 >
                     Buat Akun Sekarang
                 </button>
@@ -931,7 +931,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-emerald-700 disabled:opacity-50"
+                        className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700 disabled:opacity-50"
                     >
                         {loading ? 'Membuat Akun...' : 'Daftar'}
                     </button>

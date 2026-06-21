@@ -53,7 +53,7 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
             title="Laporan"
             headerRight={
                 <>
-                    <button onClick={handleExport} className="flex h-10 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-600 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
+                    <button onClick={handleExport} className="flex h-10 items-center gap-1 rounded-xl border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-600 transition-all duration-150 active:opacity-80 active:bg-slate-50">
                         <Download className="h-4 w-4" /> CSV
                     </button>
                     <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>

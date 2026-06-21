@@ -176,7 +176,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             key={option.value}
                             type="button"
                             onClick={() => form.setData('payment_method', option.value)}
-                            className={`flex min-h-[68px] w-full items-center justify-between rounded-xl border px-4 text-left transition-all active:scale-[0.98] ${
+                            className={`flex min-h-[68px] w-full items-center justify-between rounded-xl border px-4 text-left transition-all active:opacity-80 ${
                                 form.data.payment_method === option.value ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'
                             }`}
                         >
@@ -261,7 +261,7 @@ function StepButton({ label, disabled, processing, onClick }: { label: string; d
                     type="button"
                     onClick={onClick}
                     disabled={disabled}
-                    className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-emerald-700 disabled:bg-slate-300 disabled:active:scale-100"
+                    className="flex min-h-14 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700 disabled:bg-slate-300 "
                 >
                     {processing ? 'Memproses...' : label}
                 </button>

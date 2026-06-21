@@ -98,7 +98,7 @@ return;
                                 key={variant.id}
                                 onClick={() => setSelectedId(variant.id)}
                                 disabled={outOfStock}
-                                className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-all active:scale-[0.98] disabled:opacity-40 ${
+                                className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-all active:opacity-80 disabled:opacity-40 ${
                                     isSelected
                                         ? 'border-emerald-500 bg-emerald-50'
                                         : 'border-zinc-200 bg-white'

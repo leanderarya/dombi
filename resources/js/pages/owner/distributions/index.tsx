@@ -43,7 +43,7 @@ export default function OwnerDistributionsIndex({ distributions, outlets, filter
             ) : (
                 <div className="space-y-2">
                     {distributions.data.map((d: any) => (
-                        <Link key={d.id} href={`/owner/distributions/${d.id}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 transition-all duration-150 active:scale-[0.98] active:bg-slate-50">
+                        <Link key={d.id} href={`/owner/distributions/${d.id}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 transition-all duration-150 active:opacity-80 active:bg-slate-50">
                             <div>
                                 <div className="text-sm font-bold text-slate-900">#{d.id}</div>
                                 <div className="mt-0.5 text-xs text-slate-500">{d.outlet.name}</div>
