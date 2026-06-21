@@ -333,6 +333,15 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             {/* Proof of Delivery */}
             {delivery.status === 'completed' && (
                 <SectionCard className="mb-4 border-emerald-200 bg-emerald-50" label="Bukti Pengiriman">
+                    {delivery.proof_image && (
+                        <div className="mb-3">
+                            <img
+                                src={`/storage/${delivery.proof_image}`}
+                                alt="Bukti pengiriman"
+                                className="w-full rounded-xl object-cover"
+                            />
+                        </div>
+                    )}
                     {delivery.delivered_to && (
                         <div className="mt-2 text-sm text-emerald-800">
                             <span className="font-medium">Diterima oleh:</span> {delivery.delivered_to}
@@ -387,7 +396,17 @@ function CompleteSheetContent({ deliveryId, onClose }: { deliveryId: number; onC
     const form = useForm({
         delivered_to: '',
         delivery_note: '',
+        proof_image: null as File | null,
     });
+    const [proofPreview, setProofPreview] = useState<string | null>(null);
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            form.setData('proof_image', file);
+            setProofPreview(URL.createObjectURL(file));
+        }
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -420,7 +439,25 @@ function CompleteSheetContent({ deliveryId, onClose }: { deliveryId: number; onC
                         className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
                     />
                 </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-slate-700">Foto Bukti Pengiriman</label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handleImageChange}
+                        className="mt-1 w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-emerald-800"
+                    />
+                    {proofPreview && (
+                        <img src={proofPreview} alt="Preview" className="mt-2 h-32 w-32 rounded-lg object-cover" />
+                    )}
+                </div>
             </div>
+
+            {form.errors.proof_image && (
+                <p className="mt-1 text-xs text-red-600">{form.errors.proof_image}</p>
+            )}
 
             <button
                 type="submit"

@@ -115,6 +115,11 @@ class DeliveryController extends Controller
     public function complete(UpdateDeliveryStatusRequest $request, Delivery $delivery, DeliveryService $deliveryService): RedirectResponse
     {
         $payload = $request->validated();
+
+        if ($request->hasFile('proof_image')) {
+            $payload['proof_image'] = $request->file('proof_image')->store('delivery-proofs', 'public');
+        }
+
         $deliveryService->completeDelivery($delivery, $request->user(), $payload);
 
         return redirect()->route('courier.deliveries.show', $delivery)->with('success', 'Delivery selesai.');
