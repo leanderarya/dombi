@@ -11,7 +11,9 @@ createInertiaApp({
         color: '#047857',
     },
     resolve: (name) => {
-        const pages = import.meta.glob('./pages/customer/**/*.tsx', { eager: true });
+        const customerPages = import.meta.glob('./pages/customer/**/*.tsx', { eager: true });
+        const rootPages = import.meta.glob('./pages/*.tsx', { eager: true });
+        const pages = { ...customerPages, ...rootPages };
         const page = pages[`./pages/${name}.tsx`];
 
         if (!page) {
