@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import ActiveOrderCard from '@/components/customer/active-order-card';
 import EmptyOrderState from '@/components/customer/empty-order-state';
@@ -66,12 +66,14 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
             <Head title="Pesanan Saya" />
 
             {/* Sticky Page Header */}
-            <header className="fixed inset-x-0 top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur">
+            <header className="fixed inset-x-0 top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link href="/customer/home" className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
-                        <ArrowLeft className="h-5 w-5" />
+                    <Link href="/customer/home" className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
                     </Link>
-                    <h1 className="text-sm font-semibold text-slate-900">Pesanan Saya</h1>
+                    <h1 className="text-sm font-semibold text-text">Pesanan Saya</h1>
                     <div className="h-10 w-10" />
                 </div>
                 {viewState === 'recovered' && (hasActiveOrders || hasHistory) && (
@@ -88,8 +90,8 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
                 <>
                     {/* Recovery info card */}
                     {recoveredActive !== null && maskedPhone && (
-                        <div className="mb-4 flex items-center justify-between rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2">
-                            <div className="text-xs text-emerald-800">
+                        <div className="mb-4 flex items-center justify-between rounded-lg border border-border bg-emerald-50 px-3 py-2">
+                            <div className="text-xs text-text">
                                 Pesanan ditemukan menggunakan nomor: <span className="font-semibold">{maskedPhone}</span>
                             </div>
                             <button
@@ -100,7 +102,7 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
                                     setRecoveredHistory(null);
                                     setRecoverySheetOpen(true);
                                 }}
-                                className="min-h-[44px] shrink-0 px-2 text-[11px] font-bold uppercase tracking-wide text-emerald-700 active:text-emerald-900"
+                                className="min-h-[44px] shrink-0 px-2 text-[13px] text-text-subtle active:opacity-80"
                             >
                                 Ganti
                             </button>
@@ -110,7 +112,7 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
                     {/* Active Orders */}
                     {hasActiveOrders && (
                         <section>
-                            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pesanan Aktif</div>
+                            <div className="text-[13px] text-text-subtle">Pesanan Aktif</div>
                             <div className="mt-2 space-y-3">
                                 {displayActive.map((order: any) => (
                                     <ActiveOrderCard key={order.id} order={order} />
@@ -121,7 +123,7 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
 
                     {/* History */}
                     <section className={hasActiveOrders ? 'mt-6' : ''}>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                        <div className="text-[13px] text-text-subtle">
                             {recoveredActive !== null ? 'Riwayat Pesanan Terbaru' : 'Riwayat Pesanan'}
                         </div>
 
@@ -152,13 +154,13 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
                 <div className="mt-8 flex flex-col items-center px-4 text-center">
                     <EmptyOrderState type="no-orders" />
 
-                    <div className="mt-8 w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-                        <p className="text-sm font-semibold text-slate-900">Pernah pesan sebelumnya?</p>
-                        <p className="mt-1 text-xs text-slate-500">Cari pesananmu menggunakan nomor WhatsApp yang dipakai saat memesan.</p>
+                    <div className="mt-8 w-full max-w-sm rounded-2xl border border-border bg-white p-5 shadow-sm">
+                        <p className="text-sm font-semibold text-text">Pernah pesan sebelumnya?</p>
+                        <p className="mt-1 text-xs text-text-muted">Cari pesananmu menggunakan nomor WhatsApp yang dipakai saat memesan.</p>
                         <button
                             type="button"
                             onClick={() => setRecoverySheetOpen(true)}
-                            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 text-sm font-bold text-white active:bg-emerald-800"
+                            className="mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 text-sm font-bold text-white active:opacity-80"
                         >
                             <Search className="h-4 w-4" />
                             Cari Pesanan Saya

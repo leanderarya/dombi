@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, Copy, MapPin, Navigation, Phone, Share2, Store, Truck, XCircle } from 'lucide-react';
+import { CheckCircle2, Copy, MapPin, Navigation, Phone, Share2, Store, Truck, XCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import OrderSummaryCard from '@/components/customer/order-summary-card';
@@ -68,15 +68,17 @@ return;
             <OfflineBanner />
 
             {/* Sticky Header */}
-            <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur">
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link href="/customer/orders" className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
-                        <ArrowLeft className="h-5 w-5" />
+                    <Link href="/customer/orders" className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
                     </Link>
                     <div className="text-center">
-                        <div className="text-sm font-semibold text-slate-900">{order.order_code}</div>
+                        <div className="text-sm font-semibold text-text">{order.order_code}</div>
                         {order.ordered_at && (
-                            <div className="text-[11px] text-slate-500">{formatDate(order.ordered_at)}</div>
+                            <div className="text-[11px] text-text-muted">{formatDate(order.ordered_at)}</div>
                         )}
                     </div>
                     <div className="h-10 w-10" />
@@ -89,7 +91,7 @@ return;
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1 ${orderStatusTone[order.status] ?? 'bg-slate-50 text-slate-800 ring-slate-200'}`}>
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1 ${orderStatusTone[order.status] ?? 'bg-surface-muted text-text ring-slate-200'}`}>
                         {orderStatusLabel(order.status)}
                     </span>
                 </div>
@@ -140,7 +142,7 @@ return;
                                 href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 min-h-[44px] text-sm font-bold text-white transition-all active:opacity-80 active:bg-blue-700"
+                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 min-h-[44px] text-sm font-bold text-white transition-all active:opacity-80"
                             >
                                 <Navigation className="h-4 w-4" />
                                 Navigasi ke Outlet
@@ -170,7 +172,7 @@ return;
                         {order.outlet.phone && (
                             <a
                                 href={`tel:${order.outlet.phone}`}
-                                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 min-h-[44px] text-sm font-semibold text-blue-700 transition-all active:opacity-80 active:bg-blue-100"
+                                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 min-h-[44px] text-sm font-semibold text-blue-700 transition-all active:opacity-80"
                             >
                                 <Phone className="h-4 w-4" />
                                 Hubungi Outlet
@@ -181,17 +183,17 @@ return;
 
                 {/* Tracking Code */}
                 {order.recovery_token && (
-                    <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kode Pelacakan</div>
+                    <div className="mt-4 rounded-2xl border border-border bg-white p-4 shadow-sm">
+                        <div className="text-[13px] text-text-subtle">Kode Pelacakan</div>
                         <div className="mt-2 flex items-center gap-3">
                             <div className="flex-1">
-                                <div className="text-lg font-bold tabular-nums tracking-wider text-slate-900">{order.recovery_token}</div>
-                                <div className="mt-0.5 text-[11px] text-slate-500">Gunakan link publik ini untuk melacak pesanan tanpa login</div>
+                                <div className="text-lg font-bold tabular-nums tracking-wider text-text">{order.recovery_token}</div>
+                                <div className="mt-0.5 text-[11px] text-text-muted">Gunakan link publik ini untuk melacak pesanan tanpa login</div>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleCopyLink}
-                                className="flex h-11 items-center gap-1.5 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
+                                className="flex h-11 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-semibold text-text active:opacity-80"
                             >
                                 {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
                                 {copied ? 'Tersalin' : 'Salin Link'}
@@ -199,13 +201,13 @@ return;
                         </div>
                         {trackingUrl && (
                             <>
-                                <div className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs font-semibold tabular-nums text-slate-700 break-all">
+                                <div className="mt-3 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold tabular-nums text-text break-all">
                                     {trackingUrl}
                                 </div>
                                 <button
                                     type="button"
                                     onClick={handleShare}
-                                    className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
+                                    className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:opacity-80"
                                 >
                                     <Share2 className="h-4 w-4" />
                                     Bagikan Link Pelacakan
@@ -254,24 +256,24 @@ return;
 
                 {/* Expired Reason */}
                 {isExpired && (
-                    <div className="mt-4 rounded-2xl border border-zinc-200 bg-slate-50 p-4 shadow-sm">
+                    <div className="mt-4 rounded-2xl border border-border bg-surface-muted p-4 shadow-sm">
                         <div className="flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-slate-500" />
-                            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Pesanan Kadaluarsa</div>
+                            <XCircle className="h-4 w-4 text-text-muted" />
+                            <div className="text-[11px] font-bold uppercase tracking-wider text-text">Pesanan Kadaluarsa</div>
                         </div>
-                        <div className="mt-2 text-sm text-slate-700">Outlet tidak memberikan konfirmasi dalam batas waktu yang ditentukan.</div>
+                        <div className="mt-2 text-sm text-text">Outlet tidak memberikan konfirmasi dalam batas waktu yang ditentukan.</div>
                     </div>
                 )}
 
                 {/* Courier Card */}
                 {order.delivery?.courier && (
-                    <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kurir</div>
+                    <div className="mt-4 rounded-2xl border border-border bg-white p-4 shadow-sm">
+                        <div className="text-[13px] text-text-subtle">Kurir</div>
                         <div className="mt-2 flex items-center gap-3">
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">
                                 <Truck className="h-4 w-4 text-emerald-600" />
                             </div>
-                            <div className="text-sm font-semibold text-slate-900">{order.delivery.courier.name}</div>
+                            <div className="text-sm font-semibold text-text">{order.delivery.courier.name}</div>
                         </div>
                     </div>
                 )}
@@ -286,23 +288,23 @@ return;
 
                 {/* Delivery Address */}
                 {order.fulfillment_type !== 'pickup' && (
-                    <div className="mt-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Alamat Pengiriman</div>
-                        <div className="mt-2 text-sm font-medium text-slate-900">{order.customer_name}</div>
-                        <div className="mt-0.5 text-xs text-slate-500">{order.customer_phone}</div>
-                        <div className="mt-1.5 text-xs leading-relaxed text-slate-600">{order.customer_address}</div>
+                    <div className="mt-4 rounded-2xl border border-border bg-white p-4 shadow-sm">
+                        <div className="text-[13px] text-text-subtle">Alamat Pengiriman</div>
+                        <div className="mt-2 text-sm font-medium text-text">{order.customer_name}</div>
+                        <div className="mt-0.5 text-xs text-text-muted">{order.customer_phone}</div>
+                        <div className="mt-1.5 text-xs leading-relaxed text-text">{order.customer_address}</div>
                         {order.customer_address_detail && (
-                            <div className="mt-1 text-xs text-slate-600"><span className="font-medium text-slate-500">Detail: </span>{order.customer_address_detail}</div>
+                            <div className="mt-1 text-xs text-text"><span className="font-medium text-text-muted">Detail: </span>{order.customer_address_detail}</div>
                         )}
                         {order.customer_landmark && (
-                            <div className="mt-1 text-xs text-slate-600"><span className="font-medium text-slate-500">Patokan: </span>{order.customer_landmark}</div>
+                            <div className="mt-1 text-xs text-text"><span className="font-medium text-text-muted">Patokan: </span>{order.customer_landmark}</div>
                         )}
                         {order.latitude && order.longitude && (
                             <a
                                 href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 active:bg-emerald-100"
+                                className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 active:opacity-80"
                             >
                                 <MapPin className="h-3.5 w-3.5" />
                                 Buka di Maps
@@ -317,7 +319,7 @@ return;
                         <button
                             type="button"
                             onClick={() => setCancelDialogOpen(true)}
-                            className="flex h-11 w-full items-center justify-center rounded-xl border border-red-200 text-sm font-semibold text-red-600 active:bg-red-50"
+                            className="flex h-11 w-full items-center justify-center rounded-xl border border-red-200 text-sm font-semibold text-red-600 active:opacity-80"
                         >
                             Batalkan Pesanan
                         </button>
@@ -340,7 +342,7 @@ return;
 
             {/* Cancel Dialog */}
             <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} title="Batalkan Pesanan">
-                <p className="text-sm text-slate-500">Pilih alasan pembatalan.</p>
+                <p className="text-sm text-text-muted">Pilih alasan pembatalan.</p>
 
                 <div className="mt-4 space-y-2">
                     {cancellationReasons.map((reason: string) => (
@@ -351,7 +353,7 @@ return;
                             className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
                                 cancelForm.data.reason === reason
                                     ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
-                                    : 'border-slate-200 text-slate-700 active:bg-slate-50'
+                                    : 'border-border text-text active:opacity-80'
                             }`}
                         >
                             {reason}
@@ -365,7 +367,7 @@ return;
                             value={cancelForm.data.note}
                             onChange={(e) => cancelForm.setData('note', e.target.value)}
                             placeholder="Jelaskan alasan pembatalan..."
-                            className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                            className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
                         />
                     </div>
                 )}
@@ -381,7 +383,7 @@ return;
                     type="button"
                     onClick={handleCancel}
                     disabled={!cancelForm.data.reason || cancelForm.processing}
-                    className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:bg-red-700 disabled:bg-slate-300"
+                    className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-slate-300"
                 >
                     {cancelForm.processing ? 'Membatalkan...' : 'Batalkan Pesanan'}
                 </button>

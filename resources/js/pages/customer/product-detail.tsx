@@ -176,21 +176,21 @@ return;
 
             <div className="min-h-dvh bg-[#fbf9f7]">
                 {/* Header */}
-                <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur">
+                <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
                     <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
                         <Link
                             href="/customer/products"
-                            className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
                         >
                             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                             </svg>
                         </Link>
                         <div className="min-w-0 flex-1">
-                            <div className="text-sm font-semibold text-slate-900 truncate">{family.name}</div>
-                            {family.brand && <div className="text-xs text-zinc-500">{family.brand}</div>}
+                            <div className="text-sm font-semibold text-text truncate">{family.name}</div>
+                            {family.brand && <div className="text-xs text-text-muted">{family.brand}</div>}
                         </div>
-                        <Link href="/customer/checkout" className="relative flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
+                        <Link href="/customer/checkout" className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80">
                             <ShoppingCart className="h-5 w-5" />
                             {cart.totalItems > 0 && (
                                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white">
@@ -209,13 +209,13 @@ return;
 
                     {/* Product Name */}
                     <div className="mb-1">
-                        <h1 className="text-xl font-bold text-slate-900">{family.name}</h1>
+                        <h1 className="text-xl font-bold text-text">{family.name}</h1>
                     </div>
 
                     {/* Variant Summary (compact: "Original • 250ml") */}
                     {variantSummary && (
                         <div className="mt-0.5">
-                            <span className="text-sm text-zinc-500">{variantSummary}</span>
+                            <span className="text-sm text-text-muted">{variantSummary}</span>
                         </div>
                     )}
 
@@ -237,17 +237,17 @@ return;
 
                     {/* Description */}
                     {family.description && (
-                        <p className="mt-3 text-sm text-zinc-600 leading-relaxed">{family.description}</p>
+                        <p className="mt-3 text-sm text-text-muted leading-relaxed">{family.description}</p>
                     )}
 
                     {/* Flavor Selection (hidden when only one flavor) */}
                     {showFlavorSelector && (
                         <section className="mt-6">
                             <div className="flex items-baseline justify-between">
-                                <h3 className="text-sm font-semibold text-slate-900">Pilih Rasa</h3>
-                                <span className="text-[11px] font-medium text-slate-400">Wajib, Pilih 1</span>
+                                <h3 className="text-sm font-semibold text-text">Pilih Rasa</h3>
+                                <span className="text-[13px] text-text-subtle">Wajib, Pilih 1</span>
                             </div>
-                            <div className="mt-3 divide-y divide-zinc-100 rounded-xl border border-zinc-100 bg-white">
+                            <div className="mt-3 divide-y divide-zinc-100 rounded-xl border border-border bg-white">
                                 {flavors.map((flavor) => {
                                     const isSelected = effectiveFlavor === flavor;
                                     const hasVariant = family.variants.some(
@@ -259,10 +259,10 @@ return;
                                             key={flavor}
                                             onClick={() => setOverriddenFlavor(flavor)}
                                             disabled={!hasVariant}
-                                            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-zinc-50 disabled:opacity-40"
+                                            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:opacity-80 disabled:opacity-40"
                                         >
                                             <RadioDot checked={isSelected} disabled={!hasVariant} />
-                                            <span className={`flex-1 text-sm ${isSelected ? 'font-semibold text-slate-900' : 'text-slate-700'}`}>
+                                            <span className={`flex-1 text-sm ${isSelected ? 'font-semibold text-text' : 'text-text'}`}>
                                                 {flavor}
                                             </span>
                                         </button>
@@ -276,10 +276,10 @@ return;
                     {showSizeSelector && (
                         <section className="mt-5">
                             <div className="flex items-baseline justify-between">
-                                <h3 className="text-sm font-semibold text-slate-900">Pilih Ukuran</h3>
-                                <span className="text-[11px] font-medium text-slate-400">Wajib, Pilih 1</span>
+                                <h3 className="text-sm font-semibold text-text">Pilih Ukuran</h3>
+                                <span className="text-[13px] text-text-subtle">Wajib, Pilih 1</span>
                             </div>
-                            <div className="mt-3 divide-y divide-zinc-100 rounded-xl border border-zinc-100 bg-white">
+                            <div className="mt-3 divide-y divide-zinc-100 rounded-xl border border-border bg-white">
                                 {sortedSizes.map((size) => {
                                     const isSelected = effectiveSize === size;
                                     const hasVariant = family.variants.some(
@@ -296,10 +296,10 @@ return;
                                             key={size}
                                             onClick={() => setOverriddenSize(size)}
                                             disabled={!hasVariant}
-                                            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-zinc-50 disabled:opacity-40"
+                                            className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:opacity-80 disabled:opacity-40"
                                         >
                                             <RadioDot checked={isSelected} disabled={!hasVariant} />
-                                            <span className={`flex-1 text-sm ${isSelected ? 'font-semibold text-slate-900' : 'text-slate-700'}`}>
+                                            <span className={`flex-1 text-sm ${isSelected ? 'font-semibold text-text' : 'text-text'}`}>
                                                 {size}
                                             </span>
                                             {sizeVariant && (
@@ -316,9 +316,9 @@ return;
                     {flavors.length === 0 && sortedSizes.length === 0 && family.variants.length > 0 && (
                         <section className="mt-5">
                             <div className="flex items-baseline justify-between">
-                                <h3 className="text-sm font-semibold text-slate-900">Varian</h3>
+                                <h3 className="text-sm font-semibold text-text">Varian</h3>
                             </div>
-                            <div className="mt-3 divide-y divide-zinc-100 rounded-xl border border-zinc-100 bg-white">
+                            <div className="mt-3 divide-y divide-zinc-100 rounded-xl border border-border bg-white">
                                 {family.variants.map((variant) => (
                                     <button
                                         key={variant.id}
@@ -326,13 +326,13 @@ return;
                                             setOverriddenFlavor(null);
                                             setOverriddenSize(null);
                                         }}
-                                        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-zinc-50"
+                                        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:opacity-80"
                                     >
                                         <RadioDot checked={selectedVariant?.id === variant.id} />
-                                        <span className={`flex-1 text-sm ${selectedVariant?.id === variant.id ? 'font-semibold text-slate-900' : 'text-slate-700'}`}>
+                                        <span className={`flex-1 text-sm ${selectedVariant?.id === variant.id ? 'font-semibold text-text' : 'text-text'}`}>
                                             {variant.name}
                                         </span>
-                                        <span className="text-sm tabular-nums text-slate-500">{formatCurrency(variant.selling_price)}</span>
+                                        <span className="text-sm tabular-nums text-text-muted">{formatCurrency(variant.selling_price)}</span>
                                     </button>
                                 ))}
                             </div>
@@ -342,29 +342,29 @@ return;
                     {/* Quantity */}
                     {selectedVariant && (
                         <section className="mt-6">
-                            <h3 className="text-sm font-semibold text-slate-900">Jumlah</h3>
+                            <h3 className="text-sm font-semibold text-text">Jumlah</h3>
                             <div className="mt-3 flex items-center gap-4">
-                                <div className="flex items-center rounded-xl border border-zinc-200 bg-white">
+                                <div className="flex items-center rounded-xl border border-border bg-white">
                                     <button
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                        className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-l-xl"
+                                        className="flex h-11 w-11 items-center justify-center text-text-muted active:opacity-80 rounded-l-xl"
                                     >
                                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                             <path strokeLinecap="round" d="M5 12h14" />
                                         </svg>
                                     </button>
-                                    <span className="w-12 text-center text-sm font-bold text-slate-900">{quantity}</span>
+                                    <span className="w-12 text-center text-sm font-bold text-text">{quantity}</span>
                                     <button
                                         onClick={() => setQuantity(quantity + 1)}
-                                        className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-r-xl"
+                                        className="flex h-11 w-11 items-center justify-center text-text-muted active:opacity-80 rounded-r-xl"
                                     >
                                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                             <path strokeLinecap="round" d="M12 5v14M5 12h14" />
                                         </svg>
                                     </button>
                                 </div>
-                                <span className="text-sm text-zinc-500">
-                                    Total <span className="font-bold text-slate-900">{formatCurrency(selectedVariant.selling_price * quantity)}</span>
+                                <span className="text-sm text-text-muted">
+                                    Total <span className="font-bold text-text">{formatCurrency(selectedVariant.selling_price * quantity)}</span>
                                 </span>
                             </div>
                         </section>
@@ -373,7 +373,7 @@ return;
                     {/* Other Products */}
                     {otherFamilies.length > 0 && (
                         <section className="mt-8">
-                            <h3 className="text-sm font-semibold text-slate-900">Produk Lainnya</h3>
+                            <h3 className="text-sm font-semibold text-text">Produk Lainnya</h3>
                             <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-none pb-2 -mx-4 px-4">
                                 {otherFamilies.map((other) => {
                                     const minPrice = Math.min(...(other.variants?.map((v) => v.selling_price) ?? [0]));
@@ -382,13 +382,13 @@ return;
                                         <Link
                                             key={other.id}
                                             href={`/customer/products/${other.id}`}
-                                            className="flex w-36 shrink-0 flex-col rounded-xl border border-zinc-100 bg-white overflow-hidden active:bg-zinc-50"
+                                            className="flex w-36 shrink-0 flex-col rounded-xl border border-border bg-white overflow-hidden active:opacity-80"
                                         >
                                             <div className="flex h-20 items-center justify-center bg-gradient-to-br from-emerald-50 to-zinc-50">
                                                 <span className="text-3xl">&#129371;</span>
                                             </div>
                                             <div className="p-2">
-                                                <div className="text-xs font-semibold text-slate-900 leading-tight truncate">{other.name}</div>
+                                                <div className="text-xs font-semibold text-text leading-tight truncate">{other.name}</div>
                                                 <div className="mt-1 text-[11px] font-bold text-emerald-700">
                                                     {minPrice > 0 ? `Mulai ${formatCurrency(minPrice)}` : ''}
                                                 </div>
@@ -403,12 +403,12 @@ return;
 
                 {/* Sticky CTA */}
                 {selectedVariant && (
-                    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-zinc-200 bg-white/95 backdrop-blur pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
+                    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-white/95 backdrop-blur pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
                         <div className="mx-auto max-w-lg px-4">
                             <button
                                 onClick={handleAddToCart}
                                 disabled={adding || isOutOfStock}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white active:bg-emerald-700 shadow-sm disabled:opacity-60"
+                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white active:opacity-80 shadow-sm disabled:opacity-60"
                             >
                                 {isOutOfStock ? (
                                     <span>Habis</span>
@@ -438,7 +438,7 @@ function RadioDot({ checked, disabled }: { checked: boolean; disabled?: boolean 
     }
 
     return (
-        <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${disabled ? 'border-zinc-200' : 'border-zinc-300'}`} />
+        <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${disabled ? 'border-border' : 'border-zinc-300'}`} />
     );
 }
 
@@ -450,7 +450,7 @@ return null;
     const prefix = diff > 0 ? '+' : '';
 
     return (
-        <span className={`text-xs tabular-nums ${selected ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>
+        <span className={`text-xs tabular-nums ${selected ? 'font-semibold text-emerald-700' : 'text-text-subtle'}`}>
             {prefix}{formatCurrency(diff)}
         </span>
     );
