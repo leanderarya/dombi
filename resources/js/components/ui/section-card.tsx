@@ -14,14 +14,14 @@ interface Props {
 
 export default function SectionCard({ children, label, labelRight, className = '', noPadding }: Props) {
     return (
-        <div>
+        <div className="mb-6">
             {(label || labelRight) && (
-                <div className="mb-2 flex items-center justify-between">
-                    {label && <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">{label}</h2>}
+                <div className="mb-2 flex items-center justify-between px-1">
+                    {label && <h2 className="text-[13px] font-normal text-text-subtle">{label}</h2>}
                     {labelRight}
                 </div>
             )}
-            <div className={`rounded-2xl border border-border bg-surface ${noPadding ? '' : 'p-5'} ${className}`}>
+            <div className={`overflow-hidden rounded-xl bg-white ${noPadding ? '' : 'p-4'} ${className}`}>
                 {children}
             </div>
         </div>
