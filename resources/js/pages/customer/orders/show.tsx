@@ -64,7 +64,7 @@ return;
     }
 
     return (
-        <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
+        <div className="min-h-dvh bg-surface text-slate-950">
             <OfflineBanner />
 
             {/* Sticky Header */}
@@ -95,6 +95,63 @@ return;
                         {orderStatusLabel(order.status)}
                     </span>
                 </div>
+
+                {/* Order Success Banner — shown immediately after checkout */}
+                {isPending && order.recovery_token && (
+                    <div className="mt-4 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                            </div>
+                            <div>
+                                <div className="text-lg font-bold text-emerald-900">Pesanan Berhasil!</div>
+                                <div className="text-sm text-emerald-700">Simpan kode di bawah untuk melacak pesanan</div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl bg-white border border-emerald-200 p-4">
+                            <div className="text-[13px] text-emerald-700 mb-1">Kode Pelacakan Anda</div>
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1">
+                                    <div className="text-2xl font-bold tabular-nums tracking-wider text-emerald-900">{order.recovery_token}</div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleCopyLink}
+                                    className="flex h-11 items-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white active:opacity-80"
+                                >
+                                    {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                    {copied ? 'Tersalin' : 'Salin'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 text-xs text-emerald-600 leading-relaxed">
+                            <span className="font-semibold">Penting:</span> Kode ini dibutuhkan untuk melacak pesanan tanpa login. Kirim ke diri sendiri atau simpan di tempat aman.
+                        </div>
+
+                        {trackingUrl && (
+                            <div className="mt-3 flex gap-2">
+                                <button
+                                    type="button"
+                                    onClick={handleShare}
+                                    className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                                >
+                                    <Share2 className="h-4 w-4" />
+                                    Kirim ke WA
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => window.open(trackingUrl, '_blank')}
+                                    className="flex h-11 items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-white px-4 text-sm font-semibold text-emerald-700 active:opacity-80"
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                    Lacak
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Pickup Info Card */}
                 {order.fulfillment_type === 'pickup' && order.outlet && (

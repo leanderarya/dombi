@@ -449,19 +449,25 @@ class CheckoutController extends Controller
         $deliveryFee = $fulfillmentType === 'delivery_dombi' ? (float) ($deliveryQuote['delivery_fee'] ?? 0) : 0;
         $paymentFee = $this->calculatePaymentFee($validated['payment_method'], $subtotal);
 
-        $order = $orderService->createCheckoutOrder($request->user(), [
-            ...($location ?? []),
-            ...$customer,
-            'items' => $cart,
-            'fulfillment_type' => $fulfillmentType,
-            'selected_outlet_id' => $request->session()->get('checkout.fulfillment.selected_outlet_id'),
-            'payment_method' => $validated['payment_method'],
-            'delivery_fee' => $deliveryFee,
-            'delivery_distance_km' => $deliveryQuote['distance_km'] ?? 0,
-            'recommended_outlet_id' => $deliveryQuote['outlet']['id'] ?? null,
-            'payment_fee' => $paymentFee,
-            'notes' => $location['delivery_notes'] ?? null,
-        ]);
+        try {
+            $order = $orderService->createCheckoutOrder($request->user(), [
+                ...($location ?? []),
+                ...$customer,
+                'items' => $cart,
+                'fulfillment_type' => $fulfillmentType,
+                'selected_outlet_id' => $request->session()->get('checkout.fulfillment.selected_outlet_id'),
+                'payment_method' => $validated['payment_method'],
+                'delivery_fee' => $deliveryFee,
+                'delivery_distance_km' => $deliveryQuote['distance_km'] ?? 0,
+                'recommended_outlet_id' => $deliveryQuote['outlet']['id'] ?? null,
+                'payment_fee' => $paymentFee,
+                'notes' => $location['delivery_notes'] ?? null,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->validator->errors())->withInput();
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.'])->withInput();
+        }
 
         $request->session()->forget([
             'checkout.cart',
