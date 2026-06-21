@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Clock, Copy, MapPin, MessageCircle, Package, Phone, RotateCcw, Share2, Store, Truck, UserCheck, XCircle, CheckCircle2, Circle, Navigation, ChevronRight, QrCode, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { cn } from '@/lib/utils';
 import { formatCurrency, formatDate } from '@/lib/format';
 
@@ -296,19 +297,31 @@ function PickupHero({ status, orderCode, statusConfig, isTerminal }: {
 
     if (status === 'ready_for_pickup') {
         return (
-            <div className="mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 p-5 text-white">
+            <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-white p-5">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-                        <QrCode className="h-6 w-6" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
+                        <QrCode className="h-6 w-6 text-blue-600" />
                     </div>
                     <div>
-                        <div className="text-xs font-medium text-blue-100">Siap Diambil</div>
-                        <div className="mt-0.5 text-lg font-bold">Pesanan Sudah Siap</div>
+                        <div className="text-xs font-medium text-text-subtle">Siap Diambil</div>
+                        <div className="mt-0.5 text-lg font-bold text-text">Pesanan Sudah Siap</div>
                     </div>
                 </div>
-                <div className="mt-4 rounded-xl bg-white/15 px-4 py-3 text-center backdrop-blur-sm">
-                    <div className="text-xs text-blue-100 mb-1">Tunjukkan kode ini ke kasir</div>
-                    <div className="text-3xl font-bold tracking-wider">{orderCode}</div>
+
+                {/* QR Code — encodes plain order_code, not URL */}
+                <div className="mt-4 rounded-xl bg-surface-muted p-4 flex flex-col items-center">
+                    <QRCodeSVG
+                        value={orderCode}
+                        size={200}
+                        bgColor="#f4f4f5"
+                        fgColor="#1e40af"
+                        level="M"
+                        marginSize={0}
+                    />
+                    <div className="mt-3 text-center">
+                        <div className="text-lg font-bold tracking-wider text-blue-700">{orderCode}</div>
+                        <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
+                    </div>
                 </div>
             </div>
         );
@@ -528,7 +541,7 @@ function PickupInfoCard({ outlet, orderCode, isReadyForPickup }: {
                     </li>
                     <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-800">2.</span>
-                        <span>Tunjukkan kode pesanan <span className="font-bold">{orderCode}</span> ke kasir</span>
+                        <span>Tunjukkan <span className="font-bold">QR code</span> di atas ke kasir</span>
                     </li>
                     <li className="flex items-start gap-2">
                         <span className="font-semibold text-blue-800">3.</span>
