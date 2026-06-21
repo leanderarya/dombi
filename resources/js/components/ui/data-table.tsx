@@ -10,6 +10,8 @@ interface Column<T> {
     render?: (row: T) => ReactNode;
     /** Whether column is sortable */
     sortable?: boolean;
+    /** Whether to show this column prominently (as title) */
+    primary?: boolean;
 }
 
 interface Action<T> {
@@ -35,9 +37,9 @@ interface Props<T> {
 }
 
 const actionVariants = {
-    primary: 'bg-emerald-700 text-white hover:bg-emerald-800',
-    secondary: 'border border-border text-slate-700 hover:bg-surface-muted',
-    danger: 'border border-red-200 text-red-700 hover:bg-red-50',
+    primary: 'bg-primary text-white active:bg-primary-hover',
+    secondary: 'border border-border text-text active:bg-surface-muted',
+    danger: 'border border-red-200 text-red-600 active:bg-red-50',
 };
 
 export default function DataTable<T extends Record<string, any>>({
@@ -52,7 +54,7 @@ export default function DataTable<T extends Record<string, any>>({
 }: Props<T>) {
     if (data.length === 0) {
         return (
-            <div className="rounded-xl border border-border bg-surface">
+            <div className="rounded-xl bg-white">
                 <EmptyState
                     icon={<Inbox className="h-8 w-8" />}
                     title={emptyMessage}
@@ -63,63 +65,64 @@ export default function DataTable<T extends Record<string, any>>({
         );
     }
 
+    const primaryCol = columns.find((c) => c.primary) ?? columns[0];
+    const secondaryCols = columns.filter((c) => c !== primaryCol);
+
     return (
-        <div className={`overflow-x-auto rounded-xl border border-border bg-surface ${className}`}>
-            <table className="w-full text-sm">
-                <thead>
-                    <tr className="border-b border-zinc-100 bg-surface-muted/50">
-                        {columns.map((col) => (
-                            <th
-                                key={col.key}
-                                className={`px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-text-subtle ${col.className ?? ''}`}
-                            >
-                                {col.label}
-                            </th>
-                        ))}
-                        {actions && actions.length > 0 && (
-                            <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-text-subtle">
-                                Aksi
-                            </th>
-                        )}
-                    </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                    {data.map((row) => (
-                        <tr
-                            key={row[rowKey]}
-                            className={`transition-colors ${onRowClick ? 'cursor-pointer hover:bg-surface-muted/50' : ''}`}
-                            onClick={() => onRowClick?.(row)}
-                        >
-                            {columns.map((col) => (
-                                <td key={col.key} className={`px-4 py-3 ${col.className ?? ''}`}>
-                                    {col.render ? col.render(row) : row[col.key]}
-                                </td>
-                            ))}
-                            {actions && actions.length > 0 && (
-                                <td className="px-4 py-3 text-right">
-                                    <div className="flex items-center justify-end gap-1.5">
-                                        {actions
-                                            .filter((action) => !action.show || action.show(row))
-                                            .map((action, i) => (
-                                                <button
-                                                    key={i}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        action.onClick(row);
-                                                    }}
-                                                    className={`inline-flex min-h-[32px] items-center gap-1 rounded-md px-2.5 text-[11px] font-semibold transition-colors ${actionVariants[action.variant ?? 'secondary']}`}
-                                                >
-                                                    {action.icon}
-                                                    {action.label}
-                                                </button>
-                                            ))}
+        <div className={`space-y-2 ${className}`}>
+            {data.map((row) => (
+                <div
+                    key={row[rowKey]}
+                    className={`rounded-xl bg-white ${onRowClick ? 'active:opacity-80' : ''}`}
+                    onClick={() => onRowClick?.(row)}
+                >
+                    <div className="p-4">
+                        {/* Primary row — title */}
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="text-sm font-semibold text-text truncate">
+                                    {primaryCol.render ? primaryCol.render(row) : row[primaryCol.key]}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Secondary rows — key-value pairs */}
+                        {secondaryCols.length > 0 && (
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+                                {secondaryCols.map((col) => (
+                                    <div key={col.key} className="flex items-center gap-1.5">
+                                        <span className="text-[11px] text-text-subtle">{col.label}:</span>
+                                        <span className={`text-[11px] font-medium text-text ${col.className ?? ''}`}>
+                                            {col.render ? col.render(row) : row[col.key]}
+                                        </span>
                                     </div>
-                                </td>
-                            )}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Actions */}
+                    {actions && actions.length > 0 && (
+                        <div className="border-t border-border px-4 py-2.5 flex items-center justify-end gap-2">
+                            {actions
+                                .filter((action) => !action.show || action.show(row))
+                                .map((action, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            action.onClick(row);
+                                        }}
+                                        className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-3 text-[11px] font-semibold transition-colors ${actionVariants[action.variant ?? 'secondary']}`}
+                                    >
+                                        {action.icon}
+                                        {action.label}
+                                    </button>
+                                ))}
+                        </div>
+                    )}
+                </div>
+            ))}
         </div>
     );
 }
