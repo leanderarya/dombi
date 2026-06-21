@@ -64,7 +64,7 @@ return;
     }
 
     return (
-        <div className="min-h-dvh bg-surface text-slate-950">
+        <div className="min-h-dvh bg-surface text-text">
             <OfflineBanner />
 
             {/* Sticky Header */}
@@ -91,7 +91,7 @@ return;
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1 ${orderStatusTone[order.status] ?? 'bg-surface-muted text-text ring-slate-200'}`}>
+                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1 ${orderStatusTone[order.status] ?? 'bg-surface-muted text-text ring-border'}`}>
                         {orderStatusLabel(order.status)}
                     </span>
                 </div>
@@ -160,7 +160,7 @@ return;
                             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50">
                                 <Store className="h-3.5 w-3.5 text-blue-600" />
                             </div>
-                            <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">Ambil di Outlet</span>
+                            <span className="text-[13px] text-text-subtle">Ambil di Outlet</span>
                         </div>
 
                         <div className="flex items-start gap-3">
@@ -238,8 +238,8 @@ return;
                     </div>
                 )}
 
-                {/* Tracking Code — Important for order recovery */}
-                {order.recovery_token && (
+                {/* Tracking Code — only show if NOT already shown in confirmation banner */}
+                {order.recovery_token && !(isConfirmation || isPending) && (
                     <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
                         <div className="flex items-center gap-2 mb-2">
                             <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100">
@@ -248,9 +248,6 @@ return;
                                 </svg>
                             </div>
                             <span className="text-[13px] font-semibold text-blue-900">Kode Pelacakan</span>
-                        </div>
-                        <div className="text-sm text-blue-700 mb-3">
-                            Simpan kode ini untuk melacak pesanan Anda kapan saja, tanpa perlu login.
                         </div>
                         <div className="flex items-center gap-3">
                             <div className="flex-1 rounded-lg bg-white px-3 py-2.5 border border-blue-200">
@@ -265,26 +262,6 @@ return;
                                 {copied ? 'Tersalin' : 'Salin'}
                             </button>
                         </div>
-                        {trackingUrl && (
-                            <div className="mt-3 flex gap-2">
-                                <button
-                                    type="button"
-                                    onClick={handleShare}
-                                    className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-bold text-white active:opacity-80"
-                                >
-                                    <Share2 className="h-4 w-4" />
-                                    Bagikan
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => window.open(trackingUrl, '_blank')}
-                                    className="flex h-11 items-center justify-center gap-2 rounded-lg border border-blue-300 bg-white px-4 text-sm font-semibold text-blue-700 active:opacity-80"
-                                >
-                                    <ExternalLink className="h-4 w-4" />
-                                    Buka
-                                </button>
-                            </div>
-                        )}
                     </div>
                 )}
 
@@ -302,7 +279,7 @@ return;
                     <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
                         <div className="flex items-center gap-2">
                             <XCircle className="h-4 w-4 text-red-500" />
-                            <div className="text-[11px] font-bold uppercase tracking-wider text-red-600">Pesanan Ditolak Outlet</div>
+                            <div className="text-[13px] text-red-600">Pesanan Ditolak Outlet</div>
                         </div>
                         <div className="mt-2 text-sm font-semibold text-red-800">{order.rejection_reason}</div>
                         {order.rejection_note && (
@@ -316,7 +293,7 @@ return;
                     <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
                         <div className="flex items-center gap-2">
                             <XCircle className="h-4 w-4 text-red-500" />
-                            <div className="text-[11px] font-bold uppercase tracking-wider text-red-600">Pesanan Dibatalkan</div>
+                            <div className="text-[13px] text-red-600">Pesanan Dibatalkan</div>
                         </div>
                         <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
                         {order.cancellation_note && (
@@ -327,10 +304,10 @@ return;
 
                 {/* Expired Reason */}
                 {isExpired && (
-                    <div className="mt-4 rounded-2xl border border-border bg-surface-muted p-4 shadow-sm">
+                    <div className="mt-4 rounded-2xl border border-border bg-surface-muted p-4">
                         <div className="flex items-center gap-2">
                             <XCircle className="h-4 w-4 text-text-muted" />
-                            <div className="text-[11px] font-bold uppercase tracking-wider text-text">Pesanan Kadaluarsa</div>
+                            <div className="text-[13px] text-text">Pesanan Kadaluarsa</div>
                         </div>
                         <div className="mt-2 text-sm text-text">Outlet tidak memberikan konfirmasi dalam batas waktu yang ditentukan.</div>
                     </div>
@@ -352,7 +329,7 @@ return;
                 {/* Failed Delivery Reason */}
                 {order.delivery?.failed_reason && (
                     <div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-4">
-                        <div className="text-xs font-bold uppercase tracking-wider text-red-600">Alasan gagal</div>
+                        <div className="text-[13px] text-red-600">Alasan gagal</div>
                         <div className="mt-1 text-sm text-red-800">{order.delivery.failed_reason}</div>
                     </div>
                 )}
@@ -454,7 +431,7 @@ return;
                     type="button"
                     onClick={handleCancel}
                     disabled={!cancelForm.data.reason || cancelForm.processing}
-                    className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-slate-300"
+                    className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
                 >
                     {cancelForm.processing ? 'Membatalkan...' : 'Batalkan Pesanan'}
                 </button>
