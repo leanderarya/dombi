@@ -283,6 +283,24 @@ class NotificationService
         }
     }
 
+    public function notifyDeliveryOutForDelivery(Delivery $delivery): void
+    {
+        $order = $delivery->order;
+
+        // Notify customer
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::DELIVERY_OUT_FOR_DELIVERY,
+                title: 'Pesanan Dalam Perjalanan',
+                message: "Pesanan {$order->order_code} sedang dalam perjalanan ke alamat Anda.",
+                data: ['order_id' => $order->id, 'delivery_id' => $delivery->id]
+            );
+        }
+    }
+
     public function notifyDeliveryCompleted(Delivery $delivery): void
     {
         $order = $delivery->order;

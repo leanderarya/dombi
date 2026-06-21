@@ -163,6 +163,8 @@ class DeliveryService
             $courier->recordActivity();
             $this->recordHistory($result, 'picked_up', 'delivering', $courier, 'courier', 'Kurir memulai pengiriman.');
 
+            $this->notificationService->notifyDeliveryOutForDelivery($result);
+
             return $result;
         });
     }
