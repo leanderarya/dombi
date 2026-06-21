@@ -108,6 +108,7 @@ Route::middleware(['customer.inertia'])->group(function (): void {
         Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->name('checkout.process-payment');
         Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
         Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
+        Route::get('/orders/{order}/confirmation/{token}', [CustomerOrderController::class, 'confirmation'])->name('orders.confirmation');
         Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
         Route::get('/verify-phone', fn () => Inertia::render('customer/verify-phone'))->name('verify-phone');
         Route::post('/verify-phone/send-otp', [AccountPromotionController::class, 'sendOtp'])->name('verify-phone.send-otp');

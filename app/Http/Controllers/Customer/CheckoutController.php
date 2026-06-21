@@ -482,12 +482,12 @@ class CheckoutController extends Controller
         // Clear OTP verification state
         $otpService->clear($request);
 
-        if ($request->user()) {
-            return redirect()->route('customer.orders.show', $order)->with('success', 'Order berhasil dibuat.');
-        }
+        // Redirect ALL users to order confirmation page
+        $redirect = redirect()->route('customer.orders.confirmation', [
+            'order' => $order->id,
+            'token' => $order->recovery_token,
+        ])->with('success', 'Order berhasil dibuat.');
 
-        // Flash account promotion data for OTP-verified delivery guests
-        $redirect = redirect()->route('track', ['token' => $order->recovery_token])->with('success', 'Order berhasil dibuat.');
         if ($wasOtpVerified) {
             $redirect->with('canCreateAccount', true)
                 ->with('accountPhone', $customer['phone_number'] ?? '')

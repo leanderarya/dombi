@@ -43,6 +43,20 @@ class OrderController extends Controller
         ]);
     }
 
+    public function confirmation(Order $order, string $token): Response
+    {
+        // Verify the recovery token matches
+        if ($order->recovery_token !== $token) {
+            abort(403, 'Token tidak valid.');
+        }
+
+        return Inertia::render('customer/orders/show', [
+            'order' => $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier']),
+            'cancellationReasons' => OrderStatusService::cancellationReasons(),
+            'isConfirmation' => true,
+        ]);
+    }
+
     public function cancel(CancelOrderRequest $request, Order $order, OrderStatusService $orderStatusService): RedirectResponse
     {
         $user = $request->user();

@@ -11,7 +11,7 @@ import { orderStatusLabel, orderStatusTone, activeOrderStatuses } from '@/lib/cu
 import { formatDate } from '@/lib/format';
 import { useOrderRecovery } from '@/lib/order-recovery';
 
-export default function OrderShow({ order, cancellationReasons = [] }: any) {
+export default function OrderShow({ order, cancellationReasons = [], isConfirmation = false }: any) {
     const isActive = activeOrderStatuses.includes(order.status);
     const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
     const isPending = order.status === 'pending_confirmation';
@@ -97,7 +97,7 @@ return;
                 </div>
 
                 {/* Order Success Banner — shown immediately after checkout */}
-                {isPending && order.recovery_token && (
+                {(isConfirmation || isPending) && order.recovery_token && (
                     <div className="mt-4 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-5">
                         <div className="flex items-center gap-3 mb-3">
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
