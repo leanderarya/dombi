@@ -99,12 +99,17 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     async function handleCancel() {
         if (!cancelForm.data.reason) return;
 
+        console.log('[Cancel] Starting cancel request...');
         setCancelLoading(true);
         cancelForm.clearErrors();
         setCancelError(null);
 
         try {
-            const response = await fetch(`/track/${order.recovery_token}/cancel`, {
+            const url = `/track/${order.recovery_token}/cancel`;
+            console.log('[Cancel] URL:', url);
+            console.log('[Cancel] Token:', order.recovery_token);
+
+            const response = await fetch(url, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {
@@ -118,18 +123,25 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
                 }),
             });
 
+            console.log('[Cancel] Response status:', response.status);
+            console.log('[Cancel] Response URL:', response.url);
+
             const data = await response.json();
+            console.log('[Cancel] Response data:', data);
 
             if (data.success) {
+                console.log('[Cancel] Success! Reloading...');
                 setCancelDialogOpen(false);
-                // Reload page to show cancelled status
                 window.location.reload();
             } else if (data.errors) {
+                console.log('[Cancel] Validation errors:', data.errors);
                 cancelForm.setErrors(data.errors);
             } else {
+                console.log('[Cancel] Error:', data.error);
                 setCancelError(data.error || 'Gagal membatalkan pesanan.');
             }
-        } catch {
+        } catch (err) {
+            console.error('[Cancel] Fetch error:', err);
             setCancelError('Gagal membatalkan pesanan. Periksa koneksi Anda.');
         } finally {
             setCancelLoading(false);
