@@ -4,6 +4,8 @@ import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
+import StepButton from '@/components/customer/step-button';
+import StepHeader from '@/components/customer/step-header';
 import SectionCard from '@/components/ui/section-card';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { formatCurrency } from '@/lib/format';
@@ -108,8 +110,8 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
 
             {items.length === 0 ? (
                 <div className="mt-6 rounded-xl bg-white p-5 text-center">
-                    <p className="text-sm font-semibold text-slate-900">Belum ada produk di keranjang</p>
-                    <p className="mt-1 text-xs text-slate-500">Pilih produk terlebih dahulu untuk melanjutkan checkout.</p>
+                    <p className="text-sm font-semibold text-text">Belum ada produk di keranjang</p>
+                    <p className="mt-1 text-xs text-text-muted">Pilih produk terlebih dahulu untuk melanjutkan checkout.</p>
                     <button onClick={() => router.visit('/customer/products')} className="mt-4 min-h-11 rounded-lg bg-emerald-600 px-5 text-sm font-bold text-white">
                         Lihat Produk
                     </button>
@@ -139,7 +141,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     <FulfillmentCard
                         active={fulfillmentType === 'pickup'}
                         title="Ambil di Outlet"
-                        icon={<Store className="h-5 w-5 text-slate-600" />}
+                        icon={<Store className="h-5 w-5 text-text-muted" />}
                         description="Ambil langsung di outlet yang melayani pesanan Anda."
                         onClick={() => setFulfillmentType('pickup')}
                         detail={nearestOutlet ? {
@@ -151,7 +153,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     <FulfillmentCard
                         active={fulfillmentType === 'delivery_dombi'}
                         title="Kurir Dombi"
-                        icon={<Truck className="h-5 w-5 text-slate-600" />}
+                        icon={<Truck className="h-5 w-5 text-text-muted" />}
                         description="Diantar oleh kurir internal Dombi."
                         onClick={() => {
                             if (!isLoggedIn) {
@@ -188,7 +190,7 @@ function FulfillmentCard({ active, title, icon, description, onClick, detail }: 
             type="button"
             onClick={onClick}
             className={`min-h-[88px] w-full rounded-xl border p-4 text-left transition-all active:opacity-80 ${
-                active ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'
+                active ? 'border-emerald-500 bg-emerald-50' : 'border-border bg-white'
             }`}
         >
             <div className="flex items-start gap-3">
@@ -225,38 +227,4 @@ function FulfillmentCard({ active, title, icon, description, onClick, detail }: 
     );
 }
 
-function StepHeader({ title, step, backHref }: { title: string; step: string; backHref: string }) {
-    return (
-        <header className="border-b border-slate-200 bg-white px-4 py-3">
-            <div className="mx-auto flex max-w-lg items-center justify-between">
-                <button onClick={() => router.visit(backHref)} className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-700 active:opacity-80">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
-                <div className="text-center">
-                    <h1 className="text-base font-semibold text-text">{title}</h1>
-                    <p className="text-[13px] text-text-subtle">{step}</p>
-                </div>
-                <div className="h-11 w-11" />
-            </div>
-        </header>
-    );
-}
 
-function StepButton({ label, disabled, processing, onClick }: { label: string; disabled: boolean; processing: boolean; onClick: () => void }) {
-    return (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
-            <div className="mx-auto max-w-lg">
-                <button
-                    type="button"
-                    onClick={onClick}
-                    disabled={disabled}
-                    className="flex min-h-14 w-full items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
-                >
-                    {processing ? 'Memproses...' : label}
-                </button>
-            </div>
-        </div>
-    );
-}
