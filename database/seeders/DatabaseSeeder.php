@@ -14,7 +14,10 @@ class DatabaseSeeder extends Seeder
         // 2. Create users (owner, outlets, courier) and outlet data
         $this->call(OutletSeeder::class);
 
-        // 3. Seed outlet inventory for all active variants
+        // 3. Seed center inventory for all active variants
+        $this->call(CenterInventorySeeder::class);
+
+        // 4. Seed outlet inventory for all active variants
         $this->call(OutletInventorySeeder::class);
     }
 }
