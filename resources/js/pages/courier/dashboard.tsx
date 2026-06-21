@@ -106,7 +106,7 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                         <button
                             onClick={handleAvailabilityToggle}
                             disabled={loadingAction !== null}
-                            className={`rounded-lg px-3 py-2 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                            className={`min-h-[44px] rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50 ${
                                 courier.is_online
                                     ? 'border border-zinc-200 bg-white text-slate-600 active:bg-zinc-50'
                                     : 'bg-emerald-700 text-white active:bg-emerald-800'
@@ -118,7 +118,7 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                             <button
                                 onClick={handleShiftStart}
                                 disabled={loadingAction !== null}
-                                className="rounded-lg bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition-colors active:bg-emerald-800 disabled:opacity-50"
+                                className="min-h-[44px] rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors active:bg-emerald-800 disabled:opacity-50"
                             >
                                 {loadingAction === 'shift-start' ? '...' : 'Mulai Shift'}
                             </button>
@@ -126,7 +126,7 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                             <button
                                 onClick={handleShiftEnd}
                                 disabled={loadingAction !== null}
-                                className="rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition-colors active:bg-red-50 disabled:opacity-50"
+                                className="min-h-[44px] rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition-colors active:bg-red-50 disabled:opacity-50"
                             >
                                 {loadingAction === 'shift-end' ? '...' : 'Akhiri Shift'}
                             </button>
@@ -241,7 +241,7 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                     <SectionCard
                         label={`Selesai Hari Ini (${tasks.completedToday.length})`}
                         labelRight={
-                            <Link href="/courier/deliveries?status=completed" className="text-[11px] font-bold text-emerald-700">
+                            <Link href="/courier/deliveries?status=completed" className="min-h-[44px] inline-flex items-center text-[11px] font-bold text-emerald-700">
                                 Lihat Semua
                             </Link>
                         }
