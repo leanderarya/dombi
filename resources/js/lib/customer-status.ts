@@ -43,6 +43,7 @@ export const deliveryStatusLabels: Record<string, string> = {
     cancelled_and_released: 'Dibatalkan',
 };
 
+/** @deprecated Use getOrderStatusLabel(status, fulfillmentType) instead */
 export function orderStatusLabel(status?: string | null) {
     if (!status) {
         return '-';

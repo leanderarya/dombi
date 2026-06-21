@@ -7,6 +7,7 @@ import OfflineBanner from '@/components/offline-banner';
 import Dialog from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { getOrderStatusLabel } from '@/lib/customer-status';
 
 type TrackOrder = {
     id: number;
@@ -174,7 +175,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
                         "inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1",
                         isTerminal ? "bg-red-50 text-red-700 ring-red-200" : "bg-emerald-50 text-emerald-700 ring-emerald-200"
                     )}>
-                        {statusConfig.label}
+                        {getOrderStatusLabel(order.status, order.fulfillment_type)}
                     </span>
                 </div>
 
