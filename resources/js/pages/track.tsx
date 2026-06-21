@@ -18,7 +18,7 @@ type TrackOrder = {
     fulfillment_type: string;
     total: number;
     ordered_at?: string;
-    outlet?: { name: string; address?: string; phone?: string; operating_hours?: string };
+    outlet?: { name: string; address?: string; phone?: string; operating_hours?: string; latitude?: number; longitude?: number };
     items: { product_name: string; quantity: number; subtotal: number }[];
     status_histories: HistoryItem[];
     delivery?: { courier?: { name: string; phone?: string } };
@@ -469,10 +469,18 @@ function Timeline({ steps, currentStepIndex, historyMap, isPickup, isTerminal }:
 }
 
 function PickupInfoCard({ outlet, orderCode, isReadyForPickup }: {
-    outlet: { name: string; address?: string; phone?: string; operating_hours?: string };
+    outlet: { name: string; address?: string; phone?: string; operating_hours?: string; latitude?: number; longitude?: number };
     orderCode: string;
     isReadyForPickup: boolean;
 }) {
+    const openMaps = () => {
+        if (outlet.latitude && outlet.longitude) {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${outlet.latitude},${outlet.longitude}`, '_blank');
+        } else if (outlet.address) {
+            window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(outlet.address)}`, '_blank');
+        }
+    };
+
     return (
         <div className="mt-4 rounded-2xl border border-border bg-white p-4">
             <div className="flex items-center gap-2 mb-3">
@@ -499,6 +507,16 @@ function PickupInfoCard({ outlet, orderCode, isReadyForPickup }: {
                     )}
                 </div>
             </div>
+
+            {/* Navigation Button */}
+            <button
+                type="button"
+                onClick={openMaps}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-blue-700"
+            >
+                <Navigation className="h-4 w-4" />
+                Navigasi ke Outlet
+            </button>
 
             {/* Pickup Instructions */}
             <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3">

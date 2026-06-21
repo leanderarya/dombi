@@ -13,7 +13,7 @@ class TrackController extends Controller
     {
         $order = Order::query()
             ->where('recovery_token', strtoupper($token))
-            ->with(['outlet:id,name', 'items', 'statusHistories', 'delivery.courier:id,name'])
+            ->with(['outlet:id,name,address,phone,latitude,longitude', 'items', 'statusHistories', 'delivery.courier:id,name'])
             ->first();
 
         if (! $order) {
@@ -49,7 +49,13 @@ class TrackController extends Controller
                 'fulfillment_type' => $order->fulfillment_type,
                 'total' => (float) $order->total,
                 'ordered_at' => $order->ordered_at?->toISOString(),
-                'outlet' => $order->outlet ? ['name' => $order->outlet->name] : null,
+                'outlet' => $order->outlet ? [
+                    'name' => $order->outlet->name,
+                    'address' => $order->outlet->address,
+                    'phone' => $order->outlet->phone,
+                    'latitude' => $order->outlet->latitude ? (float) $order->outlet->latitude : null,
+                    'longitude' => $order->outlet->longitude ? (float) $order->outlet->longitude : null,
+                ] : null,
                 'items' => $order->items->map(fn ($item) => [
                     'product_name' => $item->product_name,
                     'quantity' => $item->quantity,
