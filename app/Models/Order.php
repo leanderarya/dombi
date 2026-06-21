@@ -69,6 +69,17 @@ class Order extends Model
         self::STATUS_EXPIRED,
     ];
 
+    public const FULFILLMENT_PICKUP = 'pickup';
+
+    public const FULFILLMENT_DELIVERY_DOMBI = 'delivery_dombi';
+
+    public const FULFILLMENT_DELIVERY_OJOL = 'delivery_ojol';
+
+    public const DELIVERY_FULFILLMENT_TYPES = [
+        self::FULFILLMENT_DELIVERY_DOMBI,
+        self::FULFILLMENT_DELIVERY_OJOL,
+    ];
+
     public const PENDING_CONFIRMATION = self::STATUS_PENDING_CONFIRMATION;
 
     public const REJECTED = self::STATUS_REJECTED_BY_OUTLET;
@@ -221,5 +232,15 @@ class Order extends Model
     public function isFinalized(): bool
     {
         return in_array($this->status, self::HISTORY_STATUSES, true);
+    }
+
+    public function isPickup(): bool
+    {
+        return $this->fulfillment_type === self::FULFILLMENT_PICKUP;
+    }
+
+    public function isDelivery(): bool
+    {
+        return in_array($this->fulfillment_type, self::DELIVERY_FULFILLMENT_TYPES, true);
     }
 }
