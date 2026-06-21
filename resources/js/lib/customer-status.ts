@@ -59,14 +59,46 @@ export function deliveryStatusLabel(status?: string | null) {
     return deliveryStatusLabels[status] ?? status.replaceAll('_', ' ');
 }
 
-export function orderProgressIndex(status?: string | null) {
-    const steps = ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering', 'completed'];
-    const index = steps.indexOf(status ?? '');
+export function getOrderStatusLabel(status: string, fulfillmentType?: string): string {
+    const isPickup = fulfillmentType === 'pickup';
 
-    return {
-        steps,
-        index: index < 0 ? 0 : index,
-    };
+    if (status === 'ready_for_pickup') {
+        return isPickup ? 'Siap Diambil' : 'Menunggu Kurir';
+    }
+    if (status === 'picked_up') {
+        return 'Kurir Mengambil';
+    }
+    if (status === 'delivering') {
+        return 'Sedang Diantar';
+    }
+
+    return orderStatusLabel(status);
+}
+
+export function orderProgressIndex(status: string, fulfillmentType?: string): number {
+    const isPickup = fulfillmentType === 'pickup';
+
+    const pickupSteps = [
+        'pending_confirmation',
+        'confirmed',
+        'preparing',
+        'ready_for_pickup',
+        'completed',
+    ];
+
+    const deliverySteps = [
+        'pending_confirmation',
+        'confirmed',
+        'preparing',
+        'ready_for_pickup',
+        'picked_up',
+        'delivering',
+        'completed',
+    ];
+
+    const steps = isPickup ? pickupSteps : deliverySteps;
+    const index = steps.indexOf(status);
+    return index >= 0 ? index : 0;
 }
 
 /**
