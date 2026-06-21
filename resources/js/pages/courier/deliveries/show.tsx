@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { CheckCircle2, Clock, MapPin, MessageCircle, Package, Phone, Truck, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock, MapPin, MessageCircle, Package, Phone, Truck, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import BottomSheet from '@/components/ui/bottom-sheet';
@@ -83,12 +83,16 @@ export default function CourierDeliveryShow({ delivery }: Props) {
     const order = delivery.order;
     const [showFailSheet, setShowFailSheet] = useState(false);
     const [showCompleteSheet, setShowCompleteSheet] = useState(false);
+    const [showRejectSheet, setShowRejectSheet] = useState(false);
+    const [showReturnSheet, setShowReturnSheet] = useState(false);
 
     const canConfirmPickup = delivery.status === 'waiting_pickup';
     const canStartDelivery = delivery.status === 'picked_up';
     const canComplete = delivery.status === 'delivering';
     const canFail = delivery.status === 'delivering' || delivery.status === 'picked_up';
-    const hasActions = canConfirmPickup || canStartDelivery || canComplete || canFail;
+    const canReject = delivery.status === 'waiting_pickup';
+    const canReturn = delivery.status === 'picked_up';
+    const hasActions = canConfirmPickup || canStartDelivery || canComplete || canFail || canReject || canReturn;
 
     const openMaps = () => {
         if (order.latitude && order.longitude) {
@@ -119,6 +123,14 @@ export default function CourierDeliveryShow({ delivery }: Props) {
         router.post(`/courier/deliveries/${delivery.id}/start-delivery`, {}, { preserveScroll: true });
     };
 
+    const rejectDelivery = () => {
+        router.post(`/courier/deliveries/${delivery.id}/reject`, {}, { preserveScroll: true });
+    };
+
+    const returnToOutlet = () => {
+        router.post(`/courier/deliveries/${delivery.id}/return-to-outlet`, {}, { preserveScroll: true });
+    };
+
     const buildActions = () => {
         const actions = [];
 
@@ -130,11 +142,29 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             });
         }
 
+        if (canReject) {
+            actions.push({
+                label: 'Tolak',
+                icon: <XCircle className="h-4 w-4" />,
+                onClick: () => setShowRejectSheet(true),
+                variant: 'danger' as const,
+            });
+        }
+
         if (canStartDelivery) {
             actions.push({
                 label: 'Mulai Antar',
                 icon: <Truck className="h-4 w-4" />,
                 onClick: startDelivery,
+            });
+        }
+
+        if (canReturn) {
+            actions.push({
+                label: 'Kembali ke Outlet',
+                icon: <AlertTriangle className="h-4 w-4" />,
+                onClick: () => setShowReturnSheet(true),
+                variant: 'danger' as const,
             });
         }
 
@@ -379,6 +409,58 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             {/* Fail Sheet */}
             <BottomSheet open={showFailSheet} onClose={() => setShowFailSheet(false)} title="Gagal Antar">
                 <FailSheetContent deliveryId={delivery.id} onClose={() => setShowFailSheet(false)} />
+            </BottomSheet>
+
+            {/* Reject Sheet */}
+            <BottomSheet open={showRejectSheet} onClose={() => setShowRejectSheet(false)} title="Tolak Pesanan">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3 rounded-lg bg-red-50 p-4">
+                        <AlertTriangle className="h-5 w-5 shrink-0 text-red-600" />
+                        <p className="text-sm text-red-800">
+                            Anda yakin ingin menolak pesanan <strong>{order.order_code}</strong>? Pesanan akan dikembalikan ke daftar menunggu.
+                        </p>
+                    </div>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setShowRejectSheet(false)}
+                            className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors active:bg-zinc-50"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            onClick={rejectDelivery}
+                            className="flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-bold text-white transition-colors active:bg-red-700"
+                        >
+                            Ya, Tolak
+                        </button>
+                    </div>
+                </div>
+            </BottomSheet>
+
+            {/* Return to Outlet Sheet */}
+            <BottomSheet open={showReturnSheet} onClose={() => setShowReturnSheet(false)} title="Kembali ke Outlet">
+                <div className="space-y-4">
+                    <div className="flex items-center gap-3 rounded-lg bg-amber-50 p-4">
+                        <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
+                        <p className="text-sm text-amber-800">
+                            Anda yakin ingin mengembalikan pesanan <strong>{order.order_code}</strong> ke outlet? Pesanan perlu diambil ulang.
+                        </p>
+                    </div>
+                    <div className="flex gap-3">
+                        <button
+                            onClick={() => setShowReturnSheet(false)}
+                            className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors active:bg-zinc-50"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            onClick={returnToOutlet}
+                            className="flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-bold text-white transition-colors active:bg-red-700"
+                        >
+                            Ya, Kembalikan
+                        </button>
+                    </div>
+                </div>
             </BottomSheet>
         </CourierLayout>
     );
