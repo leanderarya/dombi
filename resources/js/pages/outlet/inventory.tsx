@@ -82,7 +82,7 @@ export default function OutletInventory({ outlet, inventories }: any) {
                             <AlertTriangle className="h-3 w-3 text-red-600" />
                         </div>
                         <h2 className="text-xs font-bold uppercase tracking-wider text-red-700">Stok Kritis</h2>
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">{criticalFamilies.length}</span>
+                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-600">{criticalFamilies.length}</span>
                     </div>
                     <div className="space-y-2">
                         {criticalFamilies.map(([familyId, group]) => (
@@ -100,7 +100,7 @@ export default function OutletInventory({ outlet, inventories }: any) {
                             <AlertTriangle className="h-3 w-3 text-amber-600" />
                         </div>
                         <h2 className="text-xs font-bold uppercase tracking-wider text-amber-700">Stok Rendah</h2>
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-600">{lowStockFamilies.length}</span>
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-600">{lowStockFamilies.length}</span>
                     </div>
                     <div className="space-y-2">
                         {lowStockFamilies.map(([familyId, group]) => (
@@ -121,7 +121,7 @@ export default function OutletInventory({ outlet, inventories }: any) {
                         <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-emerald-500" />
                             <span className="text-sm font-medium text-text">Stok Sehat</span>
-                            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-bold text-zinc-500">{healthyFamilies.length}</span>
+                            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-bold text-zinc-500">{healthyFamilies.length}</span>
                         </div>
                         {showHealthy ? <ChevronUp className="h-4 w-4 text-text-subtle" /> : <ChevronDown className="h-4 w-4 text-text-subtle" />}
                     </button>
@@ -203,7 +203,7 @@ function SummaryCell({ label, value, variant }: { label: string; value: number; 
     return (
         <div className="flex-1 px-4 py-3 text-center">
             <div className={`text-lg font-bold tabular-nums ${colorMap[variant]}`}>{value}</div>
-            <div className="text-[10px] font-medium text-text-subtle">{label}</div>
+            <div className="text-[11px] font-medium text-text-subtle">{label}</div>
         </div>
     );
 }

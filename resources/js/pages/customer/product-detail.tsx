@@ -193,7 +193,7 @@ return;
                         <Link href="/customer/checkout" className="relative flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
                             <ShoppingCart className="h-5 w-5" />
                             {cart.totalItems > 0 && (
-                                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">
+                                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white">
                                     {cart.totalItems > 9 ? '9+' : cart.totalItems}
                                 </span>
                             )}

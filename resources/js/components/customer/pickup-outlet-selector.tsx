@@ -134,7 +134,7 @@ export default function PickupOutletSelector({ items, initialRecommendations, se
                             {loading ? 'Mencari outlet pickup terbaik...' : 'Stok tersedia diprioritaskan lebih dulu, lalu jarak terdekat.'}
                         </div>
                     </div>
-                    {recommendations.recommended && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">Direkomendasikan</span>}
+                    {recommendations.recommended && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-700">Direkomendasikan</span>}
                 </div>
 
                 {selectedOutlet ? (
@@ -156,7 +156,7 @@ export default function PickupOutletSelector({ items, initialRecommendations, se
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <div className="text-sm font-semibold text-slate-900">{outlet.name}</div>
-                                                {recommended && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-700">Direkomendasikan</span>}
+                                                {recommended && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700">Direkomendasikan</span>}
                                             </div>
                                             <div className="mt-1 text-xs leading-relaxed text-slate-500">{outlet.address}</div>
                                             <div className="mt-1 text-xs text-slate-500">{[outlet.kelurahan, outlet.kecamatan].filter(Boolean).join(' · ')}</div>

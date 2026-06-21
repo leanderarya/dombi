@@ -64,7 +64,7 @@ export default function DeliveryCard({ item, onAssignCourier, onResolve }: Props
 
                 {item.courier && (
                     <div className="mt-1.5 flex items-center gap-1.5 text-[11px]">
-                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[9px] font-bold text-slate-600">
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-600">
                             {item.courier.name.charAt(0)}
                         </div>
                         <span className="text-slate-600">{item.courier.name}</span>

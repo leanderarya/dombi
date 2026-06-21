@@ -413,19 +413,19 @@ return;
                                     )}
                                     <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                                         <div>
-                                            <div className="text-[10px] font-medium text-zinc-400">Harga Center</div>
+                                            <div className="text-[11px] font-medium text-zinc-400">Harga Center</div>
                                             <div className="text-xs font-medium text-slate-700">{formatCurrency(variant.center_price)}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-medium text-zinc-400">Harga Jual</div>
+                                            <div className="text-[11px] font-medium text-zinc-400">Harga Jual</div>
                                             <div className="text-xs font-medium text-slate-700">{formatCurrency(variant.selling_price)}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-medium text-zinc-400">Stok</div>
+                                            <div className="text-[11px] font-medium text-zinc-400">Stok</div>
                                             <div className="text-xs font-medium text-slate-700">{variant.center_stock} pcs</div>
                                         </div>
                                         <div>
-                                            <div className="text-[10px] font-medium text-zinc-400">Margin</div>
+                                            <div className="text-[11px] font-medium text-zinc-400">Margin</div>
                                             <div className="text-xs font-medium text-emerald-600">{formatCurrency(margin(variant))}</div>
                                         </div>
                                     </div>

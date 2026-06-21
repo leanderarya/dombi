@@ -263,8 +263,8 @@ return;
                         <div className="flex flex-wrap gap-1">
                             {[1000, 2000, 5000, 10000].map((amt) => (
                                 <div key={amt} className="flex gap-0.5">
-                                    <Button type="button" size="sm" variant={bulkAmount === String(amt) ? 'primary' : 'secondary'} onClick={() => setBulkAmount(String(amt))} className="text-[10px] px-2 py-1">+{amt.toLocaleString('id-ID')}</Button>
-                                    <Button type="button" size="sm" variant={bulkAmount === String(-amt) ? 'primary' : 'secondary'} onClick={() => setBulkAmount(String(-amt))} className="text-[10px] px-2 py-1">-{amt.toLocaleString('id-ID')}</Button>
+                                    <Button type="button" size="sm" variant={bulkAmount === String(amt) ? 'primary' : 'secondary'} onClick={() => setBulkAmount(String(amt))} className="text-[11px] px-2 py-1">+{amt.toLocaleString('id-ID')}</Button>
+                                    <Button type="button" size="sm" variant={bulkAmount === String(-amt) ? 'primary' : 'secondary'} onClick={() => setBulkAmount(String(-amt))} className="text-[11px] px-2 py-1">-{amt.toLocaleString('id-ID')}</Button>
                                 </div>
                             ))}
                         </div>
@@ -276,7 +276,7 @@ return;
                         <Button type="button" size="sm" variant="ghost" onClick={() => {
                             setBulkOpen(false); setBulkAmount('');
                         }} className="text-amber-700">Batal</Button>
-                        <span className="text-[10px] text-amber-600">{sorted.length} produk</span>
+                        <span className="text-[11px] text-amber-600">{sorted.length} produk</span>
                     </div>
                 </div>
             )}
@@ -329,7 +329,7 @@ return;
                                     <td className="px-4 py-3">
                                         <div className="font-semibold text-text">{row.name}</div>
                                         {row.has_override && (
-                                            <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">Custom</span>
+                                            <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-600">Custom</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(row.center_price)}</td>

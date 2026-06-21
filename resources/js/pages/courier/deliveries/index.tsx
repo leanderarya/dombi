@@ -72,17 +72,17 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
                             <div className="flex flex-col items-center rounded-lg bg-slate-50 p-3">
                                 <MapPin className="mb-1 h-4 w-4 text-emerald-600" />
                                 <div className="text-lg font-bold text-slate-900">{routeSummary.stops}</div>
-                                <div className="text-[10px] text-slate-500">Stops</div>
+                                <div className="text-[11px] text-slate-500">Stops</div>
                             </div>
                             <div className="flex flex-col items-center rounded-lg bg-slate-50 p-3">
                                 <Route className="mb-1 h-4 w-4 text-emerald-600" />
                                 <div className="text-lg font-bold text-slate-900">{routeSummary.total_distance_km}</div>
-                                <div className="text-[10px] text-slate-500">KM</div>
+                                <div className="text-[11px] text-slate-500">KM</div>
                             </div>
                             <div className="flex flex-col items-center rounded-lg bg-slate-50 p-3">
                                 <Clock className="mb-1 h-4 w-4 text-emerald-600" />
                                 <div className="text-lg font-bold text-slate-900">{routeSummary.estimated_minutes}</div>
-                                <div className="text-[10px] text-slate-500">Menit</div>
+                                <div className="text-[11px] text-slate-500">Menit</div>
                             </div>
                         </div>
                     </SectionCard>

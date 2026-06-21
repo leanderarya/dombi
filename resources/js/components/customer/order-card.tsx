@@ -25,7 +25,7 @@ export default function OrderCard({ order, showReorder = false }: Props) {
                         <div className="text-sm font-semibold text-slate-900">{order.order_code}</div>
                         <div className="mt-0.5 text-xs text-slate-500">{order.outlet?.name ?? '-'} · {formatDate(order.created_at)}</div>
                     </div>
-                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ring-1 ${tone}`}>
+                    <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${tone}`}>
                         {orderStatusLabel(order.status)}
                     </span>
                 </div>

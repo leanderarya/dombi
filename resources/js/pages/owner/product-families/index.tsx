@@ -196,7 +196,7 @@ return true;
                                         {family.variants.slice(0, 4).map((v) => (
                                             <span
                                                 key={v.id}
-                                                className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                                className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${
                                                     v.is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-zinc-100 text-zinc-500'
                                                 }`}
                                             >
@@ -204,7 +204,7 @@ return true;
                                             </span>
                                         ))}
                                         {family.variants_count > 4 && (
-                                            <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500">
+                                            <span className="inline-flex rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500">
                                                 +{family.variants_count - 4} lagi
                                             </span>
                                         )}

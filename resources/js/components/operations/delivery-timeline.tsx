@@ -76,7 +76,7 @@ export default function DeliveryTimeline({ histories }: Props) {
                                     {statusLabels[h.to_status] ?? h.to_status.replaceAll('_', ' ')}
                                 </span>
                                 {h.changed_by_type && (
-                                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-medium text-slate-500">
+                                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-500">
                                         {typeLabels[h.changed_by_type] ?? h.changed_by_type}
                                     </span>
                                 )}
@@ -85,10 +85,10 @@ export default function DeliveryTimeline({ histories }: Props) {
                                 <div className="mt-0.5 text-[11px] text-slate-500">{h.reason}</div>
                             )}
                             {h.actor && (
-                                <div className="mt-0.5 text-[10px] text-slate-400">oleh {h.actor.name}</div>
+                                <div className="mt-0.5 text-[11px] text-slate-400">oleh {h.actor.name}</div>
                             )}
                             {h.created_at && (
-                                <div className="mt-0.5 text-[10px] tabular-nums text-slate-400">
+                                <div className="mt-0.5 text-[11px] tabular-nums text-slate-400">
                                     {new Date(h.created_at).toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                                 </div>
                             )}

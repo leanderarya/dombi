@@ -61,7 +61,7 @@ const settlementColumns = [
                 <div className="flex items-center gap-2">
                     <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${badge.className}`}>{badge.label}</span>
                     {overdueLabel && (
-                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">{overdueLabel}</span>
+                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700">{overdueLabel}</span>
                     )}
                 </div>
             );
@@ -94,19 +94,19 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div>
-                        <div className="text-[10px] font-semibold uppercase text-slate-400">Total Tagihan</div>
+                        <div className="text-[11px] font-semibold uppercase text-slate-400">Total Tagihan</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-slate-900">{formatCurrency(summary.total_due)}</div>
                     </div>
                     <div>
-                        <div className="text-[10px] font-semibold uppercase text-slate-400">Sudah Dibayar</div>
+                        <div className="text-[11px] font-semibold uppercase text-slate-400">Sudah Dibayar</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-emerald-600">{formatCurrency(summary.paid_total)}</div>
                     </div>
                     <div>
-                        <div className="text-[10px] font-semibold uppercase text-slate-400">Sisa Tagihan</div>
+                        <div className="text-[11px] font-semibold uppercase text-slate-400">Sisa Tagihan</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-red-600">{formatCurrency(summary.outstanding)}</div>
                     </div>
                     <div>
-                        <div className="text-[10px] font-semibold uppercase text-slate-400">Keterlambatan</div>
+                        <div className="text-[11px] font-semibold uppercase text-slate-400">Keterlambatan</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-slate-900">
                             {summary.days_overdue > 0 ? `${summary.days_overdue} Hari` : '-'}
                         </div>

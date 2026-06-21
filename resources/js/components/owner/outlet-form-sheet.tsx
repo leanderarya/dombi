@@ -227,7 +227,7 @@ function Section({ title, subtitle, children }: { title: string; subtitle?: stri
 function InfoBadge({ label, value, loading }: { label: string; value?: string; loading?: boolean }) {
     return (
         <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
             <div className={`mt-0.5 text-sm font-medium ${loading ? 'text-slate-400' : 'text-slate-900'}`}>
                 {loading ? 'Mendeteksi...' : (value || '-')}
             </div>

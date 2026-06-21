@@ -57,7 +57,7 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
                     <FilterIcon />
                     Filter
                     {activeFilterCount > 0 && (
-                        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[9px] font-bold text-white">
+                        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[11px] font-bold text-white">
                             {activeFilterCount}
                         </span>
                     )}

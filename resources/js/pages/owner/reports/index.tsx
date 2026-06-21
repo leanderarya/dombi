@@ -141,7 +141,7 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
 function Kpi({ label, value, highlight, alert }: { label: string; value: string; highlight?: boolean; alert?: boolean }) {
     return (
         <div className={`rounded-lg border p-3 ${alert ? 'border-red-200 bg-red-50' : highlight ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
-            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
             <div className={`mt-0.5 text-lg font-bold tabular-nums ${highlight ? 'text-emerald-800' : alert ? 'text-red-800' : 'text-slate-900'}`}>{value}</div>
         </div>
     );
@@ -152,7 +152,7 @@ function BreakdownCard({ title, data }: { title: string; data: Record<string, nu
 
     return (
         <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{title}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{title}</div>
             {entries.length === 0 ? <p className="mt-2 text-xs text-slate-400">Tidak ada data</p> : (
                 <div className="mt-2 space-y-1.5">
                     {entries.map(([status, count]) => (

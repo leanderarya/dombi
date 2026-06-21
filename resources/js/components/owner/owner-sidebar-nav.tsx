@@ -117,7 +117,7 @@ return item.isActive(currentUrl);
                                                 <span className="flex items-center justify-between gap-2">
                                                     <span>{item.label}</span>
                                                     {item.badgeKey && (pendingCounts[item.badgeKey] ?? 0) > 0 && (
-                                                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                                                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
                                                             {pendingCounts[item.badgeKey]}
                                                         </span>
                                                     )}

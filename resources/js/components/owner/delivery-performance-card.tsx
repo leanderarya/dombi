@@ -25,7 +25,7 @@ export default function DeliveryPerformanceCard({ label, value, href, color }: P
             {...(href ? { href } : {})}
             className={`rounded-xl border border-slate-200 ${c.bg} p-3 transition-all duration-150 active:scale-[0.97] ${value > 0 && color === 'red' ? 'ring-2 ' + c.ring : ''}`}
         >
-            <div className={`text-[10px] font-bold uppercase tracking-wider ${c.text}`}>{label}</div>
+            <div className={`text-[11px] font-bold uppercase tracking-wider ${c.text}`}>{label}</div>
             <div className={`mt-1 text-2xl font-bold tabular-nums ${c.text}`}>{value}</div>
         </Wrapper>
     );

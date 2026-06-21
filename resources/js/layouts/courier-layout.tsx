@@ -40,7 +40,7 @@ export default function CourierLayout({ children, title, subtitle, backHref, hid
         <div className="flex items-center gap-2">
             <div className="font-semibold text-emerald-800">Dombi</div>
             {auth?.user?.is_online !== undefined && (
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${
                     auth.user.is_online
                         ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
                         : 'bg-slate-50 text-slate-500 ring-1 ring-slate-200'

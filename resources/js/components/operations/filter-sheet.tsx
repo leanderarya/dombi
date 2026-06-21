@@ -96,7 +96,7 @@ return null;
                     <div className="mt-4 space-y-5">
                         {sections.map((section) => (
                             <div key={section.key}>
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{section.label}</div>
+                                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{section.label}</div>
                                 <div className="mt-2 flex flex-wrap gap-2">
                                     <FilterPill
                                         label="Semua"

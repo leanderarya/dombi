@@ -198,7 +198,7 @@ return true;
 
 function StatusBadge({ active }: { active: boolean }) {
     return (
-        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${
+        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
             active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
         }`}>
             {active ? <ToggleRight className="h-3 w-3" /> : <ToggleLeft className="h-3 w-3" />}
@@ -209,11 +209,11 @@ function StatusBadge({ active }: { active: boolean }) {
 
 function StockBadge({ status, stock }: { status: string; stock: number }) {
     if (status === 'out_of_stock') {
-        return <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">Habis</span>;
+        return <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700">Habis</span>;
     }
 
     if (status === 'low') {
-        return <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">Menipis ({stock})</span>;
+        return <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">Menipis ({stock})</span>;
     }
 
     return <span className="tabular-nums text-slate-700">{stock} pcs</span>;

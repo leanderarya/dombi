@@ -124,7 +124,7 @@ return null;
 
                     {/* Incident Summary */}
                     <div className="mt-3 rounded-lg border border-red-100 bg-red-50/50 p-3">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-red-600">Insiden</div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-red-600">Insiden</div>
                         <div className="mt-1.5 space-y-1 text-xs">
                             <div className="flex justify-between"><span className="text-slate-500">Alasan</span><span className="font-medium text-slate-900">{delivery.failed_reason ?? '-'}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500">Kurir</span><span className="text-slate-700">{delivery.courier?.name ?? '-'}</span></div>

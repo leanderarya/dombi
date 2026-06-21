@@ -25,7 +25,7 @@ export default function DeliveryBoardColumn({ title, count, items, color, emptyM
         <div className="flex flex-col">
             {/* Column Header */}
             <div className="sticky top-0 z-10 flex items-center gap-2 px-1 pb-2">
-                <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold ${colors.bg} ${colors.text}`}>
+                <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${colors.bg} ${colors.text}`}>
                     {count}
                 </span>
                 <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">{title}</h3>

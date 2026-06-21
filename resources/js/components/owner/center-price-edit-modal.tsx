@@ -96,19 +96,19 @@ return;
 
                     {/* Product Name */}
                     <div className="mt-4">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Produk</div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Produk</div>
                         <div className="mt-1 text-sm font-semibold text-slate-900">{productName}</div>
                     </div>
 
                     {/* Current Center Price */}
                     <div className="mt-3">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Harga Pusat Saat Ini</div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Harga Pusat Saat Ini</div>
                         <div className="mt-1 text-sm font-semibold text-slate-700">{formatCurrency(currentCenterPrice)}</div>
                     </div>
 
                     {/* New Center Price Input */}
                     <div className="mt-3">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Harga Pusat Baru</label>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Harga Pusat Baru</label>
                         <div className="relative mt-1">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">Rp</span>
                             <input

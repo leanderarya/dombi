@@ -31,7 +31,7 @@ export default function DevToolbar({ currentRole, env }: DevToolbarProps) {
                 <div className="mb-2 rounded-lg border border-zinc-700 bg-zinc-900 p-3 shadow-xl">
                     <div className="mb-2 flex items-center justify-between">
                         <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Dev Toolbar</span>
-                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-bold text-amber-400">LOCAL</span>
+                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[11px] font-bold text-amber-400">LOCAL</span>
                     </div>
 
                     <div className="mb-2 text-xs text-zinc-300">

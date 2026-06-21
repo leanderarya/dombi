@@ -22,7 +22,7 @@ return null;
                     </svg>
                 </div>
                 <div className="min-w-0 flex-1">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-white/50">Order aktif</div>
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-white/50">Order aktif</div>
                     <div className="truncate text-sm font-semibold text-white">{orderStatusLabel(order.status)}</div>
                 </div>
                 <span className="shrink-0 rounded-md bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white">

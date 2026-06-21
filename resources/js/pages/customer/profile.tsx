@@ -41,7 +41,7 @@ export default function Profile({ defaultAddress }: any) {
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-semibold text-zinc-900">{defaultAddress.label || 'Alamat Utama'}</span>
-                                    <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-emerald-700">Utama</span>
+                                    <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold uppercase text-emerald-700">Utama</span>
                                 </div>
                                 <div className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-600">{defaultAddress.address}</div>
                             </div>

@@ -44,7 +44,7 @@ export default function OwnerActionCard({ href, icon, title, subtitle, metric, c
 
             <div className="flex shrink-0 items-center gap-1.5">
                 {count !== undefined && count > 0 && (
-                    <span className={`flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-[10px] font-bold text-white ${config.indicator}`}>
+                    <span className={`flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-[11px] font-bold text-white ${config.indicator}`}>
                         {count}
                     </span>
                 )}

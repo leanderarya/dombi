@@ -247,15 +247,15 @@ return;
                         {/* Summary Cards */}
                         <div className="mt-3 grid grid-cols-3 gap-2">
                             <div className="rounded-lg border border-slate-200 bg-[#F8FAFC] p-3">
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Outstanding</div>
+                                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Outstanding</div>
                                 <div className="mt-1 text-sm font-bold tabular-nums text-red-600">{formatCurrency(settlementSummary.outstanding)}</div>
                             </div>
                             <div className="rounded-lg border border-slate-200 bg-[#F8FAFC] p-3">
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Terlambat</div>
+                                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Terlambat</div>
                                 <div className="mt-1 text-sm font-bold tabular-nums text-amber-600">{settlementSummary.overdue_count}</div>
                             </div>
                             <div className="rounded-lg border border-slate-200 bg-[#F8FAFC] p-3">
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Dibayar Bulan Ini</div>
+                                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Dibayar Bulan Ini</div>
                                 <div className="mt-1 text-sm font-bold tabular-nums text-emerald-600">{formatCurrency(settlementSummary.paid_this_month)}</div>
                             </div>
                         </div>
@@ -263,7 +263,7 @@ return;
                         {/* Recent Settlements */}
                         {settlementSummary.recent_settlements?.length > 0 && (
                             <div className="mt-3">
-                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Settlement Terakhir</div>
+                                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Settlement Terakhir</div>
                                 <div className="space-y-1.5">
                                     {settlementSummary.recent_settlements.map((s: any) => {
                                         const statusBadge: Record<string, { label: string; className: string }> = {
@@ -278,7 +278,7 @@ return;
                                             <div key={s.id} className="flex items-center justify-between rounded-lg border border-slate-100 bg-[#F8FAFC] px-3 py-2">
                                                 <div className="text-xs text-slate-600">{s.period_date}</div>
                                                 <div className="text-xs tabular-nums font-semibold">{formatCurrency(s.amount_due)}</div>
-                                                <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${badge.className}`}>{badge.label}</span>
+                                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>{badge.label}</span>
                                             </div>
                                         );
                                     })}
@@ -342,7 +342,7 @@ function Metric({
             <div className="text-lg font-semibold tabular-nums">
                 {value ?? 0}
             </div>
-            <div className="mt-0.5 text-[10px] font-semibold tracking-wide uppercase opacity-70">
+            <div className="mt-0.5 text-[11px] font-semibold tracking-wide uppercase opacity-70">
                 {label}
             </div>
         </div>

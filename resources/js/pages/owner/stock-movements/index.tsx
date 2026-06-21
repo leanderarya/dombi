@@ -26,7 +26,7 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
             headerRight={
                 <div className="relative">
                     <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
-                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[9px] font-bold text-white">{activeFilterCount}</span>}
+                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[11px] font-bold text-white">{activeFilterCount}</span>}
                 </div>
             }
         >
@@ -41,11 +41,11 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="truncate text-xs font-semibold text-slate-900">{m.product?.name ?? '-'}</div>
-                                <div className="mt-0.5 text-[10px] text-slate-400">{m.outlet?.name} · <span className={typeColors[m.type] ?? 'text-slate-500'}>{typeLabels[m.type] ?? m.type}</span></div>
+                                <div className="mt-0.5 text-[11px] text-slate-400">{m.outlet?.name} · <span className={typeColors[m.type] ?? 'text-slate-500'}>{typeLabels[m.type] ?? m.type}</span></div>
                             </div>
                             <div className="shrink-0 text-right">
-                                <div className="text-[10px] tabular-nums text-slate-500">{m.before_stock}→{m.after_stock}</div>
-                                <div className="text-[9px] tabular-nums text-slate-400">{formatDate(m.created_at)}</div>
+                                <div className="text-[11px] tabular-nums text-slate-500">{m.before_stock}→{m.after_stock}</div>
+                                <div className="text-[11px] tabular-nums text-slate-400">{formatDate(m.created_at)}</div>
                             </div>
                         </div>
                     ))}

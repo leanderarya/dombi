@@ -214,7 +214,7 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
                                     <div className="truncate text-sm font-bold text-slate-950">{item.product.name}</div>
                                     <div className="mt-0.5 text-xs text-slate-500">Diminta {item.requested_quantity}</div>
                                 </div>
-                                {inventory ? <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} /> : <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-500">Stok Kosong</span>}
+                                {inventory ? <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} /> : <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500">Stok Kosong</span>}
                             </div>
                             <label className="mt-3 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Jumlah disetujui</label>
                             <input
@@ -318,7 +318,7 @@ function Timeline({ events }: { events: TimelineEvent[] }) {
 function Metric({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
     return (
         <div className={`rounded-xl border p-3 ${muted ? 'border-amber-200 bg-amber-50' : 'border-slate-100 bg-slate-50'}`}>
-            <div className={`text-[10px] font-semibold uppercase tracking-wide ${muted ? 'text-amber-600' : 'text-slate-400'}`}>{label}</div>
+            <div className={`text-[11px] font-semibold uppercase tracking-wide ${muted ? 'text-amber-600' : 'text-slate-400'}`}>{label}</div>
             <div className={`mt-1 truncate text-xs font-bold ${muted ? 'text-amber-800' : 'text-slate-900'}`}>{value}</div>
         </div>
     );
@@ -327,7 +327,7 @@ function Metric({ label, value, muted = false }: { label: string; value: string;
 function NoteRow({ label, value, danger = false }: { label: string; value?: string | null; danger?: boolean }) {
     return (
         <div className={`rounded-xl border p-3 ${danger ? 'border-red-200 bg-red-50 text-red-700' : 'border-slate-100 bg-slate-50'}`}>
-            <div className="text-[10px] font-semibold uppercase tracking-wide opacity-70">{label}</div>
+            <div className="text-[11px] font-semibold uppercase tracking-wide opacity-70">{label}</div>
             <div className="mt-1 leading-5">{value || '-'}</div>
         </div>
     );

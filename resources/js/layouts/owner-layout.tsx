@@ -113,7 +113,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                             </button>
                         </div>
                         <div className="mt-2.5 text-sm font-medium text-slate-800">{auth?.user?.name}</div>
-                        <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400">Owner</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Owner</div>
                     </div>
 
                     {/* Navigation */}
@@ -125,7 +125,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                             <NotificationBell onClick={() => setNotificationOpen(true)} />
                         </div>
                         <button onClick={() => router.post('/logout')} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900">Logout</button>
-                        <div className="mt-2 text-[10px] text-zinc-400">v{page.props.appVersion ?? '1.0.0'}</div>
+                        <div className="mt-2 text-[11px] text-zinc-400">v{page.props.appVersion ?? '1.0.0'}</div>
                     </div>
                 </div>
             </aside>

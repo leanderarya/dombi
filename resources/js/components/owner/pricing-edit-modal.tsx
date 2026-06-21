@@ -97,19 +97,19 @@ return;
 
                     {/* Product Name */}
                     <div className="mt-4">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Produk</div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Produk</div>
                         <div className="mt-1 text-sm font-semibold text-slate-900">{productName}</div>
                     </div>
 
                     {/* Center Price (read-only) */}
                     <div className="mt-3">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Harga Pusat</div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Harga Pusat</div>
                         <div className="mt-1 text-sm font-semibold text-slate-700">{formatCurrency(centerPrice)}</div>
                     </div>
 
                     {/* Selling Price Input */}
                     <div className="mt-3">
-                        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Harga Jual Outlet</label>
+                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Harga Jual Outlet</label>
                         <div className="relative mt-1">
                             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">Rp</span>
                             <input
@@ -144,7 +144,7 @@ return;
 
                     {/* Quick Actions */}
                     <div className="mt-4">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Ubah Cepat</div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Ubah Cepat</div>
                         <div className="mt-2 flex flex-wrap gap-1.5">
                             {QUICK_AMOUNTS.map((amt) => (
                                 <div key={amt} className="flex gap-0.5">

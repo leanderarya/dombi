@@ -110,7 +110,7 @@ function AddressCard({ address, onSetDefault }: { address: any; onSetDefault: ()
             <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-slate-900">{address.label || 'Alamat'}</span>
                 {isDefault && (
-                    <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700">Utama</span>
+                    <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700">Utama</span>
                 )}
             </div>
 

@@ -190,7 +190,7 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                                             <div className="mt-0.5 text-[11px] text-slate-500">Outlet: {task.outlet_name}</div>
                                         </div>
                                         {task.age_minutes !== undefined && task.age_minutes > 15 && (
-                                            <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200">
+                                            <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 ring-1 ring-amber-200">
                                                 {task.age_minutes}m
                                             </span>
                                         )}
@@ -224,7 +224,7 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                                                 </div>
                                             )}
                                         </div>
-                                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700 ring-1 ring-red-200">
+                                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700 ring-1 ring-red-200">
                                             Gagal
                                         </span>
                                     </div>
@@ -257,7 +257,7 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                                         <div className="text-xs text-slate-500">{task.customer_name}</div>
                                     </div>
                                     {task.delivered_to && (
-                                        <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 ring-1 ring-emerald-200">
+                                        <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-200">
                                             → {task.delivered_to}
                                         </span>
                                     )}
@@ -284,7 +284,7 @@ function StatCard({ label, value }: { label: string; value: number }) {
     return (
         <div className="rounded-xl border border-zinc-200 bg-white p-3 text-center">
             <div className="text-2xl font-bold text-slate-900">{value}</div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
         </div>
     );
 }

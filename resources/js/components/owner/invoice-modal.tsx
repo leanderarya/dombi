@@ -72,7 +72,7 @@ return null;
 
                     {/* Breakdown */}
                     <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Tagihan Belum Dibayar</div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Tagihan Belum Dibayar</div>
                         {unpaidBreakdown.map((item) => (
                             <div key={item.id} className="flex justify-between py-1 text-xs">
                                 <span className="text-slate-600">{item.period_date}</span>

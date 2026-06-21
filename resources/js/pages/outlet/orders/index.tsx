@@ -73,7 +73,7 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <span className="text-sm font-bold tabular-nums text-text">{order.order_code}</span>
-                                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
                                             order.fulfillment_type === 'pickup'
                                                 ? 'bg-blue-50 text-blue-600'
                                                 : 'bg-purple-50 text-purple-600'
@@ -81,7 +81,7 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                                             {order.fulfillment_type === 'pickup' ? 'Pickup' : 'Delivery'}
                                         </span>
                                     </div>
-                                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-semibold ${st.bg}`}>
+                                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${st.bg}`}>
                                         <span className={`h-1 w-1 rounded-full ${st.dot}`} />
                                         {st.label}
                                     </span>

@@ -99,7 +99,7 @@ return;
 
                     {/* Courier List */}
                     <div className="mt-4">
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Available Couriers</div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Available Couriers</div>
                         <div className="mt-2 space-y-1.5">
                             {couriers.length === 0 ? (
                                 <div className="rounded-lg border border-slate-200 bg-white p-4 text-center text-xs text-slate-500">
@@ -123,17 +123,17 @@ return;
                                             <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}>
                                                 {isSelected && <div className="h-1.5 w-1.5 rounded-full bg-white" />}
                                             </div>
-                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-600">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-600">
                                                 {courier.name.charAt(0)}
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-sm font-semibold text-slate-900">{courier.name}</div>
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`text-[10px] ${activeCount === 0 ? 'text-emerald-600' : isBusy ? 'text-amber-600' : 'text-blue-600'}`}>
+                                                    <span className={`text-[11px] ${activeCount === 0 ? 'text-emerald-600' : isBusy ? 'text-amber-600' : 'text-blue-600'}`}>
                                                         {activeCount === 0 ? 'Tersedia' : `${activeCount} tugas aktif`}
                                                     </span>
                                                     {isBusy && (
-                                                        <span className="rounded bg-amber-100 px-1 py-0.5 text-[9px] font-bold text-amber-700">Sibuk</span>
+                                                        <span className="rounded bg-amber-100 px-1 py-0.5 text-[11px] font-bold text-amber-700">Sibuk</span>
                                                     )}
                                                 </div>
                                             </div>

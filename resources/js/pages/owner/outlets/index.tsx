@@ -112,7 +112,7 @@ function Metric({ label, value, warn = false }: { label: string; value: number; 
     return (
         <div className={`rounded-lg border p-3 ${warn && value > 0 ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-slate-200 bg-[#F8FAFC] text-slate-700'}`}>
             <div className="text-lg font-semibold tabular-nums">{value}</div>
-            <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wide opacity-70">{label}</div>
+            <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide opacity-70">{label}</div>
         </div>
     );
 }

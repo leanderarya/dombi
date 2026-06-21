@@ -36,7 +36,7 @@ export default function OwnerProfile() {
 function InfoBox({ label, value }: { label: string; value: string }) {
     return (
         <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</div>
             <div className="mt-1 truncate text-sm font-semibold text-slate-900">{value}</div>
         </div>
     );

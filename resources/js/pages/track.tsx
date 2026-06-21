@@ -271,7 +271,7 @@ function Header({ orderCode, isPickup, orderedAt }: { orderCode: string; isPicku
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-text">{orderCode}</span>
                         <span className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                            "rounded-full px-2 py-0.5 text-[11px] font-semibold",
                             isPickup ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"
                         )}>
                             {isPickup ? 'Pickup' : 'Delivery'}
@@ -762,7 +762,7 @@ function StickyBottomBar({ isPickup, status, statusConfig, outletPhone }: {
             <div className="mx-auto max-w-lg">
                 <div className="flex items-center justify-between mb-2">
                     <div>
-                        <div className="text-[10px] font-medium text-text-subtle uppercase">Status</div>
+                        <div className="text-[11px] font-medium text-text-subtle uppercase">Status</div>
                         <div className={cn("text-sm font-semibold", `text-${accentColor}-700`)}>
                             {statusConfig.label}
                         </div>

@@ -60,7 +60,7 @@ const columns = [
         key: 'action',
         label: 'Aksi',
         render: (row: AuditLog) => (
-            <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+            <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">
                 {actionLabels[row.action] ?? row.action}
             </span>
         ),

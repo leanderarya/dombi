@@ -34,7 +34,7 @@ export default function OwnerDistributionsIndex({ distributions, outlets, filter
             headerRight={
                 <div className="relative">
                     <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
-                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[9px] font-bold text-white">{activeFilterCount}</span>}
+                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[11px] font-bold text-white">{activeFilterCount}</span>}
                 </div>
             }
         >
@@ -47,9 +47,9 @@ export default function OwnerDistributionsIndex({ distributions, outlets, filter
                             <div>
                                 <div className="text-sm font-bold text-slate-900">#{d.id}</div>
                                 <div className="mt-0.5 text-xs text-slate-500">{d.outlet.name}</div>
-                                <div className="mt-1 text-[10px] tabular-nums text-slate-400">{d.sent_at ? formatDate(d.sent_at) : 'Belum dikirim'}</div>
+                                <div className="mt-1 text-[11px] tabular-nums text-slate-400">{d.sent_at ? formatDate(d.sent_at) : 'Belum dikirim'}</div>
                             </div>
-                            <span className={`rounded-md border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${statusStyles[d.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>{getDistributionStatus(d.status).label}</span>
+                            <span className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${statusStyles[d.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>{getDistributionStatus(d.status).label}</span>
                         </Link>
                     ))}
                 </div>
