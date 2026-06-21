@@ -87,6 +87,7 @@ return;
                 <button
                     type="button"
                     onClick={onClose}
+                    aria-label="Tutup"
                     className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100 active:bg-slate-100"
                 >
                     <X className="h-4 w-4" />

@@ -97,6 +97,7 @@ export default function BottomSheet({ open, onClose, title, children, maxHeight 
                         <button
                             type="button"
                             onClick={onClose}
+                            aria-label="Tutup"
                             className="flex h-11 w-11 items-center justify-center rounded-full text-slate-400 active:bg-slate-100"
                         >
                             <X className="h-4 w-4" />

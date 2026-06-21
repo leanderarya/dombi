@@ -74,7 +74,7 @@ return;
                 <div className="flex justify-center pt-3 pb-2 lg:hidden">
                     <div className="h-1 w-12 rounded-full bg-slate-300" />
                 </div>
-                <button type="button" onClick={onClose} className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100">
+                <button type="button" onClick={onClose} aria-label="Tutup" className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100">
                     <X className="h-4 w-4" />
                 </button>
 
