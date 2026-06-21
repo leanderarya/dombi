@@ -1,42 +1,20 @@
-import { Link } from '@inertiajs/react';
-import {
-    AlertCircle,
-    ArrowLeftRight,
-    ArrowRight,
-    Box,
-    CheckCircle2,
-    CreditCard,
-    Package,
-    RefreshCw,
-    RotateCcw,
-    Wallet,
-} from 'lucide-react';
-import OutletAttentionList from '@/components/owner/outlet-attention-list';
-import OwnerActionCard from '@/components/owner/owner-action-card';
-import OwnerKpiCard from '@/components/owner/owner-kpi-card';
+import { Head, Link } from '@inertiajs/react';
+import { Wallet, ClipboardList, AlertTriangle, Package, RotateCcw, ArrowLeftRight, CreditCard } from 'lucide-react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import EmptyState from '@/components/ui/empty-state';
-import SectionCard from '@/components/ui/section-card';
-import { formatCurrency } from '@/lib/format';
-import { stockSeverity, pendingSeverity } from '@/lib/severity';
+import OwnerKpiCard from '@/components/owner/owner-kpi-card';
+import { ExpandableSection, ExpandableItem } from '@/components/ui/expandable-section';
 import { usePolling } from '@/lib/use-polling';
+import { formatCurrency } from '@/lib/format';
 
 interface DashboardProps {
     hero: {
-        outstandingAmount: number;
+        total_outstanding: number;
         subtitle: string;
-        ctaLabel: string;
-        ctaHref: string;
     };
     kpis: {
         outstandingAmount: number;
-        approvalsNeeded: number;
-        outletsNeedingAttention: number;
-        criticalCenterSkus: number;
-        monthlyBilling?: number;
-        monthlyPayments?: number;
-        activeReturns?: number;
-        activeExchanges?: number;
+        pendingActions: number;
+        criticalStock: number;
     };
     actionRequired: {
         restocks: number;
@@ -44,238 +22,161 @@ interface DashboardProps {
         exchanges: number;
         pendingSettlementVerifications: number;
     };
-    outletAttention: Array<{
-        outlet: { id: number; name: string };
-        outstandingAmount: number;
-        pendingRestocks: number;
-        pendingReturns: number;
-        pendingExchanges: number;
-        pendingIssues: number;
-        criticalStocks: number;
-        daysOverdue: number;
-        severityScore: number;
-        detailHref: string;
-    }>;
     settlementAlerts: Array<{
-        outlet: { id: number; name: string };
-        outstandingAmount: number;
-        daysOverdue: number;
-        detailHref: string;
+        id: number;
+        outlet_name: string;
+        days_overdue: number;
+        outstanding: number;
     }>;
     inventoryRisks: Array<{
-        variant: { id: number; name: string; full_name: string; family_name?: string | null };
-        centerStock: number;
+        id: number;
+        variant_name: string;
+        current_stock: number;
         threshold: number;
-        shortage: number;
-        detailHref: string;
     }>;
 }
 
-export default function Dashboard({ hero, kpis, actionRequired, outletAttention, settlementAlerts, inventoryRisks }: DashboardProps) {
+export default function Dashboard({
+    hero,
+    kpis,
+    actionRequired,
+    settlementAlerts,
+    inventoryRisks,
+}: DashboardProps) {
     usePolling(30000);
 
-    const attentionOutlets = outletAttention.map((row) => ({
-        outletId: row.outlet.id,
-        outletName: row.outlet.name,
-        outstanding: row.outstandingAmount,
-        pendingRestocks: row.pendingRestocks,
-        pendingReturns: row.pendingReturns,
-        pendingExchanges: row.pendingExchanges,
-        criticalStocks: row.criticalStocks,
-        daysOverdue: row.daysOverdue,
-        href: row.detailHref,
-    }));
+    const totalPendingActions = actionRequired.restocks + actionRequired.returns + actionRequired.exchanges + actionRequired.pendingSettlementVerifications;
 
     return (
-        <OwnerPageShell title="Dasbor Keputusan" subtitle="Prioritas owner: menyetujui, menagih, dan mengelola risiko stok pusat">
-            {/* Hero */}
-            <section className="rounded-2xl border border-zinc-200 bg-white p-6">
-                <div className="flex items-start justify-between gap-6">
-                    <div>
-                        <div className="text-sm text-zinc-500">Total Belum Masuk</div>
-                        <div className="mt-1 text-2xl font-semibold tabular-nums text-zinc-900">
-                            {formatCurrency(hero.outstandingAmount)}
-                        </div>
-                        <p className="mt-1 max-w-xl text-sm text-zinc-400">{hero.subtitle}</p>
+        <>
+            <Head title="Dasbor" />
+            <OwnerPageShell
+                title="Dasbor"
+                subtitle="Ringkasan operasional hari ini"
+            >
+                {/* Hero Bar */}
+                <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary-hover px-6 py-5 text-white">
+                    <div className="text-xs font-medium uppercase tracking-wider opacity-70">
+                        Tagihan Tertunggak
+                    </div>
+                    <div className="mt-1 text-3xl font-bold tabular-nums">
+                        {formatCurrency(hero.total_outstanding)}
+                    </div>
+                    <div className="mt-1 text-sm opacity-80">
+                        {hero.subtitle}
                     </div>
                     <Link
-                        href={hero.ctaHref}
-                        className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-zinc-900 px-4 text-sm font-semibold text-white transition-colors hover:bg-zinc-800"
+                        href="/owner/finance"
+                        className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold backdrop-blur-sm transition-colors hover:bg-white/25"
                     >
-                        {hero.ctaLabel}
-                        <ArrowRight className="h-4 w-4" />
+                        Lihat Penagihan →
                     </Link>
                 </div>
-            </section>
 
-            {/* KPI Strip */}
-            <section className="mt-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
-                <OwnerKpiCard
-                    label="Belum Masuk"
-                    value={formatCurrency(kpis.outstandingAmount)}
-                    icon={<Wallet className="h-5 w-5" />}
-                />
-                <OwnerKpiCard
-                    label="Menunggu Persetujuan"
-                    value={kpis.approvalsNeeded}
-                    icon={<CheckCircle2 className="h-5 w-5" />}
-                />
-                <OwnerKpiCard
-                    label="Outlet Perlu Perhatian"
-                    value={kpis.outletsNeedingAttention}
-                    icon={<AlertCircle className="h-5 w-5" />}
-                />
-                <OwnerKpiCard
-                    label="Stok Pusat Kritis"
-                    value={kpis.criticalCenterSkus}
-                    icon={<Box className="h-5 w-5" />}
-                />
-            </section>
-
-            {/* Billing & Payment KPIs */}
-            <section className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
-                <OwnerKpiCard
-                    icon={<Wallet className="h-5 w-5" />}
-                    label="Tagihan Bulan Ini"
-                    value={formatCurrency(kpis.monthlyBilling ?? 0)}
-                />
-                <OwnerKpiCard
-                    icon={<CreditCard className="h-5 w-5" />}
-                    label="Pembayaran Diterima"
-                    value={formatCurrency(kpis.monthlyPayments ?? 0)}
-                />
-                <OwnerKpiCard
-                    icon={<RotateCcw className="h-5 w-5" />}
-                    label="Returns Aktif"
-                    value={kpis.activeReturns ?? 0}
-                    color={kpis.activeReturns > 0 ? 'warning' : 'success'}
-                />
-                <OwnerKpiCard
-                    icon={<ArrowLeftRight className="h-5 w-5" />}
-                    label="Exchanges Aktif"
-                    value={kpis.activeExchanges ?? 0}
-                    color={kpis.activeExchanges > 0 ? 'warning' : 'success'}
-                />
-            </section>
-
-            {/* Two-column: Actions + Outlet Attention */}
-            <section className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <SectionCard label="Perlu Tindakan">
-                    <div className="space-y-3">
-                        <OwnerActionCard
-                            href="/owner/restocks?status=requested"
-                            title="Restock Menunggu Persetujuan"
-                            subtitle={`${actionRequired.restocks} permintaan`}
-                            count={actionRequired.restocks}
-                            severity={pendingSeverity(actionRequired.restocks)}
-                            icon={<RefreshCw className="h-5 w-5" />}
-                            ctaLabel="Tinjau"
-                        />
-                        <OwnerActionCard
-                            href="/owner/returns?status=submitted"
-                            title="Return Menunggu Persetujuan"
-                            subtitle={`${actionRequired.returns} permintaan`}
-                            count={actionRequired.returns}
-                            severity={pendingSeverity(actionRequired.returns)}
-                            icon={<Package className="h-5 w-5" />}
-                            ctaLabel="Tinjau"
-                        />
-                        <OwnerActionCard
-                            href="/owner/exchanges?status=submitted"
-                            title="Tukar Produk Menunggu Persetujuan"
-                            subtitle={`${actionRequired.exchanges} permintaan`}
-                            count={actionRequired.exchanges}
-                            severity={pendingSeverity(actionRequired.exchanges)}
-                            icon={<RefreshCw className="h-5 w-5" />}
-                            ctaLabel="Tinjau"
-                        />
-                        <OwnerActionCard
-                            href="/owner/settlement-payments"
-                            title="Pembayaran Menunggu Verifikasi"
-                            subtitle={`${actionRequired.pendingSettlementVerifications} pembayaran`}
-                            count={actionRequired.pendingSettlementVerifications}
-                            severity={pendingSeverity(actionRequired.pendingSettlementVerifications)}
+                {/* KPI Cards */}
+                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <Link href="/owner/finance">
+                        <OwnerKpiCard
                             icon={<Wallet className="h-5 w-5" />}
-                            ctaLabel="Tinjau"
+                            label="Tagihan"
+                            value={formatCurrency(kpis.outstandingAmount)}
+                            trend={`${settlementAlerts.length} outlet belum bayar`}
                         />
-                    </div>
-                </SectionCard>
+                    </Link>
+                    <Link href="#actions">
+                        <OwnerKpiCard
+                            icon={<ClipboardList className="h-5 w-5" />}
+                            label="Butuh Tindakan"
+                            value={totalPendingActions}
+                            trend={`${actionRequired.restocks} restock · ${actionRequired.returns} return · ${actionRequired.pendingSettlementVerifications} pembayaran`}
+                        />
+                    </Link>
+                    <Link href="/owner/inventories?filter=critical">
+                        <OwnerKpiCard
+                            icon={<AlertTriangle className="h-5 w-5" />}
+                            label="Stok Kritis"
+                            value={kpis.criticalStock}
+                            color={kpis.criticalStock > 0 ? 'danger' : 'success'}
+                            trend="SKU perlu restock segera"
+                        />
+                    </Link>
+                </div>
 
-                <SectionCard label="Outlet Perlu Perhatian" labelRight={<Link href="/owner/outlets" className="text-xs font-semibold text-zinc-500 hover:text-zinc-700">Lihat Semua</Link>}>
-                    <div id="outlet-attention">
-                        <OutletAttentionList outlets={attentionOutlets} />
-                    </div>
-                </SectionCard>
-            </section>
-
-            {/* Two-column: Settlement Preview + Inventory Risks */}
-            <section className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
-                <SectionCard
-                    label="Belum Masuk"
-                    labelRight={<Link href="/owner/finance" className="text-xs font-semibold text-zinc-500 hover:text-zinc-700">Lihat Semua</Link>}
-                >
-                    <div className="space-y-3">
-                        {settlementAlerts.length > 0 ? settlementAlerts.map((item) => (
-                            <Link
-                                key={item.outlet.id}
-                                href={item.detailHref}
-                                className="flex items-center justify-between rounded-xl border border-zinc-100 px-4 py-3 transition-colors hover:bg-zinc-50"
+                {/* Expandable Sections */}
+                <div className="mt-4 space-y-3">
+                    <ExpandableSection
+                        title="Butuh Tindakan"
+                        count={totalPendingActions}
+                        countColor="blue"
+                        action={{
+                            label: 'Lihat Semua',
+                            href: '/owner/restocks?status=requested',
+                        }}
+                    >
+                        {actionRequired.restocks > 0 && (
+                            <ExpandableItem
+                                icon={<Package className="h-4 w-4" />}
+                                action={{ label: 'Tinjau', href: '/owner/restocks?status=requested' }}
                             >
-                                <div>
-                                    <div className="text-sm font-semibold text-zinc-900">{item.outlet.name}</div>
-                                    <div className="mt-1 text-xs text-zinc-400">
-                                        {item.daysOverdue > 0 ? `${item.daysOverdue} hari terlambat` : 'Belum terselesaikan'}
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-sm font-semibold tabular-nums text-red-600">
-                                        {formatCurrency(item.outstandingAmount)}
-                                    </div>
-                                    {item.daysOverdue > 14 && (
-                                        <div className="mt-0.5 text-[10px] font-bold text-red-500">Kritis</div>
-                                    )}
-                                </div>
-                            </Link>
-                        )) : (
-                            <EmptyState title="Tidak ada kewajiban tertunggak" description="Semua outlet sudah menyelesaikan kewajibannya." />
+                                {actionRequired.restocks} restock menunggu persetujuan
+                            </ExpandableItem>
                         )}
-                    </div>
-                </SectionCard>
-
-                <SectionCard
-                    label="Stok Pusat Kritis"
-                    labelRight={<Link href="/owner/inventories" className="text-xs font-semibold text-zinc-500 hover:text-zinc-700">Lihat Inventaris</Link>}
-                >
-                    <div className="space-y-3">
-                        {inventoryRisks.length > 0 ? inventoryRisks.map((risk) => {
-                            const severity = stockSeverity(risk.centerStock, risk.threshold);
-
-                            return (
-                                <Link
-                                    key={risk.variant.id}
-                                    href={risk.detailHref}
-className="flex items-center justify-between rounded-xl border border-zinc-100 px-4 py-3 transition-colors hover:bg-zinc-50"
-                                    >
-                                        <div>
-                                            <div className="text-sm font-semibold text-zinc-900">{risk.variant.name}</div>
-                                            <div className="mt-1 text-xs text-zinc-400">
-                                                Threshold {risk.threshold} · Kurang {risk.shortage}
-                                            </div>
-                                        </div>
-                                    <div className="text-right">
-                                        <div className={`text-sm font-semibold tabular-nums ${severity === 'critical' ? 'text-red-600' : severity === 'warning' ? 'text-amber-600' : 'text-slate-900'}`}>
-                                            {risk.centerStock}
-                                        </div>
-                                        <div className="text-[11px] text-zinc-400">stok pusat</div>
-                                    </div>
-                                </Link>
-                            );
-                        }) : (
-                            <EmptyState title="Stok pusat masih aman" description="Belum ada SKU pusat yang melewati batas kritis." />
+                        {actionRequired.returns > 0 && (
+                            <ExpandableItem
+                                icon={<RotateCcw className="h-4 w-4" />}
+                                action={{ label: 'Tinjau', href: '/owner/returns?status=submitted' }}
+                            >
+                                {actionRequired.returns} return menunggu persetujuan
+                            </ExpandableItem>
                         )}
-                    </div>
-                </SectionCard>
-            </section>
-        </OwnerPageShell>
+                        {actionRequired.exchanges > 0 && (
+                            <ExpandableItem
+                                icon={<ArrowLeftRight className="h-4 w-4" />}
+                                action={{ label: 'Tinjau', href: '/owner/exchanges?status=submitted' }}
+                            >
+                                {actionRequired.exchanges} tukar produk menunggu persetujuan
+                            </ExpandableItem>
+                        )}
+                        {actionRequired.pendingSettlementVerifications > 0 && (
+                            <ExpandableItem
+                                icon={<CreditCard className="h-4 w-4" />}
+                                action={{ label: 'Verifikasi', href: '/owner/settlement-payments' }}
+                            >
+                                {actionRequired.pendingSettlementVerifications} pembayaran menunggu verifikasi
+                            </ExpandableItem>
+                        )}
+                        {totalPendingActions === 0 && (
+                            <div className="py-4 text-center text-sm text-text-muted">
+                                Tidak ada tindakan yang diperlukan
+                            </div>
+                        )}
+                    </ExpandableSection>
+
+                    <ExpandableSection
+                        title="Stok Kritis"
+                        count={inventoryRisks.length}
+                        countColor="red"
+                        action={{
+                            label: 'Lihat Semua',
+                            href: '/owner/inventories?filter=critical',
+                        }}
+                    >
+                        {inventoryRisks.map((risk) => (
+                            <ExpandableItem
+                                key={risk.id}
+                                action={{ label: 'Restock', href: `/owner/restocks/create?variant=${risk.id}` }}
+                            >
+                                {risk.variant_name} — Stok: {risk.current_stock} (min: {risk.threshold})
+                            </ExpandableItem>
+                        ))}
+                        {inventoryRisks.length === 0 && (
+                            <div className="py-4 text-center text-sm text-text-muted">
+                                Stok pusat masih aman
+                            </div>
+                        )}
+                    </ExpandableSection>
+                </div>
+            </OwnerPageShell>
+        </>
     );
 }
