@@ -5,10 +5,12 @@ import type { PropsWithChildren } from 'react';
 import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
 import OfflineBanner from '@/components/offline-banner';
+import OwnerCommandSheet from '@/components/owner/owner-command-sheet';
 import OwnerSidebarNav from '@/components/owner/owner-sidebar-nav';
 import OwnerMobileNav from '@/components/owner-mobile-nav';
 import UpdateBanner from '@/components/update-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import { User } from 'lucide-react';
 
 interface NavGroup {
     label: string;
@@ -84,6 +86,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
     const url = page.url;
     const pendingCounts = ownerOperationalCounts ?? { pendingReturns: 0, pendingExchanges: 0 };
     const [notificationOpen, setNotificationOpen] = useState(false);
+    const [commandOpen, setCommandOpen] = useState(false);
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -120,10 +123,19 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             {/* Main content */}
             <main id="main-content" className="pb-16 lg:pb-0 lg:pl-56">
                 {/* Mobile header */}
-                <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 lg:hidden">
+                <div className="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3 lg:hidden">
                     <span className="text-sm font-semibold text-slate-800">Dombi</span>
-                    <div className="flex-1" />
-                    <NotificationBell onClick={() => setNotificationOpen(true)} />
+                    <div className="flex items-center gap-2">
+                        <NotificationBell onClick={() => setNotificationOpen(true)} />
+                        <button
+                            type="button"
+                            onClick={() => setCommandOpen(true)}
+                            aria-label="Menu"
+                            className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary"
+                        >
+                            <User className="h-5 w-5" />
+                        </button>
+                    </div>
                 </div>
                 <div className="mx-auto max-w-[1400px] px-6 py-5">
                     {children}
@@ -131,6 +143,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             </main>
             <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
             <OwnerMobileNav />
+            <OwnerCommandSheet open={commandOpen} onClose={() => setCommandOpen(false)} />
         </div>
     );
 }
