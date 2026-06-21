@@ -13,7 +13,7 @@ export default function StepButton({ label, disabled, processing, onClick }: Pro
                     type="button"
                     onClick={onClick}
                     disabled={disabled}
-                    className="flex min-h-14 w-full items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
+                    className="flex min-h-14 w-full items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-500 px-5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 active:opacity-80 disabled:from-zinc-300 disabled:to-zinc-300 disabled:shadow-none disabled:text-zinc-500"
                 >
                     {processing ? 'Memproses...' : label}
                 </button>
