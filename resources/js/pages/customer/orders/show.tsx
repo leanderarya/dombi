@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { CheckCircle2, Copy, MapPin, Navigation, Phone, Share2, Store, Truck, XCircle } from 'lucide-react';
+import { CheckCircle2, Copy, ExternalLink, MapPin, Navigation, Phone, Share2, Store, Truck, XCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import OrderSummaryCard from '@/components/customer/order-summary-card';
@@ -181,38 +181,52 @@ return;
                     </div>
                 )}
 
-                {/* Tracking Code */}
+                {/* Tracking Code — Important for order recovery */}
                 {order.recovery_token && (
-                    <div className="mt-4 rounded-2xl border border-border bg-white p-4 shadow-sm">
-                        <div className="text-[13px] text-text-subtle">Kode Pelacakan</div>
-                        <div className="mt-2 flex items-center gap-3">
-                            <div className="flex-1">
-                                <div className="text-lg font-bold tabular-nums tracking-wider text-text">{order.recovery_token}</div>
-                                <div className="mt-0.5 text-[11px] text-text-muted">Gunakan link publik ini untuk melacak pesanan tanpa login</div>
+                    <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100">
+                                <svg className="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                            </div>
+                            <span className="text-[13px] font-semibold text-blue-900">Kode Pelacakan</span>
+                        </div>
+                        <div className="text-sm text-blue-700 mb-3">
+                            Simpan kode ini untuk melacak pesanan Anda kapan saja, tanpa perlu login.
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 rounded-lg bg-white px-3 py-2.5 border border-blue-200">
+                                <div className="text-xl font-bold tabular-nums tracking-wider text-blue-900">{order.recovery_token}</div>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleCopyLink}
-                                className="flex h-11 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-semibold text-text active:opacity-80"
+                                className="flex h-11 items-center gap-1.5 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white active:opacity-80"
                             >
-                                {copied ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                                {copied ? 'Tersalin' : 'Salin Link'}
+                                {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                {copied ? 'Tersalin' : 'Salin'}
                             </button>
                         </div>
                         {trackingUrl && (
-                            <>
-                                <div className="mt-3 rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold tabular-nums text-text break-all">
-                                    {trackingUrl}
-                                </div>
+                            <div className="mt-3 flex gap-2">
                                 <button
                                     type="button"
                                     onClick={handleShare}
-                                    className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                                    className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-bold text-white active:opacity-80"
                                 >
                                     <Share2 className="h-4 w-4" />
-                                    Bagikan Link Pelacakan
+                                    Bagikan
                                 </button>
-                            </>
+                                <button
+                                    type="button"
+                                    onClick={() => window.open(trackingUrl, '_blank')}
+                                    className="flex h-11 items-center justify-center gap-2 rounded-lg border border-blue-300 bg-white px-4 text-sm font-semibold text-blue-700 active:opacity-80"
+                                >
+                                    <ExternalLink className="h-4 w-4" />
+                                    Buka
+                                </button>
+                            </div>
                         )}
                     </div>
                 )}
@@ -267,7 +281,7 @@ return;
 
                 {/* Courier Card */}
                 {order.delivery?.courier && (
-                    <div className="mt-4 rounded-2xl border border-border bg-white p-4 shadow-sm">
+                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
                         <div className="text-[13px] text-text-subtle">Kurir</div>
                         <div className="mt-2 flex items-center gap-3">
                             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">
@@ -288,7 +302,7 @@ return;
 
                 {/* Delivery Address */}
                 {order.fulfillment_type !== 'pickup' && (
-                    <div className="mt-4 rounded-2xl border border-border bg-white p-4 shadow-sm">
+                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
                         <div className="text-[13px] text-text-subtle">Alamat Pengiriman</div>
                         <div className="mt-2 text-sm font-medium text-text">{order.customer_name}</div>
                         <div className="mt-0.5 text-xs text-text-muted">{order.customer_phone}</div>
