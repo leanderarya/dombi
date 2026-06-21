@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { AlertTriangle, ArrowRight, ClipboardList, Package, RefreshCw, Truck, Warehouse } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Camera, ClipboardList, Package, QrCode, RefreshCw, Truck, Warehouse } from 'lucide-react';
 import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
@@ -36,6 +36,21 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                     </div>
                 </div>
             </div>
+
+            {/* QR Scan Card */}
+            <Link
+                href="/outlet/scan"
+                className="mt-4 flex items-center gap-4 rounded-2xl bg-gradient-to-br from-primary to-primary-hover p-5 text-white transition-all active:scale-[0.99]"
+            >
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+                    <QrCode className="h-7 w-7" />
+                </div>
+                <div className="flex-1">
+                    <div className="text-lg font-bold">Scan QR untuk Ambil Pesanan</div>
+                    <div className="mt-0.5 text-sm text-white/80">Arahkan kamera ke QR code customer</div>
+                </div>
+                <Camera className="h-5 w-5 text-white/60" />
+            </Link>
 
             {/* Perlu Tindakan */}
             {hasActions && (
