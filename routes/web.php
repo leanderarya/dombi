@@ -310,6 +310,7 @@ Route::middleware(['internal.inertia'])->group(function (): void {
         Route::post('/shift/start', [CourierAvailabilityController::class, 'startShift'])->name('shift.start');
         Route::post('/shift/end', [CourierAvailabilityController::class, 'endShift'])->name('shift.end');
         Route::get('/availability/status', [CourierAvailabilityController::class, 'status'])->name('availability.status');
+        Route::get('/profile', \App\Http\Controllers\Courier\ProfileController::class)->name('profile');
     });
 
     // Dev routes
