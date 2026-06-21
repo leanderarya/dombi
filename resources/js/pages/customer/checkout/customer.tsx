@@ -184,7 +184,7 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
                                     <button
                                         type="button"
                                         onClick={() => setLocationSheetOpen(true)}
-                                        className="min-h-10 shrink-0 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
+                                        className="min-h-[44px] shrink-0 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
                                     >
                                         Ubah Lokasi
                                     </button>
@@ -318,14 +318,14 @@ function StepHeader({ title, step, backHref }: { title: string; step: string; ba
     return (
         <header className="-mx-4 -mt-5 border-b border-slate-200 bg-white px-4 py-3">
             <div className="mx-auto flex max-w-lg items-center justify-between">
-                <button onClick={() => router.visit(backHref)} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 active:bg-slate-100">
+                <button onClick={() => router.visit(backHref)} className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-700 active:bg-slate-100">
                     <span className="text-xl">‹</span>
                 </button>
                 <div className="text-center">
                     <h1 className="text-base font-semibold text-slate-900">{title}</h1>
                     <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{step}</p>
                 </div>
-                <div className="h-10 w-10" />
+                <div className="h-11 w-11" />
             </div>
         </header>
     );

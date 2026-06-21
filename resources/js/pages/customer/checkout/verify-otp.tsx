@@ -154,7 +154,7 @@ return;
                     <button
                         type="button"
                         onClick={() => router.visit('/customer/checkout/customer')}
-                        className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100"
                     >
                         <ArrowLeft className="h-5 w-5" />
                     </button>
@@ -216,7 +216,7 @@ return;
                                 type="button"
                                 onClick={sendOtp}
                                 disabled={sending}
-                                className="text-sm font-semibold text-emerald-700 active:text-emerald-800 disabled:opacity-50"
+                                className="min-h-[44px] px-4 text-sm font-semibold text-emerald-700 active:text-emerald-800 disabled:opacity-50"
                             >
                                 {sending ? 'Mengirim...' : 'Kirim Ulang Kode'}
                             </button>

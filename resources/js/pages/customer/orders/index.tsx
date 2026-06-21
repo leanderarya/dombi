@@ -68,7 +68,7 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
             {/* Sticky Page Header */}
             <header className="fixed inset-x-0 top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link href="/customer/home" className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
+                    <Link href="/customer/home" className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
                         <ArrowLeft className="h-5 w-5" />
                     </Link>
                     <h1 className="text-sm font-semibold text-slate-900">Pesanan Saya</h1>
@@ -100,7 +100,7 @@ return displayHistory.filter((o: any) => ['failed_delivery', 'expired'].includes
                                     setRecoveredHistory(null);
                                     setRecoverySheetOpen(true);
                                 }}
-                                className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-emerald-700 active:text-emerald-900"
+                                className="min-h-[44px] shrink-0 px-2 text-[11px] font-bold uppercase tracking-wide text-emerald-700 active:text-emerald-900"
                             >
                                 Ganti
                             </button>

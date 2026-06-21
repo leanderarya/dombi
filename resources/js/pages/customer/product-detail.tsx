@@ -180,7 +180,7 @@ return;
                     <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
                         <Link
                             href="/customer/products"
-                            className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100"
+                            className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100"
                         >
                             <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -190,7 +190,7 @@ return;
                             <div className="text-sm font-semibold text-slate-900 truncate">{family.name}</div>
                             {family.brand && <div className="text-xs text-zinc-500">{family.brand}</div>}
                         </div>
-                        <Link href="/customer/checkout" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
+                        <Link href="/customer/checkout" className="relative flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
                             <ShoppingCart className="h-5 w-5" />
                             {cart.totalItems > 0 && (
                                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[10px] font-bold text-white">

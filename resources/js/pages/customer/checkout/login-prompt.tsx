@@ -10,7 +10,7 @@ export default function LoginPrompt() {
                 <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
                     <Link
                         href="/customer/checkout"
-                        className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100"
                     >
                         <ArrowLeft className="h-5 w-5" />
                     </Link>

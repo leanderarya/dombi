@@ -232,7 +232,7 @@ function StepHeader({ title, step, backHref }: { title: string; step: string; ba
     return (
         <header className="border-b border-slate-200 bg-white px-4 py-3">
             <div className="mx-auto flex max-w-lg items-center justify-between">
-                <button onClick={() => router.visit(backHref)} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-700 active:bg-slate-100">
+                <button onClick={() => router.visit(backHref)} className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-700 active:bg-slate-100">
                     <span className="text-xl">&#8249;</span>
                 </button>
                 <div className="text-center">

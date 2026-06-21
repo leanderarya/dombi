@@ -46,7 +46,7 @@ export default function Profile({ defaultAddress }: any) {
                                 <div className="mt-1 line-clamp-2 text-xs leading-relaxed text-zinc-600">{defaultAddress.address}</div>
                             </div>
                         </div>
-                        <Link href="/customer/addresses" className="mt-3 flex min-h-9 w-full items-center justify-center rounded-lg border border-zinc-200 text-xs font-semibold text-zinc-700 active:bg-zinc-50">
+                        <Link href="/customer/addresses" className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-zinc-200 text-xs font-semibold text-zinc-700 active:bg-zinc-50">
                             Kelola Alamat
                         </Link>
                     </div>

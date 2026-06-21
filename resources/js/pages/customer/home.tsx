@@ -170,7 +170,7 @@ return;
                         {HERO_SLIDES[slideIndex].cta && (
                             <Link
                                 href={HERO_SLIDES[slideIndex].ctaHref!}
-                                className="mt-5 rounded-full bg-white px-6 py-2.5 text-sm font-bold text-emerald-700 shadow-lg transition-all active:scale-95"
+                                className="mt-5 min-h-[44px] rounded-full bg-white px-6 py-2.5 text-sm font-bold text-emerald-700 shadow-lg transition-all active:scale-95"
                             >
                                 {HERO_SLIDES[slideIndex].cta}
                             </Link>
@@ -252,7 +252,7 @@ return;
                         <div className="mt-0.5 text-xs text-text-muted">Lacak pesanan, simpan alamat, dan lebih banyak lagi.</div>
                         <a
                             href="/auth/google"
-                            className="mt-3 flex min-h-[40px] items-center justify-center gap-2 rounded-xl bg-primary text-xs font-bold text-white transition-all active:scale-[0.98] active:bg-primary-hover"
+                            className="mt-3 flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary text-xs font-bold text-white transition-all active:scale-[0.98] active:bg-primary-hover"
                         >
                             <svg className="h-4 w-4" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
