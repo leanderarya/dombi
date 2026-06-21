@@ -256,7 +256,7 @@ class GuestOrderRecoveryTest extends TestCase
         ]);
 
         $this->assertNotNull($order->recovery_token);
-        $this->assertMatchesRegularExpression('/^[A-F0-9]{32}$/', $order->recovery_token);
+        $this->assertMatchesRegularExpression('/^[A-HJ-NP-Z2-9]{8}$/', $order->recovery_token);
     }
 
     public function test_recovery_tokens_are_unique(): void
