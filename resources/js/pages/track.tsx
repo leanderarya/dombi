@@ -106,6 +106,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
         try {
             const response = await fetch(`/track/${order.recovery_token}/cancel`, {
                 method: 'POST',
+                credentials: 'same-origin',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
