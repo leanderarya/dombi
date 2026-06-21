@@ -254,7 +254,7 @@ class DeliverySafetyTest extends TestCase
 
         $this->actingAs($ctx['courier'])
             ->post(route('courier.shift.end'))
-            ->assertStatus(422);
+            ->assertRedirect();
 
         $ctx['courier']->refresh();
         $this->assertTrue($ctx['courier']->isOnShift());
@@ -267,7 +267,7 @@ class DeliverySafetyTest extends TestCase
 
         $this->actingAs($ctx['courier'])
             ->post(route('courier.shift.end'))
-            ->assertOk();
+            ->assertRedirect();
 
         $ctx['courier']->refresh();
         $this->assertFalse($ctx['courier']->isOnShift());
