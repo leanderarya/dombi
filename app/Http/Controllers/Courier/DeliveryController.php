@@ -170,7 +170,7 @@ class DeliveryController extends Controller
         abort_unless($user->role === 'courier', 403);
 
         $deliveries = Delivery::where('courier_id', $user->id)
-            ->whereIn('status', ['waiting_pickup', 'picked_up'])
+            ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
             ->with('order')
             ->get();
 
