@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { CheckCircle2, Copy, ExternalLink, MapPin, Navigation, Phone, Share2, Store, Truck, XCircle } from 'lucide-react';
+import { CheckCircle2, Copy, MapPin, Navigation, Phone, Share2, Store, Truck, XCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import OrderSummaryCard from '@/components/customer/order-summary-card';
@@ -131,22 +131,14 @@ return;
                         </div>
 
                         {trackingUrl && (
-                            <div className="mt-3 flex gap-2">
+                            <div className="mt-3">
                                 <button
                                     type="button"
                                     onClick={handleShare}
-                                    className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
                                 >
                                     <Share2 className="h-4 w-4" />
-                                    Kirim ke WA
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => window.open(trackingUrl, '_blank')}
-                                    className="flex h-11 items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-white px-4 text-sm font-semibold text-emerald-700 active:opacity-80"
-                                >
-                                    <ExternalLink className="h-4 w-4" />
-                                    Lacak
+                                    Kirim Kode ke WhatsApp
                                 </button>
                             </div>
                         )}
