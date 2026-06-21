@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Clock, Copy, MapPin, MessageCircle, Package, Phone, RotateCcw, Share2, Store, Truck, UserCheck, XCircle, CheckCircle2, Circle, Navigation, ChevronRight, QrCode, ExternalLink, AlertTriangle } from 'lucide-react';
+import { Clock, Copy, MapPin, MessageCircle, Package, Phone, RotateCcw, Share2, Store, Truck, UserCheck, XCircle, CheckCircle2, Circle, Navigation, ChevronRight, QrCode, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { cn } from '@/lib/utils';
@@ -121,7 +121,7 @@ export default function TrackPage({ order, found, notifications = [], canCreateA
     }
 
     return (
-        <div className="min-h-dvh bg-[#fbf9f7]">
+        <div className="min-h-dvh bg-surface">
             <Head title={`Lacak ${order.order_code}`} />
 
             {/* Header */}
@@ -244,7 +244,7 @@ export default function TrackPage({ order, found, notifications = [], canCreateA
 
 function NotFoundState() {
     return (
-        <div className="min-h-dvh bg-[#fbf9f7]">
+        <div className="min-h-dvh bg-surface">
             <Head title="Lacak Pesanan" />
             <div className="mx-auto flex max-w-lg flex-col items-center justify-center px-4 py-20 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
@@ -252,7 +252,7 @@ function NotFoundState() {
                 </div>
                 <h1 className="mt-4 text-lg font-semibold text-text">Pesanan Tidak Ditemukan</h1>
                 <p className="mt-2 text-sm text-text-muted">Kode pelacakan tidak valid atau pesanan sudah tidak tersedia.</p>
-                <a href="/customer/home" className="mt-6 flex min-h-11 items-center rounded-xl bg-primary px-6 text-sm font-bold text-white transition-all active:opacity-80 active:bg-primary-hover">
+                <a href="/customer/home" className="mt-6 flex min-h-11 items-center rounded-xl bg-primary px-6 text-sm font-bold text-white transition-all active:opacity-80">
                     Kembali ke Beranda
                 </a>
             </div>
@@ -264,8 +264,8 @@ function Header({ orderCode, isPickup, orderedAt }: { orderCode: string; isPicku
     return (
         <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                <a href="/customer/home" className="flex h-10 w-10 items-center justify-center rounded-xl text-text-muted transition-colors active:bg-surface-muted">
-                    <ArrowLeft className="h-5 w-5" />
+                <a href="/customer/home" className="flex h-10 w-10 items-center justify-center rounded-xl text-text-muted transition-colors active:opacity-80">
+                    <ChevronRight className="h-5 w-5 rotate-180" />
                 </a>
                 <div className="text-center">
                     <div className="flex items-center gap-2">
@@ -397,8 +397,6 @@ function Timeline({ steps, currentStepIndex, historyMap, isPickup, isTerminal }:
     isPickup: boolean;
     isTerminal: boolean;
 }) {
-    const accentColor = isPickup ? 'blue' : 'emerald';
-
     return (
         <div className="mt-4 rounded-2xl border border-border bg-white p-4">
             <div className="flex items-center gap-2 mb-4">
@@ -408,7 +406,7 @@ function Timeline({ steps, currentStepIndex, historyMap, isPickup, isTerminal }:
                 )}>
                     {isPickup ? <Store className="h-3.5 w-3.5" /> : <Truck className="h-3.5 w-3.5" />}
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">
+                <span className="text-[13px] text-text-subtle">
                     {isPickup ? 'Status Pengambilan' : 'Status Pengiriman'}
                 </span>
             </div>
@@ -426,23 +424,23 @@ function Timeline({ steps, currentStepIndex, historyMap, isPickup, isTerminal }:
                             {!isLast && (
                                 <div className={cn(
                                     "absolute left-[11px] top-6 bottom-0 w-px",
-                                    isCompleted ? `bg-${accentColor}-200` : "bg-border"
+                                    isCompleted ? (isPickup ? "bg-blue-200" : "bg-emerald-200") : "bg-border"
                                 )} />
                             )}
                             <div className="relative shrink-0 pt-0.5">
                                 {isCompleted ? (
                                     <div className={cn(
                                         "flex h-6 w-6 items-center justify-center rounded-full",
-                                        `bg-${accentColor}-600`
+                                        isPickup ? "bg-blue-600" : "bg-emerald-600"
                                     )}>
                                         <CheckCircle2 className="h-3.5 w-3.5 text-white" />
                                     </div>
                                 ) : isCurrent ? (
                                     <div className={cn(
                                         "flex h-6 w-6 items-center justify-center rounded-full ring-2",
-                                        `bg-${accentColor}-100 ring-${accentColor}-500`
+                                        isPickup ? "bg-blue-100 ring-blue-500" : "bg-emerald-100 ring-emerald-500"
                                     )}>
-                                        <Icon className={cn("h-3 w-3", `text-${accentColor}-600`)} />
+                                        <Icon className={cn("h-3 w-3", isPickup ? "text-blue-600" : "text-emerald-600")} />
                                     </div>
                                 ) : (
                                     <div className="flex h-6 w-6 items-center justify-center">
@@ -455,7 +453,7 @@ function Timeline({ steps, currentStepIndex, historyMap, isPickup, isTerminal }:
                                     <div>
                                         <div className={cn(
                                             "text-sm font-semibold",
-                                            isCurrent ? `text-${accentColor}-700` : isCompleted ? "text-text" : "text-text-subtle"
+                                            isCurrent ? (isPickup ? "text-blue-700" : "text-emerald-700") : isCompleted ? "text-text" : "text-text-subtle"
                                         )}>
                                             {config.label}
                                         </div>
@@ -466,7 +464,7 @@ function Timeline({ steps, currentStepIndex, historyMap, isPickup, isTerminal }:
                                     {history?.created_at && (
                                         <span className={cn(
                                             "shrink-0 text-xs tabular-nums",
-                                            isCurrent ? `font-semibold text-${accentColor}-700` : "text-text-subtle"
+                                            isCurrent ? (isPickup ? "font-semibold text-blue-700" : "font-semibold text-emerald-700") : "text-text-subtle"
                                         )}>
                                             {formatTime(history.created_at)}
                                         </span>
@@ -500,7 +498,7 @@ function PickupInfoCard({ outlet, orderCode, isReadyForPickup }: {
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50">
                     <Store className="h-3.5 w-3.5 text-blue-600" />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">Ambil di Outlet</span>
+                <span className="text-[13px] text-text-subtle">Ambil di Outlet</span>
             </div>
 
             <div className="flex items-start gap-3">
@@ -525,7 +523,7 @@ function PickupInfoCard({ outlet, orderCode, isReadyForPickup }: {
             <button
                 type="button"
                 onClick={openMaps}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition-all active:opacity-80 active:bg-blue-700"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition-all active:opacity-80"
             >
                 <Navigation className="h-4 w-4" />
                 Navigasi ke Outlet
@@ -554,7 +552,7 @@ function PickupInfoCard({ outlet, orderCode, isReadyForPickup }: {
             {outlet.phone && (
                 <a
                     href={`tel:${outlet.phone}`}
-                    className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-sm font-semibold text-blue-700 transition-all active:opacity-80 active:bg-blue-100"
+                    className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-sm font-semibold text-blue-700 transition-all active:opacity-80"
                 >
                     <Phone className="h-4 w-4" />
                     Hubungi Outlet
@@ -575,7 +573,7 @@ function DeliveryInfoCard({ courier, customerAddress, isDelivering }: {
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50">
                     <Navigation className="h-3.5 w-3.5 text-emerald-600" />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">Kirim ke Alamat</span>
+                <span className="text-[13px] text-text-subtle">Kirim ke Alamat</span>
             </div>
 
             {customerAddress && (
@@ -597,7 +595,7 @@ function DeliveryInfoCard({ courier, customerAddress, isDelivering }: {
                     {courier.phone && (
                         <a
                             href={`tel:${courier.phone}`}
-                            className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-200 text-emerald-700 transition-colors active:bg-emerald-300"
+                            className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-200 text-emerald-700 transition-colors active:opacity-80"
                         >
                             <Phone className="h-4 w-4" />
                         </a>
@@ -621,7 +619,7 @@ function OrderSummary({ items, total, orderCode, orderedAt, fulfillmentType }: {
                 <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-surface-muted">
                     <Package className="h-3.5 w-3.5 text-text-muted" />
                 </div>
-                <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">Ringkasan Pesanan</span>
+                <span className="text-[13px] text-text-subtle">Ringkasan Pesanan</span>
             </div>
 
             {/* Order Info */}
@@ -674,7 +672,7 @@ function TrackingLinkCard({ trackingUrl, copied, onCopy, onShare, onWhatsApp }: 
 }) {
     return (
         <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-2">Bagikan Link Pelacakan</div>
+            <div className="text-[13px] text-text-subtle mb-2">Bagikan Link Pelacakan</div>
             <div className="rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold tabular-nums text-text break-all">
                 {trackingUrl}
             </div>
@@ -682,7 +680,7 @@ function TrackingLinkCard({ trackingUrl, copied, onCopy, onShare, onWhatsApp }: 
                 <button
                     type="button"
                     onClick={onCopy}
-                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-bold text-text transition-all active:opacity-80 active:bg-surface-muted"
+                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-bold text-text transition-all active:opacity-80"
                 >
                     <Copy className="h-3.5 w-3.5" />
                     {copied ? 'Tersalin' : 'Salin'}
@@ -690,7 +688,7 @@ function TrackingLinkCard({ trackingUrl, copied, onCopy, onShare, onWhatsApp }: 
                 <button
                     type="button"
                     onClick={onShare}
-                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-white transition-all active:opacity-80 active:bg-primary-hover"
+                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-white transition-all active:opacity-80"
                 >
                     <Share2 className="h-3.5 w-3.5" />
                     Share
@@ -698,7 +696,7 @@ function TrackingLinkCard({ trackingUrl, copied, onCopy, onShare, onWhatsApp }: 
                 <button
                     type="button"
                     onClick={onWhatsApp}
-                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 transition-all active:opacity-80 active:bg-emerald-100"
+                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 transition-all active:opacity-80"
                 >
                     <MessageCircle className="h-3.5 w-3.5" />
                     WA
@@ -716,21 +714,17 @@ function TerminalStateInfo({ status, statusConfig, rejectionReason, rejectionNot
     cancellationReason?: string;
     cancellationNote?: string;
 }) {
-    const color = statusConfig.color || 'red';
-    const borderColor = `border-${color}-200`;
-    const bgColor = `bg-${color}-50`;
-    const textColor = `text-${color}-800`;
-    const labelColor = `text-${color}-600`;
+    const isAmber = status === 'failed_delivery' || status === 'expired';
 
     return (
-        <div className={cn("mt-4 rounded-2xl border p-4", borderColor, bgColor)}>
+        <div className={cn("mt-4 rounded-2xl border p-4", isAmber ? "border-amber-200 bg-amber-50" : "border-red-200 bg-red-50")}>
             <div className="flex items-center gap-2 mb-2">
-                <statusConfig.icon className={cn("h-4 w-4", labelColor)} />
-                <span className={cn("text-[11px] font-bold uppercase tracking-wider", labelColor)}>
+                <statusConfig.icon className={cn("h-4 w-4", isAmber ? "text-amber-600" : "text-red-600")} />
+                <span className={cn("text-[13px]", isAmber ? "text-amber-600" : "text-red-600")}>
                     {statusConfig.label}
                 </span>
             </div>
-            <div className={cn("text-sm font-semibold", textColor)}>{statusConfig.description}</div>
+            <div className={cn("text-sm font-semibold", isAmber ? "text-amber-800" : "text-red-800")}>{statusConfig.description}</div>
 
             {status === 'rejected_by_outlet' && rejectionReason && (
                 <div className="mt-2 text-xs text-red-700">
@@ -755,15 +749,13 @@ function StickyBottomBar({ isPickup, status, statusConfig, outletPhone }: {
     statusConfig: any;
     outletPhone?: string;
 }) {
-    const accentColor = isPickup ? 'blue' : 'emerald';
-
     return (
         <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-4 pb-[env(safe-area-inset-bottom)] pt-3 backdrop-blur">
             <div className="mx-auto max-w-lg">
                 <div className="flex items-center justify-between mb-2">
                     <div>
-                        <div className="text-[11px] font-medium text-text-subtle uppercase">Status</div>
-                        <div className={cn("text-sm font-semibold", `text-${accentColor}-700`)}>
+                        <div className="text-[13px] text-text-subtle">Status</div>
+                        <div className={cn("text-sm font-semibold", isPickup ? "text-blue-700" : "text-emerald-700")}>
                             {statusConfig.label}
                         </div>
                     </div>
@@ -772,7 +764,7 @@ function StickyBottomBar({ isPickup, status, statusConfig, outletPhone }: {
                             href={`tel:${outletPhone}`}
                             className={cn(
                                 "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all active:opacity-80",
-                                `bg-${accentColor}-100 text-${accentColor}-700`
+                                isPickup ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"
                             )}
                         >
                             <Phone className="h-4 w-4" />
@@ -782,7 +774,7 @@ function StickyBottomBar({ isPickup, status, statusConfig, outletPhone }: {
                     {!isPickup && status === 'delivering' && (
                         <div className={cn(
                             "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold",
-                            `bg-${accentColor}-100 text-${accentColor}-700`
+                            isPickup ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"
                         )}>
                             <Truck className="h-4 w-4" />
                             Dalam Perjalanan
@@ -805,7 +797,7 @@ function TerminalCTA({ orderId, isCancelled, isRejected }: {
                 {!isCancelled && !isRejected && (
                     <a
                         href={`/customer/orders/${orderId}/restore-cart`}
-                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white transition-all active:opacity-80 active:bg-primary-hover"
+                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white transition-all active:opacity-80"
                     >
                         <RotateCcw className="h-4 w-4" />
                         Pesan Lagi
@@ -869,7 +861,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
 
     return (
         <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Buat Akun</div>
+            <div className="text-[13px] text-emerald-600">Buat Akun</div>
             <div className="mt-2 text-sm text-emerald-800">
                 Buat akun untuk melacak pesanan, menyimpan alamat, dan memesan lebih mudah.
             </div>
@@ -878,7 +870,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                 <button
                     type="button"
                     onClick={() => setShowForm(true)}
-                    className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700"
+                    className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80"
                 >
                     Buat Akun Sekarang
                 </button>
@@ -886,7 +878,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                 <form onSubmit={handleSubmit} className="mt-3 space-y-3">
                     <div>
                         <label className="text-xs font-medium text-emerald-700">Nomor HP (terverifikasi)</label>
-                        <div className="mt-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-700">
+                        <div                         className="mt-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text">
                             {maskedPhone}
                         </div>
                     </div>
@@ -898,7 +890,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                             onChange={(e) => setFormName(e.target.value)}
                             required
                             minLength={3}
-                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
                         />
                     </div>
                     <div>
@@ -909,7 +901,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                             onChange={(e) => setPassword(e.target.value)}
                             required
                             minLength={8}
-                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
                         />
                     </div>
                     <div>
@@ -920,7 +912,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                             onChange={(e) => setPasswordConfirmation(e.target.value)}
                             required
                             minLength={8}
-                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
                         />
                     </div>
 
@@ -931,7 +923,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700 disabled:opacity-50"
+                        className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 disabled:opacity-50"
                     >
                         {loading ? 'Membuat Akun...' : 'Daftar'}
                     </button>
