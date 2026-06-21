@@ -89,7 +89,7 @@ return;
     return (
         <Link
             href={`/customer/products/${familyId}`}
-            className="flex items-center gap-3.5 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-zinc-50"
+            className="flex items-center gap-3.5 px-4 py-3 active:bg-zinc-50"
         >
             {/* Image */}
             <div className="relative shrink-0">

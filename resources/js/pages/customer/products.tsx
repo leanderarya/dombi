@@ -260,24 +260,25 @@ continue;
                         {/* Divider */}
                         <div className="h-px bg-border" />
 
-                        {/* Variant Cards */}
-                        <div className="mt-3 space-y-3">
-                            {section.flavorGroups.map((group) => (
-                                <VariantListItem
-                                    key={`${group.familyId}-${group.flavor ?? 'default'}`}
-                                    variant={group.representativeVariant}
-                                    familyId={group.familyId}
-                                    familyName={group.familyName}
-                                    familyDescription={group.familyDescription}
-                                    familyBrand={group.familyBrand}
-                                    displayPrice={group.lowestPrice}
-                                    displayLabel={group.displayLabel}
-                                    onQuickAdd={
-                                        group.variants.length > 1
-                                            ? () => handleQuickAdd(group)
-                                            : undefined
-                                    }
-                                />
+                        {/* Variant Rows */}
+                        <div className="mt-2 overflow-hidden rounded-xl bg-white">
+                            {section.flavorGroups.map((group, index) => (
+                                <div key={`${group.familyId}-${group.flavor ?? 'default'}`} className={index < section.flavorGroups.length - 1 ? 'border-b border-zinc-100' : ''}>
+                                    <VariantListItem
+                                        variant={group.representativeVariant}
+                                        familyId={group.familyId}
+                                        familyName={group.familyName}
+                                        familyDescription={group.familyDescription}
+                                        familyBrand={group.familyBrand}
+                                        displayPrice={group.lowestPrice}
+                                        displayLabel={group.displayLabel}
+                                        onQuickAdd={
+                                            group.variants.length > 1
+                                                ? () => handleQuickAdd(group)
+                                                : undefined
+                                        }
+                                    />
+                                </div>
                             ))}
                         </div>
                     </div>
