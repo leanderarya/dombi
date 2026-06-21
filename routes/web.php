@@ -82,7 +82,6 @@ Route::middleware(['customer.inertia'])->group(function (): void {
     }
 
     Route::get('/track/{token}', TrackController::class)->middleware('throttle:track')->name('track');
-    Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware('throttle:6,1')->name('track.cancel');
 
     // Customer routes
     Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->group(function (): void {
@@ -137,6 +136,9 @@ Route::middleware(['customer.inertia'])->group(function (): void {
         Route::post('/cart/restore', [CartController::class, 'restore'])->name('cart.restore');
     });
 });
+
+// Guest cancel route — outside customer.inertia middleware to avoid auth redirect
+Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware('throttle:6,1')->name('track.cancel');
 
 Route::middleware(['internal.inertia'])->group(function (): void {
     // System endpoints
