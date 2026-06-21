@@ -1,5 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, Copy, MapPin, Share2, Truck, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Copy, MapPin, Navigation, Phone, Share2, Store, Truck, XCircle } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import OrderSummaryCard from '@/components/customer/order-summary-card';
 import OrderTimeline from '@/components/customer/order-timeline';
@@ -92,6 +93,91 @@ return;
                         {orderStatusLabel(order.status)}
                     </span>
                 </div>
+
+                {/* Pickup Info Card */}
+                {order.fulfillment_type === 'pickup' && order.outlet && (
+                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50">
+                                <Store className="h-3.5 w-3.5 text-blue-600" />
+                            </div>
+                            <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">Ambil di Outlet</span>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
+                                <Store className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="text-sm font-semibold text-text">{order.outlet.name}</div>
+                                {order.outlet.address && (
+                                    <div className="mt-0.5 text-xs text-text-muted">{order.outlet.address}</div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* QR Code when ready_for_pickup */}
+                        {order.status === 'ready_for_pickup' && (
+                            <div className="mt-4 rounded-xl bg-surface-muted p-4 flex flex-col items-center">
+                                <QRCodeSVG
+                                    value={order.order_code}
+                                    size={180}
+                                    bgColor="#f4f4f5"
+                                    fgColor="#1e40af"
+                                    level="M"
+                                    marginSize={0}
+                                />
+                                <div className="mt-2 text-center">
+                                    <div className="text-sm font-bold tracking-wider text-blue-700">{order.order_code}</div>
+                                    <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Navigation Button */}
+                        {order.outlet.latitude && order.outlet.longitude && (
+                            <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition-all active:scale-[0.98] active:bg-blue-700"
+                            >
+                                <Navigation className="h-4 w-4" />
+                                Navigasi ke Outlet
+                            </a>
+                        )}
+
+                        {/* Pickup Instructions */}
+                        <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
+                            <div className="text-xs font-semibold text-blue-800 mb-2">Cara Mengambil:</div>
+                            <ol className="space-y-1.5 text-xs text-blue-700">
+                                <li className="flex items-start gap-2">
+                                    <span className="font-semibold text-blue-800">1.</span>
+                                    <span>Datang ke outlet yang tertera di atas</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="font-semibold text-blue-800">2.</span>
+                                    <span>Tunjukkan <span className="font-bold">QR code</span> di atas ke kasir</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <span className="font-semibold text-blue-800">3.</span>
+                                    <span>Ambil pesanan Anda</span>
+                                </li>
+                            </ol>
+                        </div>
+
+                        {/* Contact Outlet */}
+                        {order.outlet.phone && (
+                            <a
+                                href={`tel:${order.outlet.phone}`}
+                                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-sm font-semibold text-blue-700 transition-all active:scale-[0.98] active:bg-blue-100"
+                            >
+                                <Phone className="h-4 w-4" />
+                                Hubungi Outlet
+                            </a>
+                        )}
+                    </div>
+                )}
 
                 {/* Tracking Code */}
                 {order.recovery_token && (
