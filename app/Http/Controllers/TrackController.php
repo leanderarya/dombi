@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Services\OrderStatusService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 
 class TrackController extends Controller
@@ -141,15 +142,14 @@ class TrackController extends Controller
         return $parts[0].' '.strtoupper($parts[1][0]).'.';
     }
 
-    public function cancel(string $token, Request $request, OrderStatusService $orderStatusService): RedirectResponse
+    public function cancel(string $token, Request $request, OrderStatusService $orderStatusService): JsonResponse|RedirectResponse
     {
         $order = Order::query()
             ->where('recovery_token', strtoupper($token))
             ->first();
 
         if (! $order) {
-            return redirect()->route('track', ['token' => $token])
-                ->with('error', 'Pesanan tidak ditemukan.');
+            return response()->json(['success' => false, 'error' => 'Pesanan tidak ditemukan.'], 404);
         }
 
         $allowedStatuses = [
@@ -159,23 +159,24 @@ class TrackController extends Controller
         ];
 
         if (! in_array($order->status, $allowedStatuses, true)) {
-            return redirect()->route('track', ['token' => $token])
-                ->with('error', 'Pesanan tidak dapat dibatalkan pada status ini.');
+            return response()->json(['success' => false, 'error' => 'Pesanan tidak dapat dibatalkan pada status ini.'], 422);
         }
 
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             'reason' => 'required|string',
             'note' => 'nullable|string|max:500',
         ]);
 
-        try {
-            $orderStatusService->cancelByCustomer($order, $validated['reason'], $validated['note'] ?? null);
-        } catch (ValidationException $e) {
-            return redirect()->route('track', ['token' => $token])
-                ->with('error', $e->getMessage());
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        return redirect()->route('track', ['token' => $token])
-            ->with('success', 'Pesanan berhasil dibatalkan.');
+        try {
+            $orderStatusService->cancelByCustomer($order, $request->input('reason'), $request->input('note'));
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Pesanan berhasil dibatalkan.']);
     }
 }

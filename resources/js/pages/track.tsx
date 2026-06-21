@@ -66,6 +66,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     const [copied, setCopied] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const cancelForm = useForm({ reason: '', note: '' });
+    const [cancelError, setCancelError] = useState<string | null>(null);
 
     if (!found || !order) {
         return <NotFoundState />;
@@ -93,10 +94,45 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
         }
     }
 
-    function handleCancel() {
-        cancelForm.post(`/track/${order.recovery_token}/cancel`, {
-            onSuccess: () => setCancelDialogOpen(false),
-        });
+    const [cancelLoading, setCancelLoading] = useState(false);
+
+    async function handleCancel() {
+        if (!cancelForm.data.reason) return;
+
+        setCancelLoading(true);
+        cancelForm.clearErrors();
+        setCancelError(null);
+
+        try {
+            const response = await fetch(`/track/${order.recovery_token}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                },
+                body: JSON.stringify({
+                    reason: cancelForm.data.reason,
+                    note: cancelForm.data.note || null,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setCancelDialogOpen(false);
+                // Reload page to show cancelled status
+                window.location.reload();
+            } else if (data.errors) {
+                cancelForm.setErrors(data.errors);
+            } else {
+                setCancelError(data.error || 'Gagal membatalkan pesanan.');
+            }
+        } catch {
+            setCancelError('Gagal membatalkan pesanan. Periksa koneksi Anda.');
+        } finally {
+            setCancelLoading(false);
+        }
     }
 
     return (
@@ -513,6 +549,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
 
                 {cancelForm.errors.reason && <p className="mt-2 text-xs text-red-600">{cancelForm.errors.reason}</p>}
                 {cancelForm.errors.note && <p className="mt-1 text-xs text-red-600">{cancelForm.errors.note}</p>}
+                {cancelError && <p className="mt-2 text-sm font-medium text-red-600">{cancelError}</p>}
 
                 <div className="mt-4 flex gap-2">
                     <button
@@ -525,10 +562,10 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
                     <button
                         type="button"
                         onClick={handleCancel}
-                        disabled={!cancelForm.data.reason || cancelForm.processing}
+                        disabled={!cancelForm.data.reason || cancelLoading}
                         className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
                     >
-                        {cancelForm.processing ? 'Membatalkan...' : 'Ya, Batalkan'}
+                        {cancelLoading ? 'Membatalkan...' : 'Ya, Batalkan'}
                     </button>
                 </div>
             </Dialog>
