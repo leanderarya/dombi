@@ -79,8 +79,8 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
 
             {errors?.status && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{errors.status}</div>}
 
-            {/* Items */}
-            <SectionCard label="Pesanan" className="mb-4">
+            {/* Order: Items + Delivery */}
+            <SectionCard label="Pesanan">
                 <div className="mt-2 space-y-2">
                     {order.items.map((item: any) => (
                         <div key={item.id} className="flex justify-between text-sm">
@@ -95,48 +95,48 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                 <div className="mt-3 border-t pt-3 text-right">
                     <span className="text-lg font-semibold">Rp {Number(order.total).toLocaleString('id-ID')}</span>
                 </div>
-            </SectionCard>
 
-            {/* Delivery Info */}
-            <SectionCard label="Pengiriman" className="mt-4">
-                {order.delivery ? (
-                    <div className="mt-2 space-y-2">
-                        <DeliveryStatusBadge status={order.delivery.status} />
-                        <div className="text-sm">Kurir: {order.delivery.courier?.name ?? '-'}</div>
-                        <div className="text-sm">Pickup: {order.delivery.pickup_time ? new Date(order.delivery.pickup_time).toLocaleString('id-ID') : '-'}</div>
-                        <div className="text-sm">Selesai: {order.delivery.delivered_time ? new Date(order.delivery.delivered_time).toLocaleString('id-ID') : '-'}</div>
-                    </div>
-                ) : isReadyForPickup ? (
-                    <form onSubmit={(e) => {
- e.preventDefault(); assignForm.post(`/outlet/orders/${order.id}/assign-courier`); 
-}} className="mt-2 space-y-3">
-                        <select value={assignForm.data.courier_id} onChange={(e) => assignForm.setData('courier_id', e.target.value)} className="w-full min-h-[44px] rounded-lg border border-zinc-200 px-3 text-sm">
-                            {couriers.map((courier: any) => <option key={courier.id} value={courier.id}>{courier.name}</option>)}
-                        </select>
-                        {assignForm.errors.courier_id && <div className="text-xs text-red-600">{assignForm.errors.courier_id}</div>}
-                        <button className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white active:bg-emerald-800">Assign Kurir</button>
-                    </form>
-                ) : isReadyForCustomerPickup ? (
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                        <div className="text-sm font-semibold text-emerald-700">Siap Diambil Customer</div>
-                        <div className="mt-1 text-xs text-emerald-600">
-                            Pesanan sudah siap. Serahkan ke customer saat datang mengambil.
+                <div className="mt-4 border-t border-border pt-4">
+                    <div className="mb-2 text-[13px] text-text-subtle">Pengiriman</div>
+                    {order.delivery ? (
+                        <div className="space-y-2">
+                            <DeliveryStatusBadge status={order.delivery.status} />
+                            <div className="text-sm">Kurir: {order.delivery.courier?.name ?? '-'}</div>
+                            <div className="text-sm">Pickup: {order.delivery.pickup_time ? new Date(order.delivery.pickup_time).toLocaleString('id-ID') : '-'}</div>
+                            <div className="text-sm">Selesai: {order.delivery.delivered_time ? new Date(order.delivery.delivered_time).toLocaleString('id-ID') : '-'}</div>
                         </div>
-                        <button
-                            onClick={() => router.post(`/outlet/orders/${order.id}/complete-pickup`)}
-                            className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
-                        >
-                            Serahkan ke Customer
-                        </button>
-                    </div>
-                ) : (
-                    <div className="mt-2 text-sm text-zinc-500">Delivery tersedia setelah siap diambil.</div>
-                )}
+                    ) : isReadyForPickup ? (
+                        <form onSubmit={(e) => {
+ e.preventDefault(); assignForm.post(`/outlet/orders/${order.id}/assign-courier`); 
+}} className="space-y-3">
+                            <select value={assignForm.data.courier_id} onChange={(e) => assignForm.setData('courier_id', e.target.value)} className="w-full min-h-[44px] rounded-lg border border-zinc-200 px-3 text-sm">
+                                {couriers.map((courier: any) => <option key={courier.id} value={courier.id}>{courier.name}</option>)}
+                            </select>
+                            {assignForm.errors.courier_id && <div className="text-xs text-red-600">{assignForm.errors.courier_id}</div>}
+                            <button className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white active:bg-emerald-800">Assign Kurir</button>
+                        </form>
+                    ) : isReadyForCustomerPickup ? (
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                            <div className="text-sm font-semibold text-emerald-700">Siap Diambil Customer</div>
+                            <div className="mt-1 text-xs text-emerald-600">
+                                Pesanan sudah siap. Serahkan ke customer saat datang mengambil.
+                            </div>
+                            <button
+                                onClick={() => router.post(`/outlet/orders/${order.id}/complete-pickup`)}
+                                className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
+                            >
+                                Serahkan ke Customer
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="text-sm text-zinc-500">Delivery tersedia setelah siap diambil.</div>
+                    )}
+                </div>
             </SectionCard>
 
-            {/* Customer Info */}
-            <SectionCard label="Customer" className="mt-4">
-                <div className="mt-2 space-y-1.5 text-sm">
+            {/* Customer + Notes + Rejection */}
+            <SectionCard label="Customer">
+                <div className="space-y-1.5 text-sm">
                     <div className="font-medium">{order.customer_name}</div>
                     <div className="text-slate-600">{order.customer_phone}</div>
                     <div className="text-slate-600">{order.customer_address}</div>
@@ -158,23 +158,28 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                         Buka di Maps
                     </a>
                 )}
-                {order.notes && <div className="mt-3 rounded-lg bg-zinc-50 p-3 text-sm">{order.notes}</div>}
+
+                {order.status === 'rejected_by_outlet' && order.rejection_reason && (
+                    <div className="mt-4 border-t border-border pt-4">
+                        <div className="flex items-center gap-2">
+                            <StatusBadge variant="danger" size="sm">Ditolak</StatusBadge>
+                            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pesanan Ditolak</span>
+                        </div>
+                        <div className="mt-1 text-sm text-slate-700">{order.rejection_reason}</div>
+                        {order.rejection_note && <div className="mt-1 text-xs text-slate-500">{order.rejection_note}</div>}
+                    </div>
+                )}
+
+                {order.notes && (
+                    <div className="mt-4 border-t border-border pt-4">
+                        <div className="mb-2 text-[13px] text-text-subtle">Catatan</div>
+                        <div className="rounded-lg bg-zinc-50 p-3 text-sm">{order.notes}</div>
+                    </div>
+                )}
             </SectionCard>
 
-            {/* Rejection Info */}
-            {order.status === 'rejected_by_outlet' && order.rejection_reason && (
-                <SectionCard className="mt-4">
-                    <div className="flex items-center gap-2">
-                        <StatusBadge variant="danger" size="sm">Ditolak</StatusBadge>
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Pesanan Ditolak</span>
-                    </div>
-                    <div className="mt-1 text-sm text-slate-700">{order.rejection_reason}</div>
-                    {order.rejection_note && <div className="mt-1 text-xs text-slate-500">{order.rejection_note}</div>}
-                </SectionCard>
-            )}
-
             {/* Timeline */}
-            <SectionCard label="Timeline" className="mt-4">
+            <SectionCard label="Timeline">
                 <div className="mt-2 space-y-3">
                     {order.status_histories.map((history: any) => (
                         <div key={history.id} className="border-l-2 border-emerald-200 pl-3">
