@@ -23,6 +23,7 @@ use App\Http\Controllers\Outlet\DeliveryController as OutletDeliveryController;
 use App\Http\Controllers\Outlet\ExchangeController as OutletExchangeController;
 use App\Http\Controllers\Outlet\InventoryController as OutletInventoryController;
 use App\Http\Controllers\Outlet\OrderController as OutletOrderController;
+use App\Http\Controllers\Outlet\ScanController as OutletScanController;
 use App\Http\Controllers\Outlet\ReportController as OutletReportController;
 use App\Http\Controllers\Outlet\RestockController as OutletRestockController;
 use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
@@ -267,6 +268,8 @@ Route::middleware(['internal.inertia'])->group(function (): void {
         Route::post('/orders/{order}/reject', [OutletOrderController::class, 'reject'])->name('orders.reject');
         Route::post('/orders/{order}/assign-courier', [OutletOrderController::class, 'assignCourier'])->name('orders.assign-courier');
         Route::post('/orders/{order}/complete-pickup', [OutletOrderController::class, 'completePickup'])->name('orders.complete-pickup');
+        Route::get('/scan', [OutletScanController::class, 'index'])->name('scan');
+        Route::get('/scan/{order_code}', [OutletScanController::class, 'lookup'])->name('scan.lookup');
         Route::get('/restocks', [OutletRestockController::class, 'index'])->name('restocks.index');
         Route::get('/restocks/create', [OutletRestockController::class, 'create'])->name('restocks.create');
         Route::post('/restocks', [OutletRestockController::class, 'store'])->name('restocks.store');

@@ -113,7 +113,8 @@ class MilestoneEighthTest extends TestCase
     public function test_outlet_dashboard_responds_quickly(): void
     {
         $outletUser = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
-        Outlet::create(['user_id' => $outletUser->id, 'name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
+        $outlet = Outlet::create(['user_id' => $outletUser->id, 'name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
+        $outletUser->update(['outlet_id' => $outlet->id]);
 
         $this->actingAs($outletUser)
             ->get('/outlet/dashboard')

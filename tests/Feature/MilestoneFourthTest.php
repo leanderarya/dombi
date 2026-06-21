@@ -225,6 +225,7 @@ class MilestoneFourthTest extends TestCase
             'address' => 'Jl. Banyumanik',
             'status' => 'active',
         ]);
+        $outletUser->update(['outlet_id' => $outlet->id]);
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',

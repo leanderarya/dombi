@@ -401,6 +401,7 @@ class MilestoneSixthTest extends TestCase
             'longitude' => 110.4216000,
             'status' => 'active',
         ]);
+        $outletUser->update(['outlet_id' => $outlet->id]);
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
@@ -504,6 +505,7 @@ class MilestoneSixthTest extends TestCase
             'address' => 'Jl. Restock',
             'status' => 'active',
         ]);
+        $outletUser->update(['outlet_id' => $outlet->id]);
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',

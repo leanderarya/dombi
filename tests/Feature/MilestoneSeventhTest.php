@@ -68,6 +68,7 @@ class MilestoneSeventhTest extends TestCase
     {
         $outletUser = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
         $outlet = Outlet::create(['user_id' => $outletUser->id, 'name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
+        $outletUser->update(['outlet_id' => $outlet->id]);
         $product = Product::create(['name' => 'Susu', 'slug' => 'susu-outlet', 'unit' => 'botol', 'price' => 25000, 'is_active' => true]);
         OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 1, 'reserved_stock' => 0, 'minimum_stock' => 3]);
 

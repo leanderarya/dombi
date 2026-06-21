@@ -127,7 +127,7 @@ class AuthRedirectTraceTest extends TestCase
     public function test_outlet_can_access_outlet_dashboard(): void
     {
         $outlet = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
-        Outlet::create([
+        $outletModel = Outlet::create([
             'user_id' => $outlet->id,
             'name' => 'Test Outlet',
             'kelurahan' => 'Test',
@@ -135,7 +135,7 @@ class AuthRedirectTraceTest extends TestCase
             'address' => 'Jl. Test',
             'status' => 'active',
         ]);
-        $outlet->update(['outlet_id' => $outlet->outlet->id]);
+        $outlet->update(['outlet_id' => $outletModel->id]);
         $this->actingAs($outlet)->get('/outlet/dashboard')->assertOk();
     }
 

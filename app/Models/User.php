@@ -7,12 +7,13 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'provider', 'provider_id', 'avatar'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'provider', 'provider_id', 'avatar', 'role', 'outlet_id', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -48,9 +49,9 @@ class User extends Authenticatable
         return $this->hasMany(RestockRequest::class, 'requested_by');
     }
 
-    public function outlet(): HasOne
+    public function outlet(): BelongsTo
     {
-        return $this->hasOne(Outlet::class);
+        return $this->belongsTo(Outlet::class);
     }
 
     public function customer(): HasOne

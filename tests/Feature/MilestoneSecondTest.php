@@ -101,6 +101,7 @@ class MilestoneSecondTest extends TestCase
             'address' => 'Alamat outlet',
             'status' => 'active',
         ]);
+        $user->update(['outlet_id' => $outlet->id]);
 
         return [$user, $outlet];
     }
