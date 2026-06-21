@@ -3,6 +3,7 @@ import { CheckCircle2, Circle, Clock, Package, Truck, UserCheck, XCircle, Timer 
 type TimelineStep = {
     key: string;
     label: string;
+    pickupLabel?: string;
     icon: typeof CheckCircle2;
 };
 
@@ -10,7 +11,7 @@ const TIMELINE_STEPS: TimelineStep[] = [
     { key: 'pending_confirmation', label: 'Pesanan Dibuat', icon: Clock },
     { key: 'confirmed', label: 'Outlet Menerima Pesanan', icon: Package },
     { key: 'preparing', label: 'Pesanan Sedang Disiapkan', icon: Package },
-    { key: 'ready_for_pickup', label: 'Pesanan Siap', icon: Package },
+    { key: 'ready_for_pickup', label: 'Menunggu Kurir', pickupLabel: 'Siap Diambil', icon: Package },
     { key: 'picked_up', label: 'Kurir Mengambil Pesanan', icon: UserCheck },
     { key: 'delivering', label: 'Dalam Perjalanan', icon: Truck },
     { key: 'completed', label: 'Pesanan Selesai', icon: CheckCircle2 },
@@ -114,7 +115,7 @@ export default function OrderTimeline({ currentStatus, histories = [], fulfillme
                             <div className="min-w-0 flex-1 pt-0.5">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className={`text-sm font-semibold ${isCurrent ? (isTerminal ? 'text-red-700' : 'text-emerald-700') : isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
-                                        {step.label}
+                                        {getStepLabel(step, fulfillmentType)}
                                     </div>
                                     {history?.created_at && (
                                         <span className={`shrink-0 text-xs tabular-nums ${isCurrent ? (isTerminal ? 'font-semibold text-red-700' : 'font-semibold text-emerald-700') : 'text-slate-400'}`}>
@@ -169,6 +170,13 @@ function getStepsForFulfillment(fulfillmentType?: string): TimelineStep[] {
     }
 
     return TIMELINE_STEPS;
+}
+
+function getStepLabel(step: TimelineStep, fulfillmentType?: string): string {
+    if (fulfillmentType === 'pickup' && step.pickupLabel) {
+        return step.pickupLabel;
+    }
+    return step.label;
 }
 
 function formatTime(value: string): string {
