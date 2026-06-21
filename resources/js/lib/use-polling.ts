@@ -1,43 +1,41 @@
+import { useEffect, useRef, useCallback } from 'react';
 import { router } from '@inertiajs/react';
-import { useEffect, useRef } from 'react';
-import { useOnline } from './use-online';
 
-/**
- * Lightweight polling hook for operational pages.
- * Only polls when online and page is visible.
- * Default interval: 30 seconds.
- */
-export function usePolling(intervalMs: number = 30000): void {
-    const online = useOnline();
-    const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+export function usePolling(intervalMs: number = 30000, only: string[] = []) {
+    const isOnline = useRef(true);
+    const isVisible = useRef(true);
+
+    const handleOnline = useCallback(() => {
+        isOnline.current = true;
+    }, []);
+
+    const handleOffline = useCallback(() => {
+        isOnline.current = false;
+    }, []);
+
+    const handleVisibilityChange = useCallback(() => {
+        isVisible.current = !document.hidden;
+    }, []);
 
     useEffect(() => {
-        if (!online) {
-return;
-}
-
-        const poll = () => {
-            if (document.visibilityState === 'visible' && navigator.onLine) {
-                router.reload({ only: ['stats', 'alerts', 'activeDeliveries', 'recentOrders', 'lowStockItems'] });
-            }
-        };
-
-        timerRef.current = setInterval(poll, intervalMs);
-
-        const handleVisibility = () => {
-            if (document.visibilityState === 'visible') {
-                poll();
-            }
-        };
-
-        document.addEventListener('visibilitychange', handleVisibility);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
         return () => {
-            if (timerRef.current) {
-clearInterval(timerRef.current);
-}
-
-            document.removeEventListener('visibilitychange', handleVisibility);
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
-    }, [online, intervalMs]);
+    }, [handleOnline, handleOffline, handleVisibilityChange]);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (isOnline.current && isVisible.current) {
+                router.reload({ only: only.length > 0 ? only : undefined });
+            }
+        }, intervalMs);
+
+        return () => clearInterval(interval);
+    }, [intervalMs, only]);
 }
