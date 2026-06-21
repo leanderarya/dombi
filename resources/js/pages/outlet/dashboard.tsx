@@ -9,7 +9,7 @@ import { usePolling } from '@/lib/use-polling';
 export default function OutletDashboard({ outlet, stats, deliveryStats, lowStockItems }: any) {
     usePolling(20000);
 
-    const todayOrders = stats.pendingOrders + stats.preparingOrders + stats.readyForPickupOrders;
+    const todayOrders = stats.pendingOrders + stats.preparingOrders + stats.readyForCustomerPickup;
     const pendingTasks = stats.pendingOrders + deliveryStats.failed + deliveryStats.needsDispatch + lowStockItems.length;
     const hasActions = pendingTasks > 0;
     const hasActivity = todayOrders > 0 || pendingTasks > 0 || deliveryStats.completedToday > 0 || deliveryStats.inTransit > 0 || lowStockItems.length > 0;
@@ -105,7 +105,7 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                 <div className="mt-1 grid grid-cols-4 gap-2">
                     <QueueItem label="Baru" value={stats.pendingOrders} alert={stats.pendingOrders > 0} />
                     <QueueItem label="Diproses" value={stats.preparingOrders} />
-                    <QueueItem label="Siap Pickup" value={stats.readyForPickupOrders} />
+                    <QueueItem label="Siap Diambil" value={stats.readyForCustomerPickup} />
                     <QueueItem label="Menunggu Kurir" value={deliveryStats.waitingPickup} />
                 </div>
             </SectionCard>

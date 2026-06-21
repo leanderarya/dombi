@@ -31,7 +31,7 @@ class DashboardController extends Controller
         $stats = [
             'pendingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'pending_confirmation')->count(),
             'preparingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'preparing')->count(),
-            'readyForPickupOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'ready_for_pickup')->count(),
+            'readyForCustomerPickup' => Order::where('outlet_id', $outlet->id)->where('status', Order::STATUS_READY_FOR_PICKUP)->where('fulfillment_type', Order::FULFILLMENT_PICKUP)->count(),
             'todayOrders' => Order::where('outlet_id', $outlet->id)->whereDate('created_at', today())->count(),
             'lowStocks' => OutletInventory::where('outlet_id', $outlet->id)
                 ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
@@ -54,7 +54,7 @@ class DashboardController extends Controller
         ];
 
         $deliveryStats = [
-            'needsDispatch' => Order::where('outlet_id', $outlet->id)->where('status', 'ready_for_pickup')->whereDoesntHave('delivery')->count(),
+            'needsDispatch' => Order::where('outlet_id', $outlet->id)->where('status', Order::STATUS_READY_FOR_PICKUP)->whereIn('fulfillment_type', Order::DELIVERY_FULFILLMENT_TYPES)->whereDoesntHave('delivery')->count(),
             'waitingPickup' => (clone $outletDeliveries)->where('status', 'waiting_pickup')->count(),
             'inTransit' => (clone $outletDeliveries)->whereIn('status', ['picked_up', 'delivering'])->count(),
             'failed' => (clone $outletDeliveries)->where('status', 'failed')->count(),
@@ -76,7 +76,7 @@ class DashboardController extends Controller
         $orderQueue = [
             'new' => $stats['pendingOrders'],
             'preparing' => $stats['preparingOrders'],
-            'ready' => $stats['readyForPickupOrders'],
+            'ready' => $stats['readyForCustomerPickup'],
             'waiting_courier' => Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
                 ->where('status', 'waiting_pickup')
                 ->count(),
