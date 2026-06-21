@@ -57,7 +57,40 @@ return;
         }
     }
 
-    function handleCancel() {
+    async function handleCancel() {
+        // Guest users on confirmation page use the track cancel endpoint
+        if (isConfirmation && order.recovery_token) {
+            try {
+                const response = await fetch(`/track/${order.recovery_token}/cancel`, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    },
+                    body: JSON.stringify({
+                        reason: cancelForm.data.reason,
+                        note: cancelForm.data.note || null,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    setCancelDialogOpen(false);
+                    window.location.reload();
+                } else {
+                    // Show error
+                    alert(data.error || 'Gagal membatalkan pesanan.');
+                }
+            } catch {
+                alert('Gagal membatalkan pesanan. Periksa koneksi Anda.');
+            }
+            return;
+        }
+
+        // Logged-in customers use the standard Inertia cancel
         cancelForm.post(`/customer/orders/${order.id}/cancel`, {
             onSuccess: () => setCancelDialogOpen(false),
         });
