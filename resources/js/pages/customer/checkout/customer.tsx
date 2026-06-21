@@ -127,7 +127,16 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
             footerSlot={<StepButton label={buttonLabel} disabled={!canContinue || form.processing} processing={form.processing} onClick={submit} />}
         >
             <Head title="Informasi Pemesan" />
-            <StepHeader title="Customer & Delivery" step="2 dari 3" backHref="/customer/checkout" />
+            <StepHeader
+                title="Informasi"
+                currentStep={1}
+                steps={[
+                    { label: 'Keranjang' },
+                    { label: 'Info' },
+                    { label: 'Bayar' },
+                ]}
+                backHref="/customer/checkout"
+            />
 
             <SectionCard label="Customer">
                 <div className="space-y-3">

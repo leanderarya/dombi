@@ -61,7 +61,16 @@ export default function CheckoutPayment({ draft, summary }: any) {
             }
         >
             <Head title="Pembayaran" />
-            <StepHeader title="Pembayaran" step="3 dari 3" backHref="/customer/checkout/customer" />
+            <StepHeader
+                title="Pembayaran"
+                currentStep={2}
+                steps={[
+                    { label: 'Keranjang' },
+                    { label: 'Info' },
+                    { label: 'Bayar' },
+                ]}
+                backHref="/customer/checkout/customer"
+            />
 
             {/* Error Banner */}
             {(submitError || Object.keys(form.errors).length > 0) && (

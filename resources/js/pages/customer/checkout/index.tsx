@@ -106,7 +106,16 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
             }
         >
             <Head title="Checkout" />
-            <StepHeader title="Checkout" step="1 dari 3" backHref="/customer/products" />
+            <StepHeader
+                title="Checkout"
+                currentStep={0}
+                steps={[
+                    { label: 'Keranjang' },
+                    { label: 'Info' },
+                    { label: 'Bayar' },
+                ]}
+                backHref="/customer/products"
+            />
 
             {items.length === 0 ? (
                 <div className="mt-6 rounded-xl bg-white p-5 text-center">
