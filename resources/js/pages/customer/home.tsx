@@ -195,23 +195,27 @@ return;
 
             {/* SECTION 2 — PESAN SEKARANG */}
             <section className="mt-6">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Pesan Sekarang</h2>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Pesan Sekarang</h2>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                     <button
                         type="button"
                         onClick={handlePickup}
-                        className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 active:bg-emerald-100"
+                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98] active:bg-emerald-100"
                     >
-                        <Store className="h-6 w-6 text-emerald-600" />
+                        <div className="transition-transform duration-200 group-hover:scale-105">
+                            <Store className="h-6 w-6 text-emerald-600" />
+                        </div>
                         <div className="text-sm font-bold text-emerald-700">Ambil di Outlet</div>
                         <div className="text-xs text-emerald-600">Tanpa antre</div>
                     </button>
                     <button
                         type="button"
                         onClick={handleDelivery}
-                        className="flex flex-col items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 active:bg-emerald-100"
+                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98] active:bg-emerald-100"
                     >
-                        <Truck className="h-6 w-6 text-emerald-600" />
+                        <div className="transition-transform duration-200 group-hover:scale-105">
+                            <Truck className="h-6 w-6 text-emerald-600" />
+                        </div>
                         <div className="text-sm font-bold text-emerald-700">Kurir Dombi</div>
                         <div className="text-xs text-emerald-600">Diantar ke rumah</div>
                     </button>
@@ -223,32 +227,32 @@ return;
                 {isLoggedIn ? (
                     <Link
                         href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
-                        className="flex items-center gap-3 rounded-2xl border border-zinc-200 bg-white px-4 py-3 shadow-sm active:bg-emerald-50"
+                        className="group flex items-center gap-3 rounded-2xl border border-border bg-white px-4 py-3 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
                     >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
                             <User className="h-5 w-5 text-emerald-600" />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <div className="text-sm font-semibold text-zinc-900">
+                            <div className="text-sm font-semibold text-text">
                                 Halo, {customerName ?? auth.user.name}
                             </div>
-                            <div className="mt-0.5 text-xs text-zinc-500">
+                            <div className="mt-0.5 text-xs text-text-muted">
                                 {activeOrder
                                     ? `Pesanan Aktif · ${activeOrder.order_code}`
                                     : 'Belum Ada Pesanan Aktif'}
                             </div>
                         </div>
-                        <svg className="h-4 w-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <svg className="h-4 w-4 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                         </svg>
                     </Link>
                 ) : (
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 px-4 py-3">
-                        <div className="text-sm font-semibold text-zinc-900">Masuk untuk fitur penuh</div>
-                        <div className="mt-0.5 text-xs text-zinc-500">Lacak pesanan, simpan alamat, dan lebih banyak lagi.</div>
+                    <div className="rounded-xl border border-border bg-emerald-50/50 px-4 py-3">
+                        <div className="text-sm font-semibold text-text">Masuk untuk fitur penuh</div>
+                        <div className="mt-0.5 text-xs text-text-muted">Lacak pesanan, simpan alamat, dan lebih banyak lagi.</div>
                         <a
                             href="/auth/google"
-                            className="mt-3 flex min-h-[40px] items-center justify-center gap-2 rounded-lg bg-emerald-600 text-xs font-bold text-white active:bg-emerald-700"
+                            className="mt-3 flex min-h-[40px] items-center justify-center gap-2 rounded-xl bg-primary text-xs font-bold text-white transition-all active:scale-[0.98] active:bg-primary-hover"
                         >
                             <svg className="h-4 w-4" viewBox="0 0 24 24">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -264,69 +268,69 @@ return;
 
             {/* SECTION 4 — YANG MENARIK DI DOMBI */}
             <section className="mt-6">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-400">Yang Menarik di Dombi</h2>
+                <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Yang Menarik di Dombi</h2>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                     <Link
                         href="/customer/products"
-                        className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-emerald-50"
+                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
                             <Milk className="h-5 w-5 text-emerald-600" />
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-zinc-900">Produk Segar</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Susu kambing pilihan setiap hari</div>
+                            <div className="text-sm font-bold text-text">Produk Segar</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Susu kambing pilihan setiap hari</div>
                         </div>
                     </Link>
 
                     <Link
                         href="/customer/products"
-                        className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-emerald-50"
+                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 transition-transform duration-200 group-hover:scale-105">
                             <MapPinned className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-zinc-900">Outlet Terdekat</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Pesanan diproses dari outlet terbaik</div>
+                            <div className="text-sm font-bold text-text">Outlet Terdekat</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Pesanan diproses dari outlet terbaik</div>
                         </div>
                     </Link>
 
                     {isLoggedIn ? (
                         <Link
                             href="/customer/orders"
-                            className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-emerald-50"
+                            className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
                         >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
                                 <Package className="h-5 w-5 text-amber-600" />
                             </div>
                             <div>
-                                <div className="text-sm font-bold text-zinc-900">Riwayat Pesanan</div>
-                                <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Lihat pesanan sebelumnya</div>
+                                <div className="text-sm font-bold text-text">Riwayat Pesanan</div>
+                                <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Lihat pesanan sebelumnya</div>
                             </div>
                         </Link>
                     ) : (
                         <a
                             href="/auth/google"
-                            className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm active:bg-emerald-50"
+                            className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
                         >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
                                 <Package className="h-5 w-5 text-amber-600" />
                             </div>
                             <div>
-                                <div className="text-sm font-bold text-zinc-900">Riwayat Pesanan</div>
-                                <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Login untuk melihat pesanan</div>
+                                <div className="text-sm font-bold text-text">Riwayat Pesanan</div>
+                                <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Login untuk melihat pesanan</div>
                             </div>
                         </a>
                     )}
 
-                    <div className="flex items-start gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+                    <div className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50">
                             <ShieldCheck className="h-5 w-5 text-purple-600" />
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-zinc-900">Kualitas Terjamin</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-zinc-500">Diproses dengan standar kualitas Dombi</div>
+                            <div className="text-sm font-bold text-text">Kualitas Terjamin</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Diproses dengan standar kualitas Dombi</div>
                         </div>
                     </div>
                 </div>
@@ -338,16 +342,16 @@ return;
                     href="https://wa.me/6281111111111"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-4 rounded-2xl border border-zinc-200 bg-white px-4 py-4 shadow-sm active:bg-emerald-50"
+                    className="group flex items-center gap-4 rounded-2xl border border-border bg-white px-4 py-4 transition-all duration-200 hover:shadow-sm active:scale-[0.98]"
                 >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
                         <MessageCircle className="h-6 w-6 text-emerald-600" />
                     </div>
                     <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold text-zinc-900">Butuh Bantuan?</div>
-                        <div className="mt-0.5 text-xs text-zinc-500">Hubungi tim Dombi via WhatsApp</div>
+                        <div className="text-sm font-bold text-text">Butuh Bantuan?</div>
+                        <div className="mt-0.5 text-xs text-text-muted">Hubungi tim Dombi via WhatsApp</div>
                     </div>
-                    <svg className="h-4 w-4 shrink-0 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg className="h-4 w-4 shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                     </svg>
                 </a>

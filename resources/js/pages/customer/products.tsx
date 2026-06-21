@@ -184,7 +184,7 @@ continue;
             <Head title="Produk" />
 
             <div className="px-4 pt-4">
-                <h1 className="text-xl font-semibold text-zinc-900">
+                <h1 className="text-xl font-semibold tracking-tight text-text">
                     Produk
                 </h1>
             </div>
@@ -192,13 +192,13 @@ continue;
             {/* Search Input */}
             <div className="sticky top-0 z-10 bg-[#fbf9f7] px-4 py-3">
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari produk..."
-                        className="w-full rounded-xl border border-zinc-200 bg-white py-2.5 pl-10 pr-4 text-sm"
+                        className="w-full rounded-xl border border-border bg-white py-2.5 pl-10 pr-4 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                     />
                 </div>
             </div>
@@ -214,7 +214,7 @@ continue;
 
             {/* Product Count */}
             <div className="mt-3 px-4">
-                <p className="text-xs text-zinc-500">{loading ? '...' : `${productCount} Produk`}</p>
+                <p className="text-xs text-text-muted">{loading ? '...' : `${productCount} Produk`}</p>
             </div>
 
             {/* Family Sections or Skeleton */}
@@ -249,16 +249,16 @@ continue;
                     >
                         {/* Family Section Header */}
                         <div className="flex items-baseline justify-between pb-2">
-                            <h2 className="text-sm font-bold text-zinc-900">
+                            <h2 className="text-sm font-bold text-text">
                                 {section.familyName}
                             </h2>
-                            <span className="text-xs text-zinc-400">
+                            <span className="text-xs text-text-subtle">
                                 {section.totalVariants} Produk
                             </span>
                         </div>
 
                         {/* Divider */}
-                        <div className="h-px bg-zinc-200" />
+                        <div className="h-px bg-border" />
 
                         {/* Variant Cards */}
                         <div className="mt-3 space-y-3">
@@ -289,11 +289,13 @@ continue;
             {/* Empty State */}
             {!loading && familySections.length === 0 && (
                 <div className="mt-12 flex flex-col items-center px-4 text-center">
-                    <span className="text-4xl">&#129371;</span>
-                    <p className="mt-3 text-sm font-semibold text-zinc-900">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
+                        <span className="text-3xl">&#129371;</span>
+                    </div>
+                    <p className="mt-3 text-sm font-semibold text-text">
                         Belum ada produk
                     </p>
-                    <p className="mt-1 text-xs text-zinc-500">
+                    <p className="mt-1 text-xs text-text-muted">
                         Produk akan segera tersedia.
                     </p>
                 </div>
