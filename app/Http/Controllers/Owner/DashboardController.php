@@ -4,13 +4,10 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExchangeRequest;
-use App\Models\Outlet;
-use App\Models\OutletInventory;
 use App\Models\ProductVariant;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
 use App\Models\SettlementPayment;
-use App\Services\SettlementAgingService;
 use App\Services\SettlementReconciliationService;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -18,7 +15,7 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(SettlementReconciliationService $reconciliationService, SettlementAgingService $agingService): Response
+    public function __invoke(SettlementReconciliationService $reconciliationService): Response
     {
         $collection = $reconciliationService->getCollectionCenter();
 
@@ -36,8 +33,6 @@ class DashboardController extends Controller
             ->count();
 
         $criticalCenterStock = $this->criticalCenterStock();
-        $outletAttention = $this->outletAttention($collection['priority_list'], $agingService);
-        $agingKpis = $agingService->getDashboardAgingKpis();
 
         return Inertia::render('owner/dashboard', [
             'hero' => [
@@ -48,18 +43,15 @@ class DashboardController extends Controller
             ],
             'kpis' => [
                 'outstandingAmount' => (float) ($collection['hero']['total_outstanding'] ?? 0),
-                'approvalsNeeded' => $pendingRestocks + $pendingReturns + $pendingExchanges,
-                'outletsNeedingAttention' => count($outletAttention),
-                'criticalCenterSkus' => $criticalCenterStock->count(),
+                'pendingActions' => $pendingRestocks + $pendingReturns + $pendingExchanges + $pendingSettlementVerifications,
+                'criticalStock' => $criticalCenterStock->count(),
             ],
-            'agingKpis' => $agingKpis,
             'actionRequired' => [
                 'restocks' => $pendingRestocks,
                 'returns' => $pendingReturns,
                 'exchanges' => $pendingExchanges,
                 'pendingSettlementVerifications' => $pendingSettlementVerifications,
             ],
-            'outletAttention' => $outletAttention,
             'settlementAlerts' => collect($collection['priority_list'] ?? [])
                 ->take(5)
                 ->map(fn (array $item) => [
@@ -111,110 +103,6 @@ class DashboardController extends Controller
             ->filter(fn (array $item) => $item['centerStock'] <= $item['threshold'])
             ->sortByDesc('shortage')
             ->values();
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $priorityList
-     * @return array<int, array{
-     *     outlet: array{id:int,name:string},
-     *     outstandingAmount: float,
-     *     pendingRestocks: int,
-     *     pendingReturns: int,
-     *     pendingExchanges: int,
-     *     pendingIssues: int,
-     *     criticalStocks: int,
-     *     daysOverdue: int,
-     *     severityScore: int,
-     *     detailHref: string
-     * }>
-     */
-    private function outletAttention(array $priorityList, SettlementAgingService $agingService): array
-    {
-        $restockCounts = RestockRequest::query()
-            ->selectRaw('outlet_id, COUNT(*) as aggregate')
-            ->where('status', 'requested')
-            ->groupBy('outlet_id')
-            ->pluck('aggregate', 'outlet_id');
-
-        $returnCounts = ReturnRequest::query()
-            ->selectRaw('outlet_id, COUNT(*) as aggregate')
-            ->where('status', ReturnRequest::STATUS_SUBMITTED)
-            ->groupBy('outlet_id')
-            ->pluck('aggregate', 'outlet_id');
-
-        $exchangeCounts = ExchangeRequest::query()
-            ->selectRaw('outlet_id, COUNT(*) as aggregate')
-            ->where('status', ExchangeRequest::STATUS_SUBMITTED)
-            ->groupBy('outlet_id')
-            ->pluck('aggregate', 'outlet_id');
-
-        $criticalStockCounts = OutletInventory::query()
-            ->selectRaw('outlet_id, COUNT(*) as aggregate')
-            ->whereRaw('(current_stock - reserved_stock) <= 0')
-            ->groupBy('outlet_id')
-            ->pluck('aggregate', 'outlet_id');
-
-        $priorityByOutlet = collect($priorityList)
-            ->mapWithKeys(fn (array $item) => [
-                (int) $item['outlet']['id'] => [
-                    'outstanding' => (float) $item['outstanding'],
-                    'days_overdue' => (int) ($item['days_overdue'] ?? 0),
-                ],
-            ]);
-
-        $items = Outlet::query()
-            ->where('status', 'active')
-            ->get(['id', 'name'])
-            ->map(function (Outlet $outlet) use ($restockCounts, $returnCounts, $exchangeCounts, $criticalStockCounts, $priorityByOutlet, $agingService): ?array {
-                $pendingRestocks = (int) ($restockCounts[$outlet->id] ?? 0);
-                $pendingReturns = (int) ($returnCounts[$outlet->id] ?? 0);
-                $pendingExchanges = (int) ($exchangeCounts[$outlet->id] ?? 0);
-                $criticalStocks = (int) ($criticalStockCounts[$outlet->id] ?? 0);
-                $outstandingAmount = (float) ($priorityByOutlet[$outlet->id]['outstanding'] ?? 0);
-                $daysOverdue = (int) ($priorityByOutlet[$outlet->id]['days_overdue'] ?? 0);
-                $pendingIssues = $pendingRestocks + $pendingReturns + $pendingExchanges;
-
-                $outstandingThreshold = 100_000;
-                $criticalSkuThreshold = 1;
-                $overdueThreshold = 7;
-
-                $meetsOutstanding = $outstandingAmount >= $outstandingThreshold;
-                $meetsCritical = $criticalStocks >= $criticalSkuThreshold;
-                $meetsPending = $pendingIssues > 0;
-                $meetsOverdue = $daysOverdue > $overdueThreshold;
-
-                if (! $meetsOutstanding && ! $meetsCritical && ! $meetsPending && ! $meetsOverdue) {
-                    return null;
-                }
-
-                $score = $agingService->calculateSeverity($outstandingAmount, $daysOverdue, $criticalStocks, $pendingIssues);
-
-                return [
-                    'outlet' => [
-                        'id' => $outlet->id,
-                        'name' => $outlet->name,
-                    ],
-                    'outstandingAmount' => $outstandingAmount,
-                    'pendingRestocks' => $pendingRestocks,
-                    'pendingReturns' => $pendingReturns,
-                    'pendingExchanges' => $pendingExchanges,
-                    'pendingIssues' => $pendingIssues,
-                    'criticalStocks' => $criticalStocks,
-                    'daysOverdue' => $daysOverdue,
-                    'severityScore' => $score,
-                    'detailHref' => '/owner/outlets/'.$outlet->id,
-                ];
-            })
-            ->filter()
-            ->values()
-            ->all();
-
-        usort($items, function (array $left, array $right): int {
-            return [$right['severityScore'], $right['outstandingAmount'], $left['outlet']['name']]
-                <=> [$left['severityScore'], $left['outstandingAmount'], $right['outlet']['name']];
-        });
-
-        return array_slice($items, 0, 5);
     }
 
     private function centerStockThreshold(ProductVariant $variant): int

@@ -31,7 +31,6 @@ class MilestoneSeventhTest extends TestCase
                 ->has('hero')
                 ->has('kpis')
                 ->has('actionRequired')
-                ->has('outletAttention')
                 ->has('settlementAlerts')
                 ->has('inventoryRisks')
             );
@@ -58,7 +57,7 @@ class MilestoneSeventhTest extends TestCase
             ->get('/owner/dashboard')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('kpis.criticalCenterSkus', 1)
+                ->where('kpis.criticalStock', 1)
                 ->has('inventoryRisks', 1)
             );
     }

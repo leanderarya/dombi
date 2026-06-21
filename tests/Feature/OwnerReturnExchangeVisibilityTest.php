@@ -65,7 +65,7 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
                 ->component('owner/dashboard')
                 ->where('actionRequired.returns', 1)
                 ->where('actionRequired.exchanges', 1)
-                ->where('kpis.approvalsNeeded', 2)
+                ->where('kpis.pendingActions', 2)
                 ->where('ownerOperationalCounts.pendingReturns', 1)
                 ->where('ownerOperationalCounts.pendingExchanges', 1)
             );
