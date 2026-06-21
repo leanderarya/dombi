@@ -40,8 +40,11 @@ export default function Home({ customerName, activeOrders }: any) {
     const [pickupOutletName, setPickupOutletName] = useState<string | null>(null);
     const { saveLocation } = useCustomerLocation();
 
-    // Auto-rotate hero slides
+    // Auto-rotate hero slides (respect prefers-reduced-motion)
     useEffect(() => {
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (prefersReducedMotion) return;
+
         const timer = setInterval(() => {
             setSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
         }, 5000);
@@ -103,10 +106,7 @@ return;
         // Use cached nearest outlet if available
         if (nearestOutlet?.name) {
             setPickupOutletName(nearestOutlet.name);
-            setTimeout(() => {
-                router.get('/customer/products');
-            }, 3000);
-
+            router.get('/customer/products');
             return;
         }
 
@@ -125,10 +125,7 @@ return;
         }
 
         setPickupOutletName(outletName ?? 'Outlet Dombi');
-
-        setTimeout(() => {
-            router.get('/customer/products');
-        }, 3000);
+        router.get('/customer/products');
     }, [nearestOutlet]);
 
     const handleDelivery = useCallback(() => {
