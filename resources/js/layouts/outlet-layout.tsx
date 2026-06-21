@@ -30,7 +30,7 @@ export default function OutletLayout({ children, title, subtitle, backHref, hide
             <NotificationBell onClick={() => setNotificationOpen(true)} />
             <button
                 onClick={() => router.post('/logout')}
-                className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 active:bg-zinc-100"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 active:bg-zinc-100"
                 aria-label="Logout"
             >
                 <LogOut className="h-4 w-4" />

@@ -52,7 +52,7 @@ export default function CreateRestock({ families, inventories }: any) {
                                     <button
                                         type="button"
                                         onClick={() => removeItem(index)}
-                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 active:bg-red-50 active:text-red-600"
+                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 active:bg-red-50 active:text-red-600"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </button>
@@ -64,7 +64,7 @@ export default function CreateRestock({ families, inventories }: any) {
                                 <select
                                     value={item.product_variant_id}
                                     onChange={(e) => setItem(index, 'product_variant_id', e.target.value)}
-                                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm"
+                                    className="mt-1 w-full min-h-[44px] rounded-lg border border-zinc-200 px-3 text-sm"
                                 >
                                     {families?.map((family: any) => (
                                         <optgroup key={family.id} label={family.name}>
@@ -101,7 +101,7 @@ export default function CreateRestock({ families, inventories }: any) {
                                     min="1"
                                     value={item.requested_quantity}
                                     onChange={(e) => setItem(index, 'requested_quantity', Number(e.target.value))}
-                                    className="mt-1 w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm"
+                                    className="mt-1 w-full min-h-[44px] rounded-lg border border-zinc-200 px-3 text-sm"
                                 />
                             </div>
                         </SectionCard>

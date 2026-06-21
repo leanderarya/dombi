@@ -193,7 +193,7 @@ export default function OutletScanPage() {
                         type="button"
                         onClick={stopScanner}
                         aria-label="Berhenti scan"
-                        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-border py-3 text-sm font-semibold text-text active:bg-surface-muted"
+                        className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-border text-sm font-semibold text-text active:bg-surface-muted"
                     >
                         <XCircle className="h-4 w-4" />
                         Berhenti Scan
@@ -230,7 +230,7 @@ export default function OutletScanPage() {
                             onChange={(e) => setManualCode(e.target.value.toUpperCase())}
                             placeholder="Masukkan kode pesanan"
                             aria-label="Kode pesanan"
-                            className="flex-1 rounded-xl border border-border px-4 py-3 text-sm font-semibold uppercase tracking-wider text-text placeholder:normal-case placeholder:tracking-normal placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                            className="flex-1 min-h-[44px] rounded-xl border border-border px-4 text-sm font-semibold uppercase tracking-wider text-text placeholder:normal-case placeholder:tracking-normal placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                         <button
                             type="submit"

@@ -109,11 +109,11 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                     <form onSubmit={(e) => {
  e.preventDefault(); assignForm.post(`/outlet/orders/${order.id}/assign-courier`); 
 }} className="mt-2 space-y-3">
-                        <select value={assignForm.data.courier_id} onChange={(e) => assignForm.setData('courier_id', e.target.value)} className="w-full rounded-lg border border-zinc-200 px-3 py-2.5 text-sm">
+                        <select value={assignForm.data.courier_id} onChange={(e) => assignForm.setData('courier_id', e.target.value)} className="w-full min-h-[44px] rounded-lg border border-zinc-200 px-3 text-sm">
                             {couriers.map((courier: any) => <option key={courier.id} value={courier.id}>{courier.name}</option>)}
                         </select>
                         {assignForm.errors.courier_id && <div className="text-xs text-red-600">{assignForm.errors.courier_id}</div>}
-                        <button className="w-full rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white active:bg-emerald-800">Assign Kurir</button>
+                        <button className="flex min-h-[44px] w-full items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white active:bg-emerald-800">Assign Kurir</button>
                     </form>
                 ) : isReadyForCustomerPickup ? (
                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
@@ -123,7 +123,7 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                         </div>
                         <button
                             onClick={() => router.post(`/outlet/orders/${order.id}/complete-pickup`)}
-                            className="mt-3 w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white active:bg-emerald-700"
+                            className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
                         >
                             Serahkan ke Customer
                         </button>

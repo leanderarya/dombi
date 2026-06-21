@@ -94,7 +94,7 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                         <StatCell label="Menunggu" value={deliveryStats.waitingPickup} />
                     </div>
 
-                    <Link href="/outlet/orders" className="mt-3 block text-center text-xs font-semibold text-primary">
+                    <Link href="/outlet/orders" className="mt-3 flex min-h-[44px] items-center justify-center text-xs font-semibold text-primary">
                         Lihat Semua Pesanan →
                     </Link>
                 </div>
@@ -116,7 +116,7 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                 <div className="mb-6">
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Rendah</h2>
-                        <Link href="/outlet/inventory" className="text-[11px] font-semibold text-primary">Lihat Semua</Link>
+                        <Link href="/outlet/inventory" className="flex min-h-[44px] items-center text-[11px] font-semibold text-primary">Lihat Semua</Link>
                     </div>
                     <div className="space-y-1.5">
                         {lowStockItems.slice(0, 3).map((item: any) => (

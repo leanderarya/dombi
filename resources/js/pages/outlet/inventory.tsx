@@ -116,7 +116,7 @@ export default function OutletInventory({ outlet, inventories }: any) {
                     <button
                         type="button"
                         onClick={() => setShowHealthy(!showHealthy)}
-                        className="flex w-full items-center justify-between rounded-xl border border-border bg-white px-4 py-3 text-left transition-colors active:bg-surface-muted"
+                        className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-border bg-white px-4 text-left transition-colors active:bg-surface-muted"
                     >
                         <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-emerald-500" />
@@ -230,7 +230,7 @@ function InventoryRow({ item, variant, compact }: { item: any; variant: 'danger'
                 <button
                     type="button"
                     onClick={() => setShowOpname(true)}
-                    className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-text-subtle transition-colors active:bg-surface-muted active:text-primary"
+                    className="ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-text-subtle transition-colors active:bg-surface-muted active:text-primary"
                     title="Stock Opname"
                 >
                     <ClipboardCheck className="h-4 w-4" />
