@@ -21,10 +21,15 @@ interface Props {
 
 export default function OwnerKpiCard({ label, value, icon, trend, color, className }: Props) {
     return (
-        <div className={cn('rounded-xl border border-border bg-surface p-4 transition-colors hover:border-border-strong', className)}>
+        <div className={cn(
+            'group rounded-xl border border-border bg-surface p-4 transition-all duration-200',
+            'hover:border-border-strong hover:shadow-sm hover:-translate-y-0.5',
+            'active:translate-y-0 active:shadow-none',
+            className
+        )}>
             <div className="flex items-center gap-2">
                 {icon && (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted transition-colors group-hover:bg-primary-light">
                         {icon}
                     </div>
                 )}
