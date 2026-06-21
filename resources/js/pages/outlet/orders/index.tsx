@@ -49,12 +49,12 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                         <Link
                             key={order.id}
                             href={`/outlet/orders/${order.id}`}
-                            className="block rounded-xl border border-zinc-200 bg-white p-4 transition-colors active:bg-zinc-50"
+                            className="group block rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:border-border-strong hover:shadow-sm active:scale-[0.99]"
                         >
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
-                                        <div className="text-sm font-bold tabular-nums text-slate-900">{order.order_code}</div>
+                                        <div className="text-sm font-bold tabular-nums text-text">{order.order_code}</div>
                                         <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${
                                             order.fulfillment_type === 'pickup'
                                                 ? 'bg-blue-50 text-blue-700'
@@ -63,11 +63,11 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                                             {order.fulfillment_type === 'pickup' ? 'Pickup' : 'Delivery'}
                                         </span>
                                     </div>
-                                    <div className="mt-0.5 text-sm text-slate-600">{order.customer_name}</div>
+                                    <div className="mt-0.5 text-sm text-text-muted">{order.customer_name}</div>
                                 </div>
                                 <OrderStatusBadge status={order.status} />
                             </div>
-                            <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                            <div className="mt-2 flex items-center justify-between text-xs text-text-subtle">
                                 <span>{order.items?.length ?? 0} item · {formatCurrency(order.total)}</span>
                                 <span>{formatDate(order.created_at)}</span>
                             </div>

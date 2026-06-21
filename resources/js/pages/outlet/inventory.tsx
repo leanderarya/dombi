@@ -163,12 +163,12 @@ function SummaryCard({ label, value, variant }: { label: string; value: number; 
     };
 
     return (
-        <div className="rounded-lg border border-zinc-200 bg-white p-2.5 text-center">
+        <div className="rounded-lg border border-border bg-white p-2.5 text-center transition-colors hover:border-border-strong">
             <div className="flex items-center justify-center gap-1">
                 {iconMap[variant]}
-                <span className="text-lg font-bold text-slate-900">{value}</span>
+                <span className="text-lg font-bold text-text">{value}</span>
             </div>
-            <div className="text-[10px] font-semibold uppercase text-slate-500">{label}</div>
+            <div className="text-[10px] font-semibold uppercase text-text-muted">{label}</div>
         </div>
     );
 }
@@ -180,22 +180,22 @@ function InventoryRow({ item, variant }: { item: any; variant: 'danger' | 'warni
 
     return (
         <>
-            <div className="flex items-center justify-between rounded-lg border border-zinc-100 bg-white p-3">
+            <div className="group flex items-center justify-between rounded-lg border border-border bg-white p-3 transition-all duration-200 hover:border-border-strong hover:shadow-sm">
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-slate-900">{displayName}</span>
+                        <span className="text-sm font-medium text-text">{displayName}</span>
                         <StatusBadge variant={variant} size="sm">
                             {variant === 'danger' ? 'Kritis' : variant === 'warning' ? 'Rendah' : 'Sehat'}
                         </StatusBadge>
                     </div>
-                    <div className="mt-0.5 text-xs text-slate-500">
+                    <div className="mt-0.5 text-xs text-text-muted">
                         Tersedia: {available} · Min: {item.minimum_stock}
                     </div>
                 </div>
                 <button
                     type="button"
                     onClick={() => setShowOpname(true)}
-                    className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 active:bg-slate-100 active:text-emerald-600"
+                    className="ml-2 flex h-8 w-8 items-center justify-center rounded-lg text-text-subtle transition-colors active:bg-surface-muted active:text-primary"
                     title="Stock Opname"
                 >
                     <ClipboardCheck className="h-4 w-4" />

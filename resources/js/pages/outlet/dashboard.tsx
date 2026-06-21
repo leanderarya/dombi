@@ -19,17 +19,20 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
             <Head title="Dashboard" />
 
             {/* Hero */}
-            <div className="mb-4 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-800 p-4 text-white">
-                <p className="text-xs font-medium text-emerald-100">Selamat datang,</p>
-                <h1 className="mt-0.5 text-lg font-bold">{outlet.name}</h1>
-                <div className="mt-3 flex gap-3">
-                    <div className="flex-1 rounded-lg bg-white/15 px-3 py-2">
-                        <div className="text-xl font-bold tabular-nums">{todayOrders}</div>
-                        <div className="text-[11px] text-emerald-100">Pesanan Hari Ini</div>
-                    </div>
-                    <div className="flex-1 rounded-lg bg-white/15 px-3 py-2">
-                        <div className="text-xl font-bold tabular-nums">{pendingTasks}</div>
-                        <div className="text-[11px] text-emerald-100">Tugas Menunggu</div>
+            <div className="relative mb-4 overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary-hover p-4 text-white">
+                <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
+                <div className="relative">
+                    <p className="text-xs font-medium text-emerald-100">Selamat datang,</p>
+                    <h1 className="mt-0.5 text-lg font-bold tracking-tight">{outlet.name}</h1>
+                    <div className="mt-3 flex gap-3">
+                        <div className="flex-1 rounded-lg bg-white/15 px-3 py-2 backdrop-blur-sm">
+                            <div className="text-xl font-bold tabular-nums">{todayOrders}</div>
+                            <div className="text-[11px] text-emerald-100">Pesanan Hari Ini</div>
+                        </div>
+                        <div className="flex-1 rounded-lg bg-white/15 px-3 py-2 backdrop-blur-sm">
+                            <div className="text-xl font-bold tabular-nums">{pendingTasks}</div>
+                            <div className="text-[11px] text-emerald-100">Tugas Menunggu</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -151,27 +154,27 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
 
 function QueueItem({ label, value, alert }: { label: string; value: number; alert?: boolean }) {
     return (
-        <div className={`rounded-lg border p-2 text-center ${alert ? 'border-amber-200 bg-amber-50' : 'border-zinc-200 bg-white'}`}>
-            <div className={`text-lg font-bold tabular-nums ${alert ? 'text-amber-700' : 'text-slate-900'}`}>{value}</div>
-            <div className="text-[10px] font-medium text-slate-500">{label}</div>
+        <div className={`rounded-lg border p-2 text-center transition-colors ${alert ? 'border-amber-200 bg-amber-50' : 'border-border bg-white hover:border-border-strong'}`}>
+            <div className={`text-lg font-bold tabular-nums ${alert ? 'text-amber-700' : 'text-text'}`}>{value}</div>
+            <div className="text-[10px] font-medium text-text-muted">{label}</div>
         </div>
     );
 }
 
 function QuickAction({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
     return (
-        <Link href={href} className="flex flex-col items-center gap-1.5 rounded-lg border border-zinc-200 bg-white p-3 active:bg-zinc-50">
-            <div className="text-emerald-700">{icon}</div>
-            <div className="text-xs font-semibold text-slate-700">{label}</div>
+        <Link href={href} className="group flex flex-col items-center gap-1.5 rounded-lg border border-border bg-white p-3 transition-all duration-200 hover:border-border-strong hover:shadow-sm active:scale-[0.98]">
+            <div className="text-primary transition-transform duration-200 group-hover:scale-105">{icon}</div>
+            <div className="text-xs font-semibold text-text">{label}</div>
         </Link>
     );
 }
 
 function MiniStat({ label, value }: { label: string; value: number }) {
     return (
-        <div className="rounded-lg border border-zinc-200 bg-white p-2.5 text-center">
-            <div className="text-lg font-bold tabular-nums text-slate-900">{value}</div>
-            <div className="text-[10px] font-medium text-slate-500">{label}</div>
+        <div className="rounded-lg border border-border bg-white p-2.5 text-center transition-colors hover:border-border-strong">
+            <div className="text-lg font-bold tabular-nums text-text">{value}</div>
+            <div className="text-[10px] font-medium text-text-muted">{label}</div>
         </div>
     );
 }
