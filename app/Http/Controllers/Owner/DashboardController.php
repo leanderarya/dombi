@@ -100,7 +100,7 @@ class DashboardController extends Controller
                     'detailHref' => '/owner/product-families/'.$variant->product_family_id,
                 ];
             })
-            ->filter(fn (array $item) => $item['centerStock'] <= $item['threshold'])
+            ->filter(fn (array $item) => $item['centerStock'] < $item['threshold'])
             ->sortByDesc('shortage')
             ->values();
     }
