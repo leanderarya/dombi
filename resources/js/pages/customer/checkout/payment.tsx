@@ -3,7 +3,6 @@ import { AlertCircle, MapPin, Store, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
-import SectionCard from '@/components/ui/section-card';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';
@@ -188,8 +187,10 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             key={option.value}
                             type="button"
                             onClick={() => form.setData('payment_method', option.value)}
-                            className={`flex min-h-[68px] w-full items-center justify-between rounded-xl border px-4 text-left transition-all active:opacity-80 ${
-                                form.data.payment_method === option.value ? 'border-emerald-500 bg-emerald-50' : 'border-border bg-white'
+                            className={`flex min-h-[68px] w-full items-center justify-between rounded-2xl px-4 text-left transition-all active:opacity-80 ${
+                                form.data.payment_method === option.value
+                                    ? 'bg-emerald-50 ring-2 ring-emerald-500'
+                                    : 'bg-white border border-border'
                             }`}
                         >
                             <div>
@@ -215,22 +216,22 @@ export default function CheckoutPayment({ draft, summary }: any) {
             </section>
 
             {/* Total Card */}
-            <section className="mt-4 rounded-xl border-2 border-emerald-200 bg-emerald-50 p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Total Pembayaran</div>
+            <section className="mt-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 p-5 text-white">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-100">Total Pembayaran</div>
                 <div className="mt-3 space-y-2">
                     <SummaryRow label="Subtotal" value={formatCurrency(summary.subtotal)} />
                     <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />
                     {paymentFee > 0 && <SummaryRow label="Biaya Pembayaran" value={formatCurrency(paymentFee)} />}
-                    <div className="border-t border-emerald-200 pt-2">
+                    <div className="border-t border-emerald-400/30 pt-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold text-emerald-900">Total</span>
-                            <span className="text-xl font-bold tabular-nums text-emerald-900">{formatCurrency(total)}</span>
+                            <span className="text-sm font-semibold text-white">Total</span>
+                            <span className="text-2xl font-bold tabular-nums text-white">{formatCurrency(total)}</span>
                         </div>
                     </div>
                 </div>
                 {deliveryBlocked && (
-                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs leading-relaxed text-red-700">
-                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+                    <div className="mt-3 flex items-start gap-2 rounded-lg bg-white/20 px-3 py-2 text-xs leading-relaxed text-white">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-white" />
                         <span>Lokasi Anda berada di luar area layanan Kurir Dombi. Silakan kembali dan ubah lokasi.</span>
                     </div>
                 )}
@@ -254,8 +255,8 @@ export default function CheckoutPayment({ draft, summary }: any) {
 function SummaryRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-center justify-between text-sm">
-            <span className="text-text-muted">{label}</span>
-            <span className="font-semibold tabular-nums text-text">{value}</span>
+            <span className="text-emerald-100">{label}</span>
+            <span className="font-semibold tabular-nums text-white">{value}</span>
         </div>
     );
 }
