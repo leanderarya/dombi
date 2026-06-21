@@ -1,11 +1,12 @@
-import { router, usePage } from '@inertiajs/react';
-import { LogOut } from 'lucide-react';
-import { useState  } from 'react';
+import { usePage } from '@inertiajs/react';
+import { User } from 'lucide-react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
-import type {PropsWithChildren} from 'react';
+import type { PropsWithChildren } from 'react';
 import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
 import OutletBottomNav from '@/components/outlet-bottom-nav';
+import OutletMoreSheet from '@/components/outlet/outlet-more-sheet';
 import MobileRoleLayout from '@/components/ui/mobile-role-layout';
 import PageHeader from '@/components/ui/page-header';
 
@@ -24,16 +25,18 @@ export default function OutletLayout({ children, title, subtitle, backHref, hide
     const page = usePage<any>();
     const { auth } = page.props;
     const [notificationOpen, setNotificationOpen] = useState(false);
+    const [moreOpen, setMoreOpen] = useState(false);
 
     const rightSlot = headerRight ?? (
         <div className="flex items-center gap-1">
             <NotificationBell onClick={() => setNotificationOpen(true)} />
             <button
-                onClick={() => router.post('/logout')}
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 active:bg-zinc-100"
-                aria-label="Logout"
+                type="button"
+                onClick={() => setMoreOpen(true)}
+                aria-label="Menu"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary"
             >
-                <LogOut className="h-4 w-4" />
+                <User className="h-5 w-5" />
             </button>
         </div>
     );
@@ -52,6 +55,7 @@ export default function OutletLayout({ children, title, subtitle, backHref, hide
             />
             {children}
             <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
+            <OutletMoreSheet open={moreOpen} onClose={() => setMoreOpen(false)} />
         </MobileRoleLayout>
     );
 }
