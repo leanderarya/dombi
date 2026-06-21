@@ -1,9 +1,25 @@
 import { Link, usePage } from '@inertiajs/react';
-import { ClipboardList, History } from 'lucide-react';
+import { ClipboardList, History, User } from 'lucide-react';
 
 const navItems = [
-    { href: '/courier/dashboard', label: 'Tugas Saya', icon: ClipboardList },
-    { href: '/courier/deliveries', label: 'Riwayat', icon: History },
+    { 
+        href: '/courier/dashboard', 
+        label: 'Tugas', 
+        icon: ClipboardList,
+        match: ['/courier/dashboard'],
+    },
+    { 
+        href: '/courier/deliveries', 
+        label: 'Riwayat', 
+        icon: History,
+        match: ['/courier/deliveries'],
+    },
+    { 
+        href: '/courier/profile', 
+        label: 'Profil', 
+        icon: User,
+        match: ['/courier/profile'],
+    },
 ];
 
 export default function CourierBottomNav() {
@@ -11,9 +27,9 @@ export default function CourierBottomNav() {
 
     return (
         <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)]">
-            <div className="mx-auto grid h-14 max-w-lg grid-cols-2">
+            <div className="mx-auto grid h-14 max-w-lg grid-cols-3">
                 {navItems.map((item) => {
-                    const active = url === item.href || url.startsWith(`${item.href}/`);
+                    const active = item.match.some((href) => url === href || url.startsWith(`${href}/`));
                     const Icon = item.icon;
 
                     return (
