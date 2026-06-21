@@ -182,13 +182,21 @@ class OrderStatusService
         return DB::transaction(function () use ($order, $reason, $note): Order {
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
 
-            if (! $order->isPendingConfirmation()) {
+            $allowedStatuses = [
+                Order::STATUS_PENDING_CONFIRMATION,
+                Order::STATUS_CONFIRMED,
+                Order::STATUS_PREPARING,
+            ];
+
+            if (! in_array($order->status, $allowedStatuses, true)) {
                 throw ValidationException::withMessages([
-                    'status' => 'Pesanan sudah tidak dalam status menunggu konfirmasi.',
+                    'status' => 'Pesanan tidak dapat dibatalkan pada status ini.',
                 ]);
             }
 
             $this->inventoryService->releaseReservedStock($order);
+
+            $fromStatus = $order->status;
 
             $order->update([
                 'status' => Order::CANCELLED_BY_CUSTOMER,
@@ -199,7 +207,7 @@ class OrderStatusService
             ]);
 
             $order->statusHistories()->create([
-                'from_status' => Order::STATUS_PENDING_CONFIRMATION,
+                'from_status' => $fromStatus,
                 'to_status' => Order::CANCELLED_BY_CUSTOMER,
                 'notes' => "Pesanan dibatalkan customer. Alasan: {$reason}",
                 'reason' => $reason,

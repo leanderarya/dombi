@@ -1,29 +1,34 @@
-import { Head, Link } from '@inertiajs/react';
-import { Clock, Copy, MapPin, MessageCircle, Package, Phone, RotateCcw, Share2, Store, Truck, UserCheck, XCircle, CheckCircle2, Circle, Navigation, ChevronRight, QrCode, ExternalLink, AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import { CheckCircle2, Clock, Copy, MapPin, Navigation, Package, Phone, Share2, Store, Truck, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { useState } from 'react';
+import OrderTimeline from '@/components/customer/order-timeline';
+import OfflineBanner from '@/components/offline-banner';
+import Dialog from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { formatCurrency, formatDate } from '@/lib/format';
-
-type HistoryItem = {
-    to_status: string;
-    notes?: string | null;
-    created_at?: string | null;
-};
 
 type TrackOrder = {
     id: number;
     order_code: string;
+    recovery_token: string;
     tracking_url: string;
     status: string;
     fulfillment_type: string;
     total: number;
+    subtotal: number;
+    delivery_fee: number;
+    payment_method: string;
     ordered_at?: string;
     outlet?: { name: string; address?: string; phone?: string; operating_hours?: string; latitude?: number; longitude?: number };
-    items: { product_name: string; quantity: number; subtotal: number }[];
-    status_histories: HistoryItem[];
+    items: { product_name: string; quantity: number; price: number; subtotal: number }[];
+    status_histories: { to_status: string; notes?: string | null; created_at?: string | null }[];
     delivery?: { courier?: { name: string; phone?: string } };
+    customer_name?: string;
+    customer_phone?: string;
     customer_address?: string;
+    customer_address_detail?: string;
+    customer_landmark?: string;
     rejection_reason?: string;
     rejection_note?: string;
     cancellation_reason?: string;
@@ -33,177 +38,433 @@ type TrackOrder = {
 type Props = {
     order: TrackOrder | null;
     found: boolean;
+    cancellationReasons?: string[];
     notifications?: { id: number; title: string; message: string; time_ago: string }[];
     canCreateAccount?: boolean;
     accountPhone?: string;
     accountName?: string;
 };
 
-// Customer-friendly status labels
-const PICKUP_STATUSES: Record<string, { label: string; description: string; icon: typeof Clock }> = {
-    pending_confirmation: { label: 'Menunggu Diproses', description: 'Outlet belum memproses pesanan Anda', icon: Clock },
-    confirmed: { label: 'Pesanan Diterima', description: 'Outlet sedang menyiapkan pesanan Anda', icon: CheckCircle2 },
-    preparing: { label: 'Sedang Disiapkan', description: 'Pesanan Anda sedang disiapkan', icon: Package },
-    ready_for_pickup: { label: 'Siap Diambil', description: 'Pesanan sudah siap, silakan ambil di outlet', icon: QrCode },
-    completed: { label: 'Sudah Diambil', description: 'Pesanan selesai', icon: CheckCircle2 },
+const STATUS_LABELS: Record<string, { label: string; description: string }> = {
+    pending_confirmation: { label: 'Menunggu Diproses', description: 'Outlet belum memproses pesanan Anda' },
+    confirmed: { label: 'Pesanan Diterima', description: 'Outlet sedang menyiapkan pesanan Anda' },
+    preparing: { label: 'Sedang Disiapkan', description: 'Pesanan Anda sedang disiapkan' },
+    ready_for_pickup: { label: 'Siap Diambil', description: 'Pesanan sudah siap, silakan ambil di outlet' },
+    picked_up: { label: 'Kurir Mengambil', description: 'Kurir sudah mengambil pesanan' },
+    delivering: { label: 'Sedang Diantar', description: 'Pesanan sedang dalam perjalanan' },
+    completed: { label: 'Selesai', description: 'Pesanan sudah selesai' },
+    cancelled_by_customer: { label: 'Dibatalkan', description: 'Anda membatalkan pesanan ini' },
+    cancelled_by_outlet: { label: 'Dibatalkan Outlet', description: 'Outlet membatalkan pesanan ini' },
+    rejected_by_outlet: { label: 'Ditolak Outlet', description: 'Outlet menolak pesanan ini' },
+    failed_delivery: { label: 'Gagal Dikirim', description: 'Pengiriman gagal' },
+    expired: { label: 'Kadaluarsa', description: 'Pesanan tidak dikonfirmasi dalam batas waktu' },
 };
 
-const DELIVERY_STATUSES: Record<string, { label: string; description: string; icon: typeof Clock }> = {
-    pending_confirmation: { label: 'Menunggu Diproses', description: 'Outlet belum memproses pesanan Anda', icon: Clock },
-    confirmed: { label: 'Pesanan Diterima', description: 'Outlet sedang menyiapkan pesanan Anda', icon: CheckCircle2 },
-    preparing: { label: 'Sedang Disiapkan', description: 'Pesanan Anda sedang disiapkan', icon: Package },
-    ready_for_pickup: { label: 'Menunggu Kurir', description: 'Pesanan siap, menunggu kurir mengambil', icon: Clock },
-    picked_up: { label: 'Kurir Mengambil', description: 'Kurir sudah mengambil pesanan dari outlet', icon: UserCheck },
-    delivering: { label: 'Sedang Diantar', description: 'Pesanan sedang dalam perjalanan ke Anda', icon: Truck },
-    completed: { label: 'Sudah Diterima', description: 'Pesanan sudah diterima', icon: CheckCircle2 },
-};
+const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
 
-const TERMINAL_STATUSES: Record<string, { label: string; description: string; icon: typeof XCircle; color: string }> = {
-    cancelled_by_customer: { label: 'Dibatalkan', description: 'Anda membatalkan pesanan ini', icon: XCircle, color: 'red' },
-    cancelled_by_outlet: { label: 'Dibatalkan Outlet', description: 'Outlet membatalkan pesanan ini', icon: XCircle, color: 'red' },
-    rejected_by_outlet: { label: 'Ditolak Outlet', description: 'Outlet menolak pesanan ini', icon: XCircle, color: 'red' },
-    failed_delivery: { label: 'Gagal Dikirim', description: 'Pengiriman gagal, silakan hubungi outlet', icon: AlertTriangle, color: 'amber' },
-    expired: { label: 'Kadaluarsa', description: 'Pesanan tidak dikonfirmasi dalam batas waktu', icon: Clock, color: 'amber' },
-};
-
-export default function TrackPage({ order, found, notifications = [], canCreateAccount = false, accountPhone, accountName }: Props) {
+export default function TrackPage({ order, found, cancellationReasons = [], canCreateAccount = false, accountPhone, accountName }: Props) {
     const [copied, setCopied] = useState(false);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const cancelForm = useForm({ reason: '', note: '' });
 
     if (!found || !order) {
         return <NotFoundState />;
     }
 
     const isPickup = order.fulfillment_type === 'pickup';
-    const isTerminal = Object.keys(TERMINAL_STATUSES).includes(order.status);
-    const isReadyForPickup = order.status === 'ready_for_pickup';
-    const isDelivering = order.status === 'delivering';
-    const isCompleted = order.status === 'completed';
-
-    const statusConfig = isTerminal
-        ? TERMINAL_STATUSES[order.status]
-        : isPickup
-            ? PICKUP_STATUSES[order.status]
-            : DELIVERY_STATUSES[order.status];
-
-    const steps = isPickup
-        ? Object.entries(PICKUP_STATUSES).filter(([key]) => key !== 'completed' || isCompleted)
-        : Object.entries(DELIVERY_STATUSES).filter(([key]) => key !== 'completed' || isCompleted);
-
-    const currentStepIndex = steps.findIndex(([key]) => key === order.status);
-    const effectiveIndex = currentStepIndex < 0 ? 0 : currentStepIndex;
-
-    const historyMap = new Map<string, HistoryItem>();
-    for (const h of order.status_histories) {
-        if (!historyMap.has(h.to_status)) {
-            historyMap.set(h.to_status, h);
-        }
-    }
-
+    const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
+    const isPending = order.status === 'pending_confirmation';
+    const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
+    const statusConfig = STATUS_LABELS[order.status] ?? { label: order.status, description: '' };
     const trackingUrl = order.tracking_url;
-    const shareText = `Lacak pesanan Dombi saya:\n${trackingUrl}`;
 
-    function copyTrackingLink() {
-        navigator.clipboard.writeText(trackingUrl);
+    function handleCopy() {
+        navigator.clipboard.writeText(order.recovery_token);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }
 
-    function shareTrackingLink() {
+    function handleShare() {
+        const text = `Lacak pesanan Dombi saya:\n${trackingUrl}`;
         if (navigator.share) {
-            navigator.share({ text: shareText }).catch(() => {});
-            return;
+            navigator.share({ text }).catch(() => {});
+        } else {
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
         }
-        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
     }
 
-    function shareViaWhatsApp() {
-        window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+    function handleCancel() {
+        cancelForm.post(`/track/${order.recovery_token}/cancel`, {
+            onSuccess: () => setCancelDialogOpen(false),
+        });
     }
 
     return (
         <div className="min-h-dvh bg-surface">
-            <Head title={`Lacak ${order.order_code}`} />
+            <Head title={`Pesanan ${order.order_code}`} />
+            <OfflineBanner />
 
             {/* Header */}
-            <Header orderCode={order.order_code} isPickup={isPickup} orderedAt={order.ordered_at} />
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+                    <a href="/customer/home" className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80" aria-label="Kembali">
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                    <div className="text-center">
+                        <div className="text-sm font-semibold text-text">{order.order_code}</div>
+                        {order.ordered_at && (
+                            <div className="text-[11px] text-text-muted">{formatDate(order.ordered_at)}</div>
+                        )}
+                    </div>
+                    <div className="h-11 w-11" />
+                </div>
+            </header>
 
             {/* Content */}
-            <main className={cn(
-                "mx-auto max-w-lg px-4 py-4",
-                isTerminal ? "pb-[calc(8rem+env(safe-area-inset-bottom))]" : "pb-[calc(4rem+env(safe-area-inset-bottom))]"
-            )}>
-                {/* Hero Banner - Context Dependent */}
-                {isPickup ? (
-                    <PickupHero
-                        status={order.status}
-                        orderCode={order.order_code}
-                        statusConfig={statusConfig}
-                        isTerminal={isTerminal}
-                    />
-                ) : (
-                    <DeliveryHero
-                        status={order.status}
-                        statusConfig={statusConfig}
-                        courier={order.delivery?.courier}
-                        isTerminal={isTerminal}
-                    />
+            <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
+
+                {/* Status Badge */}
+                <div className="flex items-center justify-center">
+                    <span className={cn(
+                        "inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1",
+                        isTerminal ? "bg-red-50 text-red-700 ring-red-200" : "bg-emerald-50 text-emerald-700 ring-emerald-200"
+                    )}>
+                        {statusConfig.label}
+                    </span>
+                </div>
+
+                {/* Confirmation Banner — only for pending orders */}
+                {isPending && order.recovery_token && (
+                    <div className="mt-4 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-5">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+                                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                            </div>
+                            <div>
+                                <div className="text-lg font-bold text-emerald-900">Pesanan Berhasil!</div>
+                                <div className="text-sm text-emerald-700">Simpan kode di bawah untuk melacak pesanan</div>
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl bg-white border border-emerald-200 p-4">
+                            <div className="text-[13px] text-emerald-700 mb-1">Kode Pelacakan Anda</div>
+                            <div className="flex items-center gap-3">
+                                <div className="flex-1">
+                                    <div className="text-2xl font-bold tabular-nums tracking-wider text-emerald-900">{order.recovery_token}</div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleCopy}
+                                    className="flex h-11 items-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white active:opacity-80"
+                                >
+                                    {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                    {copied ? 'Tersalin' : 'Salin'}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="mt-3 text-xs text-emerald-600 leading-relaxed">
+                            <span className="font-semibold">Penting:</span> Kode ini dibutuhkan untuk melacak pesanan tanpa login. Kirim ke diri sendiri atau simpan di tempat aman.
+                        </div>
+
+                        <div className="mt-3">
+                            <button
+                                type="button"
+                                onClick={handleShare}
+                                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                            >
+                                <Share2 className="h-4 w-4" />
+                                Kirim Kode ke WhatsApp
+                            </button>
+                        </div>
+                    </div>
                 )}
 
-                {/* Progress Timeline */}
-                <Timeline
-                    steps={steps}
-                    currentStepIndex={effectiveIndex}
-                    historyMap={historyMap}
-                    isPickup={isPickup}
-                    isTerminal={isTerminal}
-                />
-
-                {/* Pickup Info Card */}
-                {isPickup && order.outlet && (
-                    <PickupInfoCard
-                        outlet={order.outlet}
-                        orderCode={order.order_code}
-                        isReadyForPickup={isReadyForPickup}
-                    />
+                {/* Tracking Code — for non-pending orders */}
+                {!isPending && order.recovery_token && (
+                    <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100">
+                                <svg className="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                            </div>
+                            <span className="text-[13px] font-semibold text-blue-900">Kode Pelacakan</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 rounded-lg bg-white px-3 py-2.5 border border-blue-200">
+                                <div className="text-xl font-bold tabular-nums tracking-wider text-blue-900">{order.recovery_token}</div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCopy}
+                                className="flex h-11 items-center gap-1.5 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white active:opacity-80"
+                            >
+                                {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                {copied ? 'Tersalin' : 'Salin'}
+                            </button>
+                        </div>
+                    </div>
                 )}
 
-                {/* Delivery Info Card */}
-                {!isPickup && (
-                    <DeliveryInfoCard
-                        courier={order.delivery?.courier}
-                        customerAddress={order.customer_address}
-                        isDelivering={isDelivering}
+                {/* Timeline */}
+                <div className="mt-4">
+                    <OrderTimeline
+                        currentStatus={order.status}
+                        histories={order.status_histories}
+                        fulfillmentType={order.fulfillment_type}
                     />
+                </div>
+
+                {/* Order Items */}
+                <div className="mt-4 rounded-2xl border border-border bg-white p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-surface-muted">
+                            <Package className="h-3.5 w-3.5 text-text-muted" />
+                        </div>
+                        <span className="text-[13px] text-text-subtle">Item Pesanan</span>
+                    </div>
+                    <div className="space-y-2">
+                        {order.items.map((item, index) => (
+                            <div key={index} className="flex items-center justify-between text-sm">
+                                <div className="min-w-0">
+                                    <span className="text-text">{item.product_name}</span>
+                                    <span className="ml-1 text-xs text-text-subtle">x{item.quantity}</span>
+                                </div>
+                                <span className="shrink-0 font-semibold tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="mt-3 border-t border-border pt-3 space-y-1">
+                        <div className="flex items-center justify-between text-xs text-text-muted">
+                            <span>Subtotal</span>
+                            <span>{formatCurrency(order.subtotal)}</span>
+                        </div>
+                        {order.delivery_fee > 0 && (
+                            <div className="flex items-center justify-between text-xs text-text-muted">
+                                <span>Ongkir</span>
+                                <span>{formatCurrency(order.delivery_fee)}</span>
+                            </div>
+                        )}
+                        <div className="flex items-center justify-between text-sm font-semibold text-text pt-1">
+                            <span>Total</span>
+                            <span className="tabular-nums">{formatCurrency(order.total)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Order Info */}
+                <div className="mt-4 rounded-2xl border border-border bg-white p-4">
+                    <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                            <span className="text-text-muted">Metode</span>
+                            <span className="font-medium text-text">{isPickup ? 'Ambil di Outlet' : 'Kirim ke Alamat'}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-text-muted">Pembayaran</span>
+                            <span className="font-medium text-text">{order.payment_method === 'cod' ? 'Bayar di Tempat' : order.payment_method}</span>
+                        </div>
+                        {order.ordered_at && (
+                            <div className="flex justify-between">
+                                <span className="text-text-muted">Tanggal</span>
+                                <span className="font-medium text-text">{formatDate(order.ordered_at)}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Outlet Info */}
+                {order.outlet && (
+                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50">
+                                <Store className="h-3.5 w-3.5 text-blue-600" />
+                            </div>
+                            <span className="text-[13px] text-text-subtle">Outlet</span>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
+                                <Store className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="text-sm font-semibold text-text">{order.outlet.name}</div>
+                                {order.outlet.address && (
+                                    <div className="mt-0.5 text-xs text-text-muted">{order.outlet.address}</div>
+                                )}
+                                {order.outlet.operating_hours && (
+                                    <div className="mt-1 flex items-center gap-1 text-xs text-text-muted">
+                                        <Clock className="h-3 w-3" />
+                                        <span>{order.outlet.operating_hours}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* QR Code for pickup */}
+                        {isPickup && order.status === 'ready_for_pickup' && (
+                            <div className="mt-4 rounded-xl bg-surface-muted p-4 flex flex-col items-center">
+                                <QRCodeSVG
+                                    value={order.order_code}
+                                    size={180}
+                                    bgColor="#f4f4f5"
+                                    fgColor="#1e40af"
+                                    level="M"
+                                    marginSize={0}
+                                />
+                                <div className="mt-2 text-center">
+                                    <div className="text-sm font-bold tracking-wider text-blue-700">{order.order_code}</div>
+                                    <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Navigation */}
+                        {order.outlet.latitude && order.outlet.longitude && (
+                            <a
+                                href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 min-h-[44px] text-sm font-bold text-white active:opacity-80"
+                            >
+                                <Navigation className="h-4 w-4" />
+                                Navigasi ke Outlet
+                            </a>
+                        )}
+
+                        {/* Contact */}
+                        {order.outlet.phone && (
+                            <a
+                                href={`tel:${order.outlet.phone}`}
+                                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 min-h-[44px] text-sm font-semibold text-blue-700 active:opacity-80"
+                            >
+                                <Phone className="h-4 w-4" />
+                                Hubungi Outlet
+                            </a>
+                        )}
+                    </div>
                 )}
 
-                {/* Order Summary */}
-                <OrderSummary
-                    items={order.items}
-                    total={order.total}
-                    orderCode={order.order_code}
-                    orderedAt={order.ordered_at}
-                    fulfillmentType={order.fulfillment_type}
-                />
+                {/* Delivery Address */}
+                {!isPickup && order.customer_address && (
+                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50">
+                                <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                            </div>
+                            <span className="text-[13px] text-text-subtle">Alamat Pengiriman</span>
+                        </div>
+                        <div className="text-sm font-medium text-text">{order.customer_name}</div>
+                        <div className="mt-0.5 text-xs text-text-muted">{order.customer_phone}</div>
+                        <div className="mt-1.5 text-xs leading-relaxed text-text">{order.customer_address}</div>
+                    </div>
+                )}
 
-                {/* Tracking Link */}
-                <TrackingLinkCard
-                    trackingUrl={trackingUrl}
-                    copied={copied}
-                    onCopy={copyTrackingLink}
-                    onShare={shareTrackingLink}
-                    onWhatsApp={shareViaWhatsApp}
-                />
+                {/* Courier */}
+                {order.delivery?.courier && (
+                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50">
+                                <Truck className="h-3.5 w-3.5 text-emerald-600" />
+                            </div>
+                            <span className="text-[13px] text-text-subtle">Kurir</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+                                <UserCheck className="h-5 w-5 text-emerald-600" />
+                            </div>
+                            <div className="text-sm font-semibold text-text">{order.delivery.courier.name}</div>
+                        </div>
+                    </div>
+                )}
 
-                {/* Terminal State Info */}
-                {isTerminal && (
-                    <TerminalStateInfo
-                        status={order.status}
-                        statusConfig={statusConfig}
-                        rejectionReason={order.rejection_reason}
-                        rejectionNote={order.rejection_note}
-                        cancellationReason={order.cancellation_reason}
-                        cancellationNote={order.cancellation_note}
-                    />
+                {/* Rejection / Cancellation */}
+                {order.status === 'rejected_by_outlet' && order.rejection_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div className="text-[13px] text-red-600">Pesanan Ditolak Outlet</div>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.rejection_reason}</div>
+                        {order.rejection_note && <div className="mt-1 text-xs text-red-700">{order.rejection_note}</div>}
+                    </div>
+                )}
+
+                {order.status === 'cancelled_by_customer' && order.cancellation_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div className="text-[13px] text-red-600">Pesanan Dibatalkan</div>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
+                        {order.cancellation_note && <div className="mt-1 text-xs text-red-700">{order.cancellation_note}</div>}
+                    </div>
+                )}
+
+                {order.status === 'cancelled_by_outlet' && order.cancellation_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div className="text-[13px] text-red-600">Dibatalkan Outlet</div>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
+                    </div>
+                )}
+
+                {order.status === 'failed_delivery' && (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-amber-600" />
+                            <div className="text-[13px] text-amber-700">Pengiriman Gagal</div>
+                        </div>
+                        <div className="mt-2 text-sm text-amber-800">Silakan hubungi outlet untuk bantuan.</div>
+                    </div>
+                )}
+
+                {order.status === 'expired' && (
+                    <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
+                        <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-text-muted" />
+                            <div className="text-[13px] text-text">Pesanan Kadaluarsa</div>
+                        </div>
+                        <div className="mt-2 text-sm text-text-muted">Outlet tidak memberikan konfirmasi dalam batas waktu.</div>
+                    </div>
+                )}
+
+                {/* Cancel Button */}
+                {isCancellable && (
+                    <div className="mt-4">
+                        <button
+                            type="button"
+                            onClick={() => setCancelDialogOpen(true)}
+                            className="flex h-11 w-full items-center justify-center rounded-xl border border-red-200 text-sm font-semibold text-red-600 active:opacity-80"
+                        >
+                            Batalkan Pesanan
+                        </button>
+                        <p className="mt-2 text-center text-[11px] text-text-subtle">
+                            Batalkan hanya jika pesanan belum diproses
+                        </p>
+                    </div>
+                )}
+
+                {/* Non-cancellable message */}
+                {!isCancellable && !isTerminal && (
+                    <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
+                        <div className="text-sm text-text-muted">
+                            Pesanan sedang diproses dan tidak dapat dibatalkan.
+                        </div>
+                        {order.outlet?.phone && (
+                            <a
+                                href={`tel:${order.outlet.phone}`}
+                                className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-blue-600"
+                            >
+                                <Phone className="h-3.5 w-3.5" />
+                                Hubungi Outlet
+                            </a>
+                        )}
+                    </div>
                 )}
 
                 {/* Account Promotion */}
@@ -218,597 +479,76 @@ export default function TrackPage({ order, found, notifications = [], canCreateA
                 </div>
             </main>
 
-            {/* Sticky Bottom Bar */}
-            {!isTerminal && (
-                <StickyBottomBar
-                    isPickup={isPickup}
-                    status={order.status}
-                    statusConfig={statusConfig}
-                    outletPhone={order.outlet?.phone}
-                />
-            )}
+            {/* Cancel Dialog */}
+            <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} title="Batalkan Pesanan">
+                <p className="text-sm text-text-muted">Pesanan yang dibatalkan tidak dapat dipulihkan.</p>
 
-            {/* Terminal CTA */}
-            {isTerminal && (
-                <TerminalCTA
-                    orderId={order.id}
-                    isCancelled={order.status.includes('cancelled')}
-                    isRejected={order.status === 'rejected_by_outlet'}
-                />
-            )}
+                <div className="mt-4 space-y-2">
+                    {cancellationReasons.map((reason: string) => (
+                        <button
+                            key={reason}
+                            type="button"
+                            onClick={() => cancelForm.setData('reason', reason)}
+                            className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
+                                cancelForm.data.reason === reason
+                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                    : 'border-border text-text active:opacity-80'
+                            }`}
+                        >
+                            {reason}
+                        </button>
+                    ))}
+                </div>
+
+                {cancelForm.data.reason === 'Lainnya' && (
+                    <div className="mt-3">
+                        <textarea
+                            value={cancelForm.data.note}
+                            onChange={(e) => cancelForm.setData('note', e.target.value)}
+                            placeholder="Jelaskan alasan pembatalan..."
+                            className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                        />
+                    </div>
+                )}
+
+                {cancelForm.errors.reason && <p className="mt-2 text-xs text-red-600">{cancelForm.errors.reason}</p>}
+                {cancelForm.errors.note && <p className="mt-1 text-xs text-red-600">{cancelForm.errors.note}</p>}
+
+                <div className="mt-4 flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setCancelDialogOpen(false)}
+                        className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                    >
+                        Kembali
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={!cancelForm.data.reason || cancelForm.processing}
+                        className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
+                    >
+                        {cancelForm.processing ? 'Membatalkan...' : 'Ya, Batalkan'}
+                    </button>
+                </div>
+            </Dialog>
         </div>
     );
 }
 
-// ─── COMPONENTS ──────────────────────────────────────────────────────────────
-
 function NotFoundState() {
     return (
         <div className="min-h-dvh bg-surface">
-            <Head title="Lacak Pesanan" />
+            <Head title="Pesanan Tidak Ditemukan" />
             <div className="mx-auto flex max-w-lg flex-col items-center justify-center px-4 py-20 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
                     <XCircle className="h-8 w-8 text-text-subtle" />
                 </div>
                 <h1 className="mt-4 text-lg font-semibold text-text">Pesanan Tidak Ditemukan</h1>
                 <p className="mt-2 text-sm text-text-muted">Kode pelacakan tidak valid atau pesanan sudah tidak tersedia.</p>
-                <a href="/customer/home" className="mt-6 flex min-h-11 items-center rounded-xl bg-primary px-6 text-sm font-bold text-white transition-all active:opacity-80">
+                <a href="/customer/home" className="mt-6 flex min-h-11 items-center rounded-xl bg-primary px-6 text-sm font-bold text-white active:opacity-80">
                     Kembali ke Beranda
                 </a>
-            </div>
-        </div>
-    );
-}
-
-function Header({ orderCode, isPickup, orderedAt }: { orderCode: string; isPickup: boolean; orderedAt?: string }) {
-    return (
-        <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
-            <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                <a href="/customer/home" className="flex h-10 w-10 items-center justify-center rounded-xl text-text-muted transition-colors active:opacity-80">
-                    <ChevronRight className="h-5 w-5 rotate-180" />
-                </a>
-                <div className="text-center">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-text">{orderCode}</span>
-                        <span className={cn(
-                            "rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                            isPickup ? "bg-blue-50 text-blue-700" : "bg-purple-50 text-purple-700"
-                        )}>
-                            {isPickup ? 'Pickup' : 'Delivery'}
-                        </span>
-                    </div>
-                    {orderedAt && (
-                        <div className="text-[11px] text-text-subtle">{formatDate(orderedAt)}</div>
-                    )}
-                </div>
-                <div className="h-10 w-10" />
-            </div>
-        </header>
-    );
-}
-
-function PickupHero({ status, orderCode, statusConfig, isTerminal }: {
-    status: string;
-    orderCode: string;
-    statusConfig: any;
-    isTerminal: boolean;
-}) {
-    if (isTerminal) return null;
-
-    if (status === 'ready_for_pickup') {
-        return (
-            <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-white p-5">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
-                        <QrCode className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                        <div className="text-xs font-medium text-text-subtle">Siap Diambil</div>
-                        <div className="mt-0.5 text-lg font-bold text-text">Pesanan Sudah Siap</div>
-                    </div>
-                </div>
-
-                {/* QR Code — encodes plain order_code, not URL */}
-                <div className="mt-4 rounded-xl bg-surface-muted p-4 flex flex-col items-center">
-                    <QRCodeSVG
-                        value={orderCode}
-                        size={200}
-                        bgColor="#f4f4f5"
-                        fgColor="#1e40af"
-                        level="M"
-                        marginSize={0}
-                    />
-                    <div className="mt-3 text-center">
-                        <div className="text-lg font-bold tracking-wider text-blue-700">{orderCode}</div>
-                        <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-            <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-                    <statusConfig.icon className="h-5 w-5 text-blue-600" />
-                </div>
-                <div>
-                    <div className="text-sm font-semibold text-text">{statusConfig.label}</div>
-                    <div className="text-xs text-text-muted">{statusConfig.description}</div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function DeliveryHero({ status, statusConfig, courier, isTerminal }: {
-    status: string;
-    statusConfig: any;
-    courier?: { name: string; phone?: string };
-    isTerminal: boolean;
-}) {
-    if (isTerminal) return null;
-
-    if (status === 'delivering' && courier) {
-        return (
-            <div className="mt-4 overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 p-5 text-white">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-                        <Truck className="h-6 w-6" />
-                    </div>
-                    <div>
-                        <div className="text-xs font-medium text-emerald-100">Sedang Diantar</div>
-                        <div className="mt-0.5 text-lg font-bold">{courier.name}</div>
-                    </div>
-                </div>
-                {courier.phone && (
-                    <a
-                        href={`tel:${courier.phone}`}
-                        className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-white/20 py-3 text-sm font-semibold backdrop-blur-sm transition-colors hover:bg-white/30"
-                    >
-                        <Phone className="h-4 w-4" />
-                        Hubungi Kurir
-                    </a>
-                )}
-            </div>
-        );
-    }
-
-    return (
-        <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-            <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
-                    <statusConfig.icon className="h-5 w-5 text-emerald-600" />
-                </div>
-                <div>
-                    <div className="text-sm font-semibold text-text">{statusConfig.label}</div>
-                    <div className="text-xs text-text-muted">{statusConfig.description}</div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function Timeline({ steps, currentStepIndex, historyMap, isPickup, isTerminal }: {
-    steps: [string, any][];
-    currentStepIndex: number;
-    historyMap: Map<string, HistoryItem>;
-    isPickup: boolean;
-    isTerminal: boolean;
-}) {
-    return (
-        <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-            <div className="flex items-center gap-2 mb-4">
-                <div className={cn(
-                    "flex h-6 w-6 items-center justify-center rounded-lg",
-                    isPickup ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
-                )}>
-                    {isPickup ? <Store className="h-3.5 w-3.5" /> : <Truck className="h-3.5 w-3.5" />}
-                </div>
-                <span className="text-[13px] text-text-subtle">
-                    {isPickup ? 'Status Pengambilan' : 'Status Pengiriman'}
-                </span>
-            </div>
-
-            <div className="space-y-0">
-                {steps.map(([key, config], index) => {
-                    const isCompleted = index < currentStepIndex;
-                    const isCurrent = index === currentStepIndex;
-                    const isLast = index === steps.length - 1;
-                    const history = historyMap.get(key);
-                    const Icon = config.icon;
-
-                    return (
-                        <div key={key} className="relative flex gap-3 pb-5 last:pb-0">
-                            {!isLast && (
-                                <div className={cn(
-                                    "absolute left-[11px] top-6 bottom-0 w-px",
-                                    isCompleted ? (isPickup ? "bg-blue-200" : "bg-emerald-200") : "bg-border"
-                                )} />
-                            )}
-                            <div className="relative shrink-0 pt-0.5">
-                                {isCompleted ? (
-                                    <div className={cn(
-                                        "flex h-6 w-6 items-center justify-center rounded-full",
-                                        isPickup ? "bg-blue-600" : "bg-emerald-600"
-                                    )}>
-                                        <CheckCircle2 className="h-3.5 w-3.5 text-white" />
-                                    </div>
-                                ) : isCurrent ? (
-                                    <div className={cn(
-                                        "flex h-6 w-6 items-center justify-center rounded-full ring-2",
-                                        isPickup ? "bg-blue-100 ring-blue-500" : "bg-emerald-100 ring-emerald-500"
-                                    )}>
-                                        <Icon className={cn("h-3 w-3", isPickup ? "text-blue-600" : "text-emerald-600")} />
-                                    </div>
-                                ) : (
-                                    <div className="flex h-6 w-6 items-center justify-center">
-                                        <Circle className="h-3 w-3 text-text-subtle" />
-                                    </div>
-                                )}
-                            </div>
-                            <div className="min-w-0 flex-1 pt-0.5">
-                                <div className="flex items-start justify-between gap-2">
-                                    <div>
-                                        <div className={cn(
-                                            "text-sm font-semibold",
-                                            isCurrent ? (isPickup ? "text-blue-700" : "text-emerald-700") : isCompleted ? "text-text" : "text-text-subtle"
-                                        )}>
-                                            {config.label}
-                                        </div>
-                                        {isCurrent && config.description && (
-                                            <div className="mt-0.5 text-xs text-text-muted">{config.description}</div>
-                                        )}
-                                    </div>
-                                    {history?.created_at && (
-                                        <span className={cn(
-                                            "shrink-0 text-xs tabular-nums",
-                                            isCurrent ? (isPickup ? "font-semibold text-blue-700" : "font-semibold text-emerald-700") : "text-text-subtle"
-                                        )}>
-                                            {formatTime(history.created_at)}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-}
-
-function PickupInfoCard({ outlet, orderCode, isReadyForPickup }: {
-    outlet: { name: string; address?: string; phone?: string; operating_hours?: string; latitude?: number; longitude?: number };
-    orderCode: string;
-    isReadyForPickup: boolean;
-}) {
-    const openMaps = () => {
-        if (outlet.latitude && outlet.longitude) {
-            window.open(`https://www.google.com/maps/dir/?api=1&destination=${outlet.latitude},${outlet.longitude}`, '_blank');
-        } else if (outlet.address) {
-            window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(outlet.address)}`, '_blank');
-        }
-    };
-
-    return (
-        <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-            <div className="flex items-center gap-2 mb-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50">
-                    <Store className="h-3.5 w-3.5 text-blue-600" />
-                </div>
-                <span className="text-[13px] text-text-subtle">Ambil di Outlet</span>
-            </div>
-
-            <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-                    <Store className="h-5 w-5 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                    <div className="text-sm font-semibold text-text">{outlet.name}</div>
-                    {outlet.address && (
-                        <div className="mt-0.5 text-xs text-text-muted">{outlet.address}</div>
-                    )}
-                    {outlet.operating_hours && (
-                        <div className="mt-1 flex items-center gap-1 text-xs text-text-muted">
-                            <Clock className="h-3 w-3" />
-                            <span>{outlet.operating_hours}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Navigation Button */}
-            <button
-                type="button"
-                onClick={openMaps}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 text-sm font-bold text-white transition-all active:opacity-80"
-            >
-                <Navigation className="h-4 w-4" />
-                Navigasi ke Outlet
-            </button>
-
-            {/* Pickup Instructions */}
-            <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
-                <div className="text-xs font-semibold text-blue-800 mb-2">Cara Mengambil:</div>
-                <ol className="space-y-1.5 text-xs text-blue-700">
-                    <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-800">1.</span>
-                        <span>Datang ke outlet yang tertera di atas</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-800">2.</span>
-                        <span>Tunjukkan <span className="font-bold">QR code</span> di atas ke kasir</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                        <span className="font-semibold text-blue-800">3.</span>
-                        <span>Ambil pesanan Anda</span>
-                    </li>
-                </ol>
-            </div>
-
-            {/* Contact Outlet */}
-            {outlet.phone && (
-                <a
-                    href={`tel:${outlet.phone}`}
-                    className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2.5 text-sm font-semibold text-blue-700 transition-all active:opacity-80"
-                >
-                    <Phone className="h-4 w-4" />
-                    Hubungi Outlet
-                </a>
-            )}
-        </div>
-    );
-}
-
-function DeliveryInfoCard({ courier, customerAddress, isDelivering }: {
-    courier?: { name: string; phone?: string };
-    customerAddress?: string;
-    isDelivering: boolean;
-}) {
-    return (
-        <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-            <div className="flex items-center gap-2 mb-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50">
-                    <Navigation className="h-3.5 w-3.5 text-emerald-600" />
-                </div>
-                <span className="text-[13px] text-text-subtle">Kirim ke Alamat</span>
-            </div>
-
-            {customerAddress && (
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-3 mb-3">
-                    <div className="text-xs font-semibold text-emerald-800 mb-1">Alamat Pengiriman:</div>
-                    <div className="text-xs text-emerald-700">{customerAddress}</div>
-                </div>
-            )}
-
-            {courier && (
-                <div className="flex items-center gap-3 rounded-xl border border-border bg-surface-muted p-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-                        <UserCheck className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div className="flex-1">
-                        <div className="text-xs font-medium text-text-muted">Kurir</div>
-                        <div className="text-sm font-semibold text-text">{courier.name}</div>
-                    </div>
-                    {courier.phone && (
-                        <a
-                            href={`tel:${courier.phone}`}
-                            className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-200 text-emerald-700 transition-colors active:opacity-80"
-                        >
-                            <Phone className="h-4 w-4" />
-                        </a>
-                    )}
-                </div>
-            )}
-        </div>
-    );
-}
-
-function OrderSummary({ items, total, orderCode, orderedAt, fulfillmentType }: {
-    items: { product_name: string; quantity: number; subtotal: number }[];
-    total: number;
-    orderCode: string;
-    orderedAt?: string;
-    fulfillmentType: string;
-}) {
-    return (
-        <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-            <div className="flex items-center gap-2 mb-3">
-                <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-surface-muted">
-                    <Package className="h-3.5 w-3.5 text-text-muted" />
-                </div>
-                <span className="text-[13px] text-text-subtle">Ringkasan Pesanan</span>
-            </div>
-
-            {/* Order Info */}
-            <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                <div>
-                    <span className="text-text-muted">Kode</span>
-                    <div className="font-semibold text-text">{orderCode}</div>
-                </div>
-                {orderedAt && (
-                    <div>
-                        <span className="text-text-muted">Tanggal</span>
-                        <div className="font-semibold text-text">{formatDate(orderedAt)}</div>
-                    </div>
-                )}
-                <div>
-                    <span className="text-text-muted">Metode</span>
-                    <div className="font-semibold text-text">{fulfillmentType === 'pickup' ? 'Ambil di Outlet' : 'Kirim ke Alamat'}</div>
-                </div>
-            </div>
-
-            {/* Items */}
-            <div className="space-y-2 border-t border-border pt-3">
-                {items.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between text-sm">
-                        <div className="min-w-0">
-                            <span className="text-text">{item.product_name}</span>
-                            <span className="ml-1 text-xs text-text-subtle">x{item.quantity}</span>
-                        </div>
-                        <span className="shrink-0 font-semibold tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
-                    </div>
-                ))}
-            </div>
-
-            <div className="mt-3 border-t border-border pt-3">
-                <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-text">Total</span>
-                    <span className="text-lg font-bold tabular-nums text-primary">{formatCurrency(total)}</span>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function TrackingLinkCard({ trackingUrl, copied, onCopy, onShare, onWhatsApp }: {
-    trackingUrl: string;
-    copied: boolean;
-    onCopy: () => void;
-    onShare: () => void;
-    onWhatsApp: () => void;
-}) {
-    return (
-        <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-            <div className="text-[13px] text-text-subtle mb-2">Bagikan Link Pelacakan</div>
-            <div className="rounded-lg bg-surface-muted px-3 py-2 text-xs font-semibold tabular-nums text-text break-all">
-                {trackingUrl}
-            </div>
-            <div className="mt-3 grid grid-cols-3 gap-2">
-                <button
-                    type="button"
-                    onClick={onCopy}
-                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-bold text-text transition-all active:opacity-80"
-                >
-                    <Copy className="h-3.5 w-3.5" />
-                    {copied ? 'Tersalin' : 'Salin'}
-                </button>
-                <button
-                    type="button"
-                    onClick={onShare}
-                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-white transition-all active:opacity-80"
-                >
-                    <Share2 className="h-3.5 w-3.5" />
-                    Share
-                </button>
-                <button
-                    type="button"
-                    onClick={onWhatsApp}
-                    className="flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-xs font-bold text-emerald-700 transition-all active:opacity-80"
-                >
-                    <MessageCircle className="h-3.5 w-3.5" />
-                    WA
-                </button>
-            </div>
-        </div>
-    );
-}
-
-function TerminalStateInfo({ status, statusConfig, rejectionReason, rejectionNote, cancellationReason, cancellationNote }: {
-    status: string;
-    statusConfig: any;
-    rejectionReason?: string;
-    rejectionNote?: string;
-    cancellationReason?: string;
-    cancellationNote?: string;
-}) {
-    const isAmber = status === 'failed_delivery' || status === 'expired';
-
-    return (
-        <div className={cn("mt-4 rounded-2xl border p-4", isAmber ? "border-amber-200 bg-amber-50" : "border-red-200 bg-red-50")}>
-            <div className="flex items-center gap-2 mb-2">
-                <statusConfig.icon className={cn("h-4 w-4", isAmber ? "text-amber-600" : "text-red-600")} />
-                <span className={cn("text-[13px]", isAmber ? "text-amber-600" : "text-red-600")}>
-                    {statusConfig.label}
-                </span>
-            </div>
-            <div className={cn("text-sm font-semibold", isAmber ? "text-amber-800" : "text-red-800")}>{statusConfig.description}</div>
-
-            {status === 'rejected_by_outlet' && rejectionReason && (
-                <div className="mt-2 text-xs text-red-700">
-                    <span className="font-medium">Alasan: </span>{rejectionReason}
-                    {rejectionNote && <span> - {rejectionNote}</span>}
-                </div>
-            )}
-
-            {status.includes('cancelled') && cancellationReason && (
-                <div className="mt-2 text-xs text-red-700">
-                    <span className="font-medium">Alasan: </span>{cancellationReason}
-                    {cancellationNote && <span> - {cancellationNote}</span>}
-                </div>
-            )}
-        </div>
-    );
-}
-
-function StickyBottomBar({ isPickup, status, statusConfig, outletPhone }: {
-    isPickup: boolean;
-    status: string;
-    statusConfig: any;
-    outletPhone?: string;
-}) {
-    return (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-4 pb-[env(safe-area-inset-bottom)] pt-3 backdrop-blur">
-            <div className="mx-auto max-w-lg">
-                <div className="flex items-center justify-between mb-2">
-                    <div>
-                        <div className="text-[13px] text-text-subtle">Status</div>
-                        <div className={cn("text-sm font-semibold", isPickup ? "text-blue-700" : "text-emerald-700")}>
-                            {statusConfig.label}
-                        </div>
-                    </div>
-                    {isPickup && status === 'ready_for_pickup' && outletPhone && (
-                        <a
-                            href={`tel:${outletPhone}`}
-                            className={cn(
-                                "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-all active:opacity-80",
-                                isPickup ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"
-                            )}
-                        >
-                            <Phone className="h-4 w-4" />
-                            Hubungi Outlet
-                        </a>
-                    )}
-                    {!isPickup && status === 'delivering' && (
-                        <div className={cn(
-                            "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold",
-                            isPickup ? "bg-blue-100 text-blue-700" : "bg-emerald-100 text-emerald-700"
-                        )}>
-                            <Truck className="h-4 w-4" />
-                            Dalam Perjalanan
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function TerminalCTA({ orderId, isCancelled, isRejected }: {
-    orderId: number;
-    isCancelled: boolean;
-    isRejected: boolean;
-}) {
-    return (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-4 pb-[env(safe-area-inset-bottom)] pt-3 backdrop-blur">
-            <div className="mx-auto max-w-lg space-y-2">
-                {!isCancelled && !isRejected && (
-                    <a
-                        href={`/customer/orders/${orderId}/restore-cart`}
-                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white transition-all active:opacity-80"
-                    >
-                        <RotateCcw className="h-4 w-4" />
-                        Pesan Lagi
-                    </a>
-                )}
-                <Link
-                    href="/customer/home"
-                    className="flex min-h-10 w-full items-center justify-center text-xs font-bold uppercase tracking-wide text-text-muted transition-colors active:text-text"
-                >
-                    Kembali ke Beranda
-                </Link>
             </div>
         </div>
     );
@@ -837,16 +577,10 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                 },
-                body: JSON.stringify({
-                    phone,
-                    name: formName,
-                    password,
-                    password_confirmation: passwordConfirmation,
-                }),
+                body: JSON.stringify({ phone, name: formName, password, password_confirmation: passwordConfirmation }),
             });
 
             const data = await response.json();
-
             if (data.success) {
                 window.location.href = data.redirect;
             } else {
@@ -870,7 +604,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                 <button
                     type="button"
                     onClick={() => setShowForm(true)}
-                    className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80"
+                    className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
                 >
                     Buat Akun Sekarang
                 </button>
@@ -878,9 +612,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                 <form onSubmit={handleSubmit} className="mt-3 space-y-3">
                     <div>
                         <label className="text-xs font-medium text-emerald-700">Nomor HP (terverifikasi)</label>
-                        <div                         className="mt-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text">
-                            {maskedPhone}
-                        </div>
+                        <div className="mt-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text">{maskedPhone}</div>
                     </div>
                     <div>
                         <label className="text-xs font-medium text-emerald-700">Nama</label>
@@ -916,14 +648,12 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                         />
                     </div>
 
-                    {error && (
-                        <p className="text-sm font-medium text-red-600">{error}</p>
-                    )}
+                    {error && <p className="text-sm font-medium text-red-600">{error}</p>}
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 disabled:opacity-50"
+                        className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                     >
                         {loading ? 'Membuat Akun...' : 'Daftar'}
                     </button>
@@ -931,12 +661,4 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
             )}
         </div>
     );
-}
-
-function formatTime(value: string): string {
-    try {
-        return new Date(value).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-    } catch {
-        return '-';
-    }
 }
