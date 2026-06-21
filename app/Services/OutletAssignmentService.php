@@ -3,10 +3,13 @@
 namespace App\Services;
 
 use App\Models\Outlet;
+use App\Services\Concerns\CalculatesDistance;
 use Illuminate\Support\Collection;
 
 class OutletAssignmentService
 {
+    use CalculatesDistance;
+
     public function findAvailableOutlet(?float $lat, ?float $lng, array $items): ?Outlet
     {
         return $this->findCandidateOutlets($lat, $lng, $items)->first();
@@ -94,15 +97,4 @@ class OutletAssignmentService
         return true;
     }
 
-    public function calculateDistance(float $lat1, float $lng1, float $lat2, float $lng2): float
-    {
-        $earthRadius = 6371;
-        $latDelta = deg2rad($lat2 - $lat1);
-        $lngDelta = deg2rad($lng2 - $lng1);
-
-        $a = sin($latDelta / 2) ** 2
-            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($lngDelta / 2) ** 2;
-
-        return $earthRadius * (2 * atan2(sqrt($a), sqrt(1 - $a)));
-    }
 }
