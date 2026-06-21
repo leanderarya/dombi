@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { AlertCircle, CheckCircle2, MapPin, Package } from 'lucide-react';
+import { AlertCircle, MapPin, Package } from 'lucide-react';
 import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import EmptyState from '@/components/ui/empty-state';
@@ -53,92 +53,33 @@ interface Props {
     };
 }
 
-export default function CourierDashboard({ courier: initialCourier, stats, performance, tasks }: Props) {
+export default function CourierDashboard({ courier, stats, performance, tasks }: Props) {
     usePolling(15000);
 
-    const [courier, setCourier] = useState(initialCourier);
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
-    const handleAvailabilityToggle = async () => {
+    const handleAvailabilityToggle = () => {
         setLoadingAction('availability');
-
-        try {
-            const res = await fetch('/courier/availability/toggle', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-                },
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                setCourier((prev) => ({ ...prev, is_online: data.is_online }));
-            }
-        } catch {
-            // Silently fail
-        } finally {
-            setLoadingAction(null);
-        }
+        router.post('/courier/availability/toggle', {}, {
+            preserveScroll: true,
+            onFinish: () => setLoadingAction(null),
+        });
     };
 
-    const handleShiftStart = async () => {
+    const handleShiftStart = () => {
         setLoadingAction('shift-start');
-
-        try {
-            const res = await fetch('/courier/shift/start', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-                },
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                setCourier((prev) => ({
-                    ...prev,
-                    is_online: data.is_online,
-                    is_on_shift: true,
-                    shift_started_at: data.shift_started_at,
-                }));
-            }
-        } catch {
-            // Silently fail
-        } finally {
-            setLoadingAction(null);
-        }
+        router.post('/courier/shift/start', {}, {
+            preserveScroll: true,
+            onFinish: () => setLoadingAction(null),
+        });
     };
 
-    const handleShiftEnd = async () => {
+    const handleShiftEnd = () => {
         setLoadingAction('shift-end');
-
-        try {
-            const res = await fetch('/courier/shift/end', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
-                },
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                setCourier((prev) => ({
-                    ...prev,
-                    is_online: data.is_online,
-                    is_on_shift: false,
-                    shift_ended_at: data.shift_ended_at,
-                }));
-            }
-        } catch {
-            // Silently fail
-        } finally {
-            setLoadingAction(null);
-        }
+        router.post('/courier/shift/end', {}, {
+            preserveScroll: true,
+            onFinish: () => setLoadingAction(null),
+        });
     };
 
     return (
