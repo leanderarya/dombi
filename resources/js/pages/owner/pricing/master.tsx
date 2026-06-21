@@ -141,84 +141,58 @@ return;
                 />
             </div>
 
-            {/* Table */}
-            <div className="rounded-xl border border-border bg-surface">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-zinc-100">
-                                <th
-                                    className="cursor-pointer px-4 py-3 text-left font-medium text-text-muted hover:bg-zinc-100"
-                                    onClick={() => toggleSort('name')}
-                                >
-                                    <span className="inline-flex items-center gap-1">
-                                        Produk
-                                        {sortField === 'name' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-                                    </span>
-                                </th>
-                                <th
-                                    className="cursor-pointer px-4 py-3 text-right font-medium text-text-muted hover:bg-zinc-100"
-                                    onClick={() => toggleSort('center_price')}
-                                >
-                                    <span className="inline-flex items-center gap-1 justify-end">
-                                        Harga Pusat
-                                        {sortField === 'center_price' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-                                    </span>
-                                </th>
-                                <th
-                                    className="cursor-pointer px-4 py-3 text-right font-medium text-text-muted hover:bg-zinc-100"
-                                    onClick={() => toggleSort('selling_price')}
-                                >
-                                    <span className="inline-flex items-center gap-1 justify-end">
-                                        Harga Default
-                                        {sortField === 'selling_price' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-                                    </span>
-                                </th>
-                                <th
-                                    className="cursor-pointer px-4 py-3 text-right font-medium text-text-muted hover:bg-zinc-100"
-                                    onClick={() => toggleSort('margin')}
-                                >
-                                    <span className="inline-flex items-center gap-1 justify-end">
-                                        Margin
-                                        {sortField === 'margin' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-                                    </span>
-                                </th>
-                                <th className="px-4 py-3 text-right font-medium text-text-muted">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedVariants.map((v) => (
-                                <tr key={v.variant_id} className="border-b border-slate-50 last:border-0">
-                                    <td className="px-4 py-3">
-                                        <div className="font-semibold text-text">{v.name}</div>
-                                    </td>
-                                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">
-                                        {formatCurrency(v.center_price)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">
-                                        {formatCurrency(v.selling_price)}
-                                    </td>
-                                    <td className={`px-4 py-3 text-right font-bold tabular-nums ${marginColor(v.margin, v.selling_price)}`}>
-                                        {formatCurrency(v.margin)} {formatMarginPercent(v.margin, v.selling_price)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => handleOpenModal(v)}
-                                            className="text-emerald-700 hover:bg-emerald-50"
-                                        >
-                                            Ubah Harga Pusat
-                                        </Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            {/* Sort Bar */}
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-text-muted">Urutkan:</span>
+                {[
+                    { key: 'name' as const, label: 'Produk' },
+                    { key: 'center_price' as const, label: 'Harga Pusat' },
+                    { key: 'selling_price' as const, label: 'Harga Default' },
+                    { key: 'margin' as const, label: 'Margin' },
+                ].map((col) => (
+                    <button
+                        key={col.key}
+                        type="button"
+                        onClick={() => toggleSort(col.key)}
+                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                            sortField === col.key
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : 'bg-surface text-text-muted hover:bg-zinc-100'
+                        }`}
+                    >
+                        {col.label}
+                        {sortField === col.key && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                    </button>
+                ))}
+            </div>
+
+            {/* Card List */}
+            <div className="space-y-2">
+                {paginatedVariants.map((v) => (
+                    <div key={v.variant_id} className="rounded-xl border border-border bg-surface p-4">
+                        <div className="flex items-start justify-between">
+                            <div className="font-semibold text-text">{v.name}</div>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleOpenModal(v)}
+                                className="shrink-0 text-emerald-700 hover:bg-emerald-50"
+                            >
+                                Ubah Harga
+                            </Button>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                            <span className="text-text-muted">Pusat: <span className="font-semibold tabular-nums text-text">{formatCurrency(v.center_price)}</span></span>
+                            <span className="text-text-muted">Default: <span className="tabular-nums text-slate-600">{formatCurrency(v.selling_price)}</span></span>
+                            <span className={`font-bold tabular-nums ${marginColor(v.margin, v.selling_price)}`}>
+                                {formatCurrency(v.margin)} {formatMarginPercent(v.margin, v.selling_price)}
+                            </span>
+                        </div>
+                    </div>
+                ))}
                 {sortedVariants.length === 0 && (
-                    <div className="p-8 text-center text-sm text-text-muted">
+                    <div className="rounded-xl border border-border bg-surface p-8 text-center text-sm text-text-muted">
                         {search ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'}
                     </div>
                 )}

@@ -207,79 +207,55 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                     )}
                 </div>
             ) : (
-                <div className="overflow-x-auto rounded-xl border border-border bg-surface">
-                    <table className="w-full text-sm">
-                        <thead className="bg-surface-muted text-xs uppercase text-text-muted">
-                            <tr>
-                                <th
-                                    className="cursor-pointer px-4 py-3 text-left hover:bg-zinc-100"
-                                    onClick={() => toggleSort('outlet')}
-                                >
-                                    <span className="inline-flex items-center gap-1">
-                                        Outlet
-                                        {sortField === 'outlet' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-                                    </span>
-                                </th>
-                                <th
-                                    className="cursor-pointer px-4 py-3 text-left hover:bg-zinc-100"
-                                    onClick={() => toggleSort('product')}
-                                >
-                                    <span className="inline-flex items-center gap-1">
-                                        Produk
-                                        {sortField === 'product' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-                                    </span>
-                                </th>
-                                <th
-                                    className="cursor-pointer px-4 py-3 text-right hover:bg-zinc-100"
-                                    onClick={() => toggleSort('stock')}
-                                >
-                                    <span className="inline-flex items-center gap-1 justify-end">
-                                        Stok
-                                        {sortField === 'stock' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-                                    </span>
-                                </th>
-                                <th className="px-4 py-3 text-right">Reserved</th>
-                                <th
-                                    className="cursor-pointer px-4 py-3 text-right hover:bg-zinc-100"
-                                    onClick={() => toggleSort('available')}
-                                >
-                                    <span className="inline-flex items-center gap-1 justify-end">
-                                        Tersedia
-                                        {sortField === 'available' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
-                                    </span>
-                                </th>
-                                <th className="px-4 py-3 text-center">Status</th>
-                                <th className="px-4 py-3 text-center">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-zinc-100">
-                            {paginatedItems.map((row: any) => {
-                                const familyName = row.variant?.family?.name;
-                                const variantName = row.variant?.name ?? row.product?.name ?? '-';
-                                const available = row.current_stock - row.reserved_stock;
-                                const isCritical = available <= 0;
-                                const isLow = available <= row.minimum_stock;
+                <>
+                    {/* Sort Bar */}
+                    <div className="mb-3 flex flex-wrap items-center gap-2">
+                        <span className="text-xs text-text-muted">Urutkan:</span>
+                        {[
+                            { key: 'outlet' as const, label: 'Outlet' },
+                            { key: 'product' as const, label: 'Produk' },
+                            { key: 'stock' as const, label: 'Stok' },
+                            { key: 'available' as const, label: 'Tersedia' },
+                        ].map((col) => (
+                            <button
+                                key={col.key}
+                                type="button"
+                                onClick={() => toggleSort(col.key)}
+                                className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                                    sortField === col.key
+                                        ? 'bg-emerald-50 text-emerald-700'
+                                        : 'bg-surface text-text-muted hover:bg-zinc-100'
+                                }`}
+                            >
+                                {col.label}
+                                {sortField === col.key && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
+                            </button>
+                        ))}
+                    </div>
 
-                                return (
-                                    <tr key={row.id} className="transition-colors">
-                                        <td className="px-4 py-3 font-medium text-text">{row.outlet_name}</td>
-                                        <td className="px-4 py-3 font-semibold text-text">
-                                            <div>
-                                                {familyName && <div className="text-[11px] text-text-subtle">{familyName}</div>}
-                                                <div>{variantName}</div>
+                    {/* Card List */}
+                    <div className="space-y-2">
+                        {paginatedItems.map((row: any) => {
+                            const familyName = row.variant?.family?.name;
+                            const variantName = row.variant?.name ?? row.product?.name ?? '-';
+                            const available = row.current_stock - row.reserved_stock;
+                            const isCritical = available <= 0;
+                            const isLow = available <= row.minimum_stock;
+
+                            return (
+                                <div key={row.id} className="rounded-xl border border-border bg-surface p-4">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <div className="text-xs font-medium text-text-muted">{row.outlet_name}</div>
+                                            <div className="font-semibold text-text">
+                                                {familyName && <span className="mr-1 text-[11px] text-text-subtle">{familyName}</span>}
+                                                {variantName}
                                             </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-right tabular-nums">{row.current_stock}</td>
-                                        <td className="px-4 py-3 text-right tabular-nums">{row.reserved_stock}</td>
-                                        <td className={`px-4 py-3 text-right font-bold tabular-nums ${isCritical ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-text'}`}>
-                                            {available}
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
+                                        </div>
+                                        <div className="flex items-center gap-2">
                                             <StatusBadge variant={isCritical ? 'danger' : isLow ? 'warning' : 'success'} size="sm">
                                                 {isCritical ? 'Kritis' : isLow ? 'Rendah' : 'Sehat'}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-4 py-3 text-center">
                                             <Button
                                                 variant="secondary"
                                                 size="sm"
@@ -287,13 +263,20 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                                             >
                                                 Edit
                                             </Button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                                        </div>
+                                    </div>
+                                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                                        <span className="text-text-muted">Stok: <span className="tabular-nums">{row.current_stock}</span></span>
+                                        <span className="text-text-muted">Reserved: <span className="tabular-nums">{row.reserved_stock}</span></span>
+                                        <span className={`font-bold tabular-nums ${isCritical ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-text'}`}>
+                                            Tersedia: {available}
+                                        </span>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </>
             )}
 
             {/* Pagination */}

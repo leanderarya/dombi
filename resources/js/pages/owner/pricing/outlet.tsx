@@ -302,51 +302,55 @@ return;
                 </div>
             )}
 
-            {/* Table */}
-            <div className="rounded-xl border border-border bg-surface">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead className="sticky top-0 z-10 bg-surface">
-                            <tr className="border-b border-zinc-100">
-                                <th className="px-4 py-3 text-left">
-                                    <button type="button" onClick={() => toggleSort('name')} className="flex items-center gap-1 font-medium text-text-muted">Produk <SortIcon column="name" /></button>
-                                </th>
-                                <th className="px-4 py-3 text-right">
-                                    <button type="button" onClick={() => toggleSort('center_price')} className="flex items-center gap-1 font-medium text-text-muted ml-auto">Harga Pusat <SortIcon column="center_price" /></button>
-                                </th>
-                                <th className="px-4 py-3 text-right">
-                                    <button type="button" onClick={() => toggleSort('selling_price')} className="flex items-center gap-1 font-medium text-text-muted ml-auto">Harga Jual <SortIcon column="selling_price" /></button>
-                                </th>
-                                <th className="px-4 py-3 text-right">
-                                    <button type="button" onClick={() => toggleSort('margin')} className="flex items-center gap-1 font-medium text-text-muted ml-auto">Margin <SortIcon column="margin" /></button>
-                                </th>
-                                <th className="px-4 py-3 text-right font-medium text-text-muted">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginated.map((row) => (
-                                <tr key={row.variant_id} className="border-b border-slate-50 last:border-0">
-                                    <td className="px-4 py-3">
-                                        <div className="font-semibold text-text">{row.name}</div>
-                                        {row.has_override && (
-                                            <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-600">Custom</span>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(row.center_price)}</td>
-                                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">{formatCurrency(row.selling_price)}</td>
-                                    <td className={`px-4 py-3 text-right font-bold tabular-nums ${marginColor(row.margin, row.selling_price)}`}>
-                                        {formatCurrency(row.margin)} {formatMarginPercent(row.margin, row.selling_price)}
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <Button type="button" size="sm" variant="ghost" onClick={() => handleOpenModal(row)} className="text-emerald-700">Ubah</Button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            {/* Sort Bar */}
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+                <span className="text-xs text-text-muted">Urutkan:</span>
+                {[
+                    { key: 'name' as SortKey, label: 'Produk' },
+                    { key: 'center_price' as SortKey, label: 'Harga Pusat' },
+                    { key: 'selling_price' as SortKey, label: 'Harga Jual' },
+                    { key: 'margin' as SortKey, label: 'Margin' },
+                ].map((col) => (
+                    <button
+                        key={col.key}
+                        type="button"
+                        onClick={() => toggleSort(col.key)}
+                        className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
+                            sortKey === col.key
+                                ? 'bg-emerald-50 text-emerald-700'
+                                : 'bg-surface text-text-muted hover:bg-zinc-100'
+                        }`}
+                    >
+                        {col.label}
+                        <SortIcon column={col.key} />
+                    </button>
+                ))}
+            </div>
+
+            {/* Card List */}
+            <div className="space-y-2">
+                {paginated.map((row) => (
+                    <div key={row.variant_id} className="rounded-xl border border-border bg-surface p-4">
+                        <div className="flex items-start justify-between">
+                            <div>
+                                <div className="font-semibold text-text">{row.name}</div>
+                                {row.has_override && (
+                                    <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-600">Custom</span>
+                                )}
+                            </div>
+                            <Button type="button" size="sm" variant="ghost" onClick={() => handleOpenModal(row)} className="shrink-0 text-emerald-700">Ubah</Button>
+                        </div>
+                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                            <span className="text-text-muted">Pusat: <span className="tabular-nums text-slate-600">{formatCurrency(row.center_price)}</span></span>
+                            <span className="text-text-muted">Jual: <span className="font-semibold tabular-nums text-text">{formatCurrency(row.selling_price)}</span></span>
+                            <span className={`font-bold tabular-nums ${marginColor(row.margin, row.selling_price)}`}>
+                                {formatCurrency(row.margin)} {formatMarginPercent(row.margin, row.selling_price)}
+                            </span>
+                        </div>
+                    </div>
+                ))}
                 {paginated.length === 0 && (
-                    <div className="p-8 text-center text-sm text-text-muted">
+                    <div className="rounded-xl border border-border bg-surface p-8 text-center text-sm text-text-muted">
                         {search || marginFilter !== 'all' ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'}
                     </div>
                 )}
