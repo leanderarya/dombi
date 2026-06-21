@@ -1,7 +1,8 @@
 import { Link, router } from '@inertiajs/react';
-import { Truck } from 'lucide-react';
+import { LayoutGrid, Truck } from 'lucide-react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
+import { Button } from '@/components/ui/button';
 import DataTable from '@/components/ui/data-table';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
@@ -26,6 +27,12 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: 
             title="Pengiriman"
             headerRight={
                 <>
+                    <Link href="/owner/deliveries/board">
+                        <Button variant="outline" size="sm" className="gap-1.5">
+                            <LayoutGrid className="h-4 w-4" />
+                            Board View
+                        </Button>
+                    </Link>
                     <select
                         value={filters.status ?? ''}
                         onChange={(e) => setFilter('status', e.target.value)}
