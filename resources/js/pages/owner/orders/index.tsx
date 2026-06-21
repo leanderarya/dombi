@@ -44,6 +44,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         defaultValue={filters.search ?? ''}
                         onBlur={(e) => setFilter('search', e.target.value)}
                         placeholder="Cari kode pesanan..."
+                        aria-label="Cari pesanan"
                         className="h-9 w-48"
                     />
                     <Select
@@ -51,6 +52,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         onChange={(e) => setFilter('status', e.target.value)}
                         options={statusFilters.slice(1).map((sf) => ({ value: sf.key, label: sf.label }))}
                         placeholder="Semua status"
+                        aria-label="Filter status"
                         className="h-9"
                     />
                     <Select
@@ -58,12 +60,14 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         onChange={(e) => setFilter('outlet_id', e.target.value)}
                         options={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
                         placeholder="Semua outlet"
+                        aria-label="Filter outlet"
                         className="h-9"
                     />
                     <Input
                         type="date"
                         value={filters.date ?? ''}
                         onChange={(e) => setFilter('date', e.target.value)}
+                        aria-label="Filter tanggal"
                         className="h-9"
                     />
                 </>

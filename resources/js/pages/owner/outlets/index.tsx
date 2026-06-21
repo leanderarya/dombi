@@ -3,9 +3,11 @@ import { Store } from 'lucide-react';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
+import { buttonVariants } from '@/components/ui/button';
 import DataTable from '@/components/ui/data-table';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
+import { cn } from '@/lib/utils';
 
 export default function OutletsIndex({ outlets }: any) {
     const { flash } = usePage<any>().props;
@@ -18,7 +20,7 @@ export default function OutletsIndex({ outlets }: any) {
             title="Outlet"
             subtitle="Manajemen cabang operasional"
             headerRight={
-                <Link href="/owner/outlets/create" className="flex h-9 items-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white transition-colors hover:bg-emerald-800">
+                <Link href="/owner/outlets/create" className={cn(buttonVariants({ variant: 'primary', size: 'md' }))}>
                     + Tambah Outlet
                 </Link>
             }

@@ -80,8 +80,8 @@ return item.isActive(currentUrl);
                                 href={group.items[0].href}
                                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                                     isItemActive(group.items[0], url)
-                                        ? 'bg-zinc-100 text-zinc-900'
-                                        : 'text-slate-600 hover:bg-zinc-50'
+                                        ? 'bg-zinc-100 text-text'
+                                        : 'text-slate-600 hover:bg-surface-muted'
                                 }`}
                             >
                                 <span className="h-4 w-4 shrink-0">{group.icon}</span>
@@ -91,10 +91,11 @@ return item.isActive(currentUrl);
                             <>
                                 <button
                                     onClick={() => toggleGroup(group.label)}
+                                    aria-expanded={isExpanded}
                                     className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                                         hasActive
-                                            ? 'text-zinc-900'
-                                            : 'text-slate-600 hover:bg-zinc-50'
+                                            ? 'text-text'
+                                            : 'text-slate-600 hover:bg-surface-muted'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">{group.icon}</span>
@@ -109,8 +110,8 @@ return item.isActive(currentUrl);
                                                 href={item.href}
                                                 className={`block rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
                                                     isItemActive(item, url)
-                                                        ? 'bg-zinc-100 text-zinc-900'
-                                                        : 'text-slate-500 hover:bg-zinc-50'
+                                                        ? 'bg-zinc-100 text-text'
+                                                        : 'text-text-muted hover:bg-surface-muted'
                                                 }`}
                                             >
                                                 <span className="flex items-center justify-between gap-2">

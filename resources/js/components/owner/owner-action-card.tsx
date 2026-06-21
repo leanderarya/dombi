@@ -26,7 +26,7 @@ export default function OwnerActionCard({ href, icon, title, subtitle, metric, c
     return (
         <Link
             href={href}
-            className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-3 transition-all duration-150 hover:bg-zinc-50"
+            className="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-3 transition-all duration-150 hover:bg-surface-muted"
         >
             <div className={`h-1.5 w-1.5 shrink-0 rounded-full ${config.indicator}`} />
 
@@ -37,9 +37,9 @@ export default function OwnerActionCard({ href, icon, title, subtitle, metric, c
             )}
 
             <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold text-slate-900">{title}</div>
-                {subtitle && <div className="mt-0.5 text-[11px] text-slate-500">{subtitle}</div>}
-                {metric && <div className="mt-1 text-sm font-bold tabular-nums text-slate-900">{metric}</div>}
+                <div className="text-sm font-semibold text-text">{title}</div>
+                {subtitle && <div className="mt-0.5 text-[11px] text-text-muted">{subtitle}</div>}
+                {metric && <div className="mt-1 text-sm font-bold tabular-nums text-text">{metric}</div>}
             </div>
 
             <div className="flex shrink-0 items-center gap-1.5">

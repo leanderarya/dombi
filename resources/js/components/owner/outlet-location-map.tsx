@@ -269,6 +269,7 @@ function MapCenter({ position }: { position: LatLng | null }) {
         // Skip the first render to let MapFitBounds handle initial positioning
         if (isInitialMount.current) {
             isInitialMount.current = false;
+
             return;
         }
 
@@ -285,12 +286,15 @@ function MapFitBounds({ existingOutlets, position }: { existingOutlets: Existing
     const hasFitted = useRef(false);
 
     useEffect(() => {
-        if (hasFitted.current) return;
+        if (hasFitted.current) {
+return;
+}
 
         // If we have a position (editing), zoom to it
         if (position) {
             map.setView([position.lat, position.lng], MARKER_ZOOM, { animate: false });
             hasFitted.current = true;
+
             return;
         }
 

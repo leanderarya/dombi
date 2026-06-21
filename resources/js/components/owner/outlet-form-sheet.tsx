@@ -2,6 +2,10 @@ import { Link } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 import { reverseGeocode } from '@/lib/geocoding';
 
 const OutletLocationMap = lazy(() => import('./outlet-location-map'));
@@ -140,6 +144,7 @@ setGeocodingState('failed');
                             <button
                                 type="button"
                                 onClick={() => setNotesExpanded(!notesExpanded)}
+                                aria-expanded={notesExpanded}
                                 className="flex w-full items-center justify-between px-4 py-3 text-left"
                             >
                                 <div>
@@ -157,13 +162,15 @@ setGeocodingState('failed');
                                                 <Field label="Radius Pengiriman (km)" value={form.data.delivery_radius_km ?? ''} onChange={(value) => form.setData('delivery_radius_km', value)} error={form.errors.delivery_radius_km} type="number" />
                                                 <Field label="Estimasi Persiapan (menit)" value={form.data.prep_estimate_minutes ?? ''} onChange={(value) => form.setData('prep_estimate_minutes', value)} error={form.errors.prep_estimate_minutes} type="number" />
                                             </div>
-                                            <label className="block">
-                                                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Status</span>
-                                                <select value={form.data.status} onChange={(event) => form.setData('status', event.target.value)} className="mt-1.5 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
-                                                    <option value="active">Aktif</option>
-                                                    <option value="inactive">Nonaktif</option>
-                                                </select>
-                                            </label>
+                                            <Select
+                                                label="Status"
+                                                value={form.data.status}
+                                                onChange={(event) => form.setData('status', event.target.value)}
+                                                options={[
+                                                    { value: 'active', label: 'Aktif' },
+                                                    { value: 'inactive', label: 'Nonaktif' },
+                                                ]}
+                                            />
                                         </div>
                                     )}
                                 </div>
@@ -175,17 +182,19 @@ setGeocodingState('failed');
                             <div className="flex items-center gap-3">
                                 <Link
                                     href="/owner/outlets"
-                                    className="flex min-h-[48px] flex-1 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                                    className={cn(buttonVariants({ variant: 'secondary', size: 'lg' }), 'flex-1')}
                                 >
                                     Batal
                                 </Link>
-                                <button
+                                <Button
                                     type="submit"
+                                    variant="primary"
+                                    size="lg"
                                     disabled={form.processing}
-                                    className="flex min-h-[48px] flex-[2] items-center justify-center rounded-lg bg-emerald-600 px-4 text-sm font-bold text-white hover:bg-emerald-700 disabled:bg-slate-300"
+                                    className="flex-[2]"
                                 >
                                     {form.processing ? 'Menyimpan...' : 'Simpan Outlet'}
-                                </button>
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -228,11 +237,14 @@ function InfoBadge({ label, value, loading }: { label: string; value?: string; l
 
 function Field({ label, value, onChange, error, type = 'text', required }: { label: string; value: any; onChange: (value: string) => void; error?: string; type?: string; required?: boolean }) {
     return (
-        <label className="block">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">{label} {required && <span className="text-red-500">*</span>}</span>
-            <input type={type} value={value ?? ''} onChange={(event) => onChange(event.target.value)} className="mt-1.5 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100" required={required} />
-            {error && <span className="mt-1 block text-xs font-semibold text-red-600">{error}</span>}
-        </label>
+        <Input
+            label={`${label}${required ? ' *' : ''}`}
+            type={type}
+            value={value ?? ''}
+            onChange={(event) => onChange(event.target.value)}
+            error={error}
+            required={required}
+        />
     );
 }
 

@@ -4,6 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import PricingEditModal from '@/components/owner/pricing-edit-modal';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
 
@@ -205,46 +208,50 @@ return;
             {/* Toolbar */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 <div className="relative flex-1 min-w-[140px]">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
+                    <Input
+                        icon={Search}
                         type="text"
                         value={search}
                         onChange={(e) => {
- setSearch(e.target.value); setPage(1); 
-}}
+                            setSearch(e.target.value); setPage(1);
+                        }}
                         placeholder="Cari produk..."
-                        className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                        aria-label="Cari produk"
                     />
                 </div>
-                <select
+                <Select
                     value={marginFilter}
                     onChange={(e) => {
- setMarginFilter(e.target.value as MarginFilter); setPage(1); 
-}}
-                    className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
-                >
-                    <option value="all">Semua Margin</option>
-                    <option value="high">Margin Tinggi (&gt;20rb)</option>
-                    <option value="low">Margin Rendah (&lt;5rb)</option>
-                    <option value="negative">Margin Negatif</option>
-                </select>
-                <button
+                        setMarginFilter(e.target.value as MarginFilter); setPage(1);
+                    }}
+                    options={[
+                        { value: 'all', label: 'Semua Margin' },
+                        { value: 'high', label: 'Margin Tinggi (>20rb)' },
+                        { value: 'low', label: 'Margin Rendah (<5rb)' },
+                        { value: 'negative', label: 'Margin Negatif' },
+                    ]}
+                    aria-label="Filter margin"
+                    className="text-xs font-semibold"
+                />
+                <Button
                     type="button"
+                    variant="secondary"
+                    size="sm"
+                    icon={Plus}
                     onClick={() => setBulkOpen(!bulkOpen)}
-                    className="flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
                 >
-                    <Plus className="h-3.5 w-3.5" />
                     Atur Massal
-                </button>
+                </Button>
                 {otherOutlets.length > 0 && (
-                    <button
+                    <Button
                         type="button"
+                        variant="secondary"
+                        size="sm"
+                        icon={Copy}
                         onClick={() => setCopyOpen(!copyOpen)}
-                        className="flex h-10 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
                     >
-                        <Copy className="h-3.5 w-3.5" />
                         Salin Dari
-                    </button>
+                    </Button>
                 )}
             </div>
 
@@ -256,19 +263,19 @@ return;
                         <div className="flex flex-wrap gap-1">
                             {[1000, 2000, 5000, 10000].map((amt) => (
                                 <div key={amt} className="flex gap-0.5">
-                                    <button type="button" onClick={() => setBulkAmount(String(amt))} className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${bulkAmount === String(amt) ? 'bg-amber-600 text-white' : 'bg-white text-amber-700 border border-amber-200'}`}>+{amt.toLocaleString('id-ID')}</button>
-                                    <button type="button" onClick={() => setBulkAmount(String(-amt))} className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${bulkAmount === String(-amt) ? 'bg-slate-600 text-white' : 'bg-white text-slate-600 border border-slate-200'}`}>-{amt.toLocaleString('id-ID')}</button>
+                                    <Button type="button" size="sm" variant={bulkAmount === String(amt) ? 'primary' : 'secondary'} onClick={() => setBulkAmount(String(amt))} className="text-[10px] px-2 py-1">+{amt.toLocaleString('id-ID')}</Button>
+                                    <Button type="button" size="sm" variant={bulkAmount === String(-amt) ? 'primary' : 'secondary'} onClick={() => setBulkAmount(String(-amt))} className="text-[10px] px-2 py-1">-{amt.toLocaleString('id-ID')}</Button>
                                 </div>
                             ))}
                         </div>
                         <div className="relative">
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">Rp</span>
-                            <input type="number" value={bulkAmount} onChange={(e) => setBulkAmount(e.target.value)} placeholder="Custom" className="w-24 rounded-lg border border-amber-200 bg-white py-1 pl-7 pr-2 text-xs" />
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-text-subtle">Rp</span>
+                            <Input type="number" value={bulkAmount} onChange={(e) => setBulkAmount(e.target.value)} placeholder="Custom" aria-label="Jumlah kustom" className="w-24 pl-7 text-xs" />
                         </div>
-                        <button type="button" onClick={handleBulkUpdate} disabled={saving || !bulkAmount} className="rounded-lg bg-amber-600 px-3 py-1 text-[10px] font-bold text-white disabled:opacity-50">Terapkan</button>
-                        <button type="button" onClick={() => {
- setBulkOpen(false); setBulkAmount(''); 
-}} className="text-[10px] font-semibold text-amber-700">Batal</button>
+                        <Button type="button" size="sm" onClick={handleBulkUpdate} disabled={saving || !bulkAmount}>Terapkan</Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => {
+                            setBulkOpen(false); setBulkAmount('');
+                        }} className="text-amber-700">Batal</Button>
                         <span className="text-[10px] text-amber-600">{sorted.length} produk</span>
                     </div>
                 </div>
@@ -279,55 +286,59 @@ return;
                 <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
                     <div className="text-xs font-bold uppercase tracking-wider text-blue-600">Salin Harga Dari Outlet Lain</div>
                     <div className="mt-2 flex items-center gap-2">
-                        <select value={copySource} onChange={(e) => setCopySource(e.target.value)} className="flex-1 rounded-lg border border-blue-200 bg-white py-1.5 px-3 text-sm">
-                            <option value="">Pilih outlet sumber...</option>
-                            {otherOutlets.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
-                        </select>
-                        <button type="button" onClick={handleCopy} disabled={saving || !copySource} className="rounded-lg bg-blue-600 px-4 py-1.5 text-xs font-bold text-white disabled:opacity-50">Salin</button>
-                        <button type="button" onClick={() => {
- setCopyOpen(false); setCopySource(''); 
-}} className="text-xs font-semibold text-blue-700">Batal</button>
+                        <Select
+                            value={copySource}
+                            onChange={(e) => setCopySource(e.target.value)}
+                            options={otherOutlets.map((o) => ({ value: String(o.id), label: o.name }))}
+                            placeholder="Pilih outlet sumber..."
+                            aria-label="Outlet sumber"
+                            className="flex-1"
+                        />
+                        <Button type="button" size="sm" onClick={handleCopy} disabled={saving || !copySource}>Salin</Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => {
+                            setCopyOpen(false); setCopySource('');
+                        }} className="text-blue-700">Batal</Button>
                     </div>
                 </div>
             )}
 
             {/* Table */}
-            <div className="rounded-xl border border-slate-200 bg-white">
+            <div className="rounded-xl border border-border bg-surface">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
-                        <thead className="sticky top-0 z-10 bg-white">
-                            <tr className="border-b border-slate-100">
+                        <thead className="sticky top-0 z-10 bg-surface">
+                            <tr className="border-b border-zinc-100">
                                 <th className="px-4 py-3 text-left">
-                                    <button type="button" onClick={() => toggleSort('name')} className="flex items-center gap-1 font-medium text-slate-500">Produk <SortIcon column="name" /></button>
+                                    <button type="button" onClick={() => toggleSort('name')} className="flex items-center gap-1 font-medium text-text-muted">Produk <SortIcon column="name" /></button>
                                 </th>
                                 <th className="px-4 py-3 text-right">
-                                    <button type="button" onClick={() => toggleSort('center_price')} className="flex items-center gap-1 font-medium text-slate-500 ml-auto">Harga Pusat <SortIcon column="center_price" /></button>
+                                    <button type="button" onClick={() => toggleSort('center_price')} className="flex items-center gap-1 font-medium text-text-muted ml-auto">Harga Pusat <SortIcon column="center_price" /></button>
                                 </th>
                                 <th className="px-4 py-3 text-right">
-                                    <button type="button" onClick={() => toggleSort('selling_price')} className="flex items-center gap-1 font-medium text-slate-500 ml-auto">Harga Jual <SortIcon column="selling_price" /></button>
+                                    <button type="button" onClick={() => toggleSort('selling_price')} className="flex items-center gap-1 font-medium text-text-muted ml-auto">Harga Jual <SortIcon column="selling_price" /></button>
                                 </th>
                                 <th className="px-4 py-3 text-right">
-                                    <button type="button" onClick={() => toggleSort('margin')} className="flex items-center gap-1 font-medium text-slate-500 ml-auto">Margin <SortIcon column="margin" /></button>
+                                    <button type="button" onClick={() => toggleSort('margin')} className="flex items-center gap-1 font-medium text-text-muted ml-auto">Margin <SortIcon column="margin" /></button>
                                 </th>
-                                <th className="px-4 py-3 text-right font-medium text-slate-500">Aksi</th>
+                                <th className="px-4 py-3 text-right font-medium text-text-muted">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {paginated.map((row) => (
                                 <tr key={row.variant_id} className="border-b border-slate-50 last:border-0">
                                     <td className="px-4 py-3">
-                                        <div className="font-semibold text-slate-900">{row.name}</div>
+                                        <div className="font-semibold text-text">{row.name}</div>
                                         {row.has_override && (
                                             <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-600">Custom</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3 text-right tabular-nums text-slate-600">{formatCurrency(row.center_price)}</td>
-                                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-slate-900">{formatCurrency(row.selling_price)}</td>
+                                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">{formatCurrency(row.selling_price)}</td>
                                     <td className={`px-4 py-3 text-right font-bold tabular-nums ${marginColor(row.margin, row.selling_price)}`}>
                                         {formatCurrency(row.margin)} {formatMarginPercent(row.margin, row.selling_price)}
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        <button type="button" onClick={() => handleOpenModal(row)} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-emerald-700 active:bg-emerald-50">Ubah</button>
+                                        <Button type="button" size="sm" variant="ghost" onClick={() => handleOpenModal(row)} className="text-emerald-700">Ubah</Button>
                                     </td>
                                 </tr>
                             ))}
@@ -335,7 +346,7 @@ return;
                     </table>
                 </div>
                 {paginated.length === 0 && (
-                    <div className="p-8 text-center text-sm text-slate-500">
+                    <div className="p-8 text-center text-sm text-text-muted">
                         {search || marginFilter !== 'all' ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'}
                     </div>
                 )}
@@ -344,10 +355,10 @@ return;
             {/* Pagination */}
             {totalPages > 1 && (
                 <div className="mt-4 flex items-center justify-between">
-                    <span className="text-xs text-slate-500">{sorted.length} produk · Halaman {page} dari {totalPages}</span>
+                    <span className="text-xs text-text-muted">{sorted.length} produk · Halaman {page} dari {totalPages}</span>
                     <div className="flex gap-1">
-                        <button type="button" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-40">Prev</button>
-                        <button type="button" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:opacity-40">Next</button>
+                        <Button type="button" size="sm" variant="secondary" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>Prev</Button>
+                        <Button type="button" size="sm" variant="secondary" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}>Next</Button>
                     </div>
                 </div>
             )}

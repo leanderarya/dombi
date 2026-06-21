@@ -3,6 +3,8 @@ import { ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import CenterPriceEditModal from '@/components/owner/center-price-edit-modal';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
 
@@ -47,6 +49,7 @@ export default function PricingMaster({ variants }: Props) {
             setSortField(field);
             setSortDir('asc');
         }
+
         setCurrentPage(1);
     };
 
@@ -98,6 +101,7 @@ return;
     const sortedVariants = useMemo(() => {
         return [...filtered].sort((a, b) => {
             let cmp = 0;
+
             switch (sortField) {
                 case 'name':
                     cmp = a.name.localeCompare(b.name);
@@ -112,6 +116,7 @@ return;
                     cmp = a.margin - b.margin;
                     break;
             }
+
             return sortDir === 'asc' ? cmp : -cmp;
         });
     }, [filtered, sortField, sortDir]);
@@ -126,26 +131,24 @@ return;
         <OwnerPageShell title="Harga Pusat" subtitle="Kelola harga pusat dan harga jual default">
             {/* Search */}
             <div className="mb-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Cari produk..."
-                        className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
-                    />
-                </div>
+                <Input
+                    icon={Search}
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Cari produk..."
+                    aria-label="Cari produk"
+                />
             </div>
 
             {/* Table */}
-            <div className="rounded-xl border border-slate-200 bg-white">
+            <div className="rounded-xl border border-border bg-surface">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-slate-100">
+                            <tr className="border-b border-zinc-100">
                                 <th
-                                    className="cursor-pointer px-4 py-3 text-left font-medium text-slate-500 hover:bg-zinc-100"
+                                    className="cursor-pointer px-4 py-3 text-left font-medium text-text-muted hover:bg-zinc-100"
                                     onClick={() => toggleSort('name')}
                                 >
                                     <span className="inline-flex items-center gap-1">
@@ -154,7 +157,7 @@ return;
                                     </span>
                                 </th>
                                 <th
-                                    className="cursor-pointer px-4 py-3 text-right font-medium text-slate-500 hover:bg-zinc-100"
+                                    className="cursor-pointer px-4 py-3 text-right font-medium text-text-muted hover:bg-zinc-100"
                                     onClick={() => toggleSort('center_price')}
                                 >
                                     <span className="inline-flex items-center gap-1 justify-end">
@@ -163,7 +166,7 @@ return;
                                     </span>
                                 </th>
                                 <th
-                                    className="cursor-pointer px-4 py-3 text-right font-medium text-slate-500 hover:bg-zinc-100"
+                                    className="cursor-pointer px-4 py-3 text-right font-medium text-text-muted hover:bg-zinc-100"
                                     onClick={() => toggleSort('selling_price')}
                                 >
                                     <span className="inline-flex items-center gap-1 justify-end">
@@ -172,7 +175,7 @@ return;
                                     </span>
                                 </th>
                                 <th
-                                    className="cursor-pointer px-4 py-3 text-right font-medium text-slate-500 hover:bg-zinc-100"
+                                    className="cursor-pointer px-4 py-3 text-right font-medium text-text-muted hover:bg-zinc-100"
                                     onClick={() => toggleSort('margin')}
                                 >
                                     <span className="inline-flex items-center gap-1 justify-end">
@@ -180,16 +183,16 @@ return;
                                         {sortField === 'margin' && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
                                     </span>
                                 </th>
-                                <th className="px-4 py-3 text-right font-medium text-slate-500">Aksi</th>
+                                <th className="px-4 py-3 text-right font-medium text-text-muted">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             {paginatedVariants.map((v) => (
                                 <tr key={v.variant_id} className="border-b border-slate-50 last:border-0">
                                     <td className="px-4 py-3">
-                                        <div className="font-semibold text-slate-900">{v.name}</div>
+                                        <div className="font-semibold text-text">{v.name}</div>
                                     </td>
-                                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-slate-900">
+                                    <td className="px-4 py-3 text-right tabular-nums font-semibold text-text">
                                         {formatCurrency(v.center_price)}
                                     </td>
                                     <td className="px-4 py-3 text-right tabular-nums text-slate-600">
@@ -199,13 +202,15 @@ return;
                                         {formatCurrency(v.margin)} {formatMarginPercent(v.margin, v.selling_price)}
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        <button
+                                        <Button
                                             type="button"
+                                            variant="ghost"
+                                            size="sm"
                                             onClick={() => handleOpenModal(v)}
-                                            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 active:bg-emerald-50"
+                                            className="text-emerald-700 hover:bg-emerald-50"
                                         >
                                             Ubah Harga Pusat
-                                        </button>
+                                        </Button>
                                     </td>
                                 </tr>
                             ))}
@@ -213,7 +218,7 @@ return;
                     </table>
                 </div>
                 {sortedVariants.length === 0 && (
-                    <div className="p-8 text-center text-sm text-slate-500">
+                    <div className="p-8 text-center text-sm text-text-muted">
                         {search ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'}
                     </div>
                 )}
@@ -221,27 +226,29 @@ return;
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-zinc-200 px-4 py-3 mt-4 rounded-xl border border-slate-200 bg-white">
-                    <span className="text-sm text-zinc-500">
+                <div className="flex items-center justify-between border-t border-border px-4 py-3 mt-4 rounded-xl border border-border bg-surface">
+                    <span className="text-sm text-text-muted">
                         Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, sortedVariants.length)} dari {sortedVariants.length} produk
                     </span>
                     <div className="flex gap-2">
-                        <button
+                        <Button
                             type="button"
+                            variant="secondary"
+                            size="sm"
                             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                             disabled={currentPage === 1}
-                            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50"
                         >
                             Sebelumnya
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="secondary"
+                            size="sm"
                             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                             disabled={currentPage === totalPages}
-                            className="rounded-lg border border-zinc-300 px-3 py-1.5 text-sm disabled:opacity-50"
                         >
                             Berikutnya
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

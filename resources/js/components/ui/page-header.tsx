@@ -16,7 +16,7 @@ interface Props {
 
 export default function PageHeader({ title, subtitle, backHref, right, below, transparent }: Props) {
     return (
-        <header className={`sticky top-0 z-30 ${transparent ? '' : 'border-b border-zinc-100 bg-white/95 backdrop-blur'}`}>
+        <header className={`sticky top-0 z-30 ${transparent ? '' : 'border-b border-zinc-100 bg-surface/95 backdrop-blur'}`}>
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                 {backHref ? (
                     <Link href={backHref} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
@@ -28,8 +28,8 @@ export default function PageHeader({ title, subtitle, backHref, right, below, tr
 
                 {title ? (
                     <div className="text-center">
-                        <div className="text-sm font-semibold text-slate-900">{title}</div>
-                        {subtitle && <div className="text-[11px] text-slate-500">{subtitle}</div>}
+                        <div className="text-sm font-semibold text-text">{title}</div>
+                        {subtitle && <div className="text-[11px] text-text-muted">{subtitle}</div>}
                     </div>
                 ) : (
                     <div />

@@ -40,7 +40,7 @@ export default function OutletAttentionList({ outlets, emptyTitle = 'Tidak ada o
             <div className="flex flex-col items-center justify-center py-8 text-center">
                 <CheckCircle2 className="mb-3 h-10 w-10 text-emerald-400" />
                 <div className="text-sm font-semibold text-slate-700">{emptyTitle}</div>
-                <div className="mt-1 text-xs text-slate-500">{emptyDescription}</div>
+                <div className="mt-1 text-xs text-text-muted">{emptyDescription}</div>
             </div>
         );
     }
@@ -55,12 +55,12 @@ export default function OutletAttentionList({ outlets, emptyTitle = 'Tidak ada o
                     <Link
                         key={row.outletId}
                         href={row.href}
-                        className={`block rounded-xl border border-l-4 border-slate-200 bg-slate-50/70 p-4 transition-colors hover:border-emerald-200 hover:bg-emerald-50/40 ${severityBorder(severity)}`}
+                        className={`block rounded-xl border border-l-4 border-border bg-surface-muted/70 p-4 transition-colors hover:border-emerald-200 hover:bg-emerald-50/40 ${severityBorder(severity)}`}
                     >
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <div className="text-sm font-semibold text-slate-900">{row.outletName}</div>
-                                <div className="mt-1 text-xs text-slate-500">
+                                <div className="text-sm font-semibold text-text">{row.outletName}</div>
+                                <div className="mt-1 text-xs text-text-muted">
                                     {totalIssues} issue belum diproses{row.criticalStocks > 0 ? ` · ${row.criticalStocks} SKU kritis` : ''}
                                 </div>
                             </div>
@@ -70,21 +70,21 @@ export default function OutletAttentionList({ outlets, emptyTitle = 'Tidak ada o
                         </div>
 
                         <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
-                            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
+                            <div className="rounded-lg border border-border bg-surface px-3 py-2">
                                 <div className="text-sm font-semibold tabular-nums text-red-600">{formatCurrency(row.outstanding)}</div>
-                                <div className="mt-1 text-[11px] text-slate-500">Belum Masuk</div>
+                                <div className="mt-1 text-[11px] text-text-muted">Belum Masuk</div>
                             </div>
-                            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                                <div className="text-sm font-semibold tabular-nums text-slate-900">{row.pendingRestocks}</div>
-                                <div className="mt-1 text-[11px] text-slate-500">Restock</div>
+                            <div className="rounded-lg border border-border bg-surface px-3 py-2">
+                                <div className="text-sm font-semibold tabular-nums text-text">{row.pendingRestocks}</div>
+                                <div className="mt-1 text-[11px] text-text-muted">Restock</div>
                             </div>
-                            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                                <div className="text-sm font-semibold tabular-nums text-slate-900">{row.pendingReturns + row.pendingExchanges}</div>
-                                <div className="mt-1 text-[11px] text-slate-500">Return/Tukar</div>
+                            <div className="rounded-lg border border-border bg-surface px-3 py-2">
+                                <div className="text-sm font-semibold tabular-nums text-text">{row.pendingReturns + row.pendingExchanges}</div>
+                                <div className="mt-1 text-[11px] text-text-muted">Return/Tukar</div>
                             </div>
-                            <div className="rounded-lg border border-slate-200 bg-white px-3 py-2">
-                                <div className="text-sm font-semibold tabular-nums text-slate-900">{row.criticalStocks}</div>
-                                <div className="mt-1 text-[11px] text-slate-500">Stok Kritis</div>
+                            <div className="rounded-lg border border-border bg-surface px-3 py-2">
+                                <div className="text-sm font-semibold tabular-nums text-text">{row.criticalStocks}</div>
+                                <div className="mt-1 text-[11px] text-text-muted">Stok Kritis</div>
                             </div>
                         </div>
                     </Link>

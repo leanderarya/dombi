@@ -158,6 +158,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                     onChange={(e) => {
                         setSearch(e.target.value); setCurrentPage(1);
                     }}
+                    aria-label="Cari inventaris"
                     className="flex-1"
                 />
 
@@ -171,6 +172,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                         { value: 'all', label: 'Semua Outlet' },
                         ...outlets.map((outlet: string) => ({ value: outlet, label: outlet })),
                     ]}
+                    aria-label="Filter outlet"
                 />
 
                 {/* Stock level filter */}
@@ -185,6 +187,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                         { value: 'low', label: 'Rendah' },
                         { value: 'healthy', label: 'Sehat' },
                     ]}
+                    aria-label="Filter stok"
                 />
             </div>
 

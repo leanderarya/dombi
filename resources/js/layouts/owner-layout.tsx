@@ -88,6 +88,9 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900">
+            <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:rounded-lg focus:bg-emerald-700 focus:px-4 focus:py-2 focus:text-white focus:outline-none">
+                Langsung ke konten
+            </a>
             <OfflineBanner />
             <UpdateBanner />
 
@@ -103,7 +106,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                     <div className="px-4 pt-5 pb-3">
                         <div className="flex items-center justify-between">
                             <div className="rounded-lg bg-emerald-700 px-3 py-2 text-lg font-semibold text-white">Dombi</div>
-                            <button onClick={() => setSidebarOpen(false)} className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 lg:hidden">
+                            <button onClick={() => setSidebarOpen(false)} aria-label="Tutup sidebar" className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 lg:hidden">
                                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                                 </svg>
@@ -128,10 +131,10 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             </aside>
 
             {/* Main content */}
-            <main className="pb-16 lg:pb-0 lg:pl-56">
+            <main id="main-content" className="pb-16 lg:pb-0 lg:pl-56">
                 {/* Mobile header */}
                 <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 lg:hidden">
-                    <button onClick={() => setSidebarOpen(true)} className="rounded-md p-1.5 text-zinc-600 hover:bg-zinc-100">
+                    <button onClick={() => setSidebarOpen(true)} aria-label="Buka menu" className="rounded-md p-1.5 text-zinc-600 hover:bg-zinc-100">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                         </svg>

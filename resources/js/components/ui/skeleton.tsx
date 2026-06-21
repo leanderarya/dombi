@@ -9,7 +9,7 @@ export function Skeleton({ className = '', count = 1 }: SkeletonProps) {
             {Array.from({ length: count }).map((_, i) => (
                 <div
                     key={i}
-                    className={`animate-pulse rounded-lg bg-zinc-200 ${className}`}
+                    className={`animate-pulse rounded-lg bg-border ${className}`}
                 />
             ))}
         </>
@@ -18,7 +18,7 @@ export function Skeleton({ className = '', count = 1 }: SkeletonProps) {
 
 export function SkeletonCard() {
     return (
-        <div className="rounded-xl border border-zinc-200 bg-white p-4 space-y-3">
+        <div className="rounded-xl border border-border bg-surface p-4 space-y-3">
             <Skeleton className="h-4 w-1/3" />
             <Skeleton className="h-3 w-1/2" />
             <Skeleton className="h-3 w-2/3" />
@@ -38,7 +38,7 @@ export function SkeletonList({ count = 3 }: { count?: number }) {
 
 export function SkeletonKpi() {
     return (
-        <div className="rounded-xl border border-zinc-200 bg-white p-4">
+        <div className="rounded-xl border border-border bg-surface p-4">
             <Skeleton className="h-3 w-1/4 mb-2" />
             <Skeleton className="h-6 w-1/2" />
         </div>

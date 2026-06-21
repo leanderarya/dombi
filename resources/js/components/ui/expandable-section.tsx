@@ -8,17 +8,13 @@ interface ExpandableSectionProps {
     countColor?: 'blue' | 'red' | 'amber';
     children: ReactNode;
     defaultExpanded?: boolean;
-    action?: {
-        label: string;
-        href: string;
-    };
     className?: string;
 }
 
 const countColorStyles = {
-    blue: 'bg-blue-500',
-    red: 'bg-red-500',
-    amber: 'bg-amber-500',
+    blue: 'bg-blue-100 text-blue-700',
+    red: 'bg-red-100 text-red-700',
+    amber: 'bg-amber-100 text-amber-700',
 };
 
 export function ExpandableSection({
@@ -27,7 +23,6 @@ export function ExpandableSection({
     countColor = 'blue',
     children,
     defaultExpanded = false,
-    action,
     className,
 }: ExpandableSectionProps) {
     const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -41,13 +36,13 @@ export function ExpandableSection({
             <button
                 type="button"
                 onClick={toggle}
-                className="flex w-full items-center justify-between bg-surface-muted px-4 py-3 transition-colors hover:bg-surface-muted/80"
+                className="flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-surface-muted"
                 aria-expanded={isExpanded}
             >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                     <span className="text-sm font-semibold text-text">{title}</span>
                     {count > 0 && (
-                        <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-bold text-white', countColorStyles[countColor])}>
+                        <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold', countColorStyles[countColor])}>
                             {count}
                         </span>
                     )}
@@ -59,14 +54,6 @@ export function ExpandableSection({
             {isExpanded && (
                 <div className="border-t border-border px-4 py-3">
                     {children}
-                    {action && count > 0 && (
-                        <a
-                            href={action.href}
-                            className="mt-3 inline-block text-xs font-semibold text-primary hover:text-primary-hover"
-                        >
-                            {action.label} →
-                        </a>
-                    )}
                 </div>
             )}
         </div>
