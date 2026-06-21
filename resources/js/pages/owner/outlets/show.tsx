@@ -17,6 +17,7 @@ import OperatingHoursManager from '@/components/owner/operating-hours-manager';
 import OutletProducts from '@/components/owner/outlet-products';
 import OutletStatusBadge from '@/components/owner/outlet-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import SectionCard from '@/components/ui/section-card';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 const OutletLocationMap = lazy(
@@ -72,15 +73,12 @@ return;
                 </div>
             }
         >
-            <div className="mx-auto max-w-5xl space-y-4">
-                {/* Section 1: Informasi Outlet */}
-                <section className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="mx-auto max-w-5xl">
+                {/* Informasi Outlet + Lokasi */}
+                <SectionCard label="Informasi Outlet">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <p className="text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
-                                Informasi Outlet
-                            </p>
-                            <h1 className="mt-1 text-2xl font-semibold text-slate-900">
+                            <h1 className="text-2xl font-semibold text-slate-900">
                                 {outlet.name ?? '-'}
                             </h1>
                             <p className="mt-1 text-xs leading-5 text-slate-500">
@@ -133,119 +131,84 @@ return;
                             value={outlet.today_orders_count ?? 0}
                         />
                     </div>
-                </section>
 
-                {/* Section 2: Lokasi */}
-                <section className="rounded-xl border border-slate-200 bg-white p-4">
-                    <h2 className="text-base font-semibold text-slate-900">
-                        Lokasi
-                    </h2>
-                    <p className="mt-1 text-xs text-slate-500">
-                        {outlet.kelurahan ?? '-'} · {outlet.kecamatan ?? '-'}
-                        {outlet.city ? ` · ${outlet.city}` : ''}
-                    </p>
-                    <div className="mt-3">
-                        <Suspense
-                            fallback={
-                                <div className="flex h-[280px] items-center justify-center rounded-xl border border-slate-300 bg-[#F8FAFC] text-xs font-semibold text-slate-500">
-                                    Memuat peta...
-                                </div>
-                            }
-                        >
-                            <OutletLocationMap
-                                value={location}
-                                onChange={() => undefined}
-                                readOnly
-                            />
-                        </Suspense>
-                    </div>
-                </section>
-
-                {/* Section 3: Jam Operasional */}
-                <section className="rounded-xl border border-slate-200 bg-white p-4">
-                    <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-slate-400" />
-                        <h2 className="text-base font-semibold text-slate-900">
-                            Jam Operasional
-                        </h2>
-                    </div>
-                    <div className="mt-4">
-                        <OperatingHoursManager
-                            outletId={outlet.id}
-                            initialHours={operatingHours ?? []}
-                        />
-                    </div>
-                </section>
-
-                {/* Section 4: Hari Libur */}
-                <section className="rounded-xl border border-slate-200 bg-white p-4">
-                    <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-slate-400" />
-                        <h2 className="text-base font-semibold text-slate-900">
-                            Hari Libur
-                        </h2>
-                    </div>
-                    <div className="mt-4">
-                        <HolidayManager
-                            outletId={outlet.id}
-                            initialHolidays={holidays ?? []}
-                        />
-                    </div>
-                </section>
-
-                {/* Section 5: Area Layanan */}
-                {outlet.delivery_radius_km && (
-                    <section className="rounded-xl border border-slate-200 bg-white p-4">
-                        <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4 text-slate-400" />
-                            <h2 className="text-base font-semibold text-slate-900">
-                                Area Layanan
-                            </h2>
+                    <div className="mt-4 border-t border-slate-100 pt-4">
+                        <h3 className="text-sm font-semibold text-slate-900">
+                            Lokasi
+                        </h3>
+                        <p className="mt-1 text-xs text-slate-500">
+                            {outlet.kelurahan ?? '-'} · {outlet.kecamatan ?? '-'}
+                            {outlet.city ? ` · ${outlet.city}` : ''}
+                        </p>
+                        <div className="mt-3">
+                            <Suspense
+                                fallback={
+                                    <div className="flex h-[280px] items-center justify-center rounded-xl border border-slate-300 bg-[#F8FAFC] text-xs font-semibold text-slate-500">
+                                        Memuat peta...
+                                    </div>
+                                }
+                            >
+                                <OutletLocationMap
+                                    value={location}
+                                    onChange={() => undefined}
+                                    readOnly
+                                />
+                            </Suspense>
                         </div>
-                        <p className="mt-2 text-sm font-medium text-slate-900">
+                    </div>
+                </SectionCard>
+
+                {/* Jam Operasional */}
+                <SectionCard label="Jam Operasional" labelRight={<Clock className="h-4 w-4 text-slate-400" />}>
+                    <OperatingHoursManager
+                        outletId={outlet.id}
+                        initialHours={operatingHours ?? []}
+                    />
+                </SectionCard>
+
+                {/* Hari Libur */}
+                <SectionCard label="Hari Libur" labelRight={<Calendar className="h-4 w-4 text-slate-400" />}>
+                    <HolidayManager
+                        outletId={outlet.id}
+                        initialHolidays={holidays ?? []}
+                    />
+                </SectionCard>
+
+                {/* Area Layanan */}
+                {outlet.delivery_radius_km && (
+                    <SectionCard label="Area Layanan" labelRight={<MapPin className="h-4 w-4 text-slate-400" />}>
+                        <p className="text-sm font-medium text-slate-900">
                             {outlet.delivery_radius_km} km
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
                             Customer di luar radius ini tidak dapat memesan
                             delivery.
                         </p>
-                    </section>
+                    </SectionCard>
                 )}
 
-                {/* Section 6: Produk Outlet (unified) */}
-                <section className="rounded-xl border border-slate-200 bg-white p-4">
-                    <div className="flex items-center gap-2">
-                        <Package className="h-4 w-4 text-slate-400" />
-                        <h2 className="text-base font-semibold text-slate-900">
-                            Produk Outlet
-                        </h2>
-                    </div>
-                    <p className="mt-1 text-xs text-slate-500">
+                {/* Produk Outlet */}
+                <SectionCard label="Produk Outlet" labelRight={<Package className="h-4 w-4 text-slate-400" />}>
+                    <p className="mb-3 text-xs text-slate-500">
                         Kelola produk, stok, dan restock outlet ini.
                     </p>
-                    <div className="mt-4">
-                        <OutletProducts outletId={outlet.id} />
-                    </div>
-                </section>
+                    <OutletProducts outletId={outlet.id} />
+                </SectionCard>
 
-                {/* Section 7: Settlement Outlet */}
+                {/* Settlement Outlet */}
                 {settlementSummary && (
-                    <section className="rounded-xl border border-slate-200 bg-white p-4">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                                <DollarSign className="h-4 w-4 text-slate-400" />
-                                <h2 className="text-base font-semibold text-slate-900">Settlement Outlet</h2>
-                            </div>
+                    <SectionCard
+                        label="Settlement Outlet"
+                        labelRight={
                             <Link
                                 href={`/owner/finance/settlements/${outlet.id}`}
                                 className="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
                             >
                                 Lihat Semua
                             </Link>
-                        </div>
-
-                        {/* Summary Cards */}
-                        <div className="mt-3 grid grid-cols-3 gap-2">
+                        }
+                    >
+                        <div className="grid grid-cols-3 gap-2">
                             <div className="rounded-lg border border-slate-200 bg-[#F8FAFC] p-3">
                                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Outstanding</div>
                                 <div className="mt-1 text-sm font-bold tabular-nums text-red-600">{formatCurrency(settlementSummary.outstanding)}</div>
@@ -260,10 +223,9 @@ return;
                             </div>
                         </div>
 
-                        {/* Recent Settlements */}
                         {settlementSummary.recent_settlements?.length > 0 && (
                             <div className="mt-3">
-                                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Settlement Terakhir</div>
+                                <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">Settlement Terakhir</div>
                                 <div className="space-y-1.5">
                                     {settlementSummary.recent_settlements.map((s: any) => {
                                         const statusBadge: Record<string, { label: string; className: string }> = {
@@ -285,19 +247,13 @@ return;
                                 </div>
                             </div>
                         )}
-                    </section>
+                    </SectionCard>
                 )}
 
-                {/* Section 8: Riwayat Perubahan */}
+                {/* Riwayat Perubahan */}
                 {auditLogs && auditLogs.length > 0 && (
-                    <section className="rounded-xl border border-slate-200 bg-white p-4">
-                        <div className="flex items-center gap-2">
-                            <History className="h-4 w-4 text-slate-400" />
-                            <h2 className="text-base font-semibold text-slate-900">
-                                Riwayat Perubahan
-                            </h2>
-                        </div>
-                        <div className="mt-3 space-y-2">
+                    <SectionCard label="Riwayat Perubahan" labelRight={<History className="h-4 w-4 text-slate-400" />}>
+                        <div className="space-y-2">
                             {auditLogs.map((log: any) => (
                                 <div
                                     key={log.id}
@@ -319,7 +275,7 @@ return;
                                 </div>
                             ))}
                         </div>
-                    </section>
+                    </SectionCard>
                 )}
             </div>
         </OwnerPageShell>
