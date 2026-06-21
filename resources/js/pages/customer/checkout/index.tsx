@@ -6,7 +6,6 @@ import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
-import SectionCard from '@/components/ui/section-card';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
@@ -126,7 +125,8 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     </button>
                 </div>
             ) : (
-                <SectionCard label="Pesanan" className="mt-5">
+                <div className="mt-5 rounded-2xl bg-white p-4">
+                    <h2 className="text-[13px] font-semibold text-text-subtle mb-3">Pesanan</h2>
                     {items.map((item) => (
                         <CheckoutItemCard
                             key={item.product_variant_id}
@@ -139,13 +139,13 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     ))}
                     <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
                         <span className="text-sm text-text-muted">{itemCount} item</span>
-                        <span className="text-xl font-bold tabular-nums text-text">{formatCurrency(subtotal || summary?.subtotal || 0)}</span>
+                        <span className="text-2xl font-bold tabular-nums text-text">{formatCurrency(subtotal || summary?.subtotal || 0)}</span>
                     </div>
-                </SectionCard>
+                </div>
             )}
 
             <section className="mt-4">
-                <h2 className="text-sm font-semibold text-text">Metode Pengiriman</h2>
+                <h2 className="text-[13px] font-semibold text-text-subtle">Metode Pengiriman</h2>
                 <div className="mt-3 space-y-3">
                     <FulfillmentCard
                         active={fulfillmentType === 'pickup'}
@@ -198,8 +198,10 @@ function FulfillmentCard({ active, title, icon, description, onClick, detail }: 
         <button
             type="button"
             onClick={onClick}
-            className={`min-h-[88px] w-full rounded-xl border p-4 text-left transition-all active:opacity-80 ${
-                active ? 'border-emerald-500 bg-emerald-50' : 'border-border bg-white'
+            className={`min-h-[88px] w-full rounded-2xl p-4 text-left transition-all active:opacity-80 ${
+                active
+                    ? 'bg-emerald-50 ring-2 ring-emerald-500'
+                    : 'bg-white border border-border'
             }`}
         >
             <div className="flex items-start gap-3">
