@@ -60,6 +60,16 @@ class OrderStatusService
                 ]);
             }
 
+            // Fulfillment-aware guard: prevent pickup orders from entering delivery-only statuses
+            if ($order->isPickup() && in_array($status, [
+                Order::STATUS_PICKED_UP,
+                Order::STATUS_DELIVERING,
+            ], true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Pesanan pickup tidak dapat masuk ke status pengiriman.',
+                ]);
+            }
+
             if (in_array($status, ['cancelled_by_outlet', 'cancelled_by_customer', 'rejected_by_outlet'], true)) {
                 $this->inventoryService->releaseReservedStock($order);
             }
@@ -81,7 +91,7 @@ class OrderStatusService
             $order->statusHistories()->create([
                 'from_status' => $fromStatus,
                 'to_status' => $status,
-                'notes' => $this->statusNote($status),
+                'notes' => $this->statusNote($status, $order),
                 'changed_by' => $actor?->id,
                 'changed_by_type' => $actor?->role ?? 'system',
                 'created_at' => now(),
@@ -301,12 +311,14 @@ class OrderStatusService
         return self::CANCELLATION_REASONS;
     }
 
-    private function statusNote(string $status): string
+    private function statusNote(string $status, ?Order $order = null): string
     {
         return match ($status) {
             'confirmed' => 'Order diterima outlet.',
             'preparing' => 'Order mulai diproses.',
-            'ready_for_pickup' => 'Order siap diambil kurir.',
+            'ready_for_pickup' => $order && $order->isPickup()
+                ? 'Pesanan siap diambil customer'
+                : 'Order siap diambil kurir.',
             'picked_up' => 'Order sudah diambil kurir.',
             'delivering' => 'Order sedang diantar.',
             'completed' => 'Order selesai dikirim.',
