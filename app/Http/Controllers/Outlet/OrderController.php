@@ -25,6 +25,7 @@ class OrderController extends Controller
         $orders = Order::query()
             ->where('outlet_id', $outlet->id)
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
+            ->with('items')
             ->latest()
             ->paginate(20)
             ->withQueryString();
