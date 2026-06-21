@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
-import { AlertCircle, MapPin, Store } from 'lucide-react';
+import { AlertCircle, MapPin, Store, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation } from '@/lib/customer-location';
@@ -12,6 +12,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const fulfillmentType = draft?.fulfillment?.fulfillment_type ?? 'pickup';
     const isDelivery = fulfillmentType === 'delivery_dombi';
     const [itemsExpanded, setItemsExpanded] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
     const form = useForm({
         payment_method: 'cod',
     });
@@ -24,10 +25,20 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const ctaLabel = buildCtaLabel(form.data.payment_method, total);
 
     const submit = () => {
+        setSubmitError(null);
         form.post('/customer/checkout/payment', {
             onSuccess: () => {
                 cart.clear();
                 markUsedForOrder();
+            },
+            onError: (errors) => {
+                if (errors.error) {
+                    setSubmitError(errors.error);
+                } else if (Object.keys(errors).length > 0) {
+                    setSubmitError(Object.values(errors)[0] as string);
+                } else {
+                    setSubmitError('Terjadi kesalahan. Silakan coba lagi.');
+                }
             },
         });
     };
@@ -48,6 +59,26 @@ export default function CheckoutPayment({ draft, summary }: any) {
         >
             <Head title="Pembayaran" />
             <StepHeader title="Pembayaran" step="3 dari 3" backHref="/customer/checkout/customer" />
+
+            {/* Error Banner */}
+            {(submitError || Object.keys(form.errors).length > 0) && (
+                <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+                    <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+                    <div className="flex-1">
+                        <p className="text-sm font-semibold text-red-800">Gagal membuat pesanan</p>
+                        <p className="mt-1 text-xs text-red-600">
+                            {submitError || Object.values(form.errors)[0]}
+                        </p>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => setSubmitError(null)}
+                        className="shrink-0 text-red-400 hover:text-red-600"
+                    >
+                        <XCircle className="h-4 w-4" />
+                    </button>
+                </div>
+            )}
 
             {/* Pesanan */}
             <section className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
