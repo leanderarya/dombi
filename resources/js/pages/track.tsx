@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { CheckCircle2, Clock, Copy, MapPin, Navigation, Package, Phone, Share2, Store, Truck, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
@@ -65,8 +65,10 @@ const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
 export default function TrackPage({ order, found, cancellationReasons = [], canCreateAccount = false, accountPhone, accountName }: Props) {
     const [copied, setCopied] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-    const cancelForm = useForm({ reason: '', note: '' });
+    const [cancelReason, setCancelReason] = useState('');
+    const [cancelNote, setCancelNote] = useState('');
     const [cancelError, setCancelError] = useState<string | null>(null);
+    const [cancelLoading, setCancelLoading] = useState(false);
 
     if (!found || !order) {
         return <NotFoundState />;
@@ -94,20 +96,16 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
         }
     }
 
-    const [cancelLoading, setCancelLoading] = useState(false);
-
     async function handleCancel() {
-        if (!cancelForm.data.reason) return;
+        if (!cancelReason) return;
 
         console.log('[Cancel] Starting cancel request...');
         setCancelLoading(true);
-        cancelForm.clearErrors();
         setCancelError(null);
 
         try {
             const url = `/track/${order.recovery_token}/cancel`;
             console.log('[Cancel] URL:', url);
-            console.log('[Cancel] Token:', order.recovery_token);
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -118,13 +116,12 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                 },
                 body: JSON.stringify({
-                    reason: cancelForm.data.reason,
-                    note: cancelForm.data.note || null,
+                    reason: cancelReason,
+                    note: cancelNote || null,
                 }),
             });
 
             console.log('[Cancel] Response status:', response.status);
-            console.log('[Cancel] Response URL:', response.url);
 
             const data = await response.json();
             console.log('[Cancel] Response data:', data);
@@ -133,9 +130,6 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
                 console.log('[Cancel] Success! Reloading...');
                 setCancelDialogOpen(false);
                 window.location.reload();
-            } else if (data.errors) {
-                console.log('[Cancel] Validation errors:', data.errors);
-                cancelForm.setErrors(data.errors);
             } else {
                 console.log('[Cancel] Error:', data.error);
                 setCancelError(data.error || 'Gagal membatalkan pesanan.');
@@ -537,9 +531,9 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
                         <button
                             key={reason}
                             type="button"
-                            onClick={() => cancelForm.setData('reason', reason)}
+                            onClick={() => setCancelReason(reason)}
                             className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
-                                cancelForm.data.reason === reason
+                                cancelReason === reason
                                     ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
                                     : 'border-border text-text active:opacity-80'
                             }`}
@@ -549,19 +543,17 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
                     ))}
                 </div>
 
-                {cancelForm.data.reason === 'Lainnya' && (
+                {cancelReason === 'Lainnya' && (
                     <div className="mt-3">
                         <textarea
-                            value={cancelForm.data.note}
-                            onChange={(e) => cancelForm.setData('note', e.target.value)}
+                            value={cancelNote}
+                            onChange={(e) => setCancelNote(e.target.value)}
                             placeholder="Jelaskan alasan pembatalan..."
                             className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
                         />
                     </div>
                 )}
 
-                {cancelForm.errors.reason && <p className="mt-2 text-xs text-red-600">{cancelForm.errors.reason}</p>}
-                {cancelForm.errors.note && <p className="mt-1 text-xs text-red-600">{cancelForm.errors.note}</p>}
                 {cancelError && <p className="mt-2 text-sm font-medium text-red-600">{cancelError}</p>}
 
                 <div className="mt-4 flex gap-2">
@@ -575,7 +567,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
                     <button
                         type="button"
                         onClick={handleCancel}
-                        disabled={!cancelForm.data.reason || cancelLoading}
+                        disabled={!cancelReason || cancelLoading}
                         className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
                     >
                         {cancelLoading ? 'Membatalkan...' : 'Ya, Batalkan'}
