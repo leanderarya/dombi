@@ -84,7 +84,6 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
     const url = page.url;
     const pendingCounts = ownerOperationalCounts ?? { pendingReturns: 0, pendingExchanges: 0 };
     const [notificationOpen, setNotificationOpen] = useState(false);
-    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -94,24 +93,12 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             <OfflineBanner />
             <UpdateBanner />
 
-            {/* Mobile overlay */}
-            {sidebarOpen && (
-                <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
-            )}
-
-            {/* Sidebar */}
-            <aside className={`fixed inset-y-0 left-0 z-50 w-56 border-r border-zinc-200 bg-white transition-transform lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+            {/* Sidebar — hidden on mobile, visible on desktop */}
+            <aside className="fixed inset-y-0 left-0 z-50 hidden w-56 border-r border-zinc-200 bg-white lg:block">
                 <div className="flex h-full flex-col">
                     {/* Brand */}
                     <div className="px-4 pt-5 pb-3">
-                        <div className="flex items-center justify-between">
-                            <div className="rounded-lg bg-emerald-700 px-3 py-2 text-lg font-semibold text-white">Dombi</div>
-                            <button onClick={() => setSidebarOpen(false)} aria-label="Tutup sidebar" className="rounded-md p-1.5 text-zinc-500 hover:bg-zinc-100 lg:hidden">
-                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
+                        <div className="rounded-lg bg-emerald-700 px-3 py-2 text-lg font-semibold text-white">Dombi</div>
                         <div className="mt-2.5 text-sm font-medium text-slate-800">{auth?.user?.name}</div>
                         <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Owner</div>
                     </div>
@@ -134,12 +121,9 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             <main id="main-content" className="pb-16 lg:pb-0 lg:pl-56">
                 {/* Mobile header */}
                 <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 lg:hidden">
-                    <button onClick={() => setSidebarOpen(true)} aria-label="Buka menu" className="rounded-md p-1.5 text-zinc-600 hover:bg-zinc-100">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-                        </svg>
-                    </button>
                     <span className="text-sm font-semibold text-slate-800">Dombi</span>
+                    <div className="flex-1" />
+                    <NotificationBell onClick={() => setNotificationOpen(true)} />
                 </div>
                 <div className="mx-auto max-w-[1400px] px-6 py-5">
                     {children}
