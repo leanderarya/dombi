@@ -15,6 +15,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const isDelivery = fulfillmentType === 'delivery_dombi';
     const [itemsExpanded, setItemsExpanded] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [paymentExpanded, setPaymentExpanded] = useState(false);
     const form = useForm({
         payment_method: 'cod',
     });
@@ -179,40 +180,69 @@ export default function CheckoutPayment({ draft, summary }: any) {
             </section>
 
             {/* Pembayaran */}
-            <section className="mt-4 rounded-xl border border-border bg-white p-4">
-                <div className="text-[13px] text-text-subtle">Pembayaran</div>
-                <div className="mt-3 space-y-3">
-                    {paymentOptions.map((option: any) => (
-                        <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => form.setData('payment_method', option.value)}
-                            className={`flex min-h-[68px] w-full items-center justify-between rounded-2xl px-4 text-left transition-all active:opacity-80 ${
-                                form.data.payment_method === option.value
-                                    ? 'bg-emerald-50 ring-2 ring-emerald-500'
-                                    : 'bg-white border border-border'
-                            }`}
-                        >
-                            <div>
-                                <div className="text-sm font-semibold text-text">{option.label}</div>
-                                <div className="mt-1 text-xs text-text-muted">
-                                    {option.value === 'qris' && '+0.7%'}
-                                    {option.value === 'card' && '+4%'}
-                                    {option.value === 'transfer' && '0% fee'}
-                                    {option.value === 'cod' && 'Bayar saat produk diterima'}
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-sm font-bold tabular-nums text-text">
-                                    {option.fee_rate > 0 ? `${(option.fee_rate * 100).toFixed(option.value === 'qris' ? 1 : 0)}%` : '0%'}
-                                </div>
-                                {form.data.payment_method === option.value && paymentFee > 0 && (
-                                    <div className="mt-0.5 text-xs font-semibold text-emerald-700">+ {formatCurrency(paymentFee)}</div>
-                                )}
-                            </div>
-                        </button>
-                    ))}
+            <section className="mt-4 rounded-2xl bg-white p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-[13px] text-text-subtle">Pembayaran</span>
+                    <button
+                        type="button"
+                        onClick={() => setPaymentExpanded(!paymentExpanded)}
+                        className="text-xs font-semibold text-emerald-600 active:opacity-80"
+                    >
+                        {paymentExpanded ? 'Tutup' : 'Ganti'}
+                    </button>
                 </div>
+
+                {/* Selected payment — always visible */}
+                <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
+                    <div>
+                        <div className="text-sm font-semibold text-text">{selectedOption?.label ?? 'COD'}</div>
+                        <div className="mt-0.5 text-xs text-text-muted">
+                            {form.data.payment_method === 'cod' && 'Bayar saat produk diterima'}
+                            {form.data.payment_method === 'qris' && 'Scan QR untuk membayar'}
+                            {form.data.payment_method === 'transfer' && 'Transfer bank'}
+                            {form.data.payment_method === 'card' && 'Kartu kredit/debit'}
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-sm font-bold tabular-nums text-text">
+                            {selectedOption?.fee_rate ? `${(selectedOption.fee_rate * 100).toFixed(1)}%` : '0%'}
+                        </div>
+                        {paymentFee > 0 && (
+                            <div className="mt-0.5 text-[11px] font-semibold text-emerald-700">+ {formatCurrency(paymentFee)}</div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Other options — expandable */}
+                {paymentExpanded && (
+                    <div className="mt-3 space-y-2">
+                        {paymentOptions
+                            .filter((option: any) => option.value !== form.data.payment_method)
+                            .map((option: any) => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => {
+                                        form.setData('payment_method', option.value);
+                                        setPaymentExpanded(false);
+                                    }}
+                                    className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-left transition-all active:opacity-80"
+                                >
+                                    <div>
+                                        <div className="text-sm font-medium text-text">{option.label}</div>
+                                        <div className="mt-0.5 text-[11px] text-text-subtle">
+                                            {option.value === 'qris' && 'Scan QR untuk membayar'}
+                                            {option.value === 'card' && 'Kartu kredit/debit'}
+                                            {option.value === 'transfer' && 'Transfer bank'}
+                                        </div>
+                                    </div>
+                                    <div className="text-xs font-bold tabular-nums text-text-muted">
+                                        {option.fee_rate > 0 ? `+${(option.fee_rate * 100).toFixed(1)}%` : 'Gratis'}
+                                    </div>
+                                </button>
+                            ))}
+                    </div>
+                )}
             </section>
 
             {/* Total Card */}
