@@ -19,6 +19,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
     const { addOrder } = useOrderRecovery();
     const [copied, setCopied] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [cancelError, setCancelError] = useState<string | null>(null);
 
     const cancelForm = useForm({
         reason: '',
@@ -82,10 +83,10 @@ return;
                     window.location.reload();
                 } else {
                     // Show error
-                    alert(data.error || 'Gagal membatalkan pesanan.');
+                    setCancelError(data.error || 'Gagal membatalkan pesanan.');
                 }
             } catch {
-                alert('Gagal membatalkan pesanan. Periksa koneksi Anda.');
+                setCancelError('Gagal membatalkan pesanan. Periksa koneksi Anda.');
             }
             return;
         }
@@ -111,7 +112,7 @@ return;
                     <div className="text-center">
                         <div className="text-sm font-semibold text-text">{order.order_code}</div>
                         {order.ordered_at && (
-                            <div className="text-[11px] text-text-muted">{formatDate(order.ordered_at)}</div>
+                            <div className="text-[13px] text-text-muted">{formatDate(order.ordered_at)}</div>
                         )}
                     </div>
                     <div className="h-10 w-10" />
@@ -181,13 +182,6 @@ return;
                 {/* Pickup Info Card */}
                 {order.fulfillment_type === 'pickup' && order.outlet && (
                     <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50">
-                                <Store className="h-3.5 w-3.5 text-blue-600" />
-                            </div>
-                            <span className="text-[13px] text-text-subtle">Ambil di Outlet</span>
-                        </div>
-
                         <div className="flex items-start gap-3">
                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
                                 <Store className="h-5 w-5 text-blue-600" />
@@ -213,7 +207,7 @@ return;
                                 />
                                 <div className="mt-2 text-center">
                                     <div className="text-sm font-bold tracking-wider text-blue-700">{order.order_code}</div>
-                                    <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
+                                    <div className="mt-1 text-[13px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
                                 </div>
                             </div>
                         )}
@@ -260,33 +254,6 @@ return;
                                 Hubungi Outlet
                             </a>
                         )}
-                    </div>
-                )}
-
-                {/* Tracking Code — only show if NOT already shown in confirmation banner */}
-                {order.recovery_token && !(isConfirmation || isPending) && (
-                    <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100">
-                                <svg className="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
-                            </div>
-                            <span className="text-[13px] font-semibold text-blue-900">Kode Pelacakan</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1 rounded-lg bg-white px-3 py-2.5 border border-blue-200">
-                                <div className="text-xl font-bold tabular-nums tracking-wider text-blue-900">{order.recovery_token}</div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleCopyLink}
-                                className="flex h-11 items-center gap-1.5 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white active:opacity-80"
-                            >
-                                {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                                {copied ? 'Tersalin' : 'Salin'}
-                            </button>
-                        </div>
                     </div>
                 )}
 
@@ -416,6 +383,8 @@ return;
             {/* Cancel Dialog */}
             <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} title="Batalkan Pesanan">
                 <p className="text-sm text-text-muted">Pilih alasan pembatalan.</p>
+
+                {cancelError && <p className="mt-2 text-sm font-medium text-red-600">{cancelError}</p>}
 
                 <div className="mt-4 space-y-2">
                     {cancellationReasons.map((reason: string) => (
