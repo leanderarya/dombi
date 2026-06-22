@@ -1,4 +1,5 @@
 import { router, usePage } from '@inertiajs/react';
+import { User } from 'lucide-react';
 import { useState } from 'react';
 import type {ReactNode} from 'react';
 import type { PropsWithChildren } from 'react';
@@ -10,7 +11,6 @@ import OwnerSidebarNav from '@/components/owner/owner-sidebar-nav';
 import OwnerMobileNav from '@/components/owner-mobile-nav';
 import UpdateBanner from '@/components/update-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
-import { User } from 'lucide-react';
 
 interface NavGroup {
     label: string;

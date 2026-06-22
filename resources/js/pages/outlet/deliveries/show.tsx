@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { getDeliveryStatus } from '@/lib/status-labels';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import DeliveryTimeline from '@/components/operations/delivery-timeline';
@@ -7,6 +6,7 @@ import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDeliveryAge } from '@/lib/format';
+import { getDeliveryStatus } from '@/lib/status-labels';
 
 export default function OutletDeliveryShow({ delivery }: any) {
     const order = delivery.order;

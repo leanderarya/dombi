@@ -484,6 +484,7 @@ function CompleteSheetContent({ deliveryId, onClose }: { deliveryId: number; onC
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
+
         if (file) {
             form.setData('proof_image', file);
             setProofPreview(URL.createObjectURL(file));

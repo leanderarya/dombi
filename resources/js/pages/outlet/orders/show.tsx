@@ -1,5 +1,4 @@
 import { Head, router, useForm, usePage } from '@inertiajs/react';
-import { getOrderStatus } from '@/lib/status-labels';
 import { MapPin } from 'lucide-react';
 import { useState } from 'react';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
@@ -9,6 +8,7 @@ import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import OutletLayout from '@/layouts/outlet-layout';
+import { getOrderStatus } from '@/lib/status-labels';
 
 export default function OutletOrderShow({ order, couriers, rejectionReasons = [] }: any) {
     const { errors } = usePage<any>().props;

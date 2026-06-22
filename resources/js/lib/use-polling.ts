@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react';
 import { router } from '@inertiajs/react';
+import { useEffect, useRef, useCallback } from 'react';
 
 export function usePolling(intervalMs: number = 30000, only: string[] = []) {
     const isOnline = useRef(true);

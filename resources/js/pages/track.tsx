@@ -5,9 +5,9 @@ import { useState } from 'react';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/offline-banner';
 import Dialog from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
-import { formatCurrency, formatDate } from '@/lib/format';
 import { getOrderStatusLabel } from '@/lib/customer-status';
+import { formatCurrency, formatDate } from '@/lib/format';
+import { cn } from '@/lib/utils';
 
 type TrackOrder = {
     id: number;
@@ -90,6 +90,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
 
     function handleShare() {
         const text = `Lacak pesanan Dombi saya:\n${trackingUrl}`;
+
         if (navigator.share) {
             navigator.share({ text }).catch(() => {});
         } else {
@@ -98,7 +99,9 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     }
 
     async function handleCancel() {
-        if (!cancelReason) return;
+        if (!cancelReason) {
+return;
+}
 
         console.log('[Cancel] Starting cancel request...');
         setCancelLoading(true);
@@ -624,6 +627,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
             });
 
             const data = await response.json();
+
             if (data.success) {
                 window.location.href = data.redirect;
             } else {

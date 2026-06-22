@@ -88,6 +88,7 @@ return;
             } catch {
                 setCancelError('Gagal membatalkan pesanan. Periksa koneksi Anda.');
             }
+
             return;
         }
 
@@ -130,8 +131,8 @@ return;
                     </span>
                 </div>
 
-                {/* Order Success Banner — shown immediately after checkout */}
-                {(isConfirmation || isPending) && order.recovery_token && (
+                {/* Order Success Banner — shown immediately after checkout, hidden when terminal */}
+                {(isConfirmation || isPending) && !isTerminal && order.recovery_token && (
                     <div className="mt-4 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-5">
                         <div className="flex items-center gap-3 mb-3">
                             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">

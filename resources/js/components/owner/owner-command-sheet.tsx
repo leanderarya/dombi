@@ -28,6 +28,7 @@ export default function OwnerCommandSheet({ open, onClose }: Props) {
                     }
 
                     const Icon = item.icon!;
+
                     return (
                         <Link
                             key={item.href}
@@ -45,7 +46,9 @@ export default function OwnerCommandSheet({ open, onClose }: Props) {
             <div className="border-t border-border pt-3">
                 <button
                     type="button"
-                    onClick={() => { onClose(); router.post('/logout'); }}
+                    onClick={() => {
+ onClose(); router.post('/logout'); 
+}}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-red-600 active:opacity-80"
                 >
                     <LogOut className="h-5 w-5" />

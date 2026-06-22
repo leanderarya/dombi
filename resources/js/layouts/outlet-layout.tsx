@@ -5,8 +5,8 @@ import type { ReactNode } from 'react';
 import type { PropsWithChildren } from 'react';
 import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
-import OutletBottomNav from '@/components/outlet-bottom-nav';
 import OutletMoreSheet from '@/components/outlet/outlet-more-sheet';
+import OutletBottomNav from '@/components/outlet-bottom-nav';
 import MobileRoleLayout from '@/components/ui/mobile-role-layout';
 import PageHeader from '@/components/ui/page-header';
 

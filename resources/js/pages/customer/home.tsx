@@ -43,7 +43,10 @@ export default function Home({ customerName, activeOrders }: any) {
     // Auto-rotate hero slides (respect prefers-reduced-motion)
     useEffect(() => {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (prefersReducedMotion) return;
+
+        if (prefersReducedMotion) {
+return;
+}
 
         const timer = setInterval(() => {
             setSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
@@ -107,6 +110,7 @@ return;
         if (nearestOutlet?.name) {
             setPickupOutletName(nearestOutlet.name);
             router.get('/customer/products');
+
             return;
         }
 

@@ -176,6 +176,7 @@ function getStepLabel(step: TimelineStep, fulfillmentType?: string): string {
     if (fulfillmentType === 'pickup' && step.pickupLabel) {
         return step.pickupLabel;
     }
+
     return step.label;
 }
 

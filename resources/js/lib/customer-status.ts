@@ -66,9 +66,11 @@ export function getOrderStatusLabel(status: string, fulfillmentType?: string): s
     if (status === 'ready_for_pickup') {
         return isPickup ? 'Siap Diambil' : 'Menunggu Kurir';
     }
+
     if (status === 'picked_up') {
         return 'Kurir Mengambil';
     }
+
     if (status === 'delivering') {
         return 'Sedang Diantar';
     }
@@ -99,6 +101,7 @@ export function orderProgressIndex(status: string, fulfillmentType?: string): nu
 
     const steps = isPickup ? pickupSteps : deliverySteps;
     const index = steps.indexOf(status);
+
     return index >= 0 ? index : 0;
 }
 

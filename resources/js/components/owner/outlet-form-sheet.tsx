@@ -5,8 +5,8 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
 import { reverseGeocode } from '@/lib/geocoding';
+import { cn } from '@/lib/utils';
 
 const OutletLocationMap = lazy(() => import('./outlet-location-map'));
 
