@@ -62,23 +62,23 @@ return false;
             </section>
 
             {/* Sticky Filters + Search */}
-            <div className="sticky top-0 z-20 -mx-4 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+            <div className="sticky top-0 z-20 -mx-4 border-b border-border bg-surface/80 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <FinanceFilterTabs tabs={FILTER_TABS} active={filter} onChange={setFilter} />
                     <div className="relative sm:w-56">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari outlet..."
-                            className="w-full rounded-full border border-slate-200 bg-white py-2 pl-9 pr-8 text-sm placeholder:text-slate-400 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="w-full rounded-full border border-border bg-white py-2 pl-9 pr-8 text-sm placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/30"
                         />
                         {search && (
                             <button
                                 type="button"
                                 onClick={() => setSearch('')}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-muted"
                             >
                                 ✕
                             </button>
@@ -90,22 +90,22 @@ return false;
             {/* Outlet List */}
             <section className="mt-4">
                 {filtered.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
+                    <div className="rounded-2xl border border-dashed border-border bg-white py-16 text-center">
                         {search ? (
                             <>
-                                <Store className="mx-auto h-10 w-10 text-slate-300" />
-                                <p className="mt-3 text-sm font-medium text-slate-600">Outlet tidak ditemukan</p>
+                                <Store className="mx-auto h-10 w-10 text-text-subtle" />
+                                <p className="mt-3 text-sm font-medium text-text-muted">Outlet tidak ditemukan</p>
                             </>
                         ) : filter === 'paid' ? (
                             <>
                                 <PartyPopper className="mx-auto h-10 w-10 text-emerald-400" />
-                                <p className="mt-3 text-sm font-medium text-slate-700">Semua outlet sudah lunas</p>
-                                <p className="mt-1 text-xs text-slate-400">Tidak ada tagihan aktif</p>
+                                <p className="mt-3 text-sm font-medium text-text">Semua outlet sudah lunas</p>
+                                <p className="mt-1 text-xs text-text-subtle">Tidak ada tagihan aktif</p>
                             </>
                         ) : (
                             <>
-                                <Store className="mx-auto h-10 w-10 text-slate-300" />
-                                <p className="mt-3 text-sm font-medium text-slate-600">Belum ada outlet dengan status ini</p>
+                                <Store className="mx-auto h-10 w-10 text-text-subtle" />
+                                <p className="mt-3 text-sm font-medium text-text-muted">Belum ada outlet dengan status ini</p>
                             </>
                         )}
                     </div>
