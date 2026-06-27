@@ -84,7 +84,7 @@ return;
             </section>
 
             {/* Sticky Filter */}
-            <div className="sticky top-0 z-20 -mx-4 border-b border-slate-200 bg-white/80 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+            <div className="sticky top-0 z-20 -mx-4 border-b border-border bg-surface/80 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
                 <FinanceFilterTabs
                     tabs={FILTER_TABS}
                     active={statusFilter}
@@ -101,7 +101,7 @@ return;
                         onChange={(e) => setRejectReason(e.target.value)}
                         placeholder="Masukkan alasan penolakan..."
                         rows={2}
-                        className="mt-2 w-full rounded-lg border border-red-200 bg-white px-3 py-2 text-sm focus:border-red-400 focus:ring-1 focus:ring-red-200"
+                        className="mt-2 w-full rounded-lg border border-red-200 bg-surface px-3 py-2 text-sm focus:border-red-400 focus:ring-1 focus:ring-red-200"
                     />
                     <div className="mt-3 flex gap-2">
                         <button
@@ -117,7 +117,7 @@ return;
                             onClick={() => {
  setRejectingId(null); setRejectReason(''); 
 }}
-                            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                            className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold text-text hover:bg-surface-muted"
                         >
                             Batal
                         </button>
@@ -128,10 +128,10 @@ return;
             {/* Payment Cards */}
             <section className="mt-4">
                 {payments.data.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-300 bg-white py-16 text-center">
-                        <DollarSign className="mx-auto h-10 w-10 text-slate-300" />
-                        <p className="mt-3 text-sm font-medium text-slate-600">Belum ada pembayaran</p>
-                        <p className="mt-1 text-xs text-slate-400">Pembayaran outlet akan muncul di sini.</p>
+                    <div className="rounded-2xl border border-dashed border-border bg-surface py-16 text-center">
+                        <DollarSign className="mx-auto h-10 w-10 text-text-subtle" />
+                        <p className="mt-3 text-sm font-medium text-text-muted">Belum ada pembayaran</p>
+                        <p className="mt-1 text-xs text-text-subtle">Pembayaran outlet akan muncul di sini.</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -174,8 +174,8 @@ return;
                             onClick={() => router.get(`/owner/settlement-payments?page=${page}&status=${statusFilter}`)}
                             className={`h-9 w-9 rounded-full text-sm font-medium transition-colors ${
                                 page === payments.current_page
-                                    ? 'bg-emerald-600 text-white shadow-sm'
-                                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                    ? 'bg-primary text-white shadow-sm'
+                                    : 'bg-surface-muted text-text-muted hover:bg-surface-muted'
                             }`}
                         >
                             {page}
