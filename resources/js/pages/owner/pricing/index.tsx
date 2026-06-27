@@ -51,32 +51,32 @@ export default function PricingIndex({ outlets, kpis }: Props) {
 
             {/* Outlet Card Grid */}
             <section className="mt-6">
-                <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Pilih Outlet</h2>
+                <h2 className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Pilih Outlet</h2>
                 <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {outlets.map((outlet) => (
                         <Link
                             key={outlet.id}
                             href={`/owner/pricing/outlets/${outlet.id}`}
-                            className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 transition-colors hover:border-emerald-200 hover:bg-emerald-50/30 active:opacity-80"
+                            className="flex items-center gap-4 rounded-xl border border-border bg-white p-4 transition-colors hover:border-primary/20 hover:bg-primary-light/30 active:opacity-80"
                         >
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
-                                <Store className="h-6 w-6 text-emerald-600" />
+                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary-light">
+                                <Store className="h-6 w-6 text-primary" />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="text-sm font-bold text-slate-900">{outlet.name}</div>
-                                <div className="mt-0.5 text-xs text-slate-500">{outlet.variant_prices_count} Produk</div>
+                                <div className="text-sm font-bold text-text">{outlet.name}</div>
+                                <div className="mt-0.5 text-xs text-text-muted">{outlet.variant_prices_count} Produk</div>
                             </div>
-                            <svg className="h-4 w-4 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <svg className="h-4 w-4 shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                             </svg>
                         </Link>
                     ))}
                 </div>
                 {outlets.length === 0 && (
-                    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-8 text-center">
-                        <Store className="mx-auto h-10 w-10 text-slate-300" />
-                        <p className="mt-2 text-sm font-semibold text-slate-700">Belum ada outlet aktif</p>
-                        <p className="mt-1 text-xs text-slate-500">Tambahkan outlet terlebih dahulu untuk mengelola harga.</p>
+                    <div className="mt-4 rounded-xl border border-border bg-white p-8 text-center">
+                        <Store className="mx-auto h-10 w-10 text-text-subtle" />
+                        <p className="mt-2 text-sm font-semibold text-text">Belum ada outlet aktif</p>
+                        <p className="mt-1 text-xs text-text-muted">Tambahkan outlet terlebih dahulu untuk mengelola harga.</p>
                     </div>
                 )}
             </section>
