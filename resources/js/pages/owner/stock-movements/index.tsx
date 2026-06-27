@@ -10,6 +10,7 @@ import { formatDate } from '@/lib/format';
 
 const typeLabels: Record<string, string> = { initial_stock: 'Stok Awal', stock_adjustment: 'Penyesuaian', order_reserved: 'Direservasi', order_completed: 'Selesai', order_cancelled: 'Dibatalkan', restock_in: 'Restock Masuk', delivery_returned: 'Dikembalikan' };
 const typeColors: Record<string, string> = { initial_stock: 'text-text-muted', stock_adjustment: 'text-amber-700', order_reserved: 'text-blue-700', order_completed: 'text-emerald-700', order_cancelled: 'text-red-700', restock_in: 'text-emerald-700', delivery_returned: 'text-purple-700' };
+const typeBorderColors: Record<string, string> = { initial_stock: 'border-l-slate-300', stock_adjustment: 'border-l-amber-400', order_reserved: 'border-l-blue-400', order_completed: 'border-l-emerald-400', order_cancelled: 'border-l-red-400', restock_in: 'border-l-emerald-400', delivery_returned: 'border-l-purple-400' };
 const typeOptions = Object.entries(typeLabels).map(([k, v]) => ({ value: k, label: v }));
 
 export default function StockMovementsIndex({ movements, outlets, products, filters }: any) {
@@ -33,22 +34,67 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
             {movements.data.length === 0 ? (
                 <EmptyState icon={<ClipboardList className="h-8 w-8 text-text-subtle" />} title="Belum ada movement" description="Perubahan stok akan tercatat di sini." />
             ) : (
-                <div className="space-y-1.5">
-                    {movements.data.map((m: any) => (
-                        <div key={m.id} className="flex items-center gap-3 rounded-lg border border-border bg-white px-3 py-2.5">
-                            <div className={`shrink-0 text-xs font-bold tabular-nums ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
-                                {m.quantity >= 0 ? '+' : ''}{m.quantity}
+                <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-5">
+                    {/* Left: movement list */}
+                    <div className="space-y-1.5">
+                        {movements.data.map((m: any) => (
+                            <div key={m.id} className={`flex items-center gap-3 rounded-lg border border-border border-l-[3px] bg-white px-3 py-2.5 transition-all duration-200 hover:shadow-sm ${typeBorderColors[m.type] ?? 'border-l-slate-300'}`}>
+                                <div className={`shrink-0 text-xs font-bold tabular-nums ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
+                                    {m.quantity >= 0 ? '+' : ''}{m.quantity}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <div className="truncate text-xs font-semibold text-text">{m.product?.name ?? '-'}</div>
+                                    <div className="mt-0.5 text-[11px] text-text-subtle">{m.outlet?.name} · <span className={typeColors[m.type] ?? 'text-text-muted'}>{typeLabels[m.type] ?? m.type}</span></div>
+                                </div>
+                                <div className="shrink-0 text-right">
+                                    <div className="text-[11px] tabular-nums text-text-muted">{m.before_stock}→{m.after_stock}</div>
+                                    <div className="text-[11px] tabular-nums text-text-subtle">{formatDate(m.created_at)}</div>
+                                </div>
                             </div>
-                            <div className="min-w-0 flex-1">
-                                <div className="truncate text-xs font-semibold text-text">{m.product?.name ?? '-'}</div>
-                                <div className="mt-0.5 text-[11px] text-text-subtle">{m.outlet?.name} · <span className={typeColors[m.type] ?? 'text-text-muted'}>{typeLabels[m.type] ?? m.type}</span></div>
+                        ))}
+                    </div>
+
+                    {/* Right: filter summary + stats (desktop only, sticky) */}
+                    <div className="hidden lg:block">
+                        <div className="sticky top-4 space-y-3">
+                            {/* Stats summary */}
+                            <div className="rounded-xl border border-border bg-white p-4 transition-shadow hover:shadow-sm">
+                                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-3">Ringkasan</div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-text-muted">Total Movement</span>
+                                        <span className="font-bold tabular-nums text-text">{movements.data.length}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-text-muted">Stok Masuk</span>
+                                        <span className="font-bold tabular-nums text-emerald-700">{movements.data.filter((m: any) => m.quantity > 0).length}</span>
+                                    </div>
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-text-muted">Stok Keluar</span>
+                                        <span className="font-bold tabular-nums text-red-600">{movements.data.filter((m: any) => m.quantity < 0).length}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="shrink-0 text-right">
-                                <div className="text-[11px] tabular-nums text-text-muted">{m.before_stock}→{m.after_stock}</div>
-                                <div className="text-[11px] tabular-nums text-text-subtle">{formatDate(m.created_at)}</div>
-                            </div>
+
+                            {/* Active filters */}
+                            {activeFilterCount > 0 && (
+                                <div className="rounded-xl border border-border bg-white p-4 transition-shadow hover:shadow-sm">
+                                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-3">Filter Aktif</div>
+                                    <div className="space-y-1.5">
+                                        {filters.outlet_id && (
+                                            <div className="text-xs text-text">Outlet: {outlets.find((o: any) => String(o.id) === String(filters.outlet_id))?.name ?? filters.outlet_id}</div>
+                                        )}
+                                        {filters.product_id && (
+                                            <div className="text-xs text-text">Produk: {products.find((p: any) => String(p.id) === String(filters.product_id))?.name ?? filters.product_id}</div>
+                                        )}
+                                        {filters.type && (
+                                            <div className="text-xs text-text">Tipe: <span className={typeColors[filters.type]}>{typeLabels[filters.type] ?? filters.type}</span></div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                    ))}
+                    </div>
                 </div>
             )}
             <Pagination links={movements.links} />
