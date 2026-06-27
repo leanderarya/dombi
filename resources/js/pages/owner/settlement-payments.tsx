@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
-import { DollarSign, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
+import { DollarSign, Clock, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import FinanceFilterTabs from '@/components/owner/finance/finance-filter-tabs';
 import FinanceKpiCard from '@/components/owner/finance/finance-kpi-card';
 import PaymentHistoryCard from '@/components/owner/finance/payment-history-card';
@@ -20,6 +20,14 @@ export default function OwnerSettlementPayments({ payments, statusFilter, kpis }
     const [rejectReason, setRejectReason] = useState('');
     const [processing, setProcessing] = useState(false);
     const [proofUrl, setProofUrl] = useState<string | null>(null);
+    const [batchVerifying, setBatchVerifying] = useState(false);
+
+    // P2: Default to pending_verification if no statusFilter
+    useEffect(() => {
+        if (!statusFilter || statusFilter === 'all') {
+            router.get('/owner/settlement-payments', { status: 'pending_verification' }, { replace: true, preserveState: true });
+        }
+    }, []);
 
     const handleVerify = (paymentId: number) => {
         if (!confirm('Verifikasi pembayaran ini?')) {
@@ -35,22 +43,33 @@ return;
     const handleReject = (paymentId: number) => {
         if (rejectingId === paymentId) {
             if (!rejectReason.trim()) {
-return;
-}
+                return;
+            }
 
             setProcessing(true);
             router.post(`/owner/settlement-payments/${paymentId}/reject`, {
                 rejection_reason: rejectReason,
             }, {
                 onSuccess: () => {
- setRejectingId(null); setRejectReason(''); 
-},
+                    setRejectingId(null);
+                    setRejectReason('');
+                },
                 onFinish: () => setProcessing(false),
             });
         } else {
             setRejectingId(paymentId);
             setRejectReason('');
         }
+    };
+
+    const handleBatchVerify = () => {
+        if (!confirm(`Verifikasi semua ${pendingPayments.length} pembayaran yang pending?`)) {
+            return;
+        }
+        setBatchVerifying(true);
+        router.post('/owner/settlement-payments/bulk-verify', {}, {
+            onFinish: () => setBatchVerifying(false),
+        });
     };
 
     const pendingPayments = payments.data.filter((p: any) => p.status === 'pending_verification');
@@ -85,11 +104,28 @@ return;
 
             {/* Sticky Filter */}
             <div className="sticky top-0 z-20 -mx-4 border-b border-border bg-surface/80 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-                <FinanceFilterTabs
-                    tabs={FILTER_TABS}
-                    active={statusFilter}
-                    onChange={(key) => router.get('/owner/settlement-payments', { status: key }, { preserveState: true })}
-                />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <FinanceFilterTabs
+                        tabs={FILTER_TABS}
+                        active={statusFilter}
+                        onChange={(key) => router.get('/owner/settlement-payments', { status: key }, { preserveState: true })}
+                    />
+                    {pendingPayments.length > 0 && statusFilter !== 'verified' && statusFilter !== 'rejected' && (
+                        <button
+                            type="button"
+                            onClick={handleBatchVerify}
+                            disabled={batchVerifying}
+                            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                            {batchVerifying ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                                <CheckCircle className="h-3.5 w-3.5" />
+                            )}
+                            Verifikasi Semua ({pendingPayments.length})
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Reject reason input */}
@@ -167,21 +203,36 @@ return;
 
             {/* Pagination */}
             {payments.last_page > 1 && (
-                <div className="mt-6 flex justify-center gap-2">
-                    {Array.from({ length: payments.last_page }, (_, i) => i + 1).map((page) => (
-                        <button
-                            key={page}
-                            onClick={() => router.get(`/owner/settlement-payments?page=${page}&status=${statusFilter}`)}
-                            className={`h-9 w-9 rounded-full text-sm font-medium transition-colors ${
-                                page === payments.current_page
-                                    ? 'bg-primary text-white shadow-sm'
-                                    : 'bg-surface-muted text-text-muted hover:bg-surface-muted'
-                            }`}
-                        >
-                            {page}
-                        </button>
-                    ))}
-                </div>
+                <>
+                    {/* Desktop: number pagination */}
+                    <div className="mt-6 hidden justify-center gap-2 sm:flex">
+                        {Array.from({ length: payments.last_page }, (_, i) => i + 1).map((page) => (
+                            <button
+                                key={page}
+                                onClick={() => router.get(`/owner/settlement-payments?page=${page}&status=${statusFilter}`)}
+                                className={`h-9 w-9 rounded-full text-sm font-medium transition-colors ${
+                                    page === payments.current_page
+                                        ? 'bg-primary text-white shadow-sm'
+                                        : 'bg-surface-muted text-text-muted hover:bg-surface-muted'
+                                }`}
+                            >
+                                {page}
+                            </button>
+                        ))}
+                    </div>
+                    {/* Mobile: Load More */}
+                    {payments.current_page < payments.last_page && (
+                        <div className="mt-6 flex justify-center sm:hidden">
+                            <button
+                                type="button"
+                                onClick={() => router.get(`/owner/settlement-payments?page=${payments.current_page + 1}&status=${statusFilter}`, {}, { preserveState: true })}
+                                className="rounded-full border border-border bg-surface px-6 py-2.5 text-sm font-semibold text-text transition-colors hover:bg-surface-muted"
+                            >
+                                Muat Lebih Banyak
+                            </button>
+                        </div>
+                    )}
+                </>
             )}
 
             {/* Proof Modal */}

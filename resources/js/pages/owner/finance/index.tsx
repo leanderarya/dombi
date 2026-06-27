@@ -7,24 +7,25 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { formatCurrency } from '@/lib/format';
 
 const FILTER_TABS = [
-    { key: 'all', label: 'Semua' },
+    { key: 'action_needed', label: 'Butuh Tindakan' },
     { key: 'overdue', label: 'Terlambat' },
     { key: 'unpaid', label: 'Belum Bayar' },
-    { key: 'partial', label: 'Sebagian' },
-    { key: 'unsettled', label: 'Belum Ditagihkan' },
-    { key: 'no_activity', label: 'Belum Ada Aktivitas' },
     { key: 'paid', label: 'Lunas' },
 ];
 
 export default function FinanceDashboard({ kpis, outlets }: any) {
-    const [filter, setFilter] = useState('all');
+    const [filter, setFilter] = useState('action_needed');
     const [search, setSearch] = useState('');
 
     const filtered = useMemo(() => {
         return outlets.filter((o: any) => {
-            if (filter !== 'all' && o.display_status !== filter) {
-return false;
-}
+            if (filter === 'action_needed') {
+                if (o.display_status !== 'overdue' && o.display_status !== 'unpaid') {
+                    return false;
+                }
+            } else if (filter !== 'all' && o.display_status !== filter) {
+                return false;
+            }
 
             if (search) {
                 return o.outlet_name.toLowerCase().includes(search.toLowerCase());
@@ -96,12 +97,18 @@ return false;
                                 <Store className="mx-auto h-10 w-10 text-text-subtle" />
                                 <p className="mt-3 text-sm font-medium text-text-muted">Outlet tidak ditemukan</p>
                             </>
+                        ) : filter === 'action_needed' ? (
+                            <>
+                                <PartyPopper className="mx-auto h-10 w-10 text-emerald-400" />
+                                <p className="mt-3 text-sm font-medium text-text">Tidak ada outlet yang butuh tindakan</p>
+                                <p className="mt-1 text-xs text-text-subtle">Semua tagihan sudah tertangani</p>
+                            </>
                         ) : filter === 'paid' ? (
                             <>
                                 <PartyPopper className="mx-auto h-10 w-10 text-emerald-400" />
                                 <p className="mt-3 text-sm font-medium text-text">Semua outlet sudah lunas</p>
                                 <p className="mt-1 text-xs text-text-subtle">Tidak ada tagihan aktif</p>
-                            </>
+</>
                         ) : (
                             <>
                                 <Store className="mx-auto h-10 w-10 text-text-subtle" />
