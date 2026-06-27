@@ -10,9 +10,9 @@ export default function EditInventory({ inventory }: any) {
     return (
         <OwnerPageShell title="Edit Stok" backHref="/owner/inventories">
             <div className="mt-2">
-                <div className="text-sm font-semibold text-slate-900">{inventory.outlet?.name}</div>
-                <div className="mt-0.5 text-sm text-slate-600">
-                    {familyName && <span className="text-slate-400">{familyName} &middot; </span>}
+                <div className="text-sm font-semibold text-text">{inventory.outlet?.name}</div>
+                <div className="mt-0.5 text-sm text-text-muted">
+                    {familyName && <span className="text-text-subtle">{familyName} &middot; </span>}
                     {variantName}
                 </div>
             </div>
@@ -20,7 +20,7 @@ export default function EditInventory({ inventory }: any) {
                 onSubmit={(e) => {
  e.preventDefault(); form.put(`/owner/inventories/${inventory.id}`); 
 }}
-                className="mt-5 grid gap-4 rounded-lg border border-slate-200 bg-white p-5 sm:grid-cols-2"
+                className="mt-5 grid gap-4 rounded-lg border border-border bg-white p-5 sm:grid-cols-2"
             >
                 <label className="text-sm">
                     Current Stock
@@ -29,7 +29,7 @@ export default function EditInventory({ inventory }: any) {
                         min="0"
                         value={form.data.current_stock}
                         onChange={(e) => form.setData('current_stock', Number(e.target.value))}
-                        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
+                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
                     />
                 </label>
 
@@ -40,7 +40,7 @@ export default function EditInventory({ inventory }: any) {
                         min="0"
                         value={form.data.minimum_stock}
                         onChange={(e) => form.setData('minimum_stock', Number(e.target.value))}
-                        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
+                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
                     />
                 </label>
 
@@ -49,12 +49,12 @@ export default function EditInventory({ inventory }: any) {
                     <textarea
                         value={form.data.notes}
                         onChange={(e) => form.setData('notes', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
+                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
                     />
                 </label>
 
                 <div className="sm:col-span-2">
-                    <button className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+                    <button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">
                         Update
                     </button>
                 </div>

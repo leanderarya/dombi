@@ -22,14 +22,14 @@ export default function CreateInventory({ outlets, families }: any) {
                 onSubmit={(e) => {
  e.preventDefault(); form.post('/owner/inventories'); 
 }}
-                className="mt-5 grid gap-4 rounded-lg border border-slate-200 bg-white p-5 sm:grid-cols-2"
+                className="mt-5 grid gap-4 rounded-lg border border-border bg-white p-5 sm:grid-cols-2"
             >
                 <label className="text-sm">
                     Outlet
                     <select
                         value={form.data.outlet_id}
                         onChange={(e) => form.setData('outlet_id', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
+                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
                     >
                         <option value="">Pilih Outlet</option>
                         {outlets?.map((o: any) => (
@@ -44,7 +44,7 @@ export default function CreateInventory({ outlets, families }: any) {
                     <select
                         value={form.data.product_variant_id}
                         onChange={(e) => form.setData('product_variant_id', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
+                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
                     >
                         <option value="">Pilih Varian</option>
                         {families?.map((family: any) => (
@@ -65,7 +65,7 @@ export default function CreateInventory({ outlets, families }: any) {
                         min="0"
                         value={form.data.current_stock}
                         onChange={(e) => form.setData('current_stock', Number(e.target.value))}
-                        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
+                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
                     />
                 </label>
 
@@ -76,7 +76,7 @@ export default function CreateInventory({ outlets, families }: any) {
                         min="0"
                         value={form.data.minimum_stock}
                         onChange={(e) => form.setData('minimum_stock', Number(e.target.value))}
-                        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
+                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
                     />
                 </label>
 
@@ -85,12 +85,12 @@ export default function CreateInventory({ outlets, families }: any) {
                     <textarea
                         value={form.data.notes}
                         onChange={(e) => form.setData('notes', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-slate-200 px-3 py-2"
+                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
                     />
                 </label>
 
                 <div className="sm:col-span-2">
-                    <button className="rounded-md bg-emerald-700 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-800">
+                    <button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">
                         Simpan
                     </button>
                 </div>
