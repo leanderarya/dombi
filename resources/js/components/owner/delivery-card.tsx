@@ -25,13 +25,26 @@ interface Props {
     onResolve?: (deliveryId: number) => void;
 }
 
+const statusBorderMap: Record<string, string> = {
+    waiting_assignment: 'border-l-slate-300',
+    waiting_pickup: 'border-l-amber-400',
+    picked_up: 'border-l-blue-400',
+    delivering: 'border-l-indigo-400',
+    completed: 'border-l-emerald-400',
+    failed: 'border-l-red-400',
+    retry_delivery: 'border-l-orange-400',
+    returned_to_outlet: 'border-l-amber-400',
+    cancelled_and_released: 'border-l-slate-300',
+};
+
 export default function DeliveryCard({ item, onAssignCourier, onResolve }: Props) {
     const href = item.type === 'delivery' ? `/owner/deliveries/${item.id}` : `/owner/orders/${item.id}`;
     const isFailed = ['failed', 'retry_delivery', 'returned_to_outlet'].includes(item.status);
     const needsAssignment = item.status === 'waiting_assignment';
+    const borderColor = statusBorderMap[item.status] ?? 'border-l-slate-300';
 
     return (
-        <div className={`rounded-lg border bg-white p-3 transition-all duration-150 active:opacity-80 ${isFailed ? 'border-red-200 bg-red-50/30' : 'border-slate-200'}`}>
+        <div className={`rounded-lg border border-slate-200 border-l-4 bg-white p-3 transition-all duration-150 hover:shadow-md ${borderColor} ${isFailed ? 'bg-red-50/30' : ''}`}>
             <Link href={href} className="block">
                 <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -83,9 +96,9 @@ export default function DeliveryCard({ item, onAssignCourier, onResolve }: Props
                 {needsAssignment && onAssignCourier && (
                     <button
                         onClick={(e) => {
- e.preventDefault(); onAssignCourier(item.id); 
+ e.preventDefault(); onAssignCourier(item.id);
 }}
-                        className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-emerald-700 text-xs font-semibold text-white active:bg-emerald-800"
+                        className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-emerald-700 text-xs font-semibold text-white transition-colors hover:bg-emerald-800 active:bg-emerald-900"
                     >
                         Assign Kurir
                     </button>
@@ -93,9 +106,9 @@ export default function DeliveryCard({ item, onAssignCourier, onResolve }: Props
                 {isFailed && onResolve && (
                     <button
                         onClick={(e) => {
- e.preventDefault(); onResolve(item.id); 
+ e.preventDefault(); onResolve(item.id);
 }}
-                        className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-amber-600 text-xs font-semibold text-white active:bg-amber-700"
+                        className="flex min-h-[36px] flex-1 items-center justify-center rounded-md bg-amber-600 text-xs font-semibold text-white transition-colors hover:bg-amber-700 active:bg-amber-800"
                     >
                         Resolve
                     </button>

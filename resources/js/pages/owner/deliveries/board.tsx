@@ -52,7 +52,7 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
             headerRight={
                 <button
                     onClick={() => setFilterOpen(true)}
-                    className="relative flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-text-muted"
+                    className="relative flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-text-muted transition-colors hover:bg-surface-muted"
                 >
                     <FilterIcon />
                     Filter
@@ -65,21 +65,24 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
             }
         >
             {/* Performance KPIs */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-3 lg:grid-cols-6">
                 <DeliveryPerformanceCard label="Selesai" value={stats.completed} color="green" />
                 <DeliveryPerformanceCard label="Gagal" value={stats.failed} color="red" href="/owner/deliveries?status=failed" />
                 <DeliveryPerformanceCard label="Terlambat" value={stats.overdue} color="amber" />
+                <DeliveryPerformanceCard label="Belum Di-assign" value={stats.unassigned} color="slate" />
+                <DeliveryPerformanceCard label="Ditugaskan" value={stats.assigned} color="blue" />
+                <DeliveryPerformanceCard label="Dalam Perjalanan" value={stats.inTransit} color="purple" />
             </div>
 
             {/* Courier Availability */}
             {couriers.length > 0 && (
-                <div className="mt-4">
+                <div className="mt-5">
                     <CourierAvailabilityCard couriers={couriers} />
                 </div>
             )}
 
             {/* Board Columns */}
-            <div className="mt-4 grid grid-cols-5 gap-4">
+            <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
                 <DeliveryBoardColumn title="Menunggu Kurir" count={stats.unassigned} items={board.unassigned} color="slate" emptyMessage="Semua pesanan sudah di-assign" onAssignCourier={handleAssignCourier} />
                 <DeliveryBoardColumn title="Ditugaskan" count={stats.assigned} items={board.assigned} color="blue" emptyMessage="Tidak ada kurir menunggu pickup" />
                 <DeliveryBoardColumn title="Dalam Perjalanan" count={stats.inTransit} items={board.inTransit} color="purple" emptyMessage="Tidak ada pengiriman dalam perjalanan" />
@@ -90,7 +93,7 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
             {/* Assign Courier Sheet */}
             {selectedOrder && (
                 <AssignCourierSheet order={selectedOrder} couriers={couriers} open={assignOpen} onClose={() => {
- setAssignOpen(false); setSelectedOrder(null); 
+ setAssignOpen(false); setSelectedOrder(null);
 }} />
             )}
 

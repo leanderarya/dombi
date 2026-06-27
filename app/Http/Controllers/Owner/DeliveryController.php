@@ -27,10 +27,19 @@ class DeliveryController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $todayStart = today();
+        $stats = [
+            'total_today' => Delivery::where('updated_at', '>=', $todayStart)->count(),
+            'active' => Delivery::whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])->count(),
+            'completed_today' => Delivery::where('status', 'completed')->where('updated_at', '>=', $todayStart)->count(),
+            'failed_today' => Delivery::where('status', 'failed')->where('updated_at', '>=', $todayStart)->count(),
+        ];
+
         return Inertia::render('owner/deliveries/index', [
             'deliveries' => $deliveries,
             'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['status', 'courier_id', 'search']),
+            'stats' => $stats,
         ]);
     }
 
