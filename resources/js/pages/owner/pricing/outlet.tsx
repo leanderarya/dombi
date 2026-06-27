@@ -127,10 +127,10 @@ return false;
 
     const SortIcon = ({ column }: { column: SortKey }) => {
         if (sortKey !== column) {
-return <ChevronDown className="h-3 w-3 text-slate-300" />;
+return <ChevronDown className="h-3 w-3 text-text-subtle" />;
 }
 
-        return sortDir === 'asc' ? <ChevronUp className="h-3 w-3 text-emerald-600" /> : <ChevronDown className="h-3 w-3 text-emerald-600" />;
+        return sortDir === 'asc' ? <ChevronUp className="h-3 w-3 text-primary" /> : <ChevronDown className="h-3 w-3 text-primary" />;
     };
 
     const handleOpenModal = useCallback((row: PriceRow) => {
@@ -317,8 +317,8 @@ return;
                         onClick={() => toggleSort(col.key)}
                         className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
                             sortKey === col.key
-                                ? 'bg-emerald-50 text-emerald-700'
-                                : 'bg-surface text-text-muted hover:bg-zinc-100'
+                                ? 'bg-primary-light text-primary'
+                                : 'bg-surface text-text-muted hover:bg-surface-muted'
                         }`}
                     >
                         {col.label}
@@ -338,10 +338,10 @@ return;
                                     <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-600">Custom</span>
                                 )}
                             </div>
-                            <Button type="button" size="sm" variant="ghost" onClick={() => handleOpenModal(row)} className="shrink-0 text-emerald-700">Ubah</Button>
+                            <Button type="button" size="sm" variant="ghost" onClick={() => handleOpenModal(row)} className="shrink-0 text-primary">Ubah</Button>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                            <span className="text-text-muted">Pusat: <span className="tabular-nums text-slate-600">{formatCurrency(row.center_price)}</span></span>
+                            <span className="text-text-muted">Pusat: <span className="tabular-nums text-text-muted">{formatCurrency(row.center_price)}</span></span>
                             <span className="text-text-muted">Jual: <span className="font-semibold tabular-nums text-text">{formatCurrency(row.selling_price)}</span></span>
                             <span className={`font-bold tabular-nums ${marginColor(row.margin, row.selling_price)}`}>
                                 {formatCurrency(row.margin)} {formatMarginPercent(row.margin, row.selling_price)}
