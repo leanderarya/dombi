@@ -1,15 +1,22 @@
 import { useForm } from '@inertiajs/react';
-import { MapPin, Package } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import OrderStatusChip from '@/components/owner/order-status-chip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
+import { Select } from '@/components/ui/select';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
+import { getOrderStatus } from '@/lib/status-labels';
 import { isDifferentRecipient } from '@/lib/recipient';
 
 export default function OwnerOrderShow({ order, reservedStocks, couriers }: any) {
     const form = useForm({ courier_id: couriers[0]?.id ?? '' });
     const [resolveOpen, setResolveOpen] = useState(false);
+    const [showFullTimeline, setShowFullTimeline] = useState(false);
+
+    const lastHistory = order.status_histories?.[order.status_histories.length - 1];
+    const olderHistories = order.status_histories?.slice(0, -1) ?? [];
 
     return (
         <OwnerPageShell title={order.order_code} subtitle="Detail pesanan" backHref="/owner/orders" headerRight={<OrderStatusChip status={order.status} />}>
@@ -27,12 +34,42 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
                     </div>
                     <div className="rounded-lg border border-border bg-surface-muted p-4">
                         <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Linimasa</div>
-                        {order.status_histories.map((h: any) => (
-                            <div key={h.id} className="mt-2 border-l-2 border-primary/20 pl-3 text-sm">
-                                <div className="font-medium">{h.to_status.replaceAll('_', ' ')}</div>
-                                <div className="text-xs text-text-subtle">{new Date(h.created_at).toLocaleString('id-ID')}</div>
+                        {/* Last status as prominent badge */}
+                        {lastHistory && (
+                            <div className="mt-2 flex items-center gap-2">
+                                <StatusBadge variant={getOrderStatus(lastHistory.to_status).variant} size="md">
+                                    {getOrderStatus(lastHistory.to_status).label}
+                                </StatusBadge>
+                                <span className="text-xs text-text-subtle">
+                                    {new Date(lastHistory.created_at).toLocaleString('id-ID')}
+                                </span>
                             </div>
-                        ))}
+                        )}
+                        {/* Expandable full timeline */}
+                        {olderHistories.length > 0 && (
+                            <>
+                                <button
+                                    onClick={() => setShowFullTimeline(!showFullTimeline)}
+                                    className="mt-2 flex items-center gap-1 text-xs font-medium text-primary"
+                                >
+                                    {showFullTimeline ? (
+                                        <>Sembunyikan <ChevronUp className="h-3 w-3" /></>
+                                    ) : (
+                                        <>Lihat Semua ({olderHistories.length}) <ChevronDown className="h-3 w-3" /></>
+                                    )}
+                                </button>
+                                {showFullTimeline && (
+                                    <div className="mt-2 space-y-2">
+                                        {olderHistories.map((h: any) => (
+                                            <div key={h.id} className="border-l-2 border-primary/20 pl-3 text-sm">
+                                                <div className="font-medium">{h.to_status.replaceAll('_', ' ')}</div>
+                                                <div className="text-xs text-text-subtle">{new Date(h.created_at).toLocaleString('id-ID')}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
+                        )}
                     </div>
                 </div>
                 <div className="space-y-4">
@@ -72,11 +109,13 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
                     </div>
                     {order.status === 'ready_for_pickup' && !order.delivery && (
                         <form onSubmit={(e) => {
- e.preventDefault(); form.post(`/owner/orders/${order.id}/assign-courier`); 
+ e.preventDefault(); form.post(`/owner/orders/${order.id}/assign-courier`);
 }} className="rounded-lg border border-border bg-surface-muted p-4">
-                            <select value={form.data.courier_id} onChange={(e) => form.setData('courier_id', e.target.value)} className="w-full rounded-md border px-3 py-2 text-sm">
-                                {couriers.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                            </select>
+                            <Select
+                                value={String(form.data.courier_id)}
+                                onChange={(e) => form.setData('courier_id', e.target.value)}
+                                options={couriers.map((c: any) => ({ value: String(c.id), label: c.name }))}
+                            />
                             <button className="mt-2 w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-white">Tugaskan Kurir</button>
                         </form>
                     )}
