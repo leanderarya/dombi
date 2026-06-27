@@ -1,5 +1,5 @@
-import { Head, router } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { ChevronRight, Search } from 'lucide-react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -12,6 +12,7 @@ import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
 
 const statusFilters = [
+    { key: 'needs_action', label: 'Butuh Tindakan' },
     { key: '', label: 'Semua' },
     { key: 'pending_confirmation', label: 'Menunggu Konfirmasi' },
     { key: 'confirmed', label: 'Diterima' },
@@ -29,8 +30,15 @@ const statusFilters = [
 export default function OwnerOrdersIndex({ orders, outlets, filters, stats, couriers }: any) {
     const [assignOrder, setAssignOrder] = useState<any>(null);
 
+    // Default to 'needs_action' when no status filter is set
+    const currentStatus = filters.status ?? 'needs_action';
+
     const setFilter = (key: string, value: string) => {
         router.get('/owner/orders', { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
+    };
+
+    const handleQuickConfirm = (orderId: number) => {
+        router.visit(`/owner/orders/${orderId}`);
     };
 
     return (
@@ -48,10 +56,13 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         className="h-9 w-48"
                     />
                     <Select
-                        value={filters.status ?? ''}
+                        value={currentStatus}
                         onChange={(e) => setFilter('status', e.target.value)}
-                        options={statusFilters.slice(1).map((sf) => ({ value: sf.key, label: sf.label }))}
-                        placeholder="Semua status"
+                        options={[
+                            { value: 'needs_action', label: 'Butuh Tindakan' },
+                            { value: '', label: 'Semua' },
+                            ...statusFilters.filter((sf) => sf.key !== '' && sf.key !== 'needs_action').map((sf) => ({ value: sf.key, label: sf.label })),
+                        ]}
                         aria-label="Filter status"
                         className="h-9"
                     />
@@ -73,7 +84,52 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                 </>
             }
         >
-            <DataTable
+            {/* Mobile card layout (below lg) */}
+            <div className="space-y-3 lg:hidden">
+                {orders.data.length === 0 ? (
+                    <div className="rounded-xl bg-white py-12 text-center text-sm text-text-muted">Tidak ada pesanan</div>
+                ) : (
+                    orders.data.map((order: any) => {
+                        const s = getOrderStatus(order.status);
+
+                        return (
+                            <button
+                                key={order.id}
+                                onClick={() => router.visit(`/owner/orders/${order.id}`)}
+                                className="w-full rounded-xl border border-border bg-surface p-4 text-left active:bg-surface-muted"
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className="font-bold tabular-nums text-text">{order.order_code}</div>
+                                    <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>
+                                </div>
+                                <div className="mt-1 text-sm text-text-muted">{order.outlet?.name ?? '-'}</div>
+                                <div className="mt-2 flex items-center justify-between">
+                                    <span className="text-lg font-bold tabular-nums">{formatCurrency(order.total)}</span>
+                                    <div className="flex items-center gap-2">
+                                        {order.status === 'pending_confirmation' && (
+                                            <span
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleQuickConfirm(order.id);
+                                                }}
+                                                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white active:bg-primary-hover"
+                                            >
+                                                Konfirmasi
+                                            </span>
+                                        )}
+                                        <ChevronRight className="h-4 w-4 text-text-subtle" />
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    })
+                )}
+                <Pagination links={orders.links} />
+            </div>
+
+            {/* Desktop table layout (lg and above) */}
+            <div className="hidden lg:block">
+                <DataTable
                     rowKey="id"
                     data={orders.data}
                     columns={[
@@ -114,6 +170,12 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                     ]}
                     actions={[
                         {
+                            label: 'Konfirmasi',
+                            variant: 'primary',
+                            onClick: (row) => handleQuickConfirm(row.id),
+                            show: (row) => row.status === 'pending_confirmation',
+                        },
+                        {
                             label: 'Detail',
                             variant: 'secondary',
                             onClick: (row) => router.visit(`/owner/orders/${row.id}`),
@@ -129,6 +191,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                     emptyAction={{ label: 'Lihat Semua Pesanan', href: '/owner/orders' }}
                 />
                 <Pagination links={orders.links} />
+            </div>
 
             <AssignCourierSheet order={assignOrder} couriers={couriers ?? []} open={!!assignOrder} onClose={() => setAssignOrder(null)} />
         </OwnerPageShell>

@@ -17,7 +17,14 @@ class OrderController extends Controller
     {
         $orders = Order::query()
             ->with(['outlet', 'items', 'delivery.courier', 'statusHistories'])
-            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
+            ->when(true, function ($query) use ($request) {
+                $status = $request->string('status', 'needs_action')->toString();
+                if ($status === 'needs_action') {
+                    $query->whereIn('status', ['pending_confirmation', 'ready_for_pickup']);
+                } elseif ($status !== '') {
+                    $query->where('status', $status);
+                }
+            })
             ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
             ->when($request->filled('date'), fn ($query) => $query->whereDate('created_at', $request->date('date')))
             ->when($request->filled('search'), fn ($query) => $query->where('order_code', 'like', '%'.$request->string('search')->toString().'%'))
