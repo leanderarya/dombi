@@ -76,7 +76,7 @@ export default function DataTable<T extends Record<string, any>>({
             {data.map((row) => (
                 <div
                     key={row[rowKey]}
-                    className={`rounded-xl border border-border bg-white transition-all duration-200 hover:border-border-strong hover:shadow-sm ${onRowClick ? 'cursor-pointer active:opacity-80' : ''} ${rowClassName ? rowClassName(row) : ''}`}
+                    className={`rounded-xl border border-border bg-white transition-all duration-200 hover:border-border-strong hover:shadow-md ${onRowClick ? 'cursor-pointer active:opacity-80' : ''} ${rowClassName ? rowClassName(row) : ''}`}
                     onClick={() => onRowClick?.(row)}
                 >
                     <div className="p-4">
