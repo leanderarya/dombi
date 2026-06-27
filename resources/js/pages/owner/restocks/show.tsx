@@ -40,12 +40,12 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
     return (
         <OwnerPageShell title={`Restock #${restock.id}`} subtitle={restock.outlet.name} backHref="/owner/restocks">
             <div className="mx-auto max-w-5xl space-y-4">
-                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <section className="rounded-2xl border border-border bg-white p-4">
                     <div className="flex items-start justify-between gap-3">
                         <div>
-                            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Permintaan Restock</p>
-                            <h1 className="mt-1 text-xl font-bold text-slate-950">#{restock.id} · {restock.outlet.name}</h1>
-                            <p className="mt-1 text-xs text-slate-500">{totalRequested} Diminta · {totalApproved || '-'} Disetujui</p>
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-subtle">Permintaan Restock</p>
+                            <h1 className="mt-1 text-xl font-bold text-text">#{restock.id} · {restock.outlet.name}</h1>
+                            <p className="mt-1 text-xs text-text-muted">{totalRequested} Diminta · {totalApproved || '-'} Disetujui</p>
                         </div>
                         <RestockStatusBadge status={restock.status} />
                     </div>
@@ -76,19 +76,19 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <ItemsSummary restock={restock} inventories={inventoryByProduct} />
                 )}
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <section className="rounded-2xl border border-border bg-white p-4">
                     <div className="flex items-center justify-between gap-3">
                         <div>
-                            <h2 className="text-sm font-bold text-slate-950">Linimasa Operasional</h2>
-                            <p className="mt-0.5 text-xs text-slate-500">Ringkasan status, aktor, dan waktu proses.</p>
+                            <h2 className="text-sm font-bold text-text">Linimasa Operasional</h2>
+                            <p className="mt-0.5 text-xs text-text-muted">Ringkasan status, aktor, dan waktu proses.</p>
                         </div>
                     </div>
                     <Timeline events={timeline} />
                 </section>
 
-                <section className="rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm">
-                    <h2 className="text-sm font-bold text-slate-950">Catatan</h2>
-                    <div className="mt-3 space-y-3 text-xs text-slate-600">
+                <section className="rounded-2xl border border-border bg-white p-4 text-sm">
+                    <h2 className="text-sm font-bold text-text">Catatan</h2>
+                    <div className="mt-3 space-y-3 text-xs text-text-muted">
                         <NoteRow label="Catatan outlet" value={restock.notes} />
                         <NoteRow label="Catatan owner" value={restock.owner_notes} />
                         {restock.rejected_reason && <NoteRow label="Alasan penolakan" value={restock.rejected_reason} danger />}
@@ -104,11 +104,11 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
 function DistributionCard({ distribution, restock, totalDistributed }: any) {
     if (!distribution) {
         return (
-            <section className="rounded-2xl border border-dashed border-slate-300 bg-white p-4 shadow-sm">
+            <section className="rounded-2xl border border-dashed border-border bg-white p-4">
                 <div className="flex items-start justify-between gap-3">
                     <div>
-                        <h2 className="text-sm font-bold text-slate-950">Status Distribusi</h2>
-                        <p className="mt-1 text-xs leading-5 text-slate-500">Belum ada distribution. Approve request untuk membuat shipment.</p>
+                        <h2 className="text-sm font-bold text-text">Status Distribusi</h2>
+                        <p className="mt-1 text-xs leading-5 text-text-muted">Belum ada distribution. Approve request untuk membuat shipment.</p>
                     </div>
                 </div>
             </section>
@@ -123,12 +123,12 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
     const actionLabel = actionLabels[distribution.status] ?? 'Monitoring distribution.';
 
     return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="rounded-2xl border border-border bg-white p-4">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-400">Status Distribusi</p>
-                    <h2 className="mt-1 text-lg font-bold text-slate-950">Pengiriman #{distribution.id}</h2>
-                    <p className="mt-1 text-xs text-slate-500">{actionLabel}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-subtle">Status Distribusi</p>
+                    <h2 className="mt-1 text-lg font-bold text-text">Pengiriman #{distribution.id}</h2>
+                    <p className="mt-1 text-xs text-text-muted">{actionLabel}</p>
                 </div>
                 <DistributionStatusBadge status={distribution.status} />
             </div>
@@ -142,13 +142,13 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
                 <Metric label="Tanggal terima" value={formatDate(distribution.received_at)} />
             </div>
 
-            <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-3">
-                <div className="mb-2 text-xs font-bold text-slate-700">Ringkasan pengiriman</div>
+            <div className="mt-4 rounded-xl border border-border bg-slate-50 p-3">
+                <div className="mb-2 text-xs font-bold text-text">Ringkasan pengiriman</div>
                 <div className="space-y-2">
                     {distribution.items.map((item: any) => (
                         <div key={item.id} className="flex items-center justify-between gap-3 text-xs">
-                            <span className="min-w-0 truncate text-slate-600">{item.product.name}</span>
-                            <span className="font-bold text-slate-900">{item.quantity}</span>
+                            <span className="min-w-0 truncate text-text-muted">{item.product.name}</span>
+                            <span className="font-bold text-text">{item.quantity}</span>
                         </div>
                     ))}
                 </div>
@@ -158,7 +158,7 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
                 <button
                     type="button"
                     onClick={() => router.post(`/owner/distributions/${distribution.id}/mark-shipped`)}
-                    className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white transition-all duration-150 active:opacity-80"
+                    className="mt-4 flex min-h-[48px] w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-white transition-all duration-150 active:opacity-80"
                 >
                     Tandai Dikirim
                 </button>
@@ -176,7 +176,7 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
                 </div>
             )}
 
-            <Link href={`/owner/distributions/${distribution.id}`} className="mt-3 block text-center text-xs font-bold text-emerald-700">
+            <Link href={`/owner/distributions/${distribution.id}`} className="mt-3 block text-center text-xs font-bold text-primary">
                 Lihat detail distribution
             </Link>
         </section>
@@ -185,11 +185,11 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
 
 function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
     return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="rounded-2xl border border-border bg-white p-4">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <h2 className="text-sm font-bold text-slate-950">Setujui & Siapkan</h2>
-                    <p className="mt-1 text-xs text-slate-500">Set approved quantity. Distribution akan dibuat status preparing.</p>
+                    <h2 className="text-sm font-bold text-text">Setujui & Siapkan</h2>
+                    <p className="mt-1 text-xs text-text-muted">Set approved quantity. Distribution akan dibuat status preparing.</p>
                 </div>
             </div>
 
@@ -208,21 +208,21 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
                     const inventory: any = inventories.get(item.product_id);
 
                     return (
-                        <div key={item.id} className="rounded-xl border border-slate-200 p-3">
+                        <div key={item.id} className="rounded-xl border border-border p-3">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                    <div className="truncate text-sm font-bold text-slate-950">{item.product.name}</div>
-                                    <div className="mt-0.5 text-xs text-slate-500">Diminta {item.requested_quantity}</div>
+                                    <div className="truncate text-sm font-bold text-text">{item.product.name}</div>
+                                    <div className="mt-0.5 text-xs text-text-muted">Diminta {item.requested_quantity}</div>
                                 </div>
-                                {inventory ? <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} /> : <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-slate-500">Stok Kosong</span>}
+                                {inventory ? <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} /> : <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-text-muted">Stok Kosong</span>}
                             </div>
-                            <label className="mt-3 block text-[11px] font-semibold uppercase tracking-wide text-slate-400">Jumlah disetujui</label>
+                            <label className="mt-3 block text-[11px] font-semibold uppercase tracking-wide text-text-subtle">Jumlah disetujui</label>
                             <input
                                 type="number"
                                 min="0"
                                 value={(form.data.items[index] as any).approved_quantity}
                                 onChange={(event) => onQuantityChange(index, Number(event.target.value))}
-                                className="mt-1 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm font-semibold text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                                className="mt-1 h-11 w-full rounded-lg border border-border px-3 text-sm font-semibold text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
                             />
                         </div>
                     );
@@ -232,10 +232,10 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
                     value={form.data.owner_notes}
                     onChange={(event) => form.setData('owner_notes', event.target.value)}
                     placeholder="Catatan owner"
-                    className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                    className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
                 />
                 {form.errors.items && <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700">{form.errors.items}</div>}
-                <button disabled={form.processing} className="min-h-[48px] w-full rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white transition-all duration-150 active:opacity-80 disabled:opacity-60">
+                <button disabled={form.processing} className="min-h-[48px] w-full rounded-lg bg-primary px-4 text-sm font-bold text-white transition-all duration-150 active:opacity-80 disabled:opacity-60">
                     Setujui & Buat Distribusi
                 </button>
             </form>
@@ -245,9 +245,9 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
 
 function RejectPanel({ restock, form }: any) {
     return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-bold text-slate-950">Tolak Permintaan</h2>
-            <p className="mt-1 text-xs leading-5 text-slate-500">Gunakan hanya jika request tidak bisa dipenuhi.</p>
+        <section className="rounded-2xl border border-border bg-white p-4">
+            <h2 className="text-sm font-bold text-text">Tolak Permintaan</h2>
+            <p className="mt-1 text-xs leading-5 text-text-muted">Gunakan hanya jika request tidak bisa dipenuhi.</p>
             <form
                 onSubmit={(event) => {
                     event.preventDefault();
@@ -259,7 +259,7 @@ function RejectPanel({ restock, form }: any) {
                     value={form.data.rejected_reason}
                     onChange={(event) => form.setData('rejected_reason', event.target.value)}
                     placeholder="Alasan penolakan"
-                    className="min-h-20 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
+                    className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100"
                 />
                 {form.errors.rejected_reason && <div className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700">{form.errors.rejected_reason}</div>}
                 <button disabled={form.processing} className="min-h-[48px] w-full rounded-lg border border-red-200 px-4 text-sm font-bold text-red-700 transition-all duration-150 active:opacity-80 disabled:opacity-60">
@@ -272,18 +272,18 @@ function RejectPanel({ restock, form }: any) {
 
 function ItemsSummary({ restock, inventories }: any) {
     return (
-        <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-sm font-bold text-slate-950">Item Permintaan</h2>
+        <section className="rounded-2xl border border-border bg-white p-4">
+            <h2 className="text-sm font-bold text-text">Item Permintaan</h2>
             <div className="mt-3 space-y-2">
                 {restock.items.map((item: any) => {
                     const inventory: any = inventories.get(item.product_id);
 
                     return (
-                        <div key={item.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                        <div key={item.id} className="rounded-xl border border-border bg-slate-50 p-3">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                    <div className="truncate text-sm font-bold text-slate-950">{item.product.name}</div>
-                                    <div className="mt-1 text-xs text-slate-500">Diminta {item.requested_quantity} · Disetujui {item.approved_quantity ?? 0}</div>
+                                    <div className="truncate text-sm font-bold text-text">{item.product.name}</div>
+                                    <div className="mt-1 text-xs text-text-muted">Diminta {item.requested_quantity} · Disetujui {item.approved_quantity ?? 0}</div>
                                 </div>
                                 {inventory && <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} />}
                             </div>
@@ -301,13 +301,13 @@ function Timeline({ events }: { events: TimelineEvent[] }) {
             {events.map((event, index) => (
                 <div key={`${event.label}-${index}`} className="flex gap-3">
                     <div className="flex flex-col items-center">
-                        <div className={`h-3 w-3 rounded-full border-2 ${event.active ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300 bg-white'}`} />
+                        <div className={`h-3 w-3 rounded-full border-2 ${event.active ? 'border-emerald-600 bg-emerald-600' : 'border-border bg-white'}`} />
                         {index < events.length - 1 && <div className="h-full min-h-10 w-px bg-slate-200" />}
                     </div>
                     <div className="pb-4">
-                        <div className="text-sm font-bold text-slate-950">{event.label}</div>
-                        <div className="mt-0.5 text-xs text-slate-500">{formatDate(event.at)}{event.actor ? ` · ${event.actor}` : ''}</div>
-                        {event.note && <div className="mt-1 text-xs leading-5 text-slate-600">{event.note}</div>}
+                        <div className="text-sm font-bold text-text">{event.label}</div>
+                        <div className="mt-0.5 text-xs text-text-muted">{formatDate(event.at)}{event.actor ? ` · ${event.actor}` : ''}</div>
+                        {event.note && <div className="mt-1 text-xs leading-5 text-text-muted">{event.note}</div>}
                     </div>
                 </div>
             ))}
@@ -317,16 +317,16 @@ function Timeline({ events }: { events: TimelineEvent[] }) {
 
 function Metric({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
     return (
-        <div className={`rounded-xl border p-3 ${muted ? 'border-amber-200 bg-amber-50' : 'border-slate-100 bg-slate-50'}`}>
-            <div className={`text-[11px] font-semibold uppercase tracking-wide ${muted ? 'text-amber-600' : 'text-slate-400'}`}>{label}</div>
-            <div className={`mt-1 truncate text-xs font-bold ${muted ? 'text-amber-800' : 'text-slate-900'}`}>{value}</div>
+        <div className={`rounded-xl border p-3 ${muted ? 'border-amber-200 bg-amber-50' : 'border-border bg-slate-50'}`}>
+            <div className={`text-[11px] font-semibold uppercase tracking-wide ${muted ? 'text-amber-600' : 'text-text-subtle'}`}>{label}</div>
+            <div className={`mt-1 truncate text-xs font-bold ${muted ? 'text-amber-800' : 'text-text'}`}>{value}</div>
         </div>
     );
 }
 
 function NoteRow({ label, value, danger = false }: { label: string; value?: string | null; danger?: boolean }) {
     return (
-        <div className={`rounded-xl border p-3 ${danger ? 'border-red-200 bg-red-50 text-red-700' : 'border-slate-100 bg-slate-50'}`}>
+        <div className={`rounded-xl border p-3 ${danger ? 'border-red-200 bg-red-50 text-red-700' : 'border-border bg-slate-50'}`}>
             <div className="text-[11px] font-semibold uppercase tracking-wide opacity-70">{label}</div>
             <div className="mt-1 leading-5">{value || '-'}</div>
         </div>
