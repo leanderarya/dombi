@@ -22,14 +22,14 @@ interface Props {
 export default function OwnerKpiCard({ label, value, icon, trend, color, className }: Props) {
     return (
         <div className={cn(
-            'group rounded-xl border border-border bg-surface p-4 transition-all duration-200',
-            'hover:border-border-strong hover:shadow-sm hover:-translate-y-0.5',
+            'group rounded-xl border border-border bg-surface p-4 lg:p-5 transition-all duration-200',
+            'lg:shadow-sm hover:border-border-strong hover:shadow-md hover:-translate-y-0.5',
             'active:translate-y-0 active:shadow-none',
             className
         )}>
             <div className="flex items-center gap-2">
                 {icon && (
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted transition-colors group-hover:bg-primary-light">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted transition-colors group-hover:bg-primary-light lg:h-9 lg:w-9">
                         {icon}
                     </div>
                 )}
@@ -39,7 +39,7 @@ export default function OwnerKpiCard({ label, value, icon, trend, color, classNa
                 {value}
             </div>
             {trend && (
-                <div className="mt-1 text-xs text-text-subtle">{trend}</div>
+                <div className="mt-1.5 text-xs font-medium text-text-subtle">{trend}</div>
             )}
         </div>
     );
@@ -51,7 +51,7 @@ interface OwnerKpiCardSkeletonProps {
 
 export function OwnerKpiCardSkeleton({ className }: OwnerKpiCardSkeletonProps) {
     return (
-        <div className={cn('rounded-xl border border-border bg-surface p-4', className)}>
+        <div className={cn('rounded-xl border border-border bg-surface p-4 lg:p-5', className)}>
             <div className="flex items-center gap-3">
                 <div className="h-8 w-8 animate-pulse rounded-lg bg-surface-muted" />
                 <div className="h-4 w-24 animate-pulse rounded bg-surface-muted" />
