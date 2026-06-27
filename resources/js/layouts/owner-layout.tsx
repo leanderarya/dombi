@@ -138,7 +138,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                         </button>
                     </div>
                 </div>
-                <div className="mx-auto max-w-[1400px] px-6 py-5">
+                <div className="mx-auto max-w-[1200px] px-6 py-6 lg:px-8 lg:py-8">
                     {children}
                 </div>
             </main>
