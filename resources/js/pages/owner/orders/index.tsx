@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ChevronRight, Search } from 'lucide-react';
+import { ChevronRight, ClipboardList, Clock, DollarSign, Search, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -10,6 +10,20 @@ import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
+
+const statusBorderColors: Record<string, string> = {
+    pending_confirmation: 'border-l-amber-400',
+    confirmed: 'border-l-blue-400',
+    preparing: 'border-l-indigo-400',
+    ready_for_pickup: 'border-l-emerald-400',
+    delivering: 'border-l-violet-400',
+    completed: 'border-l-emerald-400',
+    cancelled_by_customer: 'border-l-red-400',
+    cancelled_by_outlet: 'border-l-red-400',
+    rejected_by_outlet: 'border-l-red-400',
+    failed_delivery: 'border-l-red-400',
+    expired: 'border-l-red-400',
+};
 
 const statusFilters = [
     { key: 'needs_action', label: 'Butuh Tindakan' },
@@ -91,12 +105,13 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                 ) : (
                     orders.data.map((order: any) => {
                         const s = getOrderStatus(order.status);
+                        const borderColor = statusBorderColors[order.status] ?? 'border-l-gray-300';
 
                         return (
                             <button
                                 key={order.id}
                                 onClick={() => router.visit(`/owner/orders/${order.id}`)}
-                                className="w-full rounded-xl border border-border bg-surface p-4 text-left active:bg-surface-muted"
+                                className={`w-full rounded-xl border border-border border-l-4 ${borderColor} bg-surface p-4 text-left transition-all duration-200 hover:shadow-md active:bg-surface-muted`}
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="font-bold tabular-nums text-text">{order.order_code}</div>
@@ -127,70 +142,133 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                 <Pagination links={orders.links} />
             </div>
 
-            {/* Desktop table layout (lg and above) */}
-            <div className="hidden lg:block">
-                <DataTable
-                    rowKey="id"
-                    data={orders.data}
-                    columns={[
-                        {
-                            key: 'order_code',
-                            label: 'Kode Pesanan',
-                            className: 'font-bold tabular-nums text-text',
-                        },
-                        {
-                            key: 'customer_name',
-                            label: 'Pelanggan',
-                        },
-                        {
-                            key: 'outlet',
-                            label: 'Outlet',
-                            render: (row: any) => row.outlet?.name ?? '-',
-                        },
-                        {
-                            key: 'status',
-                            label: 'Status',
-                            render: (row: any) => {
-                                const s = getOrderStatus(row.status);
-
-                                return <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>;
+            {/* Desktop layout (lg and above) */}
+            <div className="hidden lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
+                {/* Left: order list */}
+                <div>
+                    <DataTable
+                        rowKey="id"
+                        data={orders.data}
+                        rowClassName={(row: any) => `border-l-4 ${statusBorderColors[row.status] ?? 'border-l-gray-300'}`}
+                        columns={[
+                            {
+                                key: 'order_code',
+                                label: 'Kode Pesanan',
+                                className: 'font-bold tabular-nums text-text',
                             },
-                        },
-                        {
-                            key: 'total',
-                            label: 'Total',
-                            className: 'text-right tabular-nums font-semibold',
-                            render: (row: any) => formatCurrency(row.total),
-                        },
-                        {
-                            key: 'created_at',
-                            label: 'Waktu',
-                            render: (row: any) => row.created_at ? new Date(row.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-',
-                        },
-                    ]}
-                    actions={[
-                        {
-                            label: 'Konfirmasi',
-                            variant: 'primary',
-                            onClick: (row) => handleQuickConfirm(row.id),
-                            show: (row) => row.status === 'pending_confirmation',
-                        },
-                        {
-                            label: 'Detail',
-                            variant: 'secondary',
-                            onClick: (row) => router.visit(`/owner/orders/${row.id}`),
-                        },
-                        {
-                            label: 'Assign Kurir',
-                            variant: 'primary',
-                            onClick: (row) => setAssignOrder(row),
-                            show: (row) => row.status === 'ready_for_pickup' && !row.delivery,
-                        },
-                    ]}
-                    emptyMessage="Tidak ada pesanan"
-                    emptyAction={{ label: 'Lihat Semua Pesanan', href: '/owner/orders' }}
-                />
-                <Pagination links={orders.links} />
+                            {
+                                key: 'customer_name',
+                                label: 'Pelanggan',
+                            },
+                            {
+                                key: 'outlet',
+                                label: 'Outlet',
+                                render: (row: any) => row.outlet?.name ?? '-',
+                            },
+                            {
+                                key: 'status',
+                                label: 'Status',
+                                render: (row: any) => {
+                                    const s = getOrderStatus(row.status);
+
+                                    return <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>;
+                                },
+                            },
+                            {
+                                key: 'total',
+                                label: 'Total',
+                                className: 'text-right tabular-nums font-semibold',
+                                render: (row: any) => formatCurrency(row.total),
+                            },
+                            {
+                                key: 'created_at',
+                                label: 'Waktu',
+                                render: (row: any) => row.created_at ? new Date(row.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-',
+                            },
+                        ]}
+                        actions={[
+                            {
+                                label: 'Konfirmasi',
+                                variant: 'primary',
+                                onClick: (row) => handleQuickConfirm(row.id),
+                                show: (row) => row.status === 'pending_confirmation',
+                            },
+                            {
+                                label: 'Detail',
+                                variant: 'secondary',
+                                onClick: (row) => router.visit(`/owner/orders/${row.id}`),
+                            },
+                            {
+                                label: 'Assign Kurir',
+                                variant: 'primary',
+                                onClick: (row) => setAssignOrder(row),
+                                show: (row) => row.status === 'ready_for_pickup' && !row.delivery,
+                            },
+                        ]}
+                        emptyMessage="Tidak ada pesanan"
+                        emptyAction={{ label: 'Lihat Semua Pesanan', href: '/owner/orders' }}
+                    />
+                    <Pagination links={orders.links} />
+                </div>
+
+                {/* Right: KPI stats sidebar */}
+                <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+                    <div className="rounded-xl border border-border bg-white p-5">
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Ringkasan Hari Ini</h3>
+                        <div className="mt-4 space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                    <ClipboardList className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-bold tabular-nums text-text">{stats?.total_today ?? 0}</div>
+                                    <div className="text-xs text-text-muted">Total Pesanan</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                                    <Clock className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-bold tabular-nums text-text">{stats?.pending ?? 0}</div>
+                                    <div className="text-xs text-text-muted">Menunggu Konfirmasi</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                                    <TrendingUp className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-bold tabular-nums text-text">{stats?.completed_today ?? 0}</div>
+                                    <div className="text-xs text-text-muted">Selesai Hari Ini</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                                    <DollarSign className="h-5 w-5" />
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-bold tabular-nums text-text">{formatCurrency(stats?.revenue_today ?? 0)}</div>
+                                    <div className="text-xs text-text-muted">Pendapatan Hari Ini</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Quick actions */}
+                    {(stats?.pending ?? 0) > 0 && (
+                        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                            <div className="text-sm font-semibold text-amber-800">Perlu Tindakan</div>
+                            <div className="mt-1 text-xs text-amber-700">{stats?.pending} pesanan menunggu konfirmasi</div>
+                            <button
+                                onClick={() => setFilter('status', 'pending_confirmation')}
+                                className="mt-3 w-full rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
+                            >
+                                Lihat Pesanan
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <AssignCourierSheet order={assignOrder} couriers={couriers ?? []} open={!!assignOrder} onClose={() => setAssignOrder(null)} />
