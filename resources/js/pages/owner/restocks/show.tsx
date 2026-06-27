@@ -40,7 +40,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
     return (
         <OwnerPageShell title={`Restock #${restock.id}`} subtitle={restock.outlet.name} backHref="/owner/restocks">
             <div className="mx-auto max-w-5xl space-y-4">
-                <section className="rounded-2xl border border-border bg-white p-4">
+                <section className="rounded-xl border border-border bg-white p-4">
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-subtle">Permintaan Restock</p>
@@ -76,7 +76,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <ItemsSummary restock={restock} inventories={inventoryByProduct} />
                 )}
 
-                <section className="rounded-2xl border border-border bg-white p-4">
+                <section className="rounded-xl border border-border bg-white p-4">
                     <div className="flex items-center justify-between gap-3">
                         <div>
                             <h2 className="text-sm font-bold text-text">Linimasa Operasional</h2>
@@ -86,7 +86,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                     <Timeline events={timeline} />
                 </section>
 
-                <section className="rounded-2xl border border-border bg-white p-4 text-sm">
+                <section className="rounded-xl border border-border bg-white p-4 text-sm">
                     <h2 className="text-sm font-bold text-text">Catatan</h2>
                     <div className="mt-3 space-y-3 text-xs text-text-muted">
                         <NoteRow label="Catatan outlet" value={restock.notes} />
@@ -104,7 +104,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
 function DistributionCard({ distribution, restock, totalDistributed }: any) {
     if (!distribution) {
         return (
-            <section className="rounded-2xl border border-dashed border-border bg-white p-4">
+            <section className="rounded-xl border border-dashed border-border bg-white p-4">
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <h2 className="text-sm font-bold text-text">Status Distribusi</h2>
@@ -123,7 +123,7 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
     const actionLabel = actionLabels[distribution.status] ?? 'Monitoring distribution.';
 
     return (
-        <section className="rounded-2xl border border-border bg-white p-4">
+        <section className="rounded-xl border border-border bg-white p-4">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-text-subtle">Status Distribusi</p>
@@ -185,7 +185,7 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
 
 function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
     return (
-        <section className="rounded-2xl border border-border bg-white p-4">
+        <section className="rounded-xl border border-border bg-white p-4">
             <div className="flex items-start justify-between gap-3">
                 <div>
                     <h2 className="text-sm font-bold text-text">Setujui & Siapkan</h2>
@@ -245,7 +245,7 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
 
 function RejectPanel({ restock, form }: any) {
     return (
-        <section className="rounded-2xl border border-border bg-white p-4">
+        <section className="rounded-xl border border-border bg-white p-4">
             <h2 className="text-sm font-bold text-text">Tolak Permintaan</h2>
             <p className="mt-1 text-xs leading-5 text-text-muted">Gunakan hanya jika request tidak bisa dipenuhi.</p>
             <form
@@ -272,7 +272,7 @@ function RejectPanel({ restock, form }: any) {
 
 function ItemsSummary({ restock, inventories }: any) {
     return (
-        <section className="rounded-2xl border border-border bg-white p-4">
+        <section className="rounded-xl border border-border bg-white p-4">
             <h2 className="text-sm font-bold text-text">Item Permintaan</h2>
             <div className="mt-3 space-y-2">
                 {restock.items.map((item: any) => {

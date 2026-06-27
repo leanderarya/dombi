@@ -7,13 +7,8 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
+import { STATUS_BORDER } from '@/lib/status-border';
 import { cn } from '@/lib/utils';
-
-const STATUS_BORDER: Record<string, string> = {
-    critical: 'border-l-4 border-l-red-400',
-    low: 'border-l-4 border-l-amber-400',
-    healthy: 'border-l-4 border-l-emerald-400',
-};
 
 export default function InventoriesIndex({ outletSections, stats }: any) {
     const items = useMemo(() =>
@@ -194,7 +189,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
 
                     {/* Card List */}
                     {paginatedItems.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface/50 py-16 text-center">
+                        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-white py-16 text-center">
                             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-muted">
                                 <Package className="h-7 w-7 text-text-subtle" />
                             </div>
@@ -238,7 +233,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                                     <div
                                         key={row.id}
                                         className={cn(
-                                            'rounded-xl border border-border bg-surface p-4 transition-all duration-200 hover:shadow-md',
+                                            'rounded-xl border border-border border-l-4 bg-white p-4 transition-all duration-200 hover:shadow-md',
                                             STATUS_BORDER[healthKey]
                                         )}
                                     >
@@ -287,7 +282,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-surface px-4 py-3">
+                        <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-white px-4 py-3">
                             <span className="text-sm text-text-muted">
                                 Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)} dari {filteredItems.length} item
                             </span>

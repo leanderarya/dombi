@@ -5,15 +5,8 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { STATUS_BORDER } from '@/lib/status-border';
 import { getReturnStatus } from '@/lib/status-labels';
-
-const STATUS_COLORS: Record<string, string> = {
-    submitted: 'border-l-amber-400',
-    approved: 'border-l-blue-400',
-    rejected: 'border-l-red-400',
-    received_at_center: 'border-l-violet-400',
-    completed: 'border-l-emerald-400',
-};
 
 const STATUS_ICONS: Record<string, typeof CheckCircle2> = {
     submitted: Clock,
@@ -31,7 +24,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
     const rejectForm = useForm({ reason: '' });
 
     const status = getReturnStatus(ret.status);
-    const borderClass = STATUS_COLORS[ret.status] ?? 'border-l-gray-300';
+    const borderClass = STATUS_BORDER[ret.status] ?? 'border-l-gray-300';
     const StatusIcon = STATUS_ICONS[ret.status] ?? Clock;
 
     const handleApprove = () => {

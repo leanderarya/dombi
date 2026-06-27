@@ -5,17 +5,8 @@ import Pagination from '@/components/pagination';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { STATUS_BORDER } from '@/lib/status-border';
 import { getExchangeStatus } from '@/lib/status-labels';
-
-const STATUS_COLORS: Record<string, string> = {
-    submitted: 'border-l-amber-400',
-    approved: 'border-l-blue-400',
-    rejected: 'border-l-red-400',
-    preparing: 'border-l-violet-400',
-    shipped: 'border-l-indigo-400',
-    received: 'border-l-teal-400',
-    completed: 'border-l-emerald-400',
-};
 
 export default function OwnerExchangesIndex({ exchanges, filters, dashboard, outlets, reasons }: any) {
     const handleApprove = (id: number, e: React.MouseEvent) => {
@@ -87,7 +78,7 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                         )}
                         {exchanges.data.map((ex: any) => {
                             const status = getExchangeStatus(ex.status);
-                            const borderClass = STATUS_COLORS[ex.status] ?? 'border-l-gray-300';
+                            const borderClass = STATUS_BORDER[ex.status] ?? 'border-l-gray-300';
 
                             return (
                                 <Link

@@ -7,22 +7,9 @@ import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
+import { STATUS_BORDER } from '@/lib/status-border';
 import { getOrderStatus } from '@/lib/status-labels';
 import { isDifferentRecipient } from '@/lib/recipient';
-
-const statusBorderColors: Record<string, string> = {
-    pending_confirmation: 'border-l-amber-400',
-    confirmed: 'border-l-blue-400',
-    preparing: 'border-l-indigo-400',
-    ready_for_pickup: 'border-l-emerald-400',
-    delivering: 'border-l-violet-400',
-    completed: 'border-l-emerald-400',
-    cancelled_by_customer: 'border-l-red-400',
-    cancelled_by_outlet: 'border-l-red-400',
-    rejected_by_outlet: 'border-l-red-400',
-    failed_delivery: 'border-l-red-400',
-    expired: 'border-l-red-400',
-};
 
 export default function OwnerOrderShow({ order, reservedStocks, couriers }: any) {
     const form = useForm({ courier_id: couriers[0]?.id ?? '' });
@@ -31,7 +18,7 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
 
     const lastHistory = order.status_histories?.[order.status_histories.length - 1];
     const olderHistories = order.status_histories?.slice(0, -1) ?? [];
-    const borderColor = statusBorderColors[order.status] ?? 'border-l-gray-300';
+    const borderColor = STATUS_BORDER[order.status] ?? 'border-l-gray-300';
     const s = getOrderStatus(order.status);
 
     return (

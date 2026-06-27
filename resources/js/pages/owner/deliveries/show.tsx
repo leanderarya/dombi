@@ -6,25 +6,14 @@ import OrderStatusBadge from '@/components/order-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { formatDate } from '@/lib/format';
-
-const statusBorderMap: Record<string, string> = {
-    waiting_assignment: 'border-l-slate-300',
-    waiting_pickup: 'border-l-amber-400',
-    picked_up: 'border-l-blue-400',
-    delivering: 'border-l-indigo-400',
-    completed: 'border-l-emerald-400',
-    failed: 'border-l-red-400',
-    retry_delivery: 'border-l-orange-400',
-    returned_to_outlet: 'border-l-amber-400',
-    cancelled_and_released: 'border-l-slate-300',
-};
+import { STATUS_BORDER } from '@/lib/status-border';
 
 export default function OwnerDeliveryShow({ delivery }: any) {
     const order = delivery.order;
     const canResolve = ['failed', 'retry_delivery', 'returned_to_outlet'].includes(delivery.status);
     const isActive = ['delivering', 'picked_up'].includes(delivery.status);
     const [resolveOpen, setResolveOpen] = useState(false);
-    const borderColor = statusBorderMap[delivery.status] ?? 'border-l-slate-300';
+    const borderColor = STATUS_BORDER[delivery.status] ?? 'border-l-slate-300';
 
     return (
         <OwnerPageShell
@@ -35,16 +24,16 @@ export default function OwnerDeliveryShow({ delivery }: any) {
             <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                 {/* Left: Main Content */}
                 <div className="space-y-5">
-                    <section className={`rounded-lg border border-slate-200 border-l-4 bg-white p-5 ${borderColor}`}>
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Item Pesanan</h2>
+                    <section className={`rounded-xl border border-border border-l-4 bg-white p-5 ${borderColor}`}>
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-text-subtle">Item Pesanan</h2>
                         <div className="mt-3 space-y-3">
                             {order.items.map((item: any) => (
-                                <div key={item.id} className="flex justify-between border-t border-slate-100 pt-3 text-sm">
+                                <div key={item.id} className="flex justify-between border-t border-border pt-3 text-sm">
                                     <div>
-                                        <div className="font-medium text-slate-900">{item.product_name}</div>
-                                        <div className="text-xs text-slate-500">Jml {item.quantity}</div>
+                                        <div className="font-medium text-text">{item.product_name}</div>
+                                        <div className="text-xs text-text-muted">Jml {item.quantity}</div>
                                     </div>
-                                    <div className="font-semibold tabular-nums text-slate-900">
+                                    <div className="font-semibold tabular-nums text-text">
                                         Rp {Number(item.subtotal).toLocaleString('id-ID')}
                                     </div>
                                 </div>
@@ -52,14 +41,14 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                         </div>
                     </section>
 
-                    <section className={`rounded-lg border border-slate-200 border-l-4 bg-white p-5 ${borderColor}`}>
-                        <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Linimasa</h2>
+                    <section className={`rounded-xl border border-border border-l-4 bg-white p-5 ${borderColor}`}>
+                        <h2 className="text-sm font-bold uppercase tracking-wider text-text-subtle">Linimasa</h2>
                         <div className="mt-3 space-y-3">
                             {order.status_histories.map((history: any) => (
-                                <div key={history.id} className="border-l-2 border-slate-200 pl-3">
-                                    <div className="text-sm font-medium text-slate-900">{history.to_status.replaceAll('_', ' ')}</div>
-                                    {history.notes && <div className="text-xs text-slate-500">{history.notes}</div>}
-                                    <div className="text-[11px] text-slate-400">
+                                <div key={history.id} className="border-l-2 border-primary/20 pl-3">
+                                    <div className="text-sm font-medium text-text">{history.to_status.replaceAll('_', ' ')}</div>
+                                    {history.notes && <div className="text-xs text-text-muted">{history.notes}</div>}
+                                    <div className="text-[11px] text-text-subtle">
                                         {formatDate(history.created_at)} {history.actor ? `oleh ${history.actor.name}` : ''}
                                     </div>
                                 </div>
@@ -87,15 +76,15 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                 <aside className="hidden lg:block">
                     <div className="sticky top-4 space-y-4">
                         {/* Status Card */}
-                        <section className="rounded-lg border border-slate-200 bg-white p-5">
-                            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Status</h2>
+                        <section className="rounded-xl border border-border bg-white p-5">
+                            <h2 className="text-sm font-bold uppercase tracking-wider text-text-subtle">Status</h2>
                             <div className="mt-3 flex flex-col gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs text-slate-500">Pesanan</span>
+                                    <span className="text-xs text-text-muted">Pesanan</span>
                                     <OrderStatusBadge status={order.status} />
                                 </div>
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs text-slate-500">Pengiriman</span>
+                                    <span className="text-xs text-text-muted">Pengiriman</span>
                                     <DeliveryStatusBadge status={delivery.status} />
                                 </div>
                             </div>
@@ -108,25 +97,25 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                         </section>
 
                         {/* Delivery Info */}
-                        <section className="rounded-lg border border-slate-200 bg-white p-5 text-sm">
-                            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Info Pengiriman</h2>
-                            <div className="mt-3 space-y-2 text-slate-600">
+                        <section className="rounded-xl border border-border bg-white p-5 text-sm">
+                            <h2 className="text-sm font-bold uppercase tracking-wider text-text-subtle">Info Pengiriman</h2>
+                            <div className="mt-3 space-y-2 text-text">
                                 <div className="flex justify-between">
-                                    <span className="text-slate-400">Outlet</span>
+                                    <span className="text-text-muted">Outlet</span>
                                     <span className="font-medium">{order.outlet?.name ?? '-'}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-slate-400">Pelanggan</span>
+                                    <span className="text-text-muted">Pelanggan</span>
                                     <span className="font-medium">{order.customer_name}</span>
                                 </div>
-                                <div className="text-xs text-slate-400">{order.customer_address}</div>
-                                <div className="border-t border-slate-100 pt-2">
+                                <div className="text-xs text-text-muted">{order.customer_address}</div>
+                                <div className="border-t border-border pt-2">
                                     <div className="flex justify-between">
-                                        <span className="text-slate-400">Pengambilan</span>
+                                        <span className="text-text-muted">Pengambilan</span>
                                         <span>{formatDate(delivery.pickup_time)}</span>
                                     </div>
                                     <div className="flex justify-between">
-                                        <span className="text-slate-400">Terkirim</span>
+                                        <span className="text-text-muted">Terkirim</span>
                                         <span>{formatDate(delivery.delivered_time)}</span>
                                     </div>
                                 </div>
@@ -151,15 +140,15 @@ export default function OwnerDeliveryShow({ delivery }: any) {
 
                         {/* Courier Info */}
                         {delivery.courier && (
-                            <section className="rounded-lg border border-slate-200 bg-white p-5">
-                                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-500">Kurir</h2>
+                            <section className="rounded-xl border border-border bg-white p-5">
+                                <h2 className="text-sm font-bold uppercase tracking-wider text-text-subtle">Kurir</h2>
                                 <div className="mt-3 flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-600">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-muted text-sm font-bold text-text">
                                         {delivery.courier.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <div className="text-sm font-semibold text-slate-900">{delivery.courier.name}</div>
-                                        <div className="text-xs text-slate-400">Kurir</div>
+                                        <div className="text-sm font-semibold text-text">{delivery.courier.name}</div>
+                                        <div className="text-xs text-text-muted">Kurir</div>
                                     </div>
                                 </div>
                             </section>
@@ -170,13 +159,13 @@ export default function OwnerDeliveryShow({ delivery }: any) {
 
             {/* Mobile: Status + Info (visible only on small screens) */}
             <div className="mt-5 space-y-4 lg:hidden">
-                <section className="rounded-lg border border-slate-200 bg-white p-4">
+                <section className="rounded-xl border border-border bg-white p-4">
                     <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Pesanan</span>
+                        <span className="text-xs text-text-muted">Pesanan</span>
                         <OrderStatusBadge status={order.status} />
                     </div>
                     <div className="mt-2 flex items-center justify-between">
-                        <span className="text-xs text-slate-500">Pengiriman</span>
+                        <span className="text-xs text-text-muted">Pengiriman</span>
                         <DeliveryStatusBadge status={delivery.status} />
                     </div>
                 </section>
