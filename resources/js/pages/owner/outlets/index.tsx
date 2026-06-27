@@ -1,5 +1,6 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { Store } from 'lucide-react';
+import { Pencil, Store } from 'lucide-react';
+import { useState } from 'react';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
@@ -9,8 +10,32 @@ import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils';
 
+type FilterKey = 'all' | 'active' | 'inactive' | 'low_stock';
+
+const FILTERS: { key: FilterKey; label: string }[] = [
+    { key: 'all', label: 'Semua' },
+    { key: 'active', label: 'Aktif' },
+    { key: 'inactive', label: 'Nonaktif' },
+    { key: 'low_stock', label: 'Stok Rendah' },
+];
+
+function matchesFilter(outlet: any, filter: FilterKey): boolean {
+    switch (filter) {
+        case 'active':
+            return outlet.status === 'active' && Number(outlet.low_stock_count) === 0;
+        case 'inactive':
+            return outlet.status !== 'active';
+        case 'low_stock':
+            return Number(outlet.low_stock_count) > 0;
+        default:
+            return true;
+    }
+}
+
 export default function OutletsIndex({ outlets }: any) {
     const { flash } = usePage<any>().props;
+    const [filter, setFilter] = useState<FilterKey>('active');
+    const filtered = outlets.data.filter((o: any) => matchesFilter(o, filter));
     const activeOutlets = outlets.data.filter((outlet: any) => outlet.status === 'active').length;
     const lowStockOutlets = outlets.data.filter((outlet: any) => Number(outlet.low_stock_count) > 0).length;
     const busyOutlets = outlets.data.filter((outlet: any) => Number(outlet.active_orders_count) >= 3).length;
@@ -32,9 +57,28 @@ export default function OutletsIndex({ outlets }: any) {
                 <Metric label="Sibuk" value={busyOutlets} />
             </div>
 
+            {/* Filter Tabs */}
+            <div className="mb-3 flex gap-1.5 overflow-x-auto">
+                {FILTERS.map((f) => (
+                    <button
+                        key={f.key}
+                        type="button"
+                        onClick={() => setFilter(f.key)}
+                        className={cn(
+                            'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
+                            filter === f.key
+                                ? 'bg-text text-white'
+                                : 'bg-surface-muted text-text-muted hover:bg-border',
+                        )}
+                    >
+                        {f.label}
+                    </button>
+                ))}
+            </div>
+
             <DataTable
                 rowKey="id"
-                data={outlets.data}
+                data={filtered}
                 columns={[
                     {
                         key: 'name',
@@ -75,10 +119,24 @@ export default function OutletsIndex({ outlets }: any) {
                         label: 'Restock',
                         className: 'tabular-nums',
                     },
+                    {
+                        key: 'edit',
+                        label: '',
+                        className: 'w-px',
+                        render: (row: any) => (
+                            <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); router.visit(`/owner/outlets/${row.id}/edit`); }}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
+                                title="Edit"
+                            >
+                                <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                        ),
+                    },
                 ]}
                 actions={[
                     { label: 'Detail', variant: 'secondary', onClick: (row) => router.visit(`/owner/outlets/${row.id}`) },
-                    { label: 'Edit', variant: 'secondary', onClick: (row) => router.visit(`/owner/outlets/${row.id}/edit`) },
                     { label: 'Inventaris', variant: 'secondary', onClick: (row) => router.visit(`/owner/inventories?outlet_id=${row.id}`) },
                 ]}
                 emptyMessage="Belum ada outlet"

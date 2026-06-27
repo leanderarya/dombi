@@ -18,6 +18,7 @@ import OutletProducts from '@/components/owner/outlet-products';
 import OutletStatusBadge from '@/components/owner/outlet-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import SectionCard from '@/components/ui/section-card';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 const OutletLocationMap = lazy(
@@ -159,24 +160,24 @@ return;
                 </SectionCard>
 
                 {/* Jam Operasional */}
-                <SectionCard label="Jam Operasional" labelRight={<Clock className="h-4 w-4 text-text-subtle" />}>
+                <CollapsibleSection icon={<Clock className="h-4 w-4 text-text-subtle" />} label="Jam Operasional">
                     <OperatingHoursManager
                         outletId={outlet.id}
                         initialHours={operatingHours ?? []}
                     />
-                </SectionCard>
+                </CollapsibleSection>
 
                 {/* Hari Libur */}
-                <SectionCard label="Hari Libur" labelRight={<Calendar className="h-4 w-4 text-text-subtle" />}>
+                <CollapsibleSection icon={<Calendar className="h-4 w-4 text-text-subtle" />} label="Hari Libur">
                     <HolidayManager
                         outletId={outlet.id}
                         initialHolidays={holidays ?? []}
                     />
-                </SectionCard>
+                </CollapsibleSection>
 
                 {/* Area Layanan */}
                 {outlet.delivery_radius_km && (
-                    <SectionCard label="Area Layanan" labelRight={<MapPin className="h-4 w-4 text-text-subtle" />}>
+                    <CollapsibleSection icon={<MapPin className="h-4 w-4 text-text-subtle" />} label="Area Layanan">
                         <p className="text-sm font-medium text-text">
                             {outlet.delivery_radius_km} km
                         </p>
@@ -184,7 +185,7 @@ return;
                             Customer di luar radius ini tidak dapat memesan
                             delivery.
                         </p>
-                    </SectionCard>
+                    </CollapsibleSection>
                 )}
 
                 {/* Produk Outlet */}
@@ -196,7 +197,7 @@ return;
                 </SectionCard>
 
                 {/* Settlement Outlet */}
-                {settlementSummary && (
+                {settlementSummary && Number(settlementSummary.outstanding) > 0 && (
                     <SectionCard
                         label="Settlement Outlet"
                         labelRight={
@@ -228,19 +229,24 @@ return;
                                 <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-text-subtle">Settlement Terakhir</div>
                                 <div className="space-y-1.5">
                                     {settlementSummary.recent_settlements.map((s: any) => {
-                                        const statusBadge: Record<string, { label: string; className: string }> = {
-                                            pending: { label: 'Pending', className: 'bg-surface-muted text-text-muted' },
-                                            due_today: { label: 'Jatuh Tempo', className: 'bg-amber-50 text-amber-700' },
-                                            overdue: { label: 'Terlambat', className: 'bg-red-50 text-red-700' },
-                                            paid: { label: 'Lunas', className: 'bg-emerald-50 text-emerald-700' },
+                                        const variantMap: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
+                                            pending: 'neutral',
+                                            due_today: 'warning',
+                                            overdue: 'danger',
+                                            paid: 'success',
                                         };
-                                        const badge = statusBadge[s.status] ?? statusBadge.pending;
+                                        const labelMap: Record<string, string> = {
+                                            pending: 'Pending',
+                                            due_today: 'Jatuh Tempo',
+                                            overdue: 'Terlambat',
+                                            paid: 'Lunas',
+                                        };
 
                                         return (
                                             <div key={s.id} className="flex items-center justify-between rounded-lg border border-border bg-surface-muted px-3 py-2">
                                                 <div className="text-xs text-text-muted">{s.period_date}</div>
                                                 <div className="text-xs tabular-nums font-semibold">{formatCurrency(s.amount_due)}</div>
-                                                <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${badge.className}`}>{badge.label}</span>
+                                                <StatusBadge variant={variantMap[s.status] ?? 'neutral'} size="sm">{labelMap[s.status] ?? s.status}</StatusBadge>
                                             </div>
                                         );
                                     })}
@@ -302,5 +308,30 @@ function Metric({
                 {label}
             </div>
         </div>
+    );
+}
+
+function CollapsibleSection({
+    icon,
+    label,
+    children,
+}: {
+    icon: React.ReactNode;
+    label: string;
+    children: React.ReactNode;
+}) {
+    return (
+        <details className="group mb-6">
+            <summary className="flex cursor-pointer items-center justify-between rounded-xl border border-border bg-white px-5 py-4 text-sm font-semibold text-text transition-colors hover:bg-surface-muted [&::-webkit-details-marker]:hidden">
+                <div className="flex items-center gap-2">
+                    {icon}
+                    {label}
+                </div>
+                <svg className="h-4 w-4 text-text-subtle transition-transform group-open:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            </summary>
+            <div className="mt-2 rounded-xl border border-border bg-white p-4">
+                {children}
+            </div>
+        </details>
     );
 }
