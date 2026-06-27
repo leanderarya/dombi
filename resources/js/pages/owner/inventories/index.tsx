@@ -24,7 +24,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
     // State for search, filters, sort, and pagination
     const [search, setSearch] = useState('');
     const [outletFilter, setOutletFilter] = useState<string>('all');
-    const [stockFilter, setStockFilter] = useState<'all' | 'critical' | 'low' | 'healthy'>('all');
+    const [stockFilter, setStockFilter] = useState<'all' | 'critical' | 'low' | 'healthy'>('critical');
     const [sortField, setSortField] = useState<'outlet' | 'product' | 'stock' | 'available'>('outlet');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [currentPage, setCurrentPage] = useState(1);
@@ -256,6 +256,15 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                                             <StatusBadge variant={isCritical ? 'danger' : isLow ? 'warning' : 'success'} size="sm">
                                                 {isCritical ? 'Kritis' : isLow ? 'Rendah' : 'Sehat'}
                                             </StatusBadge>
+                                            {(isCritical || isLow) && (
+                                                <Button
+                                                    variant="primary"
+                                                    size="sm"
+                                                    onClick={() => router.visit(`/owner/restocks/create?outlet_id=${row.outlet_id}&product_id=${row.product_id ?? row.variant_id}`)}
+                                                >
+                                                    Restock
+                                                </Button>
+                                            )}
                                             <Button
                                                 variant="secondary"
                                                 size="sm"

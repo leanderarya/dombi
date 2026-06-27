@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { Package } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import FilterSheet from '@/components/owner/filter-sheet';
 import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -19,6 +19,13 @@ export default function OwnerDistributionsIndex({ distributions, outlets, filter
     const [filterOpen, setFilterOpen] = useState(false);
     const activeFilterCount = [filters.status, filters.outlet_id].filter(Boolean).length;
 
+    // Default to "preparing" status when no filters are set
+    useEffect(() => {
+        if (!filters.status && !filters.outlet_id) {
+            router.get('/owner/distributions', { status: 'preparing' }, { preserveState: true, replace: true });
+        }
+    }, []);
+
     const handleFilterApply = (f: Record<string, string>) => {
         router.get('/owner/distributions', { status: f.status || undefined, outlet_id: f.outlet_id || undefined }, { preserveState: true, replace: true });
     };
@@ -29,7 +36,7 @@ export default function OwnerDistributionsIndex({ distributions, outlets, filter
             headerRight={
                 <div className="relative">
                     <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
-                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[11px] font-bold text-white">{activeFilterCount}</span>}
+                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[11px] font-bold text-white">{activeFilterCount}</span>}
                 </div>
             }
         >
