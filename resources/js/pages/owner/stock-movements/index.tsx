@@ -9,7 +9,7 @@ import EmptyState from '@/components/ui/empty-state';
 import { formatDate } from '@/lib/format';
 
 const typeLabels: Record<string, string> = { initial_stock: 'Stok Awal', stock_adjustment: 'Penyesuaian', order_reserved: 'Direservasi', order_completed: 'Selesai', order_cancelled: 'Dibatalkan', restock_in: 'Restock Masuk', delivery_returned: 'Dikembalikan' };
-const typeColors: Record<string, string> = { initial_stock: 'text-slate-600', stock_adjustment: 'text-amber-700', order_reserved: 'text-blue-700', order_completed: 'text-emerald-700', order_cancelled: 'text-red-700', restock_in: 'text-emerald-700', delivery_returned: 'text-purple-700' };
+const typeColors: Record<string, string> = { initial_stock: 'text-text-muted', stock_adjustment: 'text-amber-700', order_reserved: 'text-blue-700', order_completed: 'text-emerald-700', order_cancelled: 'text-red-700', restock_in: 'text-emerald-700', delivery_returned: 'text-purple-700' };
 const typeOptions = Object.entries(typeLabels).map(([k, v]) => ({ value: k, label: v }));
 
 export default function StockMovementsIndex({ movements, outlets, products, filters }: any) {
@@ -26,26 +26,26 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
             headerRight={
                 <div className="relative">
                     <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
-                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-0.5 text-[11px] font-bold text-white">{activeFilterCount}</span>}
+                    {activeFilterCount > 0 && <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[11px] font-bold text-white">{activeFilterCount}</span>}
                 </div>
             }
         >
             {movements.data.length === 0 ? (
-                <EmptyState icon={<ClipboardList className="h-8 w-8 text-slate-400" />} title="Belum ada movement" description="Perubahan stok akan tercatat di sini." />
+                <EmptyState icon={<ClipboardList className="h-8 w-8 text-text-subtle" />} title="Belum ada movement" description="Perubahan stok akan tercatat di sini." />
             ) : (
                 <div className="space-y-1.5">
                     {movements.data.map((m: any) => (
-                        <div key={m.id} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
+                        <div key={m.id} className="flex items-center gap-3 rounded-lg border border-border bg-white px-3 py-2.5">
                             <div className={`shrink-0 text-xs font-bold tabular-nums ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
                                 {m.quantity >= 0 ? '+' : ''}{m.quantity}
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="truncate text-xs font-semibold text-slate-900">{m.product?.name ?? '-'}</div>
-                                <div className="mt-0.5 text-[11px] text-slate-400">{m.outlet?.name} · <span className={typeColors[m.type] ?? 'text-slate-500'}>{typeLabels[m.type] ?? m.type}</span></div>
+                                <div className="truncate text-xs font-semibold text-text">{m.product?.name ?? '-'}</div>
+                                <div className="mt-0.5 text-[11px] text-text-subtle">{m.outlet?.name} · <span className={typeColors[m.type] ?? 'text-text-muted'}>{typeLabels[m.type] ?? m.type}</span></div>
                             </div>
                             <div className="shrink-0 text-right">
-                                <div className="text-[11px] tabular-nums text-slate-500">{m.before_stock}→{m.after_stock}</div>
-                                <div className="text-[11px] tabular-nums text-slate-400">{formatDate(m.created_at)}</div>
+                                <div className="text-[11px] tabular-nums text-text-muted">{m.before_stock}→{m.after_stock}</div>
+                                <div className="text-[11px] tabular-nums text-text-subtle">{formatDate(m.created_at)}</div>
                             </div>
                         </div>
                     ))}
