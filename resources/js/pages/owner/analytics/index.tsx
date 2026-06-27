@@ -49,8 +49,8 @@ export default function OwnerAnalytics({ kpis, outletRevenue, topProducts, perio
                             onClick={() => handlePeriodChange(p.key)}
                             className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                                 period === p.key
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-zinc-100 text-zinc-600 active:bg-zinc-200'
+                                    ? 'bg-primary text-white'
+                                    : 'bg-surface-muted text-zinc-600 active:bg-zinc-200'
                             }`}
                         >
                             {p.label}
@@ -59,57 +59,57 @@ export default function OwnerAnalytics({ kpis, outletRevenue, topProducts, perio
                 </div>
 
                 <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                        <div className="text-[11px] font-medium text-slate-500">Total Revenue</div>
-                        <div className="mt-1 text-lg font-bold tabular-nums text-slate-900">{formatCurrency(kpis.total_revenue)}</div>
+                    <div className="rounded-xl border border-border bg-white p-4">
+                        <div className="text-[11px] font-medium text-text-muted">Total Revenue</div>
+                        <div className="mt-1 text-lg font-bold tabular-nums text-text">{formatCurrency(kpis.total_revenue)}</div>
                     </div>
-                    <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                        <div className="text-[11px] font-medium text-slate-500">Total Orders</div>
-                        <div className="mt-1 text-lg font-bold tabular-nums text-slate-900">{kpis.total_orders}</div>
+                    <div className="rounded-xl border border-border bg-white p-4">
+                        <div className="text-[11px] font-medium text-text-muted">Total Orders</div>
+                        <div className="mt-1 text-lg font-bold tabular-nums text-text">{kpis.total_orders}</div>
                     </div>
-                    <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                        <div className="text-[11px] font-medium text-slate-500">Active Outlets</div>
-                        <div className="mt-1 text-lg font-bold tabular-nums text-slate-900">{kpis.active_outlets}</div>
+                    <div className="rounded-xl border border-border bg-white p-4">
+                        <div className="text-[11px] font-medium text-text-muted">Active Outlets</div>
+                        <div className="mt-1 text-lg font-bold tabular-nums text-text">{kpis.active_outlets}</div>
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Perbandingan Outlet</div>
+                <div className="rounded-xl border border-border bg-white p-4">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-3">Perbandingan Outlet</div>
                     {outletRevenue.length === 0 ? (
-                        <p className="text-sm text-zinc-500 text-center py-4">Belum ada data</p>
+                        <p className="text-sm text-text-muted text-center py-4">Belum ada data</p>
                     ) : (
                         <div className="space-y-3">
                             {outletRevenue.map((item) => (
                                 <div key={item.outlet_id} className="flex items-center justify-between">
                                     <div>
-                                        <div className="text-sm font-medium text-slate-900">{item.outlet.name}</div>
-                                        <div className="text-[11px] text-zinc-500">{item.orders} orders</div>
+                                        <div className="text-sm font-medium text-text">{item.outlet.name}</div>
+                                        <div className="text-[11px] text-text-muted">{item.orders} orders</div>
                                     </div>
-                                    <div className="text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(item.revenue)}</div>
+                                    <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(item.revenue)}</div>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
 
-                <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Produk Terlaris</div>
+                <div className="rounded-xl border border-border bg-white p-4">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-3">Produk Terlaris</div>
                     {topProducts.length === 0 ? (
-                        <p className="text-sm text-zinc-500 text-center py-4">Belum ada data</p>
+                        <p className="text-sm text-text-muted text-center py-4">Belum ada data</p>
                     ) : (
                         <div className="space-y-3">
                             {topProducts.map((product, index) => (
                                 <div key={product.product_name} className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-200 text-[11px] font-bold text-zinc-600">
+                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-[11px] font-bold text-text-muted">
                                             {index + 1}
                                         </span>
                                         <div>
-                                            <div className="text-sm font-medium text-slate-900">{product.product_name}</div>
-                                            <div className="text-[11px] text-zinc-500">{product.total_qty} unit</div>
+                                            <div className="text-sm font-medium text-text">{product.product_name}</div>
+                                            <div className="text-[11px] text-text-muted">{product.total_qty} unit</div>
                                         </div>
                                     </div>
-                                    <div className="text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(product.total_revenue)}</div>
+                                    <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(product.total_revenue)}</div>
                                 </div>
                             ))}
                         </div>
