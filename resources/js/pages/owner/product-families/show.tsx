@@ -152,7 +152,7 @@ return;
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => setShowFamilyEdit(!showFamilyEdit)}
-                        className="flex h-9 items-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-sm font-medium text-slate-700 hover:bg-zinc-50"
+                        className="flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium text-slate-700 hover:bg-zinc-50"
                     >
                         <Pencil className="h-4 w-4" />
                         Edit
@@ -173,47 +173,47 @@ return;
         >
             {/* Family Edit Form */}
             {showFamilyEdit && (
-                <form onSubmit={handleUpdateFamily} className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
+                <form onSubmit={handleUpdateFamily} className="mb-4 rounded-xl border border-border bg-white p-4">
                     <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-semibold text-slate-900">Edit Product Family</h3>
-                        <button type="button" onClick={() => setShowFamilyEdit(false)} className="text-zinc-400 hover:text-zinc-600">
+                        <h3 className="text-sm font-semibold text-text">Edit Product Family</h3>
+                        <button type="button" onClick={() => setShowFamilyEdit(false)} className="text-text-subtle hover:text-text-muted">
                             <X className="h-4 w-4" />
                         </button>
                     </div>
                     <div className="space-y-3">
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-zinc-500">Nama</label>
+                            <label className="mb-1 block text-xs font-medium text-text-muted">Nama</label>
                             <input
                                 type="text"
                                 value={familyForm.data.name}
                                 onChange={(e) => familyForm.setData('name', e.target.value)}
                                 required
-                                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                             />
                             {familyForm.errors.name && <p className="mt-1 text-xs text-red-600">{familyForm.errors.name}</p>}
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-zinc-500">Brand</label>
+                            <label className="mb-1 block text-xs font-medium text-text-muted">Brand</label>
                             <input
                                 type="text"
                                 value={familyForm.data.brand}
                                 onChange={(e) => familyForm.setData('brand', e.target.value)}
-                                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-zinc-500">Deskripsi</label>
+                            <label className="mb-1 block text-xs font-medium text-text-muted">Deskripsi</label>
                             <textarea
                                 value={familyForm.data.description}
                                 onChange={(e) => familyForm.setData('description', e.target.value)}
                                 rows={2}
-                                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                             />
                         </div>
                         <button
                             type="submit"
                             disabled={familyForm.processing}
-                            className="w-full rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                            className="w-full rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
                         >
                             {familyForm.processing ? 'Menyimpan...' : 'Update'}
                         </button>
@@ -223,7 +223,7 @@ return;
 
             {/* Family Info */}
             {family.description && !showFamilyEdit && (
-                <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
+                <div className="mb-4 rounded-xl border border-border bg-white p-4">
                     <p className="text-sm text-slate-600">{family.description}</p>
                 </div>
             )}
@@ -237,7 +237,7 @@ return;
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari variant..."
-                        className="w-full rounded-lg border border-zinc-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                        className="w-full rounded-lg border border-border bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-primary focus:ring-1 focus:ring-primary"
                     />
                 </div>
                 <button
@@ -248,7 +248,7 @@ return;
 
                         setShowVariantForm(!showVariantForm);
                     }}
-                    className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600 px-3.5 text-xs font-bold text-white hover:bg-emerald-700"
+                    className="flex h-10 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3.5 text-xs font-bold text-white hover:bg-primary"
                 >
                     <Plus className="h-4 w-4" />
                     {showVariantForm ? 'Batal' : 'Tambah Variant'}
@@ -259,89 +259,89 @@ return;
             {(showVariantForm || editingVariant) && (
                 <form
                     onSubmit={editingVariant ? handleUpdateVariant : handleCreateVariant}
-                    className="mb-4 rounded-xl border border-zinc-200 bg-white p-4"
+                    className="mb-4 rounded-xl border border-border bg-white p-4"
                 >
-                    <h2 className="mb-3 text-sm font-semibold text-slate-900">
+                    <h2 className="mb-3 text-sm font-semibold text-text">
                         {editingVariant ? 'Edit Variant' : 'Tambah Variant'}
                     </h2>
                     <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-zinc-500">Rasa</label>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Rasa</label>
                                 <input
                                     type="text"
                                     value={variantForm.data.flavor}
                                     onChange={(e) => variantForm.setData('flavor', e.target.value)}
-                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                     placeholder="Coklat"
                                 />
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-zinc-500">Ukuran</label>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Ukuran</label>
                                 <input
                                     type="text"
                                     value={variantForm.data.size}
                                     onChange={(e) => variantForm.setData('size', e.target.value)}
-                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                     placeholder="250ml"
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-zinc-500">Nama Variant</label>
+                            <label className="mb-1 block text-xs font-medium text-text-muted">Nama Variant</label>
                             <input
                                 type="text"
                                 value={variantForm.data.name}
                                 onChange={(e) => variantForm.setData('name', e.target.value)}
                                 required
-                                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                 placeholder="Coklat 250ml"
                             />
                             {variantForm.errors.name && <p className="mt-1 text-xs text-red-600">{variantForm.errors.name}</p>}
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-zinc-500">SKU</label>
+                            <label className="mb-1 block text-xs font-medium text-text-muted">SKU</label>
                             <input
                                 type="text"
                                 value={variantForm.data.sku}
                                 onChange={(e) => variantForm.setData('sku', e.target.value)}
-                                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                 placeholder="DOM-COK-250ML"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-zinc-500">Harga Center (Rp)</label>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Harga Center (Rp)</label>
                                 <input
                                     type="number"
                                     value={variantForm.data.center_price}
                                     onChange={(e) => variantForm.setData('center_price', e.target.value)}
                                     required
                                     min="0"
-                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                 />
                             </div>
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-zinc-500">Harga Jual (Rp)</label>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Harga Jual (Rp)</label>
                                 <input
                                     type="number"
                                     value={variantForm.data.selling_price}
                                     onChange={(e) => variantForm.setData('selling_price', e.target.value)}
                                     required
                                     min="0"
-                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                 />
                             </div>
                         </div>
                         <div>
-                            <label className="mb-1 block text-xs font-medium text-zinc-500">Stok Pusat</label>
+                            <label className="mb-1 block text-xs font-medium text-text-muted">Stok Pusat</label>
                             <input
                                 type="number"
                                 value={variantForm.data.center_stock}
                                 onChange={(e) => variantForm.setData('center_stock', e.target.value)}
                                 required
                                 min="0"
-                                className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                             />
                         </div>
                         {editingVariant && (
@@ -361,14 +361,14 @@ return;
                             <button
                                 type="submit"
                                 disabled={variantForm.processing}
-                                className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                                className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
                             >
                                 {variantForm.processing ? 'Menyimpan...' : editingVariant ? 'Update' : 'Simpan'}
                             </button>
                             <button
                                 type="button"
                                 onClick={cancelForm}
-                                className="rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-zinc-50"
+                                className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-slate-700 hover:bg-zinc-50"
                             >
                                 Batal
                             </button>
@@ -397,39 +397,39 @@ return;
                         <div
                             key={variant.id}
                             className={`rounded-xl border bg-white p-4 transition-opacity ${
-                                variant.is_active ? 'border-zinc-200' : 'border-zinc-100 opacity-60'
+                                variant.is_active ? 'border-border' : 'border-zinc-100 opacity-60'
                             }`}
                         >
                             <div className="flex items-start justify-between">
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-sm font-semibold text-slate-900">{variant.name}</span>
+                                        <span className="text-sm font-semibold text-text">{variant.name}</span>
                                         <StatusBadge variant={variant.is_active ? 'success' : 'neutral'} size="sm">
                                             {variant.is_active ? 'Aktif' : 'Nonaktif'}
                                         </StatusBadge>
                                     </div>
                                     {variant.sku && (
-                                        <div className="mt-0.5 text-xs text-zinc-400">SKU: {variant.sku}</div>
+                                        <div className="mt-0.5 text-xs text-text-subtle">SKU: {variant.sku}</div>
                                     )}
                                     <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                                         <div>
-                                            <div className="text-[11px] font-medium text-zinc-400">Harga Center</div>
+                                            <div className="text-[11px] font-medium text-text-subtle">Harga Center</div>
                                             <div className="text-xs font-medium text-slate-700">{formatCurrency(variant.center_price)}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[11px] font-medium text-zinc-400">Harga Jual</div>
+                                            <div className="text-[11px] font-medium text-text-subtle">Harga Jual</div>
                                             <div className="text-xs font-medium text-slate-700">{formatCurrency(variant.selling_price)}</div>
                                         </div>
                                         <div>
-                                            <div className="text-[11px] font-medium text-zinc-400">Stok</div>
+                                            <div className="text-[11px] font-medium text-text-subtle">Stok</div>
                                             <div className="text-xs font-medium text-slate-700">{variant.center_stock} pcs</div>
                                         </div>
                                         <div>
-                                            <div className="text-[11px] font-medium text-zinc-400">Margin</div>
+                                            <div className="text-[11px] font-medium text-text-subtle">Margin</div>
                                             <div className="text-xs font-medium text-emerald-600">{formatCurrency(margin(variant))}</div>
                                         </div>
                                     </div>
-                                    <div className="mt-2 flex items-center gap-3 text-xs text-zinc-500">
+                                    <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
                                         <span>{variant.order_items_count} pesanan</span>
                                     </div>
                                 </div>
@@ -438,8 +438,8 @@ return;
                                         onClick={() => handleToggleVariant(variant)}
                                         className={`rounded-lg p-2 transition-colors ${
                                             variant.is_active
-                                                ? 'text-emerald-600 hover:bg-emerald-50'
-                                                : 'text-zinc-400 hover:bg-zinc-100'
+                                                ? 'text-primary hover:bg-primary-light'
+                                                : 'text-text-subtle hover:bg-surface-muted'
                                         }`}
                                         title={variant.is_active ? 'Nonaktifkan' : 'Aktifkan'}
                                     >
@@ -451,14 +451,14 @@ return;
                                     </button>
                                     <button
                                         onClick={() => startEditVariant(variant)}
-                                        className="rounded-lg p-2 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600"
+                                        className="rounded-lg p-2 text-text-subtle hover:bg-surface-muted hover:text-text-muted"
                                         title="Edit"
                                     >
                                         <Pencil className="h-4 w-4" />
                                     </button>
                                     <button
                                         onClick={() => handleDeleteVariant(variant.id)}
-                                        className="rounded-lg p-2 text-zinc-400 hover:bg-red-50 hover:text-red-600"
+                                        className="rounded-lg p-2 text-text-subtle hover:bg-red-50 hover:text-red-600"
                                         title="Hapus"
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -472,8 +472,8 @@ return;
 
             {/* Search Empty State */}
             {search && filteredVariants.length === 0 && family.variants.length > 0 && (
-                <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center">
-                    <p className="text-sm text-zinc-500">Tidak ditemukan variant "{search}"</p>
+                <div className="rounded-xl border border-border bg-white p-8 text-center">
+                    <p className="text-sm text-text-muted">Tidak ditemukan variant "{search}"</p>
                 </div>
             )}
         </OwnerPageShell>
