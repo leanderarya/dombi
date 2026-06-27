@@ -24,7 +24,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                         <div className="mt-3 space-y-3">
                             {order.items.map((item: any) => (
                                 <div key={item.id} className="flex justify-between border-t pt-3 text-sm">
-                                    <div><div className="font-medium">{item.product_name}</div><div className="text-zinc-500">Jml {item.quantity}</div></div>
+                                    <div><div className="font-medium">{item.product_name}</div><div className="text-text-muted">Jml {item.quantity}</div></div>
                                     <div className="font-medium">Rp {Number(item.subtotal).toLocaleString('id-ID')}</div>
                                 </div>
                             ))}
@@ -47,7 +47,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                         <h2 className="font-semibold">Info Pengiriman</h2>
                         <div className="mt-3">Outlet: {order.outlet?.name ?? '-'}</div>
                         <div>Pelanggan: {order.customer_name}</div>
-                        <div className="text-zinc-600">{order.customer_address}</div>
+                        <div className="text-text-muted">{order.customer_address}</div>
                         <div className="mt-3">Pengambilan: {formatDate(delivery.pickup_time)}</div>
                         <div>Terkirim: {formatDate(delivery.delivered_time)}</div>
                         {delivery.failed_reason && <div className="mt-3 rounded-md bg-red-50 p-3 text-red-700"><strong>Alasan gagal:</strong> {delivery.failed_reason}</div>}
@@ -63,10 +63,10 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                         <h2 className="font-semibold">Linimasa</h2>
                         <div className="mt-3 space-y-3">
                             {order.status_histories.map((history: any) => (
-                                <div key={history.id} className="border-l-2 border-emerald-200 pl-3">
+                                <div key={history.id} className="border-l-2 border-primary/20 pl-3">
                                     <div className="font-medium">{history.to_status.replaceAll('_', ' ')}</div>
-                                    <div className="text-zinc-500">{history.notes}</div>
-                                    <div className="text-xs text-zinc-400">{formatDate(history.created_at)} {history.actor ? `oleh ${history.actor.name}` : ''}</div>
+                                    <div className="text-text-muted">{history.notes}</div>
+                                    <div className="text-xs text-text-subtle">{formatDate(history.created_at)} {history.actor ? `oleh ${history.actor.name}` : ''}</div>
                                 </div>
                             ))}
                         </div>
