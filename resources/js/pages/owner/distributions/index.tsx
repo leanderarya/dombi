@@ -7,18 +7,13 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
 import EmptyState from '@/components/ui/empty-state';
 import { formatDate } from '@/lib/format';
-import { getDistributionStatus } from '@/lib/status-labels';
+import StatusBadge from '@/components/ui/status-badge';
 
 const statusOptions = [
     { value: 'preparing', label: 'Disiapkan' },
     { value: 'shipped', label: 'Dikirim' },
     { value: 'completed', label: 'Selesai' },
 ];
-const statusStyles: Record<string, string> = {
-    preparing: 'bg-orange-50 text-orange-700 border-orange-200',
-    shipped: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-};
 
 export default function OwnerDistributionsIndex({ distributions, outlets, filters }: any) {
     const [filterOpen, setFilterOpen] = useState(false);
@@ -39,17 +34,17 @@ export default function OwnerDistributionsIndex({ distributions, outlets, filter
             }
         >
             {distributions.data.length === 0 ? (
-                <EmptyState icon={<Package className="h-8 w-8 text-slate-400" />} title="Tidak ada distribution" description="Distribution dibuat setelah restock disetujui." />
+                <EmptyState icon={<Package className="h-8 w-8 text-text-muted" />} title="Tidak ada distribution" description="Distribution dibuat setelah restock disetujui." />
             ) : (
                 <div className="space-y-2">
                     {distributions.data.map((d: any) => (
-                        <Link key={d.id} href={`/owner/distributions/${d.id}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 transition-all duration-150 active:opacity-80 active:bg-slate-50">
+                        <Link key={d.id} href={`/owner/distributions/${d.id}`} className="flex items-center justify-between rounded-lg border border-border bg-white p-3 transition-all duration-150 active:opacity-80 active:bg-surface-muted">
                             <div>
-                                <div className="text-sm font-bold text-slate-900">#{d.id}</div>
-                                <div className="mt-0.5 text-xs text-slate-500">{d.outlet.name}</div>
-                                <div className="mt-1 text-[11px] tabular-nums text-slate-400">{d.sent_at ? formatDate(d.sent_at) : 'Belum dikirim'}</div>
+                                <div className="text-sm font-bold text-text">#{d.id}</div>
+                                <div className="mt-0.5 text-xs text-text-muted">{d.outlet.name}</div>
+                                <div className="mt-1 text-[11px] tabular-nums text-text-muted">{d.sent_at ? formatDate(d.sent_at) : 'Belum dikirim'}</div>
                             </div>
-                            <span className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${statusStyles[d.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>{getDistributionStatus(d.status).label}</span>
+                            <StatusBadge status={d.status} size="sm" />
                         </Link>
                     ))}
                 </div>
