@@ -54,9 +54,9 @@ export default function DataTable<T extends Record<string, any>>({
 }: Props<T>) {
     if (data.length === 0) {
         return (
-            <div className="rounded-xl bg-white">
+            <div className="rounded-xl border border-border bg-white p-6">
                 <EmptyState
-                    icon={<Inbox className="h-8 w-8" />}
+                    icon={<Inbox className="h-10 w-10 text-text-subtle" />}
                     title={emptyMessage}
                     description="Belum ada data yang tersedia"
                     action={emptyAction ? { label: emptyAction.label, href: emptyAction.href, onClick: emptyAction.onClick } : undefined}
@@ -73,7 +73,7 @@ export default function DataTable<T extends Record<string, any>>({
             {data.map((row) => (
                 <div
                     key={row[rowKey]}
-                    className={`rounded-xl bg-white ${onRowClick ? 'active:opacity-80' : ''}`}
+                    className={`rounded-xl border border-border bg-white transition-all duration-200 hover:border-border-strong hover:shadow-sm ${onRowClick ? 'cursor-pointer active:opacity-80' : ''}`}
                     onClick={() => onRowClick?.(row)}
                 >
                     <div className="p-4">
@@ -103,7 +103,7 @@ export default function DataTable<T extends Record<string, any>>({
 
                     {/* Actions */}
                     {actions && actions.length > 0 && (
-                        <div className="border-t border-border px-4 py-2.5 flex items-center justify-end gap-2">
+                        <div className="border-t border-border px-4 py-3 flex items-center justify-end gap-2.5">
                             {actions
                                 .filter((action) => !action.show || action.show(row))
                                 .map((action, i) => (
