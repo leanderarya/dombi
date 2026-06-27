@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Download } from 'lucide-react';
+import { ChevronDown, Download } from 'lucide-react';
 import { useState } from 'react';
 import FilterSheet from '@/components/owner/filter-sheet';
 import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
@@ -18,6 +18,8 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
     const [filterOpen, setFilterOpen] = useState(false);
     const [period, setPeriod] = useState('month');
     const [exporting, setExporting] = useState<string | null>(null);
+    const [exportOpen, setExportOpen] = useState(false);
+    const [secondaryOpen, setSecondaryOpen] = useState(false);
 
     function handleFilter(key: string, value: string) {
         router.get('/owner/reports', { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
@@ -53,7 +55,7 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
             title="Laporan"
             headerRight={
                 <>
-                    <button onClick={handleExport} className="flex h-10 items-center gap-1 rounded-xl border border-border bg-white px-2.5 text-[11px] font-semibold text-text-muted transition-all duration-150 active:opacity-80 active:bg-slate-50">
+                    <button onClick={handleExport} className="flex h-10 items-center gap-1 rounded-xl border border-border bg-white px-2.5 text-[11px] font-semibold text-text-muted transition-all duration-150 active:opacity-80 active:bg-surface-muted">
                         <Download className="h-4 w-4" /> CSV
                     </button>
                     <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}><FilterIcon /></HeaderIconButton>
@@ -75,7 +77,7 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
                         className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
                             period === p.key
                                 ? 'bg-primary text-white'
-                                : 'bg-surface-muted text-zinc-600 active:bg-zinc-200'
+                                : 'bg-surface-muted text-text-muted active:bg-surface-muted'
                         }`}
                     >
                         {p.label}
@@ -83,41 +85,66 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
                 ))}
             </div>
 
-            {/* Export Cards */}
-            <div className="space-y-3">
-                <div className="rounded-xl border border-border bg-white p-4">
-                    <div className="text-sm font-semibold text-text mb-1">Laporan Orders</div>
-                    <p className="text-xs text-text-muted mb-3">Download data order completed</p>
-                    <button
-                        onClick={() => handleExportReport('orders')}
-                        disabled={exporting === 'orders'}
-                        className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white active:bg-emerald-700 disabled:opacity-50"
-                    >
-                        {exporting === 'orders' ? 'Mengexport...' : 'Download CSV'}
-                    </button>
-                </div>
-
-                <div className="rounded-xl border border-border bg-white p-4">
-                    <div className="text-sm font-semibold text-text mb-1">Laporan Settlements</div>
-                    <p className="text-xs text-text-muted mb-3">Download data settlement outlet</p>
-                    <button
-                        onClick={() => handleExportReport('settlements')}
-                        disabled={exporting === 'settlements'}
-                        className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white active:bg-emerald-700 disabled:opacity-50"
-                    >
-                        {exporting === 'settlements' ? 'Mengexport...' : 'Download CSV'}
-                    </button>
-                </div>
+            {/* Export Cards (collapsible) */}
+            <div className="rounded-xl border border-border bg-white">
+                <button
+                    onClick={() => setExportOpen(!exportOpen)}
+                    className="flex w-full items-center justify-between p-4"
+                >
+                    <div className="text-sm font-semibold text-text">Download Laporan</div>
+                    <ChevronDown className={`h-4 w-4 text-text-muted transition-transform ${exportOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {exportOpen && (
+                    <div className="space-y-3 border-t border-border px-4 pb-4 pt-3">
+                        <div>
+                            <div className="text-xs font-medium text-text mb-1">Laporan Orders</div>
+                            <p className="text-[11px] text-text-muted mb-2">Download data order completed</p>
+                            <button
+                                onClick={() => handleExportReport('orders')}
+                                disabled={exporting === 'orders'}
+                                className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white active:bg-primary/90 disabled:opacity-50"
+                            >
+                                {exporting === 'orders' ? 'Mengexport...' : 'Download CSV'}
+                            </button>
+                        </div>
+                        <div>
+                            <div className="text-xs font-medium text-text mb-1">Laporan Settlements</div>
+                            <p className="text-[11px] text-text-muted mb-2">Download data settlement outlet</p>
+                            <button
+                                onClick={() => handleExportReport('settlements')}
+                                disabled={exporting === 'settlements'}
+                                className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white active:bg-primary/90 disabled:opacity-50"
+                            >
+                                {exporting === 'settlements' ? 'Mengexport...' : 'Download CSV'}
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
 
-            {/* KPI Grid */}
-            <div className="mt-3 grid grid-cols-2 gap-2">
+            {/* KPI Grid - Primary */}
+            <div className="mt-3 grid grid-cols-3 gap-2">
                 <Kpi label="Total Pesanan" value={String(summary.totalOrders)} />
                 <Kpi label="Pendapatan" value={formatCurrency(summary.totalRevenue)} highlight />
                 <Kpi label="Selesai" value={String(summary.completedOrders)} />
-                <Kpi label="Dibatalkan" value={String(summary.cancelledOrders)} />
-                <Kpi label="Pengiriman Berhasil" value={String(summary.completedDeliveries)} />
-                <Kpi label="Pengiriman Gagal" value={String(summary.failedDeliveries)} alert={summary.failedDeliveries > 0} />
+            </div>
+
+            {/* Secondary KPIs (collapsible) */}
+            <div className="rounded-xl border border-border bg-white">
+                <button
+                    onClick={() => setSecondaryOpen(!secondaryOpen)}
+                    className="flex w-full items-center justify-between p-3"
+                >
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Detail Lainnya</div>
+                    <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${secondaryOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {secondaryOpen && (
+                    <div className="grid grid-cols-3 gap-2 border-t border-border px-3 pb-3 pt-2">
+                        <Kpi label="Dibatalkan" value={String(summary.cancelledOrders)} />
+                        <Kpi label="Pengiriman Berhasil" value={String(summary.completedDeliveries)} />
+                        <Kpi label="Pengiriman Gagal" value={String(summary.failedDeliveries)} alert={summary.failedDeliveries > 0} />
+                    </div>
+                )}
             </div>
 
             {/* Breakdown */}
@@ -140,27 +167,35 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
 
 function Kpi({ label, value, highlight, alert }: { label: string; value: string; highlight?: boolean; alert?: boolean }) {
     return (
-        <div className={`rounded-lg border p-3 ${alert ? 'border-red-200 bg-red-50' : highlight ? 'border-emerald-200 bg-primary-light' : 'border-border bg-white'}`}>
-            <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">{label}</div>
-            <div className={`mt-0.5 text-lg font-bold tabular-nums ${highlight ? 'text-primary' : alert ? 'text-red-800' : 'text-text'}`}>{value}</div>
+        <div className={`rounded-lg border p-2.5 ${alert ? 'border-red-200 bg-red-50' : highlight ? 'border-emerald-200 bg-primary-light' : 'border-border bg-white'}`}>
+            <div className="text-[10px] font-bold uppercase tracking-wider text-text-subtle">{label}</div>
+            <div className={`mt-0.5 text-sm font-bold tabular-nums ${highlight ? 'text-primary' : alert ? 'text-red-800' : 'text-text'}`}>{value}</div>
         </div>
     );
 }
 
 function BreakdownCard({ title, data }: { title: string; data: Record<string, number> }) {
+    const [open, setOpen] = useState(false);
     const entries = Object.entries(data);
 
     return (
-        <div className="rounded-lg border border-border bg-white p-3">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">{title}</div>
-            {entries.length === 0 ? <p className="mt-2 text-xs text-text-subtle">Tidak ada data</p> : (
-                <div className="mt-2 space-y-1.5">
-                    {entries.map(([status, count]) => (
-                        <div key={status} className="flex items-center justify-between text-xs">
-                            <span className="text-text-muted">{statusLabels[status] ?? status}</span>
-                            <span className="font-bold tabular-nums text-text">{count}</span>
+        <div className="rounded-lg border border-border bg-white">
+            <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between p-3">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">{title}</div>
+                <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
+            </button>
+            {open && (
+                <div className="border-t border-border px-3 pb-3 pt-2">
+                    {entries.length === 0 ? <p className="text-xs text-text-subtle">Tidak ada data</p> : (
+                        <div className="space-y-1.5">
+                            {entries.map(([status, count]) => (
+                                <div key={status} className="flex items-center justify-between text-xs">
+                                    <span className="text-text-muted">{statusLabels[status] ?? status}</span>
+                                    <span className="font-bold tabular-nums text-text">{count}</span>
+                                </div>
+                            ))}
                         </div>
-                    ))}
+                    )}
                 </div>
             )}
         </div>
