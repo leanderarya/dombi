@@ -156,8 +156,8 @@ return;
                         onClick={() => toggleSort(col.key)}
                         className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
                             sortField === col.key
-                                ? 'bg-emerald-50 text-emerald-700'
-                                : 'bg-surface text-text-muted hover:bg-zinc-100'
+                                ? 'bg-primary-light text-primary'
+                                : 'bg-surface text-text-muted hover:bg-surface-muted'
                         }`}
                     >
                         {col.label}
@@ -177,14 +177,14 @@ return;
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleOpenModal(v)}
-                                className="shrink-0 text-emerald-700 hover:bg-emerald-50"
+                                className="shrink-0 text-primary hover:bg-primary-light"
                             >
                                 Ubah Harga
                             </Button>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                             <span className="text-text-muted">Pusat: <span className="font-semibold tabular-nums text-text">{formatCurrency(v.center_price)}</span></span>
-                            <span className="text-text-muted">Default: <span className="tabular-nums text-slate-600">{formatCurrency(v.selling_price)}</span></span>
+                            <span className="text-text-muted">Default: <span className="tabular-nums text-text-muted">{formatCurrency(v.selling_price)}</span></span>
                             <span className={`font-bold tabular-nums ${marginColor(v.margin, v.selling_price)}`}>
                                 {formatCurrency(v.margin)} {formatMarginPercent(v.margin, v.selling_price)}
                             </span>

@@ -41,31 +41,31 @@ const actionLabels: Record<string, string> = {
 };
 
 const columns = [
-    { key: 'created_at', label: 'Waktu', className: 'text-xs text-slate-500', render: (row: AuditLog) => formatDate(row.created_at) },
-    { key: 'outlet', label: 'Outlet', className: 'text-sm text-slate-900' },
-    { key: 'product', label: 'Produk', className: 'text-sm text-slate-900' },
+    { key: 'created_at', label: 'Waktu', className: 'text-xs text-text-muted', render: (row: AuditLog) => formatDate(row.created_at) },
+    { key: 'outlet', label: 'Outlet', className: 'text-sm text-text' },
+    { key: 'product', label: 'Produk', className: 'text-sm text-text' },
     {
         key: 'old_price',
         label: 'Lama',
-        className: 'text-right tabular-nums text-slate-500',
+        className: 'text-right tabular-nums text-text-muted',
         render: (row: AuditLog) => (row.old_price ? formatCurrency(row.old_price) : '-'),
     },
     {
         key: 'new_price',
         label: 'Baru',
-        className: 'text-right tabular-nums font-semibold text-slate-900',
+        className: 'text-right tabular-nums font-semibold text-text',
         render: (row: AuditLog) => formatCurrency(row.new_price),
     },
     {
         key: 'action',
         label: 'Aksi',
         render: (row: AuditLog) => (
-            <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-600">
+            <span className="rounded bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
                 {actionLabels[row.action] ?? row.action}
             </span>
         ),
     },
-    { key: 'changed_by', label: 'Oleh', className: 'text-xs text-slate-500' },
+    { key: 'changed_by', label: 'Oleh', className: 'text-xs text-text-muted' },
 ];
 
 export default function PricingHistory({ logs }: Props) {
