@@ -36,7 +36,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: 
                     <select
                         value={filters.status ?? ''}
                         onChange={(e) => setFilter('status', e.target.value)}
-                        className="h-9 rounded-lg border border-zinc-200 px-3 text-sm"
+                        className="h-9 rounded-lg border border-border px-3 text-sm"
                     >
                         <option value="">Semua status</option>
                         {statusOptions.map((sf) => <option key={sf.value} value={sf.value}>{sf.label}</option>)}
@@ -44,7 +44,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: 
                     <select
                         value={filters.courier_id ?? ''}
                         onChange={(e) => setFilter('courier_id', e.target.value)}
-                        className="h-9 rounded-lg border border-zinc-200 px-3 text-sm"
+                        className="h-9 rounded-lg border border-border px-3 text-sm"
                     >
                         <option value="">Semua kurir</option>
                         {couriers.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -53,7 +53,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: 
             }
         >
             {deliveries.data.length === 0 ? (
-                <EmptyState icon={<Truck className="h-8 w-8 text-slate-400" />} title="Tidak ada pengiriman" description="Pengiriman akan muncul setelah kurir di-assign." />
+                <EmptyState icon={<Truck className="h-8 w-8 text-text-subtle" />} title="Tidak ada pengiriman" description="Pengiriman akan muncul setelah kurir di-assign." />
             ) : (
                 <DataTable
                     rowKey="id"
@@ -62,7 +62,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters }: 
                         {
                             key: 'order_code',
                             label: 'Kode Pesanan',
-                            className: 'font-bold tabular-nums text-slate-900',
+                            className: 'font-bold tabular-nums text-text',
                             render: (row: any) => row.order?.order_code ?? '-',
                         },
                         {
