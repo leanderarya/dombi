@@ -34,6 +34,8 @@ interface Props<T> {
     emptyAction?: { label: string; href?: string; onClick?: () => void };
     onRowClick?: (row: T) => void;
     className?: string;
+    /** Dynamic class name per row, receives the row data */
+    rowClassName?: (row: T) => string;
 }
 
 const actionVariants = {
@@ -51,6 +53,7 @@ export default function DataTable<T extends Record<string, any>>({
     emptyAction,
     onRowClick,
     className = '',
+    rowClassName,
 }: Props<T>) {
     if (data.length === 0) {
         return (
@@ -73,7 +76,7 @@ export default function DataTable<T extends Record<string, any>>({
             {data.map((row) => (
                 <div
                     key={row[rowKey]}
-                    className={`rounded-xl border border-border bg-white transition-all duration-200 hover:border-border-strong hover:shadow-sm ${onRowClick ? 'cursor-pointer active:opacity-80' : ''}`}
+                    className={`rounded-xl border border-border bg-white transition-all duration-200 hover:border-border-strong hover:shadow-sm ${onRowClick ? 'cursor-pointer active:opacity-80' : ''} ${rowClassName ? rowClassName(row) : ''}`}
                     onClick={() => onRowClick?.(row)}
                 >
                     <div className="p-4">
