@@ -75,6 +75,7 @@ const navGroups: NavGroup[] = [
             { href: '/owner/analytics', label: 'Dashboard Analitik' },
             { href: '/owner/stock-movements', label: 'Audit Trail' },
             { href: '/owner/reports', label: 'Laporan' },
+            { href: '/owner/order-reports', label: 'Laporan Masalah' },
         ],
     },
 ];
@@ -89,33 +90,33 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
     const [commandOpen, setCommandOpen] = useState(false);
 
     return (
-        <div className="min-h-screen bg-slate-50 text-slate-900">
-            <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:rounded-lg focus:bg-emerald-700 focus:px-4 focus:py-2 focus:text-white focus:outline-none">
+        <div className="min-h-screen bg-surface-muted text-text">
+            <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-white focus:outline-none">
                 Langsung ke konten
             </a>
             <OfflineBanner />
             <UpdateBanner />
 
             {/* Sidebar — hidden on mobile, visible on desktop */}
-            <aside className="fixed inset-y-0 left-0 z-50 hidden w-56 border-r border-zinc-200 bg-white lg:block">
+            <aside className="fixed inset-y-0 left-0 z-50 hidden w-56 border-r border-border bg-surface lg:block">
                 <div className="flex h-full flex-col">
                     {/* Brand */}
-                    <div className="px-4 pt-5 pb-3">
-                        <div className="rounded-lg bg-emerald-700 px-3 py-2 text-lg font-semibold text-white">Dombi</div>
-                        <div className="mt-2.5 text-sm font-medium text-slate-800">{auth?.user?.name}</div>
-                        <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Owner</div>
+                    <div className="border-b border-border px-4 pt-5 pb-4">
+                        <div className="rounded-lg bg-primary px-3 py-2 text-lg font-semibold text-white">Dombi</div>
+                        <div className="mt-3 text-sm font-medium text-text">{auth?.user?.name}</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-text-subtle">Owner</div>
                     </div>
 
                     {/* Navigation */}
                     <OwnerSidebarNav navGroups={navGroups} pendingCounts={pendingCounts} />
 
                     {/* Footer */}
-                    <div className="border-t border-zinc-100 px-4 py-3">
+                    <div className="border-t border-border px-4 py-3">
                         <div className="mb-2">
                             <NotificationBell onClick={() => setNotificationOpen(true)} />
                         </div>
-                        <button onClick={() => router.post('/logout')} className="w-full rounded-md border border-zinc-200 px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900">Logout</button>
-                        <div className="mt-2 text-[11px] text-zinc-400">v{page.props.appVersion ?? '1.0.0'}</div>
+                        <button onClick={() => router.post('/logout')} className="w-full rounded-md border border-border px-3 py-2 text-sm text-text-muted transition-colors duration-150 hover:text-text">Logout</button>
+                        <div className="mt-2 text-[11px] text-text-subtle">v{page.props.appVersion ?? '1.0.0'}</div>
                     </div>
                 </div>
             </aside>
@@ -123,8 +124,8 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             {/* Main content */}
             <main id="main-content" className="pb-16 lg:pb-0 lg:pl-56">
                 {/* Mobile header */}
-                <div className="sticky top-0 z-30 flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3 lg:hidden">
-                    <span className="text-sm font-semibold text-slate-800">Dombi</span>
+                <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-surface px-4 py-3 lg:hidden">
+                    <span className="text-sm font-semibold text-text">Dombi</span>
                     <div className="flex items-center gap-2">
                         <NotificationBell onClick={() => setNotificationOpen(true)} />
                         <button

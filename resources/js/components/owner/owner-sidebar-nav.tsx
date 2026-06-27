@@ -42,12 +42,12 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
 
     const isItemActive = (item: NavItem, currentUrl: string): boolean => {
         if (!currentUrl) {
-return false;
-}
+            return false;
+        }
 
         if (item.isActive) {
-return item.isActive(currentUrl);
-}
+            return item.isActive(currentUrl);
+        }
 
         return currentUrl === item.href || currentUrl.startsWith(item.href + '/');
     };
@@ -68,20 +68,25 @@ return item.isActive(currentUrl);
 
     return (
         <nav className="flex-1 overflow-y-auto px-3 pb-4">
-            {navGroups.map((group) => {
+            {navGroups.map((group, groupIndex) => {
                 const isExpanded = expandedGroups.has(group.label);
                 const hasActive = group.items.some((item) => isItemActive(item, url));
 
                 return (
-                    <div key={group.label} className="mb-1">
+                    <div key={group.label}>
+                        {/* Section separator between groups */}
+                        {groupIndex > 0 && (
+                            <div className="mx-2 my-2 border-t border-border" />
+                        )}
+
                         {group.items.length === 1 ? (
                             /* Single-item groups render as direct link */
                             <Link
                                 href={group.items[0].href}
-                                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                     isItemActive(group.items[0], url)
-                                        ? 'bg-zinc-100 text-text'
-                                        : 'text-slate-600 hover:bg-surface-muted'
+                                        ? 'border-l-2 border-primary bg-primary/10 font-semibold text-primary'
+                                        : 'font-medium text-text-muted hover:bg-surface-muted'
                                 }`}
                             >
                                 <span className="h-4 w-4 shrink-0">{group.icon}</span>
@@ -92,10 +97,10 @@ return item.isActive(currentUrl);
                                 <button
                                     onClick={() => toggleGroup(group.label)}
                                     aria-expanded={isExpanded}
-                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                         hasActive
-                                            ? 'text-text'
-                                            : 'text-slate-600 hover:bg-surface-muted'
+                                            ? 'font-semibold text-text'
+                                            : 'font-medium text-text-muted hover:bg-surface-muted'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">{group.icon}</span>
@@ -108,10 +113,10 @@ return item.isActive(currentUrl);
                                             <Link
                                                 key={item.href}
                                                 href={item.href}
-                                                className={`block rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                                                className={`block rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ${
                                                     isItemActive(item, url)
-                                                        ? 'bg-zinc-100 text-text'
-                                                        : 'text-text-muted hover:bg-surface-muted'
+                                                        ? 'border-l-2 border-primary bg-primary/10 font-semibold text-primary'
+                                                        : 'font-medium text-text-muted hover:bg-surface-muted'
                                                 }`}
                                             >
                                                 <span className="flex items-center justify-between gap-2">
