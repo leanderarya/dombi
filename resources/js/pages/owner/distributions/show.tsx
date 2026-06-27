@@ -9,18 +9,18 @@ export default function OwnerDistributionShow({ distribution }: any) {
                 <DistributionStatusBadge status={distribution.status} />
             </div>
             <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_340px]">
-                <section className="rounded-lg border bg-white p-5">
+                <section className="rounded-xl border border-border bg-white p-5">
                     <h2 className="font-semibold">Item</h2>
                     <div className="mt-3 space-y-3">
                         {distribution.items.map((item: any) => (
-                            <div key={item.id} className="flex justify-between border-t pt-3 text-sm">
+                            <div key={item.id} className="flex justify-between border-t border-border pt-3 text-sm">
                                 <span>{item.product.name}</span>
                                 <span>{item.quantity}</span>
                             </div>
                         ))}
                     </div>
                 </section>
-                <aside className="rounded-lg border bg-white p-5 text-sm">
+                <aside className="rounded-xl border border-border bg-white p-5 text-sm">
                     <h2 className="font-semibold">Status</h2>
                     <div className="mt-3">
                         Dikirim: {distribution.sent_at ? new Date(distribution.sent_at).toLocaleString('id-ID') : '-'}
@@ -31,7 +31,7 @@ export default function OwnerDistributionShow({ distribution }: any) {
                     {distribution.status === 'preparing' && (
                         <button
                             onClick={() => router.post(`/owner/distributions/${distribution.id}/mark-shipped`)}
-                            className="mt-5 w-full rounded-md bg-primary px-4 py-2 font-medium text-white"
+                            className="mt-5 w-full rounded-xl bg-primary px-4 py-3 font-bold text-white transition-all duration-200 hover:shadow-md"
                         >
                             Tandai Dikirim
                         </button>

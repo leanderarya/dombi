@@ -11,14 +11,14 @@ export default function OwnerProfile() {
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-5">
                 {/* Left: user info */}
                 <div className="space-y-4">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
+                    <div className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 text-base font-bold text-white">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-base font-bold text-white">
                                 {user?.name?.charAt(0)?.toUpperCase() ?? 'O'}
                             </div>
                             <div className="min-w-0">
-                                <div className="truncate text-sm font-bold text-slate-950">{user?.name ?? 'Owner'}</div>
-                                <div className="truncate text-xs text-slate-500">{user?.email ?? '-'}</div>
+                                <div className="truncate text-sm font-bold text-text">{user?.name ?? 'Owner'}</div>
+                                <div className="truncate text-xs text-text-muted">{user?.email ?? '-'}</div>
                             </div>
                         </div>
 
@@ -34,11 +34,11 @@ export default function OwnerProfile() {
                 {/* Right: quick actions (desktop only, sticky) */}
                 <div className="hidden lg:block">
                     <div className="sticky top-4 space-y-3">
-                        <div className="rounded-2xl border border-slate-200 bg-white p-4 transition-shadow hover:shadow-sm">
-                            <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Quick Actions</div>
+                        <div className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md">
+                            <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-3">Quick Actions</div>
                             <button
                                 onClick={() => router.post('/logout')}
-                                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 hover:bg-red-100 active:opacity-80"
+                                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 hover:bg-red-100 active:opacity-80"
                             >
                                 <LogOut className="h-4 w-4" />
                                 Logout
@@ -51,7 +51,7 @@ export default function OwnerProfile() {
                 <div className="mt-4 lg:hidden">
                     <button
                         onClick={() => router.post('/logout')}
-                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 hover:bg-red-100 active:opacity-80"
+                        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 hover:bg-red-100 active:opacity-80"
                     >
                         <LogOut className="h-4 w-4" />
                         Logout
@@ -64,12 +64,12 @@ export default function OwnerProfile() {
 
 function InfoBox({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
     return (
-        <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 transition-all duration-200 hover:border-slate-200 hover:shadow-sm">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        <div className="rounded-xl border border-border bg-surface-muted p-3 transition-all duration-200 hover:shadow-sm">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-text-subtle">
                 {icon}
                 {label}
             </div>
-            <div className="mt-1 truncate text-sm font-semibold text-slate-900">{value}</div>
+            <div className="mt-1 truncate text-sm font-semibold text-text">{value}</div>
         </div>
     );
 }

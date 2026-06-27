@@ -38,7 +38,7 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
                     {/* Left: movement list */}
                     <div className="space-y-1.5">
                         {movements.data.map((m: any) => (
-                            <div key={m.id} className={`flex items-center gap-3 rounded-lg border border-border border-l-[3px] bg-white px-3 py-2.5 transition-all duration-200 hover:shadow-sm ${typeBorderColors[m.type] ?? 'border-l-slate-300'}`}>
+                            <div key={m.id} className={`flex items-center gap-3 rounded-xl border border-border border-l-4 bg-white px-3 py-2.5 transition-all duration-200 hover:shadow-sm ${typeBorderColors[m.type] ?? 'border-l-slate-300'}`}>
                                 <div className={`shrink-0 text-xs font-bold tabular-nums ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
                                     {m.quantity >= 0 ? '+' : ''}{m.quantity}
                                 </div>

@@ -62,17 +62,17 @@ export default function OutletsIndex({ outlets }: any) {
                 {/* Left: List */}
                 <div>
                     {/* Filter Tabs */}
-                    <div className="mb-3 flex gap-1.5 overflow-x-auto">
+                    <div className="mb-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                         {FILTERS.map((f) => (
                             <button
                                 key={f.key}
                                 type="button"
                                 onClick={() => setFilter(f.key)}
                                 className={cn(
-                                    'rounded-full px-3 py-1.5 text-xs font-semibold transition-colors',
+                                    'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200',
                                     filter === f.key
-                                        ? 'bg-text text-white'
-                                        : 'bg-surface-muted text-text-muted hover:bg-border',
+                                        ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                                        : 'bg-surface-muted text-text-muted hover:bg-zinc-200',
                                 )}
                             >
                                 {f.label}

@@ -5,15 +5,8 @@ import Pagination from '@/components/pagination';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { STATUS_BORDER } from '@/lib/status-border';
 import { getReturnStatus } from '@/lib/status-labels';
-
-const STATUS_COLORS: Record<string, string> = {
-    submitted: 'border-l-amber-400',
-    approved: 'border-l-blue-400',
-    rejected: 'border-l-red-400',
-    received_at_center: 'border-l-violet-400',
-    completed: 'border-l-emerald-400',
-};
 
 export default function OwnerReturnsIndex({ returns, filters, dashboard, outlets, reasons }: any) {
     const handleApprove = (id: number, e: React.MouseEvent) => {
@@ -85,7 +78,7 @@ export default function OwnerReturnsIndex({ returns, filters, dashboard, outlets
                         )}
                         {returns.data.map((ret: any) => {
                             const status = getReturnStatus(ret.status);
-                            const borderClass = STATUS_COLORS[ret.status] ?? 'border-l-gray-300';
+                            const borderClass = STATUS_BORDER[ret.status] ?? 'border-l-gray-300';
 
                             return (
                                 <Link

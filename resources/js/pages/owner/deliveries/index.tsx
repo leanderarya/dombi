@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import { formatDate } from '@/lib/format';
+import { STATUS_BORDER } from '@/lib/status-border';
 
 const statusOptions = [
     { value: '', label: 'Semua' },
@@ -15,18 +16,6 @@ const statusOptions = [
     { value: 'completed', label: 'Selesai' },
     { value: 'failed', label: 'Gagal' },
 ];
-
-const statusBorderMap: Record<string, string> = {
-    waiting_pickup: 'border-l-amber-400',
-    picked_up: 'border-l-blue-400',
-    delivering: 'border-l-indigo-400',
-    completed: 'border-l-emerald-400',
-    failed: 'border-l-red-400',
-    retry_delivery: 'border-l-orange-400',
-    returned_to_outlet: 'border-l-amber-400',
-    cancelled_and_released: 'border-l-slate-300',
-    waiting_assignment: 'border-l-slate-300',
-};
 
 export default function OwnerDeliveriesIndex({ deliveries, couriers, filters, stats }: any) {
     const setFilter = (key: string, value: string) => {
@@ -49,7 +38,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters, st
                 {/* Left: Filters + Delivery List */}
                 <div className="space-y-4">
                     {/* Filter Pills */}
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                         {statusOptions.map((opt) => {
                             const isActive = (filters.status ?? '') === opt.value;
 
@@ -57,10 +46,10 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters, st
                                 <button
                                     key={opt.value}
                                     onClick={() => setFilter('status', opt.value)}
-                                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+                                    className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ${
                                         isActive
-                                            ? 'bg-slate-900 text-white'
-                                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                                            ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                                            : 'bg-surface-muted text-text-muted hover:bg-zinc-200'
                                     }`}
                                 >
                                     {opt.label}
@@ -70,7 +59,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters, st
                         <select
                             value={filters.courier_id ?? ''}
                             onChange={(e) => setFilter('courier_id', e.target.value)}
-                            className="h-8 rounded-full border border-border bg-white px-3 text-xs font-medium text-slate-600"
+                            className="h-8 shrink-0 rounded-full border border-border bg-white px-3 text-xs font-medium text-text-muted"
                         >
                             <option value="">Semua kurir</option>
                             {couriers.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -87,31 +76,31 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters, st
                     ) : (
                         <div className="space-y-2">
                             {deliveries.data.map((d: any) => {
-                                const borderColor = statusBorderMap[d.status] ?? 'border-l-slate-300';
+                                const borderColor = STATUS_BORDER[d.status] ?? 'border-l-slate-300';
                                 const isActive = ['delivering', 'picked_up'].includes(d.status);
 
                                 return (
                                     <Link
                                         key={d.id}
                                         href={`/owner/deliveries/${d.id}`}
-                                        className={`block rounded-lg border border-slate-200 border-l-4 bg-white p-4 transition-all duration-150 hover:shadow-md ${borderColor}`}
+                                        className={`block rounded-xl border border-border border-l-4 bg-white p-4 transition-all duration-200 hover:shadow-md ${borderColor}`}
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-sm font-bold tabular-nums text-slate-900">
+                                                    <span className="text-sm font-bold tabular-nums text-text">
                                                         {d.order?.order_code ?? '-'}
                                                     </span>
                                                     <DeliveryStatusBadge status={d.status} />
                                                 </div>
-                                                <div className="mt-1 text-xs text-slate-500">
+                                                <div className="mt-1 text-xs text-text-muted">
                                                     {d.order?.outlet?.name ?? '-'}
                                                 </div>
-                                                <div className="mt-0.5 text-xs text-slate-400">
+                                                <div className="mt-0.5 text-xs text-text-subtle">
                                                     {d.courier?.name ?? 'Belum ada kurir'}
                                                 </div>
                                             </div>
-                                            <div className="text-right text-xs text-slate-400">
+                                            <div className="text-right text-xs text-text-subtle">
                                                 {formatDate(d.assigned_at)}
                                             </div>
                                         </div>
@@ -134,7 +123,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters, st
                 {/* Right: KPI Stats Sidebar */}
                 <aside className="hidden lg:block">
                     <div className="sticky top-4 space-y-3">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Statistik Hari Ini</h3>
+                        <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Statistik Hari Ini</h3>
                         <KpiCard
                             icon={<Package className="h-5 w-5" />}
                             label="Total Pengiriman"
@@ -175,7 +164,7 @@ function KpiCard({ icon, label, value, color, href }: {
     href?: string;
 }) {
     const colorMap = {
-        slate: { bg: 'bg-slate-50', text: 'text-slate-700', icon: 'text-slate-400' },
+        slate: { bg: 'bg-surface-muted', text: 'text-text', icon: 'text-text-muted' },
         blue: { bg: 'bg-blue-50', text: 'text-blue-700', icon: 'text-blue-400' },
         emerald: { bg: 'bg-emerald-50', text: 'text-emerald-700', icon: 'text-emerald-400' },
         red: { bg: 'bg-red-50', text: 'text-red-700', icon: 'text-red-400' },
@@ -186,11 +175,11 @@ function KpiCard({ icon, label, value, color, href }: {
     return (
         <Wrapper
             {...(href ? { href } : {})}
-            className={`flex items-center gap-3 rounded-xl border border-slate-200 ${c.bg} p-4 transition-all hover:shadow-sm`}
+            className={`flex items-center gap-3 rounded-xl border border-border ${c.bg} p-4 transition-all duration-200 hover:shadow-md`}
         >
             <div className={c.icon}>{icon}</div>
             <div>
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{label}</div>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">{label}</div>
                 <div className={`mt-0.5 text-2xl font-bold tabular-nums ${c.text}`}>{value}</div>
             </div>
         </Wrapper>

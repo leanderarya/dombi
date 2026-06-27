@@ -5,17 +5,8 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { STATUS_BORDER } from '@/lib/status-border';
 import { getExchangeStatus, getReturnStatus } from '@/lib/status-labels';
-
-const STATUS_COLORS: Record<string, string> = {
-    submitted: 'border-l-amber-400',
-    approved: 'border-l-blue-400',
-    rejected: 'border-l-red-400',
-    preparing: 'border-l-violet-400',
-    shipped: 'border-l-indigo-400',
-    received: 'border-l-teal-400',
-    completed: 'border-l-emerald-400',
-};
 
 const STATUS_ICONS: Record<string, typeof CheckCircle2> = {
     submitted: Clock,
@@ -36,7 +27,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
     const rejectForm = useForm({ reason: '' });
 
     const status = getExchangeStatus(exchange.status);
-    const borderClass = STATUS_COLORS[exchange.status] ?? 'border-l-gray-300';
+    const borderClass = STATUS_BORDER[exchange.status] ?? 'border-l-gray-300';
     const StatusIcon = STATUS_ICONS[exchange.status] ?? Clock;
 
     const handleApprove = () => {

@@ -6,24 +6,10 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
 import DataTable from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
+import { STATUS_BORDER } from '@/lib/status-border';
 import { getOrderStatus } from '@/lib/status-labels';
-
-const statusBorderColors: Record<string, string> = {
-    pending_confirmation: 'border-l-amber-400',
-    confirmed: 'border-l-blue-400',
-    preparing: 'border-l-indigo-400',
-    ready_for_pickup: 'border-l-emerald-400',
-    delivering: 'border-l-violet-400',
-    completed: 'border-l-emerald-400',
-    cancelled_by_customer: 'border-l-red-400',
-    cancelled_by_outlet: 'border-l-red-400',
-    rejected_by_outlet: 'border-l-red-400',
-    failed_delivery: 'border-l-red-400',
-    expired: 'border-l-red-400',
-};
 
 const statusFilters = [
     { key: 'needs_action', label: 'Butuh Tindakan' },
@@ -69,25 +55,31 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         aria-label="Cari pesanan"
                         className="h-9 w-48"
                     />
-                    <Select
-                        value={currentStatus}
-                        onChange={(e) => setFilter('status', e.target.value)}
-                        options={[
-                            { value: 'needs_action', label: 'Butuh Tindakan' },
-                            { value: '', label: 'Semua' },
-                            ...statusFilters.filter((sf) => sf.key !== '' && sf.key !== 'needs_action').map((sf) => ({ value: sf.key, label: sf.label })),
-                        ]}
-                        aria-label="Filter status"
-                        className="h-9"
-                    />
-                    <Select
+                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                        {statusFilters.map((sf) => (
+                            <button
+                                key={sf.key}
+                                type="button"
+                                onClick={() => setFilter('status', sf.key)}
+                                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ${
+                                    currentStatus === sf.key
+                                        ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                                        : 'bg-surface-muted text-text-muted hover:bg-zinc-200'
+                                }`}
+                            >
+                                {sf.label}
+                            </button>
+                        ))}
+                    </div>
+                    <select
                         value={filters.outlet_id ?? ''}
                         onChange={(e) => setFilter('outlet_id', e.target.value)}
-                        options={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
-                        placeholder="Semua outlet"
                         aria-label="Filter outlet"
-                        className="h-9"
-                    />
+                        className="h-8 rounded-full border border-border bg-white px-3 text-xs font-medium text-text-muted"
+                    >
+                        <option value="">Semua outlet</option>
+                        {outlets.map((o: any) => <option key={o.id} value={o.id}>{o.name}</option>)}
+                    </select>
                     <Input
                         type="date"
                         value={filters.date ?? ''}
@@ -105,13 +97,13 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                 ) : (
                     orders.data.map((order: any) => {
                         const s = getOrderStatus(order.status);
-                        const borderColor = statusBorderColors[order.status] ?? 'border-l-gray-300';
+                        const borderColor = STATUS_BORDER[order.status] ?? 'border-l-gray-300';
 
                         return (
                             <button
                                 key={order.id}
                                 onClick={() => router.visit(`/owner/orders/${order.id}`)}
-                                className={`w-full rounded-xl border border-border border-l-4 ${borderColor} bg-surface p-4 text-left transition-all duration-200 hover:shadow-md active:bg-surface-muted`}
+                                className={`w-full rounded-xl border border-border border-l-4 ${borderColor} bg-white p-4 text-left transition-all duration-200 hover:shadow-md active:bg-surface-muted`}
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="font-bold tabular-nums text-text">{order.order_code}</div>
@@ -149,7 +141,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                     <DataTable
                         rowKey="id"
                         data={orders.data}
-                        rowClassName={(row: any) => `border-l-4 ${statusBorderColors[row.status] ?? 'border-l-gray-300'}`}
+                        rowClassName={(row: any) => `border-l-4 ${STATUS_BORDER[row.status] ?? 'border-l-gray-300'}`}
                         columns={[
                             {
                                 key: 'order_code',

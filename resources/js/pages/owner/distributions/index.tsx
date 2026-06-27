@@ -6,13 +6,8 @@ import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/format';
 import StatusBadge from '@/components/ui/status-badge';
+import { STATUS_BORDER } from '@/lib/status-border';
 import { cn } from '@/lib/utils';
-
-const STATUS_BORDER: Record<string, string> = {
-    preparing: 'border-l-4 border-l-amber-400',
-    shipped: 'border-l-4 border-l-blue-400',
-    completed: 'border-l-4 border-l-emerald-400',
-};
 
 const FILTER_TABS = [
     { key: 'preparing', label: 'Disiapkan' },
@@ -63,7 +58,7 @@ export default function OwnerDistributionsIndex({ distributions, filters }: any)
 
             {/* Distribution List */}
             {distributions.data.length === 0 ? (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-surface/50 py-16 text-center">
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-white py-16 text-center">
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-muted">
                         <Package className="h-7 w-7 text-text-subtle" />
                     </div>
@@ -81,7 +76,7 @@ export default function OwnerDistributionsIndex({ distributions, filters }: any)
                             key={d.id}
                             href={`/owner/distributions/${d.id}`}
                             className={cn(
-                                'group flex items-start justify-between rounded-xl border border-border bg-surface p-4 transition-all duration-200 hover:shadow-md',
+                                'group flex items-start justify-between rounded-xl border border-border border-l-4 bg-white p-4 transition-all duration-200 hover:shadow-md',
                                 STATUS_BORDER[d.status]
                             )}
                         >
