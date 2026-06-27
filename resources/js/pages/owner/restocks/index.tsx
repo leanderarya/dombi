@@ -6,15 +6,8 @@ import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-uti
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
 import EmptyState from '@/components/ui/empty-state';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatDate } from '@/lib/format';
-
-const statusStyles: Record<string, string> = {
-    requested: 'bg-amber-50 text-amber-700 border-amber-200',
-    preparing: 'bg-orange-50 text-orange-700 border-orange-200',
-    shipped: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    rejected: 'bg-red-50 text-red-700 border-red-200',
-};
 
 export default function OwnerRestocksIndex({ restocks, outlets, filters, statusOptions }: any) {
     const [filterOpen, setFilterOpen] = useState(false);
@@ -40,15 +33,13 @@ export default function OwnerRestocksIndex({ restocks, outlets, filters, statusO
             ) : (
                 <div className="space-y-2">
                     {restocks.data.map((r: any) => (
-                        <Link key={r.id} href={`/owner/restocks/${r.id}`} className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-3 transition-all duration-150 active:opacity-80 active:bg-slate-50">
+                        <Link key={r.id} href={`/owner/restocks/${r.id}`} className="flex items-center justify-between rounded-lg border border-border bg-white p-3 transition-all duration-150 active:opacity-80 active:bg-slate-50">
                             <div>
-                                <div className="text-sm font-bold text-slate-900">#{r.id}</div>
-                                <div className="mt-0.5 text-xs text-slate-500">{r.outlet.name} · {r.items.length} items</div>
-                                <div className="mt-1 text-[11px] tabular-nums text-slate-400">{formatDate(r.created_at)}</div>
+                                <div className="text-sm font-bold text-text">#{r.id}</div>
+                                <div className="mt-0.5 text-xs text-text-muted">{r.outlet.name} · {r.items.length} items</div>
+                                <div className="mt-1 text-[11px] tabular-nums text-text-muted">{formatDate(r.created_at)}</div>
                             </div>
-                            <span className={`rounded-md border px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide ${statusStyles[r.status] ?? 'bg-slate-50 text-slate-600 border-slate-200'}`}>
-                                {r.status}
-                            </span>
+                            <StatusBadge status={r.status} />
                         </Link>
                     ))}
                 </div>
