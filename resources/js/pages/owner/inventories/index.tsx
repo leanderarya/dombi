@@ -195,7 +195,7 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
             {paginatedItems.length === 0 ? (
                 <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-surface py-12 text-center">
                     <div className="text-text-subtle"><Box className="h-8 w-8" /></div>
-                    <p className="mt-2 text-sm font-medium text-slate-600">
+                    <p className="mt-2 text-sm font-medium text-text-muted">
                         {search || outletFilter !== 'all' || stockFilter !== 'all' ? 'Tidak ada item yang cocok' : 'Belum ada inventaris'}
                     </p>
                     {!search && outletFilter === 'all' && stockFilter === 'all' && (
@@ -223,8 +223,8 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                                 onClick={() => toggleSort(col.key)}
                                 className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
                                     sortField === col.key
-                                        ? 'bg-emerald-50 text-emerald-700'
-                                        : 'bg-surface text-text-muted hover:bg-zinc-100'
+                                        ? 'bg-primary/10 text-primary'
+                                        : 'bg-surface text-text-muted hover:bg-surface-muted'
                                 }`}
                             >
                                 {col.label}
