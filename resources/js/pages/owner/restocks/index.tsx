@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { ClipboardList } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import FilterSheet from '@/components/owner/filter-sheet';
 import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -11,6 +11,13 @@ import { formatDate } from '@/lib/format';
 
 export default function OwnerRestocksIndex({ restocks, outlets, filters, statusOptions }: any) {
     const [filterOpen, setFilterOpen] = useState(false);
+
+    // Default to "requested" status when no filters are set
+    useEffect(() => {
+        if (!filters.status && !filters.outlet_id) {
+            router.get('/owner/restocks', { status: 'requested' }, { preserveState: true, replace: true });
+        }
+    }, []);
 
     const handleFilterApply = (f: Record<string, string>) => {
         router.get('/owner/restocks', { status: f.status || undefined, outlet_id: f.outlet_id || undefined }, { preserveState: true, replace: true });
@@ -33,7 +40,7 @@ export default function OwnerRestocksIndex({ restocks, outlets, filters, statusO
             ) : (
                 <div className="space-y-2">
                     {restocks.data.map((r: any) => (
-                        <Link key={r.id} href={`/owner/restocks/${r.id}`} className="flex items-center justify-between rounded-lg border border-border bg-white p-3 transition-all duration-150 active:opacity-80 active:bg-slate-50">
+                        <Link key={r.id} href={`/owner/restocks/${r.id}`} className="flex items-center justify-between rounded-lg border border-border bg-white p-3 transition-all duration-150 active:opacity-80 active:bg-surface-muted">
                             <div>
                                 <div className="text-sm font-bold text-text">#{r.id}</div>
                                 <div className="mt-0.5 text-xs text-text-muted">{r.outlet.name} · {r.items.length} items</div>
