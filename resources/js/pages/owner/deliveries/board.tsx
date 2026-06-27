@@ -52,12 +52,12 @@ export default function DeliveryBoard({ board, stats, couriers, filters, outlets
             headerRight={
                 <button
                     onClick={() => setFilterOpen(true)}
-                    className="relative flex h-9 items-center gap-1.5 rounded-lg border border-zinc-200 px-3 text-sm text-slate-600"
+                    className="relative flex h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-text-muted"
                 >
                     <FilterIcon />
                     Filter
                     {activeFilterCount > 0 && (
-                        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-600 px-1 text-[11px] font-bold text-white">
+                        <span className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[11px] font-bold text-white">
                             {activeFilterCount}
                         </span>
                     )}
