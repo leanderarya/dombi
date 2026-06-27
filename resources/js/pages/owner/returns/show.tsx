@@ -55,22 +55,22 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 <SectionCard label="Informasi Return">
                     <dl className="space-y-2 text-sm">
                         <div className="flex justify-between">
-                            <dt className="text-zinc-500">Alasan</dt>
-                            <dd className="font-medium text-slate-900">{ret.reason_label ?? ret.reason}</dd>
+                            <dt className="text-text-muted">Alasan</dt>
+                            <dd className="font-medium text-text">{ret.reason_label ?? ret.reason}</dd>
                         </div>
                         <div className="flex justify-between">
-                            <dt className="text-zinc-500">Diajukan</dt>
-                            <dd className="text-slate-900">{formatDate(ret.created_at)}</dd>
+                            <dt className="text-text-muted">Diajukan</dt>
+                            <dd className="text-text">{formatDate(ret.created_at)}</dd>
                         </div>
                         {ret.notes && (
                             <div className="flex justify-between">
-                                <dt className="text-zinc-500">Catatan</dt>
-                                <dd className="text-slate-900">{ret.notes}</dd>
+                                <dt className="text-text-muted">Catatan</dt>
+                                <dd className="text-text">{ret.notes}</dd>
                             </div>
                         )}
                         <div className="flex justify-between">
-                            <dt className="text-zinc-500">Total Nilai</dt>
-                            <dd className="font-bold text-emerald-700">{formatCurrency(ret.total_value)}</dd>
+                            <dt className="text-text-muted">Total Nilai</dt>
+                            <dd className="font-bold text-primary">{formatCurrency(ret.total_value)}</dd>
                         </div>
                     </dl>
                 </SectionCard>
@@ -79,14 +79,14 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 <SectionCard label="Item Return">
                     <div className="space-y-3">
                         {ret.items?.map((item: any) => (
-                            <div key={item.id} className="flex items-center justify-between rounded-lg border border-zinc-100 p-3">
+                            <div key={item.id} className="flex items-center justify-between rounded-lg border border-border p-3">
                                 <div>
-                                    <div className="text-sm font-medium text-slate-900">
+                                    <div className="text-sm font-medium text-text">
                                         {item.variant?.full_name ?? item.variant?.name}
                                     </div>
-                                    <div className="text-xs text-zinc-500">{item.quantity} x {formatCurrency(item.unit_price)}</div>
+                                    <div className="text-xs text-text-muted">{item.quantity} x {formatCurrency(item.unit_price)}</div>
                                 </div>
-                                <div className="text-sm font-bold text-slate-900">{formatCurrency(item.subtotal)}</div>
+                                <div className="text-sm font-bold text-text">{formatCurrency(item.subtotal)}</div>
                             </div>
                         ))}
                     </div>
@@ -98,15 +98,15 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         <div className="space-y-3">
                             {ret.status_histories.map((h: any, i: number) => (
                                 <div key={i} className="flex items-start gap-3">
-                                    <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                                    <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
                                     <div>
-                                        <div className="text-sm font-medium text-slate-900">
+                                        <div className="text-sm font-medium text-text">
                                             {getReturnStatus(h.to_status).label}
                                         </div>
-                                        <div className="text-xs text-zinc-500">
+                                        <div className="text-xs text-text-muted">
                                             {h.actor?.name} &middot; {formatDate(h.created_at)}
                                         </div>
-                                        {h.notes && <div className="mt-0.5 text-xs text-zinc-600">{h.notes}</div>}
+                                        {h.notes && <div className="mt-0.5 text-xs text-text-muted">{h.notes}</div>}
                                     </div>
                                 </div>
                             ))}
@@ -120,7 +120,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowApprove(true)}
-                                className="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white active:bg-emerald-700"
+                                className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-white active:opacity-90"
                             >
                                 Setujui
                             </button>
@@ -136,7 +136,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                     {ret.status === 'approved' && (
                         <button
                             onClick={handleMarkReceived}
-                            className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white active:bg-emerald-700"
+                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white active:opacity-90"
                         >
                             Barang Diterima di Pusat
                         </button>
@@ -145,7 +145,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                     {ret.status === 'received_at_center' && (
                         <button
                             onClick={handleComplete}
-                            className="w-full rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white active:bg-emerald-700"
+                            className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white active:opacity-90"
                         >
                             Selesai & Sesuaikan Settlement
                         </button>
@@ -157,19 +157,19 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             {showApprove && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl bg-white p-6">
-                        <h3 className="text-lg font-bold text-slate-900">Setujui Return</h3>
+                        <h3 className="text-lg font-bold text-text">Setujui Return</h3>
                         <textarea
                             value={approveForm.data.notes}
                             onChange={(e) => approveForm.setData('notes', e.target.value)}
                             placeholder="Catatan (opsional)"
-                            className="mt-4 w-full rounded-xl border border-zinc-200 p-3 text-sm"
+                            className="mt-4 w-full rounded-xl border border-border p-3 text-sm"
                             rows={3}
                         />
                         <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowApprove(false)} className="flex-1 rounded-xl border border-zinc-200 py-3 text-sm font-medium">
+                            <button onClick={() => setShowApprove(false)} className="flex-1 rounded-xl border border-border py-3 text-sm font-medium">
                                 Batal
                             </button>
-                            <button onClick={handleApprove} disabled={approveForm.processing} className="flex-1 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white">
+                            <button onClick={handleApprove} disabled={approveForm.processing} className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-white">
                                 {approveForm.processing ? 'Memproses...' : 'Setujui'}
                             </button>
                         </div>
@@ -181,17 +181,17 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             {showReject && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4">
                     <div className="w-full max-w-lg rounded-2xl bg-white p-6">
-                        <h3 className="text-lg font-bold text-slate-900">Tolak Return</h3>
+                        <h3 className="text-lg font-bold text-text">Tolak Return</h3>
                         <textarea
                             value={rejectForm.data.reason}
                             onChange={(e) => rejectForm.setData('reason', e.target.value)}
                             placeholder="Alasan penolakan"
-                            className="mt-4 w-full rounded-xl border border-zinc-200 p-3 text-sm"
+                            className="mt-4 w-full rounded-xl border border-border p-3 text-sm"
                             rows={3}
                         />
                         {rejectForm.errors.reason && <div className="mt-1 text-xs text-red-600">{rejectForm.errors.reason}</div>}
                         <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowReject(false)} className="flex-1 rounded-xl border border-zinc-200 py-3 text-sm font-medium">
+                            <button onClick={() => setShowReject(false)} className="flex-1 rounded-xl border border-border py-3 text-sm font-medium">
                                 Batal
                             </button>
                             <button onClick={handleReject} disabled={rejectForm.processing} className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-bold text-white">
