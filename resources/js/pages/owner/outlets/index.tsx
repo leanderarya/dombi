@@ -39,11 +39,11 @@ export default function OutletsIndex({ outlets }: any) {
                     {
                         key: 'name',
                         label: 'Outlet',
-                        className: 'font-bold text-slate-900',
+                        className: 'font-bold text-text',
                         render: (row: any) => (
                             <div>
                                 <div>{row.name}</div>
-                                <div className="text-[11px] text-slate-500">{row.kelurahan} · {row.kecamatan}</div>
+                                <div className="text-[11px] text-text-muted">{row.kelurahan} · {row.kecamatan}</div>
                             </div>
                         ),
                     },
@@ -67,7 +67,7 @@ export default function OutletsIndex({ outlets }: any) {
                         render: (row: any) => {
                             const count = Number(row.low_stock_count);
 
-                            return <span className={count > 0 ? 'font-bold text-amber-600' : 'text-slate-500'}>{count}</span>;
+                            return <span className={count > 0 ? 'font-bold text-amber-600' : 'text-text-muted'}>{count}</span>;
                         },
                     },
                     {
@@ -110,7 +110,7 @@ return { label: 'Sibuk', variant: 'info' as any };
 
 function Metric({ label, value, warn = false }: { label: string; value: number; warn?: boolean }) {
     return (
-        <div className={`rounded-lg border p-3 ${warn && value > 0 ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-slate-200 bg-[#F8FAFC] text-slate-700'}`}>
+        <div className={`rounded-lg border p-3 ${warn && value > 0 ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-border bg-surface-muted text-text-muted'}`}>
             <div className="text-lg font-semibold tabular-nums">{value}</div>
             <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide opacity-70">{label}</div>
         </div>
