@@ -27,10 +27,6 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
         router.get('/owner/orders', { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
     };
 
-    const handleQuickConfirm = (orderId: number) => {
-        router.visit(`/owner/orders/${orderId}`);
-    };
-
     return (
         <OwnerPageShell
             title="Pesanan"
@@ -103,20 +99,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                                 <div className="mt-1 text-base text-text-muted">{order.outlet?.name ?? '-'}</div>
                                 <div className="mt-2 flex items-center justify-between">
                                     <span className="text-lg font-bold tabular-nums">{formatCurrency(order.total)}</span>
-                                    <div className="flex items-center gap-2">
-                                        {order.status === 'pending_confirmation' && (
-                                            <span
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleQuickConfirm(order.id);
-                                                }}
-                                                className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-white active:bg-primary-hover"
-                                            >
-                                                Konfirmasi
-                                            </span>
-                                        )}
-                                        <ChevronRight className="h-4 w-4 text-text-subtle" />
-                                    </div>
+                                    <ChevronRight className="h-4 w-4 text-text-subtle" />
                                 </div>
                             </button>
                         );
@@ -167,15 +150,6 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
 
                                         {/* Bottom row: action buttons */}
                                         <div className="mt-4 flex gap-2">
-                                            {order.status === 'pending_confirmation' && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleQuickConfirm(order.id)}
-                                                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
-                                                >
-                                                    Konfirmasi
-                                                </button>
-                                            )}
                                             {order.status === 'ready_for_pickup' && !order.delivery && (
                                                 <button
                                                     type="button"
