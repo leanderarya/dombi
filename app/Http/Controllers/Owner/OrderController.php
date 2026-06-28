@@ -19,8 +19,14 @@ class OrderController extends Controller
             ->with(['outlet', 'items', 'delivery.courier', 'statusHistories'])
             ->when(true, function ($query) use ($request) {
                 $status = $request->string('status', 'needs_action')->toString();
-                if ($status === 'needs_action') {
-                    $query->whereIn('status', ['pending_confirmation', 'ready_for_pickup']);
+                $compoundMap = [
+                    'needs_action' => ['pending_confirmation', 'ready_for_pickup'],
+                    'active'       => ['confirmed', 'preparing', 'delivering'],
+                    'cancelled'    => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'],
+                    'failed'       => ['failed_delivery'],
+                ];
+                if (isset($compoundMap[$status])) {
+                    $query->whereIn('status', $compoundMap[$status]);
                 } elseif ($status !== '') {
                     $query->where('status', $status);
                 }
