@@ -79,11 +79,11 @@ export default function DataTable<T extends Record<string, any>>({
                     className={`rounded-xl border border-border bg-white transition-all duration-200 hover:border-border-strong hover:shadow-md ${onRowClick ? 'cursor-pointer active:opacity-80' : ''} ${rowClassName ? rowClassName(row) : ''}`}
                     onClick={() => onRowClick?.(row)}
                 >
-                    <div className="p-4">
+                    <div className="p-5">
                         {/* Primary row — title */}
                         <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0 flex-1">
-                                <div className="text-sm font-semibold text-text truncate">
+                                <div className="text-base font-semibold text-text truncate">
                                     {primaryCol.render ? primaryCol.render(row) : row[primaryCol.key]}
                                 </div>
                             </div>
@@ -94,8 +94,8 @@ export default function DataTable<T extends Record<string, any>>({
                             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
                                 {secondaryCols.map((col) => (
                                     <div key={col.key} className="flex items-center gap-1.5">
-                                        <span className="text-[11px] text-text-subtle">{col.label}:</span>
-                                        <span className={`text-[11px] font-medium text-text ${col.className ?? ''}`}>
+                                        <span className="text-xs text-text-subtle">{col.label}:</span>
+                                        <span className={`text-xs font-medium text-text ${col.className ?? ''}`}>
                                             {col.render ? col.render(row) : row[col.key]}
                                         </span>
                                     </div>
@@ -116,7 +116,7 @@ export default function DataTable<T extends Record<string, any>>({
                                             e.stopPropagation();
                                             action.onClick(row);
                                         }}
-                                        className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-3 text-[11px] font-semibold transition-colors ${actionVariants[action.variant ?? 'secondary']}`}
+                                        className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors ${actionVariants[action.variant ?? 'secondary']}`}
                                     >
                                         {action.icon}
                                         {action.label}

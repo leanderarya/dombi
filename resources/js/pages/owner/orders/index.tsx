@@ -103,13 +103,13 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                             <button
                                 key={order.id}
                                 onClick={() => router.visit(`/owner/orders/${order.id}`)}
-                                className={`w-full rounded-xl border border-border border-l-4 ${borderColor} bg-white p-4 text-left transition-all duration-200 hover:shadow-md active:bg-surface-muted`}
+                                className={`w-full rounded-xl border border-border border-l-4 ${borderColor} bg-white p-5 text-left transition-all duration-200 hover:shadow-md active:bg-surface-muted`}
                             >
                                 <div className="flex items-start justify-between">
-                                    <div className="font-bold tabular-nums text-text">{order.order_code}</div>
-                                    <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>
+                                    <div className="text-base font-bold tabular-nums text-text">{order.order_code}</div>
+                                    <StatusBadge variant={s.variant} size="md">{s.label}</StatusBadge>
                                 </div>
-                                <div className="mt-1 text-sm text-text-muted">{order.outlet?.name ?? '-'}</div>
+                                <div className="mt-1 text-base text-text-muted">{order.outlet?.name ?? '-'}</div>
                                 <div className="mt-2 flex items-center justify-between">
                                     <span className="text-lg font-bold tabular-nums">{formatCurrency(order.total)}</span>
                                     <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                                                     e.stopPropagation();
                                                     handleQuickConfirm(order.id);
                                                 }}
-                                                className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white active:bg-primary-hover"
+                                                className="rounded-lg bg-primary px-3 py-1.5 text-sm font-semibold text-white active:bg-primary-hover"
                                             >
                                                 Konfirmasi
                                             </span>
@@ -209,39 +209,39 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Ringkasan Hari Ini</h3>
                         <div className="mt-4 space-y-4">
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                                     <ClipboardList className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold tabular-nums text-text">{stats?.total_today ?? 0}</div>
-                                    <div className="text-xs text-text-muted">Total Pesanan</div>
+                                    <div className="text-3xl font-bold tabular-nums text-text">{stats?.total_today ?? 0}</div>
+                                    <div className="text-sm text-text-muted">Total Pesanan</div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
                                     <Clock className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold tabular-nums text-text">{stats?.pending ?? 0}</div>
-                                    <div className="text-xs text-text-muted">Menunggu Konfirmasi</div>
+                                    <div className="text-3xl font-bold tabular-nums text-text">{stats?.pending ?? 0}</div>
+                                    <div className="text-sm text-text-muted">Menunggu Konfirmasi</div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
                                     <TrendingUp className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold tabular-nums text-text">{stats?.completed_today ?? 0}</div>
-                                    <div className="text-xs text-text-muted">Selesai Hari Ini</div>
+                                    <div className="text-3xl font-bold tabular-nums text-text">{stats?.completed_today ?? 0}</div>
+                                    <div className="text-sm text-text-muted">Selesai Hari Ini</div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
                                     <DollarSign className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-bold tabular-nums text-text">{formatCurrency(stats?.revenue_today ?? 0)}</div>
-                                    <div className="text-xs text-text-muted">Pendapatan Hari Ini</div>
+                                    <div className="text-3xl font-bold tabular-nums text-text">{formatCurrency(stats?.revenue_today ?? 0)}</div>
+                                    <div className="text-sm text-text-muted">Pendapatan Hari Ini</div>
                                 </div>
                             </div>
                         </div>
@@ -250,11 +250,11 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                     {/* Quick actions */}
                     {(stats?.pending ?? 0) > 0 && (
                         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                            <div className="text-sm font-semibold text-amber-800">Perlu Tindakan</div>
-                            <div className="mt-1 text-xs text-amber-700">{stats?.pending} pesanan menunggu konfirmasi</div>
+                            <div className="text-base font-semibold text-amber-800">Perlu Tindakan</div>
+                            <div className="mt-1 text-sm text-amber-700">{stats?.pending} pesanan menunggu konfirmasi</div>
                             <button
                                 onClick={() => setFilter('status', 'pending_confirmation')}
-                                className="mt-3 w-full rounded-lg bg-amber-600 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-amber-700"
+                                className="mt-3 w-full rounded-lg bg-amber-600 px-3 py-2 text-base font-semibold text-white transition-colors hover:bg-amber-700"
                             >
                                 Lihat Pesanan
                             </button>
