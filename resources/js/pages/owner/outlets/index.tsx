@@ -1,5 +1,5 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, Box, Clock, Package, Pencil, Store, TrendingUp } from 'lucide-react';
+import { AlertTriangle, ArrowDownRight, Box, Clock, Package, Pencil, Store, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -158,37 +158,60 @@ export default function OutletsIndex({ outlets }: any) {
 
                 {/* Right: Summary Sidebar (desktop only) */}
                 <aside className="hidden lg:block">
-                    <div className="sticky top-4 space-y-4">
-                        {/* Summary Card */}
-                        <div className="rounded-xl border border-border bg-white p-4">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Ringkasan</h3>
-                            <div className="mt-3 grid grid-cols-2 gap-2">
-                                <SidebarStat
-                                    icon={<Store className="h-4 w-4" />}
-                                    label="Total Outlet"
-                                    value={totalOutlets}
-                                    color="text-text"
-                                />
-                                <SidebarStat
-                                    icon={<TrendingUp className="h-4 w-4" />}
-                                    label="Aktif"
-                                    value={activeOutlets}
-                                    color="text-emerald-600"
-                                />
-                                <SidebarStat
-                                    icon={<AlertTriangle className="h-4 w-4" />}
-                                    label="Stok Rendah"
-                                    value={lowStockOutlets}
-                                    color="text-amber-600"
-                                    warn={lowStockOutlets > 0}
-                                />
-                                <SidebarStat
-                                    icon={<Clock className="h-4 w-4" />}
-                                    label="Sibuk"
-                                    value={busyOutlets}
-                                    color="text-blue-600"
-                                />
+                    <div className="sticky top-4 space-y-3">
+                        {/* Total Outlet */}
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <Store className="h-4 w-4 text-text-subtle" />
+                                Total Outlet
                             </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{totalOutlets}</div>
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-text-subtle">
+                                Semua outlet
+                            </div>
+                        </div>
+
+                        {/* Aktif */}
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <TrendingUp className="h-4 w-4 text-emerald-500" />
+                                Aktif
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{activeOutlets}</div>
+                            {activeOutlets > 0 && (
+                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+                                    Outlet aktif
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Stok Rendah */}
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                Stok Rendah
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{lowStockOutlets}</div>
+                            {lowStockOutlets > 0 && (
+                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                                    <ArrowDownRight className="h-3 w-3" />
+                                    Perlu restock segera
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Sibuk */}
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <Clock className="h-4 w-4 text-blue-500" />
+                                Sibuk
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{busyOutlets}</div>
+                            {busyOutlets > 0 && (
+                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-blue-500">
+                                    3+ pesanan aktif
+                                </div>
+                            )}
                         </div>
 
                         {/* Quick Tips */}
@@ -238,29 +261,3 @@ function getOutletStatus(outlet: any): { label: string; variant: 'success' | 'wa
     return { label: 'Aktif', variant: 'success' };
 }
 
-function SidebarStat({
-    icon,
-    label,
-    value,
-    color,
-    warn = false,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    value: number;
-    color: string;
-    warn?: boolean;
-}) {
-    return (
-        <div className={cn(
-            'rounded-lg border p-3 transition-colors',
-            warn ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface-muted',
-        )}>
-            <div className={cn('flex items-center gap-1.5', color)}>
-                {icon}
-                <span className="text-lg font-bold tabular-nums">{value}</span>
-            </div>
-            <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-wider text-text-subtle">{label}</div>
-        </div>
-    );
-}
