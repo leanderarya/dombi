@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ClipboardList } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import FilterSheet from '@/components/owner/filter-sheet';
 import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
@@ -57,21 +57,36 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
                     {/* Right: filter summary + stats (desktop only, sticky) */}
                     <div className="hidden lg:block">
                         <div className="sticky top-4 space-y-3">
-                            {/* Stats summary */}
-                            <div className="rounded-xl border border-border bg-white p-4 transition-shadow hover:shadow-sm">
-                                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted mb-3">Ringkasan</div>
-                                <div className="space-y-2">
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="text-text-muted">Total Movement</span>
-                                        <span className="font-bold tabular-nums text-text">{movements.data.length}</span>
+                            {/* KPI cards */}
+                            <div className="space-y-3">
+                                <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                    <div className="flex items-center gap-2 text-xs text-text-muted">
+                                        <ClipboardList className="h-4 w-4 text-text-subtle" />
+                                        Total Movement
                                     </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="text-text-muted">Stok Masuk</span>
-                                        <span className="font-bold tabular-nums text-emerald-700">{movements.data.filter((m: any) => m.quantity > 0).length}</span>
+                                    <div className="mt-2 text-3xl font-bold text-text">{movements.data.length}</div>
+                                    <div className="mt-1 text-[11px] font-medium text-text-muted">Semua movement</div>
+                                </div>
+                                <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                    <div className="flex items-center gap-2 text-xs text-text-muted">
+                                        <ArrowDownRight className="h-4 w-4 text-emerald-500" />
+                                        Stok Masuk
                                     </div>
-                                    <div className="flex items-center justify-between text-xs">
-                                        <span className="text-text-muted">Stok Keluar</span>
-                                        <span className="font-bold tabular-nums text-red-600">{movements.data.filter((m: any) => m.quantity < 0).length}</span>
+                                    <div className="mt-2 text-3xl font-bold text-text">{movements.data.filter((m: any) => m.quantity > 0).length}</div>
+                                    <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+                                        <ArrowDownRight className="h-3 w-3" />
+                                        Restock & penyesuaian
+                                    </div>
+                                </div>
+                                <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                    <div className="flex items-center gap-2 text-xs text-text-muted">
+                                        <ArrowUpRight className="h-4 w-4 text-red-500" />
+                                        Stok Keluar
+                                    </div>
+                                    <div className="mt-2 text-3xl font-bold text-text">{movements.data.filter((m: any) => m.quantity < 0).length}</div>
+                                    <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                                        <ArrowUpRight className="h-3 w-3" />
+                                        Pesanan & pembatalan
                                     </div>
                                 </div>
                             </div>
