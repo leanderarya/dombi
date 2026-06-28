@@ -24,7 +24,7 @@ export default function OwnerSettlementPayments({ payments, statusFilter, kpis }
     // P2: Default to pending_verification if no statusFilter
     useEffect(() => {
         if (!statusFilter || statusFilter === 'all') {
-            router.get('/owner/settlement-payments', { status: 'pending_verification' }, { replace: true, preserveState: true });
+            router.get('/owner/finance/settlement-payments', { status: 'pending_verification' }, { replace: true, preserveState: true });
         }
     }, []);
 
@@ -34,7 +34,7 @@ return;
 }
 
         setProcessing(true);
-        router.post(`/owner/settlement-payments/${paymentId}/verify`, {}, {
+        router.post(`/owner/finance/settlement-payments/${paymentId}/verify`, {}, {
             onFinish: () => setProcessing(false),
         });
     };
@@ -46,7 +46,7 @@ return;
             }
 
             setProcessing(true);
-            router.post(`/owner/settlement-payments/${paymentId}/reject`, {
+            router.post(`/owner/finance/settlement-payments/${paymentId}/reject`, {
                 rejection_reason: rejectReason,
             }, {
                 onSuccess: () => {
@@ -66,7 +66,7 @@ return;
             return;
         }
         setBatchVerifying(true);
-        router.post('/owner/settlement-payments/bulk-verify', {}, {
+        router.post('/owner/finance/settlement-payments/bulk-verify', {}, {
             onFinish: () => setBatchVerifying(false),
         });
     };
@@ -85,7 +85,7 @@ return;
                             <FinanceFilterTabs
                                 tabs={FILTER_TABS}
                                 active={statusFilter}
-                                onChange={(key) => router.get('/owner/settlement-payments', { status: key }, { preserveState: true })}
+                                onChange={(key) => router.get('/owner/finance/settlement-payments', { status: key }, { preserveState: true })}
                             />
                             {pendingPayments.length > 0 && statusFilter !== 'verified' && statusFilter !== 'rejected' && (
                                 <button
@@ -180,7 +180,7 @@ return;
                                 {Array.from({ length: payments.last_page }, (_, i) => i + 1).map((page) => (
                                     <button
                                         key={page}
-                                        onClick={() => router.get(`/owner/settlement-payments?page=${page}&status=${statusFilter}`)}
+                                        onClick={() => router.get(`/owner/finance/settlement-payments?page=${page}&status=${statusFilter}`)}
                                         className={`h-9 w-9 rounded-full text-sm font-medium transition-colors ${
                                             page === payments.current_page
                                                 ? 'bg-primary text-white shadow-sm'
@@ -196,7 +196,7 @@ return;
                                 <div className="mt-6 flex justify-center sm:hidden">
                                     <button
                                         type="button"
-                                        onClick={() => router.get(`/owner/settlement-payments?page=${payments.current_page + 1}&status=${statusFilter}`, {}, { preserveState: true })}
+                                        onClick={() => router.get(`/owner/finance/settlement-payments?page=${payments.current_page + 1}&status=${statusFilter}`, {}, { preserveState: true })}
                                         className="rounded-full border border-border bg-surface px-6 py-2.5 text-sm font-semibold text-text transition-colors hover:bg-surface-muted"
                                     >
                                         Muat Lebih Banyak

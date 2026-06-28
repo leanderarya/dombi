@@ -49,7 +49,10 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
             return item.isActive(currentUrl);
         }
 
-        return currentUrl === item.href || currentUrl.startsWith(item.href + '/');
+        // Strip query parameters for comparison
+        const pathname = currentUrl.split('?')[0];
+
+        return pathname === item.href || pathname.startsWith(item.href + '/');
     };
 
     const toggleGroup = (label: string) => {
