@@ -241,10 +241,10 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('distributions', [OwnerStockDistributionController::class, 'index'])->name('distributions.index');
         Route::get('distributions/{distribution}', [OwnerStockDistributionController::class, 'show'])->name('distributions.show');
         Route::post('distributions/{distribution}/mark-shipped', [OwnerStockDistributionController::class, 'markShipped'])->name('distributions.mark-shipped');
-        Route::get('finance/settlement-payments', [SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
-        Route::post('finance/settlement-payments/{payment}/verify', [SettlementPaymentController::class, 'verify'])->name('settlement-payments.verify');
-        Route::post('finance/settlement-payments/{payment}/reject', [SettlementPaymentController::class, 'reject'])->name('settlement-payments.reject');
-        Route::post('finance/settlement-payments/bulk-verify', [SettlementPaymentController::class, 'bulkVerify'])->name('settlement-payments.bulk-verify');
+        Route::get('finance/settlement-payments', [SettlementPaymentController::class, 'index'])->name('finance.settlement-payments.index');
+        Route::post('finance/settlement-payments/{payment}/verify', [SettlementPaymentController::class, 'verify'])->name('finance.settlement-payments.verify');
+        Route::post('finance/settlement-payments/{payment}/reject', [SettlementPaymentController::class, 'reject'])->name('finance.settlement-payments.reject');
+        Route::post('finance/settlement-payments/bulk-verify', [SettlementPaymentController::class, 'bulkVerify'])->name('finance.settlement-payments.bulk-verify');
         Route::get('finance', [FinanceSettlementController::class, 'dashboard'])->name('finance.dashboard');
         Route::get('finance/settlements/export', [FinanceSettlementController::class, 'export'])->name('finance.settlements.export');
         Route::get('finance/settlements/{outlet}', [FinanceSettlementController::class, 'outletDetail'])->name('finance.settlements.outlet');
