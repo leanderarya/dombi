@@ -92,7 +92,7 @@ return;
                                     type="button"
                                     onClick={handleBatchVerify}
                                     disabled={batchVerifying}
-                                    className="inline-flex shrink-0 items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-emerald-700 disabled:opacity-50"
+                                    className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50"
                                 >
                                     {batchVerifying ? (
                                         <Loader2 className="h-3.5 w-3.5 animate-spin" />

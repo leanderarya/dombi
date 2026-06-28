@@ -32,14 +32,7 @@ export default function FinanceOutletCard({
             className="group flex items-center gap-4 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md"
         >
             {/* Status badge */}
-            <FinanceStatusBadge status={displayStatus} className="hidden sm:inline-flex" />
-            <div className={`h-2.5 w-2.5 shrink-0 rounded-full sm:hidden ${
-                displayStatus === 'overdue' ? 'bg-red-500' :
-                displayStatus === 'unpaid' ? 'bg-amber-500' :
-                displayStatus === 'partial' ? 'bg-blue-500' :
-                displayStatus === 'paid' ? 'bg-emerald-500' :
-                'bg-text-subtle'
-            }`} />
+            <FinanceStatusBadge status={displayStatus} />
 
             {/* Info */}
             <div className="min-w-0 flex-1">
@@ -67,7 +60,7 @@ export default function FinanceOutletCard({
             <div className="flex items-center gap-2">
                 {needsAction && totalOutstanding > 0 && (
                     <span className="hidden rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-primary-hover sm:inline-flex items-center gap-1">
-                        Bayar
+                        Lihat Detail
                         <ArrowUpRight className="h-3 w-3" />
                     </span>
                 )}

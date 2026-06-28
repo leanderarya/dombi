@@ -41,36 +41,34 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
     return (
         <div className={`rounded-2xl border p-5 transition-all duration-200 hover:shadow-md ${
             isPending
-                ? 'border-l-4 border-l-amber-400 border-t-amber-200 border-r-amber-200 border-b-amber-200 bg-amber-50/30'
-                : isRejected
-                    ? 'border-l-4 border-l-red-400 border-slate-200 bg-white'
-                    : 'border-slate-200 bg-white'
+                ? 'border-amber-300 bg-amber-50/30'
+                : 'border-border bg-white'
         }`}>
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                    <div className="text-base font-semibold text-slate-900">{payment.outlet.name}</div>
-                    <div className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{formatCurrency(payment.amount)}</div>
+                    <div className="text-base font-semibold text-text">{payment.outlet.name}</div>
+                    <div className="mt-1 text-2xl font-bold tabular-nums text-text">{formatCurrency(payment.amount)}</div>
                 </div>
                 <FinanceStatusBadge status={payment.status === 'pending_verification' ? 'pending' : payment.status} />
             </div>
 
             {/* Meta */}
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
                 <span>{METHOD_LABELS[payment.payment_method] ?? payment.payment_method}</span>
                 {payment.reference_number && (
                     <>
-                        <span className="text-slate-300">•</span>
+                        <span className="text-text-subtle">•</span>
                         <span>Ref: {payment.reference_number}</span>
                     </>
                 )}
-                <span className="text-slate-300">•</span>
+                <span className="text-text-subtle">•</span>
                 <span>{formatDate(payment.payment_date)}</span>
             </div>
 
             {/* Notes */}
             {payment.notes && (
-                <div className="mt-2 text-xs text-slate-500">{payment.notes}</div>
+                <div className="mt-2 text-xs text-text-muted">{payment.notes}</div>
             )}
 
             {/* Rejection reason */}
@@ -82,7 +80,7 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
 
             {/* Verifier info */}
             {payment.verifier && (
-                <div className="mt-2 text-xs text-slate-400">
+                <div className="mt-2 text-xs text-text-subtle">
                     Diverifikasi oleh {payment.verifier.name}
                 </div>
             )}
@@ -92,7 +90,7 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
                 <button
                     type="button"
                     onClick={() => onShowProof(payment.proof_image!)}
-                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 transition-colors hover:bg-emerald-100 hover:text-emerald-800"
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary-light px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 hover:text-primary"
                 >
                     <Eye className="h-3.5 w-3.5" />
                     Lihat Bukti Transfer
@@ -101,12 +99,12 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
 
             {/* Actions */}
             {isPending && (
-                <div className="mt-4 flex gap-2 border-t border-slate-100 pt-3">
+                <div className="mt-4 flex gap-2 border-t border-border pt-3">
                     <button
                         type="button"
                         onClick={() => onVerify(payment.id)}
                         disabled={processing}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-600/20 transition-all hover:bg-emerald-700 hover:shadow-md disabled:opacity-50"
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-sm font-bold text-white shadow-sm shadow-primary/20 transition-all hover:bg-primary-hover hover:shadow-md disabled:opacity-50"
                     >
                         <Check className="h-4 w-4" />
                         Verifikasi
