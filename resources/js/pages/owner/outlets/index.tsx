@@ -1,12 +1,10 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, ArrowDownRight, Box, Clock, Package, Pencil, Store, TrendingUp } from 'lucide-react';
+import { AlertTriangle, ArrowDownRight, Clock, Store, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
 import { buttonVariants } from '@/components/ui/button';
-import DataTable from '@/components/ui/data-table';
-import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils';
 
@@ -78,74 +76,83 @@ export default function OutletsIndex({ outlets }: any) {
                         ))}
                     </div>
 
-                    <DataTable
-                        rowKey="id"
-                        data={filtered}
-                        rowClassName=""
-                        columns={[
-                            {
-                                key: 'name',
-                                label: 'Outlet',
-                                className: 'font-bold text-text',
-                                render: (row: any) => (
-                                    <div>
-                                        <div>{row.name}</div>
-                                        <div className="text-[11px] text-text-muted">{row.kelurahan} &middot; {row.kecamatan}</div>
+                    <div className="space-y-3">
+                        {filtered.length === 0 && (
+                            <div className="rounded-xl border border-border bg-white p-10 text-center">
+                                <p className="text-sm text-text-muted">Belum ada outlet</p>
+                                <Link href="/owner/outlets/create" className="mt-2 inline-block text-sm font-semibold text-primary">
+                                    + Tambah Outlet
+                                </Link>
+                            </div>
+                        )}
+                        {filtered.map((outlet: any) => {
+                            const status = getOutletStatus(outlet);
+                            const lowStock = Number(outlet.low_stock_count);
+
+                            return (
+                                <div
+                                    key={outlet.id}
+                                    className="cursor-pointer rounded-xl border border-border bg-white p-5 transition-all duration-200 hover:shadow-md"
+                                    onClick={() => router.visit(`/owner/outlets/${outlet.id}`)}
+                                >
+                                    {/* Top row: name + status */}
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <div className="text-lg font-bold text-text">{outlet.name}</div>
+                                            <div className="mt-1">
+                                                <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
+                                            </div>
+                                        </div>
+                                        <span className="rounded-lg bg-surface-muted px-2.5 py-1 text-sm font-bold tabular-nums text-text">
+                                            {outlet.active_orders_count} pesanan
+                                        </span>
                                     </div>
-                                ),
-                            },
-                            {
-                                key: 'status',
-                                label: 'Status',
-                                render: (row: any) => {
-                                    const status = getOutletStatus(row);
 
-                                    return <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>;
-                                },
-                            },
-                            {
-                                key: 'active_orders_count',
-                                label: 'Pesanan Aktif',
-                                className: 'tabular-nums',
-                            },
-                            {
-                                key: 'low_stock_count',
-                                label: 'Stok Rendah',
-                                render: (row: any) => {
-                                    const count = Number(row.low_stock_count);
+                                    {/* Middle row: metadata */}
+                                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
+                                        <span>{outlet.kelurahan} &middot; {outlet.kecamatan}</span>
+                                        {lowStock > 0 && (
+                                            <>
+                                                <span className="text-text-subtle">&middot;</span>
+                                                <span className="font-bold text-amber-600">{lowStock} stok rendah</span>
+                                            </>
+                                        )}
+                                        {Number(outlet.pending_restocks_count) > 0 && (
+                                            <>
+                                                <span className="text-text-subtle">&middot;</span>
+                                                <span>{outlet.pending_restocks_count} restock</span>
+                                            </>
+                                        )}
+                                    </div>
 
-                                    return <span className={count > 0 ? 'font-bold text-amber-600' : 'text-text-muted'}>{count}</span>;
-                                },
-                            },
-                            {
-                                key: 'pending_restocks_count',
-                                label: 'Restock',
-                                className: 'tabular-nums',
-                            },
-                            {
-                                key: 'edit',
-                                label: '',
-                                className: 'w-px',
-                                render: (row: any) => (
-                                    <button
-                                        type="button"
-                                        onClick={(e) => { e.stopPropagation(); router.visit(`/owner/outlets/${row.id}/edit`); }}
-                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text"
-                                        title="Edit"
-                                    >
-                                        <Pencil className="h-3.5 w-3.5" />
-                                    </button>
-                                ),
-                            },
-                        ]}
-                        actions={[
-                            { label: 'Detail', variant: 'secondary', onClick: (row) => router.visit(`/owner/outlets/${row.id}`) },
-                            { label: 'Inventaris', variant: 'secondary', onClick: (row) => router.visit(`/owner/inventories?outlet_id=${row.id}`) },
-                        ]}
-                        emptyMessage="Belum ada outlet"
-                        emptyAction={{ label: 'Tambah Outlet', href: '/owner/outlets/create' }}
-                        onRowClick={(row) => router.visit(`/owner/outlets/${row.id}`)}
-                    />
+                                    {/* Bottom row: action buttons */}
+                                    <div className="mt-4 flex gap-2">
+                                        <Link
+                                            href={`/owner/outlets/${outlet.id}`}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white"
+                                        >
+                                            Detail
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); router.visit(`/owner/outlets/${outlet.id}/edit`); }}
+                                            className="rounded-lg border border-border bg-white px-4 py-2 text-sm font-semibold text-text"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={(e) => { e.stopPropagation(); router.visit(`/owner/inventories?outlet_id=${outlet.id}`); }}
+                                            className="rounded-lg border border-border bg-white px-4 py-2 text-sm font-semibold text-text"
+                                        >
+                                            Inventaris
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                     <Pagination links={outlets.links} />
                 </div>
 
