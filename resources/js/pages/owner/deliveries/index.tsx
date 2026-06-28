@@ -1,8 +1,7 @@
 import { Link, router } from '@inertiajs/react';
-import { ArrowDownRight, LayoutGrid, MapPin, Package, TrendingUp, Truck, XCircle } from 'lucide-react';
+import { ArrowDownRight, MapPin, Package, TrendingUp, Truck, XCircle } from 'lucide-react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
-import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import { formatDate } from '@/lib/format';
@@ -25,14 +24,6 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters, st
         <OwnerPageShell
             title="Pengiriman"
             subtitle="Kelola pengiriman dari semua outlet"
-            headerRight={
-                <Link href="/owner/deliveries/board">
-                    <Button variant="outline" size="sm" className="gap-1.5">
-                        <LayoutGrid className="h-4 w-4" />
-                        Board View
-                    </Button>
-                </Link>
-            }
         >
             <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                 {/* Left: Filters + Delivery List */}
