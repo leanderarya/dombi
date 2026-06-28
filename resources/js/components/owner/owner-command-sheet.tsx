@@ -10,11 +10,11 @@ interface Props {
 const sheetItems = [
     { href: '/owner/profile', label: 'Akun', icon: User },
     { divider: true },
-    { href: '/owner/reports', label: 'Laporan', icon: FileText },
-    { href: '/owner/pricing/master', label: 'Harga Produk', icon: DollarSign },
-    { href: '/owner/pricing/history', label: 'Riwayat Harga', icon: Clock },
-    { href: '/owner/settlement-payments', label: 'Riwayat Pembayaran', icon: CreditCard },
-    { href: '/owner/stock-movements', label: 'Audit Aktivitas', icon: Shield },
+    { href: '/owner/analytics?tab=laporan', label: 'Laporan', icon: FileText },
+    { href: '/owner/pricing?tab=pusat', label: 'Harga Produk', icon: DollarSign },
+    { href: '/owner/pricing?tab=riwayat', label: 'Riwayat Harga', icon: Clock },
+    { href: '/owner/finance?tab=pembayaran', label: 'Riwayat Pembayaran', icon: CreditCard },
+    { href: '/owner/analytics?tab=audit', label: 'Audit Aktivitas', icon: Shield },
     { href: '/owner/analytics', label: 'Analitik', icon: BarChart3 },
 ];
 
