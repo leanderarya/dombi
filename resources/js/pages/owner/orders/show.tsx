@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, MapPin, Truck, CheckCircle } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, Truck } from 'lucide-react';
 import { useState } from 'react';
 import OrderStatusChip from '@/components/owner/order-status-chip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -10,7 +10,7 @@ import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
 import { isDifferentRecipient } from '@/lib/recipient';
 
-export default function OwnerOrderShow({ order, reservedStocks, couriers }: any) {
+export default function OwnerOrderShow({ order, couriers }: any) {
     const form = useForm({ courier_id: couriers[0]?.id ?? '' });
     const [resolveOpen, setResolveOpen] = useState(false);
     const [showFullTimeline, setShowFullTimeline] = useState(false);
@@ -118,16 +118,6 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
                     </div>
 
                     {/* Quick actions */}
-                    {order.status === 'pending_confirmation' && (
-                        <button
-                            onClick={() => router.visit(`/owner/orders/${order.id}?action=confirm`)}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-4 text-base font-semibold text-white transition-colors hover:bg-primary-hover"
-                        >
-                            <CheckCircle className="h-4 w-4" />
-                            Konfirmasi Pesanan
-                        </button>
-                    )}
-
                     {order.status === 'ready_for_pickup' && !order.delivery && (
                         <form onSubmit={(e) => {
                             e.preventDefault(); form.post(`/owner/orders/${order.id}/assign-courier`);
