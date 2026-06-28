@@ -44,7 +44,7 @@ const navGroups: NavGroup[] = [
         icon: <FinanceIcon />,
         items: [
             { href: '/owner/finance', label: 'Dashboard Tagihan' },
-            { href: '/owner/settlement-payments', label: 'Riwayat Pembayaran' },
+            { href: '/owner/finance/settlement-payments', label: 'Riwayat Pembayaran' },
             { href: '/owner/payment-accounts', label: 'Rekening Pembayaran' },
         ],
     },
