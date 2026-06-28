@@ -24,18 +24,18 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
     return (
         <OwnerPageShell title={order.order_code} subtitle="Detail pesanan" backHref="/owner/orders" headerRight={<OrderStatusChip status={order.status} />}>
             <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-                <div className="space-y-4">
-                    <div className={`rounded-xl border border-border border-l-4 ${borderColor} bg-white p-5`}>
+                <div className="space-y-5">
+                    <div className={`rounded-xl border border-border border-l-4 ${borderColor} bg-white p-6`}>
                         <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Item</div>
                         {order.items.map((item: any) => (
-                            <div key={item.id} className="mt-3 flex justify-between border-t border-border pt-3 text-sm">
+                            <div key={item.id} className="mt-4 flex justify-between border-t border-border pt-4 text-base">
                                 <div><span className="font-medium text-text">{item.product_name}</span> <span className="text-text-subtle">x{item.quantity}</span></div>
                                 <span className="font-semibold tabular-nums">{formatCurrency(item.subtotal)}</span>
                             </div>
                         ))}
-                        <div className="mt-4 border-t border-border pt-4 text-right text-xl font-bold tabular-nums">{formatCurrency(order.total)}</div>
+                        <div className="mt-4 rounded-lg bg-surface-muted p-4 text-right text-2xl font-bold tabular-nums">{formatCurrency(order.total)}</div>
                     </div>
-                    <div className="rounded-xl border border-border bg-white p-5">
+                    <div className="rounded-xl border border-border bg-white p-6">
                         <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Linimasa</div>
                         {/* Last status as prominent badge */}
                         {lastHistory && (
@@ -75,35 +75,35 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
                         )}
                     </div>
                 </div>
-                <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+                <div className="space-y-5 lg:sticky lg:top-6 lg:self-start">
                     {/* Status badge in sidebar */}
-                    <div className="rounded-xl border border-border bg-white p-5">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Status Pesanan</div>
-                        <div className="mt-2">
+                    <div className="rounded-xl border border-border bg-white p-6">
+                        <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Status Pesanan</div>
+                        <div className="mt-3">
                             <StatusBadge variant={s.variant} size="md">{s.label}</StatusBadge>
                         </div>
                     </div>
 
-                    <div className="rounded-xl border border-border bg-white p-5 text-sm">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">
+                    <div className="rounded-xl border border-border bg-white p-6">
+                        <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">
                             {isDifferentRecipient(order) ? 'Pemesan' : 'Customer'}
                         </div>
-                        <div className="mt-2 font-semibold text-text">{order.customer_name}</div>
-                        <div className="text-text-muted">{order.customer_phone}</div>
-                        <div className="mt-1 text-xs text-text-muted">{order.customer_address}</div>
+                        <div className="mt-3 text-lg font-bold text-text">{order.customer_name}</div>
+                        <div className="text-base text-text-muted">{order.customer_phone}</div>
+                        <div className="mt-1 text-sm text-text-muted">{order.customer_address}</div>
                         {order.customer_address_detail && (
-                            <div className="mt-1 text-xs text-text-muted"><span className="font-medium text-text-muted">Detail: </span>{order.customer_address_detail}</div>
+                            <div className="mt-1 text-sm text-text-muted"><span className="font-medium text-text-muted">Detail: </span>{order.customer_address_detail}</div>
                         )}
                         {order.customer_landmark && (
-                            <div className="mt-1 text-xs text-text-muted"><span className="font-medium text-text-muted">Patokan: </span>{order.customer_landmark}</div>
+                            <div className="mt-1 text-sm text-text-muted"><span className="font-medium text-text-muted">Patokan: </span>{order.customer_landmark}</div>
                         )}
 
                         {/* Recipient — only when different */}
                         {isDifferentRecipient(order) && (
-                            <div className="mt-3 border-t border-border pt-3">
-                                <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Penerima</div>
-                                <div className="mt-2 font-semibold">{order.recipient_name}</div>
-                                <div className="text-text-muted">{order.recipient_phone ?? '-'}</div>
+                            <div className="mt-4 border-t border-border pt-4">
+                                <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Penerima</div>
+                                <div className="mt-3 text-lg font-bold">{order.recipient_name}</div>
+                                <div className="text-base text-text-muted">{order.recipient_phone ?? '-'}</div>
                             </div>
                         )}
                         {order.latitude && order.longitude && (
@@ -111,9 +111,9 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
                                 href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-primary/20 bg-primary-light px-3 py-1.5 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                                className="mt-4 inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary-light px-4 py-2.5 text-sm font-semibold text-primary transition-colors hover:bg-primary/10"
                             >
-                                <MapPin className="h-3.5 w-3.5" />
+                                <MapPin className="h-4 w-4" />
                                 Buka di Maps
                             </a>
                         )}
@@ -123,7 +123,7 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
                     {order.status === 'pending_confirmation' && (
                         <button
                             onClick={() => router.visit(`/owner/orders/${order.id}?action=confirm`)}
-                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-4 text-base font-semibold text-white transition-colors hover:bg-primary-hover"
                         >
                             <CheckCircle className="h-4 w-4" />
                             Konfirmasi Pesanan
@@ -133,15 +133,15 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
                     {order.status === 'ready_for_pickup' && !order.delivery && (
                         <form onSubmit={(e) => {
                             e.preventDefault(); form.post(`/owner/orders/${order.id}/assign-courier`);
-                        }} className="rounded-xl border border-border bg-white p-5">
+                        }} className="rounded-xl border border-border bg-white p-6">
                             <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Assign Kurir</div>
                             <Select
                                 value={String(form.data.courier_id)}
                                 onChange={(e) => form.setData('courier_id', e.target.value)}
                                 options={couriers.map((c: any) => ({ value: String(c.id), label: c.name }))}
-                                className="mt-2"
+                                className="mt-3"
                             />
-                            <button className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">
+                            <button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-4 text-base font-semibold text-white transition-colors hover:bg-primary-hover">
                                 <Truck className="h-4 w-4" />
                                 Tugaskan Kurir
                             </button>
@@ -149,14 +149,14 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
                     )}
 
                     {order.delivery && (
-                        <div className="rounded-xl border border-border bg-white p-5 text-sm">
+                        <div className="rounded-xl border border-border bg-white p-6">
                             <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Kurir</div>
-                            <div className="mt-2 font-semibold text-text">{order.delivery.courier?.name ?? '-'}</div>
+                            <div className="mt-3 font-bold text-text">{order.delivery.courier?.name ?? '-'}</div>
                         </div>
                     )}
 
                     {(order.delivery?.status === 'failed' || ['failed', 'retry_delivery', 'returned_to_outlet'].includes(order.delivery?.status ?? '')) && (
-                        <button onClick={() => setResolveOpen(true)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100">
+                        <button onClick={() => setResolveOpen(true)} className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-4 text-base font-semibold text-red-700 transition-colors hover:bg-red-100">
                             Selesaikan Masalah
                         </button>
                     )}
