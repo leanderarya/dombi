@@ -25,6 +25,7 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters, st
     return (
         <OwnerPageShell
             title="Pengiriman"
+            subtitle="Kelola pengiriman dari semua outlet"
             headerRight={
                 <Link href="/owner/deliveries/board">
                     <Button variant="outline" size="sm" className="gap-1.5">

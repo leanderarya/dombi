@@ -16,7 +16,7 @@ export default function OwnerReturnsIndex({ returns, filters, dashboard, outlets
     };
 
     return (
-        <OwnerPageShell title="Permintaan Return">
+        <OwnerPageShell title="Permintaan Return" subtitle="Kelola pengembalian barang dari outlet">
 
             <div className="space-y-6 lg:grid lg:grid-cols-[1fr_320px] lg:gap-6 lg:space-y-0">
                 {/* Left: Filters + List */}
