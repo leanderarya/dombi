@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ChevronDown, Download } from 'lucide-react';
+import { ArrowDownRight, CheckCircle, ChevronDown, ClipboardList, DollarSign, Download, Truck, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import FilterSheet from '@/components/owner/filter-sheet';
 import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
@@ -134,11 +134,32 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
                             )}
                         </div>
 
-                        {/* KPI Grid - Primary */}
-                        <div className="grid grid-cols-3 gap-2">
-                            <Kpi label="Total Pesanan" value={String(summary.totalOrders)} />
-                            <Kpi label="Pendapatan" value={formatCurrency(summary.totalRevenue)} highlight />
-                            <Kpi label="Selesai" value={String(summary.completedOrders)} />
+                        {/* KPI Cards - Primary */}
+                        <div className="space-y-2">
+                            <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                <div className="flex items-center gap-2 text-xs text-text-muted">
+                                    <ClipboardList className="h-4 w-4 text-text-subtle" />
+                                    Total Pesanan
+                                </div>
+                                <div className="mt-2 text-3xl font-bold text-text">{summary.totalOrders}</div>
+                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-text-subtle">Pesanan</div>
+                            </div>
+                            <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                <div className="flex items-center gap-2 text-xs text-text-muted">
+                                    <DollarSign className="h-4 w-4 text-emerald-500" />
+                                    Pendapatan
+                                </div>
+                                <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(summary.totalRevenue)}</div>
+                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">Total pendapatan</div>
+                            </div>
+                            <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                <div className="flex items-center gap-2 text-xs text-text-muted">
+                                    <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                    Selesai
+                                </div>
+                                <div className="mt-2 text-3xl font-bold text-text">{summary.completedOrders}</div>
+                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">Pesanan selesai</div>
+                            </div>
                         </div>
 
                         {/* Secondary KPIs (collapsible) */}
@@ -151,10 +172,36 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
                                 <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${secondaryOpen ? 'rotate-180' : ''}`} />
                             </button>
                             {secondaryOpen && (
-                                <div className="grid grid-cols-3 gap-2 border-t border-border px-3 pb-3 pt-2">
-                                    <Kpi label="Dibatalkan" value={String(summary.cancelledOrders)} />
-                                    <Kpi label="Pengiriman Berhasil" value={String(summary.completedDeliveries)} />
-                                    <Kpi label="Pengiriman Gagal" value={String(summary.failedDeliveries)} alert={summary.failedDeliveries > 0} />
+                                <div className="space-y-2 border-t border-border px-3 pb-3 pt-2">
+                                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                                            <XCircle className="h-4 w-4 text-red-500" />
+                                            Dibatalkan
+                                        </div>
+                                        <div className="mt-2 text-3xl font-bold text-text">{summary.cancelledOrders}</div>
+                                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">Dibatalkan</div>
+                                    </div>
+                                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                                            <Truck className="h-4 w-4 text-emerald-500" />
+                                            Pengiriman Berhasil
+                                        </div>
+                                        <div className="mt-2 text-3xl font-bold text-text">{summary.completedDeliveries}</div>
+                                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">Pengiriman selesai</div>
+                                    </div>
+                                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                                            <XCircle className="h-4 w-4 text-red-500" />
+                                            Pengiriman Gagal
+                                        </div>
+                                        <div className="mt-2 text-3xl font-bold text-text">{summary.failedDeliveries}</div>
+                                        {summary.failedDeliveries > 0 && (
+                                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                                                <ArrowDownRight className="h-3 w-3" />
+                                                Perlu ditinjau
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -171,15 +218,6 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
                 onApply={(f) => router.get('/owner/reports', { ...filters, outlet_id: f.outlet_id || undefined }, { preserveState: true, replace: true })}
             />
         </OwnerPageShell>
-    );
-}
-
-function Kpi({ label, value, highlight, alert }: { label: string; value: string; highlight?: boolean; alert?: boolean }) {
-    return (
-        <div className={`rounded-lg border p-2.5 transition-all duration-200 hover:shadow-sm ${alert ? 'border-red-200 bg-red-50' : highlight ? 'border-emerald-200 bg-primary-light' : 'border-border bg-white'}`}>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-text-subtle">{label}</div>
-            <div className={`mt-0.5 text-sm font-bold tabular-nums ${highlight ? 'text-primary' : alert ? 'text-red-800' : 'text-text'}`}>{value}</div>
-        </div>
     );
 }
 
