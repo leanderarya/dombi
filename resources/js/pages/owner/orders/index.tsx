@@ -194,13 +194,13 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                     <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <Clock className="h-4 w-4 text-amber-600" />
-                            Menunggu Konfirmasi
+                            Butuh Tindakan
                         </div>
                         <div className="mt-2 text-3xl font-bold text-text">{stats?.pending ?? 0}</div>
                         {(stats?.pending ?? 0) > 0 && (
                             <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-600">
                                 <ArrowDownRight className="h-3 w-3" />
-                                Perlu ditinjau
+                                Perlu assign kurir
                             </div>
                         )}
                     </div>
@@ -231,7 +231,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                     {(stats?.pending ?? 0) > 0 && (
                         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
                             <div className="text-base font-semibold text-amber-800">Perlu Tindakan</div>
-                            <div className="mt-1 text-sm text-amber-700">{stats?.pending} pesanan menunggu konfirmasi</div>
+                            <div className="mt-1 text-sm text-amber-700">{stats?.pending} pesanan menunggu assign kurir</div>
                             <button
                                 onClick={() => setFilter('status', 'needs_action')}
                                 className="mt-3 w-full rounded-lg bg-amber-600 px-3 py-2 text-base font-semibold text-white transition-colors hover:bg-amber-700"
