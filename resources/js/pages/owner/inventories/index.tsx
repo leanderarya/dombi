@@ -1,7 +1,6 @@
 import { Link, router } from '@inertiajs/react';
-import { AlertTriangle, ArrowUpDown, Box, ChevronDown, ChevronUp, Lock, Package, Search, XCircle } from 'lucide-react';
+import { AlertTriangle, ArrowUpDown, ChevronDown, ChevronUp, Lock, Package, Search, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import OwnerKpiCard from '@/components/owner/owner-kpi-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -301,61 +300,75 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                 {/* Right: KPI Cards (desktop sidebar) */}
                 <div className="hidden lg:block">
                     <div className="sticky top-4 space-y-3">
-                        <OwnerKpiCard
-                            icon={<Package className="h-5 w-5" />}
-                            label="Total SKU"
-                            value={stats.totalSku}
-                            trend="Semua outlet"
-                        />
-                        <OwnerKpiCard
-                            icon={<AlertTriangle className="h-5 w-5" />}
-                            label="Stok Rendah"
-                            value={stats.lowStock}
-                            color="warning"
-                            trend={stats.lowStock > 0 ? 'Perlu restock' : 'Semua aman'}
-                        />
-                        <OwnerKpiCard
-                            icon={<Lock className="h-5 w-5" />}
-                            label="Reserved"
-                            value={stats.totalReserved}
-                            color="info"
-                            trend="Dalam pesanan"
-                        />
-                        <OwnerKpiCard
-                            icon={<XCircle className="h-5 w-5" />}
-                            label="Kritis"
-                            value={stats.critical}
-                            color="danger"
-                            trend={stats.critical > 0 ? 'Segera tindak!' : 'Tidak ada'}
-                        />
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <Package className="h-4 w-4 text-text-subtle" />
+                                Total SKU
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{stats.totalSku}</div>
+                            <div className="mt-1 text-[11px] font-medium text-text-subtle">Semua outlet</div>
+                        </div>
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                                Stok Rendah
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{stats.lowStock}</div>
+                            <div className="mt-1 text-[11px] font-medium text-amber-500">{stats.lowStock > 0 ? 'Perlu restock' : 'Semua aman'}</div>
+                        </div>
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <Lock className="h-4 w-4 text-blue-500" />
+                                Reserved
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{stats.totalReserved}</div>
+                            <div className="mt-1 text-[11px] font-medium text-blue-500">Dalam pesanan</div>
+                        </div>
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <XCircle className="h-4 w-4 text-red-500" />
+                                Kritis
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{stats.critical}</div>
+                            <div className="mt-1 text-[11px] font-medium text-red-500">{stats.critical > 0 ? 'Segera tindak!' : 'Tidak ada'}</div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Mobile: KPI Summary (horizontal) */}
+                {/* Mobile: KPI Summary */}
                 <div className="mb-4 grid grid-cols-2 gap-3 lg:hidden">
-                    <OwnerKpiCard
-                        icon={<Package className="h-5 w-5" />}
-                        label="Total SKU"
-                        value={stats.totalSku}
-                    />
-                    <OwnerKpiCard
-                        icon={<AlertTriangle className="h-5 w-5" />}
-                        label="Stok Rendah"
-                        value={stats.lowStock}
-                        color="warning"
-                    />
-                    <OwnerKpiCard
-                        icon={<Lock className="h-5 w-5" />}
-                        label="Reserved"
-                        value={stats.totalReserved}
-                        color="info"
-                    />
-                    <OwnerKpiCard
-                        icon={<XCircle className="h-5 w-5" />}
-                        label="Kritis"
-                        value={stats.critical}
-                        color="danger"
-                    />
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <Package className="h-4 w-4 text-text-subtle" />
+                            Total SKU
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{stats.totalSku}</div>
+                        <div className="mt-1 text-[11px] font-medium text-text-subtle">Semua outlet</div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                            Stok Rendah
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{stats.lowStock}</div>
+                        <div className="mt-1 text-[11px] font-medium text-amber-500">{stats.lowStock > 0 ? 'Perlu restock' : 'Semua aman'}</div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <Lock className="h-4 w-4 text-blue-500" />
+                            Reserved
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{stats.totalReserved}</div>
+                        <div className="mt-1 text-[11px] font-medium text-blue-500">Dalam pesanan</div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            Kritis
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{stats.critical}</div>
+                        <div className="mt-1 text-[11px] font-medium text-red-500">{stats.critical > 0 ? 'Segera tindak!' : 'Tidak ada'}</div>
+                    </div>
                 </div>
             </div>
         </OwnerPageShell>
