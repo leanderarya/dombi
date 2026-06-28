@@ -11,18 +11,10 @@ import { getOrderStatus } from '@/lib/status-labels';
 
 const statusFilters = [
     { key: 'needs_action', label: 'Butuh Tindakan' },
-    { key: '', label: 'Semua' },
-    { key: 'pending_confirmation', label: 'Menunggu Konfirmasi' },
-    { key: 'confirmed', label: 'Diterima' },
-    { key: 'preparing', label: 'Disiapkan' },
-    { key: 'ready_for_pickup', label: 'Siap Diambil' },
-    { key: 'delivering', label: 'Dalam Pengiriman' },
+    { key: 'active', label: 'Aktif' },
     { key: 'completed', label: 'Selesai' },
-    { key: 'rejected_by_outlet', label: 'Ditolak Outlet' },
-    { key: 'cancelled_by_customer', label: 'Dibatalkan Customer' },
-    { key: 'cancelled_by_outlet', label: 'Dibatalkan Outlet' },
-    { key: 'failed_delivery', label: 'Pengiriman Gagal' },
-    { key: 'expired', label: 'Kadaluarsa' },
+    { key: 'cancelled', label: 'Dibatalkan' },
+    { key: 'failed', label: 'Gagal' },
 ];
 
 export default function OwnerOrdersIndex({ orders, outlets, filters, stats, couriers }: any) {
@@ -267,7 +259,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                             <div className="text-base font-semibold text-amber-800">Perlu Tindakan</div>
                             <div className="mt-1 text-sm text-amber-700">{stats?.pending} pesanan menunggu konfirmasi</div>
                             <button
-                                onClick={() => setFilter('status', 'pending_confirmation')}
+                                onClick={() => setFilter('status', 'needs_action')}
                                 className="mt-3 w-full rounded-lg bg-amber-600 px-3 py-2 text-base font-semibold text-white transition-colors hover:bg-amber-700"
                             >
                                 Lihat Pesanan
