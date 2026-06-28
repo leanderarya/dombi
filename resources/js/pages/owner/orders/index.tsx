@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ChevronRight, ClipboardList, Clock, DollarSign, Search, TrendingUp } from 'lucide-react';
+import { ArrowDownRight, ChevronRight, ClipboardList, Clock, DollarSign, Search, TrendingUp } from 'lucide-react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -205,46 +205,54 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
 
                 {/* Right: KPI stats sidebar */}
                 <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
-                    <div className="rounded-xl border border-border bg-white p-5">
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Ringkasan Hari Ini</h3>
-                        <div className="mt-4 space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                                    <ClipboardList className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <div className="text-3xl font-bold tabular-nums text-text">{stats?.total_today ?? 0}</div>
-                                    <div className="text-sm text-text-muted">Total Pesanan</div>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
-                                    <Clock className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <div className="text-3xl font-bold tabular-nums text-text">{stats?.pending ?? 0}</div>
-                                    <div className="text-sm text-text-muted">Menunggu Konfirmasi</div>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-                                    <TrendingUp className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <div className="text-3xl font-bold tabular-nums text-text">{stats?.completed_today ?? 0}</div>
-                                    <div className="text-sm text-text-muted">Selesai Hari Ini</div>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
-                                    <DollarSign className="h-5 w-5" />
-                                </div>
-                                <div>
-                                    <div className="text-3xl font-bold tabular-nums text-text">{formatCurrency(stats?.revenue_today ?? 0)}</div>
-                                    <div className="text-sm text-text-muted">Pendapatan Hari Ini</div>
-                                </div>
-                            </div>
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <ClipboardList className="h-4 w-4 text-blue-600" />
+                            Total Pesanan
                         </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{stats?.total_today ?? 0}</div>
+                        {(stats?.total_today ?? 0) > 0 && (
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-blue-600">
+                                <TrendingUp className="h-3 w-3" />
+                                Hari ini
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <Clock className="h-4 w-4 text-amber-600" />
+                            Menunggu Konfirmasi
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{stats?.pending ?? 0}</div>
+                        {(stats?.pending ?? 0) > 0 && (
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-600">
+                                <ArrowDownRight className="h-3 w-3" />
+                                Perlu ditinjau
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <TrendingUp className="h-4 w-4 text-emerald-600" />
+                            Selesai Hari Ini
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{stats?.completed_today ?? 0}</div>
+                        {(stats?.completed_today ?? 0) > 0 && (
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-600">
+                                <TrendingUp className="h-3 w-3" />
+                                Pesanan selesai
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <DollarSign className="h-4 w-4 text-violet-600" />
+                            Pendapatan Hari Ini
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(stats?.revenue_today ?? 0)}</div>
                     </div>
 
                     {/* Quick actions */}
