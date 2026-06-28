@@ -24,7 +24,7 @@ const navItems = [
         href: '/owner/finance',
         label: 'Keuangan',
         icon: DollarSign,
-        match: ['/owner/finance', '/owner/settlement-payments', '/owner/payment-accounts', '/owner/reports', '/owner/analytics', '/owner/stock-movements'],
+        match: ['/owner/finance', '/owner/settlement-payments', '/owner/reports', '/owner/analytics', '/owner/stock-movements'],
     },
 ];
 

@@ -44,6 +44,17 @@ class RestockController extends Controller
         ]);
     }
 
+    public function create(Request $request): Response
+    {
+        $outletId = $request->integer('outlet_id');
+
+        return Inertia::render('owner/restocks/create', [
+            'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
+            'selectedOutletId' => $outletId,
+            'selectedProductId' => $request->integer('product_id'),
+        ]);
+    }
+
     public function show(RestockRequest $restockRequest): Response
     {
         $restockRequest->load([

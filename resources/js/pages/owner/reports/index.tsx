@@ -86,7 +86,7 @@ export default function ReportsIndex({ summary, ordersByStatus, deliveriesByStat
             </div>
 
             {/* Desktop 2-column layout */}
-            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-5">
+            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 {/* Left: breakdown cards */}
                 <div className="space-y-3">
                     <BreakdownCard title="Pesanan per Status" data={ordersByStatus} />

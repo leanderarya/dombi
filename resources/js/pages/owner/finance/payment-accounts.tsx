@@ -29,7 +29,7 @@ export default function PaymentAccounts({ accounts }: Props) {
         e.preventDefault();
 
         if (editingId) {
-            put(`/owner/payment-accounts/${editingId}`, {
+            put(`/owner/finance/payment-accounts/${editingId}`, {
                 onSuccess: () => {
                     reset();
                     setShowForm(false);
@@ -37,7 +37,7 @@ export default function PaymentAccounts({ accounts }: Props) {
                 },
             });
         } else {
-            post('/owner/payment-accounts', {
+            post('/owner/finance/payment-accounts', {
                 onSuccess: () => {
                     reset();
                     setShowForm(false);
@@ -59,13 +59,13 @@ export default function PaymentAccounts({ accounts }: Props) {
 
     const handleDelete = (id: number) => {
         if (confirm('Hapus rekening ini?')) {
-            router.delete(`/owner/payment-accounts/${id}`);
+            router.delete(`/owner/finance/payment-accounts/${id}`);
         }
     };
 
     return (
         <OwnerPageShell title="Rekening Pembayaran" subtitle="Kelola rekening bank untuk setoran outlet">
-            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-5">
+            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 {/* Left: account list */}
                 <div>
                     <div className="mb-4 flex items-center justify-between">

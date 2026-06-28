@@ -15,7 +15,7 @@ class PaymentAccountController extends Controller
     {
         $accounts = PaymentAccount::orderBy('bank_name')->get();
 
-        return Inertia::render('owner/payment-accounts', [
+        return Inertia::render('owner/finance/payment-accounts', [
             'accounts' => $accounts,
         ]);
     }
@@ -30,7 +30,7 @@ class PaymentAccountController extends Controller
 
         PaymentAccount::create($validated);
 
-        return redirect()->route('owner.payment-accounts.index')
+        return redirect()->route('owner.finance.payment-accounts.index')
             ->with('success', 'Rekening berhasil ditambahkan.');
     }
 
@@ -45,7 +45,7 @@ class PaymentAccountController extends Controller
 
         $account->update($validated);
 
-        return redirect()->route('owner.payment-accounts.index')
+        return redirect()->route('owner.finance.payment-accounts.index')
             ->with('success', 'Rekening berhasil diperbarui.');
     }
 
@@ -53,7 +53,7 @@ class PaymentAccountController extends Controller
     {
         $account->delete();
 
-        return redirect()->route('owner.payment-accounts.index')
+        return redirect()->route('owner.finance.payment-accounts.index')
             ->with('success', 'Rekening berhasil dihapus.');
     }
 }

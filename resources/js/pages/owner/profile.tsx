@@ -8,7 +8,7 @@ export default function OwnerProfile() {
 
     return (
         <OwnerPageShell title="Profile" subtitle="Owner account">
-            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-5">
+            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 {/* Left: user info */}
                 <div className="space-y-4">
                     <div className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md">

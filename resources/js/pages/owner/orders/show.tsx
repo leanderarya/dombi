@@ -73,7 +73,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                         )}
                     </div>
                 </div>
-                <div className="space-y-5 lg:sticky lg:top-6 lg:self-start">
+                <div className="space-y-5 lg:sticky lg:top-4 lg:self-start">
                     {/* Status badge in sidebar */}
                     <div className="rounded-xl border border-border bg-white p-6">
                         <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Status Pesanan</div>
