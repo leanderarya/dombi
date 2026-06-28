@@ -16,7 +16,7 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
     };
 
     return (
-        <OwnerPageShell title="Permintaan Tukar Produk">
+        <OwnerPageShell title="Permintaan Tukar Produk" subtitle="Kelola penukaran barang dari outlet">
 
             <div className="space-y-6 lg:grid lg:grid-cols-[1fr_320px] lg:gap-6 lg:space-y-0">
                 {/* Left: Filters + List */}
