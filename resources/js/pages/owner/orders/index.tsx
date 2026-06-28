@@ -45,8 +45,26 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
         <OwnerPageShell
             title="Pesanan"
             subtitle="Kelola semua pesanan dari semua outlet"
-            headerRight={
-                <>
+        >
+            {/* Filter controls */}
+            <div className="mb-4 space-y-3">
+                <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {statusFilters.map((sf) => (
+                        <button
+                            key={sf.key}
+                            type="button"
+                            onClick={() => setFilter('status', sf.key)}
+                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ${
+                                currentStatus === sf.key
+                                    ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                                    : 'bg-surface-muted text-text-muted hover:bg-zinc-200'
+                            }`}
+                        >
+                            {sf.label}
+                        </button>
+                    ))}
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Input
                         icon={Search}
                         defaultValue={filters.search ?? ''}
@@ -55,22 +73,6 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         aria-label="Cari pesanan"
                         className="h-9 w-48"
                     />
-                    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                        {statusFilters.map((sf) => (
-                            <button
-                                key={sf.key}
-                                type="button"
-                                onClick={() => setFilter('status', sf.key)}
-                                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ${
-                                    currentStatus === sf.key
-                                        ? 'bg-primary text-white shadow-sm shadow-primary/20'
-                                        : 'bg-surface-muted text-text-muted hover:bg-zinc-200'
-                                }`}
-                            >
-                                {sf.label}
-                            </button>
-                        ))}
-                    </div>
                     <select
                         value={filters.outlet_id ?? ''}
                         onChange={(e) => setFilter('outlet_id', e.target.value)}
@@ -87,9 +89,9 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         aria-label="Filter tanggal"
                         className="h-9"
                     />
-                </>
-            }
-        >
+                </div>
+            </div>
+
             {/* Mobile card layout (below lg) */}
             <div className="space-y-3 lg:hidden">
                 {orders.data.length === 0 ? (
