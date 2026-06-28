@@ -7,7 +7,6 @@ use App\Models\Customer;
 use App\Models\Outlet;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Services\CheckoutOtpService;
 use App\Services\DeliveryPricingService;
 use App\Services\OrderService;
 use App\Services\RecommendOutletService;
@@ -15,6 +14,8 @@ use App\Support\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -94,7 +95,7 @@ class CheckoutController extends Controller
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_variant_id' => ['required_without:items.*.product_id', 'nullable', 'integer', Rule::exists('product_variants', 'id')->where('is_active', true)],
             'items.*.product_id' => ['required_without:items.*.product_variant_id', 'nullable', 'integer'],
-            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
             'fulfillment_type' => ['nullable', Rule::in(self::CHECKOUT_VISIBLE_FULFILLMENT_TYPES)],
         ]);
 
@@ -124,6 +125,20 @@ class CheckoutController extends Controller
 
         // Full submission with fulfillment, store and go to step 2
         $request->session()->put('checkout.fulfillment', $validated);
+
+        // Skip customer step for logged-in users with Customer profile (pickup)
+        $user = $request->user();
+        $customer = $user?->customer;
+
+        if ($user && $customer && $customer->phone && $validated['fulfillment_type'] === 'pickup') {
+            $request->session()->put('checkout.customer', [
+                'customer_name' => $customer->name,
+                'phone_number' => $customer->phone,
+                'existing_customer_id' => $customer->id,
+            ]);
+
+            return redirect()->route('customer.checkout.payment');
+        }
 
         return redirect()->route('customer.checkout.customer');
     }
@@ -160,6 +175,9 @@ class CheckoutController extends Controller
             ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService)
             : null;
 
+        $user = $request->user();
+        $customer = $user?->customer;
+
         return Inertia::render('customer/checkout/customer', [
             'draft' => [
                 'fulfillment' => $request->session()->get('checkout.fulfillment'),
@@ -167,6 +185,29 @@ class CheckoutController extends Controller
                 'location' => $location,
                 'items' => $this->mapVariantItems($cart, $variants),
             ],
+            'authUser' => $user ? [
+                'name' => $customer?->name ?? $user->name,
+                'phone' => $customer?->phone,
+            ] : null,
+            'recipientDefaults' => [
+                'name' => $customer?->name ?? $user?->name ?? null,
+                'phone' => $customer?->phone ?? null,
+            ],
+            'savedRecipients' => $customer ? $customer->recipients()
+                ->orderByDesc('is_default')
+                ->orderByDesc('updated_at')
+                ->get()
+                ->map(fn ($r) => [
+                    'id' => $r->id,
+                    'label' => $r->label,
+                    'name' => $r->name,
+                    'phone' => $r->phone,
+                    'address_line' => $r->address_line,
+                    'latitude' => $r->latitude,
+                    'longitude' => $r->longitude,
+                    'is_default' => $r->is_default,
+                ])
+                ->all() : [],
             'previewOutlet' => $previewOutlet ? $previewOutlet->only(['id', 'name', 'address', 'kelurahan', 'kecamatan', 'phone']) : null,
             'pickupRecommendations' => $pickupRecommendations,
             'deliveryQuote' => $deliveryQuote,
@@ -186,12 +227,7 @@ class CheckoutController extends Controller
             return redirect()->route('customer.checkout.login-prompt');
         }
 
-        // Delivery requires phone-verified Customer
-        if ($isDelivery && $request->user() && ! $request->user()->customer?->phone) {
-            $request->session()->put('redirect_after_login', route('customer.checkout.customer'));
-
-            return redirect()->route('customer.verify-phone');
-        }
+        // Note: phone is required in form validation below — no OTP gate for authenticated users
 
         $existingLocation = $request->session()->get('checkout.location', []);
         $hasExistingLocation = $isDelivery
@@ -201,6 +237,9 @@ class CheckoutController extends Controller
         $validated = $request->validate([
             'customer_name' => ['required', 'string', 'min:3', 'max:255'],
             'phone_number' => ['required', 'string', 'max:20'],
+            'recipient_name' => ['nullable', 'string', 'min:3', 'max:255'],
+            'recipient_phone' => ['nullable', 'string', 'max:20'],
+            'save_recipient' => ['nullable', 'boolean'],
             'latitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-180,180'],
             'address_line' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'string', 'max:1000'],
@@ -221,6 +260,12 @@ class CheckoutController extends Controller
             return back()->withErrors(['phone_number' => 'Nomor WhatsApp harus menggunakan format Indonesia yang valid.'])->withInput();
         }
 
+        // Auto-save phone to Customer record if changed (so next checkout pre-fills)
+        $customer = $request->user()?->customer;
+        if ($customer && $customer->phone !== $phone) {
+            $customer->update(['phone' => $phone]);
+        }
+
         $existingCustomer = Customer::query()
             ->where('phone', $phone)
             ->with(['addresses' => fn ($query) => $query->latest()->limit(1)])
@@ -230,7 +275,26 @@ class CheckoutController extends Controller
             'customer_name' => $validated['customer_name'],
             'phone_number' => $phone,
             'existing_customer_id' => $existingCustomer?->id,
+            'recipient_name' => $validated['recipient_name'] ?? null,
+            'recipient_phone' => isset($validated['recipient_phone']) ? $this->normalizeIndonesianPhone($validated['recipient_phone']) : null,
+            'save_recipient' => ! empty($validated['save_recipient']),
         ]);
+
+        // Opt-in: save recipient to profile if requested
+        if (! empty($validated['save_recipient']) && $isDelivery && $request->user()?->customer) {
+            $recipientCustomer = $request->user()->customer;
+            $recipientName = $validated['recipient_name'] ?? $validated['customer_name'];
+            $recipientPhone = isset($validated['recipient_phone']) ? $this->normalizeIndonesianPhone($validated['recipient_phone']) : $phone;
+
+            $recipientCustomer->recipients()->create([
+                'name' => $recipientName,
+                'phone' => $recipientPhone,
+                'address_line' => $validated['address_line'] ?? null,
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
+                'is_default' => $recipientCustomer->recipients()->count() === 0,
+            ]);
+        }
 
         $fulfillmentDraft = $request->session()->get('checkout.fulfillment', []);
         $request->session()->put('checkout.fulfillment', [
@@ -272,77 +336,7 @@ class CheckoutController extends Controller
         return redirect()->route('customer.checkout.payment');
     }
 
-    /**
-     * Show OTP verification page for delivery orders.
-     */
-    public function verifyOtp(Request $request, CheckoutOtpService $otpService): Response|RedirectResponse
-    {
-        $fulfillmentType = $request->session()->get('checkout.fulfillment.fulfillment_type');
-        $customer = $request->session()->get('checkout.customer');
-
-        if (! $customer || ! in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true)) {
-            return redirect()->route('customer.checkout.payment');
-        }
-
-        // If already verified, go to payment
-        if ($otpService->isVerified($request, $customer['phone_number'])) {
-            return redirect()->route('customer.checkout.payment');
-        }
-
-        return Inertia::render('customer/checkout/verify-otp', [
-            'phone' => $customer['phone_number'],
-            'otpLength' => CheckoutOtpService::OTP_LENGTH,
-            'ttlSeconds' => CheckoutOtpService::OTP_TTL_SECONDS,
-        ]);
-    }
-
-    /**
-     * Send OTP for delivery checkout.
-     */
-    public function sendOtp(Request $request, CheckoutOtpService $otpService): JsonResponse|RedirectResponse
-    {
-        $customer = $request->session()->get('checkout.customer');
-
-        if (! $customer) {
-            return redirect()->route('customer.checkout.customer');
-        }
-
-        $otpService->sendOtp($request, $customer['phone_number']);
-
-        return response()->json(['sent' => true]);
-    }
-
-    /**
-     * Verify OTP code for delivery checkout.
-     */
-    public function verifyOtpSubmit(Request $request, CheckoutOtpService $otpService): JsonResponse
-    {
-        $customer = $request->session()->get('checkout.customer');
-
-        if (! $customer) {
-            return response()->json(['verified' => false, 'error' => 'Sesi checkout tidak ditemukan.'], 422);
-        }
-
-        $validated = $request->validate([
-            'code' => ['required', 'string', 'size:6'],
-        ]);
-
-        $verified = $otpService->verify($request, $validated['code'], $customer['phone_number']);
-
-        if (! $verified) {
-            $remainingAttempts = max(0, CheckoutOtpService::MAX_ATTEMPTS - (int) $request->session()->get(CheckoutOtpService::SESSION_KEY_OTP_ATTEMPTS, 0));
-
-            return response()->json([
-                'verified' => false,
-                'error' => 'Kode OTP tidak valid atau sudah kadaluarsa.',
-                'remaining_attempts' => $remainingAttempts,
-            ], 422);
-        }
-
-        return response()->json(['verified' => true]);
-    }
-
-    public function payment(Request $request, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService, CheckoutOtpService $otpService): Response|RedirectResponse
+    public function payment(Request $request, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): Response|RedirectResponse
     {
         $cart = collect($request->session()->get('checkout.cart', []));
 
@@ -359,16 +353,7 @@ class CheckoutController extends Controller
         $fulfillmentType = $request->session()->get('checkout.fulfillment.fulfillment_type', 'pickup');
         $location = $request->session()->get('checkout.location');
 
-        // Require OTP verification for delivery orders
         $isDelivery = in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
-        if ($isDelivery) {
-            $customer = $request->session()->get('checkout.customer');
-            $phone = $customer['phone_number'] ?? null;
-
-            if (! $phone || ! $otpService->isVerified($request, $phone)) {
-                return redirect()->route('customer.checkout.verify-otp');
-            }
-        }
         $pickupOutlet = $fulfillmentType === 'pickup'
             ? Outlet::query()->find($request->session()->get('checkout.fulfillment.selected_outlet_id'), ['id', 'name', 'address', 'kelurahan', 'kecamatan'])
             : null;
@@ -399,7 +384,7 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function submit(Request $request, OrderService $orderService, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService, CheckoutOtpService $otpService): RedirectResponse
+    public function submit(Request $request, OrderService $orderService, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): RedirectResponse
     {
         $fulfillmentType = $request->session()->get('checkout.fulfillment.fulfillment_type');
         $customer = $request->session()->get('checkout.customer');
@@ -418,15 +403,6 @@ class CheckoutController extends Controller
             return redirect()->route('customer.checkout.customer')->withErrors(['latitude' => 'Lengkapi alamat pengiriman terlebih dahulu.']);
         }
 
-        // Require OTP verification for delivery orders
-        $isDelivery = in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
-        if ($isDelivery) {
-            $phone = $customer['phone_number'] ?? null;
-            if (! $phone || ! $otpService->isVerified($request, $phone)) {
-                return redirect()->route('customer.checkout.verify-otp')->withErrors(['otp' => 'Verifikasi nomor HP diperlukan untuk pengiriman.']);
-            }
-        }
-
         if (! is_array($cart) || count($cart) === 0) {
             return redirect()->route('customer.checkout.index')->withErrors(['items' => 'Pilih produk terlebih dahulu.']);
         }
@@ -434,6 +410,26 @@ class CheckoutController extends Controller
         $validated = $request->validate([
             'payment_method' => ['required', Rule::in(self::PAYMENT_METHODS)],
         ]);
+
+        // Idempotency: prevent duplicate order from double-tap/refresh
+        $fingerprint = md5(serialize([
+            'user' => $request->user()?->id ?: $request->session()->getId(),
+            'cart' => $cart,
+            'payment' => $validated['payment_method'],
+            'outlet' => $request->session()->get('checkout.fulfillment.selected_outlet_id'),
+        ]));
+        $idempotencyKey = 'checkout_submit:'.$fingerprint;
+        $cachedOrderId = Cache::get($idempotencyKey);
+
+        if ($cachedOrderId) {
+            $order = \App\Models\Order::find($cachedOrderId);
+            if ($order) {
+                return redirect()->route('customer.orders.confirmation', [
+                    'order' => $order->id,
+                    'token' => $order->recovery_token,
+                ]);
+            }
+        }
 
         $subtotal = $this->calculateSubtotal($cart);
         $deliveryQuote = $fulfillmentType === 'delivery_dombi'
@@ -463,6 +459,9 @@ class CheckoutController extends Controller
                 'payment_fee' => $paymentFee,
                 'notes' => $location['delivery_notes'] ?? null,
             ]);
+
+            // Cache order ID for idempotency (60s TTL)
+            Cache::put($idempotencyKey, $order->id, 60);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return back()->withErrors($e->validator->errors())->withInput();
         } catch (\Exception $e) {
@@ -476,22 +475,19 @@ class CheckoutController extends Controller
             'checkout.location',
         ]);
 
-        // Check if OTP was verified before clearing session
-        $wasOtpVerified = $isDelivery && $otpService->isVerified($request, $customer['phone_number'] ?? '');
+        $isDelivery = in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
 
-        // Clear OTP verification state
-        $otpService->clear($request);
-
-        // Redirect ALL users to order confirmation page
-        $redirect = redirect()->route('customer.orders.confirmation', [
-            'order' => $order->id,
-            'token' => $order->recovery_token,
-        ])->with('success', 'Order berhasil dibuat.');
-
-        if ($wasOtpVerified) {
-            $redirect->with('canCreateAccount', true)
-                ->with('accountPhone', $customer['phone_number'] ?? '')
-                ->with('accountName', $customer['customer_name'] ?? '');
+        // Pickup guests go to track page (has last4 cancel verification);
+        // delivery customers go to confirmation page.
+        if ($fulfillmentType === 'pickup' && ! $request->user()) {
+            $redirect = redirect()->route('track', [
+                'token' => $order->recovery_token,
+            ])->with('success', 'Order berhasil dibuat.');
+        } else {
+            $redirect = redirect()->route('customer.orders.confirmation', [
+                'order' => $order->id,
+                'token' => $order->recovery_token,
+            ])->with('success', 'Order berhasil dibuat.');
         }
 
         return $redirect;

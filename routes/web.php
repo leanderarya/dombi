@@ -8,12 +8,14 @@ use App\Http\Controllers\Courier\DeliveryController as CourierDeliveryController
 use App\Http\Controllers\Customer\AccountPromotionController;
 use App\Http\Controllers\Customer\AddressController as CustomerAddressController;
 use App\Http\Controllers\Customer\CartController;
+use App\Http\Controllers\Customer\FavoriteController;
 use App\Http\Controllers\Customer\CheckoutController as CustomerCheckoutController;
 use App\Http\Controllers\Customer\GuestOrderRecoveryController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
 use App\Http\Controllers\Customer\ProfileController;
+use App\Http\Controllers\Customer\RecipientController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\DevRoleSwitcherController;
 use App\Http\Controllers\NotificationController;
@@ -57,7 +59,7 @@ use App\Http\Controllers\TrackController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::middleware(['customer.inertia'])->group(function (): void {
+Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): void {
     Route::get('/', function () {
         if (auth()->check()) {
             return redirect()->route('dashboard');
@@ -101,18 +103,12 @@ Route::middleware(['customer.inertia'])->group(function (): void {
         Route::post('/checkout/customer', [CustomerCheckoutController::class, 'storeCustomer'])->name('checkout.customer.store');
         Route::get('/checkout/customer-lookup', [CustomerCheckoutController::class, 'lookupCustomer'])->middleware('throttle:lookup')->name('checkout.customer.lookup');
         Route::get('/checkout/login-prompt', fn () => Inertia::render('customer/checkout/login-prompt'))->name('checkout.login-prompt');
-        Route::get('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtp'])->name('checkout.verify-otp');
-        Route::post('/checkout/verify-otp', [CustomerCheckoutController::class, 'verifyOtpSubmit'])->name('checkout.verify-otp.submit');
-        Route::post('/checkout/send-otp', [CustomerCheckoutController::class, 'sendOtp'])->name('checkout.send-otp');
         Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
-        Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->name('checkout.process-payment');
+        Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->middleware('throttle:payment-submit')->name('checkout.process-payment');
         Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
         Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
         Route::get('/orders/{order}/confirmation/{token}', [CustomerOrderController::class, 'confirmation'])->name('orders.confirmation');
         Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
-        Route::get('/verify-phone', fn () => Inertia::render('customer/verify-phone'))->name('verify-phone');
-        Route::post('/verify-phone/send-otp', [AccountPromotionController::class, 'sendOtp'])->name('verify-phone.send-otp');
-        Route::post('/verify-phone/verify', [AccountPromotionController::class, 'verify'])->name('verify-phone.verify');
         Route::post('/register', [AccountPromotionController::class, 'register'])->middleware('throttle:3,1')->name('register');
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
@@ -121,6 +117,7 @@ Route::middleware(['customer.inertia'])->group(function (): void {
     Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
+        Route::post('/orders/{order}/report', [\App\Http\Controllers\Customer\OrderReportController::class, 'store'])->name('orders.report')->middleware('throttle:order-report');
         Route::get('/addresses', [CustomerAddressController::class, 'index'])->name('addresses.index');
         Route::get('/addresses/create', [CustomerAddressController::class, 'create'])->name('addresses.create');
         Route::post('/addresses', [CustomerAddressController::class, 'store'])->name('addresses.store');
@@ -128,6 +125,15 @@ Route::middleware(['customer.inertia'])->group(function (): void {
         Route::put('/addresses/{address}', [CustomerAddressController::class, 'update'])->name('addresses.update');
         Route::delete('/addresses/{address}', [CustomerAddressController::class, 'destroy'])->name('addresses.destroy');
         Route::post('/addresses/{address}/set-default', [CustomerAddressController::class, 'setDefault'])->name('addresses.set-default');
+        Route::get('/recipients', [RecipientController::class, 'index'])->name('recipients.index');
+        Route::post('/recipients', [RecipientController::class, 'store'])->name('recipients.store');
+        Route::put('/recipients/{recipient}', [RecipientController::class, 'update'])->name('recipients.update');
+        Route::delete('/recipients/{recipient}', [RecipientController::class, 'destroy'])->name('recipients.destroy');
+
+        // Favorites (server-persisted per account)
+        Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+        Route::post('/favorites/toggle', [FavoriteController::class, 'toggle'])->name('favorites.toggle');
+        Route::post('/favorites/merge', [FavoriteController::class, 'merge'])->name('favorites.merge');
     });
 
     Route::middleware('customer.or.recovered')->prefix('customer')->name('customer.')->group(function (): void {
@@ -138,9 +144,9 @@ Route::middleware(['customer.inertia'])->group(function (): void {
 });
 
 // Guest cancel route — outside customer.inertia middleware to avoid auth redirect
-Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware('throttle:6,1')->name('track.cancel');
+Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware('throttle:track-cancel')->name('track.cancel');
 
-Route::middleware(['internal.inertia'])->group(function (): void {
+Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): void {
     // System endpoints
     Route::get('/api/health', [SystemController::class, 'health'])->name('health');
     Route::get('/api/version', [SystemController::class, 'version'])->name('version');
@@ -152,8 +158,8 @@ Route::middleware(['internal.inertia'])->group(function (): void {
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
 
     // Google OAuth
-    Route::get('/auth/google', [SocialAuthController::class, 'redirect'])->name('google.redirect');
-    Route::get('/auth/google/callback', [SocialAuthController::class, 'callback'])->name('google.callback');
+    Route::get('/oauth/google', [SocialAuthController::class, 'redirect'])->name('google.redirect');
+    Route::get('/oauth/google/callback', [SocialAuthController::class, 'callback'])->name('google.callback');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->middleware('auth')
@@ -215,6 +221,9 @@ Route::middleware(['internal.inertia'])->group(function (): void {
         Route::put('inventories/{inventory}', [OwnerInventoryController::class, 'update'])->name('inventories.update');
         Route::get('orders', [OwnerOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [OwnerOrderController::class, 'show'])->name('orders.show');
+        Route::get('order-reports', [\App\Http\Controllers\Owner\OrderReportController::class, 'index'])->name('order-reports.index');
+        Route::get('order-reports/{report}', [\App\Http\Controllers\Owner\OrderReportController::class, 'show'])->name('order-reports.show');
+        Route::put('order-reports/{report}', [\App\Http\Controllers\Owner\OrderReportController::class, 'update'])->name('order-reports.update');
         Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
         Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
         Route::get('deliveries/board', [DeliveryBoardController::class, 'index'])->name('deliveries.board');
@@ -272,6 +281,9 @@ Route::middleware(['internal.inertia'])->group(function (): void {
         Route::post('/orders/{order}/reject', [OutletOrderController::class, 'reject'])->name('orders.reject');
         Route::post('/orders/{order}/assign-courier', [OutletOrderController::class, 'assignCourier'])->name('orders.assign-courier');
         Route::post('/orders/{order}/complete-pickup', [OutletOrderController::class, 'completePickup'])->name('orders.complete-pickup');
+        Route::get('/order-reports', [\App\Http\Controllers\Outlet\OrderReportController::class, 'index'])->name('order-reports.index');
+        Route::get('/order-reports/{report}', [\App\Http\Controllers\Outlet\OrderReportController::class, 'show'])->name('order-reports.show');
+        Route::put('/order-reports/{report}', [\App\Http\Controllers\Outlet\OrderReportController::class, 'update'])->name('order-reports.update');
         Route::get('/scan', [OutletScanController::class, 'index'])->name('scan');
         Route::get('/scan/{order_code}', [OutletScanController::class, 'lookup'])->name('scan.lookup');
         Route::get('/restocks', [OutletRestockController::class, 'index'])->name('restocks.index');

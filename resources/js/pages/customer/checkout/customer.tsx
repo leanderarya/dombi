@@ -1,6 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
-import { MapPin } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import NoticeBanner from '@/components/customer/checkout/notice-banner';
 import DeliveryQuoteCard from '@/components/customer/delivery-quote-card';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
 import LocationSheet from '@/components/customer/location-sheet';
@@ -10,10 +8,16 @@ import StepHeader from '@/components/customer/step-header';
 import SectionCard from '@/components/ui/section-card';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation } from '@/lib/customer-location';
+import { Head, useForm } from '@inertiajs/react';
+import { MapPin } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 type CustomerForm = {
     customer_name: string;
     phone_number: string;
+    recipient_name: string;
+    recipient_phone: string;
+    save_recipient: boolean;
     address_line: string;
     address_detail: string;
     province: string;
@@ -28,15 +32,37 @@ type CustomerForm = {
     selected_outlet_id: number | null;
 };
 
-export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommendations, deliveryQuote }: any) {
+export default function CheckoutCustomer({
+    draft,
+    authUser,
+    recipientDefaults,
+    savedRecipients = [],
+    previewOutlet,
+    pickupRecommendations,
+    deliveryQuote,
+}: any) {
     const fulfillmentType = draft?.fulfillment?.fulfillment_type ?? '';
-    const isDelivery = fulfillmentType === 'delivery_dombi' || fulfillmentType === 'delivery_ojol';
+    const isDelivery =
+        fulfillmentType === 'delivery_dombi' ||
+        fulfillmentType === 'delivery_ojol';
+    const isLoggedIn = !!authUser;
     const { location: savedLocation } = useCustomerLocation();
     const [locationSheetOpen, setLocationSheetOpen] = useState(false);
+    const [saveRecipient, setSaveRecipient] = useState(false);
+    const [showRecipient, setShowRecipient] = useState(
+        !!(
+            draft?.customer?.recipient_name &&
+            draft?.customer?.recipient_name !==
+                (draft?.customer?.customer_name ?? authUser?.name ?? '')
+        ),
+    );
 
     const form = useForm<CustomerForm>({
-        customer_name: draft?.customer?.customer_name ?? '',
-        phone_number: draft?.customer?.phone_number ?? '',
+        customer_name: draft?.customer?.customer_name ?? authUser?.name ?? '',
+        phone_number: draft?.customer?.phone_number ?? authUser?.phone ?? '',
+        recipient_name: draft?.customer?.recipient_name ?? '',
+        recipient_phone: draft?.customer?.recipient_phone ?? '',
+        save_recipient: false,
         address_line: draft?.location?.address_line ?? '',
         address_detail: draft?.location?.address_detail ?? '',
         province: draft?.location?.province ?? '',
@@ -48,30 +74,49 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
         longitude: draft?.location?.longitude ?? null,
         landmark: draft?.location?.landmark ?? '',
         delivery_notes: draft?.location?.delivery_notes ?? '',
-        selected_outlet_id: draft?.fulfillment?.selected_outlet_id ?? pickupRecommendations?.recommended?.id ?? previewOutlet?.id ?? null,
+        selected_outlet_id:
+            draft?.fulfillment?.selected_outlet_id ??
+            pickupRecommendations?.recommended?.id ??
+            previewOutlet?.id ??
+            null,
     });
 
     useEffect(() => {
-        if (!isDelivery || draft?.location || !savedLocation || form.data.latitude !== null || form.data.address_line.trim() !== '') {
+        if (
+            !isDelivery ||
+            draft?.location ||
+            !savedLocation ||
+            form.data.latitude !== null ||
+            form.data.address_line.trim() !== ''
+        ) {
             return;
         }
 
         form.setData({
             ...form.data,
-            address_line: form.data.address_line || savedLocation.address_line || '',
-            address_detail: form.data.address_detail || savedLocation.address_detail || '',
+            address_line:
+                form.data.address_line || savedLocation.address_line || '',
+            address_detail:
+                form.data.address_detail || savedLocation.address_detail || '',
             province: form.data.province || savedLocation.province || '',
             city: form.data.city || savedLocation.city || '',
             district: form.data.district || savedLocation.district || '',
             village: form.data.village || savedLocation.village || '',
-            postal_code: form.data.postal_code || savedLocation.postal_code || '',
+            postal_code:
+                form.data.postal_code || savedLocation.postal_code || '',
             latitude: form.data.latitude ?? savedLocation.latitude,
             longitude: form.data.longitude ?? savedLocation.longitude,
             landmark: form.data.landmark || savedLocation.landmark || '',
-            delivery_notes: form.data.delivery_notes || savedLocation.delivery_notes || '',
+            delivery_notes:
+                form.data.delivery_notes || savedLocation.delivery_notes || '',
         });
-
-    }, [draft?.location, form.data.address_line, form.data.latitude, isDelivery, savedLocation]);
+    }, [
+        draft?.location,
+        form.data.address_line,
+        form.data.latitude,
+        isDelivery,
+        savedLocation,
+    ]);
 
     useEffect(() => {
         const phone = form.data.phone_number.trim();
@@ -82,9 +127,12 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
 
         const controller = new AbortController();
         const timeout = window.setTimeout(async () => {
-            const response = await fetch(`/customer/checkout/customer-lookup?phone_number=${encodeURIComponent(phone)}`, {
-                signal: controller.signal,
-            }).catch(() => null);
+            const response = await fetch(
+                `/customer/checkout/customer-lookup?phone_number=${encodeURIComponent(phone)}`,
+                {
+                    signal: controller.signal,
+                },
+            ).catch(() => null);
 
             if (!response?.ok) {
                 return;
@@ -103,28 +151,52 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
         };
     }, [form.data.phone_number]);
 
-    const hasKnownLocation = isDelivery && !!form.data.latitude && !!form.data.longitude;
+    const hasKnownLocation =
+        isDelivery && !!form.data.latitude && !!form.data.longitude;
     const canContinue = isDelivery
-        ? form.data.customer_name.trim().length >= 3
-            && form.data.phone_number.trim().length >= 9
-            && !!form.data.latitude
-            && !!form.data.longitude
-            && (!!deliveryQuote?.is_serviceable || !hasKnownLocation)
-        : form.data.customer_name.trim().length >= 3 && form.data.phone_number.trim().length >= 9 && !!form.data.selected_outlet_id;
+        ? form.data.customer_name.trim().length >= 3 &&
+          form.data.phone_number.trim().length >= 9 &&
+          !!form.data.latitude &&
+          !!form.data.longitude &&
+          (!!deliveryQuote?.is_serviceable || !hasKnownLocation)
+        : form.data.customer_name.trim().length >= 3 &&
+          form.data.phone_number.trim().length >= 9 &&
+          !!form.data.selected_outlet_id;
+
+    const hasRecipient =
+        showRecipient && form.data.recipient_name.trim().length >= 3;
 
     const submit = () => {
+        if (!showRecipient) {
+            form.setData('recipient_name', '');
+            form.setData('recipient_phone', '');
+            form.setData('save_recipient', false);
+        } else {
+            form.setData('save_recipient', saveRecipient);
+        }
         form.post('/customer/checkout/customer');
     };
 
-    const notServiceable = isDelivery && hasKnownLocation && deliveryQuote && !deliveryQuote.is_serviceable;
-    const buttonLabel = notServiceable ? 'Lokasi Luar Jangkauan' : 'Lanjutkan ke Pembayaran';
+    const notServiceable =
+        isDelivery &&
+        hasKnownLocation &&
+        deliveryQuote &&
+        !deliveryQuote.is_serviceable;
+    const buttonLabel = notServiceable ? 'Lokasi Luar Jangkauan' : 'Lanjutkan';
 
     return (
         <CustomerMobileLayout
             hideTopBar
             hideCartBar
             hideBottomNav
-            footerSlot={<StepButton label={buttonLabel} disabled={!canContinue || form.processing} processing={form.processing} onClick={submit} />}
+            footerSlot={
+                <StepButton
+                    label={buttonLabel}
+                    disabled={!canContinue || form.processing}
+                    processing={form.processing}
+                    onClick={submit}
+                />
+            }
         >
             <Head title="Informasi Pemesan" />
             <StepHeader
@@ -138,36 +210,118 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
                 backHref="/customer/checkout"
             />
 
-            <SectionCard label="Customer">
+            <SectionCard className="mt-4">
                 <div className="space-y-3">
                     <Field
                         label="Nama Lengkap"
                         value={form.data.customer_name}
-                        onChange={(value) => form.setData('customer_name', value)}
+                        onChange={(value) =>
+                            form.setData('customer_name', value)
+                        }
                         error={form.errors.customer_name}
-                        placeholder="Nama penerima"
+                        placeholder="Nama kamu"
                     />
                     <Field
                         label="Nomor WhatsApp"
                         value={form.data.phone_number}
-                        onChange={(value) => form.setData('phone_number', value)}
+                        onChange={(value) =>
+                            form.setData('phone_number', value)
+                        }
                         error={form.errors.phone_number}
                         placeholder="081234567890"
                         inputMode="tel"
+                        hint={
+                            isLoggedIn && authUser?.phone
+                                ? 'Dari akun kamu'
+                                : undefined
+                        }
                     />
                 </div>
+
+                {/* Link to add recipient */}
+                {isDelivery && !showRecipient && (
+                    <button
+                        type="button"
+                        onClick={() => setShowRecipient(true)}
+                        className="mt-3 flex min-h-11 w-full items-center gap-1.5 text-xs font-semibold text-primary active:opacity-80"
+                    >
+                        → Kirim ke orang lain?
+                    </button>
+                )}
             </SectionCard>
 
+            {/* Penerima — only when user clicked "Kirim ke orang lain" */}
+            {isDelivery && showRecipient && (
+                <SectionCard
+                    label="Penerima"
+                    labelRight={
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setShowRecipient(false);
+                                form.setData('recipient_name', '');
+                                form.setData('recipient_phone', '');
+                                setSaveRecipient(false);
+                            }}
+                            className="text-[11px] font-semibold text-text-subtle active:opacity-80"
+                        >
+                            Hapus
+                        </button>
+                    }
+                >
+                    <div className="space-y-3">
+                        <Field
+                            label="Nama Penerima"
+                            value={form.data.recipient_name}
+                            onChange={(value) =>
+                                form.setData('recipient_name', value)
+                            }
+                            error={form.errors.recipient_name}
+                            placeholder="Nama penerima"
+                        />
+                        <Field
+                            label="Nomor WhatsApp Penerima"
+                            value={form.data.recipient_phone}
+                            onChange={(value) =>
+                                form.setData('recipient_phone', value)
+                            }
+                            error={form.errors.recipient_phone}
+                            placeholder="081234567890"
+                            inputMode="tel"
+                        />
+                    </div>
+
+                    {/* Save recipient option */}
+                    {hasRecipient && (
+                        <label className="mt-3 flex min-h-11 items-center gap-2 text-xs text-text-muted active:opacity-80">
+                            <input
+                                type="checkbox"
+                                checked={saveRecipient}
+                                onChange={(e) =>
+                                    setSaveRecipient(e.target.checked)
+                                }
+                                className="h-4 w-4 rounded border-border"
+                            />
+                            Simpan penerima ini untuk pesanan berikutnya
+                        </label>
+                    )}
+                </SectionCard>
+            )}
+
+            {/* Pickup outlet selector */}
             {!isDelivery && (
                 <PickupOutletSelector
                     items={draft?.items ?? []}
                     initialRecommendations={pickupRecommendations}
                     selectedOutletId={form.data.selected_outlet_id}
-                    onSelect={(outletId) => form.setData('selected_outlet_id', outletId)}
+                    onSelect={(outletId) =>
+                        form.setData('selected_outlet_id', outletId)
+                    }
                     error={form.errors.selected_outlet_id}
                 />
             )}
 
+            {/* Delivery location */}
             {isDelivery && (
                 <>
                     {hasKnownLocation ? (
@@ -175,28 +329,25 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
                             <div className="rounded-xl bg-white p-4">
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
-                                            <span className="text-[13px] text-text-subtle">Lokasi Pengiriman</span>
-                                        </div>
-                                        <div className="mt-2 text-sm font-semibold text-text">
-                                            {[form.data.village, form.data.district, form.data.city].filter(Boolean).join(', ') || 'Lokasi tersimpan'}
-                                        </div>
-                                        {form.data.address_detail && (
-                                            <div className="mt-1 text-xs text-text-muted">
-                                                <span className="font-semibold text-text-muted">Detail: </span>{form.data.address_detail}
+                                        <div className="flex items-start gap-2">
+                                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle" />
+                                            <div className="min-w-0">
+                                                {form.data.address_line || [form.data.village, form.data.district, form.data.city].filter(Boolean).join(', ') ? (
+                                                    <div className="line-clamp-2 text-sm font-semibold text-text">
+                                                        {form.data.address_line || [form.data.village, form.data.district, form.data.city].filter(Boolean).join(', ')}
+                                                    </div>
+                                                ) : (
+                                                    <div className="text-sm font-semibold text-amber-600">Pilih lokasi di peta</div>
+                                                )}
                                             </div>
-                                        )}
-                                        {form.data.landmark && (
-                                            <div className="mt-1 text-xs text-text-muted">
-                                                <span className="font-semibold text-text-muted">Patokan: </span>{form.data.landmark}
-                                            </div>
-                                        )}
+                                        </div>
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => setLocationSheetOpen(true)}
-                                        className="min-h-[44px] shrink-0 rounded-lg border border-border px-3 text-xs font-semibold text-text active:opacity-80"
+                                        onClick={() =>
+                                            setLocationSheetOpen(true)
+                                        }
+                                        className="min-h-11 shrink-0 rounded-lg border border-border px-3 text-xs font-semibold text-text active:opacity-80"
                                     >
                                         Ubah Lokasi
                                     </button>
@@ -206,9 +357,15 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
                             {deliveryQuote && (
                                 <DeliveryQuoteCard
                                     outlet={deliveryQuote.outlet}
-                                    distance_km={Number(deliveryQuote.distance_km ?? 0)}
-                                    delivery_fee={Number(deliveryQuote.delivery_fee ?? 0)}
-                                    is_serviceable={deliveryQuote.is_serviceable ?? false}
+                                    distance_km={Number(
+                                        deliveryQuote.distance_km ?? 0,
+                                    )}
+                                    delivery_fee={Number(
+                                        deliveryQuote.delivery_fee ?? 0,
+                                    )}
+                                    is_serviceable={
+                                        deliveryQuote.is_serviceable ?? false
+                                    }
                                 />
                             )}
                         </section>
@@ -237,68 +394,66 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
 
                                     form.setData({
                                         ...form.data,
-                                        address_line: savedLocation.address_line ?? '',
-                                        address_detail: savedLocation.address_detail ?? '',
+                                        address_line:
+                                            savedLocation.address_line ?? '',
+                                        address_detail:
+                                            savedLocation.address_detail ?? '',
                                         province: savedLocation.province ?? '',
                                         city: savedLocation.city ?? '',
                                         district: savedLocation.district ?? '',
                                         village: savedLocation.village ?? '',
-                                        postal_code: savedLocation.postal_code ?? '',
+                                        postal_code:
+                                            savedLocation.postal_code ?? '',
                                         latitude: savedLocation.latitude,
                                         longitude: savedLocation.longitude,
                                         landmark: savedLocation.landmark ?? '',
-                                        delivery_notes: savedLocation.delivery_notes ?? '',
+                                        delivery_notes:
+                                            savedLocation.delivery_notes ?? '',
                                     });
                                 }}
                                 onChange={(next) => {
                                     form.setData({
                                         ...form.data,
-                                        address_line: next.address_line ?? form.data.address_line,
-                                        address_detail: next.address_detail ?? form.data.address_detail,
-                                        province: next.province ?? form.data.province,
+                                        address_line:
+                                            next.address_line ??
+                                            form.data.address_line,
+                                        address_detail:
+                                            next.address_detail ??
+                                            form.data.address_detail,
+                                        province:
+                                            next.province ?? form.data.province,
                                         city: next.city ?? form.data.city,
-                                        district: next.district ?? form.data.district,
-                                        village: next.village ?? form.data.village,
-                                        postal_code: next.postal_code ?? form.data.postal_code,
-                                        latitude: next.latitude ?? form.data.latitude,
-                                        longitude: next.longitude ?? form.data.longitude,
-                                        landmark: next.landmark ?? form.data.landmark,
-                                        delivery_notes: next.delivery_notes ?? form.data.delivery_notes,
+                                        district:
+                                            next.district ?? form.data.district,
+                                        village:
+                                            next.village ?? form.data.village,
+                                        postal_code:
+                                            next.postal_code ??
+                                            form.data.postal_code,
+                                        latitude:
+                                            next.latitude ?? form.data.latitude,
+                                        longitude:
+                                            next.longitude ??
+                                            form.data.longitude,
+                                        landmark:
+                                            next.landmark ?? form.data.landmark,
+                                        delivery_notes:
+                                            next.delivery_notes ??
+                                            form.data.delivery_notes,
                                     });
                                 }}
                             />
-                            {(form.errors.latitude || form.errors.longitude) && <p className="mt-2 text-xs text-red-600">Lokasi pengiriman wajib dipilih pada peta.</p>}
-                        </section>
-                    )}
-
-                    {!hasKnownLocation && (
-                        <SectionCard label="Alamat">
-                            <textarea
-                                value={form.data.address_line}
-                                onChange={(event) => form.setData('address_line', event.target.value)}
-                                className="min-h-20 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
-                                placeholder="Alamat lengkap"
-                            />
-                            <div className="mt-3 grid grid-cols-1 gap-3">
-                                <Field label="Kelurahan" value={form.data.village} onChange={(value) => form.setData('village', value)} />
-                                <Field label="Kecamatan" value={form.data.district} onChange={(value) => form.setData('district', value)} />
-                                <Field label="Kota" value={form.data.city} onChange={(value) => form.setData('city', value)} />
-                                <Field label="Provinsi" value={form.data.province} onChange={(value) => form.setData('province', value)} />
-                            </div>
-                            <div className="mt-3 grid grid-cols-1 gap-3">
-                                <Field label="Kode Pos" value={form.data.postal_code} onChange={(value) => form.setData('postal_code', value)} inputMode="numeric" />
-                                <Field label="Patokan rumah" value={form.data.landmark} onChange={(value) => form.setData('landmark', value)} placeholder="Pagar hijau, dekat minimarket..." />
-                                <label className="block">
-                                    <span className="text-[13px] text-text-subtle">Catatan kurir</span>
-                                    <textarea
-                                        value={form.data.delivery_notes}
-                                        onChange={(event) => form.setData('delivery_notes', event.target.value)}
-                                        className="mt-1 min-h-16 w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
-                                        placeholder="Instruksi tambahan untuk kurir atau admin"
+                            {(form.errors.latitude ||
+                                form.errors.longitude) && (
+                                <div className="mt-3">
+                                    <NoticeBanner
+                                        variant="error"
+                                        title="Lokasi wajib dipilih"
+                                        message="Pilih lokasi pengiriman pada peta."
                                     />
-                                </label>
-                            </div>
-                        </SectionCard>
+                                </div>
+                            )}
+                        </section>
                     )}
                 </>
             )}
@@ -328,13 +483,24 @@ export default function CheckoutCustomer({ draft, previewOutlet, pickupRecommend
     );
 }
 
-function Field({ label, value, onChange, placeholder, error, inputMode }: {
+function Field({
+    label,
+    value,
+    onChange,
+    placeholder,
+    error,
+    inputMode,
+    readOnly,
+    hint,
+}: {
     label: string;
     value: string;
     onChange: (value: string) => void;
     placeholder?: string;
     error?: string;
     inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode'];
+    readOnly?: boolean;
+    hint?: string;
 }) {
     return (
         <label className="block">
@@ -343,10 +509,16 @@ function Field({ label, value, onChange, placeholder, error, inputMode }: {
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
                 inputMode={inputMode}
-                className="mt-1 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                readOnly={readOnly}
+                className={`mt-1 min-h-11 w-full rounded-lg border border-border px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                    readOnly ? 'bg-surface text-text-muted' : 'bg-white'
+                }`}
                 placeholder={placeholder}
             />
-            {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+            {hint && !error && (
+                <p className="mt-1 text-[11px] text-text-subtle">{hint}</p>
+            )}
+            {error && <p className="mt-1 text-xs text-danger">{error}</p>}
         </label>
     );
 }

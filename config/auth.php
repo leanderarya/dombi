@@ -114,4 +114,26 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Policy (Idle & Absolute Timeout)
+    |--------------------------------------------------------------------------
+    |
+    | Per-role session lifetime controls. Idle timeout triggers logout after
+    | inactivity; absolute timeout forces re-login even if active.
+    | Guest/guest-pickup sessions are never affected.
+    |
+    */
+
+    'session_policy' => [
+        'customer' => [
+            'idle_minutes' => (int) env('SESSION_IDLE_CUSTOMER', 43200),     // 30 days
+            'absolute_minutes' => null,                                      // no hard cap
+        ],
+        'operational' => [
+            'idle_minutes' => (int) env('SESSION_IDLE_OPERATIONAL', 480),    // 8 hours
+            'absolute_minutes' => (int) env('SESSION_ABSOLUTE_OPERATIONAL', 10080), // 7 days
+        ],
+    ],
+
 ];

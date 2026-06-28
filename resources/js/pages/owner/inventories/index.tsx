@@ -6,7 +6,6 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
-import { STATUS_BORDER } from '@/lib/status-border';
 import { cn } from '@/lib/utils';
 
 export default function InventoriesIndex({ outletSections, stats }: any) {
@@ -226,15 +225,11 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                                 const available = row.current_stock - row.reserved_stock;
                                 const isCritical = available <= 0;
                                 const isLow = available <= row.minimum_stock;
-                                const healthKey = isCritical ? 'critical' : isLow ? 'low' : 'healthy';
 
                                 return (
                                     <div
                                         key={row.id}
-                                        className={cn(
-                                            'rounded-xl border border-border border-l-4 bg-white p-4 transition-all duration-200 hover:shadow-md',
-                                            STATUS_BORDER[healthKey]
-                                        )}
+                                        className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md"
                                     >
                                         <div className="flex items-start justify-between">
                                             <div>

@@ -1,9 +1,17 @@
 import { Head, Link } from '@inertiajs/react';
-import { AlertTriangle, ArrowRight, Camera, ClipboardList, Package, QrCode, RefreshCw, Truck, Warehouse } from 'lucide-react';
+import { AlertTriangle, ClipboardList, Package, QrCode, RefreshCw, Truck, Warehouse } from 'lucide-react';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { usePolling } from '@/lib/use-polling';
+
+function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 11) return 'Selamat pagi';
+    if (hour < 15) return 'Selamat siang';
+    if (hour < 18) return 'Selamat sore';
+    return 'Selamat malam';
+}
 
 export default function OutletDashboard({ outlet, stats, deliveryStats, lowStockItems }: any) {
     usePolling(20000);
@@ -14,115 +22,107 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
     const hasActivity = todayOrders > 0 || pendingTasks > 0 || deliveryStats.completedToday > 0 || deliveryStats.inTransit > 0 || lowStockItems.length > 0;
 
     return (
-        <OutletLayout>
+        <OutletLayout title={outlet.name} subtitle={getGreeting()}>
             <Head title="Dashboard" />
 
-            {/* Hero — primary focal point */}
-            <div className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary-hover p-5 text-white">
-                <div className="pointer-events-none absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 256 256\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.65\' numOctaves=\'3\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")' }} />
-                <div className="relative">
-                    <p className="text-xs font-medium text-emerald-100">Selamat datang,</p>
-                    <h1 className="mt-0.5 text-lg font-bold tracking-tight">{outlet.name}</h1>
-                    <div className="mt-4 flex gap-3">
-                        <div className="flex-1 rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                            <div className="text-2xl font-bold tabular-nums">{todayOrders}</div>
-                            <div className="text-[11px] font-medium text-emerald-100">Pesanan Hari Ini</div>
+            {/* Hero — stats + alerts */}
+            <div className="mt-4 mb-4 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+                <div className="flex items-center justify-center">
+                    <div className="flex items-center gap-3 text-center">
+                        <div>
+                            <div className="text-lg font-bold tabular-nums text-text">{todayOrders}</div>
+                            <div className="text-[10px] text-text-subtle">Pesanan</div>
                         </div>
-                        <div className="flex-1 rounded-xl bg-white/15 px-4 py-3 backdrop-blur-sm">
-                            <div className="text-2xl font-bold tabular-nums">{pendingTasks}</div>
-                            <div className="text-[11px] font-medium text-emerald-100">Tugas Menunggu</div>
+                        <div className="h-6 w-px bg-emerald-200" />
+                        <div>
+                            <div className="flex items-center justify-center gap-1">
+                                {pendingTasks > 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                                <div className={`text-lg font-bold tabular-nums ${pendingTasks > 0 ? 'text-text' : 'text-text-muted'}`}>{pendingTasks}</div>
+                            </div>
+                            <div className="text-[10px] text-text-subtle">Tugas</div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            {/* QR Scan — primary action, prominent */}
-            <Link
-                href="/outlet/scan"
-                className="mb-6 flex items-center gap-4 rounded-2xl bg-gradient-to-br from-primary to-primary-hover p-5 text-white shadow-md transition-all active:opacity-80"
-            >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-                    <QrCode className="h-6 w-6" />
-                </div>
-                <div className="flex-1">
-                    <div className="text-base font-bold">Scan QR untuk Ambil Pesanan</div>
-                    <div className="mt-0.5 text-sm text-white/70">Arahkan kamera ke QR code customer</div>
-                </div>
-                <Camera className="h-5 w-5 text-white/50" />
-            </Link>
-
-            {/* Alerts — only show when there are urgent items */}
-            {hasActions && (
-                <div className="mb-6">
-                    <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-subtle">Perlu Tindakan</h2>
-                    <div className="space-y-2">
+                {/* Inline alerts — only when urgent */}
+                {hasActions && (
+                    <div className="mt-3 flex flex-wrap gap-2">
                         {stats.pendingOrders > 0 && (
-                            <ActionRow href="/outlet/orders?status=pending_confirmation" icon={<Package className="h-4 w-4" />} iconColor="amber" label={`${stats.pendingOrders} Pesanan Baru`} sublabel="Perlu konfirmasi" />
+                            <Link href="/outlet/orders?status=pending_confirmation" className="inline-flex items-center gap-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80">
+                                <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                                {stats.pendingOrders} Baru
+                            </Link>
                         )}
                         {deliveryStats.needsDispatch > 0 && (
-                            <ActionRow href="/outlet/deliveries" icon={<Truck className="h-4 w-4" />} iconColor="blue" label={`${deliveryStats.needsDispatch} Perlu Dikirim`} sublabel="Siap assign kurir" />
+                            <Link href="/outlet/deliveries" className="inline-flex items-center gap-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80">
+                                <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
+                                {deliveryStats.needsDispatch} Dikirim
+                            </Link>
                         )}
                         {deliveryStats.failed > 0 && (
-                            <ActionRow href="/outlet/deliveries?status=failed" icon={<AlertTriangle className="h-4 w-4" />} iconColor="red" label={`${deliveryStats.failed} Pengiriman Gagal`} sublabel="Perlu penanganan" />
+                            <Link href="/outlet/deliveries?status=failed" className="inline-flex items-center gap-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80">
+                                <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                {deliveryStats.failed} Gagal
+                            </Link>
                         )}
                         {lowStockItems.length > 0 && (
-                            <ActionRow href="/outlet/inventory" icon={<AlertTriangle className="h-4 w-4" />} iconColor="orange" label={`${lowStockItems.length} Stok Rendah`} sublabel="Perlu restock" />
+                            <Link href="/outlet/inventory" className="inline-flex items-center gap-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80">
+                                <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
+                                {lowStockItems.length} Stok Rendah
+                            </Link>
                         )}
                     </div>
-                </div>
-            )}
-
-            {/* Stats — unified overview with clear hierarchy */}
-            <div className="mb-6">
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-subtle">Ringkasan Hari Ini</h2>
-                <div className="rounded-2xl border border-border bg-white p-4">
-                    {/* Order queue — primary row */}
-                    <div className="grid grid-cols-4 gap-3">
-                        <StatCell label="Baru" value={stats.pendingOrders} alert={stats.pendingOrders > 0} />
-                        <StatCell label="Diproses" value={stats.preparingOrders} />
-                        <StatCell label="Siap Diambil" value={stats.readyForCustomerPickup} />
-                        <StatCell label="Menunggu Kurir" value={deliveryStats.waitingPickup} />
-                    </div>
-
-                    {/* Divider */}
-                    <div className="my-3 h-px bg-border" />
-
-                    {/* Delivery stats — secondary row */}
-                    <div className="grid grid-cols-3 gap-3">
-                        <StatCell label="Selesai" value={deliveryStats.completedToday} />
-                        <StatCell label="Dalam Perjalanan" value={deliveryStats.inTransit} />
-                        <StatCell label="Menunggu" value={deliveryStats.waitingPickup} />
-                    </div>
-
-                    <Link href="/outlet/orders" className="mt-3 flex min-h-[44px] items-center justify-center text-xs font-semibold text-primary">
-                        Lihat Semua Pesanan →
-                    </Link>
-                </div>
+                )}
             </div>
 
-            {/* Quick Actions — de-emphasized, secondary */}
-            <div className="mb-6">
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-subtle">Aksi Cepat</h2>
+            {/* QR Scan — one big button */}
+            <Link
+                href="/outlet/scan"
+                className="mb-4 flex items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3.5 text-sm font-bold text-white transition-all active:opacity-80"
+            >
+                <QrCode className="h-5 w-5" />
+                Scan QR Ambil Pesanan
+            </Link>
+
+            {/* Stats — compact grid */}
+            <div className="mb-4 rounded-xl border border-border bg-white p-4">
                 <div className="grid grid-cols-4 gap-2">
-                    <QuickAction href="/outlet/orders" icon={<ClipboardList className="h-5 w-5" />} label="Pesanan" />
-                    <QuickAction href="/outlet/inventory" icon={<Warehouse className="h-5 w-5" />} label="Inventaris" />
-                    <QuickAction href="/outlet/restocks/create" icon={<RefreshCw className="h-5 w-5" />} label="Restock" />
-                    <QuickAction href="/outlet/deliveries" icon={<Truck className="h-5 w-5" />} label="Kirim" />
+                    <StatCell label="Baru" value={stats.pendingOrders} alert={stats.pendingOrders > 0} />
+                    <StatCell label="Proses" value={stats.preparingOrders} />
+                    <StatCell label="Siap" value={stats.readyForCustomerPickup} />
+                    <StatCell label="Selesai" value={deliveryStats.completedToday} />
                 </div>
+                <div className="my-2.5 h-px bg-border" />
+                <div className="grid grid-cols-3 gap-2">
+                    <StatCell label="Dikirim" value={deliveryStats.inTransit} />
+                    <StatCell label="Kurir" value={deliveryStats.waitingPickup} />
+                    <StatCell label="Gagal" value={deliveryStats.failed} alert={deliveryStats.failed > 0} />
+                </div>
+                <Link href="/outlet/orders" className="mt-2.5 flex min-h-11 items-center justify-center text-xs font-semibold text-primary">
+                    Lihat Semua Pesanan →
+                </Link>
             </div>
 
-            {/* Low Stock — tertiary, only when relevant */}
+            {/* Quick Actions — 2×2 grid */}
+            <div className="mb-4 grid grid-cols-2 gap-2">
+                <QuickAction href="/outlet/orders" icon={<ClipboardList className="h-5 w-5" />} label="Pesanan" />
+                <QuickAction href="/outlet/inventory" icon={<Warehouse className="h-5 w-5" />} label="Inventaris" />
+                <QuickAction href="/outlet/restocks/create" icon={<RefreshCw className="h-5 w-5" />} label="Restock" />
+                <QuickAction href="/outlet/deliveries" icon={<Truck className="h-5 w-5" />} label="Pengiriman" />
+            </div>
+
+            {/* Low Stock — flat list, not cards */}
             {lowStockItems.length > 0 && (
-                <div className="mb-6">
-                    <div className="flex items-center justify-between mb-3">
+                <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
                         <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Rendah</h2>
-                        <Link href="/outlet/inventory" className="flex min-h-[44px] items-center text-[11px] font-semibold text-primary">Lihat Semua</Link>
+                        <Link href="/outlet/inventory" className="flex min-h-11 items-center text-[11px] font-semibold text-primary">Lihat Semua</Link>
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="divide-y divide-border rounded-xl border border-border bg-white">
                         {lowStockItems.slice(0, 3).map((item: any) => (
-                            <div key={item.id} className="flex items-center justify-between rounded-lg border border-border bg-white px-3 py-2">
-                                <div>
-                                    <div className="text-sm font-medium text-text">{item.product?.name}</div>
+                            <div key={item.id} className="flex items-center justify-between px-4 py-2.5">
+                                <div className="min-w-0">
+                                    <div className="text-sm font-medium text-text truncate">{item.product?.name}</div>
                                     <div className="text-[11px] text-text-subtle">Tersedia: {item.current_stock - item.reserved_stock} / Min: {item.minimum_stock}</div>
                                 </div>
                                 <StatusBadge variant={item.current_stock - item.reserved_stock <= 0 ? 'danger' : 'warning'} size="sm">
@@ -131,11 +131,6 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                             </div>
                         ))}
                     </div>
-                    {lowStockItems.length > 3 && (
-                        <Link href="/outlet/inventory" className="mt-2 block text-center text-xs font-semibold text-primary">
-                            +{lowStockItems.length - 3} lainnya
-                        </Link>
-                    )}
                 </div>
             )}
 
@@ -145,7 +140,7 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                     <EmptyState
                         icon={<Package className="h-8 w-8 text-text-subtle" />}
                         title="Tidak ada aktivitas"
-                        description="Belum ada pesanan atau tugas hari ini. Saatnya menyiapkan stok!"
+                        description="Belum ada pesanan atau tugas hari ini."
                     />
                 </div>
             )}
@@ -153,42 +148,23 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
     );
 }
 
-function ActionRow({ href, icon, iconColor, label, sublabel }: { href: string; icon: React.ReactNode; iconColor: string; label: string; sublabel: string }) {
-    const colorMap: Record<string, string> = {
-        amber: 'bg-amber-50 text-amber-600',
-        blue: 'bg-blue-50 text-blue-600',
-        red: 'bg-red-50 text-red-600',
-        orange: 'bg-orange-50 text-orange-600',
-    };
-
-    return (
-        <Link href={href} className="flex items-center gap-3 rounded-xl border border-border bg-white px-3 py-2.5 transition-all active:bg-surface-muted">
-            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${colorMap[iconColor] ?? 'bg-surface-muted text-text-muted'}`}>
-                {icon}
-            </div>
-            <div className="flex-1 min-w-0">
-                <div className="text-sm font-semibold text-text">{label}</div>
-                <div className="text-[11px] text-text-subtle">{sublabel}</div>
-            </div>
-            <ArrowRight className="h-4 w-4 text-text-subtle" />
-        </Link>
-    );
-}
-
 function StatCell({ label, value, alert }: { label: string; value: number; alert?: boolean }) {
     return (
         <div className="text-center">
-            <div className={`text-xl font-bold tabular-nums ${alert ? 'text-amber-600' : 'text-text'}`}>{value}</div>
-            <div className="text-[11px] font-medium text-text-subtle">{label}</div>
+            <div className="flex items-center justify-center gap-1">
+                {alert && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                <div className={`text-lg font-bold tabular-nums ${alert ? 'text-text' : 'text-text-muted'}`}>{value}</div>
+            </div>
+            <div className="text-[10px] font-medium text-text-subtle">{label}</div>
         </div>
     );
 }
 
 function QuickAction({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
     return (
-        <Link href={href} className="group flex flex-col items-center gap-1.5 rounded-xl border border-border bg-white p-3 transition-all hover:border-border-strong hover:shadow-sm active:opacity-80">
-            <div className="text-text-muted transition-colors group-hover:text-primary">{icon}</div>
-            <div className="text-[11px] font-medium text-text-subtle">{label}</div>
+        <Link href={href} className="group flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 transition-all hover:shadow-sm active:opacity-80">
+            <div className="text-emerald-600">{icon}</div>
+            <div className="text-sm font-semibold text-text">{label}</div>
         </Link>
     );
 }

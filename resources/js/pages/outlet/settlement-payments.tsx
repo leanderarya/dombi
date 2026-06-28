@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Receipt } from 'lucide-react';
 import { useState } from 'react';
 import EmptyState from '@/components/ui/empty-state';
@@ -83,12 +83,12 @@ export default function OutletSettlementPayments({ payments }: Props) {
 
     return (
         <OutletLayout title="Riwayat Pembayaran" subtitle="Daftar pembayaran yang sudah dikirim">
-            <div className="p-4">
+            <Head title="Riwayat Pembayaran" />
+            <div className="mt-4 p-4">
                 <div className="mb-4 flex items-center justify-between">
-                    <h1 className="text-lg font-bold text-slate-900">Pembayaran Settlement</h1>
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary"
                     >
                         {showForm ? 'Batal' : 'Bayar'}
                     </button>
@@ -96,70 +96,70 @@ export default function OutletSettlementPayments({ payments }: Props) {
 
                 {/* Payment Form */}
                 {showForm && (
-                    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
-                        <h2 className="mb-3 text-sm font-semibold text-slate-900">Submit Pembayaran</h2>
+                    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-border bg-white p-4">
+                        <h2 className="mb-3 text-sm font-semibold text-text">Submit Pembayaran</h2>
 
                         <div className="space-y-3">
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-zinc-500">Jumlah (Rp)</label>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Jumlah (Rp)</label>
                                 <input
                                     type="number"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     min="1"
                                     required
-                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                     placeholder="1200000"
                                 />
                                 {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount}</p>}
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-zinc-500">Nomor Referensi</label>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Nomor Referensi</label>
                                 <input
                                     type="text"
                                     value={referenceNumber}
                                     onChange={(e) => setReferenceNumber(e.target.value)}
                                     required
                                     maxLength={100}
-                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                     placeholder="TRF-20260605-001"
                                 />
                                 {errors.reference_number && <p className="mt-1 text-xs text-red-600">{errors.reference_number}</p>}
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-zinc-500">Tanggal Pembayaran</label>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Tanggal Pembayaran</label>
                                 <input
                                     type="date"
                                     value={paymentDate}
                                     onChange={(e) => setPaymentDate(e.target.value)}
                                     required
                                     max={new Date().toISOString().split('T')[0]}
-                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                 />
                                 {errors.payment_date && <p className="mt-1 text-xs text-red-600">{errors.payment_date}</p>}
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-zinc-500">Catatan (opsional)</label>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Catatan (opsional)</label>
                                 <textarea
                                     value={notes}
                                     onChange={(e) => setNotes(e.target.value)}
                                     maxLength={500}
                                     rows={2}
-                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                     placeholder="Transfer via BCA..."
                                 />
                             </div>
 
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-zinc-500">Bukti Transfer (opsional)</label>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Bukti Transfer (opsional)</label>
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                                    className="w-full rounded-lg border border-zinc-200 px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                 />
                                 {errors.proof_image && <p className="mt-1 text-xs text-red-600">{errors.proof_image}</p>}
                             </div>
@@ -167,7 +167,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                                className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
                             >
                                 {saving ? 'Mengirim...' : 'Kirim Pembayaran'}
                             </button>
@@ -179,29 +179,29 @@ export default function OutletSettlementPayments({ payments }: Props) {
                 <div className="space-y-2">
                     {payments.data.length === 0 ? (
                         <EmptyState
-                            icon={<Receipt className="h-8 w-8 text-slate-400" />}
+                            icon={<Receipt className="h-8 w-8 text-text-subtle" />}
                             title="Belum ada pembayaran"
                             description="Riwayat pembayaran Anda akan muncul di sini"
                         />
                     ) : (
                         payments.data.map((payment) => (
-                            <div key={payment.id} className="rounded-xl border border-zinc-200 bg-white p-4">
+                            <div key={payment.id} className="rounded-xl border border-border bg-white p-4">
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <div className="text-sm font-semibold text-slate-900">{formatCurrency(payment.amount)}</div>
-                                        <div className="text-xs text-zinc-500">{payment.reference_number}</div>
-                                        <div className="text-xs text-zinc-400">{formatDate(payment.payment_date)}</div>
+                                        <div className="text-sm font-semibold text-text">{formatCurrency(payment.amount)}</div>
+                                        <div className="text-xs text-text-muted">{payment.reference_number}</div>
+                                        <div className="text-xs text-text-subtle">{formatDate(payment.payment_date)}</div>
                                     </div>
                                     <StatusBadge variant={statusVariants[payment.status]}>
                                         {statusLabels[payment.status]}
                                     </StatusBadge>
                                 </div>
                                 {payment.notes && (
-                                    <div className="mt-2 text-xs text-zinc-500">{payment.notes}</div>
+                                    <div className="mt-2 text-xs text-text-muted">{payment.notes}</div>
                                 )}
                                 {payment.proof_image && (
                                     <div className="mt-2">
-                                        <a href={`/storage/${payment.proof_image}`} target="_blank" rel="noopener noreferrer" className="text-xs text-emerald-600 underline">
+                                        <a href={`/storage/${payment.proof_image}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">
                                             Lihat Bukti Transfer
                                         </a>
                                     </div>
@@ -212,7 +212,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                     </div>
                                 )}
                                 {payment.verifier && (
-                                    <div className="mt-2 text-xs text-zinc-400">
+                                    <div className="mt-2 text-xs text-text-subtle">
                                         Diverifikasi oleh {payment.verifier.name}
                                     </div>
                                 )}
@@ -230,8 +230,8 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                 onClick={() => router.get(`/outlet/settlement-payments?page=${page}`)}
                                 className={`h-8 w-8 rounded-lg text-sm ${
                                     page === payments.current_page
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'bg-zinc-100 text-zinc-600'
+                                        ? 'bg-primary text-white'
+                                        : 'bg-surface-muted text-text-muted'
                                 }`}
                             >
                                 {page}

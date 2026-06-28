@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Store, Truck } from 'lucide-react';
+import { ShoppingCart, Store, Truck } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
@@ -117,15 +117,18 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
             />
 
             {items.length === 0 ? (
-                <div className="mt-6 rounded-xl bg-white p-5 text-center">
-                    <p className="text-sm font-semibold text-text">Belum ada produk di keranjang</p>
-                    <p className="mt-1 text-xs text-text-muted">Pilih produk terlebih dahulu untuk melanjutkan checkout.</p>
-                    <button onClick={() => router.visit('/customer/products')} className="mt-4 min-h-11 rounded-lg bg-emerald-600 px-5 text-sm font-bold text-white">
-                        Lihat Produk
+                <div className="mt-4 rounded-xl border border-border bg-white p-5 text-center">
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface">
+                        <ShoppingCart className="h-5 w-5 text-text-subtle" />
+                    </div>
+                    <p className="mt-3 text-sm font-semibold text-text">Keranjang masih kosong</p>
+                    <p className="mt-1 text-xs text-text-muted">Pilih produk untuk mulai belanja.</p>
+                    <button onClick={() => router.visit('/customer/products')} className="mt-4 min-h-11 rounded-lg bg-primary px-5 text-sm font-bold text-white active:opacity-80">
+                        Mulai Belanja
                     </button>
                 </div>
             ) : (
-                <div className="mt-5 rounded-2xl bg-white p-4">
+                <div className="mt-4 rounded-xl border border-border bg-white p-4">
                     <h2 className="text-[13px] font-semibold text-text-subtle mb-3">Pesanan</h2>
                     {items.map((item) => (
                         <CheckoutItemCard
@@ -151,7 +154,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                         active={fulfillmentType === 'pickup'}
                         title="Ambil di Outlet"
                         icon={<Store className="h-5 w-5 text-text-muted" />}
-                        description="Ambil langsung di outlet yang melayani pesanan Anda."
+                        description="Ambil langsung di outlet terdekat."
                         onClick={() => setFulfillmentType('pickup')}
                         detail={nearestOutlet ? {
                             outletName: nearestOutlet.name,
@@ -163,7 +166,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                         active={fulfillmentType === 'delivery_dombi'}
                         title="Kurir Dombi"
                         icon={<Truck className="h-5 w-5 text-text-muted" />}
-                        description="Diantar oleh kurir internal Dombi."
+                        description="Diantar oleh kurir Dombi."
                         onClick={() => {
                             if (!isLoggedIn) {
                                 setDeliverySheetOpen(true);
@@ -198,7 +201,7 @@ function FulfillmentCard({ active, title, icon, description, onClick, detail }: 
         <button
             type="button"
             onClick={onClick}
-            className={`min-h-[88px] w-full rounded-2xl p-4 text-left transition-all active:opacity-80 ${
+            className={`min-h-[88px] w-full rounded-xl p-4 text-left transition-all active:opacity-80 ${
                 active
                     ? 'bg-emerald-50 ring-2 ring-emerald-500'
                     : 'bg-white border border-border'
@@ -228,7 +231,7 @@ function FulfillmentCard({ active, title, icon, description, onClick, detail }: 
                     )}
                     {detail?.deliveryFee !== undefined && (
                         <div className="mt-2 text-xs">
-                            <span className="text-text-muted">Estimasi Ongkir: </span>
+                            <span className="text-text-muted">Ongkir: </span>
                             <span className="font-bold text-text">Rp {detail.deliveryFee.toLocaleString('id-ID')}</span>
                         </div>
                     )}

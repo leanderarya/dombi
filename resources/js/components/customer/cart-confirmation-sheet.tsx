@@ -35,13 +35,13 @@ return null;
                     </div>
                 </div>
 
-                <div className="rounded-xl border border-zinc-200 bg-white p-4">
-                    <div className="text-sm font-semibold text-slate-900">{data.productName}</div>
+                <div className="rounded-xl border border-border bg-white p-4">
+                    <div className="text-sm font-semibold text-text">{data.productName}</div>
                     {data.variantName && (
-                        <div className="mt-0.5 text-xs text-zinc-500">{data.variantName}</div>
+                        <div className="mt-0.5 text-xs text-text-muted">{data.variantName}</div>
                     )}
                     <div className="mt-2 flex items-center justify-between">
-                        <span className="text-xs text-zinc-500">Jumlah: {data.quantity}</span>
+                        <span className="text-xs text-text-muted">Jumlah: {data.quantity}</span>
                         <span className="text-sm font-semibold text-emerald-700">{formatCurrency(data.price * data.quantity)}</span>
                     </div>
                 </div>
@@ -49,7 +49,7 @@ return null;
                 <div className="space-y-2 pt-2">
                     <button
                         onClick={handleCheckout}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white active:bg-emerald-700"
+                        className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-white active:opacity-80"
                     >
                         <ShoppingCart className="h-4 w-4" />
                         Cek Keranjang
@@ -57,7 +57,7 @@ return null;
                     </button>
                     <button
                         onClick={handleContinueShopping}
-                        className="w-full rounded-xl border border-zinc-200 py-3 text-sm font-semibold text-slate-700 active:bg-zinc-50"
+                        className="w-full rounded-xl border border-border py-3 text-sm font-semibold text-text active:opacity-80"
                     >
                         Lanjut Belanja
                     </button>

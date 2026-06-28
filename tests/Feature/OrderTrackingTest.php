@@ -99,7 +99,7 @@ class OrderTrackingTest extends TestCase
             );
     }
 
-    public function test_track_page_includes_full_delivery_address(): void
+    public function test_track_page_masks_delivery_address_for_privacy(): void
     {
         $order = $this->createOrder([
             'customer_address' => 'Jl. Melati No. 123, RT 01/RW 02, Kel. Tembalang',
@@ -110,9 +110,9 @@ class OrderTrackingTest extends TestCase
         $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('order.customer_address', 'Jl. Melati No. 123, RT 01/RW 02, Kel. Tembalang')
-                ->where('order.customer_address_detail', 'Blok A5')
-                ->where('order.customer_landmark', 'Rumah hijau')
+                ->where('order.customer_address', 'Jl. Melati, Kel. Tembalang')
+                ->where('order.customer_address_detail', null)
+                ->where('order.customer_landmark', null)
             );
     }
 

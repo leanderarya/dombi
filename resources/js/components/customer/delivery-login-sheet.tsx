@@ -32,7 +32,7 @@ export default function DeliveryLoginSheet({ open, onClose }: Props) {
             </div>
 
             <a
-                href="/auth/google"
+                href="/oauth/google"
                 className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
             >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">

@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { RotateCcw, Repeat2, PackagePlus, Truck, Receipt, BarChart3, FileText } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Repeat2, PackagePlus, Truck, Receipt, BarChart3, FileText, ChevronRight } from 'lucide-react';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
@@ -9,6 +9,7 @@ interface Props {
     pendingRestocks: number;
     activeDeliveries: number;
     pendingSettlementPayments: number;
+    pendingReports: number;
 }
 
 const features = [
@@ -27,6 +28,14 @@ const features = [
         description: 'Export laporan penjualan ke CSV',
         badgeKey: null,
         color: 'bg-indigo-50 text-indigo-600',
+    },
+    {
+        href: '/outlet/order-reports',
+        icon: AlertTriangle,
+        title: 'Laporan Masalah',
+        description: 'Laporan masalah pesanan dari customer',
+        badgeKey: 'reports' as const,
+        color: 'bg-red-50 text-red-600',
     },
     {
         href: '/outlet/returns',
@@ -70,20 +79,21 @@ const features = [
     },
 ];
 
-export default function OutletMore({ pendingReturns, pendingExchanges, pendingRestocks, activeDeliveries, pendingSettlementPayments }: Props) {
+export default function OutletMore({ pendingReturns, pendingExchanges, pendingRestocks, activeDeliveries, pendingSettlementPayments, pendingReports = 0 }: Props) {
     const badgeCounts: Record<string, number> = {
         returns: pendingReturns,
         exchanges: pendingExchanges,
         restocks: pendingRestocks,
         deliveries: activeDeliveries,
         payments: pendingSettlementPayments,
+        reports: pendingReports,
     };
 
     return (
         <OutletLayout title="Lainnya" subtitle="Fitur operasional outlet">
             <Head title="Lainnya" />
 
-            <div className="space-y-2">
+            <div className="mt-4 space-y-2">
                 {features.map((feature) => {
                     const Icon = feature.icon;
                     const count = badgeCounts[feature.badgeKey];
@@ -92,23 +102,21 @@ export default function OutletMore({ pendingReturns, pendingExchanges, pendingRe
                         <Link
                             key={feature.href}
                             href={feature.href}
-                            className="flex items-center gap-4 rounded-xl border border-zinc-200 bg-white p-4 active:bg-zinc-50 transition-colors"
+                            className="flex items-center gap-4 rounded-xl border border-border bg-white p-4 active:bg-surface-muted transition-colors"
                         >
                             <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${feature.color}`}>
                                 <Icon className="h-5 w-5" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm font-bold text-slate-900">{feature.title}</span>
+                                    <span className="text-sm font-bold text-text">{feature.title}</span>
                                     {feature.badgeKey && count > 0 && (
                                         <StatusBadge variant="warning" size="sm">{count}</StatusBadge>
                                     )}
                                 </div>
-                                <p className="mt-0.5 text-xs text-slate-500">{feature.description}</p>
+                                <p className="mt-0.5 text-xs text-text-muted">{feature.description}</p>
                             </div>
-                            <svg className="h-4 w-4 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-text-subtle" />
                         </Link>
                     );
                 })}

@@ -5,7 +5,7 @@ import Pagination from '@/components/pagination';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency, formatRelativeDate } from '@/lib/format';
 
 const statusFilters = [
     { key: '', label: 'Semua' },
@@ -17,18 +17,35 @@ const statusFilters = [
     { key: 'cancelled_by_outlet', label: 'Dibatalkan' },
 ];
 
-const statusStyles: Record<string, { bg: string; dot: string; label: string }> = {
-    pending_confirmation: { bg: 'bg-amber-50 text-amber-700', dot: 'bg-amber-400', label: 'Menunggu' },
-    confirmed: { bg: 'bg-blue-50 text-blue-700', dot: 'bg-blue-400', label: 'Diterima' },
-    preparing: { bg: 'bg-orange-50 text-orange-700', dot: 'bg-orange-400', label: 'Disiapkan' },
-    ready_for_pickup: { bg: 'bg-emerald-50 text-emerald-700', dot: 'bg-emerald-400', label: 'Siap' },
-    completed: { bg: 'bg-zinc-100 text-zinc-600', dot: 'bg-zinc-400', label: 'Selesai' },
-    cancelled_by_customer: { bg: 'bg-red-50 text-red-600', dot: 'bg-red-400', label: 'Batal' },
-    cancelled_by_outlet: { bg: 'bg-red-50 text-red-600', dot: 'bg-red-400', label: 'Batal' },
-    rejected_by_outlet: { bg: 'bg-red-50 text-red-600', dot: 'bg-red-400', label: 'Ditolak' },
-    failed_delivery: { bg: 'bg-red-50 text-red-600', dot: 'bg-red-400', label: 'Gagal' },
-    expired: { bg: 'bg-zinc-100 text-zinc-500', dot: 'bg-zinc-300', label: 'Kadaluarsa' },
+const statusDotColors: Record<string, string> = {
+    pending_confirmation: 'bg-amber-400',
+    confirmed: 'bg-blue-400',
+    preparing: 'bg-orange-400',
+    ready_for_pickup: 'bg-emerald-400',
+    completed: 'bg-zinc-400',
+    cancelled_by_customer: 'bg-red-400',
+    cancelled_by_outlet: 'bg-red-400',
+    rejected_by_outlet: 'bg-red-400',
+    failed_delivery: 'bg-red-400',
+    expired: 'bg-zinc-300',
 };
+
+const statusLabels: Record<string, string> = {
+    pending_confirmation: 'Menunggu',
+    confirmed: 'Diterima',
+    preparing: 'Disiapkan',
+    ready_for_pickup: 'Siap',
+    completed: 'Selesai',
+    cancelled_by_customer: 'Batal',
+    cancelled_by_outlet: 'Batal',
+    rejected_by_outlet: 'Ditolak',
+    failed_delivery: 'Gagal',
+    expired: 'Kadaluarsa',
+};
+
+function getWaitMinutes(orderedAt: string): number {
+    return Math.floor((Date.now() - new Date(orderedAt).getTime()) / 60000);
+}
 
 export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
@@ -48,6 +65,7 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
         >
             <Head title="Pesanan" />
 
+            <div className="mt-4">
             {orders.data.length === 0 ? (
                 <EmptyState
                     icon={<Package className="h-8 w-8 text-text-subtle" />}
@@ -56,41 +74,42 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                     action={activeFilter ? { label: 'Reset Filter', onClick: () => handleFilterChange('') } : undefined}
                 />
             ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {orders.data.map((order: any) => {
-                        const st = statusStyles[order.status] ?? statusStyles.failed_delivery;
+                        const dotColor = statusDotColors[order.status] ?? 'bg-zinc-400';
+                        const statusLabel = statusLabels[order.status] ?? order.status;
                         const isPending = order.status === 'pending_confirmation';
+                        const waitMin = order.ordered_at ? getWaitMinutes(order.ordered_at) : null;
+                        const isUrgent = isPending && waitMin !== null && waitMin > 15;
 
                         return (
                             <Link
                                 key={order.id}
                                 href={`/outlet/orders/${order.id}`}
-                                className={`group block rounded-xl border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80 ${
-                                    isPending ? 'border-amber-200' : 'border-border hover:border-border-strong'
-                                }`}
+                                className="block rounded-xl border border-border bg-white p-4 transition-all hover:shadow-sm active:opacity-80"
                             >
                                 {/* Row 1: Code + Status */}
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <span className="text-sm font-bold tabular-nums text-text">{order.order_code}</span>
-                                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                                            order.fulfillment_type === 'pickup'
-                                                ? 'bg-blue-50 text-blue-600'
-                                                : 'bg-purple-50 text-purple-600'
-                                        }`}>
+                                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-text-muted">
                                             {order.fulfillment_type === 'pickup' ? 'Pickup' : 'Delivery'}
                                         </span>
                                     </div>
-                                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${st.bg}`}>
-                                        <span className={`h-1 w-1 rounded-full ${st.dot}`} />
-                                        {st.label}
+                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-semibold text-text-muted">
+                                        <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+                                        {statusLabel}
                                     </span>
                                 </div>
 
-                                {/* Row 2: Customer + Meta */}
+                                {/* Row 2: Customer + Wait Time */}
                                 <div className="mt-2 flex items-center justify-between text-xs">
                                     <span className="font-medium text-text-muted truncate">{order.customer_name}</span>
-                                    <span className="text-text-subtle shrink-0 ml-2">{formatDate(order.created_at)}</span>
+                                    {order.ordered_at && (
+                                        <span className={`shrink-0 ml-2 ${isUrgent ? 'font-semibold text-danger' : 'text-text-subtle'}`}>
+                                            {formatRelativeDate(order.ordered_at)}
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Row 3: Items + Total */}
@@ -99,11 +118,13 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                                     <span className="font-semibold text-text tabular-nums">{formatCurrency(order.total)}</span>
                                 </div>
 
-                                {/* Pending indicator */}
+                                {/* Pending indicator — subtle */}
                                 {isPending && (
-                                    <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-1.5 text-[11px] font-medium text-amber-700">
-                                        <span className="h-1 w-1 rounded-full bg-amber-400 animate-pulse" />
-                                        Perlu konfirmasi sekarang
+                                    <div className="mt-2.5 flex items-center gap-1.5 text-[11px]">
+                                        <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${isUrgent ? 'bg-danger' : 'bg-amber-400'}`} />
+                                        <span className={isUrgent ? 'font-semibold text-danger' : 'font-medium text-text-muted'}>
+                                            {isUrgent ? 'Segera konfirmasi' : 'Perlu konfirmasi'}
+                                        </span>
                                     </div>
                                 )}
                             </Link>
@@ -111,6 +132,7 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                     })}
                 </div>
             )}
+            </div>
             <Pagination links={orders.links} />
         </OutletLayout>
     );

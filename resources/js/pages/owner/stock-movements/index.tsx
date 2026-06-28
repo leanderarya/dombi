@@ -10,7 +10,6 @@ import { formatDate } from '@/lib/format';
 
 const typeLabels: Record<string, string> = { initial_stock: 'Stok Awal', stock_adjustment: 'Penyesuaian', order_reserved: 'Direservasi', order_completed: 'Selesai', order_cancelled: 'Dibatalkan', restock_in: 'Restock Masuk', delivery_returned: 'Dikembalikan' };
 const typeColors: Record<string, string> = { initial_stock: 'text-text-muted', stock_adjustment: 'text-amber-700', order_reserved: 'text-blue-700', order_completed: 'text-emerald-700', order_cancelled: 'text-red-700', restock_in: 'text-emerald-700', delivery_returned: 'text-purple-700' };
-const typeBorderColors: Record<string, string> = { initial_stock: 'border-l-slate-300', stock_adjustment: 'border-l-amber-400', order_reserved: 'border-l-blue-400', order_completed: 'border-l-emerald-400', order_cancelled: 'border-l-red-400', restock_in: 'border-l-emerald-400', delivery_returned: 'border-l-purple-400' };
 const typeOptions = Object.entries(typeLabels).map(([k, v]) => ({ value: k, label: v }));
 
 export default function StockMovementsIndex({ movements, outlets, products, filters }: any) {
@@ -38,7 +37,7 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
                     {/* Left: movement list */}
                     <div className="space-y-1.5">
                         {movements.data.map((m: any) => (
-                            <div key={m.id} className={`flex items-center gap-3 rounded-xl border border-border border-l-4 bg-white px-3 py-2.5 transition-all duration-200 hover:shadow-sm ${typeBorderColors[m.type] ?? 'border-l-slate-300'}`}>
+                            <div key={m.id} className="flex items-center gap-3 rounded-xl border border-border bg-white px-3 py-2.5 transition-all duration-200 hover:shadow-sm">
                                 <div className={`shrink-0 text-xs font-bold tabular-nums ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
                                     {m.quantity >= 0 ? '+' : ''}{m.quantity}
                                 </div>

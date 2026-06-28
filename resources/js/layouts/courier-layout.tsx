@@ -1,8 +1,8 @@
 import { router, usePage } from '@inertiajs/react';
 import { LogOut } from 'lucide-react';
-import { useState  } from 'react';
+import { useState } from 'react';
 import type { ReactNode } from 'react';
-import type {PropsWithChildren} from 'react';
+import type { PropsWithChildren } from 'react';
 import CourierBottomNav from '@/components/courier-bottom-nav';
 import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
@@ -23,12 +23,15 @@ export default function CourierLayout({ children, title, subtitle, backHref, hid
     const { auth } = page.props;
     const [notificationOpen, setNotificationOpen] = useState(false);
 
+    const isOnline = auth?.user?.is_online;
+    const onlineLabel = isOnline !== undefined ? (isOnline ? 'Online' : 'Offline') : undefined;
+
     const rightSlot = (
         <div className="flex items-center gap-1">
             <NotificationBell onClick={() => setNotificationOpen(true)} />
             <button
                 onClick={() => router.post('/logout')}
-                className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 active:bg-zinc-100"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted active:bg-surface-muted"
                 aria-label="Logout"
             >
                 <LogOut className="h-4 w-4" />
@@ -36,20 +39,10 @@ export default function CourierLayout({ children, title, subtitle, backHref, hid
         </div>
     );
 
-    const brandSlot = backHref ? undefined : (
-        <div className="flex items-center gap-2">
-            <div className="font-semibold text-emerald-800">Dombi</div>
-            {auth?.user?.is_online !== undefined && (
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-bold ${
-                    auth.user.is_online
-                        ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-                        : 'bg-slate-50 text-slate-500 ring-1 ring-slate-200'
-                }`}>
-                    {auth.user.is_online ? 'Online' : 'Offline'}
-                </span>
-            )}
-        </div>
-    );
+    // Dashboard (no title): use brand as title, online status as subtitle
+    // Other pages: use provided title/subtitle
+    const headerTitle = title ?? 'Dombi';
+    const headerSubtitle = subtitle ?? (title ? undefined : onlineLabel);
 
     return (
         <MobileRoleLayout
@@ -57,19 +50,12 @@ export default function CourierLayout({ children, title, subtitle, backHref, hid
             hideBottomNav={hideNav}
         >
             <PageHeader
-                title={title ?? (backHref ? undefined : '')}
-                subtitle={subtitle}
+                title={headerTitle}
+                subtitle={headerSubtitle}
                 backHref={backHref}
-                right={backHref ? rightSlot : brandSlot ? undefined : rightSlot}
+                right={rightSlot}
                 below={headerBelow}
             />
-            {/* When there's no title, render brand in the header */}
-            {!title && !backHref && (
-                <div className="mb-4 flex items-center justify-between">
-                    {brandSlot}
-                    {rightSlot}
-                </div>
-            )}
             {children}
             <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
         </MobileRoleLayout>

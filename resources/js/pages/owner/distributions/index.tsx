@@ -6,7 +6,6 @@ import Pagination from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/format';
 import StatusBadge from '@/components/ui/status-badge';
-import { STATUS_BORDER } from '@/lib/status-border';
 import { cn } from '@/lib/utils';
 
 const FILTER_TABS = [
@@ -82,10 +81,7 @@ export default function OwnerDistributionsIndex({ distributions, filters }: any)
                                 <Link
                                     key={d.id}
                                     href={`/owner/distributions/${d.id}`}
-                                    className={cn(
-                                        'group flex items-start justify-between rounded-xl border border-border border-l-4 bg-white p-4 transition-all duration-200 hover:shadow-md',
-                                        STATUS_BORDER[d.status]
-                                    )}
+                                    className="group flex items-start justify-between rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md"
                                 >
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">

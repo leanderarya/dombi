@@ -1,13 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2, Clock, Copy, MapPin, Navigation, Package, Phone, Share2, Store, Truck, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, Clock, Copy, MapPin, Navigation, Package, Phone, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/offline-banner';
+import StatusBadge from '@/components/ui/status-badge';
 import Dialog from '@/components/ui/dialog';
-import { getOrderStatusLabel } from '@/lib/customer-status';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { cn } from '@/lib/utils';
 
 type TrackOrder = {
     id: number;
@@ -68,6 +67,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [cancelNote, setCancelNote] = useState('');
+    const [cancelLast4Hp, setCancelLast4Hp] = useState('');
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [cancelLoading, setCancelLoading] = useState(false);
 
@@ -103,13 +103,11 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
 return;
 }
 
-        console.log('[Cancel] Starting cancel request...');
         setCancelLoading(true);
         setCancelError(null);
 
         try {
             const url = `/track/${order.recovery_token}/cancel`;
-            console.log('[Cancel] URL:', url);
 
             const response = await fetch(url, {
                 method: 'POST',
@@ -122,24 +120,19 @@ return;
                 body: JSON.stringify({
                     reason: cancelReason,
                     note: cancelNote || null,
+                    ...(isPickup && { last4_hp: cancelLast4Hp }),
                 }),
             });
 
-            console.log('[Cancel] Response status:', response.status);
-
             const data = await response.json();
-            console.log('[Cancel] Response data:', data);
 
             if (data.success) {
-                console.log('[Cancel] Success! Reloading...');
                 setCancelDialogOpen(false);
                 window.location.reload();
             } else {
-                console.log('[Cancel] Error:', data.error);
                 setCancelError(data.error || 'Gagal membatalkan pesanan.');
             }
-        } catch (err) {
-            console.error('[Cancel] Fetch error:', err);
+        } catch {
             setCancelError('Gagal membatalkan pesanan. Periksa koneksi Anda.');
         } finally {
             setCancelLoading(false);
@@ -154,11 +147,14 @@ return;
             {/* Header */}
             <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <a href="/customer/home" className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80" aria-label="Kembali">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </a>
+                    <button
+                        type="button"
+                        onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/customer/orders'}
+                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                        aria-label="Kembali"
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                    </button>
                     <div className="text-center">
                         <div className="text-sm font-semibold text-text">{order.order_code}</div>
                         {order.ordered_at && (
@@ -174,94 +170,77 @@ return;
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <span className={cn(
-                        "inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1",
-                        isTerminal ? "bg-red-50 text-red-700 ring-red-200" : "bg-emerald-50 text-emerald-700 ring-emerald-200"
-                    )}>
-                        {getOrderStatusLabel(order.status, order.fulfillment_type)}
-                    </span>
+                    <StatusBadge status={order.status} />
                 </div>
 
-                {/* Confirmation Banner — only for pending orders */}
-                {isPending && order.recovery_token && (
-                    <div className="mt-4 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-5">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-                            </div>
-                            <div>
-                                <div className="text-lg font-bold text-emerald-900">Pesanan Berhasil!</div>
-                                <div className="text-sm text-emerald-700">Simpan kode di bawah untuk melacak pesanan</div>
-                            </div>
-                        </div>
-
-                        <div className="rounded-xl bg-white border border-emerald-200 p-4">
-                            <div className="text-[13px] text-emerald-700 mb-1">Kode Pelacakan Anda</div>
-                            <div className="flex items-center gap-3">
-                                <div className="flex-1">
-                                    <div className="text-2xl font-bold tabular-nums tracking-wider text-emerald-900">{order.recovery_token}</div>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleCopy}
-                                    className="flex h-11 items-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white active:opacity-80"
-                                >
-                                    {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                                    {copied ? 'Tersalin' : 'Salin'}
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="mt-3 text-xs text-emerald-600 leading-relaxed">
-                            <span className="font-semibold">Penting:</span> Kode ini dibutuhkan untuk melacak pesanan tanpa login. Kirim ke diri sendiri atau simpan di tempat aman.
-                        </div>
-
-                        <div className="mt-3">
-                            <button
-                                type="button"
-                                onClick={handleShare}
-                                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
-                            >
-                                <Share2 className="h-4 w-4" />
-                                Kirim Kode ke WhatsApp
-                            </button>
+                {/* QR Code — promoted above fold for pickup ready_for_pickup */}
+                {isPickup && order.status === 'ready_for_pickup' && (
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4 flex flex-col items-center">
+                        <QRCodeSVG
+                            value={order.order_code}
+                            size={160}
+                            bgColor="#ffffff"
+                            fgColor="#1e40af"
+                            level="M"
+                            marginSize={0}
+                        />
+                        <div className="mt-2 text-center">
+                            <div className="text-sm font-bold tracking-wider text-primary">{order.order_code}</div>
+                            <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
                         </div>
                     </div>
                 )}
 
-                {/* Tracking Code — for non-pending orders */}
-                {!isPending && order.recovery_token && (
-                    <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-100">
-                                <svg className="h-3.5 w-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-                                </svg>
+                {/* Completed Hero */}
+                {order.status === 'completed' && (
+                    <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-100 p-6 text-center">
+                        <div className="flex justify-center">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
                             </div>
-                            <span className="text-[13px] font-semibold text-blue-900">Kode Pelacakan</span>
                         </div>
+                        <h2 className="mt-4 text-lg font-bold text-text">Pesanan Selesai!</h2>
+                        <p className="mt-1 text-sm text-text-muted">Terima kasih sudah pesan di Dombi 🎉</p>
+                    </div>
+                )}
+
+                {/* Order Code Card — hidden when completed */}
+                {!isTerminal && order.recovery_token && (
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
                         <div className="flex items-center gap-3">
-                            <div className="flex-1 rounded-lg bg-white px-3 py-2.5 border border-blue-200">
-                                <div className="text-xl font-bold tabular-nums tracking-wider text-blue-900">{order.recovery_token}</div>
+                            <div className="flex-1 min-w-0">
+                                <div className="text-[11px] font-semibold text-text-subtle uppercase tracking-wider">Kode Pelacakan</div>
+                                <div className="mt-1 text-xl font-bold tabular-nums tracking-wider text-text">{order.recovery_token}</div>
                             </div>
                             <button
                                 type="button"
                                 onClick={handleCopy}
-                                className="flex h-11 items-center gap-1.5 rounded-lg bg-blue-600 px-4 text-xs font-bold text-white active:opacity-80"
+                                className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white active:opacity-80"
                             >
                                 {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
                                 {copied ? 'Tersalin' : 'Salin'}
                             </button>
                         </div>
+                        <div className="mt-3">
+                            <button
+                                type="button"
+                                onClick={handleShare}
+                                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
+                            >
+                                <Share2 className="h-4 w-4" />
+                                Kirim ke WhatsApp
+                            </button>
+                        </div>
                     </div>
                 )}
 
-                {/* Timeline */}
+                {/* Timeline — collapsible */}
                 <div className="mt-4">
                     <OrderTimeline
                         currentStatus={order.status}
                         histories={order.status_histories}
                         fulfillmentType={order.fulfillment_type}
+                        defaultCollapsed
                     />
                 </div>
 
@@ -322,107 +301,68 @@ return;
                     </div>
                 </div>
 
-                {/* Outlet Info */}
+                {/* Outlet */}
                 {order.outlet && (
-                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-blue-50">
-                                <Store className="h-3.5 w-3.5 text-blue-600" />
-                            </div>
-                            <span className="text-[13px] text-text-subtle">Outlet</span>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-                                <Store className="h-5 w-5 text-blue-600" />
-                            </div>
-                            <div className="flex-1">
-                                <div className="text-sm font-semibold text-text">{order.outlet.name}</div>
-                                {order.outlet.address && (
-                                    <div className="mt-0.5 text-xs text-text-muted">{order.outlet.address}</div>
-                                )}
-                                {order.outlet.operating_hours && (
-                                    <div className="mt-1 flex items-center gap-1 text-xs text-text-muted">
-                                        <Clock className="h-3 w-3" />
-                                        <span>{order.outlet.operating_hours}</span>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* QR Code for pickup */}
-                        {isPickup && order.status === 'ready_for_pickup' && (
-                            <div className="mt-4 rounded-xl bg-surface-muted p-4 flex flex-col items-center">
-                                <QRCodeSVG
-                                    value={order.order_code}
-                                    size={180}
-                                    bgColor="#f4f4f5"
-                                    fgColor="#1e40af"
-                                    level="M"
-                                    marginSize={0}
-                                />
-                                <div className="mt-2 text-center">
-                                    <div className="text-sm font-bold tracking-wider text-blue-700">{order.order_code}</div>
-                                    <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                    <Store className="h-4 w-4 text-text-subtle" />
+                                    <span className="text-sm font-semibold text-text">{order.outlet.name}</span>
                                 </div>
+                                {order.outlet.address && (
+                                    <div className="mt-1 text-xs text-text-muted">{order.outlet.address}</div>
+                                )}
                             </div>
-                        )}
-
-                        {/* Navigation */}
-                        {order.outlet.latitude && order.outlet.longitude && (
-                            <a
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 min-h-[44px] text-sm font-bold text-white active:opacity-80"
-                            >
-                                <Navigation className="h-4 w-4" />
-                                Navigasi ke Outlet
-                            </a>
-                        )}
-
-                        {/* Contact */}
-                        {order.outlet.phone && (
-                            <a
-                                href={`tel:${order.outlet.phone}`}
-                                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 min-h-[44px] text-sm font-semibold text-blue-700 active:opacity-80"
-                            >
-                                <Phone className="h-4 w-4" />
-                                Hubungi Outlet
-                            </a>
-                        )}
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                            {order.outlet.latitude && order.outlet.longitude && (
+                                <a
+                                    href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                                >
+                                    <Navigation className="h-4 w-4" />
+                                    Navigasi
+                                </a>
+                            )}
+                            {order.outlet.phone && (
+                                <a
+                                    href={`tel:${order.outlet.phone}`}
+                                    className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
+                                >
+                                    <Phone className="h-4 w-4" />
+                                    Hubungi
+                                </a>
+                            )}
+                        </div>
                     </div>
                 )}
 
                 {/* Delivery Address */}
                 {!isPickup && order.customer_address && (
-                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50">
-                                <MapPin className="h-3.5 w-3.5 text-emerald-600" />
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <div className="flex items-start gap-2">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle" />
+                            <div className="min-w-0 flex-1">
+                                <div className="line-clamp-2 text-sm font-medium text-text">{order.customer_address}</div>
                             </div>
-                            <span className="text-[13px] text-text-subtle">Alamat Pengiriman</span>
                         </div>
-                        <div className="text-sm font-medium text-text">{order.customer_name}</div>
-                        <div className="mt-0.5 text-xs text-text-muted">{order.customer_phone}</div>
-                        <div className="mt-1.5 text-xs leading-relaxed text-text">{order.customer_address}</div>
                     </div>
                 )}
 
                 {/* Courier */}
                 {order.delivery?.courier && (
-                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-emerald-50">
-                                <Truck className="h-3.5 w-3.5 text-emerald-600" />
-                            </div>
-                            <span className="text-[13px] text-text-subtle">Kurir</span>
-                        </div>
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-                                <UserCheck className="h-5 w-5 text-emerald-600" />
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-muted">
+                                <UserCheck className="h-5 w-5 text-text-muted" />
                             </div>
-                            <div className="text-sm font-semibold text-text">{order.delivery.courier.name}</div>
+                            <div>
+                                <div className="text-[11px] text-text-subtle">Kurir</div>
+                                <div className="text-sm font-semibold text-text">{order.delivery.courier.name}</div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -505,7 +445,7 @@ return;
                         {order.outlet?.phone && (
                             <a
                                 href={`tel:${order.outlet.phone}`}
-                                className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-blue-600"
+                                className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80"
                             >
                                 <Phone className="h-3.5 w-3.5" />
                                 Hubungi Outlet
@@ -530,6 +470,23 @@ return;
             <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} title="Batalkan Pesanan">
                 <p className="text-sm text-text-muted">Pesanan yang dibatalkan tidak dapat dipulihkan.</p>
 
+                {isPickup && (
+                    <div className="mt-4">
+                        <label className="text-xs font-medium text-text-subtle">4 digit terakhir nomor HP</label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="\d{4}"
+                            maxLength={4}
+                            value={cancelLast4Hp}
+                            onChange={(e) => setCancelLast4Hp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                            placeholder="Contoh: 1234"
+                            className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-text tabular-nums placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        />
+                        <p className="mt-1 text-[11px] text-text-subtle">Untuk keamanan pembatalan pesanan pickup</p>
+                    </div>
+                )}
+
                 <div className="mt-4 space-y-2">
                     {cancellationReasons.map((reason: string) => (
                         <button
@@ -538,7 +495,7 @@ return;
                             onClick={() => setCancelReason(reason)}
                             className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
                                 cancelReason === reason
-                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                    ? 'border-primary bg-primary-light text-primary'
                                     : 'border-border text-text active:opacity-80'
                             }`}
                         >
@@ -553,7 +510,7 @@ return;
                             value={cancelNote}
                             onChange={(e) => setCancelNote(e.target.value)}
                             placeholder="Jelaskan alasan pembatalan..."
-                            className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                            className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                     </div>
                 )}
@@ -563,7 +520,11 @@ return;
                 <div className="mt-4 flex gap-2">
                     <button
                         type="button"
-                        onClick={() => setCancelDialogOpen(false)}
+                        onClick={() => {
+                            setCancelDialogOpen(false);
+                            setCancelLast4Hp('');
+                            setCancelError(null);
+                        }}
                         className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
                     >
                         Kembali
@@ -571,7 +532,7 @@ return;
                     <button
                         type="button"
                         onClick={handleCancel}
-                        disabled={!cancelReason || cancelLoading}
+                        disabled={!cancelReason || cancelLoading || (isPickup && cancelLast4Hp.length !== 4)}
                         className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
                     >
                         {cancelLoading ? 'Membatalkan...' : 'Ya, Batalkan'}
@@ -651,7 +612,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                 <button
                     type="button"
                     onClick={() => setShowForm(true)}
-                    className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                    className="mt-3 flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
                 >
                     Buat Akun Sekarang
                 </button>
@@ -700,7 +661,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="flex min-h-[44px] w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                        className="flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                     >
                         {loading ? 'Membuat Akun...' : 'Daftar'}
                     </button>

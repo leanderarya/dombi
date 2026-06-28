@@ -1,30 +1,46 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { CheckCircle2, Copy, MapPin, Navigation, Phone, Share2, Store, Truck, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, Copy, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, UserCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
-import OrderSummaryCard from '@/components/customer/order-summary-card';
 import OrderTimeline from '@/components/customer/order-timeline';
-import StickyOrderActions from '@/components/customer/sticky-order-actions';
 import OfflineBanner from '@/components/offline-banner';
+import StatusBadge from '@/components/ui/status-badge';
 import Dialog from '@/components/ui/dialog';
-import { orderStatusLabel, orderStatusTone, activeOrderStatuses } from '@/lib/customer-status';
-import { formatDate } from '@/lib/format';
+import BottomSheet from '@/components/ui/bottom-sheet';
+import { formatCurrency, formatDate } from '@/lib/format';
 import { useOrderRecovery } from '@/lib/order-recovery';
 
-export default function OrderShow({ order, cancellationReasons = [], isConfirmation = false }: any) {
-    const isActive = activeOrderStatuses.includes(order.status);
+const REPORT_TYPES = [
+    { value: 'not_received', label: 'Barang tidak diterima' },
+    { value: 'wrong_items', label: 'Barang salah' },
+    { value: 'damaged', label: 'Barang rusak/cacat' },
+    { value: 'other', label: 'Lainnya' },
+];
+
+const REPORT_STATUS_LABELS: Record<string, { label: string; variant: string }> = {
+    pending: { label: 'Menunggu Tinjauan', variant: 'warning' },
+    investigating: { label: 'Sedang Ditinjau', variant: 'info' },
+    resolved: { label: 'Telah Diselesaikan', variant: 'success' },
+    rejected: { label: 'Tidak Dapat Diproses', variant: 'danger' },
+};
+
+const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
+
+export default function OrderShow({ order, cancellationReasons = [], isConfirmation = false, activeReport = null, hasRecentReport = false, canReport = false }: any) {
     const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
     const isPending = order.status === 'pending_confirmation';
-    const isExpired = order.status === 'expired';
+    const isPickup = order.fulfillment_type === 'pickup';
+    const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
     const { addOrder } = useOrderRecovery();
     const [copied, setCopied] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelError, setCancelError] = useState<string | null>(null);
+    const [cancelLast4Hp, setCancelLast4Hp] = useState('');
+    const [reportSheetOpen, setReportSheetOpen] = useState(false);
+    const [reportError, setReportError] = useState<string | null>(null);
 
-    const cancelForm = useForm({
-        reason: '',
-        note: '',
-    });
+    const cancelForm = useForm({ reason: '', note: '' });
+    const reportForm = useForm({ type: '', notes: '' });
 
     useEffect(() => {
         if (order.customer_phone && order.order_code) {
@@ -35,31 +51,27 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
     const trackingUrl = order.tracking_url
         ?? (order.recovery_token ? `${window.location.origin}/track/${order.recovery_token}` : null);
 
-    function handleCopyLink() {
-        if (trackingUrl) {
-            navigator.clipboard.writeText(trackingUrl);
+    function handleCopy() {
+        if (order.recovery_token) {
+            navigator.clipboard.writeText(order.recovery_token);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
     }
 
     function handleShare() {
-        if (!trackingUrl) {
-return;
-}
+        if (!trackingUrl) return;
 
         const text = `Lacak pesanan Dombi saya:\n${trackingUrl}`;
 
         if (navigator.share) {
             navigator.share({ text }).catch(() => {});
         } else {
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-            window.open(whatsappUrl, '_blank');
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
         }
     }
 
     async function handleCancel() {
-        // Guest users on confirmation page use the track cancel endpoint
         if (isConfirmation && order.recovery_token) {
             try {
                 const response = await fetch(`/track/${order.recovery_token}/cancel`, {
@@ -73,6 +85,7 @@ return;
                     body: JSON.stringify({
                         reason: cancelForm.data.reason,
                         note: cancelForm.data.note || null,
+                        ...(isPickup && { last4_hp: cancelLast4Hp }),
                     }),
                 });
 
@@ -82,7 +95,6 @@ return;
                     setCancelDialogOpen(false);
                     window.location.reload();
                 } else {
-                    // Show error
                     setCancelError(data.error || 'Gagal membatalkan pesanan.');
                 }
             } catch {
@@ -92,168 +104,146 @@ return;
             return;
         }
 
-        // Logged-in customers use the standard Inertia cancel
         cancelForm.post(`/customer/orders/${order.id}/cancel`, {
             onSuccess: () => setCancelDialogOpen(false),
         });
     }
 
+    async function handleReport() {
+        if (!reportForm.data.type) return;
+
+        setReportError(null);
+
+        try {
+            const response = await fetch(`/customer/orders/${order.id}/report`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                },
+                body: JSON.stringify({
+                    type: reportForm.data.type,
+                    notes: reportForm.data.notes || null,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setReportSheetOpen(false);
+                reportForm.reset();
+                // Reload to get updated report status from server
+                router.reload({ only: ['activeReport', 'hasRecentReport', 'canReport'] });
+            } else {
+                setReportError(data.error || 'Gagal mengirim laporan.');
+            }
+        } catch {
+            setReportError('Gagal mengirim laporan. Periksa koneksi Anda.');
+        }
+    }
+
     return (
-        <div className="min-h-dvh bg-surface text-text">
+        <div className="min-h-dvh bg-surface">
+            <Head title={`Pesanan ${order.order_code}`} />
             <OfflineBanner />
 
-            {/* Sticky Header */}
+            {/* Header */}
             <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link href="/customer/orders" className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
-                    </Link>
+                    <button
+                        type="button"
+                        onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/customer/orders'}
+                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                        aria-label="Kembali"
+                    >
+                        <ChevronLeft className="h-5 w-5" />
+                    </button>
                     <div className="text-center">
                         <div className="text-sm font-semibold text-text">{order.order_code}</div>
                         {order.ordered_at && (
-                            <div className="text-[13px] text-text-muted">{formatDate(order.ordered_at)}</div>
+                            <div className="text-[11px] text-text-muted">{formatDate(order.ordered_at)}</div>
                         )}
                     </div>
-                    <div className="h-10 w-10" />
+                    <div className="h-11 w-11" />
                 </div>
             </header>
 
             {/* Content */}
-            <main className="mx-auto max-w-lg px-4 pt-4 pb-[calc(7rem+env(safe-area-inset-bottom))]">
-                <Head title={order.order_code} />
+            <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1 ${orderStatusTone[order.status] ?? 'bg-surface-muted text-text ring-border'}`}>
-                        {orderStatusLabel(order.status)}
-                    </span>
+                    <StatusBadge status={order.status} />
                 </div>
 
-                {/* Order Success Banner — shown immediately after checkout, hidden when terminal */}
-                {(isConfirmation || isPending) && !isTerminal && order.recovery_token && (
-                    <div className="mt-4 rounded-2xl border-2 border-emerald-300 bg-emerald-50 p-5">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-                                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-                            </div>
-                            <div>
-                                <div className="text-lg font-bold text-emerald-900">Pesanan Berhasil!</div>
-                                <div className="text-sm text-emerald-700">Simpan kode di bawah untuk melacak pesanan</div>
-                            </div>
+                {/* QR Code — pickup ready */}
+                {isPickup && order.status === 'ready_for_pickup' && (
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4 flex flex-col items-center">
+                        <QRCodeSVG
+                            value={order.order_code}
+                            size={160}
+                            bgColor="#ffffff"
+                            fgColor="#1e40af"
+                            level="M"
+                            marginSize={0}
+                        />
+                        <div className="mt-2 text-center">
+                            <div className="text-sm font-bold tracking-wider text-primary">{order.order_code}</div>
+                            <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
                         </div>
+                    </div>
+                )}
 
-                        <div className="rounded-xl bg-white border border-emerald-200 p-4">
-                            <div className="text-[13px] text-emerald-700 mb-1">Kode Pelacakan Anda</div>
-                            <div className="flex items-center gap-3">
-                                <div className="flex-1">
-                                    <div className="text-2xl font-bold tabular-nums tracking-wider text-emerald-900">{order.recovery_token}</div>
-                                </div>
-                                <button
-                                    type="button"
-                                    onClick={handleCopyLink}
-                                    className="flex h-11 items-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white active:opacity-80"
-                                >
-                                    {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                                    {copied ? 'Tersalin' : 'Salin'}
-                                </button>
+                {/* Completed Hero */}
+                {order.status === 'completed' && (
+                    <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-100 p-6 text-center">
+                        <div className="flex justify-center">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                                <CheckCircle2 className="h-8 w-8 text-emerald-600" />
                             </div>
                         </div>
+                        <h2 className="mt-4 text-lg font-bold text-text">Pesanan Selesai!</h2>
+                        <p className="mt-1 text-sm text-text-muted">Terima kasih sudah pesan di Dombi 🎉</p>
+                        <Link
+                            href={`/customer/orders/${order.id}/restore-cart`}
+                            className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-8 text-sm font-bold text-white active:opacity-80"
+                        >
+                            <RotateCcw className="h-4 w-4" />
+                            Pesan Lagi
+                        </Link>
+                    </div>
+                )}
 
-                        <div className="mt-3 text-xs text-emerald-600 leading-relaxed">
-                            <span className="font-semibold">Penting:</span> Kode ini dibutuhkan untuk melacak pesanan tanpa login. Kirim ke diri sendiri atau simpan di tempat aman.
+                {/* Recovery Token — hidden when completed */}
+                {!isTerminal && order.recovery_token && (
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-[11px] font-semibold text-text-subtle uppercase tracking-wider">Kode Pelacakan</div>
+                                <div className="mt-1 text-xl font-bold tabular-nums tracking-wider text-text">{order.recovery_token}</div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={handleCopy}
+                                className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
+                            >
+                                {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                                {copied ? 'Tersalin' : 'Salin'}
+                            </button>
                         </div>
-
                         {trackingUrl && (
                             <div className="mt-3">
                                 <button
                                     type="button"
                                     onClick={handleShare}
-                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                                 >
                                     <Share2 className="h-4 w-4" />
-                                    Kirim Kode ke WhatsApp
+                                    Kirim ke WhatsApp
                                 </button>
                             </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Pickup Info Card */}
-                {order.fulfillment_type === 'pickup' && order.outlet && (
-                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-                        <div className="flex items-start gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50">
-                                <Store className="h-5 w-5 text-blue-600" />
-                            </div>
-                            <div className="flex-1">
-                                <div className="text-sm font-semibold text-text">{order.outlet.name}</div>
-                                {order.outlet.address && (
-                                    <div className="mt-0.5 text-xs text-text-muted">{order.outlet.address}</div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* QR Code when ready_for_pickup */}
-                        {order.status === 'ready_for_pickup' && (
-                            <div className="mt-4 rounded-xl bg-surface-muted p-4 flex flex-col items-center">
-                                <QRCodeSVG
-                                    value={order.order_code}
-                                    size={180}
-                                    bgColor="#f4f4f5"
-                                    fgColor="#1e40af"
-                                    level="M"
-                                    marginSize={0}
-                                />
-                                <div className="mt-2 text-center">
-                                    <div className="text-sm font-bold tracking-wider text-blue-700">{order.order_code}</div>
-                                    <div className="mt-1 text-[13px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Navigation Button */}
-                        {order.outlet.latitude && order.outlet.longitude && (
-                            <a
-                                href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 min-h-[44px] text-sm font-bold text-white transition-all active:opacity-80"
-                            >
-                                <Navigation className="h-4 w-4" />
-                                Navigasi ke Outlet
-                            </a>
-                        )}
-
-                        {/* Pickup Instructions */}
-                        <div className="mt-3 rounded-xl border border-blue-100 bg-blue-50 p-3">
-                            <div className="text-xs font-semibold text-blue-800 mb-2">Cara Mengambil:</div>
-                            <ol className="space-y-1.5 text-xs text-blue-700">
-                                <li className="flex items-start gap-2">
-                                    <span className="font-semibold text-blue-800">1.</span>
-                                    <span>Datang ke outlet yang tertera di atas</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="font-semibold text-blue-800">2.</span>
-                                    <span>Tunjukkan <span className="font-bold">QR code</span> di atas ke kasir</span>
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="font-semibold text-blue-800">3.</span>
-                                    <span>Ambil pesanan Anda</span>
-                                </li>
-                            </ol>
-                        </div>
-
-                        {/* Contact Outlet */}
-                        {order.outlet.phone && (
-                            <a
-                                href={`tel:${order.outlet.phone}`}
-                                className="mt-3 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 min-h-[44px] text-sm font-semibold text-blue-700 transition-all active:opacity-80"
-                            >
-                                <Phone className="h-4 w-4" />
-                                Hubungi Outlet
-                            </a>
                         )}
                     </div>
                 )}
@@ -264,88 +254,106 @@ return;
                         currentStatus={order.status}
                         histories={order.status_histories}
                         fulfillmentType={order.fulfillment_type}
+                        defaultCollapsed
                     />
                 </div>
 
-                {/* Rejection Reason */}
-                {order.status === 'rejected_by_outlet' && order.rejection_reason && (
-                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                        <div className="flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-red-500" />
-                            <div className="text-[13px] text-red-600">Pesanan Ditolak Outlet</div>
-                        </div>
-                        <div className="mt-2 text-sm font-semibold text-red-800">{order.rejection_reason}</div>
-                        {order.rejection_note && (
-                            <div className="mt-1 text-xs text-red-700">{order.rejection_note}</div>
-                        )}
+                {/* Pesanan — items + info gabung */}
+                <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Package className="h-4 w-4 text-text-subtle" />
+                        <span className="text-[13px] text-text-subtle">Pesanan</span>
                     </div>
-                )}
-
-                {/* Cancellation Reason */}
-                {order.status === 'cancelled_by_customer' && order.cancellation_reason && (
-                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                        <div className="flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-red-500" />
-                            <div className="text-[13px] text-red-600">Pesanan Dibatalkan</div>
-                        </div>
-                        <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
-                        {order.cancellation_note && (
-                            <div className="mt-1 text-xs text-red-700">{order.cancellation_note}</div>
-                        )}
-                    </div>
-                )}
-
-                {/* Expired Reason */}
-                {isExpired && (
-                    <div className="mt-4 rounded-2xl border border-border bg-surface-muted p-4">
-                        <div className="flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-text-muted" />
-                            <div className="text-[13px] text-text">Pesanan Kadaluarsa</div>
-                        </div>
-                        <div className="mt-2 text-sm text-text">Outlet tidak memberikan konfirmasi dalam batas waktu yang ditentukan.</div>
-                    </div>
-                )}
-
-                {/* Courier Card */}
-                {order.delivery?.courier && (
-                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-                        <div className="text-[13px] text-text-subtle">Kurir</div>
-                        <div className="mt-2 flex items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                                <Truck className="h-4 w-4 text-emerald-600" />
+                    <div className="space-y-2">
+                        {order.items.map((item: any, index: number) => (
+                            <div key={index} className="flex items-center justify-between text-sm">
+                                <div className="min-w-0">
+                                    <span className="text-text">{item.product_name}</span>
+                                    <span className="ml-1 text-xs text-text-subtle">x{item.quantity}</span>
+                                </div>
+                                <span className="shrink-0 font-medium tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
                             </div>
-                            <div className="text-sm font-semibold text-text">{order.delivery.courier.name}</div>
+                        ))}
+                    </div>
+                    <div className="mt-3 border-t border-border pt-3 space-y-1.5">
+                        <div className="flex items-center justify-between text-xs text-text-muted">
+                            <span>Metode</span>
+                            <span className="font-medium text-text">{isPickup ? 'Ambil di Outlet' : 'Kirim ke Alamat'}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-text-muted">
+                            <span>Pembayaran</span>
+                            <span className="font-medium text-text">{order.payment_method === 'cod' ? 'Bayar di Tempat' : order.payment_method}</span>
+                        </div>
+                        {Number(order.delivery_fee) > 0 && (
+                            <div className="flex items-center justify-between text-xs text-text-muted">
+                                <span>Ongkir</span>
+                                <span className="font-medium text-text">{formatCurrency(order.delivery_fee)}</span>
+                            </div>
+                        )}
+                        <div className="flex items-center justify-between text-sm font-semibold text-text pt-1 border-t border-border">
+                            <span>Total</span>
+                            <span className="tabular-nums">{formatCurrency(order.total)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Outlet — kompres */}
+                {order.outlet && (
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                    <Store className="h-4 w-4 text-text-subtle" />
+                                    <span className="text-sm font-semibold text-text">{order.outlet.name}</span>
+                                </div>
+                                {order.outlet.address && (
+                                    <div className="mt-1 text-xs text-text-muted">{order.outlet.address}</div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="mt-3 flex gap-2">
+                            {order.outlet.latitude && order.outlet.longitude && (
+                                <a
+                                    href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                                >
+                                    <Navigation className="h-4 w-4" />
+                                    Navigasi
+                                </a>
+                            )}
+                            {order.outlet.phone && (
+                                <a
+                                    href={`tel:${order.outlet.phone}`}
+                                    className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
+                                >
+                                    <Phone className="h-4 w-4" />
+                                    Hubungi
+                                </a>
+                            )}
                         </div>
                     </div>
                 )}
 
-                {/* Failed Delivery Reason */}
-                {order.delivery?.failed_reason && (
-                    <div className="mt-3 rounded-lg border border-red-100 bg-red-50 p-4">
-                        <div className="text-[13px] text-red-600">Alasan gagal</div>
-                        <div className="mt-1 text-sm text-red-800">{order.delivery.failed_reason}</div>
-                    </div>
-                )}
-
-                {/* Delivery Address */}
-                {order.fulfillment_type !== 'pickup' && (
-                    <div className="mt-4 rounded-2xl border border-border bg-white p-4">
-                        <div className="text-[13px] text-text-subtle">Alamat Pengiriman</div>
-                        <div className="mt-2 text-sm font-medium text-text">{order.customer_name}</div>
-                        <div className="mt-0.5 text-xs text-text-muted">{order.customer_phone}</div>
-                        <div className="mt-1.5 text-xs leading-relaxed text-text">{order.customer_address}</div>
-                        {order.customer_address_detail && (
-                            <div className="mt-1 text-xs text-text"><span className="font-medium text-text-muted">Detail: </span>{order.customer_address_detail}</div>
-                        )}
-                        {order.customer_landmark && (
-                            <div className="mt-1 text-xs text-text"><span className="font-medium text-text-muted">Patokan: </span>{order.customer_landmark}</div>
-                        )}
+                {/* Delivery Address — kompres */}
+                {!isPickup && order.customer_address && (
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <div className="flex items-start gap-2">
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle" />
+                            <div className="min-w-0 flex-1">
+                                <div className="line-clamp-2 text-sm font-medium text-text">{order.customer_address}</div>
+                                {order.customer_address_detail && (
+                                    <div className="mt-1 text-xs text-text-muted">Detail: {order.customer_address_detail}</div>
+                                )}
+                            </div>
+                        </div>
                         {order.latitude && order.longitude && (
                             <a
                                 href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="mt-3 inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 active:opacity-80"
+                                className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-xs font-semibold text-text active:opacity-80"
                             >
                                 <MapPin className="h-3.5 w-3.5" />
                                 Buka di Maps
@@ -354,8 +362,79 @@ return;
                     </div>
                 )}
 
+                {/* Courier */}
+                {order.delivery?.courier && (
+                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-muted">
+                                <UserCheck className="h-5 w-5 text-text-muted" />
+                            </div>
+                            <div>
+                                <div className="text-[11px] text-text-subtle">Kurir</div>
+                                <div className="text-sm font-semibold text-text">{order.delivery.courier.name}</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Failed Delivery */}
+                {order.delivery?.failed_reason && (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <AlertTriangle className="h-4 w-4 text-amber-600" />
+                            <div className="text-[13px] text-amber-700">Pengiriman Gagal</div>
+                        </div>
+                        <div className="mt-2 text-sm text-amber-800">{order.delivery.failed_reason}</div>
+                    </div>
+                )}
+
+                {/* Rejection */}
+                {order.status === 'rejected_by_outlet' && order.rejection_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div className="text-[13px] text-red-600">Pesanan Ditolak Outlet</div>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.rejection_reason}</div>
+                        {order.rejection_note && <div className="mt-1 text-xs text-red-700">{order.rejection_note}</div>}
+                    </div>
+                )}
+
+                {/* Cancelled */}
+                {order.status === 'cancelled_by_customer' && order.cancellation_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div className="text-[13px] text-red-600">Pesanan Dibatalkan</div>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
+                        {order.cancellation_note && <div className="mt-1 text-xs text-red-700">{order.cancellation_note}</div>}
+                    </div>
+                )}
+
+                {order.status === 'cancelled_by_outlet' && order.cancellation_reason && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-center gap-2">
+                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div className="text-[13px] text-red-600">Dibatalkan Outlet</div>
+                        </div>
+                        <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
+                    </div>
+                )}
+
+                {/* Expired */}
+                {order.status === 'expired' && (
+                    <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
+                        <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-text-muted" />
+                            <div className="text-[13px] text-text">Pesanan Kadaluarsa</div>
+                        </div>
+                        <div className="mt-2 text-sm text-text-muted">Outlet tidak memberikan konfirmasi dalam batas waktu.</div>
+                    </div>
+                )}
+
                 {/* Cancel Button */}
-                {isPending && (
+                {isCancellable && (
                     <div className="mt-4">
                         <button
                             type="button"
@@ -364,28 +443,105 @@ return;
                         >
                             Batalkan Pesanan
                         </button>
+                        <p className="mt-2 text-center text-[11px] text-text-subtle">Batalkan hanya jika pesanan belum diproses</p>
                     </div>
                 )}
 
-                {/* Order Summary */}
-                <div className="mt-4">
-                    <OrderSummaryCard
-                        items={order.items}
-                        subtotal={order.subtotal}
-                        deliveryFee={order.delivery_fee}
-                        total={order.total}
-                    />
+                {/* Non-cancellable */}
+                {!isCancellable && !isTerminal && (
+                    <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
+                        <div className="text-sm text-text-muted">Pesanan sedang diproses dan tidak dapat dibatalkan.</div>
+                        {order.outlet?.phone && (
+                            <a href={`tel:${order.outlet.phone}`} className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80">
+                                <Phone className="h-3.5 w-3.5" />
+                                Hubungi Outlet
+                            </a>
+                        )}
+                    </div>
+                )}
+
+                {/* Reorder — for non-completed terminal states */}
+                {isTerminal && order.status !== 'completed' && (
+                    <div className="mt-6">
+                        <Link href={`/customer/orders/${order.id}/restore-cart`} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:opacity-80">
+                            <RotateCcw className="h-4 w-4" />
+                            Pesan Lagi
+                        </Link>
+                    </div>
+                )}
+
+                {/* Report Status — show if report exists */}
+                {hasRecentReport && activeReport && (() => {
+                    const reportStatus = REPORT_STATUS_LABELS[activeReport.status] ?? { label: activeReport.status, variant: 'neutral' };
+                    const isResolved = activeReport.status === 'resolved' || activeReport.status === 'rejected';
+
+                    return (
+                        <div className="mt-4 rounded-xl border border-border bg-white p-4">
+                            <div className="flex items-center justify-between">
+                                <span className="text-[13px] text-text-subtle">Laporan Anda</span>
+                                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                                    reportStatus.variant === 'success' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' :
+                                    reportStatus.variant === 'danger' ? 'bg-red-50 text-red-700 ring-1 ring-red-200' :
+                                    reportStatus.variant === 'info' ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' :
+                                    'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+                                }`}>
+                                    {reportStatus.label}
+                                </span>
+                            </div>
+                            <div className="mt-1.5 text-sm text-text">{activeReport.type_label}</div>
+                            {isResolved && activeReport.resolution_notes && (
+                                <div className="mt-2 rounded-lg bg-surface-muted p-3 text-xs text-text-muted">
+                                    <span className="font-semibold text-text">Resolusi: </span>{activeReport.resolution_notes}
+                                </div>
+                            )}
+                            {!isResolved && (
+                                <div className="mt-2 text-xs text-text-subtle">Kami akan mengabari Anda setelah laporan ditinjau.</div>
+                            )}
+                        </div>
+                    );
+                })()}
+
+                {/* Report Button */}
+                {canReport && (
+                    <div className="mt-4">
+                        <button
+                            type="button"
+                            onClick={() => setReportSheetOpen(true)}
+                            className="flex h-11 w-full items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                        >
+                            <AlertTriangle className="mr-2 h-4 w-4 text-text-muted" />
+                            Laporkan Masalah
+                        </button>
+                    </div>
+                )}
+
+                {/* Branding */}
+                <div className="mt-8 text-center">
+                    <p className="text-[11px] text-text-subtle">Powered by</p>
+                    <p className="text-sm font-bold text-text-muted">Dombi</p>
                 </div>
             </main>
 
-            {/* Sticky Bottom Actions */}
-            <StickyOrderActions orderId={order.id} showReorder={isTerminal} />
-
             {/* Cancel Dialog */}
             <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} title="Batalkan Pesanan">
-                <p className="text-sm text-text-muted">Pilih alasan pembatalan.</p>
+                <p className="text-sm text-text-muted">Pesanan yang dibatalkan tidak dapat dipulihkan.</p>
 
-                {cancelError && <p className="mt-2 text-sm font-medium text-red-600">{cancelError}</p>}
+                {isPickup && isConfirmation && (
+                    <div className="mt-4">
+                        <label className="text-xs font-medium text-text-subtle">4 digit terakhir nomor HP</label>
+                        <input
+                            type="text"
+                            inputMode="numeric"
+                            pattern="\d{4}"
+                            maxLength={4}
+                            value={cancelLast4Hp}
+                            onChange={(e) => setCancelLast4Hp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                            placeholder="Contoh: 1234"
+                            className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-text tabular-nums placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        />
+                        <p className="mt-1 text-[11px] text-text-subtle">Untuk keamanan pembatalan pesanan pickup</p>
+                    </div>
+                )}
 
                 <div className="mt-4 space-y-2">
                     {cancellationReasons.map((reason: string) => (
@@ -395,7 +551,7 @@ return;
                             onClick={() => cancelForm.setData('reason', reason)}
                             className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
                                 cancelForm.data.reason === reason
-                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-800'
+                                    ? 'border-primary bg-primary-light text-primary'
                                     : 'border-border text-text active:opacity-80'
                             }`}
                         >
@@ -410,27 +566,75 @@ return;
                             value={cancelForm.data.note}
                             onChange={(e) => cancelForm.setData('note', e.target.value)}
                             placeholder="Jelaskan alasan pembatalan..."
-                            className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                            className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                     </div>
                 )}
 
-                {cancelForm.errors.reason && (
-                    <p className="mt-2 text-xs text-red-600">{cancelForm.errors.reason}</p>
-                )}
-                {cancelForm.errors.note && (
-                    <p className="mt-1 text-xs text-red-600">{cancelForm.errors.note}</p>
-                )}
+                {cancelError && <p className="mt-2 text-sm font-medium text-red-600">{cancelError}</p>}
+                {cancelForm.errors.reason && <p className="mt-2 text-xs text-red-600">{cancelForm.errors.reason}</p>}
+                {cancelForm.errors.note && <p className="mt-1 text-xs text-red-600">{cancelForm.errors.note}</p>}
+
+                <div className="mt-4 flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => { setCancelDialogOpen(false); setCancelLast4Hp(''); setCancelError(null); }}
+                        className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                    >
+                        Kembali
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={!cancelForm.data.reason || cancelForm.processing || (isPickup && isConfirmation && cancelLast4Hp.length !== 4)}
+                        className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
+                    >
+                        {cancelForm.processing ? 'Membatalkan...' : 'Ya, Batalkan'}
+                    </button>
+                </div>
+            </Dialog>
+
+            {/* Report Sheet */}
+            <BottomSheet open={reportSheetOpen} onClose={() => { setReportSheetOpen(false); setReportError(null); reportForm.reset(); }} title="Laporkan Masalah">
+                <p className="text-sm text-text-muted">Pilih jenis masalah yang Anda alami.</p>
+
+                <div className="mt-4 space-y-2">
+                    {REPORT_TYPES.map((type) => (
+                        <button
+                            key={type.value}
+                            type="button"
+                            onClick={() => reportForm.setData('type', type.value)}
+                            className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
+                                reportForm.data.type === type.value
+                                    ? 'border-primary bg-primary-light text-primary'
+                                    : 'border-border text-text active:opacity-80'
+                            }`}
+                        >
+                            {type.label}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="mt-3">
+                    <textarea
+                        value={reportForm.data.notes}
+                        onChange={(e) => reportForm.setData('notes', e.target.value)}
+                        placeholder="Jelaskan masalah Anda (opsional)..."
+                        className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                    />
+                </div>
+
+                {reportError && <p className="mt-2 text-sm font-medium text-red-600">{reportError}</p>}
 
                 <button
                     type="button"
-                    onClick={handleCancel}
-                    disabled={!cancelForm.data.reason || cancelForm.processing}
-                    className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
+                    onClick={handleReport}
+                    disabled={!reportForm.data.type || reportForm.processing}
+                    className="mt-4 flex min-h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
                 >
-                    {cancelForm.processing ? 'Membatalkan...' : 'Batalkan Pesanan'}
+                    {reportForm.processing ? 'Mengirim...' : 'Kirim Laporan'}
                 </button>
-            </Dialog>
+            </BottomSheet>
         </div>
     );
 }

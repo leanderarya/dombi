@@ -34,7 +34,7 @@ export default function OutletLayout({ children, title, subtitle, backHref, hide
                 type="button"
                 onClick={() => setMoreOpen(true)}
                 aria-label="Menu"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted active:bg-surface-muted"
             >
                 <User className="h-5 w-5" />
             </button>

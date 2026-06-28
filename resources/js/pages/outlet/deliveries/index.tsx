@@ -1,7 +1,7 @@
-import { Link, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { Package, Truck } from 'lucide-react';
 import { useState } from 'react';
-import DeliveryStatusBadge from '@/components/delivery-status-badge';
+
 import AssignCourierSheet from '@/components/operations/assign-courier-sheet';
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import FilterSheet from '@/components/operations/filter-sheet';
@@ -43,12 +43,11 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
         router.get('/outlet/deliveries', { status: f.status || undefined }, { preserveState: true, replace: true });
     };
 
-    const activeFilterCount = filters.status ? 1 : 0;
-
     return (
         <OutletLayout title="Pengiriman" subtitle={outlet.name}>
+            <Head title="Pengiriman" />
             {/* Stats */}
-            <div className="mb-4 grid grid-cols-2 gap-2">
+            <div className="mt-4 mb-4 grid grid-cols-2 gap-2">
                 <StatCard label="Perlu Dikirim" value={stats.needsDispatch} alert={stats.needsDispatch > 0} />
                 <StatCard label="Menunggu Pickup" value={stats.waitingPickup} />
                 <StatCard label="Dalam Perjalanan" value={stats.inTransit} />
@@ -57,18 +56,18 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
 
             {/* Unassigned Orders */}
             {unassignedOrders.length > 0 && (
-                <SectionCard label="Perlu Assign Kurir" className="mb-4">
+                <SectionCard label="Perlu Assign Kurir" >
                     <div className="mt-2 space-y-2">
                         {unassignedOrders.map((order: any) => (
-                            <div key={order.id} className="rounded-lg border border-zinc-100 bg-zinc-50 p-3">
+                            <div key={order.id} className="rounded-lg border border-border bg-surface-muted p-3">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-sm font-bold tabular-nums text-slate-900">{order.order_code}</div>
-                                        <div className="mt-0.5 text-xs text-slate-500">{order.customer_name}</div>
-                                        <div className="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+                                        <div className="text-sm font-bold tabular-nums text-text">{order.order_code}</div>
+                                        <div className="mt-0.5 text-xs text-text-muted">{order.customer_name}</div>
+                                        <div className="mt-1 flex items-center gap-2 text-[11px] text-text-subtle">
                                             {order.distance_km != null && <span>{formatDistance(order.distance_km)}</span>}
                                             <span>{formatCurrency(order.total)}</span>
-                                            <span className={`font-medium ${order.delivery_age > 30 ? 'text-red-600' : 'text-slate-500'}`}>
+                                            <span className={`font-medium ${order.delivery_age > 30 ? 'text-danger' : 'text-text-muted'}`}>
                                                 {formatDeliveryAge(order.delivery_age)}
                                             </span>
                                         </div>
@@ -77,7 +76,7 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
                                 </div>
                                 <button
                                     onClick={() => handleAssignCourier(order.id)}
-                                    className="mt-2 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-semibold text-white active:bg-emerald-800"
+                                    className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-white active:opacity-80"
                                 >
                                     <Truck className="h-4 w-4" />
                                     Assign Kurir
@@ -89,10 +88,10 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
             )}
 
             {/* Delivery List */}
-            <SectionCard label="Riwayat Pengiriman" className="mb-4">
+            <SectionCard label="Riwayat Pengiriman" >
                 {deliveries.data.length === 0 ? (
                     <EmptyState
-                        icon={<Package className="h-8 w-8 text-slate-400" />}
+                        icon={<Package className="h-8 w-8 text-text-subtle" />}
                         title="Belum ada pengiriman"
                         description="Pengiriman akan muncul setelah kurir di-assign."
                     />
@@ -102,25 +101,25 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
                             <Link
                                 key={d.id}
                                 href={`/outlet/deliveries/${d.id}`}
-                                className="flex items-center gap-3 rounded-lg border border-zinc-100 bg-white p-3 active:bg-zinc-50"
+                                className="flex items-center gap-3 rounded-lg border border-border bg-white p-3 active:bg-surface-muted"
                             >
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold tabular-nums text-slate-900">{d.order_code}</span>
+                                        <span className="text-sm font-bold tabular-nums text-text">{d.order_code}</span>
                                         {d.sla_health && <DeliverySlaBadge health={d.sla_health} />}
                                     </div>
-                                    <div className="mt-0.5 text-xs text-slate-500">
+                                    <div className="mt-0.5 text-xs text-text-muted">
                                         {d.customer_name} {d.courier ? `· ${d.courier.name}` : ''}
                                     </div>
-                                    <div className="mt-1 text-[11px] tabular-nums text-slate-400">
+                                    <div className="mt-1 text-[11px] tabular-nums text-text-subtle">
                                         {d.delivery_age != null && (
-                                            <span className={d.delivery_age > 60 ? 'text-red-600 font-medium' : ''}>
+                                            <span className={d.delivery_age > 60 ? 'text-danger font-medium' : ''}>
                                                 {formatDeliveryAge(d.delivery_age)}
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                <DeliveryStatusBadge status={d.status} />
+                                <StatusBadge status={d.status} />
                             </Link>
                         ))}
                     </div>
@@ -155,12 +154,12 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
 
 function StatCard({ label, value, alert }: { label: string; value: number; alert?: boolean }) {
     return (
-        <div className={`rounded-lg border p-2.5 ${alert ? 'border-amber-200' : 'border-zinc-200'} bg-white`}>
-            <div className="text-xs font-medium text-slate-500">{label}</div>
-            <div className="mt-0.5 flex items-center gap-1.5">
-                <span className="text-xl font-bold text-slate-900">{value}</span>
-                {alert && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
+        <div className="rounded-xl border border-border bg-white p-3">
+            <div className="flex items-center gap-1">
+                {alert && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                <span className="text-xl font-bold tabular-nums text-text">{value}</span>
             </div>
+            <div className="text-[11px] font-medium text-text-subtle">{label}</div>
         </div>
     );
 }

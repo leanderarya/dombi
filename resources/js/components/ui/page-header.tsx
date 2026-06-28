@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ArrowLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 interface Props {
@@ -16,11 +16,11 @@ interface Props {
 
 export default function PageHeader({ title, subtitle, backHref, right, below, transparent }: Props) {
     return (
-        <header className={`sticky top-0 z-30 ${transparent ? '' : 'border-b border-zinc-100 bg-surface/95 backdrop-blur'}`}>
+        <header className={`sticky top-0 z-30 ${transparent ? '' : 'border-b border-border bg-surface/95 backdrop-blur'}`}>
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                 {backHref ? (
-                    <Link href={backHref} className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
-                        <ArrowLeft className="h-5 w-5" />
+                    <Link href={backHref} className="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted active:bg-surface-muted">
+                        <ChevronLeft className="h-5 w-5" />
                     </Link>
                 ) : (
                     <div className="w-11" />
@@ -28,7 +28,7 @@ export default function PageHeader({ title, subtitle, backHref, right, below, tr
 
                 {title ? (
                     <div className="text-center">
-                        <div className="text-[17px] font-semibold text-text">{title}</div>
+                        <div className="text-sm font-semibold text-text">{title}</div>
                         {subtitle && <div className="text-[11px] text-text-muted">{subtitle}</div>}
                     </div>
                 ) : (

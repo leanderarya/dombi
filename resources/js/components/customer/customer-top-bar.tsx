@@ -45,7 +45,7 @@ export default function CustomerTopBar({ addressOverride }: Props) {
                             )}
                         </Link>
                     ) : guestMode ? (
-                        <a href="/auth/google" className="flex h-10 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-emerald-700 active:bg-emerald-50">
+                        <a href="/oauth/google" className="flex h-10 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-emerald-700 active:bg-emerald-50">
                             <LogIn className="h-4 w-4" />
                             Masuk
                         </a>

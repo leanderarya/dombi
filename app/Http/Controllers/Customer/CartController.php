@@ -88,7 +88,7 @@ class CartController extends Controller
     {
         $validated = $request->validate([
             'product_variant_id' => ['required', 'integer'],
-            'quantity' => ['required', 'integer', 'min:0'],
+            'quantity' => ['required', 'integer', 'min:0', 'max:999'],
         ]);
 
         $variantId = (int) $validated['product_variant_id'];

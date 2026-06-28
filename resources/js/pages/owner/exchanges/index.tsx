@@ -5,7 +5,6 @@ import Pagination from '@/components/pagination';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { STATUS_BORDER } from '@/lib/status-border';
 import { getExchangeStatus } from '@/lib/status-labels';
 
 export default function OwnerExchangesIndex({ exchanges, filters, dashboard, outlets, reasons }: any) {
@@ -78,13 +77,12 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                         )}
                         {exchanges.data.map((ex: any) => {
                             const status = getExchangeStatus(ex.status);
-                            const borderClass = STATUS_BORDER[ex.status] ?? 'border-l-gray-300';
 
                             return (
                                 <Link
                                     key={ex.id}
                                     href={`/owner/exchanges/${ex.id}`}
-                                    className={`block rounded-xl border border-l-4 border-border bg-white p-4 transition-all hover:shadow-md ${borderClass}`}
+                                    className="block rounded-xl border border-border bg-white p-4 transition-all hover:shadow-md"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div>

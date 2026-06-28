@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { BarChart3, DollarSign, FileText, LogOut, Package, RefreshCw, RotateCcw, Truck } from 'lucide-react';
+import { AlertTriangle, BarChart3, DollarSign, FileText, LogOut, Package, RefreshCw, RotateCcw, Truck } from 'lucide-react';
 import BottomSheet from '@/components/ui/bottom-sheet';
 
 interface Props {
@@ -17,6 +17,8 @@ const sheetItems = [
     { divider: true },
     { href: '/outlet/reports', label: 'Laporan', icon: FileText },
     { href: '/outlet/analytics', label: 'Analitik', icon: BarChart3 },
+    { divider: true },
+    { href: '/outlet/order-reports', label: 'Laporan Masalah', icon: AlertTriangle },
 ];
 
 export default function OutletMoreSheet({ open, onClose }: Props) {

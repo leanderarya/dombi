@@ -77,7 +77,7 @@ export default function Dashboard({
                             count={totalPendingActions}
                             countColor="blue"
                             defaultExpanded={totalPendingActions > 0}
-                            className="border-l-4 border-l-primary bg-primary/2"
+                            className="bg-primary/2"
                         >
                             <div className="space-y-2">
                                 {actionRequired.restocks > 0 && (

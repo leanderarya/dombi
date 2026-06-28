@@ -9,22 +9,44 @@ use App\Models\Order;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class OrderController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $user = $request->user();
+        $customer = $user?->customer;
+
+        $activeOrders = collect();
+        $historyOrders = [];
+
+        if ($customer) {
+            $activeOrders = $customer->orders()
+                ->whereIn('status', Order::ACTIVE_STATUSES)
+                ->with(['outlet', 'items'])
+                ->orderByDesc('ordered_at')
+                ->get();
+
+            $historyOrders = $customer->orders()
+                ->whereIn('status', Order::HISTORY_STATUSES)
+                ->with(['outlet', 'items'])
+                ->orderByDesc('ordered_at')
+                ->paginate(10)
+                ->withQueryString();
+        }
+
         return Inertia::render('customer/orders/index', [
-            'activeOrders' => collect(),
-            'historyOrders' => [],
+            'activeOrders' => $activeOrders,
+            'historyOrders' => $historyOrders,
         ]);
     }
 
     public function store(StoreOrderRequest $request, OrderService $orderService): RedirectResponse
     {
-        $order = $orderService->createCheckoutOrder(null, $request->validated());
+        $order = $orderService->createCheckoutOrder($request->user(), $request->validated());
 
         return redirect()->route('track', ['token' => $order->recovery_token])->with('success', 'Order berhasil dibuat.');
     }
@@ -33,13 +55,27 @@ class OrderController extends Controller
     {
         $user = auth()->user();
 
-        if (! $user->isOwner() && $user->customer?->id !== $order->customer_id) {
+        if (! $user->isOwner() && $user->getCustomerOrCreate()->id !== $order->customer_id) {
             abort(403, 'Anda tidak memiliki akses ke pesanan ini.');
         }
+
+        $customer = $user->getCustomerOrCreate();
+        $activeReport = \App\Models\OrderReport::where('order_id', $order->id)
+            ->where('customer_id', $customer->id)
+            ->active()
+            ->first();
+        $hasRecentReport = \App\Models\OrderReport::where('order_id', $order->id)
+            ->where('customer_id', $customer->id)
+            ->exists();
 
         return Inertia::render('customer/orders/show', [
             'order' => $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier']),
             'cancellationReasons' => OrderStatusService::cancellationReasons(),
+            'activeReport' => $activeReport,
+            'hasRecentReport' => $hasRecentReport,
+            'canReport' => $order->status === \App\Models\Order::STATUS_COMPLETED
+                && (! $order->completed_at || $order->completed_at->gt(now()->subDays(7)))
+                && ! $hasRecentReport,
         ]);
     }
 
@@ -60,7 +96,7 @@ class OrderController extends Controller
     public function cancel(CancelOrderRequest $request, Order $order, OrderStatusService $orderStatusService): RedirectResponse
     {
         $user = $request->user();
-        if ($user->role === 'customer' && $order->customer_id !== $user->customer?->id) {
+        if ($user->role === 'customer' && $order->customer_id !== $user->getCustomerOrCreate()->id) {
             abort(403);
         }
 
@@ -94,7 +130,7 @@ class OrderController extends Controller
         }
 
         // Authenticated customer — check ownership
-        if ($user && $user->customer?->id === $order->customer_id) {
+        if ($user && $user->getCustomerOrCreate()->id === $order->customer_id) {
             return;
         }
 

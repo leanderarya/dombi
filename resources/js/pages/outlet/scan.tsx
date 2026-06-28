@@ -146,10 +146,10 @@ export default function OutletScanPage() {
     };
 
     return (
-        <OutletLayout title="Scan QR Code" backHref="/outlet/dashboard" hideNav>
+        <OutletLayout title="Scan QR Code" backHref="/outlet/dashboard">
             <Head title="Scan QR Code" />
 
-            <div className="mx-auto max-w-lg">
+            <div className="mt-4 mx-auto max-w-lg">
                 {/* Scanner Area */}
                 <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-black">
                     <div
@@ -164,13 +164,13 @@ export default function OutletScanPage() {
                                 </div>
                                 <div>
                                     <div className="text-sm font-semibold text-white">Arahkan kamera ke QR code</div>
-                                    <div className="mt-1 text-xs text-zinc-400">QR code akan ter-scan otomatis</div>
+                                    <div className="mt-1 text-xs text-text-subtle">QR code akan ter-scan otomatis</div>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={startScanner}
                                     aria-label="Mulai scan QR code"
-                                    className="flex min-h-[44px] items-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-white active:bg-primary-hover"
+                                    className="flex min-h-11 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-white active:bg-primary-hover"
                                 >
                                     <Camera className="h-4 w-4" />
                                     Mulai Scan
@@ -193,7 +193,7 @@ export default function OutletScanPage() {
                         type="button"
                         onClick={stopScanner}
                         aria-label="Berhenti scan"
-                        className="mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-border text-sm font-semibold text-text active:bg-surface-muted"
+                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border text-sm font-semibold text-text active:bg-surface-muted"
                     >
                         <XCircle className="h-4 w-4" />
                         Berhenti Scan
@@ -230,13 +230,13 @@ export default function OutletScanPage() {
                             onChange={(e) => setManualCode(e.target.value.toUpperCase())}
                             placeholder="Masukkan kode pesanan"
                             aria-label="Kode pesanan"
-                            className="flex-1 min-h-[44px] rounded-xl border border-border px-4 text-sm font-semibold uppercase tracking-wider text-text placeholder:normal-case placeholder:tracking-normal placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                            className="flex-1 min-h-11 rounded-xl border border-border px-4 text-sm font-semibold uppercase tracking-wider text-text placeholder:normal-case placeholder:tracking-normal placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
                         <button
                             type="submit"
                             disabled={!manualCode.trim() || loading}
                             aria-label="Cari pesanan"
-                            className="flex min-h-[44px] items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-white active:bg-primary-hover disabled:bg-surface-muted disabled:text-text-subtle"
+                            className="flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-white active:bg-primary-hover disabled:bg-surface-muted disabled:text-text-subtle"
                         >
                             Cari
                         </button>

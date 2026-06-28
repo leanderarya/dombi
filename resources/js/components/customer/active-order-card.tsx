@@ -24,9 +24,7 @@ export default function ActiveOrderCard({ order }: Props) {
     const itemSummary = order.items?.map((i) => `${i.product_name} x${i.quantity}`).join(', ') ?? '';
     const isTerminal = isTerminalOrder(order.status);
 
-    const trackingHref = order.tracking_url
-        ?? (order.recovery_token ? `/track/${order.recovery_token}` : null)
-        ?? `/customer/orders/${order.id}`;
+    const trackingHref = `/customer/orders/${order.id}`;
 
     return (
         <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">

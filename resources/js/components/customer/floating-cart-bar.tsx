@@ -1,12 +1,13 @@
 import { router } from '@inertiajs/react';
 import { useCart } from '@/lib/use-cart';
+import { formatCurrency } from '@/lib/format';
 
 export default function FloatingCartBar() {
-    const { items, totalItems } = useCart();
+    const { items, totalItems, totalPrice } = useCart();
 
     if (totalItems === 0) {
-return null;
-}
+        return null;
+    }
 
     const handleCheckout = () => {
         router.post('/customer/checkout', {
@@ -33,13 +34,13 @@ return null;
                     </span>
                 </div>
 
-                <div className="min-w-0 flex-1">
-                    <div className="text-xs text-white/60">{totalItems} item</div>
-                    <div className="text-sm font-bold text-white">Lihat Keranjang</div>
+                <div className="min-w-0 flex-1 text-left">
+                    <div className="text-xs text-white/60">{totalItems} item di keranjang</div>
+                    <div className="text-sm font-bold text-white tabular-nums">{formatCurrency(totalPrice)}</div>
                 </div>
 
                 <span className="flex min-h-9 items-center rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white">
-                    Lihat Keranjang
+                    Checkout
                 </span>
             </button>
         </div>

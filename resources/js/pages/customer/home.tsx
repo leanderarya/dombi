@@ -1,6 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Truck, User } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { ChevronRight, MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Truck, User } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation, syncCustomerLocationDraft } from '@/lib/customer-location';
@@ -37,8 +37,23 @@ export default function Home({ customerName, activeOrders }: any) {
     const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
     const [nearestOutlet, setNearestOutlet] = useState<{ name: string; distance_km: number } | null>(null);
     const [pickupLoading, setPickupLoading] = useState(false);
-    const [pickupOutletName, setPickupOutletName] = useState<string | null>(null);
+    const [foundOutletName, setFoundOutletName] = useState<string | null>(null);
+    const [pickupError, setPickupError] = useState<string | null>(null);
     const { saveLocation } = useCustomerLocation();
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const [phoneBannerDismissed, setPhoneBannerDismissed] = useState(
+        () => typeof window !== 'undefined' && localStorage.getItem('dombi_phone_banner_dismissed') === 'true'
+    );
+    const showPhoneBanner = isLoggedIn && !auth?.user?.customer?.phone && !phoneBannerDismissed;
+
+    // Cleanup timer on unmount
+    useEffect(() => {
+        return () => {
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+        };
+    }, []);
 
     // Auto-rotate hero slides (respect prefers-reduced-motion)
     useEffect(() => {
@@ -103,13 +118,20 @@ return;
     const activeOrder = activeOrders?.[0] ?? null;
 
     const handlePickup = useCallback(async () => {
+        if (pickupLoading) return;
+
         setPickupLoading(true);
-        setPickupOutletName(null);
+        setPickupError(null);
+        setFoundOutletName(null);
 
         // Use cached nearest outlet if available
         if (nearestOutlet?.name) {
-            setPickupOutletName(nearestOutlet.name);
-            router.get('/customer/products');
+            setFoundOutletName(nearestOutlet.name);
+
+            // Keep overlay visible for at least 2 seconds before navigating
+            timerRef.current = setTimeout(() => {
+                router.get('/customer/products');
+            }, 2000);
 
             return;
         }
@@ -125,20 +147,29 @@ return;
             const data = await response.json();
             outletName = data.recommended?.name ?? null;
         } catch {
-            // Geolocation failed
+            // Geolocation or fetch failed
         }
 
-        setPickupOutletName(outletName ?? 'Outlet Dombi');
-        router.get('/customer/products');
-    }, [nearestOutlet]);
+        if (!outletName) {
+            // Fallback to default outlet name
+            outletName = 'Outlet Dombi';
+        }
+
+        setFoundOutletName(outletName);
+
+        // Keep overlay visible for at least 2 seconds before navigating
+        timerRef.current = setTimeout(() => {
+            router.get('/customer/products');
+        }, 2000);
+    }, [nearestOutlet, pickupLoading]);
 
     const handleDelivery = useCallback(() => {
-        if (!isLoggedIn || !hasLinkedCustomer) {
+        if (!isLoggedIn) {
             setDeliverySheetOpen(true);
         } else {
             router.get('/customer/products');
         }
-    }, [isLoggedIn, hasLinkedCustomer]);
+    }, [isLoggedIn]);
 
     return (
         <CustomerMobileLayout>
@@ -171,9 +202,9 @@ return;
                         {HERO_SLIDES[slideIndex].cta && (
                             <Link
                                 href={HERO_SLIDES[slideIndex].ctaHref!}
-                                className="mt-5 min-h-[44px] rounded-full bg-white px-6 py-2.5 text-sm font-bold text-emerald-700 shadow-lg transition-all active:opacity-80"
+                                className="mt-4 inline-flex min-h-[44px] items-center px-2 text-sm font-semibold text-white/80 active:text-white"
                             >
-                                {HERO_SLIDES[slideIndex].cta}
+                                Lihat Produk →
                             </Link>
                         )}
                     </div>
@@ -185,23 +216,53 @@ return;
                                 key={i}
                                 type="button"
                                 onClick={() => setSlideIndex(i)}
-                                className={`h-2 rounded-full transition-all duration-300 ${
+                                className={`flex min-h-[44px] min-w-[44px] items-center justify-center active:opacity-80`}
+                                aria-label={`Slide ${i + 1}`}
+                            >
+                                <span className={`block h-2 rounded-full transition-all duration-300 ${
                                     i === slideIndex ? 'w-6 bg-white' : 'w-2 bg-white/40'
-                                }`}
-                            />
+                                }`} />
+                            </button>
                         ))}
                     </div>
                 </div>
             </section>
 
+            {/* Phone Banner — optional, dismissible */}
+            {showPhoneBanner && (
+                <div className="mt-4 flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3">
+                    <div className="min-w-0 flex-1">
+                        <p className="text-xs text-text-muted">Tambahkan nomor HP (opsional) untuk memudahkan kurir menghubungi.</p>
+                    </div>
+                    <a
+                        href="/customer/verify-phone"
+                        className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+                    >
+                        Tambah
+                    </a>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setPhoneBannerDismissed(true);
+                            localStorage.setItem('dombi_phone_banner_dismissed', 'true');
+                        }}
+                        className="shrink-0 px-1 text-xs font-medium text-text-subtle active:opacity-80"
+                    >
+                        Nanti
+                    </button>
+                </div>
+            )}
+
             {/* SECTION 2 — PESAN SEKARANG */}
             <section className="mt-6">
                 <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Pesan Sekarang</h2>
+                <p className="mt-1 text-xs text-text-muted">Pilih cara belanja. Untuk pickup, kami rekomendasikan outlet terdekat.</p>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                     <button
                         type="button"
                         onClick={handlePickup}
-                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:opacity-80 active:bg-emerald-100"
+                        disabled={pickupLoading}
+                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:opacity-80 active:bg-emerald-100 disabled:opacity-50 disabled:active:bg-emerald-50"
                     >
                         <div className="transition-transform duration-200 group-hover:scale-105">
                             <Store className="h-6 w-6 text-emerald-600" />
@@ -243,26 +304,22 @@ return;
                                     : 'Belum Ada Pesanan Aktif'}
                             </div>
                         </div>
-                        <svg className="h-4 w-4 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                        </svg>
+                        <ChevronRight className="h-4 w-4 text-text-subtle" />
                     </Link>
                 ) : (
-                    <div className="rounded-xl border border-border bg-emerald-50/50 px-4 py-3">
-                        <div className="text-sm font-semibold text-text">Masuk untuk fitur penuh</div>
-                        <div className="mt-0.5 text-xs text-text-muted">Lacak pesanan, simpan alamat, dan lebih banyak lagi.</div>
-                        <a
-                            href="/auth/google"
-                            className="mt-3 flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary text-xs font-bold text-white transition-all active:opacity-80 active:bg-primary-hover"
-                        >
-                            <svg className="h-4 w-4" viewBox="0 0 24 24">
-                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                            </svg>
-                            Masuk dengan Google
-                        </a>
+                    <div className="rounded-xl border border-border bg-white px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="text-sm font-medium text-text">Masuk untuk pengalaman penuh</div>
+                                <div className="mt-0.5 text-xs text-text-muted">Lacak pesanan, simpan alamat.</div>
+                            </div>
+                            <a
+                                href="/oauth/google"
+                                className="flex min-h-[44px] shrink-0 items-center rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
+                            >
+                                Masuk Google
+                            </a>
+                        </div>
                     </div>
                 )}
             </section>
@@ -312,7 +369,7 @@ return;
                         </Link>
                     ) : (
                         <a
-                            href="/auth/google"
+                            href="/oauth/google"
                             className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                         >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
@@ -352,19 +409,17 @@ return;
                         <div className="text-sm font-bold text-text">Butuh Bantuan?</div>
                         <div className="mt-0.5 text-xs text-text-muted">Hubungi tim Dombi via WhatsApp</div>
                     </div>
-                    <svg className="h-4 w-4 shrink-0 text-text-subtle" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                    </svg>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-text-subtle" />
                 </a>
             </section>
 
             {/* SECTION 6 — TRUST */}
             <section className="mt-6 mb-4">
-                <div className="flex items-center justify-center gap-3 text-xs text-zinc-400">
+                <div className="flex items-center justify-center gap-3 text-xs text-text-subtle">
                     <span>Sertifikasi Halal</span>
-                    <span className="h-3 w-px bg-zinc-200" />
+                    <span className="h-3 w-px bg-border" />
                     <span>Izin Usaha</span>
-                    <span className="h-3 w-px bg-zinc-200" />
+                    <span className="h-3 w-px bg-border" />
                     <span>Dombi 2024</span>
                 </div>
             </section>
@@ -377,18 +432,50 @@ return;
 
             {/* Pickup Loading Overlay */}
             {pickupLoading && (
-                <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-emerald-600 to-emerald-700">
-                    <div className="mb-6 h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                    {pickupOutletName ? (
-                        <div className="text-center">
-                            <div className="text-[11px] font-bold uppercase tracking-widest text-emerald-200">Outlet Terdekat</div>
-                            <div className="mt-2 text-2xl font-bold text-white">{pickupOutletName}</div>
-                            <div className="mt-3 text-sm text-emerald-100">Menuju produk...</div>
-                        </div>
+                <div
+                    className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-b from-emerald-600 to-emerald-700"
+                    role="dialog"
+                    aria-live="polite"
+                    aria-label="Ambil di Outlet"
+                >
+                    {pickupError ? (
+                        <>
+                            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-500/20">
+                                <svg className="h-7 w-7 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-lg font-bold text-white">Gagal mendapatkan lokasi</div>
+                                <div className="mt-2 text-sm text-emerald-100">Aktifkan izin lokasi atau pilih outlet secara manual.</div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setPickupLoading(false);
+                                        setPickupError(null);
+                                        setFoundOutletName(null);
+                                    }}
+                                    className="mt-5 min-h-[44px] rounded-full bg-white/20 px-6 text-sm font-bold text-white active:opacity-80"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        </>
                     ) : (
-                        <div className="text-center">
-                            <div className="text-sm font-medium text-emerald-100">Mencari outlet terdekat dari lokasi Anda</div>
-                        </div>
+                        <>
+                            <div className="mb-6 h-10 w-10 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                            <div className="text-center">
+                                {foundOutletName ? (
+                                    <>
+                                        <div className="text-[11px] font-bold uppercase tracking-widest text-emerald-200">Outlet Terdekat</div>
+                                        <div className="mt-2 text-2xl font-bold text-white">{foundOutletName}</div>
+                                        <div className="mt-3 text-sm text-emerald-100">Mengarahkan...</div>
+                                    </>
+                                ) : (
+                                    <div className="text-sm font-medium text-emerald-100">Mencari outlet terdekat dari lokasi Anda</div>
+                                )}
+                            </div>
+                        </>
                     )}
                 </div>
             )}

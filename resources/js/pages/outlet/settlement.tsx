@@ -3,6 +3,7 @@ import { ChartColumn } from 'lucide-react';
 import { useState } from 'react';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
@@ -111,26 +112,14 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
     const isSettled = reconciliation.outstanding <= 0;
 
     return (
-        <OutletLayout title="Settlement" subtitle="Pantau setoran ke pusat dan margin outlet">
+        <OutletLayout
+            title="Settlement"
+            subtitle="Setoran ke pusat"
+            headerBelow={<FilterChips options={periods} active={period} onChange={handlePeriodChange} />}
+        >
             <Head title="Settlement" />
 
-            {/* Period Selector */}
-            <div className="mb-4 flex gap-2 overflow-x-auto scrollbar-none pb-1">
-                {periods.map((p) => (
-                    <button
-                        key={p.key}
-                        onClick={() => handlePeriodChange(p.key)}
-                        className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
-                            period === p.key
-                                ? 'bg-emerald-600 text-white'
-                                : 'bg-zinc-100 text-zinc-600 active:bg-zinc-200'
-                        }`}
-                    >
-                        {p.label}
-                    </button>
-                ))}
-            </div>
-
+            <div className="mt-4">
             {/* Hero Card */}
             {isSettled ? (
                 <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
@@ -138,16 +127,16 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
                         <svg className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-sm font-semibold text-emerald-700">Tidak ada kewajiban setoran saat ini</span>
+                        <span className="text-sm font-semibold text-text">Tidak ada kewajiban setoran saat ini</span>
                     </div>
                 </div>
             ) : (
                 <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-5">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Belum Disetor</div>
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Belum Disetor</div>
                     <div className="mt-1 text-3xl font-bold tabular-nums text-red-600">
                         {formatCurrency(reconciliation.outstanding)}
                     </div>
-                    <div className="mt-1 text-xs text-slate-500">
+                    <div className="mt-1 text-xs text-text-muted">
                         Jumlah yang masih perlu disetor ke pusat.
                     </div>
                     {hasPendingPayment ? (
@@ -162,7 +151,7 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
                     ) : (
                         <button
                             onClick={() => setPaymentSheetOpen(true)}
-                            className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white active:bg-emerald-800"
+                            className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
                         >
                             Ajukan Pembayaran
                         </button>
@@ -172,13 +161,13 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
 
             {/* Info Rekening */}
             {paymentAccounts.length > 0 && (
-                <SectionCard label="Info Rekening Tujuan" className="mb-4">
+                <SectionCard label="Info Rekening Tujuan">
                     <div className="space-y-2">
                         {paymentAccounts.map((account) => (
-                            <div key={account.id} className="rounded-lg bg-zinc-50 p-3">
-                                <div className="text-sm font-medium text-slate-900">{account.bank_name}</div>
-                                <div className="text-xs text-zinc-600">{account.account_number}</div>
-                                <div className="text-xs text-zinc-500">a.n. {account.account_holder}</div>
+                            <div key={account.id} className="rounded-lg bg-surface-muted p-3">
+                                <div className="text-sm font-medium text-text">{account.bank_name}</div>
+                                <div className="text-xs text-text-muted">{account.account_number}</div>
+                                <div className="text-xs text-text-muted">a.n. {account.account_holder}</div>
                             </div>
                         ))}
                     </div>
@@ -187,28 +176,28 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
 
             {/* Outstanding Breakdown Card */}
             {hasSales && (
-                <div className="mb-4 rounded-xl border border-zinc-200 bg-white p-4">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-3">Rincian Kewajiban</div>
+                <div className="mb-4 rounded-xl border border-border bg-white p-4">
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-3">Rincian Kewajiban</div>
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-600">Kewajiban Awal</span>
-                            <span className="text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(reconciliation.center_share)}</span>
+                            <span className="text-sm text-text-muted">Kewajiban Awal</span>
+                            <span className="text-sm font-semibold tabular-nums text-text">{formatCurrency(reconciliation.center_share)}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-600">Sudah Disetor</span>
-                            <span className="text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(reconciliation.verified_payments)}</span>
+                            <span className="text-sm text-text-muted">Sudah Disetor</span>
+                            <span className="text-sm font-semibold tabular-nums text-text">{formatCurrency(reconciliation.verified_payments)}</span>
                         </div>
                         {reconciliation.adjustments !== 0 && (
                             <div className="flex items-center justify-between">
-                                <span className="text-sm text-slate-600">Penyesuaian</span>
-                                <span className={`text-sm font-semibold tabular-nums ${reconciliation.adjustments < 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                                <span className="text-sm text-text-muted">Penyesuaian</span>
+                                <span className={`text-sm font-semibold tabular-nums ${reconciliation.adjustments < 0 ? 'text-emerald-600' : 'text-text'}`}>
                                     {reconciliation.adjustments < 0 ? '- ' : ''}{formatCurrency(Math.abs(reconciliation.adjustments))}
                                 </span>
                             </div>
                         )}
-                        <div className="border-t border-zinc-200 pt-2">
+                        <div className="border-t border-border pt-2">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-bold text-slate-900">Belum Disetor</span>
+                                <span className="text-sm font-bold text-text">Belum Disetor</span>
                                 <span className={`text-sm font-bold tabular-nums ${reconciliation.outstanding > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                                     {formatCurrency(reconciliation.outstanding)}
                                 </span>
@@ -233,9 +222,9 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
 
             {/* No Sales Empty State */}
             {!hasSales && (
-                <div className="mb-4">
+                <div>
                     <EmptyState
-                        icon={<ChartColumn className="h-8 w-8 text-slate-400" />}
+                        icon={<ChartColumn className="h-8 w-8 text-text-subtle" />}
                         title="Belum ada penjualan"
                         description="Belum ada penjualan pada periode ini."
                     />
@@ -244,15 +233,15 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
 
             {/* Payment History (above timeline) */}
             {hasPayments && (
-                <SectionCard label="Riwayat Pembayaran" className="mb-4">
+                <SectionCard label="Riwayat Pembayaran">
                     <div className="mt-2 space-y-2">
                         {payments.map((payment) => (
-                            <div key={payment.id} className="rounded-lg border border-zinc-100 bg-zinc-50 p-3">
+                            <div key={payment.id} className="rounded-lg border border-border bg-surface-muted p-3">
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <div className="text-sm font-semibold text-slate-900">{formatCurrency(payment.amount)}</div>
-                                        <div className="text-[11px] text-zinc-400">{formatDate(payment.payment_date)}</div>
-                                        <div className="mt-0.5 text-xs text-zinc-500">{payment.reference_number}</div>
+                                        <div className="text-sm font-semibold text-text">{formatCurrency(payment.amount)}</div>
+                                        <div className="text-[11px] text-text-subtle">{formatDate(payment.payment_date)}</div>
+                                        <div className="mt-0.5 text-xs text-text-muted">{payment.reference_number}</div>
                                     </div>
                                     <StatusBadge variant={statusVariants[payment.status]}>
                                         {statusLabels[payment.status]}
@@ -270,16 +259,16 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
             )}
 
             {!hasPayments && hasSales && (
-                <SectionCard label="Riwayat Pembayaran" className="mb-4">
-                    <div className="py-6 text-center text-sm text-zinc-500">
-                        Belum ada riwayat pembayaran.
-                    </div>
+                <SectionCard label="Riwayat Pembayaran">
+                    <EmptyState
+                        title="Belum ada riwayat pembayaran"
+                    />
                 </SectionCard>
             )}
 
             {/* Aktivitas Settlement */}
             {hasTimeline && (
-                <SectionCard label="Aktivitas Settlement" className="mb-4">
+                <SectionCard label="Aktivitas Settlement">
                     <div className="mt-2 space-y-0">
                         {timeline.map((entry, idx) => (
                             <TimelineItem key={entry.id} entry={entry} isLast={idx === timeline.length - 1} />
@@ -290,7 +279,7 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
 
             {/* Periode Saat Ini */}
             {hasSales && (
-                <SectionCard label="Periode Saat Ini" className="mb-4">
+                <SectionCard label="Periode Saat Ini">
                     <div className="mt-2 space-y-2">
                         <BreakdownRow label="Total Pesanan" value={summary.orders_count} isCurrency={false} />
                         <BreakdownRow label="Unit Terjual" value={summary.units_sold} isCurrency={false} />
@@ -309,17 +298,17 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
                 <SectionCard label="Produk Terlaris" className="mb-24">
                     <div className="mt-2 space-y-2">
                         {summary.top_products.map((product, index) => (
-                            <div key={product.product_name} className="flex items-center justify-between rounded-lg border border-zinc-100 bg-zinc-50 px-3 py-2.5">
+                            <div key={product.product_name} className="flex items-center justify-between rounded-lg border border-border bg-surface-muted px-3 py-2.5">
                                 <div className="flex items-center gap-2.5">
-                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-zinc-200 text-[11px] font-bold text-zinc-600">
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-[11px] font-bold text-text-muted">
                                         {index + 1}
                                     </span>
                                     <div>
-                                        <div className="text-sm font-medium text-slate-900">{product.product_name}</div>
-                                        <div className="text-[11px] text-zinc-500">{product.total_qty} unit</div>
+                                        <div className="text-sm font-medium text-text">{product.product_name}</div>
+                                        <div className="text-[11px] text-text-muted">{product.total_qty} unit</div>
                                     </div>
                                 </div>
-                                <div className="text-sm font-semibold tabular-nums text-slate-900">{formatCurrency(product.total_revenue)}</div>
+                                <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(product.total_revenue)}</div>
                             </div>
                         ))}
                     </div>
@@ -337,6 +326,7 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
                     ]}
                 />
             )}
+            </div>
 
             {/* Payment Bottom Sheet */}
             <PaymentSheet
@@ -356,15 +346,15 @@ function KpiCard({ label, value, accent, highlight, negative }: { label: string;
                 ? 'border-emerald-200 bg-emerald-50'
                 : accent
                     ? 'border-emerald-200 bg-emerald-50'
-                    : 'border-zinc-200 bg-white'
+                    : 'border-border bg-white'
         }`}>
-            <div className="text-[11px] font-medium text-slate-500">{label}</div>
+            <div className="text-[11px] font-medium text-text-muted">{label}</div>
             <div className={`mt-1 text-base font-bold tabular-nums ${
                 highlight && value > 0
-                    ? 'text-emerald-700'
+                    ? 'text-text'
                     : accent
-                        ? 'text-emerald-700'
-                        : 'text-slate-900'
+                        ? 'text-text'
+                        : 'text-text'
             }`}>
                 {negative ? '- ' : ''}{formatCurrency(value)}
             </div>
@@ -376,8 +366,8 @@ function KpiCard({ label, value, accent, highlight, negative }: { label: string;
 function BreakdownRow({ label, value, negative, muted, isCurrency = true }: { label: string; value: number; negative?: boolean; muted?: boolean; isCurrency?: boolean }) {
     return (
         <div className="flex items-center justify-between">
-            <span className={`text-sm ${muted ? 'text-zinc-400' : 'text-slate-600'}`}>{label}</span>
-            <span className={`text-sm font-semibold tabular-nums ${negative ? 'text-emerald-600' : muted ? 'text-zinc-400' : 'text-slate-900'}`}>
+            <span className={`text-sm ${muted ? 'text-text-subtle' : 'text-text-muted'}`}>{label}</span>
+            <span className={`text-sm font-semibold tabular-nums ${negative ? 'text-emerald-600' : muted ? 'text-text-subtle' : 'text-text'}`}>
                 {negative && value > 0 ? '- ' : ''}{isCurrency ? formatCurrency(Math.abs(value)) : value}
             </span>
         </div>
@@ -399,21 +389,21 @@ function TimelineItem({ entry, isLast }: { entry: TimelineEntry; isLast: boolean
         <div className="flex gap-3">
             {/* Timeline line */}
             <div className="flex flex-col items-center">
-                <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${isCredit ? 'bg-emerald-500' : isAdjustment ? 'bg-amber-500' : 'bg-blue-500'}`} />
-                {!isLast && <div className="w-px flex-1 bg-zinc-200" />}
+                <div className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${isCredit ? 'bg-text-subtle' : isAdjustment ? 'bg-amber-500' : 'bg-blue-500'}`} />
+                {!isLast && <div className="w-px flex-1 bg-surface-muted" />}
             </div>
 
             <div className={`flex-1 ${isLast ? 'pb-0' : 'pb-4'}`}>
                 <div className="flex items-start justify-between">
                     <div>
-                        <div className="text-sm font-medium text-slate-900">{typeLabels[entry.type] ?? entry.type}</div>
-                        {entry.notes && <div className="text-[11px] text-zinc-500">{entry.notes}</div>}
+                        <div className="text-sm font-medium text-text">{typeLabels[entry.type] ?? entry.type}</div>
+                        {entry.notes && <div className="text-[11px] text-text-muted">{entry.notes}</div>}
                     </div>
-                    <div className={`text-sm font-bold tabular-nums ${isCredit ? 'text-slate-900' : 'text-emerald-600'}`}>
+                    <div className={`text-sm font-bold tabular-nums ${isCredit ? 'text-text' : 'text-emerald-600'}`}>
                         {isCredit ? '+ ' : '- '}{formatCurrency(Math.abs(entry.amount))}
                     </div>
                 </div>
-                <div className="mt-0.5 text-[11px] text-zinc-400">{formatDate(entry.created_at)}</div>
+                <div className="mt-0.5 text-[11px] text-text-subtle">{formatDate(entry.created_at)}</div>
             </div>
         </div>
     );
@@ -442,61 +432,61 @@ function PaymentSheet({ open, onClose, outstanding }: { open: boolean; onClose: 
         <BottomSheet open={open} onClose={onClose} title="Ajukan Pembayaran">
             <form onSubmit={handleSubmit} className="space-y-4">
                 {outstanding > 0 && (
-                    <div className="rounded-lg bg-zinc-50 p-3 text-center">
-                        <div className="text-[11px] font-medium text-zinc-500">Belum Disetor</div>
-                        <div className="mt-0.5 text-lg font-bold text-slate-900">{formatCurrency(outstanding)}</div>
+                    <div className="rounded-lg bg-surface-muted p-3 text-center">
+                        <div className="text-[11px] font-medium text-text-muted">Belum Disetor</div>
+                        <div className="mt-0.5 text-lg font-bold text-text">{formatCurrency(outstanding)}</div>
                     </div>
                 )}
 
                 <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Nominal (Rp)</label>
+                    <label className="mb-1.5 block text-xs font-semibold text-text">Nominal (Rp)</label>
                     <input
                         type="number"
                         value={data.amount}
                         onChange={(e) => setData('amount', e.target.value)}
                         min="1"
                         required
-                        className="w-full rounded-lg border border-zinc-200 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        className="w-full rounded-lg border border-border px-3 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
                         placeholder="Masukkan nominal"
                     />
                     {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount}</p>}
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Referensi Transfer</label>
+                    <label className="mb-1.5 block text-xs font-semibold text-text">Referensi Transfer</label>
                     <input
                         type="text"
                         value={data.reference_number}
                         onChange={(e) => setData('reference_number', e.target.value)}
                         required
                         maxLength={100}
-                        className="w-full rounded-lg border border-zinc-200 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        className="w-full rounded-lg border border-border px-3 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
                         placeholder="No. referensi transfer"
                     />
                     {errors.reference_number && <p className="mt-1 text-xs text-red-600">{errors.reference_number}</p>}
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Tanggal Transfer</label>
+                    <label className="mb-1.5 block text-xs font-semibold text-text">Tanggal Transfer</label>
                     <input
                         type="date"
                         value={data.payment_date}
                         onChange={(e) => setData('payment_date', e.target.value)}
                         required
                         max={new Date().toISOString().split('T')[0]}
-                        className="w-full rounded-lg border border-zinc-200 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        className="w-full rounded-lg border border-border px-3 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                     {errors.payment_date && <p className="mt-1 text-xs text-red-600">{errors.payment_date}</p>}
                 </div>
 
                 <div>
-                    <label className="mb-1.5 block text-xs font-semibold text-slate-700">Catatan (opsional)</label>
+                    <label className="mb-1.5 block text-xs font-semibold text-text">Catatan (opsional)</label>
                     <textarea
                         value={data.notes}
                         onChange={(e) => setData('notes', e.target.value)}
                         maxLength={500}
                         rows={2}
-                        className="w-full rounded-lg border border-zinc-200 px-3 py-3 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                        className="w-full rounded-lg border border-border px-3 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
                         placeholder="Transfer via BCA..."
                     />
                 </div>
@@ -504,7 +494,7 @@ function PaymentSheet({ open, onClose, outstanding }: { open: boolean; onClose: 
                 <button
                     type="submit"
                     disabled={processing}
-                    className="flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-700 text-sm font-bold text-white active:bg-emerald-800 disabled:bg-zinc-300"
+                    className="flex min-h-12 w-full items-center justify-center rounded-lg bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                 >
                     {processing ? 'Mengirim...' : 'Kirim Bukti Pembayaran'}
                 </button>
