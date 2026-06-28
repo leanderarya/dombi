@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 import DevToolbar from '@/components/dev-toolbar';
 import CartConfirmationProvider from '@/providers/cart-confirmation-provider';
+import FavoritesProvider from '@/providers/favorites-provider';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
 
@@ -16,9 +17,11 @@ createInertiaApp({
 
         root.render(
             <>
-                <CartConfirmationProvider>
-                    <App {...props} />
-                </CartConfirmationProvider>
+                <FavoritesProvider>
+                    <CartConfirmationProvider>
+                        <App {...props} />
+                    </CartConfirmationProvider>
+                </FavoritesProvider>
                 <Toaster position="top-center" richColors closeButton />
                 {(props.initialPage.props.dev as Record<string, unknown>)?.isLocal && (
                     <DevToolbar

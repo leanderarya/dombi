@@ -1,12 +1,13 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle2, Clock, MapPin, MessageCircle, Package, Phone, Truck, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, MessageCircle, Package, Phone, Store, Truck, XCircle } from 'lucide-react';
 import { useState } from 'react';
-import DeliveryStatusBadge from '@/components/delivery-status-badge';
+import StatusBadge from '@/components/ui/status-badge';
 import BottomSheet from '@/components/ui/bottom-sheet';
+import { isDifferentRecipient, getContactPhone } from '@/lib/recipient';
 import SectionCard from '@/components/ui/section-card';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import CourierLayout from '@/layouts/courier-layout';
-import { formatDate } from '@/lib/format';
+import { formatCurrency, formatDate } from '@/lib/format';
 
 interface DeliveryData {
     id: number;
@@ -25,6 +26,8 @@ interface DeliveryData {
         order_code: string;
         customer_name: string;
         customer_phone: string | null;
+        recipient_name: string | null;
+        recipient_phone: string | null;
         customer_address: string;
         customer_address_detail: string | null;
         customer_landmark: string | null;
@@ -69,7 +72,7 @@ const FAILURE_REASONS = [
 ];
 
 const timelineSteps = [
-    { key: 'waiting_pickup', label: 'Assigned', icon: Clock },
+    { key: 'waiting_pickup', label: 'Ditugaskan', icon: Clock },
     { key: 'picked_up', label: 'Diambil', icon: Package },
     { key: 'delivering', label: 'Diantar', icon: Truck },
     { key: 'completed', label: 'Selesai', icon: CheckCircle2 },
@@ -102,15 +105,18 @@ export default function CourierDeliveryShow({ delivery }: Props) {
         }
     };
 
+    const recipientDiffers = isDifferentRecipient(order);
+    const recipientPhone = getContactPhone(order);
+
     const callCustomer = () => {
-        if (order.customer_phone) {
-            window.open(`tel:${order.customer_phone}`, '_self');
+        if (recipientPhone) {
+            window.open(`tel:${recipientPhone}`, '_self');
         }
     };
 
     const whatsappCustomer = () => {
-        if (order.customer_phone) {
-            const phone = order.customer_phone.replace(/^0/, '62');
+        if (recipientPhone) {
+            const phone = recipientPhone.replace(/^0/, '62');
             window.open(`https://wa.me/${phone}`, '_blank');
         }
     };
@@ -197,27 +203,35 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             <Head title={`Delivery ${order.order_code}`} />
 
             {/* Status Badge */}
-            <div className="mb-4 flex justify-center">
-                <DeliveryStatusBadge status={delivery.status} />
+            <div className="mt-4 mb-3 flex justify-center">
+                <StatusBadge status={delivery.status} />
             </div>
 
-            {/* Customer Info Card */}
-            <SectionCard className="mb-4">
+            {/* Customer / Recipient Info Card */}
+            <SectionCard label="Penerima">
                 <div className="flex items-start justify-between">
                     <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-slate-900">{order.customer_name}</div>
-                        <div className="mt-1 text-sm text-slate-600">{order.customer_address}</div>
+                        {/* Show recipient name when different, otherwise customer name */}
+                        {recipientDiffers ? (
+                            <>
+                                <div className="text-sm font-semibold text-text">{order.recipient_name}</div>
+                                <div className="mt-0.5 text-xs text-text-muted">Penerima · Pemesan: {order.customer_name}</div>
+                            </>
+                        ) : (
+                            <div className="text-sm font-semibold text-text">{order.customer_name}</div>
+                        )}
+                        <div className="mt-1 text-sm text-text-muted">{order.customer_address}</div>
                         {order.customer_address_detail && (
-                            <div className="mt-0.5 text-xs text-slate-500">{order.customer_address_detail}</div>
+                            <div className="mt-0.5 text-xs text-text-muted">{order.customer_address_detail}</div>
                         )}
                         {order.customer_landmark && (
-                            <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-amber-700">
-                                <MapPin className="h-3.5 w-3.5" />
+                            <div className="mt-2 flex items-center gap-1.5 text-xs font-medium text-text-muted">
+                                <MapPin className="h-3.5 w-3.5 text-text-subtle" />
                                 {order.customer_landmark}
                             </div>
                         )}
                         {order.notes && (
-                            <div className="mt-2 rounded-md bg-slate-50 px-2 py-1.5 text-xs text-slate-600">
+                            <div className="mt-2 rounded-md bg-surface-muted px-2 py-1.5 text-xs text-text-muted">
                                 {order.notes}
                             </div>
                         )}
@@ -229,14 +243,14 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                     <div className="mt-3 flex gap-2">
                         <button
                             onClick={whatsappCustomer}
-                            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition-colors active:bg-emerald-800"
+                            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors active:opacity-80"
                         >
                             <MessageCircle className="h-4 w-4" />
                             WhatsApp
                         </button>
                         <button
                             onClick={callCustomer}
-                            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors active:bg-zinc-50"
+                            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border bg-white px-4 py-2.5 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
                         >
                             <Phone className="h-4 w-4" />
                             Telepon
@@ -249,120 +263,119 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             {(order.latitude && order.longitude) && (
                 <button
                     onClick={openMaps}
-                    className="mb-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition-colors active:bg-blue-100"
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white transition-colors active:opacity-80"
                 >
                     <MapPin className="h-4 w-4" />
                     Buka di Google Maps
                 </button>
             )}
 
-            {/* Outlet Info */}
-            {order.outlet && (
-                <SectionCard className="mb-4" label="Outlet">
-                    <div className="mt-1 text-sm font-semibold text-slate-900">{order.outlet.name}</div>
-                    <div className="mt-0.5 text-xs text-slate-500">{order.outlet.address}</div>
-                </SectionCard>
-            )}
-
-            {/* Order Items */}
-            <SectionCard className="mb-4" label="Pesanan">
-                <div className="mt-3 space-y-2">
+            {/* Outlet + Pesanan */}
+            <SectionCard label="Pesanan">
+                {order.outlet && (
+                    <div className="mb-3 flex items-center gap-2">
+                        <Store className="h-4 w-4 text-text-subtle" />
+                        <span className="text-sm font-semibold text-text">{order.outlet.name}</span>
+                    </div>
+                )}
+                <div className="space-y-2">
                     {order.items.map((item) => (
                         <div key={item.id} className="flex items-center justify-between text-sm">
                             <div>
-                                <span className="font-medium text-slate-900">{item.product_name}</span>
-                                <span className="ml-2 text-slate-500">x{item.quantity}</span>
+                                <span className="font-medium text-text">{item.product_name}</span>
+                                <span className="ml-2 text-text-muted">x{item.quantity}</span>
                             </div>
-                            <span className="font-medium text-slate-700">
-                                Rp {item.subtotal.toLocaleString('id-ID')}
+                            <span className="font-medium tabular-nums text-text">
+                                {formatCurrency(item.subtotal)}
                             </span>
                         </div>
                     ))}
                 </div>
-                <div className="mt-3 border-t border-zinc-100 pt-3 text-right">
-                    <span className="text-sm font-bold text-slate-900">
-                        Total: Rp {order.total.toLocaleString('id-ID')}
-                    </span>
+                <div className="mt-3 border-t border-border pt-3 flex justify-between">
+                    <span className="text-sm font-medium text-text-muted">Total</span>
+                    <span className="text-sm font-bold tabular-nums text-text">{formatCurrency(order.total)}</span>
                 </div>
             </SectionCard>
 
-            {/* Delivery Timeline */}
-            {delivery.status_histories && delivery.status_histories.length > 0 && (
-                <SectionCard className="mb-4" label="Status Pengiriman">
-                    <div className="mt-4 space-y-0">
-                        {timelineSteps.map((step, index) => {
-                            const history = delivery.status_histories.find((h) => h.to_status === step.key);
-                            const isCompleted = !!history;
-                            const isCurrent = delivery.status === step.key;
-                            const isLast = index === timelineSteps.length - 1;
-                            const Icon = step.icon;
+            {/* Delivery Timeline — collapsed */}
+            {delivery.status_histories && delivery.status_histories.length > 0 && (() => {
+                const currentStep = timelineSteps.find(s => s.key === delivery.status);
+                const currentLabel = delivery.status === 'failed' ? 'Pengiriman Gagal' : (currentStep?.label ?? delivery.status);
 
-                            if (delivery.status === 'failed' && step.key === 'delivering') {
-                                return (
-                                    <div key={step.key} className="relative flex gap-3 pb-5 last:pb-0">
-                                        {!isLast && (
-                                            <div className="absolute left-[11px] top-6 bottom-0 w-px bg-red-200" />
-                                        )}
-                                        <div className="relative shrink-0 pt-0.5">
-                                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 ring-2 ring-red-500">
-                                                <XCircle className="h-3 w-3 text-red-600" />
-                                            </div>
-                                        </div>
-                                        <div className="min-w-0 flex-1 pt-0.5">
-                                            <div className="text-sm font-semibold text-red-700">Pengiriman Gagal</div>
-                                            {delivery.failed_reason && (
-                                                <div className="mt-0.5 text-xs text-red-600">{delivery.failed_reason}</div>
-                                            )}
-                                        </div>
-                                    </div>
-                                );
-                            }
+                return (
+                    <details className="group rounded-xl border border-border bg-white">
+                        <summary className="flex cursor-pointer items-center justify-between p-4 active:opacity-80">
+                            <div>
+                                <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Status Pengiriman</div>
+                                <div className="mt-1 text-sm font-medium text-text">{currentLabel}</div>
+                            </div>
+                            <ChevronDown className="h-5 w-5 shrink-0 text-text-subtle transition-transform group-open:rotate-180" />
+                        </summary>
+                        <div className="border-t border-border px-4 pb-4 pt-4">
+                            <div className="space-y-0">
+                                {timelineSteps.map((step, index) => {
+                                    const history = delivery.status_histories.find((h) => h.to_status === step.key);
+                                    const isCompleted = !!history;
+                                    const isCurrent = delivery.status === step.key;
+                                    const isLast = index === timelineSteps.length - 1;
+                                    const Icon = step.icon;
 
-                            return (
-                                <div key={step.key} className="relative flex gap-3 pb-5 last:pb-0">
-                                    {!isLast && (
-                                        <div className={`absolute left-[11px] top-6 bottom-0 w-px ${isCompleted ? 'bg-emerald-200' : 'bg-slate-200'}`} />
-                                    )}
-                                    <div className="relative shrink-0 pt-0.5">
-                                        {isCompleted ? (
-                                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-600">
-                                                <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                                    if (delivery.status === 'failed' && step.key === 'delivering') {
+                                        return (
+                                            <div key={step.key} className="relative flex gap-3 pb-5 last:pb-0">
+                                                {!isLast && <div className="absolute left-[11px] top-6 bottom-0 w-px bg-red-200" />}
+                                                <div className="relative shrink-0 pt-0.5">
+                                                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-100 ring-2 ring-red-500">
+                                                        <XCircle className="h-3 w-3 text-red-600" />
+                                                    </div>
+                                                </div>
+                                                <div className="min-w-0 flex-1 pt-0.5">
+                                                    <div className="text-sm font-semibold text-red-700">Pengiriman Gagal</div>
+                                                    {delivery.failed_reason && <div className="mt-0.5 text-xs text-red-600">{delivery.failed_reason}</div>}
+                                                </div>
                                             </div>
-                                        ) : isCurrent ? (
-                                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-100 ring-2 ring-emerald-500">
-                                                <Icon className="h-3 w-3 text-emerald-600" />
+                                        );
+                                    }
+
+                                    return (
+                                        <div key={step.key} className="relative flex gap-3 pb-5 last:pb-0">
+                                            {!isLast && <div className={`absolute left-[11px] top-6 bottom-0 w-px ${isCompleted ? 'bg-primary/20' : 'bg-border'}`} />}
+                                            <div className="relative shrink-0 pt-0.5">
+                                                {isCompleted ? (
+                                                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                                                        <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                                                    </div>
+                                                ) : isCurrent ? (
+                                                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-light ring-2 ring-primary">
+                                                        <Icon className="h-3 w-3 text-primary" />
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex h-6 w-6 items-center justify-center">
+                                                        <div className="h-3 w-3 rounded-full bg-border" />
+                                                    </div>
+                                                )}
                                             </div>
-                                        ) : (
-                                            <div className="flex h-6 w-6 items-center justify-center">
-                                                <div className="h-3 w-3 rounded-full bg-slate-200" />
+                                            <div className="min-w-0 flex-1 pt-0.5">
+                                                <div className="flex items-start justify-between gap-2">
+                                                    <div className={`text-sm font-semibold ${isCurrent ? 'text-primary' : isCompleted ? 'text-text' : 'text-text-subtle'}`}>{step.label}</div>
+                                                    {history?.created_at && (
+                                                        <span className={`shrink-0 text-xs tabular-nums ${isCurrent ? 'font-semibold text-primary' : 'text-text-subtle'}`}>{formatTime(history.created_at)}</span>
+                                                    )}
+                                                </div>
+                                                {history?.notes && <div className="mt-0.5 text-xs leading-relaxed text-text-muted">{history.notes}</div>}
                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="min-w-0 flex-1 pt-0.5">
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className={`text-sm font-semibold ${isCurrent ? 'text-emerald-700' : isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
-                                                {step.label}
-                                            </div>
-                                            {history?.created_at && (
-                                                <span className={`shrink-0 text-xs tabular-nums ${isCurrent ? 'font-semibold text-emerald-700' : 'text-slate-400'}`}>
-                                                    {formatTime(history.created_at)}
-                                                </span>
-                                            )}
                                         </div>
-                                        {history?.notes && (
-                                            <div className="mt-0.5 text-xs leading-relaxed text-slate-500">{history.notes}</div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </SectionCard>
-            )}
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </details>
+                );
+            })()}
 
             {/* Proof of Delivery */}
             {delivery.status === 'completed' && (
-                <SectionCard className="mb-4 border-emerald-200 bg-emerald-50" label="Bukti Pengiriman">
+                <SectionCard className="border-primary/20 bg-primary-light" label="Bukti Pengiriman">
                     {delivery.proof_image && (
                         <div className="mb-3">
                             <img
@@ -373,17 +386,17 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                         </div>
                     )}
                     {delivery.delivered_to && (
-                        <div className="mt-2 text-sm text-emerald-800">
-                            <span className="font-medium">Diterima oleh:</span> {delivery.delivered_to}
+                        <div className="mt-2 text-sm text-text">
+                            <span className="font-medium text-primary">Diterima oleh:</span> {delivery.delivered_to}
                         </div>
                     )}
                     {delivery.delivery_note && (
-                        <div className="mt-1 text-sm text-emerald-700">
-                            <span className="font-medium">Catatan:</span> {delivery.delivery_note}
+                        <div className="mt-1 text-sm text-text">
+                            <span className="font-medium text-primary">Catatan:</span> {delivery.delivery_note}
                         </div>
                     )}
                     {delivery.delivered_time && (
-                        <div className="mt-1 text-xs text-emerald-600">
+                        <div className="mt-1 text-xs text-text-muted">
                             {formatDate(delivery.delivered_time)}
                         </div>
                     )}
@@ -392,7 +405,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
 
             {/* Failure Info */}
             {delivery.status === 'failed' && delivery.failed_reason && (
-                <SectionCard className="mb-4 border-red-200 bg-red-50" label="Alasan Gagal">
+                <SectionCard className="border-red-200 bg-red-50" label="Alasan Gagal">
                     <div className="mt-1 text-sm text-red-800">{delivery.failed_reason}</div>
                 </SectionCard>
             )}
@@ -423,7 +436,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                     <div className="flex gap-3">
                         <button
                             onClick={() => setShowRejectSheet(false)}
-                            className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors active:bg-zinc-50"
+                            className="flex-1 rounded-lg border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
                         >
                             Batal
                         </button>
@@ -449,7 +462,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                     <div className="flex gap-3">
                         <button
                             onClick={() => setShowReturnSheet(false)}
-                            className="flex-1 rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors active:bg-zinc-50"
+                            className="flex-1 rounded-lg border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
                         >
                             Batal
                         </button>
@@ -502,35 +515,35 @@ function CompleteSheetContent({ deliveryId, onClose }: { deliveryId: number; onC
         <form onSubmit={handleSubmit}>
             <div className="space-y-4">
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">Diterima oleh</label>
+                    <label className="block text-sm font-medium text-text">Diterima oleh</label>
                     <input
                         type="text"
                         value={form.data.delivered_to}
                         onChange={(e) => form.setData('delivered_to', e.target.value)}
                         placeholder="Nama penerima"
-                        className="mt-1 block min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                        className="mt-1 block min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">Catatan (opsional)</label>
+                    <label className="block text-sm font-medium text-text">Catatan (opsional)</label>
                     <textarea
                         value={form.data.delivery_note}
                         onChange={(e) => form.setData('delivery_note', e.target.value)}
                         placeholder="Catatan pengiriman"
                         rows={2}
-                        className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                        className="mt-1 block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-slate-700">Foto Bukti Pengiriman</label>
+                    <label className="block text-sm font-medium text-text">Foto Bukti Pengiriman</label>
                     <input
                         type="file"
                         accept="image/*"
                         capture="environment"
                         onChange={handleImageChange}
-                        className="mt-1 w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-emerald-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-emerald-800"
+                        className="mt-1 w-full text-sm text-text-muted file:mr-4 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-primary-hover"
                     />
                     {proofPreview && (
                         <img src={proofPreview} alt="Preview" className="mt-2 h-32 w-32 rounded-lg object-cover" />
@@ -545,7 +558,7 @@ function CompleteSheetContent({ deliveryId, onClose }: { deliveryId: number; onC
             <button
                 type="submit"
                 disabled={form.processing}
-                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-700 px-4 text-sm font-bold text-white transition-colors active:bg-emerald-800 disabled:bg-zinc-300"
+                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-bold text-white transition-colors active:bg-primary-hover disabled:opacity-50"
             >
                 {form.processing ? 'Memproses...' : 'Konfirmasi Selesai'}
             </button>
@@ -575,7 +588,7 @@ function FailSheetContent({ deliveryId, onClose }: { deliveryId: number; onClose
                         className={`flex cursor-pointer items-center rounded-lg border p-3 transition-colors ${
                             form.data.failed_reason === reason
                                 ? 'border-red-300 bg-red-50'
-                                : 'border-zinc-200 bg-white active:bg-zinc-50'
+                                : 'border-border bg-white active:bg-surface-muted'
                         }`}
                     >
                         <input
@@ -586,7 +599,7 @@ function FailSheetContent({ deliveryId, onClose }: { deliveryId: number; onClose
                             onChange={() => form.setData('failed_reason', reason)}
                             className="mr-3"
                         />
-                        <span className="text-sm font-medium text-slate-700">{reason}</span>
+                        <span className="text-sm font-medium text-text">{reason}</span>
                     </label>
                 ))}
             </div>
@@ -598,7 +611,7 @@ function FailSheetContent({ deliveryId, onClose }: { deliveryId: number; onClose
                         onChange={(e) => form.setData('failure_note', e.target.value)}
                         placeholder="Jelaskan alasan kegagalan"
                         rows={3}
-                        className="block w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                        className="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                     />
                 </div>
             )}
@@ -613,7 +626,7 @@ function FailSheetContent({ deliveryId, onClose }: { deliveryId: number; onClose
             <button
                 type="submit"
                 disabled={!form.data.failed_reason || form.processing}
-                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition-colors active:bg-red-700 disabled:bg-zinc-300"
+                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition-colors active:bg-red-700 disabled:opacity-50"
             >
                 {form.processing ? 'Memproses...' : 'Konfirmasi Gagal'}
             </button>

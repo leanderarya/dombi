@@ -6,7 +6,6 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Services\CheckoutOtpService;
 use App\Services\DeliveryPricingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -62,8 +61,6 @@ class DeliveryPricingTest extends TestCase
                 'phone_number' => '6281234567890',
             ],
             'checkout.location' => $this->locationDraft(),
-            CheckoutOtpService::SESSION_KEY_OTP_VERIFIED => true,
-            CheckoutOtpService::SESSION_KEY_OTP_PHONE => '6281234567890',
         ])->get('/customer/checkout/payment')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
@@ -93,8 +90,6 @@ class DeliveryPricingTest extends TestCase
                 'latitude' => -6.9000000,
                 'longitude' => 110.7000000,
             ],
-            CheckoutOtpService::SESSION_KEY_OTP_VERIFIED => true,
-            CheckoutOtpService::SESSION_KEY_OTP_PHONE => '6281234567890',
         ])->post('/customer/checkout/payment', [
             'payment_method' => 'cod',
         ])->assertRedirect('/customer/checkout/customer')
@@ -186,8 +181,6 @@ class DeliveryPricingTest extends TestCase
                 'phone_number' => '6281234567890',
             ],
             'checkout.location' => $this->locationDraft(),
-            CheckoutOtpService::SESSION_KEY_OTP_VERIFIED => true,
-            CheckoutOtpService::SESSION_KEY_OTP_PHONE => '6281234567890',
         ])->get('/customer/checkout/payment')
             ->assertOk()
             ->assertInertia(fn ($page) => $page

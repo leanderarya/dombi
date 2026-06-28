@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Delivery;
 use App\Models\ExchangeRequest;
 use App\Models\Order;
+use App\Models\OrderReport;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
 use App\Models\RestockRequest;
@@ -140,6 +141,9 @@ class DashboardController extends Controller
                 ->count(),
             'pendingSettlementPayments' => SettlementPayment::where('outlet_id', $outlet->id)
                 ->where('status', SettlementPayment::STATUS_PENDING)
+                ->count(),
+            'pendingReports' => OrderReport::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
+                ->active()
                 ->count(),
         ]);
     }

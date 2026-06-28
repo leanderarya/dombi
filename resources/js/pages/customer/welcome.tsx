@@ -96,7 +96,7 @@ export default function Welcome() {
                 <div className="mx-auto max-w-sm space-y-3">
                     {/* Primary: Google Login */}
                     <a
-                        href="/auth/google"
+                        href="/oauth/google"
                         className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-200/50 transition-all active:opacity-80 active:bg-emerald-700"
                     >
                         <svg className="h-5 w-5" viewBox="0 0 24 24">

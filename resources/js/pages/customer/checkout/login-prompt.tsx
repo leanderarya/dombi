@@ -1,22 +1,22 @@
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Truck, Shield } from 'lucide-react';
+import { ChevronLeft, Truck, Shield } from 'lucide-react';
 
 export default function LoginPrompt() {
     return (
-        <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
+        <div className="min-h-dvh bg-surface text-text">
             <Head title="Login Diperlukan" />
 
-            <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur">
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
                     <Link
                         href="/customer/checkout"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
                     >
-                        <ArrowLeft className="h-5 w-5" />
+                        <ChevronLeft className="h-5 w-5" />
                     </Link>
                     <div>
-                        <div className="text-sm font-semibold text-slate-900">Login Diperlukan</div>
-                        <div className="text-[11px] text-slate-500">Untuk pengiriman ke alamat Anda</div>
+                        <div className="text-sm font-semibold text-text">Login Diperlukan</div>
+                        <div className="text-[11px] text-text-muted">Untuk pengiriman ke alamat</div>
                     </div>
                 </div>
             </header>
@@ -27,15 +27,14 @@ export default function LoginPrompt() {
                         <Truck className="h-8 w-8 text-emerald-600" />
                     </div>
 
-                    <h1 className="mt-6 text-lg font-bold text-slate-900">Login untuk Delivery</h1>
-                    <p className="mt-2 max-w-sm text-sm text-slate-500">
-                        Untuk menggunakan layanan pengiriman, Anda perlu login terlebih dahulu.
-                        Ini untuk keamanan alamat dan pesanan Anda.
+                    <h1 className="mt-6 text-lg font-bold text-text">Login untuk Pengiriman</h1>
+                    <p className="mt-2 max-w-sm text-sm text-text-muted">
+                        Untuk mengirim ke alamat Anda, silakan login terlebih dahulu.
                     </p>
 
                     <Link
-                        href="/auth/google"
-                        className="mt-8 flex min-h-[48px] w-full max-w-sm items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-6 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 active:bg-slate-100"
+                        href="/oauth/google"
+                        className="mt-8 flex min-h-[48px] w-full max-w-sm items-center justify-center gap-3 rounded-xl border border-border bg-white px-6 text-sm font-semibold text-text active:opacity-80"
                     >
                         <svg className="h-5 w-5" viewBox="0 0 24 24">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -46,20 +45,20 @@ export default function LoginPrompt() {
                         Login dengan Google
                     </Link>
 
-                    <div className="mt-8 w-full max-w-sm rounded-xl border border-slate-200 bg-white p-4 text-left">
+                    <div className="mt-8 w-full max-w-sm rounded-xl border border-border bg-white p-4 text-left">
                         <div className="flex items-start gap-3">
-                            <Shield className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" />
+                            <Shield className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
                             <div>
-                                <div className="text-sm font-semibold text-slate-900">Keamanan Terjamin</div>
-                                <div className="mt-1 text-xs leading-relaxed text-slate-500">
-                                    Data alamat dan nomor HP Anda dilindungi. Kami tidak membagikan informasi pribadi kepada pihak lain.
+                                <div className="text-sm font-semibold text-text">Keamanan Terjamin</div>
+                                <div className="mt-1 text-xs leading-relaxed text-text-muted">
+                                    Data alamat dan nomor HP Anda dilindungi.
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="mt-6 text-sm text-slate-500">
-                        Ingin <Link href="/customer/checkout" className="font-semibold text-emerald-700">pickup</Link>? Tidak perlu login.
+                    <div className="mt-6 text-sm text-text-muted">
+                        Ingin <Link href="/customer/checkout" className="font-semibold text-emerald-700">Ambil di Outlet</Link>? Tidak perlu login.
                     </div>
                 </div>
             </main>

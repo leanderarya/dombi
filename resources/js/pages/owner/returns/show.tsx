@@ -5,7 +5,6 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { STATUS_BORDER } from '@/lib/status-border';
 import { getReturnStatus } from '@/lib/status-labels';
 
 const STATUS_ICONS: Record<string, typeof CheckCircle2> = {
@@ -24,7 +23,6 @@ export default function OwnerReturnsShow({ return: ret }: any) {
     const rejectForm = useForm({ reason: '' });
 
     const status = getReturnStatus(ret.status);
-    const borderClass = STATUS_BORDER[ret.status] ?? 'border-l-gray-300';
     const StatusIcon = STATUS_ICONS[ret.status] ?? Clock;
 
     const handleApprove = () => {
@@ -126,7 +124,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 <div className="hidden lg:block">
                     <div className="sticky top-24 space-y-4">
                         {/* Status Card */}
-                        <div className={`rounded-xl border border-l-4 border-border bg-white p-5 shadow-sm ${borderClass}`}>
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
                             <div className="flex items-center gap-2">
                                 <StatusIcon className="h-5 w-5 text-text-muted" />
                                 <span className="text-xs font-medium uppercase tracking-wider text-text-muted">Status</span>
@@ -189,7 +187,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                 {/* Mobile Actions */}
                 <div className="space-y-3 lg:hidden">
-                    <div className={`rounded-xl border border-l-4 border-border bg-white p-4 ${borderClass}`}>
+                    <div className="rounded-xl border border-border bg-white p-4">
                         <StatusBadge variant={status.variant}>{status.label}</StatusBadge>
                     </div>
 

@@ -81,11 +81,11 @@ class TrackController extends Controller
                         ? ['name' => self::maskName($order->delivery->courier->name)]
                         : null,
                 ] : null,
-                'customer_name' => $order->customer_name,
-                'customer_phone' => $order->customer_phone,
-                'customer_address' => $order->customer_address,
-                'customer_address_detail' => $order->customer_address_detail,
-                'customer_landmark' => $order->customer_landmark,
+                'customer_name' => self::maskName($order->customer_name),
+                'customer_phone' => self::maskPhone($order->customer_phone),
+                'customer_address' => self::maskAddress($order->customer_address, $order->customer_address_detail, $order->customer_landmark),
+                'customer_address_detail' => null,
+                'customer_landmark' => null,
                 'rejection_reason' => $order->rejection_reason,
                 'rejection_note' => $order->rejection_note,
                 'cancellation_reason' => $order->cancellation_reason,
@@ -142,6 +142,30 @@ class TrackController extends Controller
         return $parts[0].' '.strtoupper($parts[1][0]).'.';
     }
 
+    /**
+     * Mask phone number to show only first 2 and last 4 digits.
+     * "081234567890" → "08•••••67890"
+     */
+    private static function maskPhone(?string $phone): ?string
+    {
+        if (! $phone) {
+            return null;
+        }
+
+        $clean = preg_replace('/[^0-9]/', '', $phone);
+        $len = strlen($clean);
+
+        if ($len <= 6) {
+            return $phone;
+        }
+
+        $visibleStart = substr($clean, 0, 2);
+        $visibleEnd = substr($clean, -4);
+        $maskedMiddle = str_repeat('•', $len - 6);
+
+        return $visibleStart.$maskedMiddle.$visibleEnd;
+    }
+
     public function cancel(string $token, Request $request, OrderStatusService $orderStatusService): JsonResponse|RedirectResponse
     {
         $order = Order::query()
@@ -149,7 +173,7 @@ class TrackController extends Controller
             ->first();
 
         if (! $order) {
-            return response()->json(['success' => false, 'error' => 'Pesanan tidak ditemukan.'], 404);
+            return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
         }
 
         $allowedStatuses = [
@@ -159,7 +183,25 @@ class TrackController extends Controller
         ];
 
         if (! in_array($order->status, $allowedStatuses, true)) {
-            return response()->json(['success' => false, 'error' => 'Pesanan tidak dapat dibatalkan pada status ini.'], 422);
+            return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
+        }
+
+        // Step-up verification for pickup orders: require last4 HP
+        if ($order->fulfillment_type === Order::FULFILLMENT_PICKUP) {
+            $last4Validator = Validator::make($request->all(), [
+                'last4_hp' => 'required|string|size:4|regex:/^\d{4}$/',
+            ]);
+
+            if ($last4Validator->fails()) {
+                return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
+            }
+
+            $storedDigits = preg_replace('/[^0-9]/', '', $order->customer_phone);
+            $expectedLast4 = substr($storedDigits, -4);
+
+            if ($request->input('last4_hp') !== $expectedLast4) {
+                return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
+            }
         }
 
         $validator = Validator::make($request->all(), [
@@ -174,7 +216,7 @@ class TrackController extends Controller
         try {
             $orderStatusService->cancelByCustomer($order, $request->input('reason'), $request->input('note'));
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => $e->getMessage()], 422);
+            return response()->json(['success' => false, 'error' => 'Terjadi kesalahan saat membatalkan pesanan.'], 422);
         }
 
         return response()->json(['success' => true, 'message' => 'Pesanan berhasil dibatalkan.']);

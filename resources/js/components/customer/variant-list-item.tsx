@@ -54,7 +54,7 @@ return;
         }
 
         setAdding(true);
-        cart.addItem(variant.id, 1);
+        cart.addItem(variant.id, 1, displayPrice);
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');

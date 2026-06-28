@@ -86,6 +86,10 @@ class OrderStatusService
                 $updateData['cancelled_by'] = $actor?->id;
             }
 
+            if ($status === Order::STATUS_COMPLETED) {
+                $updateData['completed_at'] = now();
+            }
+
             $order->update($updateData);
 
             $order->statusHistories()->create([

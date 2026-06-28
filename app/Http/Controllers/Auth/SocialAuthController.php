@@ -89,23 +89,26 @@ class SocialAuthController extends Controller
             ]);
         }
 
-        // 4. Login
-        auth()->login($user);
+        // 4. Login (remember for customer — long-lived session)
+        auth()->login($user, remember: true);
 
-        // 5. Clear guest mode
+        // 5. Guarantee Customer record exists (idempotent; phone nullable)
+        Customer::firstOrCreate(
+            ['user_id' => $user->id],
+            ['name' => $user->name, 'email' => $user->email, 'is_registered' => true],
+        );
+
+        // 6. Set session timestamps for session policy
+        $request->session()->put('login_at', now()->timestamp);
+        $request->session()->put('last_activity_at', now()->timestamp);
+
+        // 6. Clear guest mode
         $request->session()->forget('guest_mode');
 
-        // 6. Check if user has a linked Customer with phone
-        if ($user->customer && $user->customer->phone) {
-            // Complete — redirect to intended destination or home
-            $redirectUrl = $request->session()->pull('redirect_after_login', route('customer.home'));
+        // 7. Redirect to intended destination or home (phone is optional)
+        $redirectUrl = $request->session()->pull('redirect_after_login', route('customer.home'));
 
-            return redirect($redirectUrl)->with('success', 'Berhasil login.');
-        }
-
-        // 7. No Customer or no phone — redirect to phone verification
-        return redirect()->route('customer.verify-phone')
-            ->with('info', 'Verifikasi nomor HP diperlukan untuk melanjutkan.');
+        return redirect($redirectUrl)->with('success', 'Berhasil login.');
     }
 
     /**

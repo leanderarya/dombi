@@ -1,11 +1,13 @@
-import { Head, useForm } from '@inertiajs/react';
-import { AlertCircle, MapPin, Store, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { ChevronDown, ChevronUp, MapPin, Store } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import NoticeBanner from '@/components/customer/checkout/notice-banner';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';
+import { isDifferentRecipient } from '@/lib/recipient';
 import { useCart } from '@/lib/use-cart';
 
 export default function CheckoutPayment({ draft, summary }: any) {
@@ -26,6 +28,20 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const total = (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
     const deliveryBlocked = isDelivery && !!summary.delivery_quote && summary.delivery_quote.is_serviceable === false;
     const ctaLabel = buildCtaLabel(form.data.payment_method, total);
+
+    // Guard: redirect to cart if no items
+    useEffect(() => {
+        if (!draft?.items || draft.items.length === 0) {
+            router.visit('/customer/checkout');
+        }
+    }, [draft?.items]);
+
+    const hasDifferentRecipient = isDifferentRecipient({
+        customer_name: draft?.customer?.customer_name,
+        customer_phone: draft?.customer?.phone_number,
+        recipient_name: draft?.customer?.recipient_name,
+        recipient_phone: draft?.customer?.recipient_phone,
+    });
 
     const submit = () => {
         setSubmitError(null);
@@ -74,54 +90,44 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
             {/* Error Banner */}
             {(submitError || Object.keys(form.errors).length > 0) && (
-                <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
-                    <XCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
-                    <div className="flex-1">
-                        <p className="text-sm font-semibold text-red-800">Gagal membuat pesanan</p>
-                        <p className="mt-1 text-xs text-red-600">
-                            {submitError || Object.values(form.errors)[0]}
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => setSubmitError(null)}
-                        className="flex h-11 w-11 shrink-0 items-center justify-center text-red-400 hover:text-red-600"
-                    >
-                        <XCircle className="h-4 w-4" />
-                    </button>
+                <div className="mt-4">
+                    <NoticeBanner
+                        variant="error"
+                        title="Pesanan gagal dibuat"
+                        message={submitError || (Object.values(form.errors)[0] as string) || 'Periksa data dan coba lagi.'}
+                        onDismiss={() => setSubmitError(null)}
+                    />
                 </div>
             )}
 
-            {/* Pesanan */}
-            <section className="mt-5 rounded-xl border border-border bg-white p-4">
+            {/* Pesanan — collapsible */}
+            <section className="mt-4 rounded-xl border border-border bg-white p-4">
                 <button
                     type="button"
                     onClick={() => setItemsExpanded((value) => !value)}
-                    className="flex w-full items-center justify-between text-left"
+                    className="flex min-h-11 w-full items-center justify-between text-left active:opacity-80"
                 >
                     <div>
                         <div className="text-[13px] text-text-subtle">Pesanan</div>
-                        <div className="mt-1 text-sm font-semibold text-text">
+                        <div className="mt-0.5 text-sm font-semibold text-text">
                             {draft?.items?.length ?? 0} Produk · {formatCurrency(summary.subtotal)}
                         </div>
                     </div>
-                    <span className="text-lg text-text-muted">{itemsExpanded ? '−' : '+'}</span>
+                    {itemsExpanded ? <ChevronUp className="h-4 w-4 text-text-muted" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
                 </button>
 
                 {itemsExpanded && (
-                    <div className="mt-4 space-y-3 border-t border-border pt-4">
+                    <div className="mt-3 space-y-2 border-t border-border pt-3">
                         {(draft?.items ?? []).map((item: any) => (
                             <div key={item.product_variant_id} className="flex items-start justify-between gap-3 text-sm">
                                 <div className="min-w-0">
-                                    <p className="font-semibold text-text">{item.name}</p>
+                                    <span className="font-medium text-text">{item.name}</span>
                                     {item.variant_name && (
-                                        <p className="text-xs text-text-subtle">{item.variant_name}</p>
+                                        <span className="ml-1 text-xs text-text-subtle">{item.variant_name}</span>
                                     )}
-                                    <p className="mt-1 text-xs text-text-muted">
-                                        {item.quantity} x {formatCurrency(item.price)}
-                                    </p>
+                                    <span className="ml-1 text-xs text-text-muted">x{item.quantity}</span>
                                 </div>
-                                <div className="shrink-0 font-semibold tabular-nums text-text">{formatCurrency(item.subtotal)}</div>
+                                <span className="shrink-0 font-medium tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
                             </div>
                         ))}
                     </div>
@@ -133,67 +139,48 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 <div className="text-[13px] text-text-subtle">Pengiriman</div>
 
                 {isDelivery && summary.delivery_quote?.outlet && (
-                    <div className="mt-3 space-y-2">
-                        <div className="text-sm font-semibold text-text">{summary.delivery_quote.outlet.name}</div>
-                        <div className="flex items-center gap-3 text-xs text-text-muted">
-                            <span>Jarak: <span className="font-semibold text-text">{formatDistance(Number(summary.delivery_quote.distance_km ?? 0))}</span></span>
-                            <span>·</span>
-                            <span>Kurir Dombi</span>
+                    <div className="mt-2 flex items-center justify-between text-sm">
+                        <div>
+                            <div className="font-semibold text-text">{summary.delivery_quote.outlet.name}</div>
+                            <div className="text-xs text-text-muted">{formatDistance(Number(summary.delivery_quote.distance_km ?? 0))} · Kurir Dombi</div>
                         </div>
-                        <div className="text-xs">
-                            <span className="text-text-muted">Ongkir: </span>
-                            <span className="font-bold text-text">{formatCurrency(summary.delivery_fee)}</span>
-                        </div>
-                        {draft?.location && (
-                            <div className="mt-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-text-muted">
-                                <div className="flex items-center gap-1.5 font-semibold text-text">
-                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-text-subtle" />
-                                    <span>{[draft.location.village, draft.location.district, draft.location.city].filter(Boolean).join(', ') || draft.location.address_line}</span>
-                                </div>
-                                {draft.location.address_detail && (
-                                    <div className="mt-1"><span className="font-medium text-text-muted">Detail: </span>{draft.location.address_detail}</div>
-                                )}
-                                {draft.location.landmark && (
-                                    <div className="mt-1"><span className="font-medium text-text-muted">Patokan: </span>{draft.location.landmark}</div>
-                                )}
-                            </div>
-                        )}
+                        <span className="font-bold tabular-nums text-text">{formatCurrency(summary.delivery_fee)}</span>
+                    </div>
+                )}
+
+                {isDelivery && draft?.location && (
+                    <div className="mt-2 text-xs text-text-muted">
+                        <MapPin className="mr-1 inline h-3 w-3 align-text-bottom" />
+                        {[draft.location.village, draft.location.district, draft.location.city].filter(Boolean).join(', ') || draft.location.address_line}
                     </div>
                 )}
 
                 {fulfillmentType === 'pickup' && draft?.pickup_outlet && (
-                    <div className="mt-3 space-y-2">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-text">
-                            <Store className="h-4 w-4 shrink-0 text-text-subtle" />
-                            <span>{draft.pickup_outlet.name}</span>
-                        </div>
-                        <div className="text-xs text-text-muted">{draft.pickup_outlet.address}</div>
-                        <div className="text-xs text-text-muted">
-                            {[draft.pickup_outlet.kelurahan, draft.pickup_outlet.kecamatan].filter(Boolean).join(' · ')}
+                    <div className="mt-2 flex items-center gap-2 text-sm">
+                        <Store className="h-4 w-4 shrink-0 text-text-subtle" />
+                        <div>
+                            <div className="font-semibold text-text">{draft.pickup_outlet.name}</div>
+                            <div className="text-xs text-text-muted">{draft.pickup_outlet.address}</div>
                         </div>
                     </div>
-                )}
-
-                {!isDelivery && fulfillmentType !== 'pickup' && (
-                    <div className="mt-3 text-sm text-text-muted">-</div>
                 )}
             </section>
 
             {/* Pembayaran */}
-            <section className="mt-4 rounded-2xl bg-white p-4">
-                <div className="flex items-center justify-between mb-3">
+            <section className="mt-4 rounded-xl border border-border bg-white p-4">
+                <div className="flex items-center justify-between mb-2">
                     <span className="text-[13px] text-text-subtle">Pembayaran</span>
                     <button
                         type="button"
                         onClick={() => setPaymentExpanded(!paymentExpanded)}
-                        className="text-xs font-semibold text-emerald-600 active:opacity-80"
+                        className="min-h-11 px-2 text-xs font-semibold text-primary active:opacity-80"
                     >
                         {paymentExpanded ? 'Tutup' : 'Ganti'}
                     </button>
                 </div>
 
-                {/* Selected payment — always visible */}
-                <div className="flex items-center justify-between rounded-xl bg-emerald-50 px-4 py-3">
+                {/* Selected payment */}
+                <div className="flex items-center justify-between rounded-xl bg-surface-muted px-4 py-3">
                     <div>
                         <div className="text-sm font-semibold text-text">{selectedOption?.label ?? 'COD'}</div>
                         <div className="mt-0.5 text-xs text-text-muted">
@@ -203,19 +190,16 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             {form.data.payment_method === 'card' && 'Kartu kredit/debit'}
                         </div>
                     </div>
-                    <div className="text-right">
-                        <div className="text-sm font-bold tabular-nums text-text">
-                            {selectedOption?.fee_rate ? `${(selectedOption.fee_rate * 100).toFixed(1)}%` : '0%'}
+                    {paymentFee > 0 && (
+                        <div className="text-sm font-bold tabular-nums text-text-muted">
+                            + {formatCurrency(paymentFee)}
                         </div>
-                        {paymentFee > 0 && (
-                            <div className="mt-0.5 text-[11px] font-semibold text-emerald-700">+ {formatCurrency(paymentFee)}</div>
-                        )}
-                    </div>
+                    )}
                 </div>
 
                 {/* Other options — expandable */}
                 {paymentExpanded && (
-                    <div className="mt-3 space-y-2">
+                    <div className="mt-2 space-y-2">
                         {paymentOptions
                             .filter((option: any) => option.value !== form.data.payment_method)
                             .map((option: any) => (
@@ -236,9 +220,11 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                             {option.value === 'transfer' && 'Transfer bank'}
                                         </div>
                                     </div>
-                                    <div className="text-xs font-bold tabular-nums text-text-muted">
-                                        {option.fee_rate > 0 ? `+${(option.fee_rate * 100).toFixed(1)}%` : 'Gratis'}
-                                    </div>
+                                    {option.fee_rate > 0 && (
+                                        <div className="text-xs font-bold tabular-nums text-text-muted">
+                                            + {formatCurrency(Math.round((summary.subtotal ?? 0) * option.fee_rate * 100) / 100)}
+                                        </div>
+                                    )}
                                 </button>
                             ))}
                     </div>
@@ -246,35 +232,45 @@ export default function CheckoutPayment({ draft, summary }: any) {
             </section>
 
             {/* Total Card */}
-            <section className="mt-4 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 p-5 text-white">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-100">Total Pembayaran</div>
-                <div className="mt-3 space-y-2">
+            <section className="mt-4 rounded-xl bg-primary p-4 text-white">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-white/70">Ringkasan</div>
+                <div className="mt-2.5 space-y-1.5">
                     <SummaryRow label="Subtotal" value={formatCurrency(summary.subtotal)} />
                     <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />
                     {paymentFee > 0 && <SummaryRow label="Biaya Pembayaran" value={formatCurrency(paymentFee)} />}
-                    <div className="border-t border-emerald-400/30 pt-2">
+                    <div className="border-t border-white/20 pt-2">
                         <div className="flex items-center justify-between">
                             <span className="text-sm font-semibold text-white">Total</span>
-                            <span className="text-2xl font-bold tabular-nums text-white">{formatCurrency(total)}</span>
+                            <span className="text-xl font-bold tabular-nums text-white">{formatCurrency(total)}</span>
                         </div>
                     </div>
                 </div>
                 {deliveryBlocked && (
-                    <div className="mt-3 flex items-start gap-2 rounded-lg bg-white/20 px-3 py-2 text-xs leading-relaxed text-white">
-                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-white" />
-                        <span>Lokasi Anda berada di luar area layanan Kurir Dombi. Silakan kembali dan ubah lokasi.</span>
+                    <div className="mt-3">
+                        <NoticeBanner
+                            variant="warning"
+                            title="Lokasi di luar jangkauan"
+                            message="Kembali dan ubah lokasi pengiriman Anda."
+                        />
                     </div>
                 )}
             </section>
 
-            {/* Customer Info (compact) */}
-            <section className="mt-4 rounded-xl border border-border bg-white p-4">
-                <div className="text-[13px] text-text-subtle">Pemesan</div>
-                <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="font-semibold text-text">{draft?.customer?.customer_name ?? '-'}</span>
-                    <span className="text-text-muted">{draft?.customer?.phone_number ?? '-'}</span>
-                </div>
-            </section>
+            {/* Recipient — only when different */}
+            {hasDifferentRecipient && (
+                <section className="mt-4 rounded-xl border border-border bg-white p-4">
+                    <div className="text-[13px] text-text-subtle">Pemesan</div>
+                    <div className="mt-1 text-sm font-semibold text-text">
+                        {draft?.customer?.customer_name} · {draft?.customer?.phone_number}
+                    </div>
+                    <div className="mt-2 border-t border-border pt-2">
+                        <div className="text-[13px] text-text-subtle">Penerima</div>
+                        <div className="mt-1 text-sm font-semibold text-text">
+                            {draft.customer.recipient_name} · {draft.customer.recipient_phone ?? '-'}
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* Spacer for sticky footer */}
             <div className="h-24" />
@@ -285,7 +281,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
 function SummaryRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-center justify-between text-sm">
-            <span className="text-emerald-100">{label}</span>
+            <span className="text-white/70">{label}</span>
             <span className="font-semibold tabular-nums text-white">{value}</span>
         </div>
     );

@@ -3,6 +3,7 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react';
 export interface CartItem {
     product_variant_id: number;
     quantity: number;
+    price: number;
 }
 
 type Listener = () => void;
@@ -25,13 +26,16 @@ class CartStore {
         return this.items.find((i) => i.product_variant_id === variantId)?.quantity ?? 0;
     }
 
-    addItem(variantId: number, qty: number = 1): void {
+    addItem(variantId: number, qty: number = 1, price: number = 0): void {
         const existing = this.items.find((i) => i.product_variant_id === variantId);
 
         if (existing) {
             existing.quantity += qty;
+            if (price > 0) {
+                existing.price = price;
+            }
         } else {
-            this.items.push({ product_variant_id: variantId, quantity: qty });
+            this.items.push({ product_variant_id: variantId, quantity: qty, price });
         }
 
         this.commit();
@@ -49,7 +53,7 @@ class CartStore {
         if (existing) {
             existing.quantity = quantity;
         } else {
-            this.items.push({ product_variant_id: variantId, quantity });
+            this.items.push({ product_variant_id: variantId, quantity, price: 0 });
         }
 
         this.commit();
@@ -101,7 +105,11 @@ class CartStore {
                 if (Array.isArray(parsed)) {
                     this.items = parsed.filter(
                         (i: any) => typeof i.product_variant_id === 'number' && typeof i.quantity === 'number' && i.quantity > 0
-                    );
+                    ).map((i: any) => ({
+                        product_variant_id: i.product_variant_id,
+                        quantity: i.quantity,
+                        price: typeof i.price === 'number' ? i.price : 0,
+                    }));
                 }
             }
         } catch {
@@ -120,14 +128,16 @@ export function useCart() {
     const items = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
     const totalItems = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
+    const totalPrice = useMemo(() => items.reduce((sum, i) => sum + (i.price * i.quantity), 0), [items]);
+    const allHavePrice = useMemo(() => items.length > 0 && items.every((i) => i.price > 0), [items]);
 
-    const addItem = useCallback((variantId: number, qty?: number) => store.addItem(variantId, qty), []);
+    const addItem = useCallback((variantId: number, qty?: number, price?: number) => store.addItem(variantId, qty, price), []);
     const setQuantity = useCallback((variantId: number, qty: number) => store.setQuantity(variantId, qty), []);
     const removeItem = useCallback((variantId: number) => store.removeItem(variantId), []);
     const clear = useCallback(() => store.clear(), []);
     const getQuantity = useCallback((variantId: number) => store.getQuantity(variantId), []);
 
-    return { items, totalItems, getQuantity, addItem, setQuantity, removeItem, clear };
+    return { items, totalItems, totalPrice, allHavePrice, getQuantity, addItem, setQuantity, removeItem, clear };
 }
 
 export function useProductQuantity(variantId: number): number {

@@ -6,14 +6,12 @@ import OrderStatusBadge from '@/components/order-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { formatDate } from '@/lib/format';
-import { STATUS_BORDER } from '@/lib/status-border';
 
 export default function OwnerDeliveryShow({ delivery }: any) {
     const order = delivery.order;
     const canResolve = ['failed', 'retry_delivery', 'returned_to_outlet'].includes(delivery.status);
     const isActive = ['delivering', 'picked_up'].includes(delivery.status);
     const [resolveOpen, setResolveOpen] = useState(false);
-    const borderColor = STATUS_BORDER[delivery.status] ?? 'border-l-slate-300';
 
     return (
         <OwnerPageShell
@@ -24,7 +22,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
             <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                 {/* Left: Main Content */}
                 <div className="space-y-5">
-                    <section className={`rounded-xl border border-border border-l-4 bg-white p-5 ${borderColor}`}>
+                    <section className="rounded-xl border border-border bg-white p-5">
                         <h2 className="text-sm font-bold uppercase tracking-wider text-text-subtle">Item Pesanan</h2>
                         <div className="mt-3 space-y-3">
                             {order.items.map((item: any) => (
@@ -41,7 +39,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                         </div>
                     </section>
 
-                    <section className={`rounded-xl border border-border border-l-4 bg-white p-5 ${borderColor}`}>
+                    <section className="rounded-xl border border-border bg-white p-5">
                         <h2 className="text-sm font-bold uppercase tracking-wider text-text-subtle">Linimasa</h2>
                         <div className="mt-3 space-y-3">
                             {order.status_histories.map((history: any) => (

@@ -7,7 +7,6 @@ import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
-import { STATUS_BORDER } from '@/lib/status-border';
 import { getOrderStatus } from '@/lib/status-labels';
 import { isDifferentRecipient } from '@/lib/recipient';
 
@@ -18,14 +17,13 @@ export default function OwnerOrderShow({ order, reservedStocks, couriers }: any)
 
     const lastHistory = order.status_histories?.[order.status_histories.length - 1];
     const olderHistories = order.status_histories?.slice(0, -1) ?? [];
-    const borderColor = STATUS_BORDER[order.status] ?? 'border-l-gray-300';
     const s = getOrderStatus(order.status);
 
     return (
         <OwnerPageShell title={order.order_code} subtitle="Detail pesanan" backHref="/owner/orders" headerRight={<OrderStatusChip status={order.status} />}>
             <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
                 <div className="space-y-5">
-                    <div className={`rounded-xl border border-border border-l-4 ${borderColor} bg-white p-6`}>
+                    <div className="rounded-xl border border-border bg-white p-6">
                         <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Item</div>
                         {order.items.map((item: any) => (
                             <div key={item.id} className="mt-4 flex justify-between border-t border-border pt-4 text-base">

@@ -40,6 +40,16 @@ class Customer extends Model
         return $this->hasMany(CustomerAddress::class);
     }
 
+    public function recipients(): HasMany
+    {
+        return $this->hasMany(Recipient::class);
+    }
+
+    public function favorites(): HasMany
+    {
+        return $this->hasMany(Favorite::class);
+    }
+
     public function isGuest(): bool
     {
         return ! $this->is_registered;

@@ -16,10 +16,10 @@ export default function MobileRoleLayout({ children, bottomNav, footerSlot, hide
     const hasFloatingBar = !!footerSlot;
 
     return (
-        <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
+        <div className="min-h-dvh bg-surface text-text">
             <OfflineBanner />
 
-            <main className={`mx-auto max-w-lg px-4 pt-4 ${hasFloatingBar ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]' : 'pb-[calc(5rem+env(safe-area-inset-bottom))]'}`}>
+            <main className={`mx-auto max-w-lg px-4 ${hasFloatingBar ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]' : 'pb-[calc(5rem+env(safe-area-inset-bottom))]'}`}>
                 {children}
             </main>
 

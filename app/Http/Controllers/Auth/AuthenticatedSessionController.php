@@ -42,15 +42,24 @@ class AuthenticatedSessionController extends Controller
         }
 
         $request->session()->regenerate();
+        $request->session()->put('login_at', now()->timestamp);
+        $request->session()->put('last_activity_at', now()->timestamp);
 
         return redirect()->intended(route('dashboard'));
     }
 
     public function destroy(Request $request): RedirectResponse
     {
+        $role = $request->user()?->role;
+
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        // Customer → home; operational → login
+        if ($role === 'customer') {
+            return redirect('/');
+        }
 
         return redirect()->route('login');
     }

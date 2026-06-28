@@ -1,4 +1,4 @@
-import { CheckCircle2, MapPin, Search } from 'lucide-react';
+import { CheckCircle2, ChevronDown, ChevronUp, MapPin, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import LeafletPicker from '@/components/customer/leaflet-picker';
 import type { CustomerLocation } from '@/lib/customer-location';
@@ -54,6 +54,7 @@ export default function LocationSearchPanel({
     const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [pinUpdated, setPinUpdated] = useState(false);
+    const [showDetail, setShowDetail] = useState(false);
     const reverseTimeoutRef = useRef<number | null>(null);
     const lastReverseKey = useRef<string | null>(null);
     const suppressSearchRef = useRef(false);
@@ -216,6 +217,13 @@ export default function LocationSearchPanel({
 
     const hasPin = value.latitude !== null && value.longitude !== null;
 
+    // Auto-expand if detail fields already have values
+    useEffect(() => {
+        if ((value.address_detail ?? '').trim() || (value.landmark ?? '').trim()) {
+            setShowDetail(true);
+        }
+    }, []);
+
     return (
         <div className="space-y-4">
             {showSavedLocation && savedLocation && (
@@ -333,51 +341,57 @@ export default function LocationSearchPanel({
                 </div>
             </div>
 
-            {/* Section 3: Detail Alamat (required) */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Detail Alamat</div>
-                <div className="mt-3">
-                    <label className="block">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Detail <span className="text-red-500">*</span></span>
-                        <input
-                            value={value.address_detail ?? ''}
-                            onChange={(event) => onChange({ address_detail: event.target.value })}
-                            className={`mt-1 min-h-11 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200 ${
-                                hasPin && !(value.address_detail ?? '').trim() ? 'border-amber-300' : 'border-slate-200'
-                            }`}
-                            placeholder="Blok B3 No 27"
-                        />
-                    </label>
-                    {hasPin && !(value.address_detail ?? '').trim() ? (
-                        <p className="mt-1.5 text-xs font-medium text-amber-600">Wajib diisi untuk pengiriman.</p>
-                    ) : (
-                        <p className="mt-1.5 text-xs text-slate-500">Nomor rumah, blok, lantai, atau unit.</p>
-                    )}
-                </div>
-            </div>
+            {/* Toggle for detail fields */}
+            <button
+                type="button"
+                onClick={() => setShowDetail(!showDetail)}
+                className="flex min-h-11 w-full items-center gap-2 rounded-xl border border-border bg-white px-4 text-xs font-semibold text-text-muted active:opacity-80"
+            >
+                {showDetail ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {showDetail ? 'Sembunyikan Detail' : 'Tambah Detail Alamat'}
+                {!showDetail && hasPin && (!(value.address_detail ?? '').trim() || !(value.landmark ?? '').trim()) && (
+                    <span className="ml-auto text-[11px] font-medium text-amber-600">Opsional</span>
+                )}
+            </button>
 
-            {/* Section 4: Landmark (required) */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Patokan / Ciri Rumah</div>
-                <div className="mt-3">
-                    <label className="block">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Patokan <span className="text-red-500">*</span></span>
-                        <input
-                            value={value.landmark ?? ''}
-                            onChange={(event) => onChange({ landmark: event.target.value })}
-                            className={`mt-1 min-h-11 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200 ${
-                                hasPin && !(value.landmark ?? '').trim() ? 'border-amber-300' : 'border-slate-200'
-                            }`}
-                            placeholder="Rumah cat hijau dekat mushola"
-                        />
-                    </label>
-                    {hasPin && !(value.landmark ?? '').trim() ? (
-                        <p className="mt-1.5 text-xs font-medium text-amber-600">Wajib diisi agar kurir mudah menemukan lokasi.</p>
-                    ) : (
-                        <p className="mt-1.5 text-xs text-slate-500">Informasi ini membantu kurir menemukan lokasi dengan lebih cepat.</p>
-                    )}
-                </div>
-            </div>
+            {/* Collapsible detail sections */}
+            {showDetail && (
+                <>
+                    {/* Detail Alamat */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Detail Alamat</div>
+                        <div className="mt-3">
+                            <label className="block">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Detail</span>
+                                <input
+                                    value={value.address_detail ?? ''}
+                                    onChange={(event) => onChange({ address_detail: event.target.value })}
+                                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                                    placeholder="Blok B3 No 27"
+                                />
+                            </label>
+                            <p className="mt-1.5 text-xs text-slate-500">Nomor rumah, blok, lantai, atau unit.</p>
+                        </div>
+                    </div>
+
+                    {/* Patokan */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Patokan / Ciri Rumah</div>
+                        <div className="mt-3">
+                            <label className="block">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Patokan</span>
+                                <input
+                                    value={value.landmark ?? ''}
+                                    onChange={(event) => onChange({ landmark: event.target.value })}
+                                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                                    placeholder="Rumah cat hijau dekat mushola"
+                                />
+                            </label>
+                            <p className="mt-1.5 text-xs text-slate-500">Informasi ini membantu kurir menemukan lokasi dengan lebih cepat.</p>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 }

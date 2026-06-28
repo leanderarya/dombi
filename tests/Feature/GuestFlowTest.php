@@ -30,9 +30,12 @@ class GuestFlowTest extends TestCase
     {
         $order = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
-        $this->post('/track/' . $order->recovery_token . '/cancel', [
+        $response = $this->postJson('/track/' . $order->recovery_token . '/cancel', [
             'reason' => 'Salah Pesan',
-        ])->assertJson(['success' => true]);
+            'last4_hp' => '6789',
+        ]);
+
+        $response->assertOk()->assertJson(['success' => true]);
 
         $order->refresh();
         $this->assertSame(Order::CANCELLED_BY_CUSTOMER, $order->status);
@@ -54,6 +57,7 @@ class GuestFlowTest extends TestCase
         // No actingAs() — pure guest
         $this->post('/track/' . $order->recovery_token . '/cancel', [
             'reason' => 'Salah Pesan',
+            'last4_hp' => '6789',
         ])->assertJson(['success' => true]);
     }
 
@@ -111,6 +115,7 @@ class GuestFlowTest extends TestCase
         $guestOrder = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
         $this->post('/track/' . $guestOrder->recovery_token . '/cancel', [
             'reason' => 'Salah Pesan',
+            'last4_hp' => '6789',
         ])->assertJson(['success' => true]);
 
         // Customer cancel

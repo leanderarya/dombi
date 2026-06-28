@@ -7,7 +7,6 @@ import Pagination from '@/components/pagination';
 import { Input } from '@/components/ui/input';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
-import { STATUS_BORDER } from '@/lib/status-border';
 import { getOrderStatus } from '@/lib/status-labels';
 
 const statusFilters = [
@@ -98,13 +97,12 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                 ) : (
                     orders.data.map((order: any) => {
                         const s = getOrderStatus(order.status);
-                        const borderColor = STATUS_BORDER[order.status] ?? 'border-l-gray-300';
 
                         return (
                             <button
                                 key={order.id}
                                 onClick={() => router.visit(`/owner/orders/${order.id}`)}
-                                className={`w-full rounded-xl border border-border border-l-4 ${borderColor} bg-white p-5 text-left transition-all duration-200 hover:shadow-md active:bg-surface-muted`}
+                                className="w-full rounded-xl border border-border bg-white p-5 text-left transition-all duration-200 hover:shadow-md active:bg-surface-muted"
                             >
                                 <div className="flex items-start justify-between">
                                     <div className="text-base font-bold tabular-nums text-text">{order.order_code}</div>
@@ -145,12 +143,11 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                         <div className="space-y-3">
                             {orders.data.map((order: any) => {
                                 const s = getOrderStatus(order.status);
-                                const borderColor = STATUS_BORDER[order.status] ?? 'border-l-gray-300';
 
                                 return (
                                     <div
                                         key={order.id}
-                                        className={`rounded-xl border border-border border-l-4 ${borderColor} bg-white p-5 transition-all duration-200 hover:shadow-md`}
+                                        className="rounded-xl border border-border bg-white p-5 transition-all duration-200 hover:shadow-md"
                                     >
                                         {/* Top row: order code + total */}
                                         <div className="flex items-start justify-between">

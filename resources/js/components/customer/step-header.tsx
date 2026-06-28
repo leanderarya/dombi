@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Check } from 'lucide-react';
+import { Check, ChevronLeft } from 'lucide-react';
 
 interface StepConfig {
     label: string;
@@ -24,9 +24,7 @@ export default function StepHeader({ title, currentStep, steps, backHref }: Prop
                         className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
                         aria-label="Kembali"
                     >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
+                        <ChevronLeft className="h-5 w-5" />
                     </button>
                     <h1 className="text-base font-semibold text-text">{title}</h1>
                     <div className="h-11 w-11" />
@@ -47,7 +45,7 @@ export default function StepHeader({ title, currentStep, steps, backHref }: Prop
                                             ? 'bg-emerald-600 text-white'
                                             : isCurrent
                                                 ? 'bg-emerald-100 text-emerald-700 ring-2 ring-emerald-600'
-                                                : 'bg-zinc-100 text-zinc-400'
+                                                : 'bg-surface-muted text-text-subtle'
                                     }`}>
                                         {isCompleted ? (
                                             <Check className="h-3.5 w-3.5" />
@@ -55,7 +53,7 @@ export default function StepHeader({ title, currentStep, steps, backHref }: Prop
                                             index + 1
                                         )}
                                     </div>
-                                    <span className={`mt-1 text-[10px] font-medium ${
+                                    <span className={`mt-1 text-[11px] font-medium ${
                                         isCurrent ? 'text-emerald-700' : isCompleted ? 'text-text' : 'text-text-subtle'
                                     }`}>
                                         {step.label}
@@ -65,7 +63,7 @@ export default function StepHeader({ title, currentStep, steps, backHref }: Prop
                                 {/* Connector line */}
                                 {index < steps.length - 1 && (
                                     <div className={`mx-1 h-0.5 w-8 rounded-full mb-4 ${
-                                        isCompleted ? 'bg-emerald-600' : 'bg-zinc-200'
+                                        isCompleted ? 'bg-emerald-600' : 'bg-border'
                                     }`} />
                                 )}
                             </div>

@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import DeliveryStatusBadge from '@/components/delivery-status-badge';
+
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import DeliveryTimeline from '@/components/operations/delivery-timeline';
 import SectionCard from '@/components/ui/section-card';
@@ -16,23 +16,23 @@ export default function OutletDeliveryShow({ delivery }: any) {
             <Head title={delivery.order_code} />
 
             {/* Status Strip */}
-            <div className="mb-4 flex items-center justify-between">
-                <div className="text-sm text-slate-500">Kurir: {delivery.courier?.name ?? '-'}</div>
+            <div className="mt-4 mb-4 flex items-center justify-between">
+                <div className="text-sm text-text-muted">Kurir: {delivery.courier?.name ?? '-'}</div>
                 <div className="flex items-center gap-2">
-                    <DeliveryStatusBadge status={delivery.status} />
+                    <StatusBadge status={delivery.status} />
                     {delivery.sla_health && <DeliverySlaBadge health={delivery.sla_health} />}
                 </div>
             </div>
 
             {/* Customer Info */}
-            <SectionCard label="Customer" className="mb-4">
+            <SectionCard label="Customer">
                 <div className="mt-2 space-y-1.5 text-sm">
                     <div className="font-medium">{delivery.customer_name}</div>
-                    <div className="text-slate-600">{delivery.customer_address}</div>
-                    {delivery.customer_phone && <div className="text-slate-600">{delivery.customer_phone}</div>}
+                    <div className="text-text-muted">{delivery.customer_address}</div>
+                    {delivery.customer_phone && <div className="text-text-muted">{delivery.customer_phone}</div>}
                     {delivery.delivery_age != null && (
                         <div>
-                            <span className="text-slate-500">Usia:</span>{' '}
+                            <span className="text-text-muted">Usia:</span>{' '}
                             <span className={delivery.delivery_age > 60 ? 'font-medium text-red-600' : ''}>
                                 {formatDeliveryAge(delivery.delivery_age)}
                             </span>
@@ -42,13 +42,13 @@ export default function OutletDeliveryShow({ delivery }: any) {
             </SectionCard>
 
             {/* Items */}
-            <SectionCard label="Pesanan" className="mb-4">
+            <SectionCard label="Pesanan">
                 <div className="mt-2 space-y-2">
                     {order.items.map((item: any) => (
                         <div key={item.id} className="flex justify-between text-sm">
                             <div>
                                 <span className="font-medium">{item.product_name}</span>
-                                <span className="ml-2 text-slate-500">x{item.quantity}</span>
+                                <span className="ml-2 text-text-muted">x{item.quantity}</span>
                             </div>
                             <span className="font-medium">{formatCurrency(item.subtotal)}</span>
                         </div>
@@ -62,28 +62,28 @@ export default function OutletDeliveryShow({ delivery }: any) {
 
             {/* Failed Reason */}
             {delivery.failed_reason && (
-                <SectionCard className="mb-4">
+                <SectionCard>
                     <div className="flex items-center gap-2">
                         <StatusBadge variant="danger" size="sm">Gagal</StatusBadge>
-                        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Alasan Gagal</span>
+                        <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">Alasan Gagal</span>
                     </div>
-                    <p className="mt-1 text-sm text-slate-700">{delivery.failed_reason}</p>
+                    <p className="mt-1 text-sm text-text">{delivery.failed_reason}</p>
                 </SectionCard>
             )}
 
             {/* Resolution */}
             {delivery.resolution_status && (
-                <SectionCard className="mb-4">
+                <SectionCard>
                     <div className="flex items-center gap-2">
                         <StatusBadge variant="warning" size="sm">Resolusi</StatusBadge>
                     </div>
-                    <p className="mt-1 text-sm text-slate-700">{getDeliveryStatus(delivery.resolution_status).label}</p>
-                    {delivery.resolution_notes && <p className="mt-1 text-xs text-slate-500">{delivery.resolution_notes}</p>}
+                    <p className="mt-1 text-sm text-text">{getDeliveryStatus(delivery.resolution_status).label}</p>
+                    {delivery.resolution_notes && <p className="mt-1 text-xs text-text-muted">{delivery.resolution_notes}</p>}
                 </SectionCard>
             )}
 
             {/* Timeline */}
-            <SectionCard label="Timeline" className="mb-4">
+            <SectionCard label="Timeline">
                 <div className="mt-2">
                     <DeliveryTimeline histories={delivery.status_histories ?? []} />
                 </div>

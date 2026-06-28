@@ -27,11 +27,8 @@ export default function OrderHistoryCard({ order }: Props) {
     const itemCount = order.items?.length ?? 0;
     const itemSummary = order.items?.map((i) => i.product_name).join(', ') ?? '';
     const dateStr = formatRelativeDate(order.created_at);
-    const isGuest = !!order.recovery_token;
     const isTerminal = isTerminalOrder(order.status);
-    const detailHref = isGuest
-        ? (order.tracking_url ?? `/track/${order.recovery_token}`)
-        : `/customer/orders/${order.id}`;
+    const detailHref = `/customer/orders/${order.id}`;
 
     return (
         <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">

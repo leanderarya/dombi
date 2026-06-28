@@ -132,7 +132,7 @@ return;
 
         setAdding(true);
 
-        cart.addItem(selectedVariant.id, quantity);
+        cart.addItem(selectedVariant.id, quantity, selectedVariant.selling_price);
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');

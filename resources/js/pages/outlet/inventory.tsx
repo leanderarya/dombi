@@ -59,76 +59,72 @@ export default function OutletInventory({ outlet, inventories }: any) {
             <Head title="Inventaris" />
 
             {/* Summary Bar + Restock CTA */}
-            <div className="mb-6 flex items-center gap-3">
+            <div className="mt-4 mb-6 flex items-center gap-3">
                 <div className="flex flex-1 items-center divide-x divide-border rounded-xl border border-border bg-white">
-                    <SummaryCell label="Kritis" value={criticalFamilies.length} variant="danger" />
-                    <SummaryCell label="Rendah" value={lowStockFamilies.length} variant="warning" />
-                    <SummaryCell label="Sehat" value={healthyFamilies.length} variant="success" />
+                    <SummaryCell label="Kritis" value={criticalFamilies.length} dot="bg-red-400" />
+                    <SummaryCell label="Rendah" value={lowStockFamilies.length} dot="bg-amber-400" />
+                    <SummaryCell label="Sehat" value={healthyFamilies.length} dot="bg-emerald-400" />
                 </div>
                 <Link
                     href="/outlet/restocks/create"
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all active:bg-primary-hover active:opacity-80"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all active:opacity-80"
                     title="Request Restock"
                 >
                     <Plus className="h-5 w-5" />
                 </Link>
             </div>
 
-            {/* Critical — visually dominant */}
+            {/* Critical */}
             {criticalFamilies.length > 0 && (
                 <div className="mb-6">
                     <div className="mb-3 flex items-center gap-2">
-                        <div className="flex h-5 w-5 items-center justify-center rounded bg-red-100">
-                            <AlertTriangle className="h-3 w-3 text-red-600" />
-                        </div>
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-red-700">Stok Kritis</h2>
-                        <span className="rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-bold text-red-600">{criticalFamilies.length}</span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Kritis</h2>
+                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">{criticalFamilies.length}</span>
                     </div>
                     <div className="space-y-2">
                         {criticalFamilies.map(([familyId, group]) => (
-                            <FamilyGroup key={familyId} group={group} variant="danger" />
+                            <FamilyGroup key={familyId} group={group} />
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* Low Stock — secondary priority */}
+            {/* Low Stock */}
             {lowStockFamilies.length > 0 && (
                 <div className="mb-6">
                     <div className="mb-3 flex items-center gap-2">
-                        <div className="flex h-5 w-5 items-center justify-center rounded bg-amber-100">
-                            <AlertTriangle className="h-3 w-3 text-amber-600" />
-                        </div>
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-amber-700">Stok Rendah</h2>
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-600">{lowStockFamilies.length}</span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                        <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Rendah</h2>
+                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">{lowStockFamilies.length}</span>
                     </div>
                     <div className="space-y-2">
                         {lowStockFamilies.map(([familyId, group]) => (
-                            <FamilyGroup key={familyId} group={group} variant="warning" />
+                            <FamilyGroup key={familyId} group={group} />
                         ))}
                     </div>
                 </div>
             )}
 
-            {/* Healthy — collapsed by default, de-emphasized */}
+            {/* Healthy — collapsed */}
             {healthyFamilies.length > 0 && (
                 <div className="mb-6">
                     <button
                         type="button"
                         onClick={() => setShowHealthy(!showHealthy)}
-                        className="flex min-h-[44px] w-full items-center justify-between rounded-xl border border-border bg-white px-4 text-left transition-colors active:bg-surface-muted"
+                        className="flex min-h-11 w-full items-center justify-between rounded-xl border border-border bg-white px-4 text-left transition-colors active:bg-surface-muted"
                     >
                         <div className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                            <CheckCircle className="h-4 w-4 text-text-muted" />
                             <span className="text-sm font-medium text-text">Stok Sehat</span>
-                            <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-bold text-zinc-500">{healthyFamilies.length}</span>
+                            <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">{healthyFamilies.length}</span>
                         </div>
                         {showHealthy ? <ChevronUp className="h-4 w-4 text-text-subtle" /> : <ChevronDown className="h-4 w-4 text-text-subtle" />}
                     </button>
                     {showHealthy && (
                         <div className="mt-2 space-y-2">
                             {healthyFamilies.map(([familyId, group]) => (
-                                <FamilyGroup key={familyId} group={group} variant="success" />
+                                <FamilyGroup key={familyId} group={group} />
                             ))}
                         </div>
                     )}
@@ -141,7 +137,7 @@ export default function OutletInventory({ outlet, inventories }: any) {
                     <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-subtle">Lainnya</h2>
                     <div className="space-y-2">
                         {noFamilyItems.map((item: any) => (
-                            <InventoryRow key={item.id} item={item} variant={getVariant(item)} />
+                            <InventoryRow key={item.id} item={item} />
                         ))}
                     </div>
                 </div>
@@ -162,17 +158,15 @@ export default function OutletInventory({ outlet, inventories }: any) {
     );
 }
 
-function FamilyGroup({ group, variant }: { group: { family: any; items: any[] }; variant: 'danger' | 'warning' | 'success' }) {
-    const borderAccent = variant === 'danger' ? 'border-l-red-400' : variant === 'warning' ? 'border-l-amber-400' : 'border-l-emerald-400';
-
+function FamilyGroup({ group }: { group: { family: any; items: any[] } }) {
     return (
-        <div className={`overflow-hidden rounded-xl border border-border border-l-4 ${borderAccent} bg-white`}>
+        <div className="overflow-hidden rounded-xl border border-border bg-white">
             <div className="border-b border-border bg-surface-muted px-4 py-2">
                 <span className="text-xs font-semibold text-text-muted">{group.family?.name ?? 'Produk'}</span>
             </div>
             <div className="divide-y divide-border">
                 {group.items.map((item: any) => (
-                    <InventoryRow key={item.id} item={item} variant={variant} compact />
+                    <InventoryRow key={item.id} item={item} compact />
                 ))}
             </div>
         </div>
@@ -193,29 +187,27 @@ function getVariant(item: any): 'danger' | 'warning' | 'success' {
     return 'success';
 }
 
-function SummaryCell({ label, value, variant }: { label: string; value: number; variant: 'danger' | 'warning' | 'success' }) {
-    const colorMap = {
-        danger: 'text-red-600',
-        warning: 'text-amber-600',
-        success: 'text-emerald-600',
-    };
-
+function SummaryCell({ label, value, dot }: { label: string; value: number; dot: string }) {
     return (
         <div className="flex-1 px-4 py-3 text-center">
-            <div className={`text-lg font-bold tabular-nums ${colorMap[variant]}`}>{value}</div>
+            <div className="flex items-center justify-center gap-1.5">
+                <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+                <div className="text-lg font-bold tabular-nums text-text">{value}</div>
+            </div>
             <div className="text-[11px] font-medium text-text-subtle">{label}</div>
         </div>
     );
 }
 
-function InventoryRow({ item, variant, compact }: { item: any; variant: 'danger' | 'warning' | 'success'; compact?: boolean }) {
+function InventoryRow({ item, compact }: { item: any; compact?: boolean }) {
     const [showOpname, setShowOpname] = useState(false);
     const available = item.current_stock - item.reserved_stock;
     const displayName = item.variant?.name ?? item.product?.name ?? '-';
+    const variant = getVariant(item);
 
     return (
         <>
-            <div className={`group flex items-center justify-between ${compact ? 'px-4 py-2.5' : 'rounded-xl border border-border bg-white p-3'} transition-all duration-200 hover:bg-surface-muted`}>
+            <div className={`group flex items-center justify-between ${compact ? 'px-4 py-2.5' : 'rounded-xl border border-border bg-white p-3'} transition-all hover:bg-surface-muted`}>
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-text truncate">{displayName}</span>
@@ -303,7 +295,7 @@ function OpnameSheet({ open, onClose, item, displayName }: { open: boolean; onCl
                 <button
                     type="submit"
                     disabled={processing}
-                    className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:bg-primary-hover disabled:opacity-50"
+                    className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:bg-primary-hover disabled:opacity-50"
                 >
                     {processing ? 'Menyimpan...' : 'Simpan Opname'}
                 </button>

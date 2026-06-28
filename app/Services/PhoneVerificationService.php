@@ -6,8 +6,7 @@ use Illuminate\Http\Request;
 
 /**
  * Standalone phone verification service for Google Sign-In flow.
- * Separate from CheckoutOtpService — this is for account-level phone verification,
- * not checkout-flow OTP.
+ * Used for account-level phone verification (not checkout).
  */
 class PhoneVerificationService
 {

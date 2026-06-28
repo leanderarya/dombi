@@ -8,23 +8,23 @@ const navItems = [
         icon: LayoutDashboard,
         match: ['/outlet/dashboard'],
     },
-    { 
-        href: '/outlet/orders', 
-        label: 'Pesanan', 
+    {
+        href: '/outlet/orders',
+        label: 'Pesanan',
         icon: Package,
         match: ['/outlet/orders'],
     },
-    { 
-        href: '/outlet/scan', 
-        label: 'Scan', 
+    {
+        href: '/outlet/scan',
+        label: 'Scan',
         icon: QrCode,
         match: ['/outlet/scan'],
     },
-    { 
-        href: '/outlet/inventory', 
-        label: 'Inventaris', 
+    {
+        href: '/outlet/inventory',
+        label: 'Inventaris',
         icon: Box,
-        match: ['/outlet/inventory', '/outlet/restocks', '/outlet/settlement', '/outlet/settlement-payments', '/outlet/deliveries', '/outlet/returns', '/outlet/exchanges'],
+        match: ['/outlet/inventory'],
     },
 ];
 
@@ -32,7 +32,7 @@ export default function OutletBottomNav() {
     const { url } = usePage();
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)]">
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white pb-[env(safe-area-inset-bottom)]">
             <div className="mx-auto grid h-14 max-w-lg grid-cols-4">
                 {navItems.map((item) => {
                     const active = item.match.some((href) => url === href || url.startsWith(`${href}/`));
@@ -43,7 +43,7 @@ export default function OutletBottomNav() {
                             key={item.href}
                             href={item.href}
                             className={`flex flex-col items-center justify-center gap-0.5 text-[10px] font-semibold ${
-                                active ? 'text-emerald-700' : 'text-slate-400'
+                                active ? 'text-emerald-700' : 'text-text-subtle'
                             }`}
                         >
                             <Icon className="h-5 w-5" strokeWidth={active ? 2 : 1.5} />

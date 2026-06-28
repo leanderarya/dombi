@@ -29,18 +29,11 @@ const OutletLocationMap = lazy(
     () => import('@/components/owner/outlet-location-map'),
 );
 
-function getOutletBorderClass(outlet: any): string {
-    if (outlet.status !== 'active') return 'border-l-4 border-l-gray-400';
-    if (Number(outlet.low_stock_count) > 0) return 'border-l-4 border-l-amber-400';
-    if (Number(outlet.active_orders_count) >= 3) return 'border-l-4 border-l-blue-400';
-    return 'border-l-4 border-l-emerald-400';
-}
-
-function getOutletStatusMeta(outlet: any): { label: string; variant: 'success' | 'warning' | 'info' | 'neutral'; color: string; borderColor: string } {
-    if (outlet.status !== 'active') return { label: 'Nonaktif', variant: 'neutral', color: 'text-gray-600', borderColor: 'border-l-gray-400' };
-    if (Number(outlet.low_stock_count) > 0) return { label: 'Stok Rendah', variant: 'warning', color: 'text-amber-600', borderColor: 'border-l-amber-400' };
-    if (Number(outlet.active_orders_count) >= 3) return { label: 'Sibuk', variant: 'info', color: 'text-blue-600', borderColor: 'border-l-blue-400' };
-    return { label: 'Aktif', variant: 'success', color: 'text-emerald-600', borderColor: 'border-l-emerald-400' };
+function getOutletStatusMeta(outlet: any): { label: string; variant: 'success' | 'warning' | 'info' | 'neutral'; color: string } {
+    if (outlet.status !== 'active') return { label: 'Nonaktif', variant: 'neutral', color: 'text-gray-600' };
+    if (Number(outlet.low_stock_count) > 0) return { label: 'Stok Rendah', variant: 'warning', color: 'text-amber-600' };
+    if (Number(outlet.active_orders_count) >= 3) return { label: 'Sibuk', variant: 'info', color: 'text-blue-600' };
+    return { label: 'Aktif', variant: 'success', color: 'text-emerald-600' };
 }
 
 export default function OutletShow({
@@ -100,7 +93,6 @@ export default function OutletShow({
                     {/* Informasi Outlet + Lokasi */}
                     <SectionCard
                         label="Informasi Outlet"
-                        className={cn(getOutletBorderClass(outlet))}
                     >
                         <div className="flex items-start justify-between gap-3">
                             <div>
@@ -314,7 +306,7 @@ export default function OutletShow({
                 <aside className="hidden lg:block">
                     <div className="sticky top-4 space-y-4">
                         {/* Status Card */}
-                        <div className={cn('rounded-xl border border-border bg-white p-4 border-l-4', statusMeta.borderColor)}>
+                        <div className="rounded-xl border border-border bg-white p-4">
                             <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Status Outlet</h3>
                             <div className="mt-2 flex items-center gap-2">
                                 <OutletStatusBadge status={outlet.status ?? 'active'} />

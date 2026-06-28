@@ -24,7 +24,7 @@ class CancelOrderRequest extends FormRequest
 
         // Customer can only cancel their own orders
         if ($user && $user->isCustomer()) {
-            return $order->customer_id === $user->customer?->id;
+            return $order->customer_id === $user->getCustomerOrCreate()->id;
         }
 
         return false;

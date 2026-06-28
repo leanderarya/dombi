@@ -38,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer.or.recovered' => AllowCustomerOrRecoveredGuest::class,
             'role' => RoleMiddleware::class,
             'password.changed' => EnsurePasswordIsChanged::class,
+            'enforce.session' => \App\Http\Middleware\EnforceSessionPolicy::class,
             'dev' => DevOnly::class,
         ]);
     })

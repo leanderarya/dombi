@@ -59,6 +59,18 @@ class User extends Authenticatable
         return $this->hasOne(Customer::class);
     }
 
+    /**
+     * Get the Customer record, creating one if it doesn't exist.
+     * Guaranteed to never return null for authenticated users.
+     */
+    public function getCustomerOrCreate(): Customer
+    {
+        return $this->customer ?? Customer::firstOrCreate(
+            ['user_id' => $this->id],
+            ['name' => $this->name, 'email' => $this->email, 'is_registered' => true],
+        );
+    }
+
     public function isOwner(): bool
     {
         return $this->role === 'owner';

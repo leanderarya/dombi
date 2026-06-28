@@ -32,13 +32,6 @@ function matchesFilter(outlet: any, filter: FilterKey): boolean {
     }
 }
 
-function getRowBorderClass(outlet: any): string {
-    if (outlet.status !== 'active') return 'border-l-4 border-l-gray-400';
-    if (Number(outlet.low_stock_count) > 0) return 'border-l-4 border-l-amber-400';
-    if (Number(outlet.active_orders_count) >= 3) return 'border-l-4 border-l-blue-400';
-    return 'border-l-4 border-l-emerald-400';
-}
-
 export default function OutletsIndex({ outlets }: any) {
     const { flash } = usePage<any>().props;
     const [filter, setFilter] = useState<FilterKey>('active');
@@ -88,7 +81,7 @@ export default function OutletsIndex({ outlets }: any) {
                     <DataTable
                         rowKey="id"
                         data={filtered}
-                        rowClassName={getRowBorderClass}
+                        rowClassName=""
                         columns={[
                             {
                                 key: 'name',

@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import DeliveryStatusBadge from '@/components/delivery-status-badge';
 import { formatDate } from '@/lib/format';
-import { STATUS_BORDER } from '@/lib/status-border';
 
 const statusOptions = [
     { value: '', label: 'Semua' },
@@ -77,14 +76,13 @@ export default function OwnerDeliveriesIndex({ deliveries, couriers, filters, st
                     ) : (
                         <div className="space-y-2">
                             {deliveries.data.map((d: any) => {
-                                const borderColor = STATUS_BORDER[d.status] ?? 'border-l-slate-300';
                                 const isActive = ['delivering', 'picked_up'].includes(d.status);
 
                                 return (
                                     <Link
                                         key={d.id}
                                         href={`/owner/deliveries/${d.id}`}
-                                        className={`block rounded-xl border border-border border-l-4 bg-white p-4 transition-all duration-200 hover:shadow-md ${borderColor}`}
+                                        className="block rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md"
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0 flex-1">

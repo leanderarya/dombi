@@ -34,7 +34,7 @@ class OrderService
     public function createCheckoutOrder(User|Customer|null $user, array $payload): Order
     {
         return DB::transaction(function () use ($user, $payload): Order {
-            $customer = $user instanceof Customer ? $user : $this->findOrCreateGuestCustomer($payload);
+            $customer = $this->resolveCustomer($user, $payload);
             $items = $this->buildOrderItems($payload['items']);
             $fulfillmentType = $payload['fulfillment_type'] ?? 'delivery_dombi';
             $address = $this->shouldUseDeliveryAddress($fulfillmentType)
@@ -104,6 +104,8 @@ class OrderService
             'total' => $subtotal + $deliveryFee + $paymentFee,
             'customer_name' => $address?->recipient_name ?? ($payload['customer_name'] ?? $customer->name),
             'customer_phone' => $address?->phone ?? ($payload['phone_number'] ?? $customer->phone),
+            'recipient_name' => $payload['recipient_name'] ?? null,
+            'recipient_phone' => $payload['recipient_phone'] ?? null,
             'customer_address' => $address?->address_line ?: $this->pickupAddressLabel($outlet, $fulfillmentType),
             'customer_address_detail' => $address?->address_detail ?? null,
             'customer_landmark' => $address?->landmark ?? null,
@@ -259,6 +261,27 @@ class OrderService
             ->whereHas('outlet', fn ($q) => $q->where('status', 'active'))
             ->selectRaw('MAX(current_stock - reserved_stock) as max_available')
             ->value('max_available') ?? 0;
+    }
+
+    private function resolveCustomer(User|Customer|null $user, array $payload): Customer
+    {
+        // Already a Customer model — use directly
+        if ($user instanceof Customer) {
+            return $user;
+        }
+
+        // Authenticated User — find their existing Customer record
+        if ($user instanceof User) {
+            $customer = $user->customer;
+            if ($customer) {
+                $customer->update(['last_order_at' => now()]);
+
+                return $customer;
+            }
+        }
+
+        // Guest fallback
+        return $this->findOrCreateGuestCustomer($payload);
     }
 
     private function findOrCreateGuestCustomer(array $payload): Customer

@@ -80,9 +80,24 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($request->ip());
         });
 
+        // Payment submit: 3 per minute per user/IP (prevent double-tap)
+        RateLimiter::for('payment-submit', function (Request $request) {
+            return Limit::perMinute(3)->by($request->user()?->id ?: $request->ip());
+        });
+
         // Tracking: 30 per minute per IP (prevent abuse of public tracking endpoint)
         RateLimiter::for('track', function (Request $request) {
             return Limit::perMinute(30)->by($request->ip());
+        });
+
+        // Track cancel: 5 per minute per IP (prevent brute force last4 HP)
+        RateLimiter::for('track-cancel', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        // Order report: 5 per minute per user
+        RateLimiter::for('order-report', function (Request $request) {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
         });
     }
 }

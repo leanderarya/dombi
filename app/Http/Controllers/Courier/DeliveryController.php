@@ -62,6 +62,8 @@ class DeliveryController extends Controller
                     'order_code' => $delivery->order->order_code,
                     'customer_name' => $delivery->order->customer_name,
                     'customer_phone' => $delivery->order->customer_phone,
+                    'recipient_name' => $delivery->order->recipient_name,
+                    'recipient_phone' => $delivery->order->recipient_phone,
                     'customer_address' => $delivery->order->customer_address,
                     'customer_address_detail' => $delivery->order->customer_address_detail,
                     'customer_landmark' => $delivery->order->customer_landmark,
