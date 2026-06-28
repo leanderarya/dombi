@@ -43,9 +43,7 @@ const navGroups: NavGroup[] = [
         label: 'Keuangan',
         icon: <FinanceIcon />,
         items: [
-            { href: '/owner/finance', label: 'Dashboard Tagihan', isActive: (url: string) => url.split('?')[0] === '/owner/finance' },
-            { href: '/owner/finance/settlement-payments', label: 'Riwayat Pembayaran' },
-            { href: '/owner/finance/payment-accounts', label: 'Rekening Pembayaran' },
+            { href: '/owner/finance', label: 'Keuangan', isActive: (url: string) => url.split('?')[0] === '/owner/finance' },
         ],
     },
     {
@@ -54,9 +52,7 @@ const navGroups: NavGroup[] = [
         items: [
             { href: '/owner/outlets', label: 'Outlet' },
             { href: '/owner/products', label: 'Produk', isActive: (url: string) => url.startsWith('/owner/products') || url.startsWith('/owner/product-families') },
-            { href: '/owner/pricing/master', label: 'Harga Pusat', isActive: (url: string) => url === '/owner/pricing/master' },
-            { href: '/owner/pricing', label: 'Harga Outlet', isActive: (url: string) => url === '/owner/pricing' || url.startsWith('/owner/pricing/outlet') },
-            { href: '/owner/pricing/history', label: 'Riwayat Harga', isActive: (url: string) => url === '/owner/pricing/history' },
+            { href: '/owner/pricing', label: 'Harga', isActive: (url: string) => url.split('?')[0] === '/owner/pricing' },
         ],
     },
     {
@@ -72,10 +68,7 @@ const navGroups: NavGroup[] = [
         label: 'Analitik',
         icon: <AnalyticsIcon />,
         items: [
-            { href: '/owner/analytics', label: 'Dashboard Analitik' },
-            { href: '/owner/stock-movements', label: 'Audit Trail' },
-            { href: '/owner/reports', label: 'Laporan' },
-            { href: '/owner/order-reports', label: 'Laporan Masalah' },
+            { href: '/owner/analytics', label: 'Analitik', isActive: (url: string) => url.split('?')[0] === '/owner/analytics' },
         ],
     },
 ];
