@@ -33,7 +33,7 @@ export default function StockMovementsIndex({ movements, outlets, products, filt
             {movements.data.length === 0 ? (
                 <EmptyState icon={<ClipboardList className="h-8 w-8 text-text-subtle" />} title="Belum ada movement" description="Perubahan stok akan tercatat di sini." />
             ) : (
-                <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-5">
+                <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                     {/* Left: movement list */}
                     <div className="space-y-1.5">
                         {movements.data.map((m: any) => (

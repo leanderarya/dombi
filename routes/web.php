@@ -32,7 +32,6 @@ use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
 use App\Http\Controllers\Outlet\SettlementController;
 use App\Http\Controllers\Owner\AnalyticsController as OwnerAnalyticsController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
-use App\Http\Controllers\Owner\DeliveryBoardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
 use App\Http\Controllers\Owner\ExchangeController as OwnerExchangeController;
 use App\Http\Controllers\Owner\FinanceSettlementController;
@@ -226,7 +225,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::put('order-reports/{report}', [\App\Http\Controllers\Owner\OrderReportController::class, 'update'])->name('order-reports.update');
         Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
         Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
-        Route::get('deliveries/board', [DeliveryBoardController::class, 'index'])->name('deliveries.board');
         Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
         Route::get('stock-movements', [StockMovementController::class, 'index'])->name('stock-movements.index');
@@ -235,6 +233,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('reports/orders/export', [ReportController::class, 'exportOrders'])->name('reports.orders.export');
         Route::get('reports/settlements/export', [ReportController::class, 'exportSettlements'])->name('reports.settlements.export');
         Route::get('restocks', [OwnerRestockController::class, 'index'])->name('restocks.index');
+        Route::get('restocks/create', [OwnerRestockController::class, 'create'])->name('restocks.create');
         Route::get('restocks/{restockRequest}', [OwnerRestockController::class, 'show'])->name('restocks.show');
         Route::post('restocks/{restockRequest}/approve', [OwnerRestockController::class, 'approve'])->name('restocks.approve');
         Route::post('restocks/{restockRequest}/reject', [OwnerRestockController::class, 'reject'])->name('restocks.reject');
@@ -250,7 +249,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('finance/settlements/{outlet}', [FinanceSettlementController::class, 'outletDetail'])->name('finance.settlements.outlet');
         Route::post('finance/settlements/{outlet}/payments', [FinanceSettlementController::class, 'recordPayment'])->name('finance.settlements.payments');
         Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
-        Route::resource('payment-accounts', PaymentAccountController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('finance/payment-accounts', PaymentAccountController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::get('returns', [OwnerReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/{returnRequest}', [OwnerReturnController::class, 'show'])->name('returns.show');
         Route::post('returns/{returnRequest}/approve', [OwnerReturnController::class, 'approve'])->name('returns.approve');

@@ -45,7 +45,7 @@ const navGroups: NavGroup[] = [
         items: [
             { href: '/owner/finance', label: 'Dashboard Tagihan', isActive: (url: string) => url.split('?')[0] === '/owner/finance' },
             { href: '/owner/finance/settlement-payments', label: 'Riwayat Pembayaran' },
-            { href: '/owner/payment-accounts', label: 'Rekening Pembayaran' },
+            { href: '/owner/finance/payment-accounts', label: 'Rekening Pembayaran' },
         ],
     },
     {

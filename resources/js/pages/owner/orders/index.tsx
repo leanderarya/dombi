@@ -176,7 +176,7 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
                 </div>
 
                 {/* Right: KPI stats sidebar */}
-                <div className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+                <div className="space-y-4 lg:sticky lg:top-4 lg:self-start">
                     <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <ClipboardList className="h-4 w-4 text-blue-600" />

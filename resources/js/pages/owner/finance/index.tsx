@@ -36,7 +36,7 @@ export default function FinanceDashboard({ kpis, outlets }: any) {
 
     return (
         <OwnerPageShell title="Dashboard Tagihan" subtitle="Pantau kewajiban seluruh outlet">
-            <div className="md:grid md:grid-cols-[1fr_320px] md:gap-6">
+            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 {/* Left: Filters + Outlet List */}
                 <div>
                     {/* Sticky Filters + Search */}
@@ -115,7 +115,7 @@ export default function FinanceDashboard({ kpis, outlets }: any) {
                 </div>
 
                 {/* Right: KPI Cards (tablet+ sidebar) */}
-                <aside className="hidden md:block">
+                <aside className="hidden lg:block">
                     <div className="sticky top-20 space-y-3">
                         <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
