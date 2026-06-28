@@ -38,7 +38,7 @@ class SettlementPaymentController extends Controller
             ->whereYear('verified_at', now()->year)
             ->sum('amount');
 
-        return Inertia::render('owner/settlement-payments', [
+        return Inertia::render('owner/finance/settlement-payments', [
             'payments' => $payments,
             'statusFilter' => $status,
             'kpis' => [
