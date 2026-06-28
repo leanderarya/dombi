@@ -1,8 +1,7 @@
 import { router } from '@inertiajs/react';
-import { DollarSign, Clock, CheckCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { DollarSign, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import FinanceFilterTabs from '@/components/owner/finance/finance-filter-tabs';
-import FinanceKpiCard from '@/components/owner/finance/finance-kpi-card';
 import PaymentHistoryCard from '@/components/owner/finance/payment-history-card';
 import PaymentProofModal from '@/components/owner/finance/payment-proof-modal';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -210,54 +209,78 @@ return;
 
                 {/* Right: KPI Cards (desktop sidebar) */}
                 <aside className="hidden lg:block">
-                    <div className="sticky top-20 space-y-4">
-                        <FinanceKpiCard
-                            label="Pending Verifikasi"
-                            value={`${kpis?.pending_count ?? 0}`}
-                            accent="amber"
-                            icon={<Clock className="h-4 w-4" />}
-                            subtext="Pembayaran menunggu persetujuan"
-                        />
-                        <FinanceKpiCard
-                            label="Pembayaran Hari Ini"
-                            value={formatCurrency(kpis?.verified_today ?? 0)}
-                            accent="emerald"
-                            icon={<CheckCircle className="h-4 w-4" />}
-                            subtext="Diverifikasi hari ini"
-                        />
-                        <FinanceKpiCard
-                            label="Total Bulan Ini"
-                            value={formatCurrency(kpis?.verified_month ?? 0)}
-                            accent="blue"
-                            icon={<DollarSign className="h-4 w-4" />}
-                            subtext="Total pembayaran bulan ini"
-                        />
+                    <div className="sticky top-20 space-y-3">
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <Clock className="h-4 w-4 text-amber-500" />
+                                Pending Verifikasi
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{kpis?.pending_count ?? 0}</div>
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                                <Clock className="h-3 w-3" />
+                                Pembayaran menunggu persetujuan
+                            </div>
+                        </div>
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                Pembayaran Hari Ini
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis?.verified_today ?? 0)}</div>
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+                                <CheckCircle className="h-3 w-3" />
+                                Diverifikasi hari ini
+                            </div>
+                        </div>
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <DollarSign className="h-4 w-4 text-blue-500" />
+                                Total Bulan Ini
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis?.verified_month ?? 0)}</div>
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-blue-500">
+                                <DollarSign className="h-3 w-3" />
+                                Total pembayaran bulan ini
+                            </div>
+                        </div>
                     </div>
                 </aside>
 
                 {/* Mobile/Tablet: KPI Strip at top */}
                 <section className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3 lg:hidden">
-                    <FinanceKpiCard
-                        label="Pending Verifikasi"
-                        value={`${kpis?.pending_count ?? 0}`}
-                        accent="amber"
-                        icon={<Clock className="h-4 w-4" />}
-                        subtext="Pembayaran menunggu persetujuan"
-                    />
-                    <FinanceKpiCard
-                        label="Pembayaran Hari Ini"
-                        value={formatCurrency(kpis?.verified_today ?? 0)}
-                        accent="emerald"
-                        icon={<CheckCircle className="h-4 w-4" />}
-                        subtext="Diverifikasi hari ini"
-                    />
-                    <FinanceKpiCard
-                        label="Total Bulan Ini"
-                        value={formatCurrency(kpis?.verified_month ?? 0)}
-                        accent="blue"
-                        icon={<DollarSign className="h-4 w-4" />}
-                        subtext="Total pembayaran bulan ini"
-                    />
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <Clock className="h-4 w-4 text-amber-500" />
+                            Pending Verifikasi
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{kpis?.pending_count ?? 0}</div>
+                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                            <Clock className="h-3 w-3" />
+                            Pembayaran menunggu persetujuan
+                        </div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <CheckCircle className="h-4 w-4 text-emerald-500" />
+                            Pembayaran Hari Ini
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis?.verified_today ?? 0)}</div>
+                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+                            <CheckCircle className="h-3 w-3" />
+                            Diverifikasi hari ini
+                        </div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <DollarSign className="h-4 w-4 text-blue-500" />
+                            Total Bulan Ini
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis?.verified_month ?? 0)}</div>
+                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-blue-500">
+                            <DollarSign className="h-3 w-3" />
+                            Total pembayaran bulan ini
+                        </div>
+                    </div>
                 </section>
             </div>
 
