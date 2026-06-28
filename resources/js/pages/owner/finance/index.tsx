@@ -1,7 +1,6 @@
-import { DollarSign, Store, Clock, Search, PartyPopper } from 'lucide-react';
+import { DollarSign, Store, Clock, Search, PartyPopper, AlertCircle, CheckCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import FinanceFilterTabs from '@/components/owner/finance/finance-filter-tabs';
-import FinanceKpiCard from '@/components/owner/finance/finance-kpi-card';
 import FinanceOutletCard from '@/components/owner/finance/finance-outlet-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { formatCurrency } from '@/lib/format';
@@ -117,54 +116,114 @@ export default function FinanceDashboard({ kpis, outlets }: any) {
 
                 {/* Right: KPI Cards (desktop sidebar) */}
                 <aside className="hidden lg:block">
-                    <div className="sticky top-20 space-y-4">
-                        <FinanceKpiCard
-                            label="Total Belum Dibayar"
-                            value={formatCurrency(kpis.total_unpaid)}
-                            accent="red"
-                            icon={<DollarSign className="h-4 w-4" />}
-                            subtext={kpis.outlets_unpaid > 0 ? `${kpis.outlets_unpaid} outlet memiliki tagihan` : 'Semua outlet lunas'}
-                        />
-                        <FinanceKpiCard
-                            label="Outlet Belum Bayar"
-                            value={`${kpis.outlets_unpaid}`}
-                            accent="amber"
-                            icon={<Store className="h-4 w-4" />}
-                            subtext="Outlet dengan sisa tagihan"
-                        />
-                        <FinanceKpiCard
-                            label="Jatuh Tempo Minggu Ini"
-                            value={formatCurrency(kpis.due_this_week)}
-                            accent="orange"
-                            icon={<Clock className="h-4 w-4" />}
-                            subtext={kpis.due_this_week > 0 ? 'Segera tindak lanjuti' : 'Tidak ada jatuh tempo'}
-                        />
+                    <div className="sticky top-20 space-y-3">
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <DollarSign className="h-4 w-4 text-red-500" />
+                                Total Belum Dibayar
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis.total_unpaid)}</div>
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                                {kpis.outlets_unpaid > 0 ? (
+                                    <>
+                                        <AlertCircle className="h-3 w-3" />
+                                        {kpis.outlets_unpaid} outlet memiliki tagihan
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle className="h-3 w-3 text-emerald-500" />
+                                        <span className="text-emerald-500">Semua outlet lunas</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <Store className="h-4 w-4 text-amber-500" />
+                                Outlet Belum Bayar
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{kpis.outlets_unpaid}</div>
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                                <AlertCircle className="h-3 w-3" />
+                                Outlet dengan sisa tagihan
+                            </div>
+                        </div>
+                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="flex items-center gap-2 text-xs text-text-muted">
+                                <Clock className="h-4 w-4 text-orange-500" />
+                                Jatuh Tempo Minggu Ini
+                            </div>
+                            <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis.due_this_week)}</div>
+                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-orange-500">
+                                {kpis.due_this_week > 0 ? (
+                                    <>
+                                        <AlertCircle className="h-3 w-3" />
+                                        Segera tindak lanjuti
+                                    </>
+                                ) : (
+                                    <>
+                                        <CheckCircle className="h-3 w-3 text-emerald-500" />
+                                        <span className="text-emerald-500">Tidak ada jatuh tempo</span>
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </aside>
 
                 {/* Mobile/Tablet: KPI Strip at top */}
                 <section className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3 lg:hidden">
-                    <FinanceKpiCard
-                        label="Total Belum Dibayar"
-                        value={formatCurrency(kpis.total_unpaid)}
-                        accent="red"
-                        icon={<DollarSign className="h-4 w-4" />}
-                        subtext={kpis.outlets_unpaid > 0 ? `${kpis.outlets_unpaid} outlet memiliki tagihan` : 'Semua outlet lunas'}
-                    />
-                    <FinanceKpiCard
-                        label="Outlet Belum Bayar"
-                        value={`${kpis.outlets_unpaid}`}
-                        accent="amber"
-                        icon={<Store className="h-4 w-4" />}
-                        subtext="Outlet dengan sisa tagihan"
-                    />
-                    <FinanceKpiCard
-                        label="Jatuh Tempo Minggu Ini"
-                        value={formatCurrency(kpis.due_this_week)}
-                        accent="orange"
-                        icon={<Clock className="h-4 w-4" />}
-                        subtext={kpis.due_this_week > 0 ? 'Segera tindak lanjuti' : 'Tidak ada jatuh tempo'}
-                    />
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <DollarSign className="h-4 w-4 text-red-500" />
+                            Total Belum Dibayar
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis.total_unpaid)}</div>
+                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                            {kpis.outlets_unpaid > 0 ? (
+                                <>
+                                    <AlertCircle className="h-3 w-3" />
+                                    {kpis.outlets_unpaid} outlet memiliki tagihan
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle className="h-3 w-3 text-emerald-500" />
+                                    <span className="text-emerald-500">Semua outlet lunas</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <Store className="h-4 w-4 text-amber-500" />
+                            Outlet Belum Bayar
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{kpis.outlets_unpaid}</div>
+                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                            <AlertCircle className="h-3 w-3" />
+                            Outlet dengan sisa tagihan
+                        </div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <Clock className="h-4 w-4 text-orange-500" />
+                            Jatuh Tempo Minggu Ini
+                        </div>
+                        <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis.due_this_week)}</div>
+                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-orange-500">
+                            {kpis.due_this_week > 0 ? (
+                                <>
+                                    <AlertCircle className="h-3 w-3" />
+                                    Segera tindak lanjuti
+                                </>
+                            ) : (
+                                <>
+                                    <CheckCircle className="h-3 w-3 text-emerald-500" />
+                                    <span className="text-emerald-500">Tidak ada jatuh tempo</span>
+                                </>
+                            )}
+                        </div>
+                    </div>
                 </section>
             </div>
         </OwnerPageShell>
