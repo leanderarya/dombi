@@ -4,7 +4,6 @@ import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
-import DataTable from '@/components/ui/data-table';
 import { Input } from '@/components/ui/input';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
@@ -140,68 +139,76 @@ export default function OwnerOrdersIndex({ orders, outlets, filters, stats, cour
             <div className="hidden lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 {/* Left: order list */}
                 <div>
-                    <DataTable
-                        rowKey="id"
-                        data={orders.data}
-                        rowClassName={(row: any) => `border-l-4 ${STATUS_BORDER[row.status] ?? 'border-l-gray-300'}`}
-                        columns={[
-                            {
-                                key: 'order_code',
-                                label: 'Kode Pesanan',
-                                className: 'font-bold tabular-nums text-text',
-                            },
-                            {
-                                key: 'customer_name',
-                                label: 'Pelanggan',
-                            },
-                            {
-                                key: 'outlet',
-                                label: 'Outlet',
-                                render: (row: any) => row.outlet?.name ?? '-',
-                            },
-                            {
-                                key: 'status',
-                                label: 'Status',
-                                render: (row: any) => {
-                                    const s = getOrderStatus(row.status);
+                    {orders.data.length === 0 ? (
+                        <div className="rounded-xl bg-white py-12 text-center text-sm text-text-muted">Tidak ada pesanan</div>
+                    ) : (
+                        <div className="space-y-3">
+                            {orders.data.map((order: any) => {
+                                const s = getOrderStatus(order.status);
+                                const borderColor = STATUS_BORDER[order.status] ?? 'border-l-gray-300';
 
-                                    return <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>;
-                                },
-                            },
-                            {
-                                key: 'total',
-                                label: 'Total',
-                                className: 'text-right tabular-nums font-semibold',
-                                render: (row: any) => formatCurrency(row.total),
-                            },
-                            {
-                                key: 'created_at',
-                                label: 'Waktu',
-                                render: (row: any) => row.created_at ? new Date(row.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-',
-                            },
-                        ]}
-                        actions={[
-                            {
-                                label: 'Konfirmasi',
-                                variant: 'primary',
-                                onClick: (row) => handleQuickConfirm(row.id),
-                                show: (row) => row.status === 'pending_confirmation',
-                            },
-                            {
-                                label: 'Detail',
-                                variant: 'secondary',
-                                onClick: (row) => router.visit(`/owner/orders/${row.id}`),
-                            },
-                            {
-                                label: 'Assign Kurir',
-                                variant: 'primary',
-                                onClick: (row) => setAssignOrder(row),
-                                show: (row) => row.status === 'ready_for_pickup' && !row.delivery,
-                            },
-                        ]}
-                        emptyMessage="Tidak ada pesanan"
-                        emptyAction={{ label: 'Lihat Semua Pesanan', href: '/owner/orders' }}
-                    />
+                                return (
+                                    <div
+                                        key={order.id}
+                                        className={`rounded-xl border border-border border-l-4 ${borderColor} bg-white p-5 transition-all duration-200 hover:shadow-md`}
+                                    >
+                                        {/* Top row: order code + total */}
+                                        <div className="flex items-start justify-between">
+                                            <div>
+                                                <div className="text-lg font-bold tabular-nums text-text">{order.order_code}</div>
+                                                <div className="mt-1">
+                                                    <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>
+                                                </div>
+                                            </div>
+                                            <span className="text-lg font-bold tabular-nums text-primary">{formatCurrency(order.total)}</span>
+                                        </div>
+
+                                        {/* Middle row: customer + outlet + time */}
+                                        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
+                                            <span>{order.customer_name ?? '-'}</span>
+                                            <span className="text-text-subtle">&middot;</span>
+                                            <span>{order.outlet?.name ?? '-'}</span>
+                                            {order.created_at && (
+                                                <>
+                                                    <span className="text-text-subtle">&middot;</span>
+                                                    <span>{new Date(order.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                                                </>
+                                            )}
+                                        </div>
+
+                                        {/* Bottom row: action buttons */}
+                                        <div className="mt-4 flex gap-2">
+                                            {order.status === 'pending_confirmation' && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleQuickConfirm(order.id)}
+                                                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                                                >
+                                                    Konfirmasi
+                                                </button>
+                                            )}
+                                            {order.status === 'ready_for_pickup' && !order.delivery && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setAssignOrder(order)}
+                                                    className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+                                                >
+                                                    Assign Kurir
+                                                </button>
+                                            )}
+                                            <button
+                                                type="button"
+                                                onClick={() => router.visit(`/owner/orders/${order.id}`)}
+                                                className="rounded-lg border border-border bg-white px-4 py-2 text-sm font-semibold text-text transition-colors hover:bg-surface-muted"
+                                            >
+                                                Detail
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
                     <Pagination links={orders.links} />
                 </div>
 
