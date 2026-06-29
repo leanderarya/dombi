@@ -4,6 +4,29 @@
 
 Make every Dombi page feel native across all roles. Eliminate "web feel" — no rubber-band scrolling, no delayed taps, no janky transitions.
 
+## Design Quality Assurance
+
+For every page or component refactored, apply these skills to ensure UI quality:
+
+| Skill | When to Use | Purpose |
+|-------|-------------|---------|
+| `/gpt-taste` | Before implementation | Generate clean, compact, minimal UI designs. Break LLM defaults (cramped layouts, poor hierarchy, generic patterns). |
+| `/steve-jobs-design-review` | After implementation | Audit for visual polish: spacing consistency, typography hierarchy, color contrast, touch target sizes, information density. |
+
+**Process per page:**
+1. `/gpt-taste` — design the layout, spacing, hierarchy
+2. Implement the design
+3. `/steve-jobs-design-review` — audit and fix issues
+4. Move to next page
+
+**What to look for:**
+- Spacing: consistent padding/margin, no cramped elements
+- Typography: clear hierarchy (title > subtitle > body > caption)
+- Colors: proper contrast, semantic usage
+- Touch targets: 44px minimum on mobile
+- Information density: compact but not cluttered
+- Functional: every element serves a purpose
+
 ## Scope: All Roles
 
 | Role | Experience | Platform | Pages |
