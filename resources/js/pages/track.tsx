@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2, ChevronLeft, Clock, Copy, Download, MapPin, Navigation, Package, Phone, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
-import { useRef, useState } from 'react';
+import { CheckCircle2, ChevronLeft, Clock, Copy, MapPin, Navigation, Package, Phone, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
+import { useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/offline-banner';
@@ -65,14 +65,12 @@ const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
 
 export default function TrackPage({ order, found, cancellationReasons = [], canCancel = false, canCreateAccount = false, accountPhone, accountName }: Props) {
     const [copied, setCopied] = useState(false);
-    const [saving, setSaving] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [cancelNote, setCancelNote] = useState('');
     const [cancelLast4Hp, setCancelLast4Hp] = useState('');
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [cancelLoading, setCancelLoading] = useState(false);
-    const contentRef = useRef<HTMLDivElement>(null);
 
     if (!found || !order) {
         return <NotFoundState />;
@@ -109,32 +107,6 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
         document.body.removeChild(textarea);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
-    }
-
-    async function handleSaveDetail() {
-        if (!contentRef.current || saving) return;
-        setSaving(true);
-
-        try {
-            const { toPng } = await import('html-to-image');
-            const dataUrl = await toPng(contentRef.current, {
-                backgroundColor: '#f8fafc',
-                pixelRatio: 2,
-                quality: 0.95,
-            });
-
-            const link = document.createElement('a');
-            link.href = dataUrl;
-            link.download = `dombi-${order.order_code}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch (err) {
-            console.error('Save failed:', err);
-            alert('Gagal menyimpan. Coba lagi.');
-        } finally {
-            setSaving(false);
-        }
     }
 
     function handleShare() {
@@ -214,7 +186,7 @@ return;
             </header>
 
             {/* Content */}
-            <main ref={contentRef} className="mx-auto max-w-lg px-4 pt-4 pb-24">
+            <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
@@ -256,23 +228,14 @@ return;
                                 {copied ? 'Tersalin' : 'Salin'}
                             </button>
                         </div>
-                        <div className="mt-3 flex gap-2">
-                            <button
-                                type="button"
-                                onClick={handleSaveDetail}
-                                disabled={saving}
-                                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80 disabled:opacity-50"
-                            >
-                                <Download className="h-4 w-4" />
-                                {saving ? 'Menyimpan...' : 'Simpan'}
-                            </button>
+                        <div className="mt-3">
                             <button
                                 type="button"
                                 onClick={handleShare}
-                                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
+                                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                             >
                                 <Share2 className="h-4 w-4" />
-                                WhatsApp
+                                Kirim ke WhatsApp
                             </button>
                         </div>
                     </div>
