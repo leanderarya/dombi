@@ -116,32 +116,19 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
         setSaving(true);
 
         try {
-            const html2canvas = (await import('html2canvas')).default;
-            const canvas = await html2canvas(contentRef.current, {
+            const { toPng } = await import('html-to-image');
+            const dataUrl = await toPng(contentRef.current, {
                 backgroundColor: '#f8fafc',
-                scale: 2,
-                useCORS: true,
-                logging: false,
-                allowTaint: true,
+                pixelRatio: 2,
+                quality: 0.95,
             });
 
-            const blob = await new Promise<Blob | null>((resolve) => {
-                canvas.toBlob(resolve, 'image/png');
-            });
-
-            if (!blob) {
-                setSaving(false);
-                return;
-            }
-
-            const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.href = url;
+            link.href = dataUrl;
             link.download = `dombi-${order.order_code}.png`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            URL.revokeObjectURL(url);
         } catch (err) {
             console.error('Save failed:', err);
             alert('Gagal menyimpan. Coba lagi.');
