@@ -28,4 +28,19 @@ export default defineConfig({
             formVariants: true,
         }),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    // Vendor chunks
+                    'vendor-react': ['react', 'react-dom', '@inertiajs/react'],
+                    'vendor-lucide': ['lucide-react'],
+                    'vendor-charts': ['recharts'],
+                    'vendor-maps': ['leaflet', 'react-leaflet'],
+                    'vendor-utils': ['sonner', 'qrcode.react', 'html-to-image'],
+                },
+            },
+        },
+        chunkSizeWarningLimit: 600,
+    },
 });
