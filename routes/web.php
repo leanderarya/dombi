@@ -141,8 +141,8 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
     });
 });
 
-// Guest cancel route — outside customer.inertia middleware to avoid auth redirect
-Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware('throttle:track-cancel')->name('track.cancel');
+// Cancel route — requires authentication to prevent unauthorized cancellation
+Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware(['auth', 'throttle:track-cancel'])->name('track.cancel');
 
 Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): void {
     // System endpoints
