@@ -18,11 +18,10 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const [itemsExpanded, setItemsExpanded] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [paymentExpanded, setPaymentExpanded] = useState(false);
-    const form = useForm({
-        payment_method: 'cod',
-    });
-
     const paymentOptions = summary.payment_options ?? [];
+    const form = useForm({
+        payment_method: paymentOptions[0]?.value ?? 'cod',
+    });
     const selectedOption = paymentOptions.find((option: any) => option.value === form.data.payment_method) ?? paymentOptions[0];
     const paymentFee = Math.round((summary.subtotal ?? 0) * (selectedOption?.fee_rate ?? 0) * 100) / 100;
     const total = (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
