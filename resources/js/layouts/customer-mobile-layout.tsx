@@ -6,6 +6,7 @@ import CustomerTopBar from '@/components/customer/customer-top-bar';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import OfflineBanner from '@/components/offline-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 import { useCart } from '@/lib/use-cart';
 import FavoritesProvider from '@/providers/favorites-provider';
 
@@ -20,6 +21,7 @@ interface Props extends PropsWithChildren {
 
 export default function CustomerMobileLayout({ children, activeOrder, topAddress, footerSlot, hideTopBar = false, hideCartBar = false, hideBottomNav = false }: Props) {
     useFlashToast();
+    const { visible } = useHideOnScroll();
     const { totalItems } = useCart();
 
     const showCartBar = !hideCartBar && !footerSlot && !activeOrder && totalItems > 0;
@@ -37,7 +39,16 @@ export default function CustomerMobileLayout({ children, activeOrder, topAddress
                 </main>
 
                 {footerSlot ?? (activeOrder ? <ActiveOrderBar order={activeOrder} /> : showCartBar ? <FloatingCartBar /> : null)}
-                {!hideBottomNav && <CustomerBottomNav />}
+                {!hideBottomNav && (
+                    <div
+                        style={{
+                            transform: visible ? 'translateY(0)' : 'translateY(100%)',
+                            transition: 'transform 200ms ease',
+                        }}
+                    >
+                        <CustomerBottomNav />
+                    </div>
+                )}
             </div>
         </FavoritesProvider>
     );
