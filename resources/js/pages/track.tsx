@@ -83,7 +83,27 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     const trackingUrl = order.tracking_url;
 
     function handleCopy() {
-        navigator.clipboard.writeText(order.recovery_token);
+        const text = order?.recovery_token;
+        if (!text) return;
+        if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(text).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            }).catch(() => fallbackCopy(text));
+        } else {
+            fallbackCopy(text);
+        }
+    }
+
+    function fallbackCopy(text: string) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     }
