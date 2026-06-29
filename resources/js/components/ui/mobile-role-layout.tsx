@@ -14,17 +14,25 @@ interface Props extends PropsWithChildren {
 export default function MobileRoleLayout({ children, bottomNav, footerSlot, hideBottomNav = false }: Props) {
     useFlashToast();
     const hasFloatingBar = !!footerSlot;
+    const hasBottomNav = !hideBottomNav && !!bottomNav;
+
+    // Bottom padding: need space for bottom nav (5rem) or floating bar (8rem), but not when hidden
+    const bottomPad = !hasBottomNav && !hasFloatingBar
+        ? 'pb-8' // Just enough for sticky action bar
+        : hasFloatingBar
+            ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]'
+            : 'pb-[calc(5rem+env(safe-area-inset-bottom))]';
 
     return (
         <div className="min-h-dvh bg-surface text-text">
             <OfflineBanner />
 
-            <main className={`mx-auto max-w-lg px-4 ${hasFloatingBar ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]' : 'pb-[calc(5rem+env(safe-area-inset-bottom))]'}`}>
+            <main className={`mx-auto max-w-lg px-4 ${bottomPad}`}>
                 {children}
             </main>
 
             {footerSlot}
-            {!hideBottomNav && bottomNav}
+            {hasBottomNav && bottomNav}
         </div>
     );
 }
