@@ -90,7 +90,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             <UpdateBanner />
 
             {/* Sidebar — hidden on mobile, visible on desktop */}
-            <aside className="fixed inset-y-0 left-0 z-50 hidden w-56 border-r border-border bg-surface lg:block">
+            <aside className="fixed inset-y-0 left-0 z-50 hidden w-56 bg-surface shadow-sm lg:block">
                 <div className="flex h-full flex-col">
                     {/* Brand */}
                     <div className="border-b border-border px-4 pt-5 pb-4">
@@ -114,7 +114,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             </aside>
 
             {/* Main content */}
-            <main id="main-content" className="pb-16 lg:pb-0 lg:pl-56">
+            <main id="main-content" className="pb-16 lg:pb-0 lg:pl-56" style={{ willChange: 'contents' }}>
                 {/* Mobile header */}
                 <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-surface px-4 py-3 lg:hidden">
                     <span className="text-sm font-semibold text-text">Dombi</span>
