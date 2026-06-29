@@ -121,20 +121,30 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
                 backgroundColor: '#f8fafc',
                 scale: 2,
                 useCORS: true,
+                logging: false,
+                allowTaint: true,
             });
 
-            canvas.toBlob((blob) => {
-                if (!blob) return;
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `dombi-${order.order_code}.png`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
-            }, 'image/png');
-        } catch {
-            // Silently fail
+            const blob = await new Promise<Blob | null>((resolve) => {
+                canvas.toBlob(resolve, 'image/png');
+            });
+
+            if (!blob) {
+                setSaving(false);
+                return;
+            }
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `dombi-${order.order_code}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Save failed:', err);
+            alert('Gagal menyimpan. Coba lagi.');
         } finally {
             setSaving(false);
         }
