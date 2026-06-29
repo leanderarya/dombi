@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Wallet, ClipboardList, AlertTriangle, Package, RotateCcw, ArrowLeftRight, CreditCard, ChevronRight, TrendingDown, CheckCircle2 } from 'lucide-react';
 import OwnerKpiCard from '@/components/owner/owner-kpi-card';
+import OwnerDashboardSkeleton from '@/components/owner/owner-dashboard-skeleton';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { ExpandableSection } from '@/components/ui/expandable-section';
 import { formatCurrency } from '@/lib/format';
@@ -55,6 +56,14 @@ export default function Dashboard({
     inventoryRisks,
 }: DashboardProps) {
     usePolling(30000, ['hero', 'kpis', 'actionRequired', 'settlementAlerts', 'inventoryRisks']);
+
+    if (!hero || !kpis || !actionRequired) {
+        return (
+            <OwnerPageShell title="Dasbor" subtitle="Ringkasan operasional hari ini">
+                <OwnerDashboardSkeleton />
+            </OwnerPageShell>
+        );
+    }
 
     const totalPendingActions = actionRequired.restocks + actionRequired.returns + actionRequired.exchanges + actionRequired.pendingSettlementVerifications;
 

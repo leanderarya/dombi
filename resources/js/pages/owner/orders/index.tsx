@@ -3,6 +3,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
@@ -34,6 +35,14 @@ export default function OwnerOrdersIndex({
     couriers,
 }: any) {
     const [assignOrder, setAssignOrder] = useState<any>(null);
+
+    if (!orders || !filters) {
+        return (
+            <OwnerPageShell title="Pesanan" subtitle="Kelola semua pesanan dari semua outlet">
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
 
     // Default to 'needs_action' when no status filter is set
     const currentStatus = filters.status ?? 'needs_action';
