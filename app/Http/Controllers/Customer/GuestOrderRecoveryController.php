@@ -15,7 +15,9 @@ class GuestOrderRecoveryController extends Controller
             'phone' => ['required', 'string', 'min:8', 'max:20'],
         ]);
 
-        $result = $recoveryService->recover($validated['phone']);
+        // Guest users only see active orders
+        $isGuest = ! auth()->check();
+        $result = $recoveryService->recover($validated['phone'], activeOnly: $isGuest);
 
         // Store recovery session for guest users
         if (! empty($result['customer_id']) && ! auth()->check()) {

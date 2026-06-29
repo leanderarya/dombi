@@ -15,8 +15,10 @@ class GuestOrderRecoveryService
     /**
      * Recover orders using phone number.
      * Phone number is the sole proof of ownership — no second factor needed.
+     *
+     * @param  bool  $activeOnly  If true, return only active orders (for guest users)
      */
-    public function recover(string $phone, ?string $recoveryToken = null, ?string $orderCode = null): array
+    public function recover(string $phone, ?string $recoveryToken = null, ?string $orderCode = null, bool $activeOnly = false): array
     {
         $normalizedPhone = PhoneNormalizer::normalize($phone);
 
@@ -40,7 +42,8 @@ class GuestOrderRecoveryService
             ->get()
             ->map(fn (Order $order) => $this->formatOrder($order));
 
-        $recentOrders = Order::query()
+        // Guest users only see active orders — no history
+        $recentOrders = $activeOnly ? collect() : Order::query()
             ->where('customer_id', $customer->id)
             ->whereIn('status', Order::HISTORY_STATUSES)
             ->where('ordered_at', '>=', now()->subDays(self::MAX_DAYS))
