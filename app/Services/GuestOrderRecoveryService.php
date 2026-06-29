@@ -13,8 +13,8 @@ class GuestOrderRecoveryService
     private const MAX_DAYS = 30;
 
     /**
-     * Recover orders using phone + recovery_token OR phone + order_code.
-     * Phone-only lookup returns minimal response requiring second-factor verification.
+     * Recover orders using phone number.
+     * Phone number is the sole proof of ownership — no second factor needed.
      */
     public function recover(string $phone, ?string $recoveryToken = null, ?string $orderCode = null): array
     {
@@ -30,36 +30,6 @@ class GuestOrderRecoveryService
 
         if (! $customer) {
             return $this->notFoundResponse();
-        }
-
-        // Phone-only: do NOT expose any order data — require second factor
-        if (! $recoveryToken && ! $orderCode) {
-            return [
-                'found' => true,
-                'requires_verification' => true,
-                'message' => 'Masukkan kode pesanan atau recovery token untuk melihat data pesanan.',
-            ];
-        }
-
-        // Verify second factor matches an order for this customer
-        if ($recoveryToken) {
-            $order = Order::query()
-                ->where('customer_id', $customer->id)
-                ->where('recovery_token', strtoupper(trim($recoveryToken)))
-                ->first();
-
-            if (! $order) {
-                return $this->notFoundResponse();
-            }
-        } else {
-            $order = Order::query()
-                ->where('customer_id', $customer->id)
-                ->where('order_code', strtoupper($orderCode))
-                ->first();
-
-            if (! $order) {
-                return $this->notFoundResponse();
-            }
         }
 
         $activeOrders = Order::query()
