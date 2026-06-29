@@ -110,6 +110,70 @@ a:disabled:active {
     }
 }
 
+/* ─── Native UI Components ─────────────────────────────── */
+
+/* Toggle switch — native iOS feel */
+input[type="checkbox"].toggle,
+.toggle-switch {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 51px;
+    height: 31px;
+    background: #e2e8f0;
+    border-radius: 15.5px;
+    position: relative;
+    cursor: pointer;
+    transition: background 150ms ease;
+    flex-shrink: 0;
+}
+
+input[type="checkbox"].toggle::after,
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 27px;
+    height: 27px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 150ms ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+input[type="checkbox"].toggle:checked,
+.toggle-switch:checked {
+    background: var(--color-primary);
+}
+
+input[type="checkbox"].toggle:checked::after,
+.toggle-switch:checked::after {
+    transform: translateX(20px);
+}
+
+/* All inputs — prevent iOS zoom (font-size >= 16px) */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"],
+input[type="search"],
+textarea,
+select {
+    font-size: 16px !important;
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1);
+    outline: none;
+}
+
 /* Mobile operational utilities */
 @utility pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
