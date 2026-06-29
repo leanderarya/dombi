@@ -2,7 +2,34 @@
 
 ## Goal
 
-Make the Dombi PWA feel like a native mobile app. Eliminate "web feel" — no rubber-band scrolling, no delayed taps, no janky transitions.
+Make every Dombi page feel native across all roles. Eliminate "web feel" — no rubber-band scrolling, no delayed taps, no janky transitions.
+
+## Scope: All Roles
+
+| Role | Experience | Platform | Pages |
+|------|-----------|----------|-------|
+| **Customer** | Mobile-first | PWA / Mobile browser | Home, Checkout, Orders, Track, Profile |
+| **Outlet** | Mobile-first | PWA / Mobile browser | Dashboard, Orders, Scan, Inventory, Restocks, Returns, Exchanges, Analytics, More |
+| **Courier** | Mobile-first | PWA / Mobile browser | Dashboard, Deliveries, Profile |
+| **Owner** | Desktop-first | Desktop browser / Tablet | Dashboard, Orders, Deliveries, Returns, Exchanges, Pricing, Inventory, Outlets, Products, Reports, Analytics, Finance, Settings |
+
+### Customer / Outlet / Courier — Mobile Experience
+- Touch-optimized (44px min targets)
+- Bottom navigation
+- Pull-to-refresh
+- Swipe gestures
+- Haptic feedback
+- Full-screen layouts
+- Bottom sheets for dialogs
+
+### Owner — Desktop Experience
+- Mouse/keyboard optimized
+- Sidebar navigation
+- Hover states (no tap-highlight)
+- Multi-column layouts where appropriate
+- Modal dialogs (not bottom sheets)
+- Keyboard shortcuts
+- Responsive breakpoints (desktop → tablet → mobile fallback)
 
 ## Current State
 
@@ -10,6 +37,8 @@ Make the Dombi PWA feel like a native mobile app. Eliminate "web feel" — no ru
 - Tailwind CSS v4 with custom design tokens
 - Inertia.js SPA navigation
 - Public Sans font
+- Owner uses `OwnerPageShell` layout (sidebar)
+- Customer/Outlet/Courier use mobile layouts (bottom nav)
 
 ## Quick Wins (Done)
 
@@ -136,7 +165,7 @@ element.addEventListener('touchmove', (e) => {
 
 ### Phase 6: Native UI Components
 
-**6.1 — Native-feel switches**
+**6.1 — Shared (all roles)**
 ```css
 /* Toggle switch */
 input[type="checkbox"] {
@@ -149,20 +178,32 @@ input[type="checkbox"] {
 input[type="checkbox"]:checked {
     background: var(--color-primary);
 }
-```
 
-**6.2 — Native-feel inputs**
-```css
+/* All inputs — prevent iOS zoom (font-size >= 16px) */
 input, textarea, select {
-    font-size: 16px; /* Prevent iOS zoom */
+    font-size: 16px;
     border-radius: 10px;
     padding: 12px 16px;
 }
 ```
 
-**6.3 — Native-feel alerts**
-- Use bottom sheets instead of browser `alert()`
-- Smooth slide-up animation
+**6.2 — Customer / Outlet / Courier (mobile)**
+- Bottom sheets for dialogs (slide-up animation)
+- `min-height: 44px` on all touch targets
+- Full-width buttons
+- Bottom navigation with hide-on-scroll
+- Pull-to-refresh on list pages
+- Swipe gestures
+
+**6.3 — Owner (desktop)**
+- Modal dialogs (centered, backdrop blur)
+- Hover states on cards and buttons (`hover:shadow-md`, `hover:bg-*`)
+- Keyboard shortcuts (Esc to close, Enter to submit)
+- Sidebar navigation (fixed left)
+- Multi-column grids where appropriate
+- `cursor: pointer` on interactive elements
+- No pull-to-refresh (desktop doesn't have it)
+- Tooltip on hover for icon buttons
 
 ### Phase 7: Performance
 
@@ -201,20 +242,27 @@ if (window.matchMedia('(display-mode: standalone)').matches) {
 
 ## Implementation Order
 
-1. Phase 1 (Touch) — 1 hour
-2. Phase 2 (Transitions) — 2 hours
-3. Phase 3 (Scroll) — 1 hour
-4. Phase 4 (Loading) — 3 hours
-5. Phase 6 (Native UI) — 2 hours
-6. Phase 7 (Performance) — 2 hours
-7. Phase 5 (Gestures) — 4 hours
-8. Phase 8 (PWA) — 1 hour
+### Shared (all roles)
+1. Phase 1 (Touch & Haptics) — 1 hour
+2. Phase 2 (Page Transitions) — 2 hours
+3. Phase 6.1 (Shared UI: switches, inputs) — 1 hour
+4. Phase 7 (Performance) — 2 hours
+
+### Customer / Outlet / Courier (mobile)
+5. Phase 3 (Scroll: hide nav, pull-to-refresh) — 1 hour
+6. Phase 4 (Loading: skeletons, optimistic UI) — 2 hours
+7. Phase 6.2 (Mobile UI: bottom sheets, touch targets) — 1 hour
+8. Phase 5 (Gestures: swipe, drag) — 3 hours
+9. Phase 8 (PWA: splash, status bar) — 1 hour
+
+### Owner (desktop)
+10. Phase 6.3 (Desktop UI: modals, hover, keyboard) — 2 hours
 
 **Total: ~16 hours**
 
 ## Priority for Demo
 
 After demo, start with:
-1. Phase 1 + 2 (Touch + Transitions) — biggest visual impact
+1. Phase 1 + 2 (Touch + Transitions) — biggest visual impact, all roles
 2. Phase 6 (Native UI) — inputs, switches, alerts
 3. Phase 4 (Loading) — skeletons, optimistic UI
