@@ -64,9 +64,14 @@ export default function NotificationList({ initialNotifications, initialUnreadCo
         }
     }, [initialNotifications, fetchNotifications]);
 
+    const csrfHeaders = {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+    };
+
     const handleMarkAsRead = async (id: number) => {
         try {
-            await fetch(`/notifications/${id}/read`, { method: 'POST' });
+            await fetch(`/notifications/${id}/read`, { method: 'POST', headers: csrfHeaders });
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch {
@@ -76,7 +81,7 @@ export default function NotificationList({ initialNotifications, initialUnreadCo
 
     const handleMarkAllAsRead = async () => {
         try {
-            await fetch('/notifications/read-all', { method: 'POST' });
+            await fetch('/notifications/read-all', { method: 'POST', headers: csrfHeaders });
             setNotifications(prev => prev.map(n => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })));
             setUnreadCount(0);
         } catch {
