@@ -11,6 +11,7 @@ import OwnerSidebarNav from '@/components/owner/owner-sidebar-nav';
 import OwnerMobileNav from '@/components/owner-mobile-nav';
 import UpdateBanner from '@/components/update-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 
 interface NavGroup {
     label: string;
@@ -74,6 +75,7 @@ const navGroups: NavGroup[] = [
 
 export default function OwnerLayout({ children }: PropsWithChildren) {
     useFlashToast();
+    const { loading } = useInertiaLoading();
     const page = usePage<any>();
     const { auth, ownerOperationalCounts } = page.props;
     const url = page.url;
@@ -130,8 +132,12 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                         </button>
                     </div>
                 </div>
-                <div className="mx-auto max-w-[1200px] px-6 py-6 lg:px-8 lg:py-8">
+                <div className="relative mx-auto max-w-300 px-6 py-6 lg:px-8 lg:py-8">
                     {children}
+                    {/* Skeleton overlay during navigation */}
+                    {loading && (
+                        <div className="absolute inset-0 z-10 bg-surface-muted/80 backdrop-blur-sm animate-pulse" />
+                    )}
                 </div>
             </main>
             <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
