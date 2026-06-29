@@ -231,21 +231,18 @@ export default function CheckoutPayment({ draft, summary }: any) {
             </section>
 
             {/* Total Card */}
-            <section className="mt-4 rounded-xl bg-primary p-4 text-white">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-white/70">Ringkasan</div>
-                <div className="mt-2.5 space-y-1.5">
+            <section className="mt-4 rounded-xl bg-primary px-4 py-3 text-white">
+                <div className="space-y-1">
                     <SummaryRow label="Subtotal" value={formatCurrency(summary.subtotal)} />
-                    <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />
-                    {paymentFee > 0 && <SummaryRow label="Biaya Pembayaran" value={formatCurrency(paymentFee)} />}
-                    <div className="border-t border-white/20 pt-2">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold text-white">Total</span>
-                            <span className="text-xl font-bold tabular-nums text-white">{formatCurrency(total)}</span>
-                        </div>
-                    </div>
+                    {summary.delivery_fee > 0 && <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />}
+                    {paymentFee > 0 && <SummaryRow label="Biaya admin" value={formatCurrency(paymentFee)} />}
+                </div>
+                <div className="mt-2 border-t border-white/20 pt-2 flex items-center justify-between">
+                    <span className="text-sm font-semibold text-white">Total</span>
+                    <span className="text-lg font-bold tabular-nums text-white">{formatCurrency(total)}</span>
                 </div>
                 {deliveryBlocked && (
-                    <div className="mt-3">
+                    <div className="mt-2">
                         <NoticeBanner
                             variant="warning"
                             title="Lokasi di luar jangkauan"
@@ -279,9 +276,9 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
     return (
-        <div className="flex items-center justify-between text-sm">
-            <span className="text-white/70">{label}</span>
-            <span className="font-semibold tabular-nums text-white">{value}</span>
+        <div className="flex items-center justify-between text-xs">
+            <span className="text-white/60">{label}</span>
+            <span className="font-medium tabular-nums text-white/90">{value}</span>
         </div>
     );
 }
