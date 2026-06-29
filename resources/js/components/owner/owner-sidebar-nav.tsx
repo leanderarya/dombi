@@ -1,6 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useEffect, useState  } from 'react';
-import type {ReactNode} from 'react';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
 
 interface NavItem {
     href: string;
@@ -24,7 +24,6 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
     const { url } = usePage();
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
-    // Auto-expand group containing active item when URL changes
     useEffect(() => {
         const activeGroup = navGroups.find((g) =>
             g.items.some((item) => isItemActive(item, url))
@@ -34,65 +33,48 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
             setExpandedGroups((prev) => {
                 const next = new Set(prev);
                 next.add(activeGroup.label);
-
                 return next;
             });
         }
     }, [url, navGroups]);
 
     const isItemActive = (item: NavItem, currentUrl: string): boolean => {
-        if (!currentUrl) {
-            return false;
-        }
-
-        if (item.isActive) {
-            return item.isActive(currentUrl);
-        }
-
-        // Strip query parameters for comparison
+        if (!currentUrl) return false;
+        if (item.isActive) return item.isActive(currentUrl);
         const pathname = currentUrl.split('?')[0];
-
         return pathname === item.href || pathname.startsWith(item.href + '/');
     };
 
     const toggleGroup = (label: string) => {
         setExpandedGroups((prev) => {
             const next = new Set(prev);
-
             if (next.has(label)) {
                 next.delete(label);
             } else {
                 next.add(label);
             }
-
             return next;
         });
     };
 
     return (
-        <nav className="flex-1 overflow-y-auto px-3 pb-4">
+        <nav className="flex-1 overflow-y-auto px-2 pb-4">
             {navGroups.map((group, groupIndex) => {
                 const isExpanded = expandedGroups.has(group.label);
                 const hasActive = group.items.some((item) => isItemActive(item, url));
 
                 return (
-                    <div key={group.label}>
-                        {/* Section separator between groups */}
-                        {groupIndex > 0 && (
-                            <div className="mx-2 my-2 border-t border-border" />
-                        )}
-
+                    <div key={group.label} className={groupIndex > 0 ? 'mt-1' : ''}>
                         {group.items.length === 1 ? (
-                            /* Single-item groups render as direct link */
                             <Link
                                 href={group.items[0].href}
-                                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
+                                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-all duration-150 ${
                                     isItemActive(group.items[0], url)
-                                        ? 'border-l-2 border-primary bg-primary/10 font-semibold text-primary'
-                                        : 'font-medium text-text-muted hover:bg-surface-muted'
+                                        ? 'bg-white font-semibold text-emerald-700 shadow-sm'
+                                        : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
                                 }`}
                             >
-                                <span className="h-4 w-4 shrink-0">{group.icon}</span>
+                                <span className="h-4 w-4 shrink-0 opacity-70">{group.icon}</span>
                                 {group.label}
                             </Link>
                         ) : (
@@ -100,38 +82,41 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
                                 <button
                                     onClick={() => toggleGroup(group.label)}
                                     aria-expanded={isExpanded}
-                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
+                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-all duration-150 ${
                                         hasActive
-                                            ? 'font-semibold text-text'
-                                            : 'font-medium text-text-muted hover:bg-surface-muted'
+                                            ? 'font-semibold text-slate-900'
+                                            : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
                                     }`}
                                 >
-                                    <span className="h-4 w-4 shrink-0">{group.icon}</span>
+                                    <span className="h-4 w-4 shrink-0 opacity-70">{group.icon}</span>
                                     <span className="flex-1 text-left">{group.label}</span>
                                     <ChevronIcon expanded={isExpanded} />
                                 </button>
                                 {isExpanded && (
-                                    <div className="ml-6 mt-0.5 space-y-0.5">
-                                        {group.items.map((item) => (
-                                            <Link
-                                                key={item.href}
-                                                href={item.href}
-                                                className={`block rounded-md px-3 py-1.5 text-sm transition-colors duration-150 ${
-                                                    isItemActive(item, url)
-                                                        ? 'border-l-2 border-primary bg-primary/10 font-semibold text-primary'
-                                                        : 'font-medium text-text-muted hover:bg-surface-muted'
-                                                }`}
-                                            >
-                                                <span className="flex items-center justify-between gap-2">
+                                    <div className="ml-4 mt-0.5 space-y-px">
+                                        {group.items.map((item) => {
+                                            const active = isItemActive(item, url);
+                                            const badgeCount = item.badgeKey ? (pendingCounts[item.badgeKey] ?? 0) : 0;
+
+                                            return (
+                                                <Link
+                                                    key={item.href}
+                                                    href={item.href}
+                                                    className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-[13px] transition-all duration-150 ${
+                                                        active
+                                                            ? 'bg-white font-semibold text-emerald-700 shadow-sm'
+                                                            : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
+                                                    }`}
+                                                >
                                                     <span>{item.label}</span>
-                                                    {item.badgeKey && (pendingCounts[item.badgeKey] ?? 0) > 0 && (
-                                                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-700">
-                                                            {pendingCounts[item.badgeKey]}
+                                                    {badgeCount > 0 && (
+                                                        <span className="min-w-4.5 rounded-full bg-amber-400 px-1.5 py-px text-center text-[10px] font-bold text-white">
+                                                            {badgeCount}
                                                         </span>
                                                     )}
-                                                </span>
-                                            </Link>
-                                        ))}
+                                                </Link>
+                                            );
+                                        })}
                                     </div>
                                 )}
                             </>
@@ -146,7 +131,7 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
 function ChevronIcon({ expanded }: { expanded: boolean }) {
     return (
         <svg
-            className={`h-3.5 w-3.5 shrink-0 transition-transform ${expanded ? 'rotate-90' : ''}`}
+            className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-200 ${expanded ? 'rotate-90' : ''}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
