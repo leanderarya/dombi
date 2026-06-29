@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import { useCustomerLocation } from '@/lib/customer-location';
+import { ChevronDown, MapPin, Check } from 'lucide-react';
 
 type CheckoutItem = {
     product_id: number;
@@ -33,6 +34,7 @@ export default function PickupOutletSelector({ items, initialRecommendations, se
     const { location, summary } = useCustomerLocation();
     const [sheetOpen, setSheetOpen] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [expanded, setExpanded] = useState(false);
     const [recommendations, setRecommendations] = useState(initialRecommendations ?? { recommended: null, alternatives: [] });
 
     const alternatives = recommendations.alternatives ?? [];
@@ -106,97 +108,123 @@ export default function PickupOutletSelector({ items, initialRecommendations, se
     );
 
     const hasRecommendations = recommendations.recommended && alternatives.length > 0;
+    const otherOutlets = alternatives.filter((o) => o.id !== recommendations.recommended?.id);
 
     return (
         <>
-            {/* Location info card — only when no outlet recommendations yet */}
-            {!hasRecommendations && (
-                <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                    {loading ? (
-                        <div className="flex items-center gap-3">
-                            <div className="h-5 w-5 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-500" />
-                            <div className="text-sm text-slate-500">Mencari outlet terdekat...</div>
+            {/* Loading state */}
+            {loading && !hasRecommendations && (
+                <div className="mt-4 rounded-xl border border-border bg-white p-3">
+                    <div className="flex items-center gap-3">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-border border-t-primary" />
+                        <div className="text-xs text-text-muted">Mencari outlet terdekat...</div>
+                    </div>
+                </div>
+            )}
+
+            {/* No location yet */}
+            {!loading && !hasRecommendations && !summary && (
+                <div className="mt-4 rounded-xl border border-border bg-white p-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2 text-xs text-text-muted">
+                            <MapPin className="h-3.5 w-3.5 shrink-0" />
+                            <span>Izinkan lokasi untuk rekomendasi outlet</span>
                         </div>
-                    ) : (
-                        <div className="flex items-start justify-between gap-3">
-                            <div>
-                                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Lokasi Rekomendasi Pickup</div>
-                                <div className="mt-2 text-sm font-semibold text-slate-900">{summary || 'Lokasi tidak tersedia'}</div>
-                                <div className="mt-1 text-xs text-slate-500">
-                                    {summary ? 'Menghitung rekomendasi outlet dari lokasi ini.' : 'Izinkan lokasi atau pilih outlet manual.'}
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={() => setSheetOpen(true)}
-                                className="min-h-11 rounded-lg border border-slate-200 px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
-                            >
-                                {summary ? 'Ubah Lokasi' : 'Pilih Lokasi'}
-                            </button>
-                        </div>
-                    )}
-                </section>
+                        <button
+                            type="button"
+                            onClick={() => setSheetOpen(true)}
+                            className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold text-white active:opacity-80"
+                        >
+                            Atur
+                        </button>
+                    </div>
+                </div>
             )}
 
             {/* Recommended outlet card */}
-            <section className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
-                <div className="flex items-center justify-between gap-3">
-                    <div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Recommended Outlet</div>
-                        <div className="mt-1 text-sm text-slate-500">
-                            {hasRecommendations
-                                ? (summary
-                                    ? <span className="flex items-center gap-1.5">Dari lokasi Anda · <button type="button" onClick={() => setSheetOpen(true)} className="font-semibold text-emerald-600 active:opacity-80">Ubah</button></span>
-                                    : 'Stok tersedia diprioritaskan lebih dulu, lalu jarak terdekat.')
-                                : 'Stok tersedia diprioritaskan lebih dulu, lalu jarak terdekat.'}
+            {selectedOutlet && (
+                <div className="mt-4 rounded-xl border border-border bg-white">
+                    {/* Header */}
+                    <div className="flex items-center justify-between px-3.5 py-2.5">
+                        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">Ambil di Outlet</span>
+                        {summary && (
+                            <button
+                                type="button"
+                                onClick={() => setSheetOpen(true)}
+                                className="text-[11px] font-semibold text-primary active:opacity-80"
+                            >
+                                Ubah Lokasi
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Selected outlet */}
+                    <div className="border-t border-border px-3.5 py-3">
+                        <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5">
+                                    <span className="text-sm font-semibold text-text truncate">{selectedOutlet.name}</span>
+                                    <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+                                </div>
+                                <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted line-clamp-1">{selectedOutlet.address}</div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                                {selectedOutlet.distance_km !== null && selectedOutlet.distance_km !== undefined && (
+                                    <div className="text-xs font-semibold tabular-nums text-text">{selectedOutlet.distance_km.toFixed(1)} km</div>
+                                )}
+                                <div className={`mt-0.5 text-[10px] font-semibold ${selectedOutlet.stock_available ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                    {selectedOutlet.stock_available ? 'Stok tersedia' : 'Stok terbatas'}
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    {recommendations.recommended && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-emerald-700">Direkomendasikan</span>}
+
+                    {/* Other outlets — collapsible */}
+                    {otherOutlets.length > 0 && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => setExpanded(!expanded)}
+                                className="flex w-full items-center justify-between border-t border-border px-3.5 py-2 text-[11px] font-semibold text-text-muted active:bg-surface-muted"
+                            >
+                                <span>{otherOutlets.length} outlet lainnya</span>
+                                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {expanded && (
+                                <div className="border-t border-border">
+                                    {otherOutlets.map((outlet) => (
+                                        <button
+                                            key={outlet.id}
+                                            type="button"
+                                            onClick={() => {
+                                                onSelect(outlet.id);
+                                                setExpanded(false);
+                                            }}
+                                            className="flex w-full items-center justify-between px-3.5 py-2.5 text-left active:bg-surface-muted border-b border-border last:border-b-0"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-xs font-medium text-text truncate">{outlet.name}</div>
+                                                <div className="text-[10px] text-text-muted truncate">{outlet.address}</div>
+                                            </div>
+                                            <div className="shrink-0 ml-3 text-right">
+                                                {outlet.distance_km !== null && outlet.distance_km !== undefined && (
+                                                    <div className="text-[11px] font-medium tabular-nums text-text-muted">{outlet.distance_km.toFixed(1)} km</div>
+                                                )}
+                                                <div className={`text-[10px] font-semibold ${outlet.stock_available ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                                    {outlet.stock_available ? 'Tersedia' : 'Terbatas'}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </>
+                    )}
                 </div>
+            )}
 
-                {selectedOutlet ? (
-                    <div className="mt-4 space-y-3">
-                        {alternatives.map((outlet) => {
-                            const active = selectedOutletId === outlet.id;
-                            const recommended = recommendations.recommended?.id === outlet.id;
-
-                            return (
-                                <button
-                                    key={outlet.id}
-                                    type="button"
-                                    onClick={() => onSelect(outlet.id)}
-                                    className={`w-full rounded-xl border p-4 text-left transition-all active:opacity-80 ${
-                                        active ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 bg-white'
-                                    }`}
-                                >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <div className="text-sm font-semibold text-slate-900">{outlet.name}</div>
-                                                {recommended && <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700">Direkomendasikan</span>}
-                                            </div>
-                                            <div className="mt-1 text-xs leading-relaxed text-slate-500">{outlet.address}</div>
-                                            <div className="mt-1 text-xs text-slate-500">{[outlet.kelurahan, outlet.kecamatan].filter(Boolean).join(' · ')}</div>
-                                        </div>
-                                        <div className="shrink-0 text-right">
-                                            <div className="text-sm font-semibold tabular-nums text-slate-900">
-                                                {outlet.distance_km !== null && outlet.distance_km !== undefined ? `${outlet.distance_km.toFixed(1)} km` : 'Jarak belum tersedia'}
-                                            </div>
-                                            <div className="mt-1 text-[11px] font-semibold text-emerald-700">Stock Available</div>
-                                        </div>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <div className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-                        Belum ada outlet pickup yang bisa direkomendasikan untuk pesanan ini.
-                    </div>
-                )}
-
-                {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
-            </section>
+            {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
 
             <LocationSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
         </>
