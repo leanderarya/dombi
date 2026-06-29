@@ -190,34 +190,34 @@ export default function Dashboard({
 
                     {/* RIGHT COLUMN — KPI Cards + Stok Kritis */}
                     <div className="space-y-4">
-                        {/* KPI Cards — stacked vertically, compact */}
-                        <div className="space-y-2">
+                        {/* KPI Cards — 2x2 grid for desktop density */}
+                        <div className="grid grid-cols-2 gap-2">
                             <Link href="/owner/finance" className="block">
                                 <OwnerKpiCard
-                                    icon={<Wallet className="h-5 w-5" />}
+                                    icon={<Wallet className="h-4 w-4" />}
                                     label="Tagihan"
                                     value={formatCurrency(kpis.outstandingAmount)}
-                                    trend={`${settlementAlerts.length} outlet belum bayar`}
-                                    className="p-3 lg:p-4"
+                                    trend={`${settlementAlerts.length} outlet`}
+                                    className="p-3"
                                 />
                             </Link>
                             <Link href="#actions" className="block">
                                 <OwnerKpiCard
-                                    icon={<ClipboardList className="h-5 w-5" />}
-                                    label="Butuh Tindakan"
+                                    icon={<ClipboardList className="h-4 w-4" />}
+                                    label="Tindakan"
                                     value={totalPendingActions}
-                                    trend={`${actionRequired.restocks} restock · ${actionRequired.returns} return · ${actionRequired.pendingSettlementVerifications} bayar`}
-                                    className="p-3 lg:p-4"
+                                    trend={`${actionRequired.restocks} restock`}
+                                    className="p-3"
                                 />
                             </Link>
-                            <Link href="/owner/inventories?filter=critical" className="block">
+                            <Link href="/owner/inventories?filter=critical" className="block col-span-2">
                                 <OwnerKpiCard
-                                    icon={<AlertTriangle className="h-5 w-5" />}
+                                    icon={<AlertTriangle className="h-4 w-4" />}
                                     label="Stok Kritis"
                                     value={kpis.criticalStock}
                                     color={kpis.criticalStock > 0 ? 'danger' : 'success'}
                                     trend={kpis.criticalStock > 0 ? 'SKU perlu restock segera' : 'Semua stok aman'}
-                                    className="p-3 lg:p-4"
+                                    className="p-3"
                                 />
                             </Link>
                         </div>
