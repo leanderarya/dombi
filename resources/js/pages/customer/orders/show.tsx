@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, Copy, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, UserCheck } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
+import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/offline-banner';
 import StatusBadge from '@/components/ui/status-badge';
@@ -180,20 +180,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
 
                 {/* QR Code — pickup ready */}
                 {isPickup && order.status === 'ready_for_pickup' && (
-                    <div className="mt-4 rounded-xl border border-border bg-white p-4 flex flex-col items-center">
-                        <QRCodeSVG
-                            value={order.order_code}
-                            size={160}
-                            bgColor="#ffffff"
-                            fgColor="#1e40af"
-                            level="M"
-                            marginSize={0}
-                        />
-                        <div className="mt-2 text-center">
-                            <div className="text-sm font-bold tracking-wider text-primary">{order.order_code}</div>
-                            <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
-                        </div>
-                    </div>
+                    <OrderQRCard orderCode={order.order_code} />
                 )}
 
                 {/* Completed Hero */}
