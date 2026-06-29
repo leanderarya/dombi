@@ -40,6 +40,7 @@ type Props = {
     found: boolean;
     cancellationReasons?: string[];
     notifications?: { id: number; title: string; message: string; time_ago: string }[];
+    canCancel?: boolean;
     canCreateAccount?: boolean;
     accountPhone?: string;
     accountName?: string;
@@ -62,7 +63,7 @@ const STATUS_LABELS: Record<string, { label: string; description: string }> = {
 
 const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
 
-export default function TrackPage({ order, found, cancellationReasons = [], canCreateAccount = false, accountPhone, accountName }: Props) {
+export default function TrackPage({ order, found, cancellationReasons = [], canCancel = false, canCreateAccount = false, accountPhone, accountName }: Props) {
     const [copied, setCopied] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
@@ -441,7 +442,7 @@ return;
                 )}
 
                 {/* Cancel Button */}
-                {isCancellable && (
+                {isCancellable && canCancel && (
                     <div className="mt-4">
                         <button
                             type="button"

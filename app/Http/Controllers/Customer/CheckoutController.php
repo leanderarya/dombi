@@ -361,6 +361,19 @@ class CheckoutController extends Controller
             ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService)
             : null;
 
+        // Guest users cannot use COD — must pay online to prevent fake orders
+        $isGuest = ! auth()->check();
+        $paymentOptions = [
+            ['value' => 'cod', 'label' => 'COD', 'fee_rate' => 0],
+            ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007],
+            ['value' => 'transfer', 'label' => 'Transfer', 'fee_rate' => 0],
+            ['value' => 'card', 'label' => 'Card', 'fee_rate' => 0.04],
+        ];
+        if ($isGuest) {
+            $paymentOptions = array_filter($paymentOptions, fn ($opt) => $opt['value'] !== 'cod');
+            $paymentOptions = array_values($paymentOptions);
+        }
+
         return Inertia::render('customer/checkout/payment', [
             'draft' => [
                 'customer' => $request->session()->get('checkout.customer'),
@@ -373,12 +386,7 @@ class CheckoutController extends Controller
                 'subtotal' => $subtotal,
                 'delivery_fee' => $fulfillmentType === 'delivery_dombi' ? (float) ($deliveryQuote['delivery_fee'] ?? 0) : 0,
                 'delivery_quote' => $deliveryQuote,
-                'payment_options' => [
-                    ['value' => 'cod', 'label' => 'COD', 'fee_rate' => 0],
-                    ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007],
-                    ['value' => 'transfer', 'label' => 'Transfer', 'fee_rate' => 0],
-                    ['value' => 'card', 'label' => 'Card', 'fee_rate' => 0.04],
-                ],
+                'payment_options' => $paymentOptions,
             ],
             'deliveryTiers' => config('delivery.tiers', []),
         ]);
@@ -410,6 +418,11 @@ class CheckoutController extends Controller
         $validated = $request->validate([
             'payment_method' => ['required', Rule::in(self::PAYMENT_METHODS)],
         ]);
+
+        // Guest users cannot use COD
+        if (! auth()->check() && $validated['payment_method'] === 'cod') {
+            return redirect()->route('customer.checkout.payment')->withErrors(['payment_method' => 'COD tidak tersedia untuk guest. Silakan login atau pilih metode pembayaran lain.']);
+        }
 
         // Idempotency: prevent duplicate order from double-tap/refresh
         $fingerprint = md5(serialize([

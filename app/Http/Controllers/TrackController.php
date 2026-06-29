@@ -94,6 +94,7 @@ class TrackController extends Controller
             'cancellationReasons' => \App\Services\OrderStatusService::cancellationReasons(),
             'notifications' => $notifications,
             'found' => true,
+            'canCancel' => auth()->check(),
             'canCreateAccount' => $request->session()->get('canCreateAccount', false),
             'accountPhone' => $request->session()->get('accountPhone'),
             'accountName' => $request->session()->get('accountName'),
