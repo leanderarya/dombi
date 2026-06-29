@@ -1,68 +1,91 @@
 import { Head, useForm } from '@inertiajs/react';
+import { ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
-export default function OutletExchangesCreate({ variants, pendingReturns }: any) {
+interface PairedItem {
+    return_variant_id: number;
+    return_quantity: number;
+    replacement_variant_id: number;
+    replacement_quantity: number;
+}
+
+interface FormItem {
+    product_variant_id: number;
+    quantity: number;
+    replacement_variant_id: number;
+    replacement_quantity: number;
+}
+
+export default function OutletExchangesCreate({ variants, outletInventory, pendingReturns }: any) {
     const form = useForm({
         return_request_id: null as number | null,
         notes: '',
-        items: [] as { product_variant_id: number; quantity: number }[],
+        items: [] as FormItem[],
     });
 
-    const [selectedVariants, setSelectedVariants] = useState<Map<number, number>>(new Map());
-    const selectedSummary = Array.from(selectedVariants.entries()).reduce(
-        (summary, [variantId, quantity]) => {
-            const variant = variants.find((v: any) => v.id === variantId);
+    const [pairs, setPairs] = useState<PairedItem[]>([
+        { return_variant_id: 0, return_quantity: 1, replacement_variant_id: 0, replacement_quantity: 1 },
+    ]);
 
-            return {
-                totalItems: summary.totalItems + quantity,
-                totalValue: summary.totalValue + Number(variant?.selling_price ?? 0) * quantity,
-            };
-        },
-        { totalItems: 0, totalValue: 0 },
-    );
+    // Products in outlet inventory (what can be returned)
+    const outletProducts = outletInventory ?? [];
+    // All available variants (what can be requested as replacement)
+    const allVariants = variants ?? [];
 
-    const toggleVariant = (variantId: number) => {
-        const next = new Map(selectedVariants);
-
-        if (next.has(variantId)) {
-            next.delete(variantId);
-        } else {
-            const variant = variants.find((v: any) => v.id === variantId);
-            next.set(variantId, Math.min(1, Number(variant?.available_stock ?? 1)));
-        }
-
-        setSelectedVariants(next);
-        form.setData('items', Array.from(next.entries()).map(([id, qty]) => ({ product_variant_id: id, quantity: qty })));
+    const updatePair = (index: number, field: keyof PairedItem, value: number) => {
+        const updated = [...pairs];
+        updated[index] = { ...updated[index], [field]: value };
+        setPairs(updated);
+        syncForm(updated);
     };
 
-    const updateQuantity = (variantId: number, qty: number) => {
-        const variant = variants.find((v: any) => v.id === variantId);
-        const maxQty = Math.max(1, Number(variant?.available_stock ?? 1));
-        const next = new Map(selectedVariants);
-        next.set(variantId, Math.min(maxQty, Math.max(1, qty)));
-        setSelectedVariants(next);
-        form.setData('items', Array.from(next.entries()).map(([id, q]) => ({ product_variant_id: id, quantity: q })));
+    const addPair = () => {
+        const updated = [...pairs, { return_variant_id: 0, return_quantity: 1, replacement_variant_id: 0, replacement_quantity: 1 }];
+        setPairs(updated);
+        syncForm(updated);
+    };
+
+    const removePair = (index: number) => {
+        const updated = pairs.filter((_, i) => i !== index);
+        setPairs(updated);
+        syncForm(updated);
+    };
+
+    const syncForm = (items: PairedItem[]) => {
+        form.setData(
+            'items',
+            items
+                .filter((p) => p.return_variant_id > 0 && p.replacement_variant_id > 0)
+                .map((p) => ({
+                    product_variant_id: p.return_variant_id,
+                    quantity: p.return_quantity,
+                    replacement_variant_id: p.replacement_variant_id,
+                    replacement_quantity: p.replacement_quantity,
+                })),
+        );
     };
 
     const handleSubmit = () => {
         form.post('/outlet/exchanges');
     };
 
+    const getVariantName = (id: number) => allVariants.find((v: any) => v.id === id)?.full_name ?? allVariants.find((v: any) => v.id === id)?.name ?? '-';
+
     return (
-        <OutletLayout title="Ajukan Tukar Produk" subtitle="Request produk pengganti" backHref="/outlet/exchanges" hideNav>
+        <OutletLayout title="Ajukan Tukar Produk" subtitle="Tukar produk lama dengan produk baru" backHref="/outlet/exchanges" hideNav>
             <Head title="Ajukan Tukar Produk" />
 
             <div className="mt-4 pb-40">
                 {/* Link to return */}
                 {pendingReturns.length > 0 && (
-                    <div className="mt-6">
-                        <label className="text-sm font-semibold text-text">Return Terkait (Opsional)</label>
+                    <div className="mb-4">
+                        <label className="text-xs font-semibold text-text-muted">Return Terkait (Opsional)</label>
                         <select
                             value={form.data.return_request_id ?? ''}
                             onChange={(e) => form.setData('return_request_id', e.target.value ? Number(e.target.value) : null)}
-                            className="mt-2 w-full rounded-xl border border-border p-3 text-sm"
+                            className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm"
                         >
                             <option value="">Tanpa return</option>
                             {pendingReturns.map((r: any) => (
@@ -72,53 +95,115 @@ export default function OutletExchangesCreate({ variants, pendingReturns }: any)
                     </div>
                 )}
 
+                {/* Paired Items */}
+                <div className="space-y-3">
+                    {pairs.map((pair, index) => (
+                        <div key={index} className="rounded-xl border border-border bg-white p-4">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">Pasangan {index + 1}</span>
+                                {pairs.length > 1 && (
+                                    <button onClick={() => removePair(index)} className="rounded-lg p-1.5 text-text-subtle hover:bg-red-50 hover:text-red-600">
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Return side */}
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-red-600">Dikembalikan (Produk Lama)</label>
+                                <select
+                                    value={pair.return_variant_id || ''}
+                                    onChange={(e) => updatePair(index, 'return_variant_id', Number(e.target.value))}
+                                    className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
+                                >
+                                    <option value="">Pilih produk dari inventaris...</option>
+                                    {outletProducts.map((item: any) => (
+                                        <option key={item.product_variant_id} value={item.product_variant_id}>
+                                            {item.variant?.name ?? '-'} (stok: {item.current_stock})
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="mt-2 flex items-center gap-2">
+                                    <label className="text-xs text-text-muted">Jumlah:</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={pair.return_quantity}
+                                        onChange={(e) => updatePair(index, 'return_quantity', Math.max(1, Number(e.target.value)))}
+                                        className="w-20 rounded-lg border border-border px-2 py-1.5 text-sm text-center"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Arrow */}
+                            <div className="my-3 flex justify-center">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary-light">
+                                    <ArrowRight className="h-4 w-4 text-primary" />
+                                </div>
+                            </div>
+
+                            {/* Replacement side */}
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-emerald-600">Diganti Dengan (Produk Baru)</label>
+                                <select
+                                    value={pair.replacement_variant_id || ''}
+                                    onChange={(e) => updatePair(index, 'replacement_variant_id', Number(e.target.value))}
+                                    className="w-full rounded-lg border border-border px-3 py-2.5 text-sm"
+                                >
+                                    <option value="">Pilih produk pengganti...</option>
+                                    {allVariants.map((v: any) => (
+                                        <option key={v.id} value={v.id}>
+                                            {v.full_name ?? v.name} - {formatCurrency(v.selling_price)}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="mt-2 flex items-center gap-2">
+                                    <label className="text-xs text-text-muted">Jumlah:</label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={pair.replacement_quantity}
+                                        onChange={(e) => updatePair(index, 'replacement_quantity', Math.max(1, Number(e.target.value)))}
+                                        className="w-20 rounded-lg border border-border px-2 py-1.5 text-sm text-center"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Summary */}
+                            {pair.return_variant_id > 0 && pair.replacement_variant_id > 0 && (
+                                <div className="mt-3 rounded-lg bg-surface-muted p-2.5 text-xs">
+                                    <span className="text-text-muted">{getVariantName(pair.return_variant_id)} x{pair.return_quantity}</span>
+                                    <span className="mx-2 text-text-subtle">&rarr;</span>
+                                    <span className="font-semibold text-text">{getVariantName(pair.replacement_variant_id)} x{pair.replacement_quantity}</span>
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Add Pair */}
+                <button
+                    type="button"
+                    onClick={addPair}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border py-3 text-sm font-medium text-text-muted active:bg-surface-muted"
+                >
+                    <Plus className="h-4 w-4" />
+                    Tambah Pasangan
+                </button>
+
                 {/* Notes */}
-                <div>
-                    <label className="text-sm font-semibold text-text">Catatan</label>
+                <div className="mt-4">
+                    <label className="mb-1 block text-xs font-medium text-text-muted">Catatan</label>
                     <textarea
                         value={form.data.notes}
                         onChange={(e) => form.setData('notes', e.target.value)}
                         placeholder="Opsional"
-                        className="mt-2 w-full rounded-xl border border-border p-3 text-sm"
-                        rows={3}
+                        rows={2}
+                        className="w-full rounded-lg border border-border px-3 py-2.5 text-sm placeholder:text-text-subtle"
                     />
                 </div>
 
-                {/* Variant Selection */}
-                <div className="mt-6">
-                    <label className="text-sm font-semibold text-text">Pilih Produk Pengganti</label>
-                    <div className="mt-2 space-y-2">
-                        {variants.map((v: any) => {
-                            const isSelected = selectedVariants.has(v.id);
-                            const availableStock = Number(v.available_stock ?? 0);
-
-                            return (
-                                <div key={v.id} className={`rounded-xl border p-3 transition-colors ${isSelected ? 'border-emerald-500 bg-emerald-50' : 'border-border bg-white'}`}>
-                                    <button onClick={() => toggleVariant(v.id)} disabled={availableStock <= 0} className="flex min-h-11 w-full items-center gap-3 text-left disabled:opacity-50">
-                                        <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600' : 'border-border'}`}>
-                                            {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-primary" />}
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="text-sm font-medium text-text">{v.full_name ?? v.name}</div>
-                                            <div className="text-xs text-text-muted">{formatCurrency(v.selling_price)} · tersedia {availableStock}</div>
-                                        </div>
-                                    </button>
-                                    {isSelected && (
-                                        <div className="mt-2 flex items-center justify-end gap-2">
-                                            <button onClick={() => updateQuantity(v.id, (selectedVariants.get(v.id) ?? 1) - 1)} className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted">-</button>
-                                            <span className="w-8 text-center text-sm font-bold">{selectedVariants.get(v.id) ?? 1}</span>
-                                            <button onClick={() => updateQuantity(v.id, (selectedVariants.get(v.id) ?? 1) + 1)} className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted">+</button>
-                                        </div>
-                                    )}
-                                    {form.errors[`items.${Array.from(selectedVariants.keys()).indexOf(v.id)}.quantity` as keyof typeof form.errors] && (
-                                        <div className="mt-1 text-xs text-red-600">{form.errors[`items.${Array.from(selectedVariants.keys()).indexOf(v.id)}.quantity` as keyof typeof form.errors]}</div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                    {form.errors.items && <div className="mt-1 text-xs text-red-600">{form.errors.items}</div>}
-                </div>
+                {form.errors.items && <div className="mt-2 text-xs text-red-600">{form.errors.items}</div>}
             </div>
 
             {/* Sticky Submit */}
@@ -126,17 +211,13 @@ export default function OutletExchangesCreate({ variants, pendingReturns }: any)
                 <div className="mx-auto max-w-lg px-4">
                     <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-surface-muted px-3 py-2">
                         <div>
-                            <div className="text-xs font-semibold text-text-muted">Total Items</div>
-                            <div className="text-sm font-bold text-text">{selectedSummary.totalItems} Produk</div>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-xs font-semibold text-text-muted">Nilai Tukar</div>
-                            <div className="text-sm font-bold text-text">{formatCurrency(selectedSummary.totalValue)}</div>
+                            <div className="text-xs font-semibold text-text-muted">Pasangan</div>
+                            <div className="text-sm font-bold text-text">{pairs.filter((p) => p.return_variant_id > 0 && p.replacement_variant_id > 0).length} Item</div>
                         </div>
                     </div>
                     <button
                         onClick={handleSubmit}
-                        disabled={form.processing || selectedVariants.size === 0}
+                        disabled={form.processing || pairs.filter((p) => p.return_variant_id > 0 && p.replacement_variant_id > 0).length === 0}
                         className="w-full rounded-xl bg-primary py-3 text-sm font-bold text-white active:bg-primary disabled:opacity-50"
                     >
                         {form.processing ? 'Mengirim...' : 'Ajukan Tukar Produk'}

@@ -147,7 +147,7 @@ function DistributionCard({ distribution, restock, totalDistributed }: any) {
                 <div className="space-y-2">
                     {distribution.items.map((item: any) => (
                         <div key={item.id} className="flex items-center justify-between gap-3 text-xs">
-                            <span className="min-w-0 truncate text-text-muted">{item.product.name}</span>
+                            <span className="min-w-0 truncate text-text-muted">{item.product?.name ?? item.variant?.name ?? '-'}</span>
                             <span className="font-bold text-text">{item.quantity}</span>
                         </div>
                     ))}
@@ -211,7 +211,7 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
                         <div key={item.id} className="rounded-xl border border-border p-3">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                    <div className="truncate text-sm font-bold text-text">{item.product.name}</div>
+                                    <div className="truncate text-sm font-bold text-text">{item.product?.name ?? item.variant?.name ?? '-'}</div>
                                     <div className="mt-0.5 text-xs text-text-muted">Diminta {item.requested_quantity}</div>
                                 </div>
                                 {inventory ? <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} /> : <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-text-muted">Stok Kosong</span>}
@@ -282,7 +282,7 @@ function ItemsSummary({ restock, inventories }: any) {
                         <div key={item.id} className="rounded-xl border border-border bg-slate-50 p-3">
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                    <div className="truncate text-sm font-bold text-text">{item.product.name}</div>
+                                    <div className="truncate text-sm font-bold text-text">{item.product?.name ?? item.variant?.name ?? '-'}</div>
                                     <div className="mt-1 text-xs text-text-muted">Diminta {item.requested_quantity} · Disetujui {item.approved_quantity ?? 0}</div>
                                 </div>
                                 {inventory && <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} />}

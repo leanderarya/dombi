@@ -49,20 +49,32 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                             />
                         </div>
 
-                        <div className="flex gap-2 overflow-x-auto pb-1">
-                            {['all', 'submitted', 'approved', 'preparing', 'shipped', 'received', 'completed', 'rejected'].map((status) => (
-                                <button
-                                    key={status}
-                                    onClick={() => router.get('/owner/exchanges', { ...filters, status: status === 'all' ? undefined : status }, { preserveState: true, replace: true })}
-                                    className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all ${
-                                        (status === 'all' && !filters.status) || filters.status === status
-                                            ? 'bg-primary text-white shadow-sm'
-                                            : 'bg-surface-muted text-text-muted hover:bg-zinc-200'
-                                    }`}
-                                >
-                                    {status === 'all' ? 'Semua' : getExchangeStatus(status).label}
-                                </button>
-                            ))}
+                        <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
+                            {['all', 'submitted', 'approved', 'preparing', 'shipped', 'received', 'completed', 'rejected'].map((status) => {
+                                const isActive = (status === 'all' && !filters.status) || filters.status === status;
+                                const colorMap: Record<string, string> = {
+                                    submitted: 'text-amber-600 bg-amber-50 ring-amber-200',
+                                    approved: 'text-blue-600 bg-blue-50 ring-blue-200',
+                                    preparing: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
+                                    shipped: 'text-purple-600 bg-purple-50 ring-purple-200',
+                                    received: 'text-cyan-600 bg-cyan-50 ring-cyan-200',
+                                    completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
+                                    rejected: 'text-red-600 bg-red-50 ring-red-200',
+                                };
+                                return (
+                                    <button
+                                        key={status}
+                                        onClick={() => router.get('/owner/exchanges', { ...filters, status: status === 'all' ? undefined : status }, { preserveState: true, replace: true })}
+                                        className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                                            isActive
+                                                ? colorMap[status] ?? 'bg-primary/10 text-primary ring-primary/20'
+                                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                                        }`}
+                                    >
+                                        {status === 'all' ? 'Semua' : getExchangeStatus(status).label}
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -82,34 +94,39 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                                 <Link
                                     key={ex.id}
                                     href={`/owner/exchanges/${ex.id}`}
-                                    className="block rounded-xl border border-border bg-white p-4 transition-all hover:shadow-md"
+                                    className="block rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md"
                                 >
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <div className="text-sm font-semibold text-text">Exchange #{ex.id}</div>
-                                            <div className="mt-0.5 text-xs text-text-muted">{ex.outlet?.name}</div>
-                                            <div className="mt-1 text-[11px] text-text-subtle">
-                                                {ex.return_request_id ? `Return #${ex.return_request_id}` : 'Tanpa return terkait'}
-                                            </div>
-                                        </div>
-                                        <StatusBadge variant={status.variant}>{status.label}</StatusBadge>
-                                    </div>
-                                    <div className="mt-3 flex items-center justify-between text-xs text-text-muted">
-                                        <span>{ex.items?.length ?? 0} item</span>
-                                        <span className="font-semibold text-text">{formatCurrency(ex.exchange_value)}</span>
-                                    </div>
-                                    <div className="mt-2 flex items-center justify-between text-[11px] text-text-subtle">
-                                        <span>{formatDate(ex.created_at)}</span>
+                                    {/* Row 1: ID + badge + value */}
+                                    <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold text-text">Exchange #{ex.id}</span>
+                                            <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
+                                        </div>
+                                        <span className="text-sm font-bold text-primary tabular-nums">{formatCurrency(ex.exchange_value)}</span>
+                                    </div>
+                                    {/* Row 2: metadata + actions */}
+                                    <div className="mt-1.5 flex items-center justify-between">
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-muted">
+                                            <span>{ex.outlet?.name ?? '-'}</span>
+                                            <span className="text-text-subtle">&middot;</span>
+                                            <span className="text-text-subtle">
+                                                {ex.return_request_id ? `Return #${ex.return_request_id}` : 'Tanpa return'}
+                                            </span>
+                                            <span className="text-text-subtle">&middot;</span>
+                                            <span>{ex.items?.length ?? 0} item</span>
+                                            <span className="text-text-subtle">&middot;</span>
+                                            <span>{formatDate(ex.created_at)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
                                             {ex.status === 'submitted' && (
                                                 <span
                                                     onClick={(e) => handleApprove(ex.id, e)}
-                                                    className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white active:opacity-90"
+                                                    className="rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-white active:opacity-90"
                                                 >
                                                     Setujui
                                                 </span>
                                             )}
-                                            <span className="font-semibold text-primary">Tinjau</span>
+                                            <span className="text-xs font-semibold text-primary">Tinjau</span>
                                         </div>
                                     </div>
                                 </Link>

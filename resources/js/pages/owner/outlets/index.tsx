@@ -53,27 +53,35 @@ export default function OutletsIndex({ outlets }: any) {
                 {/* Left: List */}
                 <div>
                     {/* Filter Tabs */}
-                    <div className="mb-3 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                        {FILTERS.map((f) => (
-                            <button
-                                key={f.key}
-                                type="button"
-                                onClick={() => setFilter(f.key)}
-                                className={cn(
-                                    'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200',
-                                    filter === f.key
-                                        ? 'bg-primary text-white shadow-sm shadow-primary/20'
-                                        : 'bg-surface-muted text-text-muted hover:bg-zinc-200',
-                                )}
-                            >
-                                {f.label}
-                                {f.key !== 'all' && (
-                                    <span className="ml-1 tabular-nums opacity-70">
-                                        {f.key === 'active' ? activeOutlets : f.key === 'inactive' ? totalOutlets - activeOutlets : lowStockOutlets}
-                                    </span>
-                                )}
-                            </button>
-                        ))}
+                    <div className="mb-3 flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
+                        {FILTERS.map((f) => {
+                            const isActive = filter === f.key;
+                            const colorMap: Record<string, string> = {
+                                active: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
+                                inactive: 'text-text-muted bg-surface-muted ring-border',
+                                low_stock: 'text-amber-600 bg-amber-50 ring-amber-200',
+                            };
+                            return (
+                                <button
+                                    key={f.key}
+                                    type="button"
+                                    onClick={() => setFilter(f.key)}
+                                    className={cn(
+                                        'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all',
+                                        isActive
+                                            ? colorMap[f.key] ?? 'bg-primary/10 text-primary ring-primary/20'
+                                            : 'bg-surface text-text-muted ring-border hover:bg-surface-muted',
+                                    )}
+                                >
+                                    {f.label}
+                                    {f.key !== 'all' && (
+                                        <span className="ml-1 tabular-nums opacity-70">
+                                            {f.key === 'active' ? activeOutlets : f.key === 'inactive' ? totalOutlets - activeOutlets : lowStockOutlets}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
                     </div>
 
                     <div className="space-y-3">
@@ -92,62 +100,60 @@ export default function OutletsIndex({ outlets }: any) {
                             return (
                                 <div
                                     key={outlet.id}
-                                    className="cursor-pointer rounded-xl border border-border bg-white p-5 transition-all duration-200 hover:shadow-md"
+                                    className="cursor-pointer rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md"
                                     onClick={() => router.visit(`/owner/outlets/${outlet.id}`)}
                                 >
-                                    {/* Top row: name + status */}
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <div className="text-lg font-bold text-text">{outlet.name}</div>
-                                            <div className="mt-1">
-                                                <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
-                                            </div>
+                                    {/* Row 1: name + badge + orders */}
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold text-text">{outlet.name}</span>
+                                            <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
                                         </div>
-                                        <span className="rounded-lg bg-surface-muted px-2.5 py-1 text-sm font-bold tabular-nums text-text">
+                                        <span className="rounded-md bg-surface-muted px-2 py-0.5 text-xs font-bold tabular-nums text-text-muted">
                                             {outlet.active_orders_count} pesanan
                                         </span>
                                     </div>
 
-                                    {/* Middle row: metadata */}
-                                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
-                                        <span>{outlet.kelurahan} &middot; {outlet.kecamatan}</span>
-                                        {lowStock > 0 && (
-                                            <>
-                                                <span className="text-text-subtle">&middot;</span>
-                                                <span className="font-bold text-amber-600">{lowStock} stok rendah</span>
-                                            </>
-                                        )}
-                                        {Number(outlet.pending_restocks_count) > 0 && (
-                                            <>
-                                                <span className="text-text-subtle">&middot;</span>
-                                                <span>{outlet.pending_restocks_count} restock</span>
-                                            </>
-                                        )}
-                                    </div>
-
-                                    {/* Bottom row: action buttons */}
-                                    <div className="mt-4 flex gap-2">
-                                        <Link
-                                            href={`/owner/outlets/${outlet.id}`}
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white"
-                                        >
-                                            Detail
-                                        </Link>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => { e.stopPropagation(); router.visit(`/owner/outlets/${outlet.id}/edit`); }}
-                                            className="rounded-lg border border-border bg-white px-4 py-2 text-sm font-semibold text-text"
-                                        >
-                                            Edit
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={(e) => { e.stopPropagation(); router.visit(`/owner/inventories?outlet_id=${outlet.id}`); }}
-                                            className="rounded-lg border border-border bg-white px-4 py-2 text-sm font-semibold text-text"
-                                        >
-                                            Inventaris
-                                        </button>
+                                    {/* Row 2: metadata + actions */}
+                                    <div className="mt-1.5 flex items-center justify-between">
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-muted">
+                                            <span>{outlet.kelurahan} &middot; {outlet.kecamatan}</span>
+                                            {lowStock > 0 && (
+                                                <>
+                                                    <span className="text-text-subtle">&middot;</span>
+                                                    <span className="font-bold text-amber-600">{lowStock} stok rendah</span>
+                                                </>
+                                            )}
+                                            {Number(outlet.pending_restocks_count) > 0 && (
+                                                <>
+                                                    <span className="text-text-subtle">&middot;</span>
+                                                    <span>{outlet.pending_restocks_count} restock</span>
+                                                </>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-1.5">
+                                            <Link
+                                                href={`/owner/outlets/${outlet.id}`}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary-light"
+                                            >
+                                                Detail
+                                            </Link>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); router.visit(`/owner/outlets/${outlet.id}/edit`); }}
+                                                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-text-muted hover:bg-surface-muted"
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); router.visit(`/owner/inventories?outlet_id=${outlet.id}`); }}
+                                                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-text-muted hover:bg-surface-muted"
+                                            >
+                                                Inv
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             );
@@ -214,28 +220,6 @@ export default function OutletsIndex({ outlets }: any) {
                             )}
                         </div>
 
-                        {/* Quick Tips */}
-                        <div className="rounded-xl border border-border bg-white p-4">
-                            <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Tips</h3>
-                            <ul className="mt-2 space-y-2 text-xs text-text-muted">
-                                <li className="flex items-start gap-2">
-                                    <span className="mt-0.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                                    Outlet aktif tanpa stok rendah
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="mt-0.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
-                                    Perlu restock segera
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="mt-0.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-                                    Sedang sibuk (3+ pesanan aktif)
-                                </li>
-                                <li className="flex items-start gap-2">
-                                    <span className="mt-0.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400" />
-                                    Nonaktif / diarsipkan
-                                </li>
-                            </ul>
-                        </div>
                     </div>
                 </aside>
             </div>

@@ -11,10 +11,12 @@
     "require": {
         "php": "^8.3",
         "inertiajs/inertia-laravel": "^3.0",
+        "laravel-notification-channels/webpush": "^11.0",
         "laravel/framework": "^13.7",
         "laravel/socialite": "^5.27",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
+        "minishlink/web-push": "^10.1",
         "sentry/sentry-laravel": "^4.25",
         "spatie/laravel-backup": "^10.2"
     },

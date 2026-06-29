@@ -41,15 +41,15 @@ export default function OutletAnalytics({ outlet, kpis, topProducts, dailyRevenu
             <Head title="Analitik Performa" />
 
             <div className="mt-4 space-y-4">
-                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
                     {periods.map((p) => (
                         <button
                             key={p.key}
                             onClick={() => handlePeriodChange(p.key)}
-                            className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 period === p.key
-                                    ? 'bg-primary text-white'
-                                    : 'bg-surface-muted text-text-muted active:bg-surface-muted'
+                                    ? 'bg-primary/10 text-primary ring-primary/20'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
                             }`}
                         >
                             {p.label}

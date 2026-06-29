@@ -90,7 +90,8 @@ class OutletController extends Controller
             'settlementSummary' => [
                 'outstanding' => (float) Settlement::where('outlet_id', $outlet->id)
                     ->where('status', '!=', Settlement::STATUS_PAID)
-                    ->sum('amount_due - paid_amount'),
+                    ->selectRaw('SUM(amount_due - paid_amount) as total')
+                    ->value('total') ?? 0,
                 'overdue_count' => (int) Settlement::where('outlet_id', $outlet->id)
                     ->where('status', Settlement::STATUS_OVERDUE)
                     ->count(),

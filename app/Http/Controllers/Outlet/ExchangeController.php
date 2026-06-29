@@ -29,9 +29,51 @@ class ExchangeController extends Controller
 
         $exchanges = $query->paginate(20)->withQueryString();
 
+        // Outlet inventory (what can be returned)
+        $outletInventory = OutletInventory::query()
+            ->where('outlet_id', $outlet->id)
+            ->whereNotNull('product_variant_id')
+            ->where('current_stock', '>', 0)
+            ->with(['variant.family'])
+            ->get()
+            ->filter(fn (OutletInventory $inventory) => $inventory->variant && $inventory->variant->is_active)
+            ->map(function (OutletInventory $inventory) {
+                $variant = $inventory->variant;
+
+                return [
+                    'product_variant_id' => $variant->id,
+                    'variant' => [
+                        'id' => $variant->id,
+                        'name' => $variant->full_name,
+                    ],
+                    'current_stock' => $inventory->current_stock,
+                ];
+            })
+            ->values();
+
+        // All active variants (what can be requested as replacement)
+        $variants = \App\Models\ProductVariant::where('is_active', true)
+            ->with('family:id,name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (\App\Models\ProductVariant $v) => [
+                'id' => $v->id,
+                'name' => $v->name,
+                'full_name' => $v->full_name,
+                'selling_price' => $v->selling_price,
+            ]);
+
+        $pendingReturns = ReturnRequest::where('outlet_id', $outlet->id)
+            ->whereIn('status', ['approved', 'received_at_center'])
+            ->with('items.variant')
+            ->get();
+
         return Inertia::render('outlet/exchanges/index', [
             'exchanges' => $exchanges,
             'filters' => $request->only(['status']),
+            'outletInventory' => $outletInventory,
+            'variants' => $variants,
+            'pendingReturns' => $pendingReturns,
         ]);
     }
 
@@ -40,9 +82,11 @@ class ExchangeController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
-        $variants = OutletInventory::query()
+        // Outlet inventory (what can be returned)
+        $outletInventory = OutletInventory::query()
             ->where('outlet_id', $outlet->id)
             ->whereNotNull('product_variant_id')
+            ->where('current_stock', '>', 0)
             ->with(['variant.family'])
             ->get()
             ->filter(fn (OutletInventory $inventory) => $inventory->variant && $inventory->variant->is_active)
@@ -50,16 +94,27 @@ class ExchangeController extends Controller
                 $variant = $inventory->variant;
 
                 return [
-                    'id' => $variant->id,
-                    'name' => $variant->name,
-                    'full_name' => $variant->full_name,
-                    'selling_price' => $variant->selling_price,
+                    'product_variant_id' => $variant->id,
+                    'variant' => [
+                        'id' => $variant->id,
+                        'name' => $variant->full_name,
+                    ],
                     'current_stock' => $inventory->current_stock,
-                    'reserved_stock' => $inventory->reserved_stock,
-                    'available_stock' => $inventory->available_stock,
                 ];
             })
             ->values();
+
+        // All active variants (what can be requested as replacement)
+        $variants = \App\Models\ProductVariant::where('is_active', true)
+            ->with('family:id,name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (\App\Models\ProductVariant $v) => [
+                'id' => $v->id,
+                'name' => $v->name,
+                'full_name' => $v->full_name,
+                'selling_price' => $v->selling_price,
+            ]);
 
         $pendingReturns = ReturnRequest::where('outlet_id', $outlet->id)
             ->whereIn('status', ['approved', 'received_at_center'])
@@ -67,6 +122,7 @@ class ExchangeController extends Controller
             ->get();
 
         return Inertia::render('outlet/exchanges/create', [
+            'outletInventory' => $outletInventory,
             'variants' => $variants,
             'pendingReturns' => $pendingReturns,
         ]);

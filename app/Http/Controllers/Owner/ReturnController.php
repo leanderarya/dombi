@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExchangeRequest;
 use App\Models\Outlet;
 use App\Models\ReturnRequest;
+use App\Services\ExchangeService;
 use App\Services\ReturnService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,6 +16,16 @@ use Inertia\Response;
 class ReturnController extends Controller
 {
     public function index(Request $request): Response
+    {
+        $tab = $request->string('tab', 'pengembalian')->toString();
+
+        return match ($tab) {
+            'penukaran' => $this->penukaranTab($request),
+            default => $this->pengembalianTab($request),
+        };
+    }
+
+    private function pengembalianTab(Request $request): Response
     {
         $query = ReturnRequest::with(['outlet', 'requester', 'items.variant'])
             ->latest();
@@ -41,11 +53,44 @@ class ReturnController extends Controller
         $returns = $query->paginate(20)->withQueryString();
 
         return Inertia::render('owner/returns/index', [
+            'tab' => 'pengembalian',
             'returns' => $returns,
             'filters' => $request->only(['status', 'outlet_id', 'date_from', 'date_to', 'reason']),
             'dashboard' => app(ReturnService::class)->getOwnerDashboard(),
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
             'reasons' => ReturnRequest::REASONS,
+        ]);
+    }
+
+    private function penukaranTab(Request $request): Response
+    {
+        $query = ExchangeRequest::with(['outlet', 'requester', 'items.variant', 'returnRequest'])
+            ->latest();
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('outlet_id')) {
+            $query->where('outlet_id', $request->outlet_id);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $exchanges = $query->paginate(20)->withQueryString();
+
+        return Inertia::render('owner/returns/index', [
+            'tab' => 'penukaran',
+            'exchanges' => $exchanges,
+            'filters' => $request->only(['status', 'outlet_id', 'date_from', 'date_to']),
+            'exchangeDashboard' => app(ExchangeService::class)->getOwnerDashboard(),
+            'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
         ]);
     }
 

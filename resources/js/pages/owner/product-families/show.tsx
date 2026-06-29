@@ -1,10 +1,12 @@
 import { router, useForm } from '@inertiajs/react';
 import { Package, Search, Plus, Pencil, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-react';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
+
+const DEFAULT_MARKUP_PERCENT = 30;
 
 interface Variant {
     id: number;
@@ -56,6 +58,39 @@ export default function ProductFamilyShow({ family }: Props) {
         center_stock: '',
         is_active: true,
     });
+
+    // Auto-generate name from flavor + size
+    useEffect(() => {
+        if (editingVariant) return; // don't auto-fill when editing
+        const parts = [variantForm.data.flavor, variantForm.data.size].filter(Boolean);
+        if (parts.length > 0) {
+            variantForm.setData('name', parts.join(' '));
+        }
+    }, [variantForm.data.flavor, variantForm.data.size, editingVariant]);
+
+    // Auto-generate SKU from family name + flavor + size
+    useEffect(() => {
+        if (editingVariant) return;
+        const prefix = family.name.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
+        const flavorCode = variantForm.data.flavor ? variantForm.data.flavor.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, '') : '';
+        const sizeCode = variantForm.data.size ? variantForm.data.size.toUpperCase().replace(/[^A-Z0-9]/g, '') : '';
+        const parts = [prefix, flavorCode, sizeCode].filter(Boolean);
+        if (parts.length > 0) {
+            variantForm.setData('sku', parts.join('-'));
+        }
+    }, [variantForm.data.flavor, variantForm.data.size, family.name, editingVariant]);
+
+    // Auto-generate selling_price from center_price + markup
+    useEffect(() => {
+        if (editingVariant) return;
+        const center = parseFloat(variantForm.data.center_price);
+        if (!isNaN(center) && center > 0) {
+            const markup = Math.round(center * (1 + DEFAULT_MARKUP_PERCENT / 100));
+            // Round to nearest 500
+            const rounded = Math.ceil(markup / 500) * 500;
+            variantForm.setData('selling_price', String(rounded));
+        }
+    }, [variantForm.data.center_price, editingVariant]);
 
     const filteredVariants = useMemo(() => {
         if (!search) {
@@ -265,7 +300,8 @@ return;
                         {editingVariant ? 'Edit Variant' : 'Tambah Variant'}
                     </h2>
                     <div className="space-y-3">
-                        <div className="grid grid-cols-2 gap-3">
+                        {/* Required: Rasa + Ukuran + Harga Center */}
+                        <div className="grid grid-cols-3 gap-3">
                             <div>
                                 <label className="mb-1 block text-xs font-medium text-text-muted">Rasa</label>
                                 <input
@@ -286,30 +322,6 @@ return;
                                     placeholder="250ml"
                                 />
                             </div>
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-text-muted">Nama Variant</label>
-                            <input
-                                type="text"
-                                value={variantForm.data.name}
-                                onChange={(e) => variantForm.setData('name', e.target.value)}
-                                required
-                                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                                placeholder="Coklat 250ml"
-                            />
-                            {variantForm.errors.name && <p className="mt-1 text-xs text-red-600">{variantForm.errors.name}</p>}
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-text-muted">SKU</label>
-                            <input
-                                type="text"
-                                value={variantForm.data.sku}
-                                onChange={(e) => variantForm.setData('sku', e.target.value)}
-                                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                                placeholder="DOM-COK-250ML"
-                            />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
                             <div>
                                 <label className="mb-1 block text-xs font-medium text-text-muted">Harga Center (Rp)</label>
                                 <input
@@ -321,41 +333,68 @@ return;
                                     className="w-full rounded-lg border border-border px-3 py-2 text-sm"
                                 />
                             </div>
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-text-muted">Harga Jual (Rp)</label>
-                                <input
-                                    type="number"
-                                    value={variantForm.data.selling_price}
-                                    onChange={(e) => variantForm.setData('selling_price', e.target.value)}
-                                    required
-                                    min="0"
-                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                                />
-                            </div>
                         </div>
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-text-muted">Stok Pusat</label>
-                            <input
-                                type="number"
-                                value={variantForm.data.center_stock}
-                                onChange={(e) => variantForm.setData('center_stock', e.target.value)}
-                                required
-                                min="0"
-                                className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                            />
-                        </div>
-                        {editingVariant && (
-                            <div>
-                                <label className="flex items-center gap-2">
+
+                        {/* Auto-generated (editable) */}
+                        <div className="rounded-lg bg-surface-muted p-3">
+                            <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-text-subtle">Otomatis (bisa diubah)</div>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium text-text-muted">Nama Variant</label>
                                     <input
-                                        type="checkbox"
-                                        checked={variantForm.data.is_active}
-                                        onChange={(e) => variantForm.setData('is_active', e.target.checked)}
-                                        className="rounded border-zinc-300"
+                                        type="text"
+                                        value={variantForm.data.name}
+                                        onChange={(e) => variantForm.setData('name', e.target.value)}
+                                        required
+                                        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
                                     />
-                                    <span className="text-sm text-zinc-700">Aktif</span>
-                                </label>
+                                    {variantForm.errors.name && <p className="mt-1 text-xs text-red-600">{variantForm.errors.name}</p>}
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium text-text-muted">SKU</label>
+                                    <input
+                                        type="text"
+                                        value={variantForm.data.sku}
+                                        onChange={(e) => variantForm.setData('sku', e.target.value)}
+                                        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                                    />
+                                </div>
                             </div>
+                            <div className="mt-3 grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium text-text-muted">Harga Jual (Rp) <span className="text-text-subtle">({DEFAULT_MARKUP_PERCENT}% markup)</span></label>
+                                    <input
+                                        type="number"
+                                        value={variantForm.data.selling_price}
+                                        onChange={(e) => variantForm.setData('selling_price', e.target.value)}
+                                        required
+                                        min="0"
+                                        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="mb-1 block text-xs font-medium text-text-muted">Stok Pusat</label>
+                                    <input
+                                        type="number"
+                                        value={variantForm.data.center_stock || '0'}
+                                        onChange={(e) => variantForm.setData('center_stock', e.target.value)}
+                                        min="0"
+                                        className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {editingVariant && (
+                            <label className="flex items-center gap-2">
+                                <input
+                                    type="checkbox"
+                                    checked={variantForm.data.is_active}
+                                    onChange={(e) => variantForm.setData('is_active', e.target.checked)}
+                                    className="rounded border-zinc-300"
+                                />
+                                <span className="text-sm text-zinc-700">Aktif</span>
+                            </label>
                         )}
                         <div className="flex gap-2">
                             <button
@@ -396,74 +435,55 @@ return;
                     {filteredVariants.map((variant) => (
                         <div
                             key={variant.id}
-                            className={`rounded-xl border bg-white p-4 transition-opacity ${
-                                variant.is_active ? 'border-border' : 'border-zinc-100 opacity-60'
+                            className={`rounded-xl border bg-white p-4 transition-all duration-200 hover:shadow-sm ${
+                                variant.is_active ? 'border-border' : 'border-border/50 opacity-60'
                             }`}
                         >
-                            <div className="flex items-start justify-between">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-semibold text-text">{variant.name}</span>
-                                        <StatusBadge variant={variant.is_active ? 'success' : 'neutral'} size="sm">
-                                            {variant.is_active ? 'Aktif' : 'Nonaktif'}
-                                        </StatusBadge>
-                                    </div>
+                            {/* Row 1: name + badge + sku + actions */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-text">{variant.name}</span>
+                                    <StatusBadge variant={variant.is_active ? 'success' : 'neutral'} size="sm">
+                                        {variant.is_active ? 'Aktif' : 'Nonaktif'}
+                                    </StatusBadge>
                                     {variant.sku && (
-                                        <div className="mt-0.5 text-xs text-text-subtle">SKU: {variant.sku}</div>
+                                        <span className="text-[11px] text-text-subtle">{variant.sku}</span>
                                     )}
-                                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                                        <div>
-                                            <div className="text-[11px] font-medium text-text-subtle">Harga Center</div>
-                                            <div className="text-xs font-medium text-slate-700">{formatCurrency(variant.center_price)}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-[11px] font-medium text-text-subtle">Harga Jual</div>
-                                            <div className="text-xs font-medium text-slate-700">{formatCurrency(variant.selling_price)}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-[11px] font-medium text-text-subtle">Stok</div>
-                                            <div className="text-xs font-medium text-slate-700">{variant.center_stock} pcs</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-[11px] font-medium text-text-subtle">Margin</div>
-                                            <div className="text-xs font-medium text-emerald-600">{formatCurrency(margin(variant))}</div>
-                                        </div>
-                                    </div>
-                                    <div className="mt-2 flex items-center gap-3 text-xs text-text-muted">
-                                        <span>{variant.order_items_count} pesanan</span>
-                                    </div>
                                 </div>
-                                <div className="ml-3 flex items-center gap-1">
+                                <div className="flex items-center gap-0.5">
                                     <button
                                         onClick={() => handleToggleVariant(variant)}
-                                        className={`rounded-lg p-2 transition-colors ${
-                                            variant.is_active
-                                                ? 'text-primary hover:bg-primary-light'
-                                                : 'text-text-subtle hover:bg-surface-muted'
+                                        className={`rounded-lg p-1.5 transition-colors ${
+                                            variant.is_active ? 'text-primary hover:bg-primary-light' : 'text-text-subtle hover:bg-surface-muted'
                                         }`}
                                         title={variant.is_active ? 'Nonaktifkan' : 'Aktifkan'}
                                     >
-                                        {variant.is_active ? (
-                                            <ToggleRight className="h-5 w-5" />
-                                        ) : (
-                                            <ToggleLeft className="h-5 w-5" />
-                                        )}
+                                        {variant.is_active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
                                     </button>
-                                    <button
-                                        onClick={() => startEditVariant(variant)}
-                                        className="rounded-lg p-2 text-text-subtle hover:bg-surface-muted hover:text-text-muted"
-                                        title="Edit"
-                                    >
-                                        <Pencil className="h-4 w-4" />
+                                    <button onClick={() => startEditVariant(variant)} className="rounded-lg p-1.5 text-text-subtle hover:bg-surface-muted hover:text-text-muted" title="Edit">
+                                        <Pencil className="h-3.5 w-3.5" />
                                     </button>
-                                    <button
-                                        onClick={() => handleDeleteVariant(variant.id)}
-                                        className="rounded-lg p-2 text-text-subtle hover:bg-red-50 hover:text-red-600"
-                                        title="Hapus"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
+                                    <button onClick={() => handleDeleteVariant(variant.id)} className="rounded-lg p-1.5 text-text-subtle hover:bg-red-50 hover:text-red-600" title="Hapus">
+                                        <Trash2 className="h-3.5 w-3.5" />
                                     </button>
                                 </div>
+                            </div>
+
+                            {/* Row 2: stats inline */}
+                            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs">
+                                <span className="text-text-muted">{formatCurrency(variant.center_price)}</span>
+                                <span className="text-text-subtle">&rarr;</span>
+                                <span className="font-semibold text-text">{formatCurrency(variant.selling_price)}</span>
+                                <span className="text-text-subtle">&middot;</span>
+                                <span className="text-text-muted">{variant.center_stock} pcs</span>
+                                <span className="text-text-subtle">&middot;</span>
+                                <span className="font-semibold text-emerald-600">{formatCurrency(margin(variant))} margin</span>
+                                {variant.order_items_count > 0 && (
+                                    <>
+                                        <span className="text-text-subtle">&middot;</span>
+                                        <span className="text-text-muted">{variant.order_items_count} pesanan</span>
+                                    </>
+                                )}
                             </div>
                         </div>
                     ))}

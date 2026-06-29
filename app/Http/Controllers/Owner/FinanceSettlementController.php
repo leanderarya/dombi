@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\PaymentAccount;
 use App\Models\Settlement;
 use App\Models\SettlementAuditLog;
+use App\Models\SettlementPayment;
 use App\Services\SettlementPaymentService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -157,13 +159,44 @@ class FinanceSettlementController extends Controller
             }
         }
 
+        // Pembayaran tab data
+        $status = request()->string('status', 'all')->toString();
+        $paymentQuery = SettlementPayment::query()->with(['outlet', 'verifier', 'settlement']);
+        if ($status !== 'all') {
+            $paymentQuery->where('status', $status);
+        }
+        $payments = $paymentQuery->latest('payment_date')->paginate(20);
+
+        $pendingCount = SettlementPayment::where('status', SettlementPayment::STATUS_PENDING)->count();
+        $verifiedToday = SettlementPayment::where('status', SettlementPayment::STATUS_VERIFIED)
+            ->whereDate('verified_at', now())
+            ->sum('amount');
+        $verifiedMonth = SettlementPayment::where('status', SettlementPayment::STATUS_VERIFIED)
+            ->whereMonth('verified_at', now()->month)
+            ->whereYear('verified_at', now()->year)
+            ->sum('amount');
+
+        // Rekening tab data
+        $accounts = PaymentAccount::orderBy('bank_name')->get();
+
         return Inertia::render('owner/finance/index', [
+            // Tagihan
             'kpis' => [
                 'total_unpaid' => (float) $totalUnpaid,
                 'outlets_unpaid' => (int) $outletsUnpaid,
                 'due_this_week' => (float) $dueThisWeek,
             ],
             'outlets' => $outletList,
+            // Pembayaran
+            'payments' => $payments,
+            'statusFilter' => $status,
+            'paymentKpis' => [
+                'pending_count' => $pendingCount,
+                'verified_today' => (float) $verifiedToday,
+                'verified_month' => (float) $verifiedMonth,
+            ],
+            // Rekening
+            'accounts' => $accounts,
         ]);
     }
 

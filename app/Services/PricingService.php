@@ -162,6 +162,26 @@ class PricingService
     }
 
     /**
+     * Reset outlet price to global (delete override).
+     */
+    public function resetToGlobal(int $outletId, int $variantId, User $user): void
+    {
+        $existing = OutletVariantPrice::where('outlet_id', $outletId)
+            ->where('product_variant_id', $variantId)
+            ->first();
+
+        if ($existing) {
+            $oldPrice = (float) $existing->selling_price;
+            $existing->delete();
+
+            // Get global price for audit log
+            $globalPrice = ProductVariant::where('id', $variantId)->value('selling_price');
+
+            $this->logAudit($outletId, $variantId, $oldPrice, (float) $globalPrice, 'reset', $user);
+        }
+    }
+
+    /**
      * Log a pricing change.
      */
     private function logAudit(int $outletId, int $variantId, ?float $oldPrice, float $newPrice, string $action, User $user): void

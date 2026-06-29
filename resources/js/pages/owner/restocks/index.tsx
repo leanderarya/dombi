@@ -90,14 +90,14 @@ export default function OwnerRestocksIndex({ restocks, filters }: any) {
                                 >
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-text">#{r.id}</span>
+                                            <span className="text-lg font-bold text-text">#{r.id}</span>
                                             <StatusBadge status={r.status} size="sm" />
                                         </div>
-                                        <div className="mt-1.5 flex items-center gap-1.5 text-xs text-text-muted">
+                                        <div className="mt-1.5 flex items-center gap-1.5 text-sm text-text-muted">
                                             <MapPin className="h-3.5 w-3.5 shrink-0" />
                                             <span className="font-medium text-text">{r.outlet.name}</span>
                                         </div>
-                                        <div className="mt-1 flex items-center gap-3 text-xs text-text-subtle">
+                                        <div className="mt-1 flex items-center gap-3 text-sm text-text-subtle">
                                             <span>{r.items.length} item</span>
                                             <span className="tabular-nums">{formatDate(r.created_at)}</span>
                                         </div>

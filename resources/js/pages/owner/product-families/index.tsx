@@ -175,24 +175,35 @@ return true;
                     description={search ? 'Coba kata kunci lain' : 'Tambah product family pertama Anda'}
                 />
             ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                     {filteredFamilies.map((family) => (
-                        <div key={family.id} className="rounded-xl border border-border bg-white p-4">
-                            <div className="flex items-start justify-between">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold text-text">{family.name}</span>
-                                        {!family.is_active && (
-                                            <StatusBadge variant="neutral" size="sm">
-                                                Nonaktif
-                                            </StatusBadge>
-                                        )}
-                                    </div>
-                                    {family.brand && <div className="mt-0.5 text-xs text-text-muted">{family.brand}</div>}
-                                    {family.description && (
-                                        <div className="mt-1 line-clamp-2 text-xs text-text-subtle">{family.description}</div>
+                        <div key={family.id} className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm">
+                            {/* Row 1: name + badge + count + actions */}
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold text-text">{family.name}</span>
+                                    {!family.is_active && (
+                                        <StatusBadge variant="neutral" size="sm">Nonaktif</StatusBadge>
                                     )}
-                                    <div className="mt-2 flex flex-wrap gap-1">
+                                    <span className="text-xs text-text-muted">{family.variants_count} variant</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    <button onClick={() => handleEdit(family)} className="rounded-lg p-1.5 text-text-subtle hover:bg-surface-muted hover:text-text-muted">
+                                        <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button onClick={() => handleDelete(family.id)} className="rounded-lg p-1.5 text-text-subtle hover:bg-red-50 hover:text-red-600">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Row 2: meta + variants + link */}
+                            <div className="mt-1.5 flex items-center justify-between">
+                                <div className="min-w-0 flex-1">
+                                    <div className="text-xs text-text-muted">
+                                        {[family.brand, family.description].filter(Boolean).join(' · ') || '-'}
+                                    </div>
+                                    <div className="mt-1.5 flex flex-wrap gap-1">
                                         {family.variants.slice(0, 4).map((v) => (
                                             <span
                                                 key={v.id}
@@ -205,33 +216,16 @@ return true;
                                         ))}
                                         {family.variants_count > 4 && (
                                             <span className="inline-flex rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-text-muted">
-                                                +{family.variants_count - 4} lagi
+                                                +{family.variants_count - 4}
                                             </span>
                                         )}
                                     </div>
                                 </div>
-                                <div className="ml-2 flex gap-1">
-                                    <button
-                                        onClick={() => handleEdit(family)}
-                                        className="rounded-lg p-2 text-text-subtle hover:bg-surface-muted hover:text-text-muted"
-                                    >
-                                        <Pencil className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                        onClick={() => handleDelete(family.id)}
-                                        className="rounded-lg p-2 text-text-subtle hover:bg-red-50 hover:text-red-600"
-                                    >
-                                        <Trash2 className="h-4 w-4" />
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
-                                <span className="text-xs text-text-muted">{family.variants_count} variant</span>
                                 <button
                                     onClick={() => router.get(`/owner/product-families/${family.id}`)}
-                                    className="text-xs font-medium text-primary hover:text-primary/90"
+                                    className="ml-3 shrink-0 text-xs font-semibold text-primary hover:text-primary/80"
                                 >
-                                    Kelola Variant →
+                                    Kelola →
                                 </button>
                             </div>
                         </div>
