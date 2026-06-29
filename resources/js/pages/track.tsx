@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { CheckCircle2, ChevronLeft, Clock, Copy, MapPin, Navigation, Package, Phone, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
+import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/offline-banner';
 import StatusBadge from '@/components/ui/status-badge';
@@ -168,14 +168,13 @@ return;
             {/* Header */}
             <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <button
-                        type="button"
-                        onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/customer/orders'}
+                    <a
+                        href="/customer/orders"
                         className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
                         aria-label="Kembali"
                     >
                         <ChevronLeft className="h-5 w-5" />
-                    </button>
+                    </a>
                     <div className="text-center">
                         <div className="text-sm font-semibold text-text">{order.order_code}</div>
                         {order.ordered_at && (
@@ -196,20 +195,7 @@ return;
 
                 {/* QR Code — promoted above fold for pickup ready_for_pickup */}
                 {isPickup && order.status === 'ready_for_pickup' && (
-                    <div className="mt-4 rounded-xl border border-border bg-white p-4 flex flex-col items-center">
-                        <QRCodeSVG
-                            value={order.order_code}
-                            size={160}
-                            bgColor="#ffffff"
-                            fgColor="#1e40af"
-                            level="M"
-                            marginSize={0}
-                        />
-                        <div className="mt-2 text-center">
-                            <div className="text-sm font-bold tracking-wider text-primary">{order.order_code}</div>
-                            <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
-                        </div>
-                    </div>
+                    <OrderQRCard orderCode={order.order_code} />
                 )}
 
                 {/* Completed Hero */}
