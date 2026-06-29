@@ -24,18 +24,42 @@ class OrderController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
+        $tab = $request->string('tab', 'aktif')->toString();
+
+        $operationalStatuses = [
+            'pending_confirmation', 'confirmed', 'preparing',
+            'ready_for_pickup', 'picked_up', 'delivering',
+        ];
+        $historyStatuses = [
+            'completed', 'cancelled_by_customer', 'cancelled_by_outlet',
+            'rejected_by_outlet', 'failed_delivery', 'expired',
+        ];
+
+        $statuses = $tab === 'riwayat' ? $historyStatuses : $operationalStatuses;
+
         $orders = Order::query()
             ->where('outlet_id', $outlet->id)
-            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
+            ->whereIn('status', $statuses)
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->when($tab === 'aktif', fn ($q) => $q->oldest(), fn ($q) => $q->latest())
             ->with('items')
-            ->latest()
             ->paginate(20)
             ->withQueryString();
+
+        $pendingCount = Cache::remember(
+            "outlet:{$outlet->id}:pending_orders",
+            5,
+            fn () => Order::where('outlet_id', $outlet->id)
+                ->where('status', 'pending_confirmation')
+                ->count()
+        );
 
         return Inertia::render('outlet/orders/index', [
             'outlet' => $outlet,
             'orders' => $orders,
-            'filters' => $request->only(['status']),
+            'filters' => $request->only(['status', 'tab']),
+            'tab' => $tab,
+            'pendingCount' => $pendingCount,
         ]);
     }
 
