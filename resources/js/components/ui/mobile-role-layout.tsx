@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactNode } from 'react';
+import { cloneElement, isValidElement, type PropsWithChildren, type ReactNode } from 'react';
 import OfflineBanner from '@/components/offline-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
@@ -34,16 +34,10 @@ export default function MobileRoleLayout({ children, bottomNav, footerSlot, hide
             </main>
 
             {footerSlot}
-            {hasBottomNav && (
-                <div
-                    style={{
-                        transform: visible ? 'translateY(0)' : 'translateY(100%)',
-                        transition: 'transform 200ms ease',
-                    }}
-                >
-                    {bottomNav}
-                </div>
-            )}
+            {hasBottomNav && isValidElement(bottomNav)
+                ? cloneElement(bottomNav as React.ReactElement<{ visible?: boolean }>, { visible })
+                : bottomNav
+            }
         </div>
     );
 }
