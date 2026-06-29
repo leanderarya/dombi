@@ -8,14 +8,22 @@ import OutletLayout from '@/layouts/outlet-layout';
 import { useOrderAlert } from '@/hooks/use-order-alert';
 import { formatCurrency, formatRelativeDate } from '@/lib/format';
 
-const statusFilters = [
+const operationalFilters = [
     { key: '', label: 'Semua' },
     { key: 'pending_confirmation', label: 'Menunggu' },
     { key: 'confirmed', label: 'Diterima' },
     { key: 'preparing', label: 'Disiapkan' },
     { key: 'ready_for_pickup', label: 'Siap Ambil' },
+    { key: 'delivering', label: 'Dikirim' },
+];
+
+const historyFilters = [
+    { key: '', label: 'Semua' },
     { key: 'completed', label: 'Selesai' },
     { key: 'cancelled_by_outlet', label: 'Dibatalkan' },
+    { key: 'rejected_by_outlet', label: 'Ditolak' },
+    { key: 'failed_delivery', label: 'Gagal' },
+    { key: 'expired', label: 'Kadaluarsa' },
 ];
 
 const statusDotColors: Record<string, string> = {
@@ -23,6 +31,8 @@ const statusDotColors: Record<string, string> = {
     confirmed: 'bg-blue-400',
     preparing: 'bg-orange-400',
     ready_for_pickup: 'bg-emerald-400',
+    picked_up: 'bg-emerald-500',
+    delivering: 'bg-indigo-400',
     completed: 'bg-zinc-400',
     cancelled_by_customer: 'bg-red-400',
     cancelled_by_outlet: 'bg-red-400',
@@ -36,6 +46,8 @@ const statusLabels: Record<string, string> = {
     confirmed: 'Diterima',
     preparing: 'Disiapkan',
     ready_for_pickup: 'Siap',
+    picked_up: 'Diambil',
+    delivering: 'Dikirim',
     completed: 'Selesai',
     cancelled_by_customer: 'Batal',
     cancelled_by_outlet: 'Batal',
@@ -48,33 +60,64 @@ function getWaitMinutes(orderedAt: string): number {
     return Math.floor((Date.now() - new Date(orderedAt).getTime()) / 60000);
 }
 
-export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
+export default function OutletOrdersIndex({ outlet, orders, filters, tab, pendingCount }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
-    const { pendingCount } = useOrderAlert();
+    const { pendingCount: livePendingCount } = useOrderAlert();
+    const count = pendingCount ?? livePendingCount;
+
+    const handleTabChange = (newTab: string) => {
+        router.get('/outlet/orders', { tab: newTab }, { preserveState: false, replace: true });
+    };
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
-        router.get('/outlet/orders', { status: key || undefined }, { preserveState: true, replace: true });
+        router.get('/outlet/orders', { tab, status: key || undefined }, { preserveState: true, replace: true });
     };
+
+    const isAktif = tab !== 'riwayat';
+    const filterOptions = isAktif ? operationalFilters : historyFilters;
 
     return (
         <OutletLayout
             title="Pesanan"
             subtitle={outlet.name}
             headerBelow={
-                <FilterChips options={statusFilters} active={activeFilter} onChange={handleFilterChange} />
+                <div className="space-y-3">
+                    {/* Segmented Control */}
+                    <div className="flex rounded-xl bg-surface-muted p-1 mx-1">
+                        <button
+                            onClick={() => handleTabChange('aktif')}
+                            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                                isAktif ? 'bg-white shadow-sm text-text' : 'text-text-muted'
+                            }`}
+                        >
+                            Aktif{count > 0 ? ` (${count})` : ''}
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('riwayat')}
+                            className={`flex-1 py-2 text-xs font-semibold rounded-lg transition-colors ${
+                                !isAktif ? 'bg-white shadow-sm text-text' : 'text-text-muted'
+                            }`}
+                        >
+                            Riwayat
+                        </button>
+                    </div>
+
+                    {/* Filter Chips */}
+                    <FilterChips options={filterOptions} active={activeFilter} onChange={handleFilterChange} />
+                </div>
             }
         >
             <Head title="Pesanan" />
 
-            {/* Urgency Banner */}
-            {pendingCount > 0 && (
+            {/* Urgency Banner — only on Aktif tab */}
+            {isAktif && count > 0 && (
                 <button
                     onClick={() => handleFilterChange('pending_confirmation')}
                     className="mt-4 w-full rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-left text-sm transition-colors hover:bg-amber-100 active:bg-amber-200"
                 >
                     <span className="font-semibold text-amber-800">
-                        {pendingCount} pesanan menunggu konfirmasi
+                        {count} pesanan menunggu konfirmasi
                     </span>
                     <span className="ml-1 text-amber-600">&rarr;</span>
                 </button>
@@ -84,8 +127,8 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
             {orders.data.length === 0 ? (
                 <EmptyState
                     icon={<Package className="h-8 w-8 text-text-subtle" />}
-                    title="Belum ada pesanan"
-                    description={activeFilter ? 'Tidak ada pesanan dengan filter ini.' : 'Pesanan akan muncul saat customer memesan.'}
+                    title={isAktif ? 'Tidak ada pesanan aktif' : 'Belum ada riwayat'}
+                    description={activeFilter ? 'Tidak ada pesanan dengan filter ini.' : isAktif ? 'Pesanan akan muncul saat customer memesan.' : 'Riwayat pesanan akan muncul di sini.'}
                     action={activeFilter ? { label: 'Reset Filter', onClick: () => handleFilterChange('') } : undefined}
                 />
             ) : (
