@@ -12,6 +12,7 @@ import OwnerMobileNav from '@/components/owner-mobile-nav';
 import UpdateBanner from '@/components/update-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import OwnerPageSkeleton from '@/components/owner/owner-page-skeleton';
 
 interface NavGroup {
     label: string;
@@ -132,12 +133,8 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
                         </button>
                     </div>
                 </div>
-                <div className="relative mx-auto max-w-300 px-6 py-6 lg:px-8 lg:py-8">
-                    {children}
-                    {/* Skeleton overlay during navigation */}
-                    {loading && (
-                        <div className="absolute inset-0 z-10 bg-surface-muted/80 backdrop-blur-sm animate-pulse" />
-                    )}
+                <div className="mx-auto max-w-300 px-6 py-6 lg:px-8 lg:py-8">
+                    {loading ? <OwnerPageSkeleton /> : children}
                 </div>
             </main>
             <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
