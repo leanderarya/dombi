@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\User;
+use App\Services\GuestOrderMerger;
 use App\Services\PhoneVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -236,6 +237,9 @@ class SocialAuthController extends Controller
         }
 
         $otpService->clear($request);
+
+        // Merge guest orders into this account
+        app(GuestOrderMerger::class)->merge($user);
 
         $redirectUrl = $request->session()->pull('redirect_after_login', route('customer.home'));
 

@@ -441,7 +441,7 @@ return;
                     </div>
                 )}
 
-                {/* Cancel Button */}
+                {/* Cancel Button — authenticated users */}
                 {isCancellable && canCancel && (
                     <div className="mt-4">
                         <button
@@ -454,6 +454,20 @@ return;
                         <p className="mt-2 text-center text-[11px] text-text-subtle">
                             Batalkan hanya jika pesanan belum diproses
                         </p>
+                    </div>
+                )}
+
+                {/* Login CTA for cancel — guest users */}
+                {isCancellable && !canCancel && (
+                    <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
+                        <div className="text-sm font-medium text-text">Ingin membatalkan pesanan?</div>
+                        <div className="mt-1 text-xs text-text-muted">Masuk atau buat akun untuk mengelola pesanan Anda.</div>
+                        <a
+                            href={`/login?redirect=/track/${order.recovery_token}`}
+                            className="mt-3 inline-flex h-11 items-center justify-center rounded-xl bg-primary px-6 text-sm font-bold text-white active:opacity-80"
+                        >
+                            Masuk / Buat Akun
+                        </a>
                     </div>
                 )}
 
