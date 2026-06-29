@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
 use App\Models\OutletInventory;
+use App\Models\ProductFamily;
 use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,12 +19,18 @@ class InventoryController extends Controller
         $outlet = auth()->user()->outlet;
         abort_unless($outlet, 403);
 
+        $families = ProductFamily::where('is_active', true)
+            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('outlet/inventory', [
             'outlet' => $outlet,
             'inventories' => OutletInventory::with(['variant.family', 'product'])
                 ->where('outlet_id', $outlet->id)
                 ->orderBy('product_variant_id')
                 ->get(),
+            'families' => $families,
         ]);
     }
 
