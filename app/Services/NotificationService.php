@@ -137,6 +137,9 @@ class NotificationService
                 entityType: 'order',
                 entityId: $order->id
             );
+
+            // Send web push notification
+            $outletUser->notify(new \App\Notifications\NewOrderNotification($order));
         }
     }
 

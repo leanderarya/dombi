@@ -7,6 +7,10 @@
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="Dombi">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
+        @if(config('services.vapid.public_key'))
+        <meta name="vapid-public-key" content="{{ config('services.vapid.public_key') }}">
+        @endif
 
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">

@@ -204,9 +204,11 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::delete('variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
         Route::patch('variants/{variant}/toggle', [ProductVariantController::class, 'toggle'])->name('variants.toggle');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
-        Route::patch('pricing/master/{variant}', [PricingController::class, 'updateCenterPrice'])->name('pricing.master.update');
-        Route::get('pricing/master/{variant}/impact', [PricingController::class, 'getImpact'])->name('pricing.master.impact');
-        Route::patch('pricing/outlets/{outlet}/variants/{variant}', [PricingController::class, 'update'])->name('pricing.outlets.variants.update');
+        Route::get('pricing/outlets/{outlet}', [PricingController::class, 'show'])->name('pricing.outlets.show');
+        Route::patch('pricing/variants/{variant}', [PricingController::class, 'updateGlobal'])->name('pricing.variants.update');
+        Route::get('pricing/variants/{variant}/impact', [PricingController::class, 'getImpact'])->name('pricing.variants.impact');
+        Route::patch('pricing/outlets/{outlet}/variants/{variant}', [PricingController::class, 'updateOutlet'])->name('pricing.outlets.variants.update');
+        Route::delete('pricing/outlets/{outlet}/variants/{variant}', [PricingController::class, 'resetOutlet'])->name('pricing.outlets.variants.reset');
         Route::post('pricing/outlets/{outlet}/bulk-update', [PricingController::class, 'bulkUpdate'])->name('pricing.outlets.bulk-update');
         Route::post('pricing/outlets/{outlet}/copy', [PricingController::class, 'copy'])->name('pricing.outlets.copy');
         Route::get('inventories', [OwnerInventoryController::class, 'index'])->name('inventories.index');
@@ -214,8 +216,10 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('inventories', [OwnerInventoryController::class, 'store'])->name('inventories.store');
         Route::get('inventories/{inventory}/edit', [OwnerInventoryController::class, 'edit'])->name('inventories.edit');
         Route::put('inventories/{inventory}', [OwnerInventoryController::class, 'update'])->name('inventories.update');
+        Route::patch('inventories/central-stock/{variant}', [OwnerInventoryController::class, 'updateCenterStock'])->name('inventories.central-stock.update');
         Route::get('orders', [OwnerOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [OwnerOrderController::class, 'show'])->name('orders.show');
+        Route::get('order-reports/{report}', [\App\Http\Controllers\Owner\OrderReportController::class, 'show'])->name('order-reports.show');
         Route::put('order-reports/{report}', [\App\Http\Controllers\Owner\OrderReportController::class, 'update'])->name('order-reports.update');
         Route::post('orders/{order}/assign-courier', [OwnerDeliveryController::class, 'assignCourier'])->name('orders.assign-courier');
         Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
@@ -266,6 +270,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/deliveries/{delivery}', [OutletDeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('/deliveries/{delivery}/confirm-return', [OutletDeliveryController::class, 'confirmReturn'])->name('deliveries.confirm-return');
         Route::get('/orders', [OutletOrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/pending-count', [OutletOrderController::class, 'pendingCount'])->name('orders.pending-count');
         Route::get('/orders/{order}', [OutletOrderController::class, 'show'])->name('orders.show');
         Route::post('/orders/{order}/status', [OutletOrderController::class, 'updateStatus'])->name('orders.status');
         Route::post('/orders/{order}/reject', [OutletOrderController::class, 'reject'])->name('orders.reject');
@@ -274,12 +279,14 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/order-reports', [\App\Http\Controllers\Outlet\OrderReportController::class, 'index'])->name('order-reports.index');
         Route::get('/order-reports/{report}', [\App\Http\Controllers\Outlet\OrderReportController::class, 'show'])->name('order-reports.show');
         Route::put('/order-reports/{report}', [\App\Http\Controllers\Outlet\OrderReportController::class, 'update'])->name('order-reports.update');
+        Route::post('/push-subscribe', [\App\Http\Controllers\Outlet\PushController::class, 'subscribe'])->name('push-subscribe');
         Route::get('/scan', [OutletScanController::class, 'index'])->name('scan');
         Route::get('/scan/{order_code}', [OutletScanController::class, 'lookup'])->name('scan.lookup');
         Route::get('/restocks', [OutletRestockController::class, 'index'])->name('restocks.index');
         Route::get('/restocks/create', [OutletRestockController::class, 'create'])->name('restocks.create');
         Route::post('/restocks', [OutletRestockController::class, 'store'])->name('restocks.store');
         Route::get('/restocks/{restockRequest}', [OutletRestockController::class, 'show'])->name('restocks.show');
+        Route::post('/restocks/{restockRequest}/cancel', [OutletRestockController::class, 'cancel'])->name('restocks.cancel');
         Route::post('/distributions/{distribution}/confirm-received', [OutletRestockController::class, 'confirmReceived'])->name('distributions.confirm-received');
         Route::get('/settlement', [SettlementController::class, 'index'])->name('settlement.index');
         Route::get('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
