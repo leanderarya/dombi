@@ -31,13 +31,20 @@ const navItems = [
 
 interface Props {
     pendingCount?: number;
+    visible?: boolean;
 }
 
-export default function OutletBottomNav({ pendingCount = 0 }: Props) {
+export default function OutletBottomNav({ pendingCount = 0, visible = true }: Props) {
     const { url } = usePage();
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white pb-[env(safe-area-inset-bottom)]">
+        <nav
+            className="fixed inset-x-0 z-40 border-t border-border bg-white pb-[env(safe-area-inset-bottom)]"
+            style={{
+                bottom: visible ? 0 : -100,
+                transition: 'bottom 200ms ease',
+            }}
+        >
             <div className="mx-auto grid h-14 max-w-lg grid-cols-4">
                 {navItems.map((item) => {
                     const active = item.match.some((href) => url === href || url.startsWith(`${href}/`));

@@ -7,11 +7,21 @@ const navItems = [
     { href: '/customer/profile', label: 'Akun', icon: UserIcon },
 ];
 
-export default function CustomerBottomNav() {
+interface Props {
+    visible?: boolean;
+}
+
+export default function CustomerBottomNav({ visible = true }: Props) {
     const { url } = usePage();
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)]">
+        <nav
+            className="fixed inset-x-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)]"
+            style={{
+                bottom: visible ? 0 : -100,
+                transition: 'bottom 200ms ease',
+            }}
+        >
             <div className="mx-auto grid h-14 max-w-lg grid-cols-4">
                 {navItems.map((item) => {
                     const active = url === item.href || url.startsWith(`${item.href}/`) || (item.href === '/customer/home' && url === '/customer/home');
