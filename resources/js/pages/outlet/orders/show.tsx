@@ -247,7 +247,7 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
 
             {/* Sticky Actions */}
             {actions.length > 0 && <StickyActionBar actions={actions} />}
-            {actions.length > 0 && <div className="h-20" />}
+            {actions.length > 0 && <div className="h-16" />}
 
             {/* Status Confirmation Dialog */}
             {confirmAction && confirmAction !== 'complete_pickup' && (
