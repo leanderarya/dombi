@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { RotateCcw, Truck } from 'lucide-react';
 import OrderTimeline from '@/components/customer/order-timeline';
 import { orderStatusLabel, orderStatusTone, isTerminalOrder } from '@/lib/customer-status';
@@ -20,11 +20,15 @@ interface Props {
 }
 
 export default function ActiveOrderCard({ order }: Props) {
+    const { auth } = usePage<any>().props;
     const tone = orderStatusTone[order.status] ?? 'bg-zinc-100 text-zinc-700 ring-zinc-200';
     const itemSummary = order.items?.map((i) => `${i.product_name} x${i.quantity}`).join(', ') ?? '';
     const isTerminal = isTerminalOrder(order.status);
 
-    const trackingHref = `/customer/orders/${order.id}`;
+    // Guest users use public track page, authenticated users use customer order detail
+    const trackingHref = auth?.user
+        ? `/customer/orders/${order.id}`
+        : `/track/${order.recovery_token}`;
 
     return (
         <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
