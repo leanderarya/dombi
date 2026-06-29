@@ -122,16 +122,16 @@ export default function AnalyticsIndex(props: Props) {
 
     return (
         <OwnerPageShell title="Analitik" subtitle="Analitik performa bisnis">
-            {/* Tab Pills */}
-            <div className="mb-4 flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {/* Segmented Control — primary tab navigation */}
+            <div className="mb-5 inline-flex rounded-xl bg-surface-muted p-1">
                 {TABS.map((tab) => (
                     <button
                         key={tab.key}
                         onClick={() => handleTabChange(tab.key)}
-                        className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ${
+                        className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                             activeTab === tab.key
-                                ? 'bg-primary text-white shadow-sm shadow-primary/20'
-                                : 'bg-surface-muted text-text-muted hover:bg-zinc-200'
+                                ? 'bg-white text-text shadow-sm'
+                                : 'text-text-muted hover:text-text'
                         }`}
                     >
                         {tab.label}
@@ -169,16 +169,16 @@ function DashboardTab({ kpis, outletRevenue = [], topProducts = [], period = 'to
 
     return (
         <div className="space-y-4">
-            {/* Period selector */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+            {/* Period selector — secondary filter */}
+            <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
                 {periods.map((p) => (
                     <button
                         key={p.key}
                         onClick={() => handlePeriodChange(p.key)}
-                        className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
+                        className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                             period === p.key
-                                ? 'bg-primary text-white'
-                                : 'bg-surface-muted text-text-muted active:bg-surface-muted'
+                                ? 'bg-primary/10 text-primary ring-primary/20'
+                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
                         }`}
                     >
                         {p.label}
@@ -330,13 +330,12 @@ function AuditTrailTab({ movements, outlets = [], products = [], filters = {} }:
 
     const handleFilterApply = (f: Record<string, string>) => {
         router.get(
-            '/owner/stock-movements',
+            '/owner/analytics',
             {
+                tab: 'audit',
                 outlet_id: f.outlet_id || undefined,
                 product_id: f.product_id || undefined,
                 type: f.type || undefined,
-                date_from: filters.date_from,
-                date_to: filters.date_to,
             },
             { preserveState: true, replace: true },
         );
@@ -511,7 +510,7 @@ function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = {}, out
     const [secondaryOpen, setSecondaryOpen] = useState(false);
 
     function handleFilter(key: string, value: string) {
-        router.get('/owner/reports', { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
+        router.get('/owner/analytics', { tab: 'laporan', ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
     }
 
     function handleExport() {
@@ -566,14 +565,16 @@ function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = {}, out
                 </div>
             </div>
 
-            {/* Period selector */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+            {/* Period selector — secondary filter */}
+            <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
                 {periods.map((p) => (
                     <button
                         key={p.key}
                         onClick={() => setPeriod(p.key)}
-                        className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors ${
-                            period === p.key ? 'bg-primary text-white' : 'bg-surface-muted text-text-muted active:bg-surface-muted'
+                        className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                            period === p.key
+                                ? 'bg-primary/10 text-primary ring-primary/20'
+                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
                         }`}
                     >
                         {p.label}
@@ -710,7 +711,7 @@ function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = {}, out
                     },
                 ]}
                 onApply={(f) =>
-                    router.get('/owner/reports', { ...filters, outlet_id: f.outlet_id || undefined }, { preserveState: true, replace: true })
+                    router.get('/owner/analytics', { tab: 'laporan', ...filters, outlet_id: f.outlet_id || undefined }, { preserveState: true, replace: true })
                 }
             />
         </div>
@@ -771,24 +772,30 @@ function MasalahTab({ reports, filters = {} }: Props) {
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
-        router.get('/owner/order-reports', key ? { status: key } : {}, { preserveState: true, replace: true });
+        router.get('/owner/analytics', { tab: 'masalah', ...(key ? { status: key } : {}) }, { preserveState: true, replace: true });
     };
 
     if (!reports || reports.data.length === 0) {
         return (
             <div className="space-y-4">
-                {/* Filter chips */}
-                <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                {/* Filter chips — secondary filter */}
+                <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
                     {reportStatusFilters.map((option) => {
                         const isActive = activeFilter === option.key;
+                        const colorMap: Record<string, string> = {
+                            pending: 'text-amber-600 bg-amber-50 ring-amber-200',
+                            investigating: 'text-blue-600 bg-blue-50 ring-blue-200',
+                            resolved: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
+                            rejected: 'text-red-600 bg-red-50 ring-red-200',
+                        };
                         return (
                             <button
                                 key={option.key}
                                 onClick={() => handleFilterChange(option.key)}
-                                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ${
+                                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                     isActive
-                                        ? 'bg-primary text-white shadow-sm shadow-primary/20'
-                                        : 'bg-surface-muted text-text-muted hover:bg-zinc-200'
+                                        ? colorMap[option.key] ?? 'bg-primary/10 text-primary ring-primary/20'
+                                        : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
                                 }`}
                             >
                                 {option.label}
@@ -807,18 +814,24 @@ function MasalahTab({ reports, filters = {} }: Props) {
 
     return (
         <div className="space-y-4">
-            {/* Filter chips */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+            {/* Filter chips — secondary filter */}
+            <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
                 {reportStatusFilters.map((option) => {
                     const isActive = activeFilter === option.key;
+                    const colorMap: Record<string, string> = {
+                        pending: 'text-amber-600 bg-amber-50 ring-amber-200',
+                        investigating: 'text-blue-600 bg-blue-50 ring-blue-200',
+                        resolved: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
+                        rejected: 'text-red-600 bg-red-50 ring-red-200',
+                    };
                     return (
                         <button
                             key={option.key}
                             onClick={() => handleFilterChange(option.key)}
-                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-medium transition-all duration-200 ${
+                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 isActive
-                                    ? 'bg-primary text-white shadow-sm shadow-primary/20'
-                                    : 'bg-surface-muted text-text-muted hover:bg-zinc-200'
+                                    ? colorMap[option.key] ?? 'bg-primary/10 text-primary ring-primary/20'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
                             }`}
                         >
                             {option.label}

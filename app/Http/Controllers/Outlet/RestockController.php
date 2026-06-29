@@ -22,6 +22,15 @@ class RestockController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
+        $families = ProductFamily::where('is_active', true)
+            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+            ->orderBy('name')
+            ->get();
+
+        $inventories = OutletInventory::where('outlet_id', $outlet->id)
+            ->with('variant')
+            ->get();
+
         return Inertia::render('outlet/restocks/index', [
             'restocks' => RestockRequest::query()
                 ->with('distribution')
@@ -31,6 +40,8 @@ class RestockController extends Controller
                 ->paginate(20)
                 ->withQueryString(),
             'filters' => $request->only('status'),
+            'families' => $families,
+            'inventories' => $inventories,
         ]);
     }
 
@@ -65,8 +76,18 @@ class RestockController extends Controller
         abort_unless($outlet && $restockRequest->outlet_id === $outlet->id, 403);
 
         return Inertia::render('outlet/restocks/show', [
-            'restock' => $restockRequest->load(['outlet', 'items.variant.family', 'distribution.items.variant.family']),
+            'restock' => $restockRequest->load(['outlet', 'items.product', 'items.variant.family', 'distribution.items.variant.family']),
         ]);
+    }
+
+    public function cancel(Request $request, RestockRequest $restockRequest, RestockService $restockService): RedirectResponse
+    {
+        $outlet = $request->user()->outlet;
+        abort_unless($outlet && $restockRequest->outlet_id === $outlet->id, 403);
+
+        $restockService->cancelRequest($restockRequest, $request->user());
+
+        return redirect()->route('outlet.restocks.index')->with('success', 'Request restock berhasil dibatalkan.');
     }
 
     public function confirmReceived(ConfirmDistributionReceivedRequest $request, StockDistribution $distribution, RestockService $restockService): RedirectResponse

@@ -95,6 +95,26 @@ class RestockService
         });
     }
 
+    public function cancelRequest(RestockRequest $request, User $user): RestockRequest
+    {
+        return DB::transaction(function () use ($request, $user): RestockRequest {
+            $request = RestockRequest::query()->lockForUpdate()->findOrFail($request->id);
+
+            if ($request->status !== 'requested') {
+                throw ValidationException::withMessages(['status' => 'Request hanya bisa dibatalkan saat status requested.']);
+            }
+
+            $request->update([
+                'status' => 'cancelled',
+                'rejected_by' => $user->id,
+                'rejected_at' => now(),
+                'rejected_reason' => 'Dibatalkan oleh outlet',
+            ]);
+
+            return $request->fresh();
+        });
+    }
+
     public function rejectRequest(RestockRequest $request, User $owner, string $reason): RestockRequest
     {
         return DB::transaction(function () use ($request, $owner, $reason): RestockRequest {

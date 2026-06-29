@@ -107,7 +107,7 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
             <div className="mb-4 grid grid-cols-2 gap-2">
                 <QuickAction href="/outlet/orders" icon={<ClipboardList className="h-5 w-5" />} label="Pesanan" />
                 <QuickAction href="/outlet/inventory" icon={<Warehouse className="h-5 w-5" />} label="Inventaris" />
-                <QuickAction href="/outlet/restocks/create" icon={<RefreshCw className="h-5 w-5" />} label="Restock" />
+                <QuickAction href="/outlet/restocks" icon={<RefreshCw className="h-5 w-5" />} label="Restock" />
                 <QuickAction href="/outlet/deliveries" icon={<Truck className="h-5 w-5" />} label="Pengiriman" />
             </div>
 

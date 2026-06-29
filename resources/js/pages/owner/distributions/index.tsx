@@ -85,14 +85,14 @@ export default function OwnerDistributionsIndex({ distributions, filters }: any)
                                 >
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-text">#{d.id}</span>
+                                            <span className="text-lg font-bold text-text">#{d.id}</span>
                                             <StatusBadge status={d.status} size="sm" />
                                         </div>
-                                        <div className="mt-1.5 flex items-center gap-1.5 text-xs text-text-muted">
+                                        <div className="mt-1.5 flex items-center gap-1.5 text-sm text-text-muted">
                                             <MapPin className="h-3.5 w-3.5 shrink-0" />
                                             <span className="font-medium text-text">{d.outlet.name}</span>
                                         </div>
-                                        <div className="mt-1 text-xs text-text-subtle tabular-nums">
+                                        <div className="mt-1 text-sm text-text-subtle tabular-nums">
                                             {d.sent_at ? formatDate(d.sent_at) : 'Belum dikirim'}
                                         </div>
                                     </div>

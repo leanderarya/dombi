@@ -24,7 +24,7 @@ const variantStyles = {
 
 export default function StickyActionBar({ actions, leading }: Props) {
     return (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white px-4 pb-[env(safe-area-inset-bottom)] pt-3">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white/95 backdrop-blur-sm px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-3">
             <div className="mx-auto max-w-lg space-y-2">
                 {leading}
                 {actions.map((action, i) => (

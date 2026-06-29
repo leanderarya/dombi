@@ -6,6 +6,7 @@ import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/pagination';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
+import ReturnCreateDialog from '@/components/outlet/return-create-dialog';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 const statusFilters = [
@@ -17,8 +18,9 @@ const statusFilters = [
     { key: 'completed', label: 'Selesai' },
 ];
 
-export default function OutletReturnsIndex({ returns, filters }: any) {
+export default function OutletReturnsIndex({ returns, filters, variants, reasons }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
+    const [showCreate, setShowCreate] = useState(false);
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
@@ -34,13 +36,13 @@ export default function OutletReturnsIndex({ returns, filters }: any) {
 
             {/* Action Bar */}
             <div className="mt-4 mb-4 flex justify-end">
-                <Link
-                    href="/outlet/returns/create"
+                <button
+                    onClick={() => setShowCreate(true)}
                     className="flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
                 >
                     <Plus className="h-4 w-4" />
                     Ajukan Return
-                </Link>
+                </button>
             </div>
 
             {/* List */}
@@ -49,7 +51,7 @@ export default function OutletReturnsIndex({ returns, filters }: any) {
                     <EmptyState
                         title="Belum ada pengajuan return"
                         description="Ajukan return untuk produk tidak terjual atau rusak."
-                        action={{ label: 'Ajukan Return', href: '/outlet/returns/create' }}
+                        action={{ label: 'Ajukan Return', onClick: () => setShowCreate(true) }}
                     />
                 ) : (
                     returns.data.map((ret: any) => (
@@ -74,6 +76,14 @@ export default function OutletReturnsIndex({ returns, filters }: any) {
 
             <Pagination links={returns.links} />
             <div className="h-24" />
+
+            {/* Create Return Dialog */}
+            <ReturnCreateDialog
+                open={showCreate}
+                onClose={() => setShowCreate(false)}
+                variants={variants}
+                reasons={reasons}
+            />
         </OutletLayout>
     );
 }

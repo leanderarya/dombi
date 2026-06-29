@@ -44,9 +44,14 @@ class ExchangeService
                 $subtotal = $variant->selling_price * $item['quantity'];
                 $exchangeValue += $subtotal;
 
+                $replacementVariantId = $item['replacement_variant_id'] ?? null;
+                $replacementQuantity = $item['replacement_quantity'] ?? null;
+
                 $items[] = [
                     'product_variant_id' => $variant->id,
+                    'replacement_variant_id' => $replacementVariantId,
                     'quantity' => $item['quantity'],
+                    'replacement_quantity' => $replacementQuantity,
                     'unit_price' => $variant->selling_price,
                     'subtotal' => $subtotal,
                 ];

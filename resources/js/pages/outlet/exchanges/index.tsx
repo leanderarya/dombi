@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import ExchangeCreateDialog from '@/components/outlet/exchange-create-dialog';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/pagination';
@@ -19,8 +20,9 @@ const statusFilters = [
     { key: 'rejected', label: 'Ditolak' },
 ];
 
-export default function OutletExchangesIndex({ exchanges, filters }: any) {
+export default function OutletExchangesIndex({ exchanges, filters, variants, outletInventory, pendingReturns }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
+    const [showCreate, setShowCreate] = useState(false);
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
@@ -36,13 +38,13 @@ export default function OutletExchangesIndex({ exchanges, filters }: any) {
 
             {/* Action Bar */}
             <div className="mt-4 mb-4 flex justify-end">
-                <Link
-                    href="/outlet/exchanges/create"
+                <button
+                    onClick={() => setShowCreate(true)}
                     className="flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
                 >
                     <Plus className="h-4 w-4" />
                     Ajukan Tukar
-                </Link>
+                </button>
             </div>
 
             <div className="space-y-2">
@@ -50,6 +52,7 @@ export default function OutletExchangesIndex({ exchanges, filters }: any) {
                     <EmptyState
                         title="Belum ada pengajuan tukar produk"
                         description="Ajukan tukar produk untuk produk pengganti."
+                        action={{ label: 'Ajukan Tukar', onClick: () => setShowCreate(true) }}
                     />
                 ) : (
                     exchanges.data.map((ex: any) => (
@@ -74,6 +77,14 @@ export default function OutletExchangesIndex({ exchanges, filters }: any) {
 
             <Pagination links={exchanges.links} />
             <div className="h-24" />
+
+            {/* Create Exchange Dialog */}
+            <ExchangeCreateDialog
+                open={showCreate}
+                onClose={() => setShowCreate(false)}
+                variants={variants}
+                outletInventory={outletInventory}
+            />
         </OutletLayout>
     );
 }

@@ -10,6 +10,7 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
+use App\Models\StockMovement;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,11 @@ class InventoryController extends Controller
 {
     public function index(Request $request): Response
     {
+        $tab = $request->string('tab', 'outlet')->toString();
+
+        $data = ['tab' => $tab];
+
+        // Outlet inventory (always loaded)
         $outlets = Outlet::where('status', 'active')
             ->with(['inventories' => fn ($q) => $q->with(['variant.family', 'product'])->orderBy('product_variant_id')])
             ->orderBy('name')
@@ -45,15 +51,39 @@ class InventoryController extends Controller
             ];
         });
 
-        return Inertia::render('owner/inventories/index', [
-            'outletSections' => $outletSections,
-            'stats' => [
-                'totalSku' => OutletInventory::count(),
-                'lowStock' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= minimum_stock')->count(),
-                'totalReserved' => (int) OutletInventory::sum('reserved_stock'),
-                'critical' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= 0')->count(),
-            ],
-        ]);
+        $data['outletSections'] = $outletSections;
+        $data['stats'] = [
+            'totalSku' => OutletInventory::count(),
+            'lowStock' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= minimum_stock')->count(),
+            'totalReserved' => (int) OutletInventory::sum('reserved_stock'),
+            'critical' => OutletInventory::whereRaw('(current_stock - reserved_stock) <= 0')->count(),
+        ];
+
+        // Central stock (loaded when tab is pusat)
+        if ($tab === 'pusat') {
+            $variants = ProductVariant::where('is_active', true)
+                ->with('family:id,name')
+                ->orderBy('name')
+                ->get()
+                ->map(fn (ProductVariant $v) => [
+                    'id' => $v->id,
+                    'name' => $v->full_name,
+                    'family_name' => $v->family?->name,
+                    'sku' => $v->sku,
+                    'center_stock' => $v->center_stock,
+                    'center_price' => (float) $v->center_price,
+                ]);
+
+            $data['centralStock'] = $variants;
+            $data['centralStats'] = [
+                'total_variants' => $variants->count(),
+                'total_stock' => $variants->sum('center_stock'),
+                'zero_stock' => $variants->filter(fn ($v) => $v['center_stock'] <= 0)->count(),
+                'low_stock' => $variants->filter(fn ($v) => $v['center_stock'] > 0 && $v['center_stock'] <= 10)->count(),
+            ];
+        }
+
+        return Inertia::render('owner/inventories/index', $data);
     }
 
     public function create(): Response
@@ -67,6 +97,34 @@ class InventoryController extends Controller
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
             'families' => $families,
         ]);
+    }
+
+    /**
+     * Update center stock for a variant (quick edit from Stok Pusat tab).
+     */
+    public function updateCenterStock(Request $request, ProductVariant $variant): RedirectResponse
+    {
+        $validated = $request->validate([
+            'center_stock' => ['required', 'integer', 'min:0'],
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $before = $variant->center_stock;
+        $variant->update(['center_stock' => $validated['center_stock']]);
+
+        // Log via StockMovement (outlet_id = null for central stock)
+        StockMovement::create([
+            'outlet_id' => null,
+            'product_variant_id' => $variant->id,
+            'type' => 'stock_adjustment',
+            'quantity' => $validated['center_stock'] - $before,
+            'before_stock' => $before,
+            'after_stock' => $validated['center_stock'],
+            'notes' => $validated['reason'] ?? 'Stok pusat diubah manual',
+            'created_by' => $request->user()->id,
+        ]);
+
+        return back()->with('success', "Stok pusat {$variant->full_name} berhasil diperbarui.");
     }
 
     public function store(StoreInventoryRequest $request, InventoryService $inventoryService): RedirectResponse

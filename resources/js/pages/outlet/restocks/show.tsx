@@ -1,7 +1,5 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-
-
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
@@ -12,6 +10,8 @@ export default function OutletRestockShow({ restock }: any) {
     const [showForm, setShowForm] = useState(false);
     const [receivedNotes, setReceivedNotes] = useState('');
     const [damageNotes, setDamageNotes] = useState('');
+    const [showCancelDialog, setShowCancelDialog] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
 
     const handleConfirmReceived = () => {
         router.post(`/outlet/distributions/${restock.distribution.id}/confirm-received`, {
@@ -20,14 +20,34 @@ export default function OutletRestockShow({ restock }: any) {
         });
     };
 
+    const handleCancel = () => {
+        setCancelling(true);
+        router.post(`/outlet/restocks/${restock.id}/cancel`, {}, {
+            onFinish: () => {
+                setCancelling(false);
+                setShowCancelDialog(false);
+            },
+        });
+    };
+
     return (
         <OutletLayout title={`Restock #${restock.id}`} backHref="/outlet/restocks" hideNav>
             <Head title={`Restock #${restock.id}`} />
 
-            {/* Status */}
+            {/* Status + Cancel */}
             <div className="mt-4 mb-4 flex items-center justify-between">
                 <div />
-                <StatusBadge status={restock.status} />
+                <div className="flex items-center gap-2">
+                    <StatusBadge status={restock.status} />
+                    {restock.status === 'requested' && (
+                        <button
+                            onClick={() => setShowCancelDialog(true)}
+                            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50"
+                        >
+                            Batalkan
+                        </button>
+                    )}
+                </div>
             </div>
 
             {/* Items */}
@@ -35,7 +55,7 @@ export default function OutletRestockShow({ restock }: any) {
                 <div className="mt-2 space-y-2">
                     {restock.items.map((item: any) => (
                         <div key={item.id} className="flex justify-between text-sm">
-                            <span className="font-medium">{item.product.name}</span>
+                            <span className="font-medium">{item.product?.name ?? item.variant?.name ?? '-'}</span>
                             <span className="text-text-muted">Diminta: {item.requested_quantity} / Disetujui: {item.approved_quantity ?? '-'}</span>
                         </div>
                     ))}
@@ -130,6 +150,36 @@ export default function OutletRestockShow({ restock }: any) {
                 />
             )}
             {canConfirmReceived && <div className="h-20" />}
+
+            {/* Cancel Confirmation Dialog */}
+            {showCancelDialog && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40" onClick={() => setShowCancelDialog(false)} />
+                    <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+                        <h3 className="text-lg font-bold text-text">Batalkan Request?</h3>
+                        <p className="mt-2 text-sm text-text-muted">
+                            Request restock #{restock.id} akan dibatalkan. Tindakan ini tidak dapat diurungkan.
+                        </p>
+                        <div className="mt-6 flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowCancelDialog(false)}
+                                className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface-muted"
+                            >
+                                Kembali
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleCancel}
+                                disabled={cancelling}
+                                className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                            >
+                                {cancelling ? 'Membatalkan...' : 'Ya, Batalkan'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </OutletLayout>
     );
 }

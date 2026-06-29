@@ -4,7 +4,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 
 export default function OwnerDistributionShow({ distribution }: any) {
     return (
-        <OwnerPageShell title={`Distribution #${distribution.id}`} subtitle={distribution.outlet.name} backHref="/owner/distributions">
+        <OwnerPageShell title={`Distribution #${distribution.id}`} subtitle={distribution.outlet?.name ?? '-'} backHref="/owner/distributions">
             <div className="flex items-center justify-between">
                 <DistributionStatusBadge status={distribution.status} />
             </div>
@@ -14,7 +14,7 @@ export default function OwnerDistributionShow({ distribution }: any) {
                     <div className="mt-3 space-y-3">
                         {distribution.items.map((item: any) => (
                             <div key={item.id} className="flex justify-between border-t border-border pt-3 text-sm">
-                                <span>{item.product.name}</span>
+                                <span>{item.product?.name ?? item.variant?.name ?? '-'}</span>
                                 <span>{item.quantity}</span>
                             </div>
                         ))}

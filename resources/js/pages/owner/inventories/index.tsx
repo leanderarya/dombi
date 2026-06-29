@@ -6,9 +6,19 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
+import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
 
-export default function InventoriesIndex({ outletSections, stats }: any) {
+const TABS = [
+    { key: 'pusat', label: 'Stok Pusat' },
+    { key: 'outlet', label: 'Outlet' },
+] as const;
+
+type TabKey = (typeof TABS)[number]['key'];
+
+export default function InventoriesIndex({ tab: initialTab, outletSections, stats, centralStock, centralStats }: any) {
+    const [activeTab, setActiveTab] = useState<TabKey>((initialTab as TabKey) ?? 'pusat');
+
     const items = useMemo(() =>
         outletSections.flatMap((section: any) =>
             section.inventories.map((item: any) => ({
@@ -97,6 +107,11 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
         }
     };
 
+    const handleTabChange = (t: TabKey) => {
+        setActiveTab(t);
+        router.get('/owner/inventories', { tab: t }, { preserveState: true, replace: true });
+    };
+
     return (
         <OwnerPageShell
             title="Inventaris"
@@ -107,6 +122,26 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                 </Link>
             }
         >
+            {/* Segmented Control */}
+            <div className="mb-5 inline-flex rounded-xl bg-surface-muted p-1">
+                {TABS.map((t) => (
+                    <button
+                        key={t.key}
+                        onClick={() => handleTabChange(t.key)}
+                        className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                            activeTab === t.key ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'
+                        }`}
+                    >
+                        {t.label}
+                    </button>
+                ))}
+            </div>
+
+            {activeTab === 'pusat' && (
+                <CentralStockTab variants={centralStock} stats={centralStats} />
+            )}
+
+            {activeTab === 'outlet' && (
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 {/* Left: Filters + List */}
                 <div>
@@ -229,43 +264,48 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                                 return (
                                     <div
                                         key={row.id}
-                                        className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md"
+                                        className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm"
                                     >
-                                        <div className="flex items-start justify-between">
-                                            <div>
-                                                <div className="text-xs font-medium text-text-muted">{row.outlet_name}</div>
-                                                <div className="font-semibold text-text">
-                                                    {familyName && <span className="mr-1 text-[11px] text-text-subtle">{familyName}</span>}
-                                                    {variantName}
-                                                </div>
-                                            </div>
+                                        {/* Row 1: product + badge + actions */}
+                                        <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
+                                                <span className="text-sm font-bold text-text">
+                                                    {familyName && <span className="mr-1 text-xs text-text-subtle">{familyName}</span>}
+                                                    {variantName}
+                                                </span>
                                                 <StatusBadge variant={isCritical ? 'danger' : isLow ? 'warning' : 'success'} size="sm">
                                                     {isCritical ? 'Kritis' : isLow ? 'Rendah' : 'Sehat'}
                                                 </StatusBadge>
+                                            </div>
+                                            <div className="flex items-center gap-1.5">
                                                 {(isCritical || isLow) && (
-                                                    <Button
-                                                        variant="primary"
-                                                        size="sm"
-                                                        onClick={() => router.visit(`/owner/restocks/create?outlet_id=${row.outlet_id}&product_id=${row.product_id ?? row.variant_id}`)}
+                                                    <button
+                                                        onClick={() => router.visit(`/owner/restocks/create?outlet_id=${row.outlet_id}&product_id=${row.product_id ?? row.variant_id}&return_to=/owner/inventories`)}
+                                                        className="rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-white active:opacity-90"
                                                     >
                                                         Restock
-                                                    </Button>
+                                                    </button>
                                                 )}
-                                                <Button
-                                                    variant="secondary"
-                                                    size="sm"
+                                                <button
                                                     onClick={() => router.visit(`/owner/inventories/${row.id}/edit`)}
+                                                    className="rounded-lg px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary-light"
                                                 >
                                                     Edit
-                                                </Button>
+                                                </button>
                                             </div>
                                         </div>
-                                        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-                                            <span className="text-text-muted">Stok: <span className="tabular-nums">{row.current_stock}</span></span>
-                                            <span className="text-text-muted">Reserved: <span className="tabular-nums">{row.reserved_stock}</span></span>
-                                            <span className={cn('font-bold tabular-nums', isCritical ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600')}>
-                                                Tersedia: {available}
+
+                                        {/* Row 2: outlet + stats */}
+                                        <div className="mt-1.5 flex items-center justify-between">
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-muted">
+                                                <span>{row.outlet_name}</span>
+                                                <span className="text-text-subtle">&middot;</span>
+                                                <span>Stok: <span className="tabular-nums">{row.current_stock}</span></span>
+                                                <span className="text-text-subtle">&middot;</span>
+                                                <span>Reserved: <span className="tabular-nums">{row.reserved_stock}</span></span>
+                                            </div>
+                                            <span className={cn('text-xs font-bold tabular-nums', isCritical ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600')}>
+                                                {available} tersedia
                                             </span>
                                         </div>
                                     </div>
@@ -366,6 +406,204 @@ export default function InventoriesIndex({ outletSections, stats }: any) {
                     </div>
                 </div>
             </div>
+            )}
         </OwnerPageShell>
+    );
+}
+
+/* ================================================================== */
+/*  Stok Pusat Tab                                                     */
+/* ================================================================== */
+
+function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any }) {
+    const [search, setSearch] = useState('');
+    const [stockFilter, setStockFilter] = useState<'all' | 'zero' | 'low'>('all');
+    const [editModal, setEditModal] = useState<any>(null);
+    const [newStock, setNewStock] = useState('');
+    const [reason, setReason] = useState('');
+    const [saving, setSaving] = useState(false);
+
+    if (!variants || !stats) {
+        return <div className="h-20 animate-pulse rounded-xl border border-border bg-white" />;
+    }
+
+    const filtered = variants.filter((v) => {
+        if (search) {
+            const q = search.toLowerCase();
+            if (!v.name.toLowerCase().includes(q) && !(v.sku ?? '').toLowerCase().includes(q)) return false;
+        }
+        if (stockFilter === 'zero' && v.center_stock > 0) return false;
+        if (stockFilter === 'low' && (v.center_stock <= 0 || v.center_stock > 10)) return false;
+        return true;
+    });
+
+    return (
+        <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
+            <div>
+                {/* Filters */}
+                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+                        <Input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Cari produk atau SKU..."
+                            className="pl-9"
+                        />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {[
+                            { key: 'all' as const, label: 'Semua' },
+                            { key: 'zero' as const, label: 'Habis', color: 'text-red-600 bg-red-50 ring-red-200' },
+                            { key: 'low' as const, label: 'Rendah', color: 'text-amber-600 bg-amber-50 ring-amber-200' },
+                        ].map((tab) => (
+                            <button
+                                key={tab.key}
+                                onClick={() => setStockFilter(tab.key)}
+                                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                                    stockFilter === tab.key
+                                        ? tab.color ?? 'bg-primary/10 text-primary ring-primary/20'
+                                        : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                                }`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* List */}
+                <div className="space-y-2">
+                    {filtered.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-border bg-white py-12 text-center">
+                            <Package className="mx-auto h-8 w-8 text-text-subtle" />
+                            <p className="mt-2 text-sm text-text-muted">Tidak ada produk ditemukan</p>
+                        </div>
+                    ) : (
+                        filtered.map((v) => (
+                            <div key={v.id} className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm font-bold text-text">{v.name}</span>
+                                        {v.sku && <span className="text-[11px] text-text-subtle">{v.sku}</span>}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className={`text-sm font-bold tabular-nums ${v.center_stock <= 0 ? 'text-red-600' : v.center_stock <= 10 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                            {v.center_stock} pcs
+                                        </span>
+                                        <button
+                                            onClick={() => { setEditModal(v); setNewStock(String(v.center_stock)); setReason(''); }}
+                                            className="rounded-lg px-2 py-1 text-xs font-semibold text-primary hover:bg-primary-light"
+                                        >
+                                            Edit
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="mt-1.5 flex items-center gap-x-3 text-xs text-text-muted">
+                                    <span>{v.family_name ?? '-'}</span>
+                                    <span className="text-text-subtle">&middot;</span>
+                                    <span>HPP: {formatCurrency(v.center_price)}</span>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+
+            {/* KPI Sidebar */}
+            <aside className="hidden lg:block">
+                <div className="sticky top-4 space-y-3">
+                    <KpiCard icon={<Package className="h-4 w-4 text-text-subtle" />} label="Total Variant" value={stats.total_variants} />
+                    <KpiCard icon={<Package className="h-4 w-4 text-emerald-500" />} label="Total Stok Pusat" value={`${stats.total_stock} pcs`} />
+                    <KpiCard icon={<AlertTriangle className="h-4 w-4 text-red-500" />} label="Stok Habis" value={stats.zero_stock} highlight={stats.zero_stock > 0} />
+                    <KpiCard icon={<AlertTriangle className="h-4 w-4 text-amber-500" />} label="Stok Rendah" value={stats.low_stock} highlight={stats.low_stock > 0} />
+                </div>
+            </aside>
+
+            {/* Edit Modal */}
+            {editModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setEditModal(null)}>
+                    <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                        <h3 className="text-lg font-bold text-text">Edit Stok Pusat</h3>
+                        <p className="mt-1 text-sm text-text-muted">{editModal.name}</p>
+
+                        <div className="mt-4 space-y-3">
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Stok Saat Ini</label>
+                                <div className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-text-muted">
+                                    {editModal.center_stock} pcs
+                                </div>
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Stok Baru</label>
+                                <input
+                                    type="number"
+                                    value={newStock}
+                                    onChange={(e) => setNewStock(e.target.value)}
+                                    min="0"
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
+                                    autoFocus
+                                />
+                            </div>
+                            <div>
+                                <label className="mb-1 block text-xs font-medium text-text-muted">Alasan</label>
+                                <select
+                                    value={reason}
+                                    onChange={(e) => setReason(e.target.value)}
+                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                                >
+                                    <option value="">Pilih alasan...</option>
+                                    <option value="Stok opname">Stok Opname</option>
+                                    <option value="Produk rusak">Produk Rusak</option>
+                                    <option value="Produk expired">Produk Expired</option>
+                                    <option value="Penerimaan supplier">Penerimaan Supplier</option>
+                                    <option value="Koreksi manual">Koreksi Manual</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setEditModal(null)}
+                                className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface-muted"
+                            >
+                                Batal
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setSaving(true);
+                                    router.patch(`/owner/inventories/central-stock/${editModal.id}`, {
+                                        center_stock: parseInt(newStock),
+                                        reason: reason || undefined,
+                                    }, {
+                                        onFinish: () => {
+                                            setSaving(false);
+                                            setEditModal(null);
+                                        },
+                                    });
+                                }}
+                                disabled={saving || parseInt(newStock) === editModal.center_stock}
+                                className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
+                            >
+                                {saving ? 'Menyimpan...' : 'Simpan'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function KpiCard({ icon, label, value, highlight }: { icon: React.ReactNode; label: string; value: string | number; highlight?: boolean }) {
+    return (
+        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+            <div className="flex items-center gap-2 text-xs text-text-muted">{icon}{label}</div>
+            <div className="mt-2 text-3xl font-bold tabular-nums text-text">{value}</div>
+            {highlight && <div className="mt-1 text-[11px] font-medium text-red-500">Perlu tindakan</div>}
+        </div>
     );
 }

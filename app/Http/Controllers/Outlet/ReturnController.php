@@ -28,9 +28,31 @@ class ReturnController extends Controller
 
         $returns = $query->paginate(20)->withQueryString();
 
+        $variants = OutletInventory::query()
+            ->where('outlet_id', $outlet->id)
+            ->whereNotNull('product_variant_id')
+            ->with(['variant.family'])
+            ->get()
+            ->filter(fn (OutletInventory $inventory) => $inventory->variant && $inventory->variant->is_active)
+            ->map(function (OutletInventory $inventory) {
+                $variant = $inventory->variant;
+
+                return [
+                    'id' => $variant->id,
+                    'name' => $variant->name,
+                    'full_name' => $variant->full_name,
+                    'selling_price' => $variant->selling_price,
+                    'current_stock' => $inventory->current_stock,
+                    'available_stock' => $inventory->available_stock,
+                ];
+            })
+            ->values();
+
         return Inertia::render('outlet/returns/index', [
             'returns' => $returns,
             'filters' => $request->only(['status']),
+            'variants' => $variants,
+            'reasons' => ReturnRequest::REASONS,
         ]);
     }
 

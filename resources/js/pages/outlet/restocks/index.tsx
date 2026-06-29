@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Plus, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import Pagination from '@/components/pagination';
-
+import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
 import StatusBadge from '@/components/ui/status-badge';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
@@ -17,8 +17,9 @@ const statusFilters = [
     { key: 'rejected', label: 'Ditolak' },
 ];
 
-export default function OutletRestocksIndex({ restocks, filters }: any) {
+export default function OutletRestocksIndex({ restocks, filters, families, inventories }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
+    const [showCreate, setShowCreate] = useState(false);
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
@@ -36,10 +37,13 @@ export default function OutletRestocksIndex({ restocks, filters }: any) {
 
             {/* Action Bar */}
             <div className="mt-4 mb-4 flex justify-end">
-                <Link href="/outlet/restocks/create" className="flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80">
+                <button
+                    onClick={() => setShowCreate(true)}
+                    className="flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
+                >
                     <Plus className="h-4 w-4" />
                     Buat Restock
-                </Link>
+                </button>
             </div>
 
             {restocks.data.length === 0 ? (
@@ -47,7 +51,7 @@ export default function OutletRestocksIndex({ restocks, filters }: any) {
                     icon={<ClipboardList className="h-8 w-8 text-text-subtle" />}
                     title="Belum ada restock"
                     description={activeFilter ? 'Tidak ada restock dengan filter ini.' : 'Buat request baru untuk meminta stok tambahan.'}
-                    action={activeFilter ? { label: 'Reset Filter', onClick: () => handleFilterChange('') } : { label: 'Buat Request Restock', href: '/outlet/restocks/create' }}
+                    action={activeFilter ? { label: 'Reset Filter', onClick: () => handleFilterChange('') } : { label: 'Buat Request Restock', onClick: () => setShowCreate(true) }}
                 />
             ) : (
                 <div className="space-y-2">
@@ -68,6 +72,14 @@ export default function OutletRestocksIndex({ restocks, filters }: any) {
                 </div>
             )}
             <Pagination links={restocks.links} />
+
+            {/* Create Restock Dialog */}
+            <RestockCreateDialog
+                open={showCreate}
+                onClose={() => setShowCreate(false)}
+                families={families}
+                inventories={inventories}
+            />
         </OutletLayout>
     );
 }

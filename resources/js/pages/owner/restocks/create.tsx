@@ -6,7 +6,8 @@ import StockLevelBadge from '@/components/stock-level-badge';
 import SectionCard from '@/components/ui/section-card';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 
-export default function OwnerRestockCreate({ outlets, selectedOutletId, selectedProductId }: any) {
+export default function OwnerRestockCreate({ outlets, selectedOutletId, selectedProductId, returnTo }: any) {
+    const backHref = returnTo || '/owner/restocks';
     const [outletId, setOutletId] = useState(selectedOutletId || '');
     const [families, setFamilies] = useState<any[]>([]);
     const [inventories, setInventories] = useState<any[]>([]);
@@ -77,7 +78,7 @@ export default function OwnerRestockCreate({ outlets, selectedOutletId, selected
     };
 
     return (
-        <OwnerPageShell title="Buat Restock" subtitle="Buat permintaan restock untuk outlet" backHref="/owner/restocks">
+        <OwnerPageShell title="Buat Restock" subtitle="Buat permintaan restock untuk outlet" backHref={backHref}>
             {/* Outlet Selector */}
             <SectionCard label="Pilih Outlet">
                 <select

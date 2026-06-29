@@ -52,6 +52,7 @@ class RestockController extends Controller
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
             'selectedOutletId' => $outletId,
             'selectedProductId' => $request->integer('product_id'),
+            'returnTo' => $request->query('return_to'),
         ]);
     }
 
@@ -62,6 +63,7 @@ class RestockController extends Controller
             'requester',
             'approver',
             'rejecter',
+            'items.product',
             'items.variant.family',
             'distribution.items.variant.family',
             'distribution.sender',
