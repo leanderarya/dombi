@@ -42,3 +42,8 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
         });
     });
 }
+
+// Detect standalone PWA mode
+if (window.matchMedia('(display-mode: standalone)').matches) {
+    document.documentElement.classList.add('pwa-standalone');
+}
