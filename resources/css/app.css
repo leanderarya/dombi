@@ -69,6 +69,29 @@ main {
     overscroll-behavior-y: contain;
 }
 
+/* ─── Touch & Haptics ──────────────────────────────────── */
+
+/* Eliminate 300ms tap delay */
+html {
+    touch-action: manipulation;
+}
+
+/* Active state feedback — all interactive elements */
+button:active,
+a:active,
+[role="button"]:active {
+    transform: scale(0.97);
+    opacity: 0.85;
+    transition: transform 50ms ease-out;
+}
+
+/* Remove active state transform on disabled */
+button:disabled:active,
+a:disabled:active {
+    transform: none;
+    opacity: 0.5;
+}
+
 /* Mobile operational utilities */
 @utility pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
