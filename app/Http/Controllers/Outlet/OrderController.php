@@ -10,8 +10,10 @@ use App\Models\Order;
 use App\Models\User;
 use App\Services\DeliveryService;
 use App\Services\OrderStatusService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -83,5 +85,21 @@ class OrderController extends Controller
         $deliveryService->assignCourier($order, $courier, $request->user());
 
         return redirect()->route('outlet.orders.show', $order)->with('success', 'Kurir berhasil di-assign.');
+    }
+
+    public function pendingCount(Request $request): JsonResponse
+    {
+        $outlet = $request->user()->outlet;
+        abort_unless($outlet, 403);
+
+        $count = Cache::remember(
+            "outlet:{$outlet->id}:pending_orders",
+            5,
+            fn () => Order::where('outlet_id', $outlet->id)
+                ->where('status', 'pending_confirmation')
+                ->count()
+        );
+
+        return response()->json(['pending_count' => $count]);
     }
 }

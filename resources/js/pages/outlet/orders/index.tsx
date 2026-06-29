@@ -5,6 +5,7 @@ import Pagination from '@/components/pagination';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
+import { useOrderAlert } from '@/hooks/use-order-alert';
 import { formatCurrency, formatRelativeDate } from '@/lib/format';
 
 const statusFilters = [
@@ -49,6 +50,7 @@ function getWaitMinutes(orderedAt: string): number {
 
 export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
+    const { pendingCount } = useOrderAlert();
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
@@ -65,6 +67,19 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
         >
             <Head title="Pesanan" />
 
+            {/* Urgency Banner */}
+            {pendingCount > 0 && (
+                <button
+                    onClick={() => handleFilterChange('pending_confirmation')}
+                    className="mt-4 w-full rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-left text-sm transition-colors hover:bg-amber-100 active:bg-amber-200"
+                >
+                    <span className="font-semibold text-amber-800">
+                        {pendingCount} pesanan menunggu konfirmasi
+                    </span>
+                    <span className="ml-1 text-amber-600">&rarr;</span>
+                </button>
+            )}
+
             <div className="mt-4">
             {orders.data.length === 0 ? (
                 <EmptyState
@@ -74,7 +89,7 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                     action={activeFilter ? { label: 'Reset Filter', onClick: () => handleFilterChange('') } : undefined}
                 />
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                     {orders.data.map((order: any) => {
                         const dotColor = statusDotColors[order.status] ?? 'bg-zinc-400';
                         const statusLabel = statusLabels[order.status] ?? order.status;
@@ -86,47 +101,40 @@ export default function OutletOrdersIndex({ outlet, orders, filters }: any) {
                             <Link
                                 key={order.id}
                                 href={`/outlet/orders/${order.id}`}
-                                className="block rounded-xl border border-border bg-white p-4 transition-all hover:shadow-sm active:opacity-80"
+                                className="block rounded-xl border border-border bg-white px-3.5 py-2.5 transition-all hover:shadow-sm active:opacity-80"
                             >
-                                {/* Row 1: Code + Status */}
+                                {/* Row 1: Code + Fulfillment + Status */}
                                 <div className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2 min-w-0">
                                         <span className="text-sm font-bold tabular-nums text-text">{order.order_code}</span>
-                                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-text-muted">
-                                            {order.fulfillment_type === 'pickup' ? 'Pickup' : 'Delivery'}
-                                        </span>
+                                        <span className="text-[11px] text-text-subtle">{order.fulfillment_type === 'pickup' ? 'Pickup' : 'Delivery'}</span>
+                                        {isPending && (
+                                            <span className={`h-1.5 w-1.5 rounded-full ${isUrgent ? 'bg-danger animate-pulse' : 'bg-amber-400 animate-pulse'}`} />
+                                        )}
                                     </div>
-                                    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-semibold text-text-muted">
+                                    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-text-muted">
                                         <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
                                         {statusLabel}
                                     </span>
                                 </div>
 
-                                {/* Row 2: Customer + Wait Time */}
-                                <div className="mt-2 flex items-center justify-between text-xs">
-                                    <span className="font-medium text-text-muted truncate">{order.customer_name}</span>
-                                    {order.ordered_at && (
-                                        <span className={`shrink-0 ml-2 ${isUrgent ? 'font-semibold text-danger' : 'text-text-subtle'}`}>
-                                            {formatRelativeDate(order.ordered_at)}
-                                        </span>
-                                    )}
+                                {/* Row 2: Customer · Items · Time · Total */}
+                                <div className="mt-1 flex items-center justify-between text-xs">
+                                    <span className="text-text-muted truncate">
+                                        {order.customer_name}
+                                        <span className="mx-1 text-text-subtle">·</span>
+                                        {order.items?.length ?? 0} item
+                                        {order.ordered_at && (
+                                            <>
+                                                <span className="mx-1 text-text-subtle">·</span>
+                                                <span className={isUrgent ? 'font-semibold text-danger' : 'text-text-subtle'}>
+                                                    {formatRelativeDate(order.ordered_at)}
+                                                </span>
+                                            </>
+                                        )}
+                                    </span>
+                                    <span className="shrink-0 ml-2 text-xs font-semibold text-text tabular-nums">{formatCurrency(order.total)}</span>
                                 </div>
-
-                                {/* Row 3: Items + Total */}
-                                <div className="mt-1.5 flex items-center justify-between text-xs text-text-subtle">
-                                    <span>{order.items?.length ?? 0} item</span>
-                                    <span className="font-semibold text-text tabular-nums">{formatCurrency(order.total)}</span>
-                                </div>
-
-                                {/* Pending indicator — subtle */}
-                                {isPending && (
-                                    <div className="mt-2.5 flex items-center gap-1.5 text-[11px]">
-                                        <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${isUrgent ? 'bg-danger' : 'bg-amber-400'}`} />
-                                        <span className={isUrgent ? 'font-semibold text-danger' : 'font-medium text-text-muted'}>
-                                            {isUrgent ? 'Segera konfirmasi' : 'Perlu konfirmasi'}
-                                        </span>
-                                    </div>
-                                )}
                             </Link>
                         );
                     })}

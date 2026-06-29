@@ -9,6 +9,8 @@ import OutletMoreSheet from '@/components/outlet/outlet-more-sheet';
 import OutletBottomNav from '@/components/outlet-bottom-nav';
 import MobileRoleLayout from '@/components/ui/mobile-role-layout';
 import PageHeader from '@/components/ui/page-header';
+import { useOrderAlert } from '@/hooks/use-order-alert';
+import { usePushNotification } from '@/hooks/use-push-notification';
 
 interface Props extends PropsWithChildren {
     title?: string;
@@ -26,6 +28,8 @@ export default function OutletLayout({ children, title, subtitle, backHref, hide
     const { auth } = page.props;
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [moreOpen, setMoreOpen] = useState(false);
+    const { pendingCount } = useOrderAlert();
+    usePushNotification();
 
     const rightSlot = headerRight ?? (
         <div className="flex items-center gap-1">
@@ -43,7 +47,7 @@ export default function OutletLayout({ children, title, subtitle, backHref, hide
 
     return (
         <MobileRoleLayout
-            bottomNav={!hideNav ? <OutletBottomNav /> : undefined}
+            bottomNav={!hideNav ? <OutletBottomNav pendingCount={pendingCount} /> : undefined}
             hideBottomNav={hideNav}
         >
             <PageHeader
