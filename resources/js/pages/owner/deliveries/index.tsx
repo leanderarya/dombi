@@ -3,6 +3,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/pagination';
 import EmptyState from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/format';
 import { Link, router } from '@inertiajs/react';
 import {
@@ -29,6 +30,14 @@ export default function OwnerDeliveriesIndex({
     filters,
     stats,
 }: any) {
+    if (!deliveries || !filters) {
+        return (
+            <OwnerPageShell title="Pengiriman" subtitle="Kelola pengiriman dari semua outlet">
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
+
     const setFilter = (key: string, value: string) => {
         router.get(
             '/owner/deliveries',

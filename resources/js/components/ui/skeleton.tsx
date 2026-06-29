@@ -70,3 +70,62 @@ export function SkeletonTable({ rows = 5 }: { rows?: number }) {
         </div>
     );
 }
+
+export function SkeletonPageHeader() {
+    return (
+        <div className="border-b border-border pb-4 mb-6 flex items-center justify-between gap-4">
+            <div className="space-y-1.5">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-48" />
+            </div>
+            <Skeleton className="h-9 w-24 rounded-lg" />
+        </div>
+    );
+}
+
+export function SkeletonFilters() {
+    return (
+        <div className="flex gap-2 mb-4">
+            <Skeleton className="h-8 w-16 rounded-full" />
+            <Skeleton className="h-8 w-20 rounded-full" />
+            <Skeleton className="h-8 w-18 rounded-full" />
+            <Skeleton className="h-8 w-14 rounded-full" />
+        </div>
+    );
+}
+
+export function SkeletonOrderCard() {
+    return (
+        <div className="rounded-xl border border-border bg-white p-4 space-y-3">
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-5 w-16 rounded-full" />
+            </div>
+            <Skeleton className="h-3 w-40" />
+            <div className="flex items-center justify-between">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-4 w-16" />
+            </div>
+        </div>
+    );
+}
+
+export function SkeletonOrderList({ count = 5 }: { count?: number }) {
+    return (
+        <div className="space-y-2">
+            {Array.from({ length: count }).map((_, i) => (
+                <SkeletonOrderCard key={i} />
+            ))}
+        </div>
+    );
+}
+
+export function SkeletonPage({ showFilters = true }: { showFilters?: boolean }) {
+    return (
+        <div>
+            <SkeletonPageHeader />
+            {showFilters && <SkeletonFilters />}
+            <SkeletonOrderList />
+        </div>
+    );
+}

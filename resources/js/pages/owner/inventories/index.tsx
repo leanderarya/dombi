@@ -5,6 +5,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,14 @@ type TabKey = (typeof TABS)[number]['key'];
 
 export default function InventoriesIndex({ tab: initialTab, outletSections, stats, centralStock, centralStats }: any) {
     const [activeTab, setActiveTab] = useState<TabKey>((initialTab as TabKey) ?? 'pusat');
+
+    if (!outletSections && !centralStock) {
+        return (
+            <OwnerPageShell title="Inventaris" subtitle="Monitor stok seluruh outlet">
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
 
     const items = useMemo(() =>
         outletSections.flatMap((section: any) =>

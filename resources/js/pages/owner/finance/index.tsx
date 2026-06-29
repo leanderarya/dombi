@@ -6,6 +6,7 @@ import FinanceOutletCard from '@/components/owner/finance/finance-outlet-card';
 import PaymentHistoryCard from '@/components/owner/finance/payment-history-card';
 import PaymentProofModal from '@/components/owner/finance/payment-proof-modal';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { SkeletonKpiGrid, SkeletonFilters, SkeletonOrderList } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/format';
 
 /* ------------------------------------------------------------------ */
@@ -81,6 +82,16 @@ const TAGIHAN_FILTER_TABS = [
 function TagihanTab({ kpis, outlets }: any) {
     const [filter, setFilter] = useState('action_needed');
     const [search, setSearch] = useState('');
+
+    if (!kpis || !outlets) {
+        return (
+            <div className="space-y-4">
+                <SkeletonKpiGrid count={4} />
+                <SkeletonFilters />
+                <SkeletonOrderList />
+            </div>
+        );
+    }
 
     const filtered = useMemo(() => {
         return outlets.filter((o: any) => {
