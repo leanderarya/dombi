@@ -1,12 +1,14 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, ClipboardCheck, Package, Plus } from 'lucide-react';
 import { useState } from 'react';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import EmptyState from '@/components/ui/empty-state';
+import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
-export default function OutletInventory({ outlet, inventories }: any) {
+export default function OutletInventory({ outlet, inventories, families }: any) {
+    const [showRestock, setShowRestock] = useState(false);
     const familyGroups = new Map<number, { family: any; items: any[] }>();
     const noFamilyItems: any[] = [];
 
@@ -65,13 +67,14 @@ export default function OutletInventory({ outlet, inventories }: any) {
                     <SummaryCell label="Rendah" value={lowStockFamilies.length} dot="bg-amber-400" />
                     <SummaryCell label="Sehat" value={healthyFamilies.length} dot="bg-emerald-400" />
                 </div>
-                <Link
-                    href="/outlet/restocks/create"
+                <button
+                    type="button"
+                    onClick={() => setShowRestock(true)}
                     className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all active:opacity-80"
                     title="Request Restock"
                 >
                     <Plus className="h-5 w-5" />
-                </Link>
+                </button>
             </div>
 
             {/* Critical */}
@@ -150,10 +153,18 @@ export default function OutletInventory({ outlet, inventories }: any) {
                         icon={<Package className="h-8 w-8 text-text-subtle" />}
                         title="Belum ada inventaris"
                         description="Inventaris akan muncul setelah produk ditambahkan ke outlet."
-                        action={{ label: 'Request Restock', href: '/outlet/restocks/create' }}
+                        action={{ label: 'Request Restock', onClick: () => setShowRestock(true) }}
                     />
                 </div>
             )}
+
+            {/* Restock Dialog */}
+            <RestockCreateDialog
+                open={showRestock}
+                onClose={() => setShowRestock(false)}
+                families={families}
+                inventories={inventories}
+            />
         </OutletLayout>
     );
 }
