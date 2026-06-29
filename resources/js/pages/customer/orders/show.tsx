@@ -1,6 +1,6 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, Copy, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, UserCheck } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, Copy, Download, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, UserCheck } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/offline-banner';
@@ -33,11 +33,13 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
     const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
     const { addOrder } = useOrderRecovery();
     const [copied, setCopied] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [cancelLast4Hp, setCancelLast4Hp] = useState('');
     const [reportSheetOpen, setReportSheetOpen] = useState(false);
     const [reportError, setReportError] = useState<string | null>(null);
+    const contentRef = useRef<HTMLDivElement>(null);
 
     const cancelForm = useForm({ reason: '', note: '' });
     const reportForm = useForm({ type: '', notes: '' });
@@ -56,6 +58,35 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
             navigator.clipboard.writeText(order.recovery_token);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
+        }
+    }
+
+    async function handleSaveDetail() {
+        if (!contentRef.current || saving) return;
+        setSaving(true);
+
+        try {
+            const html2canvas = (await import('html2canvas')).default;
+            const canvas = await html2canvas(contentRef.current, {
+                backgroundColor: '#f8fafc',
+                scale: 2,
+                useCORS: true,
+            });
+
+            canvas.toBlob((blob) => {
+                if (!blob) return;
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `dombi-${order.order_code}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            }, 'image/png');
+        } catch {
+            // Silently fail
+        } finally {
+            setSaving(false);
         }
     }
 
@@ -171,7 +202,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
             </header>
 
             {/* Content */}
-            <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
+            <main ref={contentRef} className="mx-auto max-w-lg px-4 pt-4 pb-24">
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
@@ -220,18 +251,27 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                                 {copied ? 'Tersalin' : 'Salin'}
                             </button>
                         </div>
-                        {trackingUrl && (
-                            <div className="mt-3">
+                        <div className="mt-3 flex gap-2">
+                            <button
+                                type="button"
+                                onClick={handleSaveDetail}
+                                disabled={saving}
+                                className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80 disabled:opacity-50"
+                            >
+                                <Download className="h-4 w-4" />
+                                {saving ? 'Menyimpan...' : 'Simpan'}
+                            </button>
+                            {trackingUrl && (
                                 <button
                                     type="button"
                                     onClick={handleShare}
-                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
+                                    className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                                 >
                                     <Share2 className="h-4 w-4" />
-                                    Kirim ke WhatsApp
+                                    WhatsApp
                                 </button>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 )}
 
