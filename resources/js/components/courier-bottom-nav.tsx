@@ -22,11 +22,21 @@ const navItems = [
     },
 ];
 
-export default function CourierBottomNav() {
+interface Props {
+    visible?: boolean;
+}
+
+export default function CourierBottomNav({ visible = true }: Props) {
     const { url } = usePage();
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)]">
+        <nav
+            className="fixed inset-x-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)]"
+            style={{
+                bottom: visible ? 0 : -100,
+                transition: 'bottom 200ms ease',
+            }}
+        >
             <div className="mx-auto grid h-14 max-w-lg grid-cols-3">
                 {navItems.map((item) => {
                     const active = item.match.some((href) => url === href || url.startsWith(`${href}/`));
