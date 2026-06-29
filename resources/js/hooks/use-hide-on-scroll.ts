@@ -1,36 +1,40 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function useHideOnScroll(threshold = 10) {
     const [visible, setVisible] = useState(true);
-    const [lastY, setLastY] = useState(0);
+    const lastY = useRef(0);
+    const ticking = useRef(false);
 
     useEffect(() => {
-        let ticking = false;
-
         const handleScroll = () => {
-            if (ticking) return;
-            ticking = true;
+            if (ticking.current) return;
+            ticking.current = true;
 
             requestAnimationFrame(() => {
                 const currentY = window.scrollY;
-                const delta = currentY - lastY;
+                const delta = currentY - lastY.current;
 
+                // Always show near top
                 if (currentY < 50) {
                     setVisible(true);
-                } else if (delta > threshold) {
+                }
+                // Scrolling down — hide
+                else if (delta > threshold) {
                     setVisible(false);
-                } else if (delta < -threshold) {
+                }
+                // Scrolling up — show
+                else if (delta < -threshold) {
                     setVisible(true);
                 }
 
-                setLastY(currentY);
-                ticking = false;
+                lastY.current = currentY;
+                ticking.current = false;
             });
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [lastY, threshold]);
+    }, [threshold]);
 
     return { visible };
 }
