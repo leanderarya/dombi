@@ -1,6 +1,7 @@
 import type { PropsWithChildren, ReactNode } from 'react';
 import OfflineBanner from '@/components/offline-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 
 interface Props extends PropsWithChildren {
     /** Optional bottom navigation component */
@@ -13,6 +14,7 @@ interface Props extends PropsWithChildren {
 
 export default function MobileRoleLayout({ children, bottomNav, footerSlot, hideBottomNav = false }: Props) {
     useFlashToast();
+    const { visible } = useHideOnScroll();
     const hasFloatingBar = !!footerSlot;
     const hasBottomNav = !hideBottomNav && !!bottomNav;
 
@@ -32,7 +34,16 @@ export default function MobileRoleLayout({ children, bottomNav, footerSlot, hide
             </main>
 
             {footerSlot}
-            {hasBottomNav && bottomNav}
+            {hasBottomNav && (
+                <div
+                    style={{
+                        transform: visible ? 'translateY(0)' : 'translateY(100%)',
+                        transition: 'transform 200ms ease',
+                    }}
+                >
+                    {bottomNav}
+                </div>
+            )}
         </div>
     );
 }
