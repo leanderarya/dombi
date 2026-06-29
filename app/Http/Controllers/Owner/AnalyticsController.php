@@ -113,11 +113,25 @@ class AnalyticsController extends Controller
             ->whereBetween('created_at', [$dateFrom->startOfDay(), $dateTo->endOfDay()])
             ->when($outletId, fn ($q) => $q->whereHas('order', fn ($oq) => $oq->where('outlet_id', $outletId)));
 
+        // Single query for order stats using conditional aggregation
+        $orderStats = (clone $ordersQuery)
+            ->selectRaw('COUNT(*) as total')
+            ->selectRaw("SUM(CASE WHEN status = 'completed' THEN total ELSE 0 END) as revenue")
+            ->selectRaw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed")
+            ->selectRaw("SUM(CASE WHEN status IN ('cancelled_by_customer', 'cancelled_by_outlet') THEN 1 ELSE 0 END) as cancelled")
+            ->first();
+
         $ordersByStatus = (clone $ordersQuery)
             ->select('status', DB::raw('COUNT(*) as count'))
             ->groupBy('status')
             ->pluck('count', 'status')
             ->all();
+
+        // Single query for delivery stats
+        $deliveryStats = (clone $deliveriesQuery)
+            ->selectRaw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed")
+            ->selectRaw("SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed")
+            ->first();
 
         $deliveriesByStatus = (clone $deliveriesQuery)
             ->select('status', DB::raw('COUNT(*) as count'))
@@ -125,18 +139,21 @@ class AnalyticsController extends Controller
             ->pluck('count', 'status')
             ->all();
 
+        // Cache outlets list
+        $outlets = Cache::remember('owner:outlets_list', 300, fn () => Outlet::orderBy('name')->get(['id', 'name']));
+
         return Inertia::render('owner/analytics/index', [
             'summary' => [
-                'totalOrders' => (clone $ordersQuery)->count(),
-                'totalRevenue' => (float) (clone $ordersQuery)->where('status', 'completed')->sum('total'),
-                'completedOrders' => (clone $ordersQuery)->where('status', 'completed')->count(),
-                'cancelledOrders' => (clone $ordersQuery)->whereIn('status', ['cancelled_by_customer', 'cancelled_by_outlet'])->count(),
-                'completedDeliveries' => (clone $deliveriesQuery)->where('status', 'completed')->count(),
-                'failedDeliveries' => (clone $deliveriesQuery)->where('status', 'failed')->count(),
+                'totalOrders' => (int) ($orderStats->total ?? 0),
+                'totalRevenue' => (float) ($orderStats->revenue ?? 0),
+                'completedOrders' => (int) ($orderStats->completed ?? 0),
+                'cancelledOrders' => (int) ($orderStats->cancelled ?? 0),
+                'completedDeliveries' => (int) ($deliveryStats->completed ?? 0),
+                'failedDeliveries' => (int) ($deliveryStats->failed ?? 0),
             ],
             'ordersByStatus' => $ordersByStatus,
             'deliveriesByStatus' => $deliveriesByStatus,
-            'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
+            'outlets' => $outlets,
             'filters' => $request->only(['date_from', 'date_to', 'outlet_id']),
         ]);
     }

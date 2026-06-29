@@ -10,6 +10,7 @@ use App\Models\ReturnRequest;
 use App\Models\SettlementPayment;
 use App\Services\SettlementReconciliationService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,20 +20,23 @@ class DashboardController extends Controller
     {
         $collection = $reconciliationService->getCollectionCenter();
 
-        $pendingRestocks = (int) RestockRequest::query()
-            ->where('status', 'requested')
-            ->count();
-        $pendingReturns = (int) ReturnRequest::query()
-            ->where('status', ReturnRequest::STATUS_SUBMITTED)
-            ->count();
-        $pendingExchanges = (int) ExchangeRequest::query()
-            ->where('status', ExchangeRequest::STATUS_SUBMITTED)
-            ->count();
-        $pendingSettlementVerifications = (int) SettlementPayment::query()
-            ->where('status', SettlementPayment::STATUS_PENDING)
-            ->count();
+        // Cache pending counts for 10 seconds
+        $pendingCounts = Cache::remember('owner:pending_counts', 10, function () {
+            return [
+                'restocks' => (int) RestockRequest::query()->where('status', 'requested')->count(),
+                'returns' => (int) ReturnRequest::query()->where('status', ReturnRequest::STATUS_SUBMITTED)->count(),
+                'exchanges' => (int) ExchangeRequest::query()->where('status', ExchangeRequest::STATUS_SUBMITTED)->count(),
+                'settlements' => (int) SettlementPayment::query()->where('status', SettlementPayment::STATUS_PENDING)->count(),
+            ];
+        });
 
-        $criticalCenterStock = $this->criticalCenterStock();
+        $pendingRestocks = $pendingCounts['restocks'];
+        $pendingReturns = $pendingCounts['returns'];
+        $pendingExchanges = $pendingCounts['exchanges'];
+        $pendingSettlementVerifications = $pendingCounts['settlements'];
+
+        // Cache critical stock for 30 seconds
+        $criticalCenterStock = Cache::remember('owner:critical_stock', 30, fn () => $this->criticalCenterStock());
 
         return Inertia::render('owner/dashboard', [
             'hero' => [

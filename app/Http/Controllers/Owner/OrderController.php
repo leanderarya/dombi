@@ -8,6 +8,7 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,16 +39,25 @@ class OrderController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        return Inertia::render('owner/orders/index', [
-            'orders' => $orders,
-            'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
-            'filters' => $request->only(['status', 'outlet_id', 'date', 'search']),
-            'stats' => [
+        // Cache outlet and courier lists for 5 minutes
+        $outlets = Cache::remember('owner:outlets_list', 300, fn () => Outlet::orderBy('name')->get(['id', 'name']));
+        $couriers = Cache::remember('owner:couriers_list', 300, fn () => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']));
+
+        // Cache stats for 10 seconds
+        $stats = Cache::remember('owner:order_stats', 10, function () {
+            return [
                 'pendingOrders' => Order::where('status', 'pending_confirmation')->count(),
                 'activeDeliveries' => Order::whereIn('status', ['picked_up', 'delivering'])->count(),
                 'failedDeliveries' => Order::where('status', 'failed_delivery')->count(),
-            ],
-            'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            ];
+        });
+
+        return Inertia::render('owner/orders/index', [
+            'orders' => $orders,
+            'outlets' => $outlets,
+            'filters' => $request->only(['status', 'outlet_id', 'date', 'search']),
+            'stats' => $stats,
+            'couriers' => $couriers,
         ]);
     }
 

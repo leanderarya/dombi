@@ -13,6 +13,7 @@ use App\Services\SettlementPaymentService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -24,9 +25,12 @@ class FinanceSettlementController extends Controller
      */
     public function dashboard(): Response
     {
-        $outlets = Outlet::where('status', 'active')
-            ->orderBy('name')
-            ->get(['id', 'name']);
+        // Cache outlets for 5 minutes
+        $outlets = Cache::remember('owner:active_outlets', 300, function () {
+            return Outlet::where('status', 'active')
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        });
 
         // Aggregate completed orders per outlet
         $orderAgg = Order::where('status', 'completed')
