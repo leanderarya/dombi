@@ -39,11 +39,11 @@ class OrderController extends Controller
             ->paginate(20)
             ->withQueryString();
 
-        // Cache outlet and courier lists for 5 minutes
-        $outlets = Cache::remember('owner:outlets_list', 300, fn () => Outlet::orderBy('name')->get(['id', 'name']));
-        $couriers = Cache::remember('owner:couriers_list', 300, fn () => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']));
+        // Don't cache Eloquent models — serialization issues. Cache scalars only.
+        $outlets = Outlet::orderBy('name')->get(['id', 'name']);
+        $couriers = User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
-        // Cache stats for 10 seconds
+        // Cache stats for 10 seconds (scalar values only)
         $stats = Cache::remember('owner:order_stats', 10, function () {
             return [
                 'pendingOrders' => Order::where('status', 'pending_confirmation')->count(),

@@ -140,8 +140,8 @@ class AnalyticsController extends Controller
             ->pluck('count', 'status')
             ->all();
 
-        // Cache outlets list
-        $outlets = Cache::remember('analytics:outlets_list', 300, fn () => Outlet::orderBy('name')->get(['id', 'name']));
+        // Don't cache Eloquent models — serialization issues
+        $outlets = Outlet::orderBy('name')->get(['id', 'name']);
 
         return Inertia::render('owner/analytics/index', [
             'summary' => [
