@@ -35,8 +35,8 @@ class DashboardController extends Controller
         $pendingExchanges = $pendingCounts['exchanges'];
         $pendingSettlementVerifications = $pendingCounts['settlements'];
 
-        // Cache critical stock for 30 seconds
-        $criticalCenterStock = Cache::remember('owner:critical_stock', 30, fn () => $this->criticalCenterStock());
+        // Don't cache Eloquent collections — serialization issues
+        $criticalCenterStock = $this->criticalCenterStock();
 
         return Inertia::render('owner/dashboard', [
             'hero' => [
