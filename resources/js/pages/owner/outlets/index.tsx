@@ -20,11 +20,11 @@ const FILTERS: { key: FilterKey; label: string }[] = [
 function matchesFilter(outlet: any, filter: FilterKey): boolean {
     switch (filter) {
         case 'active':
-            return outlet.status === 'active' && Number(outlet.low_stock_count) === 0;
+            return outlet.status === 'active';
         case 'inactive':
             return outlet.status !== 'active';
         case 'low_stock':
-            return Number(outlet.low_stock_count) > 0;
+            return outlet.status === 'active' && Number(outlet.low_stock_count) > 0;
         default:
             return true;
     }
