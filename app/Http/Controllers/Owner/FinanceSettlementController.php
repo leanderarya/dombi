@@ -26,7 +26,7 @@ class FinanceSettlementController extends Controller
     public function dashboard(): Response
     {
         // Cache outlets for 5 minutes
-        $outlets = Cache::remember('owner:active_outlets', 300, function () {
+        $outlets = Cache::remember('finance:active_outlets', 300, function () {
             return Outlet::where('status', 'active')
                 ->orderBy('name')
                 ->get(['id', 'name']);

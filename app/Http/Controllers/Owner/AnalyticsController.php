@@ -11,6 +11,7 @@ use App\Models\Outlet;
 use App\Models\Product;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -140,7 +141,7 @@ class AnalyticsController extends Controller
             ->all();
 
         // Cache outlets list
-        $outlets = Cache::remember('owner:outlets_list', 300, fn () => Outlet::orderBy('name')->get(['id', 'name']));
+        $outlets = Cache::remember('analytics:outlets_list', 300, fn () => Outlet::orderBy('name')->get(['id', 'name']));
 
         return Inertia::render('owner/analytics/index', [
             'summary' => [
