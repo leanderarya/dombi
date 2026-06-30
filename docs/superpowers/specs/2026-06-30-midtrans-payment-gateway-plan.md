@@ -209,6 +209,8 @@ class PaymentTransaction extends Model
 Add to `app/Models/Order.php`:
 
 ```php
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 public function paymentTransactions(): HasMany
 {
     return $this->hasMany(PaymentTransaction::class);
@@ -242,7 +244,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\PaymentTransaction;
-use App\Notifications\OrderConfirmedNotification;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use Midtrans\Snap;
@@ -276,9 +278,26 @@ class MidtransService
                 'quantity' => $item->quantity,
                 'name' => $item->product_name,
             ])->toArray(),
+            'enabled_payments' => $this->mapPaymentMethods($order->payment_method),
         ];
 
         $snapToken = Snap::getSnapToken($params);
+
+    private function mapPaymentMethods(string $method): array
+    {
+        return match ($method) {
+            'qris' => ['qris'],
+            'va_bca' => ['bca_va'],
+            'va_bni' => ['bni_va'],
+            'va_mandiri' => ['echannel'],
+            'va_bri' => ['bri_va'],
+            'gopay' => ['gopay'],
+            'ovo' => ['ovo'],
+            'dana' => ['dana'],
+            'shopeepay' => ['shopeepay'],
+            default => ['qris'],
+        };
+    }
 
         // Log transaction
         PaymentTransaction::create([
@@ -337,6 +356,9 @@ class MidtransService
             \Cache::forget("outlet:{$order->outlet_id}:pending_orders");
             \Cache::forget('owner:pending_counts');
             \Cache::forget('owner:order_stats');
+
+            // Notify outlet and customer
+            app(\App\Services\NotificationService::class)->notifyOrderConfirmed($order);
         }
 
         if ($status === 'expired') {
@@ -453,6 +475,7 @@ git commit -m "feat: Midtrans webhook controller with signature verification"
 
 **Interfaces:**
 - Modifies: `submit()` method to create Snap token for non-COD payments
+- Produces: `snap_token` passed to confirmation page via Inertia
 
 - [ ] **Step 1: Update submit method**
 
@@ -465,14 +488,29 @@ use App\Services\MidtransService;
 if ($validated['payment_method'] !== 'cod') {
     $snapToken = app(MidtransService::class)->createSnapToken($order);
 
-    return redirect()->route('customer.checkout.payment', [
+    // Redirect to confirmation page with snap token
+    return redirect()->route('customer.orders.confirmation', [
         'order' => $order->id,
         'token' => $order->recovery_token,
     ])->with('snap_token', $snapToken);
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 2: Update confirmation page to receive snap_token**
+
+In the confirmation page controller method, pass `snap_token` from session:
+
+```php
+public function confirmation(Order $order, Request $request)
+{
+    return Inertia::render('customer/checkout/confirmation', [
+        'order' => $order->load('items'),
+        'snap_token' => session('snap_token'), // From flash session
+    ]);
+}
+```
+
+- [ ] **Step 3: Commit**
 
 ```bash
 git add app/Http/Controllers/Customer/CheckoutController.php
@@ -486,10 +524,11 @@ git commit -m "feat: create Snap token for non-COD payments"
 **Files:**
 - Create: `resources/views/midtrans-snap.blade.php`
 - Modify: `resources/views/app.blade.php`
-- Modify: `resources/js/pages/customer/checkout/payment.tsx`
+- Modify: `resources/js/pages/customer/checkout/confirmation.tsx`
 
 **Interfaces:**
-- Produces: `window.snap.pay(token, callbacks)` function
+- Consumes: `snap_token` from Inertia props
+- Produces: `window.snap.pay(token, callbacks)` auto-triggered on page load
 
 - [ ] **Step 1: Create midtrans-snap.blade.php**
 
@@ -511,9 +550,7 @@ Add before `</head>`:
 @include('midtrans-snap')
 ```
 
-- [ ] **Step 3: Update payment.tsx**
-
-Add Snap.js types and pay function:
+- [ ] **Step 3: Update confirmation page**
 
 ```typescript
 declare global {
@@ -529,38 +566,49 @@ declare global {
     }
 }
 
-// In submit function, after form.post succeeds:
-if (snapToken && window.snap) {
-    window.snap.pay(snapToken, {
-        onSuccess: (result) => {
-            router.visit(`/customer/orders/${result.order_id}`);
-        },
-        onPending: (result) => {
-            router.visit(`/customer/orders/${result.order_id}`);
-        },
-        onError: (result) => {
-            setSubmitError('Pembayaran gagal. Silakan coba lagi.');
-        },
-    });
-}
+// In confirmation page component:
+useEffect(() => {
+    if (snapToken && window.snap) {
+        window.snap.pay(snapToken, {
+            onSuccess: (result) => {
+                // Payment successful — redirect to order detail
+                router.visit(`/customer/orders/${order.id}`);
+            },
+            onPending: (result) => {
+                // Payment pending — show waiting message
+                router.visit(`/customer/orders/${order.id}`);
+            },
+            onError: (result) => {
+                // Payment failed — show error, allow retry
+                setError('Pembayaran gagal. Silakan coba lagi.');
+            },
+            onClose: () => {
+                // User closed without paying — show message
+                setError('Pembayaran dibatalkan.');
+            },
+        });
+    }
+}, [snapToken]);
 ```
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add resources/views/midtrans-snap.blade.php resources/views/app.blade.php resources/js/pages/customer/checkout/payment.tsx
+git add resources/views/midtrans-snap.blade.php resources/views/app.blade.php resources/js/pages/customer/checkout/confirmation.tsx
 git commit -m "feat: Midtrans Snap.js integration in checkout"
 ```
 
 ---
 
-### Task 8: Update Payment Options
+### Task 8: Update Payment Options & Frontend Labels
 
 **Files:**
 - Modify: `app/Http/Controllers/Customer/CheckoutController.php`
+- Modify: `resources/js/pages/customer/checkout/payment.tsx`
 
 **Interfaces:**
 - Updates: payment_options array with Midtrans methods
+- Updates: payment method labels and CTA button text
 
 - [ ] **Step 1: Update payment options**
 
@@ -568,23 +616,57 @@ Replace hardcoded options with Midtrans methods:
 
 ```php
 $paymentOptions = [
-    ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007, 'icon' => 'qris'],
-    ['value' => 'va_bca', 'label' => 'BCA Virtual Account', 'fee_rate' => 0, 'icon' => 'bank'],
-    ['value' => 'va_bni', 'label' => 'BNI Virtual Account', 'fee_rate' => 0, 'icon' => 'bank'],
-    ['value' => 'va_mandiri', 'label' => 'Mandiri Virtual Account', 'fee_rate' => 0, 'icon' => 'bank'],
-    ['value' => 'va_bri', 'label' => 'BRI Virtual Account', 'fee_rate' => 0, 'icon' => 'bank'],
-    ['value' => 'gopay', 'label' => 'GoPay', 'fee_rate' => 0, 'icon' => 'ewallet'],
-    ['value' => 'ovo', 'label' => 'OVO', 'fee_rate' => 0, 'icon' => 'ewallet'],
-    ['value' => 'dana', 'label' => 'DANA', 'fee_rate' => 0, 'icon' => 'ewallet'],
-    ['value' => 'shopeepay', 'label' => 'ShopeePay', 'fee_rate' => 0, 'icon' => 'ewallet'],
+    ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007],
+    ['value' => 'va_bca', 'label' => 'BCA Virtual Account', 'fee_rate' => 0],
+    ['value' => 'va_bni', 'label' => 'BNI Virtual Account', 'fee_rate' => 0],
+    ['value' => 'va_mandiri', 'label' => 'Mandiri Virtual Account', 'fee_rate' => 0],
+    ['value' => 'va_bri', 'label' => 'BRI Virtual Account', 'fee_rate' => 0],
+    ['value' => 'gopay', 'label' => 'GoPay', 'fee_rate' => 0],
+    ['value' => 'ovo', 'label' => 'OVO', 'fee_rate' => 0],
+    ['value' => 'dana', 'label' => 'DANA', 'fee_rate' => 0],
+    ['value' => 'shopeepay', 'label' => 'ShopeePay', 'fee_rate' => 0],
 ];
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 2: Update buildCtaLabel function**
+
+Update the CTA button text to handle new payment methods:
+
+```typescript
+function buildCtaLabel(paymentMethod: string, total: number): string {
+    const formattedTotal = formatCurrency(total);
+
+    // All Midtrans methods show "Bayar" since they open Snap popup
+    if (['qris', 'va_bca', 'va_bni', 'va_mandiri', 'va_bri', 'gopay', 'ovo', 'dana', 'shopeepay'].includes(paymentMethod)) {
+        return `Bayar ${formattedTotal}`;
+    }
+
+    return `Buat Pesanan ${formattedTotal}`;
+}
+```
+
+- [ ] **Step 3: Update payment method description**
+
+```typescript
+const paymentDescriptions: Record<string, string> = {
+    cod: 'Bayar saat produk diterima',
+    qris: 'Scan QR untuk membayar',
+    va_bca: 'Transfer ke Virtual Account BCA',
+    va_bni: 'Transfer ke Virtual Account BNI',
+    va_mandiri: 'Transfer ke Virtual Account Mandiri',
+    va_bri: 'Transfer ke Virtual Account BRI',
+    gopay: 'Bayar dengan GoPay',
+    ovo: 'Bayar dengan OVO',
+    dana: 'Bayar dengan DANA',
+    shopeepay: 'Bayar dengan ShopeePay',
+};
+```
+
+- [ ] **Step 4: Commit**
 
 ```bash
-git add app/Http/Controllers/Customer/CheckoutController.php
-git commit -m "feat: Midtrans payment options (QRIS, VA, E-wallet)"
+git add app/Http/Controllers/Customer/CheckoutController.php resources/js/pages/customer/checkout/payment.tsx
+git commit -m "feat: Midtrans payment options and labels"
 ```
 
 ---
