@@ -3,8 +3,10 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import Pagination from '@/components/pagination';
 import StatusBadge from '@/components/ui/status-badge';
+import { Button } from '@/components/ui/button';
 import OutletLayout from '@/layouts/outlet-layout';
 import ReturnCreateDialog from '@/components/outlet/return-create-dialog';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -33,16 +35,12 @@ export default function OutletReturnsIndex({ returns, filters, variants, reasons
             headerBelow={<FilterChips options={statusFilters} active={activeFilter} onChange={handleFilterChange} />}
         >
             <Head title="Return" />
-
+            <OutletPageShell hasStickyBar>
             {/* Action Bar */}
-            <div className="mt-4 mb-4 flex justify-end">
-                <button
-                    onClick={() => setShowCreate(true)}
-                    className="flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
-                >
-                    <Plus className="h-4 w-4" />
+            <div className="flex justify-end">
+                <Button size="lg" onClick={() => setShowCreate(true)} icon={Plus}>
                     Ajukan Return
-                </button>
+                </Button>
             </div>
 
             {/* List */}
@@ -75,7 +73,7 @@ export default function OutletReturnsIndex({ returns, filters, variants, reasons
             </div>
 
             <Pagination links={returns.links} />
-            <div className="h-24" />
+            </OutletPageShell>
 
             {/* Create Return Dialog */}
             <ReturnCreateDialog
