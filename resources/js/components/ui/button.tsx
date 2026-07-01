@@ -16,7 +16,7 @@ const buttonVariants = cva(
             size: {
                 sm: 'h-8 px-3 text-xs rounded-[--radius-chip]',
                 md: 'h-9 px-4 text-sm rounded-[--radius-control]',
-                lg: 'h-11 px-6 text-sm rounded-[--radius-control]',
+                lg: 'h-11 min-h-11 px-4 text-xs rounded-xl font-bold',
             },
         },
         defaultVariants: {
