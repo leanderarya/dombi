@@ -3,8 +3,10 @@ import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, ClipboardCheck, Pac
 import { useState } from 'react';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import EmptyState from '@/components/ui/empty-state';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
 import StatusBadge from '@/components/ui/status-badge';
+import { Button } from '@/components/ui/button';
 import OutletLayout from '@/layouts/outlet-layout';
 
 export default function OutletInventory({ outlet, inventories, families }: any) {
@@ -59,27 +61,26 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
     return (
         <OutletLayout title="Inventaris" subtitle={outlet.name}>
             <Head title="Inventaris" />
-
+            <OutletPageShell>
             {/* Summary Bar + Restock CTA */}
-            <div className="mt-4 mb-6 flex items-center gap-3">
+            <div className="flex items-center gap-3">
                 <div className="flex flex-1 items-center divide-x divide-border rounded-xl border border-border bg-white">
                     <SummaryCell label="Kritis" value={criticalFamilies.length} dot="bg-red-400" />
                     <SummaryCell label="Rendah" value={lowStockFamilies.length} dot="bg-amber-400" />
                     <SummaryCell label="Sehat" value={healthyFamilies.length} dot="bg-emerald-400" />
                 </div>
-                <button
-                    type="button"
+                <Button
+                    size="lg"
                     onClick={() => setShowRestock(true)}
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all active:opacity-80"
+                    icon={Plus}
                     title="Request Restock"
-                >
-                    <Plus className="h-5 w-5" />
-                </button>
+                    className="h-12 w-12 shrink-0 !px-0"
+                />
             </div>
 
             {/* Critical */}
             {criticalFamilies.length > 0 && (
-                <div className="mb-6">
+                <div>
                     <div className="mb-3 flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
                         <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Kritis</h2>
@@ -95,7 +96,7 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
 
             {/* Low Stock */}
             {lowStockFamilies.length > 0 && (
-                <div className="mb-6">
+                <div>
                     <div className="mb-3 flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                         <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Rendah</h2>
@@ -111,7 +112,7 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
 
             {/* Healthy — collapsed */}
             {healthyFamilies.length > 0 && (
-                <div className="mb-6">
+                <div>
                     <button
                         type="button"
                         onClick={() => setShowHealthy(!showHealthy)}
@@ -136,7 +137,7 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
 
             {/* No-family items */}
             {noFamilyItems.length > 0 && (
-                <div className="mb-6">
+                <div>
                     <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-subtle">Lainnya</h2>
                     <div className="space-y-2">
                         {noFamilyItems.map((item: any) => (
@@ -148,15 +149,14 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
 
             {/* Empty State */}
             {inventories.length === 0 && (
-                <div className="mt-8">
-                    <EmptyState
-                        icon={<Package className="h-8 w-8 text-text-subtle" />}
-                        title="Belum ada inventaris"
-                        description="Inventaris akan muncul setelah produk ditambahkan ke outlet."
-                        action={{ label: 'Request Restock', onClick: () => setShowRestock(true) }}
-                    />
-                </div>
+                <EmptyState
+                    icon={<Package className="h-8 w-8 text-text-subtle" />}
+                    title="Belum ada inventaris"
+                    description="Inventaris akan muncul setelah produk ditambahkan ke outlet."
+                    action={{ label: 'Request Restock', onClick: () => setShowRestock(true) }}
+                />
             )}
+            </OutletPageShell>
 
             {/* Restock Dialog */}
             <RestockCreateDialog
