@@ -105,7 +105,7 @@ return;
                                 }`}
                             >
                                 <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                                    isSelected ? 'border-emerald-600' : 'border-zinc-300'
+                                    isSelected ? 'border-emerald-600' : 'border-border'
                                 }`}>
                                     {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />}
                                 </div>
@@ -126,7 +126,7 @@ return;
                         <div className="flex items-center rounded-xl border border-border bg-white">
                             <button
                                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-l-xl"
+                                className="flex h-11 w-11 items-center justify-center text-text-muted active:bg-surface-muted rounded-l-xl"
                             >
                                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                     <path strokeLinecap="round" d="M5 12h14" />
@@ -135,7 +135,7 @@ return;
                             <span className="w-10 text-center text-sm font-bold text-text">{quantity}</span>
                             <button
                                 onClick={() => setQuantity(quantity + 1)}
-                                className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-r-xl"
+                                className="flex h-11 w-11 items-center justify-center text-text-muted active:bg-surface-muted rounded-r-xl"
                             >
                                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                     <path strokeLinecap="round" d="M12 5v14M5 12h14" />

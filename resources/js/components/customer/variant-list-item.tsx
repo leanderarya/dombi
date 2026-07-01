@@ -89,7 +89,7 @@ return;
     return (
         <Link
             href={`/customer/products/${familyId}`}
-            className="flex items-center gap-3.5 px-4 py-3 active:bg-zinc-50"
+            className="flex items-center gap-3.5 px-4 py-3 active:bg-surface-muted"
         >
             {/* Image */}
             <div className="relative shrink-0">
@@ -106,7 +106,7 @@ return;
                             aria-label={isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'}
                         >
                             <Heart
-                                className={`h-3.5 w-3.5 ${isFav ? 'fill-red-500 text-red-500' : 'text-zinc-400'}`}
+                                className={`h-3.5 w-3.5 ${isFav ? 'fill-red-500 text-red-500' : 'text-text-muted'}`}
                             />
                         </button>
                     </>
@@ -115,20 +115,20 @@ return;
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-zinc-900">
+                <div className="text-sm font-medium text-text">
                     {displayLabel}
                 </div>
                 {familyDescription && (
-                    <div className="mt-0.5 text-xs text-zinc-400 line-clamp-2">
+                    <div className="mt-0.5 text-xs text-text-muted line-clamp-2">
                         {familyDescription}
                     </div>
                 )}
-                <div className="mt-1 text-base font-semibold text-zinc-900 tabular-nums">
-                    <span className="text-xs font-normal text-zinc-400">Mulai dari </span>
+                <div className="mt-1 text-base font-semibold text-text tabular-nums">
+                    <span className="text-xs font-normal text-text-muted">Mulai dari </span>
                     {formatCurrency(displayPrice)}
                 </div>
                 {variant.available_stock !== undefined && (
-                    <div className="mt-0.5 text-xs text-zinc-500">
+                    <div className="mt-0.5 text-xs text-text-muted">
                         Stok: {variant.available_stock}
                     </div>
                 )}
@@ -149,7 +149,7 @@ return;
                         disabled={adding || isOutOfStock}
                         className={`flex h-11 w-11 items-center justify-center rounded-lg transition-all active:opacity-80 disabled:opacity-40 ${
                             isOutOfStock
-                                ? 'bg-zinc-100 text-zinc-400'
+                                ? 'bg-surface-muted text-text-muted'
                                 : 'bg-emerald-600 text-white active:bg-emerald-700'
                         }`}
                         aria-label={isOutOfStock ? 'Habis' : 'Tambah ke keranjang'}

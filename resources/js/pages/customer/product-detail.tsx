@@ -183,7 +183,7 @@ return;
                             <div className="text-sm font-semibold text-text truncate">{family.name}</div>
                             {family.brand && <div className="text-xs text-text-muted">{family.brand}</div>}
                         </div>
-                        <Link href="/customer/checkout" className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-muted active:bg-zinc-100">
+                        <Link href="/customer/checkout" className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-muted active:bg-surface-muted">
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
                             </svg>
@@ -264,9 +264,9 @@ return;
                         <section className="mt-6">
                             <div className="flex items-baseline justify-between">
                                 <h3 className="text-sm font-semibold text-text">Pilih Rasa</h3>
-                                <span className="text-[13px] text-text-subtle">Wajib, Pilih 1</span>
+                                <span className="text-xs text-text-subtle">Wajib, Pilih 1</span>
                             </div>
-                            <div className="mt-3 divide-y divide-zinc-100 rounded-xl border border-border bg-white">
+                            <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-white">
                                 {flavors.map((flavor) => {
                                     const isSelected = effectiveFlavor === flavor;
                                     const hasVariant = family.variants.some(
@@ -296,9 +296,9 @@ return;
                         <section className="mt-5">
                             <div className="flex items-baseline justify-between">
                                 <h3 className="text-sm font-semibold text-text">Pilih Ukuran</h3>
-                                <span className="text-[13px] text-text-subtle">Wajib, Pilih 1</span>
+                                <span className="text-xs text-text-subtle">Wajib, Pilih 1</span>
                             </div>
-                            <div className="mt-3 divide-y divide-zinc-100 rounded-xl border border-border bg-white">
+                            <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-white">
                                 {sortedSizes.map((size) => {
                                     const isSelected = effectiveSize === size;
                                     const hasVariant = family.variants.some(
@@ -337,7 +337,7 @@ return;
                             <div className="flex items-baseline justify-between">
                                 <h3 className="text-sm font-semibold text-text">Varian</h3>
                             </div>
-                            <div className="mt-3 divide-y divide-zinc-100 rounded-xl border border-border bg-white">
+                            <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-white">
                                 {family.variants.map((variant) => (
                                     <button
                                         key={variant.id}
@@ -466,7 +466,7 @@ function RadioDot({ checked, disabled }: { checked: boolean; disabled?: boolean 
     }
 
     return (
-        <div className={`h-5 w-5 shrink-0 rounded-full border-2 ${disabled ? 'border-border' : 'border-zinc-300'}`} />
+        <div className="h-5 w-5 shrink-0 rounded-full border-2 border-border" />
     );
 }
 

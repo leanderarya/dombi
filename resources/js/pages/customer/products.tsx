@@ -224,7 +224,7 @@ continue;
                         {[1, 2, 3].map((i) => (
                             <div key={i}>
                                 <Skeleton className="h-5 w-1/3 mb-2" />
-                                <div className="h-px bg-zinc-200" />
+                                <div className="h-px bg-border" />
                                 <div className="space-y-3 mt-3">
                                     {[1, 2].map((j) => (
                                         <div key={j} className="flex items-center gap-3.5 py-4">

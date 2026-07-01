@@ -22,8 +22,8 @@ const sizeStyles = {
 
 const variantStyles = {
     solid: {
-        active: 'bg-slate-900 text-white',
-        inactive: 'border border-zinc-200 bg-white text-slate-600',
+        active: 'bg-primary text-white',
+        inactive: 'border border-border bg-white text-text',
     },
     ring: {
         active: 'bg-primary/10 text-primary ring-1 ring-primary/20',
