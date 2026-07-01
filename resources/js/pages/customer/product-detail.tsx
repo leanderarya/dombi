@@ -1,5 +1,4 @@
 import { Head, Link } from '@inertiajs/react';
-import { ShoppingCart } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import { useCartConfirmation } from '@/contexts/cart-confirmation-context';
 import { formatCurrency } from '@/lib/format';
@@ -191,7 +190,9 @@ return;
                             {family.brand && <div className="text-xs text-text-muted">{family.brand}</div>}
                         </div>
                         <Link href="/customer/checkout" className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80">
-                            <ShoppingCart className="h-5 w-5" />
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+                            </svg>
                             {cart.totalItems > 0 && (
                                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white">
                                     {cart.totalItems > 9 ? '9+' : cart.totalItems}
