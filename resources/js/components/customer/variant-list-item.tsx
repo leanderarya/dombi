@@ -123,9 +123,9 @@ return;
                         {familyDescription}
                     </div>
                 )}
-                <div className="mt-1 text-base font-semibold text-text tabular-nums">
-                    <span className="text-xs font-normal text-text-muted">Mulai dari </span>
-                    {formatCurrency(displayPrice)}
+                <div className="mt-1 flex items-baseline gap-1">
+                    <span className="shrink-0 text-xs text-text-muted">Mulai dari</span>
+                    <span className="text-base font-semibold tabular-nums text-text">{formatCurrency(displayPrice)}</span>
                 </div>
                 {variant.available_stock !== undefined && (
                     <div className="mt-0.5 text-xs text-text-muted">

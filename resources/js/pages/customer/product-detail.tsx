@@ -247,10 +247,9 @@ return;
                             <StockBadge status={stockStatus} />
                         </div>
                     ) : startingPrice > 0 ? (
-                        <div className="mt-1 flex items-baseline gap-2">
-                            <span className="text-2xl font-bold tabular-nums text-emerald-700">
-                                Mulai {formatCurrency(startingPrice)}
-                            </span>
+                        <div className="mt-1 flex items-baseline gap-1.5">
+                            <span className="shrink-0 text-sm text-text-muted">Mulai</span>
+                            <span className="text-2xl font-bold tabular-nums text-emerald-700">{formatCurrency(startingPrice)}</span>
                         </div>
                     ) : null}
 
@@ -408,8 +407,9 @@ return;
                                             </div>
                                             <div className="p-2">
                                                 <div className="text-xs font-semibold text-text leading-tight truncate">{other.name}</div>
-                                                <div className="mt-1 text-[11px] font-bold text-emerald-700">
-                                                    {minPrice > 0 ? `Mulai ${formatCurrency(minPrice)}` : ''}
+                                                <div className="mt-1 flex items-baseline gap-1">
+                                                    {minPrice > 0 && <span className="shrink-0 text-[10px] text-text-muted">Mulai</span>}
+                                                    {minPrice > 0 && <span className="text-xs font-bold tabular-nums text-emerald-700">{formatCurrency(minPrice)}</span>}
                                                 </div>
                                             </div>
                                         </Link>
