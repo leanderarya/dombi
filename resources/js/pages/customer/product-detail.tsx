@@ -1,6 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
 import { useMemo, useRef, useState } from 'react';
-import { useCartConfirmation } from '@/contexts/cart-confirmation-context';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
@@ -60,7 +59,7 @@ export default function ProductDetail({ family, otherFamilies = [] }: Props) {
 
 function ProductDetailInner({ family, otherFamilies = [] }: Props) {
     const cart = useCart();
-    const { showConfirmation } = useCartConfirmation();
+    const [added, setAdded] = useState(false);
 
     const flavors = useMemo(
         () => [...new Set(family.variants.map((v) => v.flavor).filter(Boolean))] as string[],
@@ -125,7 +124,7 @@ parts.push(effectiveSize);
     }, [effectiveFlavor, effectiveSize]);
 
     const handleAddToCart = async () => {
-        if (!selectedVariant || adding || isOutOfStock) {
+        if (!selectedVariant || adding || isOutOfStock || added) {
 return;
 }
 
@@ -135,7 +134,7 @@ return;
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            const response = await fetch('/customer/cart/add', {
+            await fetch('/customer/cart/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -148,25 +147,15 @@ return;
                 }),
                 credentials: 'same-origin',
             });
-
-            const data = response.ok ? await response.json() : null;
-
-            showConfirmation({
-                productName: data?.item?.name ?? family.name,
-                variantName: data?.item?.variant_name,
-                quantity: quantity,
-                price: selectedVariant.selling_price,
-            });
         } catch {
-            showConfirmation({
-                productName: family.name,
-                quantity: quantity,
-                price: selectedVariant.selling_price,
-            });
+            // Frontend cart already updated
         }
 
         setAdding(false);
+        setAdded(true);
         setQuantity(1);
+
+        setTimeout(() => setAdded(false), 1500);
     };
 
     return (
@@ -194,7 +183,11 @@ return;
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
                             </svg>
                             {cart.totalItems > 0 && (
-                                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white">
+                                <span
+                                    key={cart.totalItems}
+                                    className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white"
+                                    style={{ animation: 'cartBounce 0.4s ease-out' }}
+                                >
                                     {cart.totalItems > 9 ? '9+' : cart.totalItems}
                                 </span>
                             )}
@@ -408,11 +401,20 @@ return;
                         <div className="mx-auto max-w-lg px-4">
                             <button
                                 onClick={handleAddToCart}
-                                disabled={adding || isOutOfStock}
-                                className="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white active:opacity-80 shadow-sm disabled:opacity-60"
+                                disabled={adding || isOutOfStock || added}
+                                className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white shadow-sm transition-all duration-200 active:opacity-80 disabled:opacity-60 ${
+                                    added ? 'bg-emerald-500' : 'bg-emerald-600'
+                                }`}
                             >
                                 {isOutOfStock ? (
                                     <span>Habis</span>
+                                ) : added ? (
+                                    <span className="flex items-center gap-1.5">
+                                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Ditambahkan!
+                                    </span>
                                 ) : (
                                     <>
                                         <span>{adding ? 'Menambahkan...' : 'Tambah ke Keranjang'}</span>
