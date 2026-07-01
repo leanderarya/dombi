@@ -533,10 +533,10 @@ return;
                         <div className="text-sm font-medium text-text">Ingin membatalkan pesanan?</div>
                         <div className="mt-1 text-xs text-text-muted">Masuk atau buat akun untuk mengelola pesanan Anda.</div>
                         <a
-                            href={`/login?redirect=/track/${order.recovery_token}`}
+                            href="/oauth/google"
                             className="mt-3 inline-flex h-11 items-center justify-center rounded-xl bg-primary px-6 text-sm font-bold text-white active:opacity-80"
                         >
-                            Masuk / Buat Akun
+                            Masuk dengan Google
                         </a>
                     </div>
                 )}
