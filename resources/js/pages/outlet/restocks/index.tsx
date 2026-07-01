@@ -6,6 +6,8 @@ import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
 import StatusBadge from '@/components/ui/status-badge';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import { Button } from '@/components/ui/button';
 import OutletLayout from '@/layouts/outlet-layout';
 
 const statusFilters = [
@@ -34,16 +36,12 @@ export default function OutletRestocksIndex({ restocks, filters, families, inven
             }
         >
             <Head title="Restock" />
-
+            <OutletPageShell>
             {/* Action Bar */}
-            <div className="mt-4 mb-4 flex justify-end">
-                <button
-                    onClick={() => setShowCreate(true)}
-                    className="flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
-                >
-                    <Plus className="h-4 w-4" />
+            <div className="flex justify-end">
+                <Button size="lg" onClick={() => setShowCreate(true)} icon={Plus}>
                     Buat Restock
-                </button>
+                </Button>
             </div>
 
             {restocks.data.length === 0 ? (
@@ -72,6 +70,7 @@ export default function OutletRestocksIndex({ restocks, filters, families, inven
                 </div>
             )}
             <Pagination links={restocks.links} />
+            </OutletPageShell>
 
             {/* Create Restock Dialog */}
             <RestockCreateDialog
