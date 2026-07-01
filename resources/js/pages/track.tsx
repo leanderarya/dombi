@@ -103,6 +103,7 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
     failed_delivery: {
         description: 'Pengiriman gagal',
         nextStep: 'Silakan hubungi kami untuk bantuan',
+        cta: { label: 'Hubungi WhatsApp', action: 'wa_outlet' },
     },
     expired: {
         description: 'Pesanan kadaluarsa',
@@ -263,6 +264,16 @@ return;
                                             <MapPin className="h-4 w-4" />
                                             {guidance.cta.label}
                                         </a>
+                                    ) : guidance.cta.action === 'wa_outlet' && order.outlet?.phone ? (
+                                        <a
+                                            href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                                        >
+                                            <Phone className="h-4 w-4" />
+                                            {guidance.cta.label}
+                                        </a>
                                     ) : guidance.cta.href ? (
                                         <Link
                                             href={guidance.cta.href}
@@ -420,7 +431,9 @@ return;
                             )}
                             {order.outlet.phone && (
                                 <a
-                                    href={`tel:${order.outlet.phone}`}
+                                    href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                                 >
                                     <Phone className="h-4 w-4" />
@@ -549,7 +562,9 @@ return;
                         </div>
                         {order.outlet?.phone && (
                             <a
-                                href={`tel:${order.outlet.phone}`}
+                                href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80"
                             >
                                 <Phone className="h-3.5 w-3.5" />

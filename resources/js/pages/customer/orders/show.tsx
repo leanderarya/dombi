@@ -70,7 +70,7 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
     failed_delivery: {
         description: 'Pengiriman gagal',
         nextStep: 'Silakan hubungi kami untuk bantuan',
-        cta: { label: 'Hubungi WhatsApp', href: 'https://wa.me/6281111111111' },
+        cta: { label: 'Hubungi WhatsApp', action: 'wa_outlet' },
     },
     expired: {
         description: 'Pesanan kadaluarsa',
@@ -254,6 +254,16 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                                             <MapPin className="h-4 w-4" />
                                             {guidance.cta.label}
                                         </a>
+                                    ) : guidance.cta.action === 'wa_outlet' && order.outlet?.phone ? (
+                                        <a
+                                            href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                                        >
+                                            <Phone className="h-4 w-4" />
+                                            {guidance.cta.label}
+                                        </a>
                                     ) : guidance.cta.href ? (
                                         <Link
                                             href={guidance.cta.href}
@@ -402,7 +412,9 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                             )}
                             {order.outlet.phone && (
                                 <a
-                                    href={`tel:${order.outlet.phone}`}
+                                    href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                                 >
                                     <Phone className="h-4 w-4" />
@@ -529,7 +541,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                     <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
                         <div className="text-sm text-text-muted">Pesanan sedang diproses dan tidak dapat dibatalkan.</div>
                         {order.outlet?.phone && (
-                            <a href={`tel:${order.outlet.phone}`} className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80">
+                            <a href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80">
                                 <Phone className="h-3.5 w-3.5" />
                                 Hubungi Outlet
                             </a>
