@@ -10,7 +10,6 @@ import { getOrderStatus } from '@/lib/status-labels';
 import { router } from '@inertiajs/react';
 import {
     ArrowDownRight,
-    ChevronRight,
     ClipboardList,
     Clock,
     DollarSign,
@@ -116,50 +115,8 @@ export default function OwnerOrdersIndex({
                 </div>
             </div>
 
-            {/* Mobile card layout (below lg) */}
-            <div className="space-y-3 lg:hidden">
-                {orders.data.length === 0 ? (
-                    <div className="rounded-xl bg-white py-12 text-center text-sm text-text-muted">
-                        Tidak ada pesanan
-                    </div>
-                ) : (
-                    orders.data.map((order: any) => {
-                        const s = getOrderStatus(order.status);
-
-                        return (
-                            <button
-                                key={order.id}
-                                onClick={() =>
-                                    router.visit(`/owner/orders/${order.id}`)
-                                }
-                                className="w-full rounded-xl border border-border bg-white p-5 text-left transition-all duration-200 hover:shadow-md active:bg-surface-muted"
-                            >
-                                <div className="flex items-start justify-between">
-                                    <div className="text-base font-bold text-text tabular-nums">
-                                        {order.order_code}
-                                    </div>
-                                    <StatusBadge variant={s.variant} size="md">
-                                        {s.label}
-                                    </StatusBadge>
-                                </div>
-                                <div className="mt-1 text-base text-text-muted">
-                                    {order.outlet?.name ?? '-'}
-                                </div>
-                                <div className="mt-2 flex items-center justify-between">
-                                    <span className="text-lg font-bold tabular-nums">
-                                        {formatCurrency(order.total)}
-                                    </span>
-                                    <ChevronRight className="h-4 w-4 text-text-subtle" />
-                                </div>
-                            </button>
-                        );
-                    })
-                )}
-                <Pagination links={orders.links} />
-            </div>
-
-            {/* Desktop layout (lg and above) */}
-            <div className="hidden lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
+            {/* Desktop layout */}
+            <div className="grid grid-cols-[1fr_320px] gap-6">
                 {/* Left: order list */}
                 <div>
                     {orders.data.length === 0 ? (
@@ -242,7 +199,7 @@ export default function OwnerOrdersIndex({
                 </div>
 
                 {/* Right: KPI stats sidebar */}
-                <div className="space-y-3 lg:sticky lg:top-4 lg:self-start">
+                <div className="sticky top-4 self-start space-y-3">
                     <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <ClipboardList className="h-4 w-4 text-blue-600" />
