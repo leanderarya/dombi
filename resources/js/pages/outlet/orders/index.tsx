@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Pagination from '@/components/pagination';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import OutletLayout from '@/layouts/outlet-layout';
 import { useOrderAlert } from '@/hooks/use-order-alert';
 import { formatCurrency, formatRelativeDate } from '@/lib/format';
@@ -109,12 +110,12 @@ export default function OutletOrdersIndex({ outlet, orders, filters, tab, pendin
             }
         >
             <Head title="Pesanan" />
-
+            <OutletPageShell>
             {/* Urgency Banner — only on Aktif tab */}
             {isAktif && count > 0 && (
                 <button
                     onClick={() => handleFilterChange('pending_confirmation')}
-                    className="mt-4 w-full rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-left text-sm transition-colors hover:bg-amber-100 active:bg-amber-200"
+                    className="w-full rounded-xl bg-amber-50 border border-amber-200 px-4 py-2.5 text-left text-sm transition-colors hover:bg-amber-100 active:bg-amber-200"
                 >
                     <span className="font-semibold text-amber-800">
                         {count} pesanan menunggu konfirmasi
@@ -123,7 +124,6 @@ export default function OutletOrdersIndex({ outlet, orders, filters, tab, pendin
                 </button>
             )}
 
-            <div className="mt-4">
             {orders.data.length === 0 ? (
                 <EmptyState
                     icon={<Package className="h-8 w-8 text-text-subtle" />}
@@ -132,7 +132,7 @@ export default function OutletOrdersIndex({ outlet, orders, filters, tab, pendin
                     action={activeFilter ? { label: 'Reset Filter', onClick: () => handleFilterChange('') } : undefined}
                 />
             ) : (
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                     {orders.data.map((order: any) => {
                         const dotColor = statusDotColors[order.status] ?? 'bg-zinc-400';
                         const statusLabel = statusLabels[order.status] ?? order.status;
@@ -183,8 +183,8 @@ export default function OutletOrdersIndex({ outlet, orders, filters, tab, pendin
                     })}
                 </div>
             )}
-            </div>
             <Pagination links={orders.links} />
+            </OutletPageShell>
         </OutletLayout>
     );
 }
