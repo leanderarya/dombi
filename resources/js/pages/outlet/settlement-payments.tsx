@@ -24,11 +24,18 @@ interface Payment {
     verified_at: string | null;
 }
 
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
 interface Props {
     payments: {
         data: Payment[];
         current_page: number;
         last_page: number;
+        links?: PaginationLink[];
     };
 }
 
