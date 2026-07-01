@@ -46,21 +46,6 @@ type Props = {
     accountName?: string;
 };
 
-const STATUS_LABELS: Record<string, { label: string; description: string }> = {
-    pending_confirmation: { label: 'Menunggu Diproses', description: 'Outlet belum memproses pesanan Anda' },
-    confirmed: { label: 'Pesanan Diterima', description: 'Outlet sedang menyiapkan pesanan Anda' },
-    preparing: { label: 'Sedang Disiapkan', description: 'Pesanan Anda sedang disiapkan' },
-    ready_for_pickup: { label: 'Siap Diambil', description: 'Pesanan sudah siap, silakan ambil di outlet' },
-    picked_up: { label: 'Kurir Mengambil', description: 'Kurir sudah mengambil pesanan' },
-    delivering: { label: 'Sedang Diantar', description: 'Pesanan sedang dalam perjalanan' },
-    completed: { label: 'Selesai', description: 'Pesanan sudah selesai' },
-    cancelled_by_customer: { label: 'Dibatalkan', description: 'Anda membatalkan pesanan ini' },
-    cancelled_by_outlet: { label: 'Dibatalkan Outlet', description: 'Outlet membatalkan pesanan ini' },
-    rejected_by_outlet: { label: 'Ditolak Outlet', description: 'Outlet menolak pesanan ini' },
-    failed_delivery: { label: 'Gagal Dikirim', description: 'Pengiriman gagal' },
-    expired: { label: 'Kadaluarsa', description: 'Pesanan tidak dikonfirmasi dalam batas waktu' },
-};
-
 const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
 
 const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; cta?: { label: string; href?: string; action?: string } }> = {
@@ -125,9 +110,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
 
     const isPickup = order.fulfillment_type === 'pickup';
     const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
-    const isPending = order.status === 'pending_confirmation';
     const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
-    const statusConfig = STATUS_LABELS[order.status] ?? { label: order.status, description: '' };
     const trackingUrl = order.tracking_url;
 
     function handleShare() {
@@ -189,13 +172,14 @@ return;
             {/* Header */}
             <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <a
-                        href="/customer/orders"
+                    <button
+                        type="button"
+                        onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/customer/home'}
                         className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
                         aria-label="Kembali"
                     >
                         <ChevronLeft className="h-5 w-5" />
-                    </a>
+                    </button>
                     <div className="text-center">
                         <div className="text-sm font-semibold text-text">{order.order_code}</div>
                         {order.ordered_at && (
@@ -394,7 +378,7 @@ return;
                                     className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                                 >
                                     <Phone className="h-4 w-4" />
-                                    Hubungi
+                                    WhatsApp
                                 </a>
                             )}
                         </div>
@@ -468,6 +452,17 @@ return;
                             <div className="text-[13px] text-amber-700">Pengiriman Gagal</div>
                         </div>
                         <div className="mt-2 text-sm text-amber-800">Silakan hubungi outlet untuk bantuan.</div>
+                        {order.outlet?.phone && (
+                            <a
+                                href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                            >
+                                <Phone className="h-4 w-4" />
+                                Hubungi WhatsApp
+                            </a>
+                        )}
                     </div>
                 )}
 
@@ -525,7 +520,7 @@ return;
                                 className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80"
                             >
                                 <Phone className="h-3.5 w-3.5" />
-                                Hubungi Outlet
+                                WhatsApp Outlet
                             </a>
                         )}
                     </div>

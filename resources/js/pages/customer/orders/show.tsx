@@ -51,21 +51,17 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
     completed: {
         description: 'Pesanan telah selesai',
         nextStep: 'Terima kasih sudah pesan di Dombi!',
-        cta: { label: 'Pesan Lagi', href: '/customer/products' },
     },
     rejected_by_outlet: {
         description: 'Outlet tidak dapat memproses pesanan',
         nextStep: 'Silakan coba pesan dari outlet lain',
-        cta: { label: 'Pesan Lagi', href: '/customer/products' },
     },
     cancelled_by_customer: {
         description: 'Pesanan telah Anda batalkan',
-        cta: { label: 'Pesan Lagi', href: '/customer/products' },
     },
     cancelled_by_outlet: {
         description: 'Pesanan dibatalkan oleh outlet',
         nextStep: 'Silakan coba pesan lagi',
-        cta: { label: 'Pesan Lagi', href: '/customer/products' },
     },
     failed_delivery: {
         description: 'Pengiriman gagal',
@@ -75,13 +71,11 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
     expired: {
         description: 'Pesanan kadaluarsa',
         nextStep: 'Outlet tidak konfirmasi dalam batas waktu',
-        cta: { label: 'Pesan Lagi', href: '/customer/products' },
     },
 };
 
 export default function OrderShow({ order, cancellationReasons = [], isConfirmation = false, activeReport = null, hasRecentReport = false, canReport = false }: any) {
     const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
-    const isPending = order.status === 'pending_confirmation';
     const isPickup = order.fulfillment_type === 'pickup';
     const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
     const { addOrder } = useOrderRecovery();
@@ -391,7 +385,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                                     className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                                 >
                                     <Phone className="h-4 w-4" />
-                                    Hubungi
+                                    WhatsApp
                                 </a>
                             )}
                         </div>
@@ -516,7 +510,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                         {order.outlet?.phone && (
                             <a href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80">
                                 <Phone className="h-3.5 w-3.5" />
-                                Hubungi Outlet
+                                WhatsApp Outlet
                             </a>
                         )}
                     </div>
