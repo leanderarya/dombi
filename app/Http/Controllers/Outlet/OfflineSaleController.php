@@ -63,8 +63,9 @@ class OfflineSaleController extends Controller
             ->first();
 
         if (!$inventory || $inventory->current_stock < $validated['quantity']) {
+            $available = $inventory?->current_stock ?? 0;
             throw ValidationException::withMessages([
-                'quantity' => "Stok tidak mencukupi. Tersedia: {$inventory?->current_stock ?? 0}",
+                'quantity' => "Stok tidak mencukupi. Tersedia: {$available}",
             ]);
         }
 
