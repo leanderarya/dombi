@@ -120,6 +120,7 @@ class OrderController extends Controller
                     'name' => $order->outlet->name,
                 ] : null,
             ],
+            'isLoggedIn' => $request->user() !== null,
         ]);
     }
 

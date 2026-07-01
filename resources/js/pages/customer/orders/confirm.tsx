@@ -22,9 +22,10 @@ interface Order {
 
 interface Props {
     order: Order;
+    isLoggedIn: boolean;
 }
 
-export default function OrderConfirm({ order }: Props) {
+export default function OrderConfirm({ order, isLoggedIn }: Props) {
     const isPickup = order.fulfillment_type === 'pickup';
     const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
     const estimatedTime = isPickup ? '15-30 menit' : '30-60 menit';
@@ -81,7 +82,7 @@ export default function OrderConfirm({ order }: Props) {
                 {/* CTAs */}
                 <div className="mt-8 w-full space-y-3">
                     <Link
-                        href={`/customer/orders/${order.id}`}
+                        href={isLoggedIn ? `/customer/orders/${order.id}` : `/track/${order.recovery_token}`}
                         className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:opacity-80"
                     >
                         Lacak Pesanan
