@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { formatCurrency } from '@/lib/format';
@@ -114,7 +115,7 @@ return true;
 return null;
 }
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
             <div className="relative flex h-[80vh] w-full max-w-lg flex-col rounded-t-2xl bg-white lg:h-auto lg:max-h-[70vh] lg:rounded-xl lg:shadow-xl">
@@ -209,5 +210,7 @@ return null;
                 </div>
             </div>
         </div>
-    );
+    ,
+        document.body,
+    );;
 }

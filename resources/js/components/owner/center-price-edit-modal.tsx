@@ -1,5 +1,6 @@
 import { AlertTriangle, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatCurrency } from '@/lib/format';
 
 interface ImpactData {
@@ -73,7 +74,7 @@ return;
         onSave(numericValue);
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
@@ -175,6 +176,7 @@ return;
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

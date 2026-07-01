@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { router } from '@inertiajs/react';
 import { X } from 'lucide-react';
 import { useState, useRef } from 'react';
@@ -80,7 +81,7 @@ formData.append('proof_image', proofFile);
         setError(null);
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
             <div className="relative w-full max-w-md animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] lg:animate-none lg:rounded-xl lg:pb-0 lg:shadow-xl">
@@ -184,5 +185,7 @@ formData.append('proof_image', proofFile);
                 </form>
             </div>
         </div>
-    );
+    ,
+        document.body,
+    );;
 }

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useForm } from '@inertiajs/react';
 import CustomSelect from '@/components/ui/custom-select';
 import { X } from 'lucide-react';
@@ -43,7 +44,7 @@ export default function OfflineSaleDialog({ open, variants = [], onClose }: Prop
 
     if (!open) return null;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
             <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
             <div
@@ -115,5 +116,7 @@ export default function OfflineSaleDialog({ open, variants = [], onClose }: Prop
                 </form>
             </div>
         </div>
-    );
+    ,
+        document.body,
+    );;
 }

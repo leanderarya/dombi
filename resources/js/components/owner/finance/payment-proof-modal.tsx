@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { X, Download } from 'lucide-react';
 
 interface Props {
@@ -11,7 +12,7 @@ export default function PaymentProofModal({ open, onClose, imageUrl }: Props) {
 return null;
 }
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/60 animate-[fadeIn_150ms_ease-out]" onClick={onClose} />
             <div className="relative z-10 mx-4 max-h-[80vh] max-w-lg animate-[slideUp_200ms_ease-out] rounded-2xl bg-white p-4 shadow-xl lg:animate-none lg:rounded-2xl">
@@ -37,5 +38,7 @@ return null;
                 <img src={imageUrl} alt="Bukti transfer" className="max-h-[65vh] rounded-xl object-contain" />
             </div>
         </div>
-    );
+    ,
+        document.body,
+    );;
 }

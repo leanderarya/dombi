@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
@@ -74,7 +75,7 @@ return;
         onSave(numericValue);
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
@@ -188,5 +189,7 @@ return;
                 </form>
             </div>
         </div>
-    );
+    ,
+        document.body,
+    );;
 }
