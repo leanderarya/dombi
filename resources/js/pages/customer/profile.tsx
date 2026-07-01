@@ -18,6 +18,9 @@ export default function Profile({ defaultAddress }: any) {
         <CustomerMobileLayout hideTopBar>
             <Head title="Pengaturan" />
 
+            {/* Safe area spacer for PWA standalone mode */}
+            <div className="h-[env(safe-area-inset-top)]" />
+
             {/* User Info */}
             <div className="flex items-center gap-3">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">

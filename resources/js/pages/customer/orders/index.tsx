@@ -77,7 +77,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
             <Head title="Pesanan Saya" />
 
             {/* Sticky Page Header */}
-            <header className="fixed inset-x-0 top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+            <header className="fixed inset-x-0 top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-[env(safe-area-inset-top)]">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <Link
                         href="/customer/home"

@@ -29,7 +29,7 @@ export default function EditAddress({ address }: any) {
     return (
         <CustomerMobileLayout hideTopBar>
             <Head title="Edit Alamat" />
-            <header className="sticky top-0 z-30 -mx-4 -mt-5 mb-5 border-b border-zinc-100 bg-white px-4 py-3">
+            <header className="sticky top-0 z-30 -mx-4 -mt-5 mb-5 border-b border-zinc-100 bg-white px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
                 <h1 className="text-base font-semibold text-slate-900">Edit Alamat</h1>
             </header>
             <AddressForm
