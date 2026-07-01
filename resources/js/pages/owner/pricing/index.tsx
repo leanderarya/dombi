@@ -237,14 +237,13 @@ function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?: PusatK
             <div>
                 {/* Toolbar */}
                 <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="relative flex-1 min-w-40">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+                    <div className="flex flex-1 items-center gap-2 min-w-40 [&>input]:pl-2">
+                        <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                         <Input
                             type="text"
                             value={search}
                             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                             placeholder="Cari produk..."
-                            className="pl-9"
                         />
                     </div>
                     <Select
@@ -526,14 +525,13 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
 
             {/* Toolbar */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
-                <div className="relative flex-1 min-w-40">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+                <div className="flex flex-1 items-center gap-2 min-w-40 [&>input]:pl-2">
+                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <Input
                         type="text"
                         value={search}
                         onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                         placeholder="Cari produk..."
-                        className="pl-9"
                     />
                 </div>
                 <Select
