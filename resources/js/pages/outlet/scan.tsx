@@ -1,6 +1,9 @@
 import { Head, router } from '@inertiajs/react';
 import { Camera, Keyboard, Loader2, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import OutletLayout from '@/layouts/outlet-layout';
 
 type ScanResult = {
@@ -146,10 +149,9 @@ export default function OutletScanPage() {
     };
 
     return (
-        <OutletLayout title="Scan QR Code" backHref="/outlet/dashboard">
+        <OutletLayout title="Scan QR Code">
             <Head title="Scan QR Code" />
-
-            <div className="mt-4 mx-auto max-w-lg">
+            <OutletPageShell>
                 {/* Scanner Area */}
                 <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-black">
                     <div
@@ -166,15 +168,9 @@ export default function OutletScanPage() {
                                     <div className="text-sm font-semibold text-white">Arahkan kamera ke QR code</div>
                                     <div className="mt-1 text-xs text-text-subtle">QR code akan ter-scan otomatis</div>
                                 </div>
-                                <button
-                                    type="button"
-                                    onClick={startScanner}
-                                    aria-label="Mulai scan QR code"
-                                    className="flex min-h-11 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-white active:bg-primary-hover"
-                                >
-                                    <Camera className="h-4 w-4" />
+                                <Button size="lg" onClick={startScanner} icon={Camera} aria-label="Mulai scan QR code">
                                     Mulai Scan
-                                </button>
+                                </Button>
                             </div>
                         )}
 
@@ -189,15 +185,9 @@ export default function OutletScanPage() {
 
                 {/* Stop Scanner Button */}
                 {scanning && (
-                    <button
-                        type="button"
-                        onClick={stopScanner}
-                        aria-label="Berhenti scan"
-                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border text-sm font-semibold text-text active:bg-surface-muted"
-                    >
-                        <XCircle className="h-4 w-4" />
+                    <Button variant="secondary" size="lg" onClick={stopScanner} icon={XCircle} className="mt-3 w-full" aria-label="Berhenti scan">
                         Berhenti Scan
-                    </button>
+                    </Button>
                 )}
 
                 {/* Error */}
@@ -224,22 +214,17 @@ export default function OutletScanPage() {
                         <span className="text-sm font-semibold text-text">Input Kode Manual</span>
                     </div>
                     <form onSubmit={handleManualSubmit} className="flex gap-2">
-                        <input
+                        <Input
                             type="text"
                             value={manualCode}
                             onChange={(e) => setManualCode(e.target.value.toUpperCase())}
                             placeholder="Masukkan kode pesanan"
                             aria-label="Kode pesanan"
-                            className="flex-1 min-h-11 rounded-xl border border-border px-4 text-sm font-semibold uppercase tracking-wider text-text placeholder:normal-case placeholder:tracking-normal placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                            className="flex-1 uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal"
                         />
-                        <button
-                            type="submit"
-                            disabled={!manualCode.trim() || loading}
-                            aria-label="Cari pesanan"
-                            className="flex min-h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-white active:bg-primary-hover disabled:bg-surface-muted disabled:text-text-subtle"
-                        >
+                        <Button type="submit" size="lg" disabled={!manualCode.trim() || loading} aria-label="Cari pesanan">
                             Cari
-                        </button>
+                        </Button>
                     </form>
                 </div>
 
@@ -261,7 +246,7 @@ export default function OutletScanPage() {
                         </li>
                     </ol>
                 </div>
-            </div>
+            </OutletPageShell>
         </OutletLayout>
     );
 }
