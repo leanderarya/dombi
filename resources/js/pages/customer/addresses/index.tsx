@@ -30,7 +30,7 @@ return addresses;
             <OfflineBanner />
 
             {/* Sticky Header */}
-            <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white">
+            <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white pt-[env(safe-area-inset-top)]">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <Link href="/customer/profile" className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

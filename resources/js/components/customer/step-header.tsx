@@ -14,7 +14,7 @@ interface Props {
 
 export default function StepHeader({ title, currentStep, steps, backHref }: Props) {
     return (
-        <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-[env(safe-area-inset-top)]">
             <div className="mx-auto max-w-lg px-4 py-3">
                 {/* Top row: back button + title */}
                 <div className="flex items-center justify-between mb-3">

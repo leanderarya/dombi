@@ -20,7 +20,7 @@ export default function CustomerTopBar({ addressOverride }: Props) {
 
     return (
         <>
-        <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white/95 backdrop-blur pt-[env(safe-area-inset-top)]">
             <div className="mx-auto flex max-w-lg items-center justify-between gap-3 px-4 py-3">
                 <button type="button" onClick={() => setSheetOpen(true)} className="min-w-0 flex-1 text-left active:opacity-80">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kirim ke</div>
