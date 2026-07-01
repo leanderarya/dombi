@@ -8,6 +8,7 @@ import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
 import MobileRoleLayout from '@/components/ui/mobile-role-layout';
 import PageHeader from '@/components/ui/page-header';
+import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 
 interface Props extends PropsWithChildren {
     title?: string;
@@ -22,6 +23,7 @@ export default function CourierLayout({ children, title, subtitle, backHref, hid
     const page = usePage<any>();
     const { auth } = page.props;
     const [notificationOpen, setNotificationOpen] = useState(false);
+    const { visible } = useHideOnScroll();
 
     const isOnline = auth?.user?.is_online;
     const onlineLabel = isOnline !== undefined ? (isOnline ? 'Online' : 'Offline') : undefined;
@@ -46,8 +48,7 @@ export default function CourierLayout({ children, title, subtitle, backHref, hid
 
     return (
         <MobileRoleLayout
-            bottomNav={!hideNav ? <CourierBottomNav /> : undefined}
-            hideBottomNav={hideNav}
+            footerSlot={!hideNav ? <CourierBottomNav visible={visible} /> : undefined}
         >
             <PageHeader
                 title={headerTitle}
