@@ -1,8 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
-import { AlertTriangle, ClipboardList, Package, QrCode, RefreshCw, Truck, Warehouse } from 'lucide-react';
+import { Package, QrCode } from 'lucide-react';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
+import OutletDashboardSkeleton from '@/components/outlet/outlet-dashboard-skeleton';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import OutletLayout from '@/layouts/outlet-layout';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import { usePolling } from '@/lib/use-polling';
 
 function getGreeting(): string {
@@ -15,6 +18,7 @@ function getGreeting(): string {
 
 export default function OutletDashboard({ outlet, stats, deliveryStats, lowStockItems }: any) {
     usePolling(20000);
+    const { loading } = useInertiaLoading();
 
     const todayOrders = stats.pendingOrders + stats.preparingOrders + stats.readyForCustomerPickup;
     const pendingTasks = stats.pendingOrders + deliveryStats.failed + deliveryStats.needsDispatch + lowStockItems.length;
@@ -25,8 +29,14 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
         <OutletLayout title={outlet.name} subtitle={getGreeting()}>
             <Head title="Dashboard" />
 
+            {loading ? (
+                <div className="mt-4">
+                    <OutletDashboardSkeleton />
+                </div>
+            ) : (
+            <OutletPageShell>
             {/* Hero — stats + alerts */}
-            <div className="mt-4 mb-4 rounded-xl border border-emerald-100 bg-emerald-50 p-4">
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4">
                 <div className="flex items-center justify-center">
                     <div className="flex items-center gap-3 text-center">
                         <div>
@@ -85,7 +95,7 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
             </Link>
 
             {/* Stats — compact grid */}
-            <div className="mb-4 rounded-xl border border-border bg-white p-4">
+            <div className="rounded-xl border border-border bg-white p-4">
                 <div className="grid grid-cols-4 gap-2">
                     <StatCell label="Baru" value={stats.pendingOrders} alert={stats.pendingOrders > 0} />
                     <StatCell label="Proses" value={stats.preparingOrders} />
@@ -103,17 +113,9 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                 </Link>
             </div>
 
-            {/* Quick Actions — 2×2 grid */}
-            <div className="mb-4 grid grid-cols-2 gap-2">
-                <QuickAction href="/outlet/orders" icon={<ClipboardList className="h-5 w-5" />} label="Pesanan" />
-                <QuickAction href="/outlet/inventory" icon={<Warehouse className="h-5 w-5" />} label="Inventaris" />
-                <QuickAction href="/outlet/restocks" icon={<RefreshCw className="h-5 w-5" />} label="Restock" />
-                <QuickAction href="/outlet/deliveries" icon={<Truck className="h-5 w-5" />} label="Pengiriman" />
-            </div>
-
             {/* Low Stock — flat list, not cards */}
             {lowStockItems.length > 0 && (
-                <div className="mb-4">
+                <div>
                     <div className="flex items-center justify-between mb-2">
                         <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Rendah</h2>
                         <Link href="/outlet/inventory" className="flex min-h-11 items-center text-[11px] font-semibold text-primary">Lihat Semua</Link>
@@ -136,13 +138,13 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
 
             {/* Empty State */}
             {!hasActivity && (
-                <div className="mt-8">
-                    <EmptyState
-                        icon={<Package className="h-8 w-8 text-text-subtle" />}
-                        title="Tidak ada aktivitas"
-                        description="Belum ada pesanan atau tugas hari ini."
-                    />
-                </div>
+                <EmptyState
+                    icon={<Package className="h-8 w-8 text-text-subtle" />}
+                    title="Tidak ada aktivitas"
+                    description="Belum ada pesanan atau tugas hari ini."
+                />
+            )}
+            </OutletPageShell>
             )}
         </OutletLayout>
     );
@@ -157,14 +159,5 @@ function StatCell({ label, value, alert }: { label: string; value: number; alert
             </div>
             <div className="text-[10px] font-medium text-text-subtle">{label}</div>
         </div>
-    );
-}
-
-function QuickAction({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
-    return (
-        <Link href={href} className="group flex items-center gap-3 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 transition-all hover:shadow-sm active:opacity-80">
-            <div className="text-emerald-600">{icon}</div>
-            <div className="text-sm font-semibold text-text">{label}</div>
-        </Link>
     );
 }
