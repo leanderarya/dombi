@@ -117,7 +117,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             </aside>
 
             {/* Main content */}
-            <main id="main-content" className="pb-16 lg:pb-0 lg:pl-56" style={{ willChange: 'contents' }}>
+            <main id="main-content" className="pb-16 lg:pb-0 lg:pl-56">
                 {/* Mobile header */}
                 <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-surface px-4 py-3 lg:hidden">
                     <span className="text-sm font-semibold text-text">Dombi</span>
