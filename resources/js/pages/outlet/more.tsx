@@ -3,16 +3,16 @@ import { AlertTriangle, RotateCcw, Repeat2, PackagePlus, Truck, Receipt, BarChar
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
-interface Props {
-    pendingReturns: number;
-    pendingExchanges: number;
-    pendingRestocks: number;
-    activeDeliveries: number;
-    pendingSettlementPayments: number;
-    pendingReports: number;
+export interface OutletMoreBadgeCounts {
+    returns?: number;
+    exchanges?: number;
+    restocks?: number;
+    deliveries?: number;
+    payments?: number;
+    reports?: number;
 }
 
-const features = [
+export const features = [
     {
         href: '/outlet/analytics',
         icon: BarChart3,
@@ -87,8 +87,17 @@ const features = [
     },
 ];
 
+interface Props {
+    pendingReturns: number;
+    pendingExchanges: number;
+    pendingRestocks: number;
+    activeDeliveries: number;
+    pendingSettlementPayments: number;
+    pendingReports: number;
+}
+
 export default function OutletMore({ pendingReturns, pendingExchanges, pendingRestocks, activeDeliveries, pendingSettlementPayments, pendingReports = 0 }: Props) {
-    const badgeCounts: Record<string, number> = {
+    const badgeCounts: OutletMoreBadgeCounts = {
         returns: pendingReturns,
         exchanges: pendingExchanges,
         restocks: pendingRestocks,
@@ -104,7 +113,7 @@ export default function OutletMore({ pendingReturns, pendingExchanges, pendingRe
             <div className="mt-4 space-y-2">
                 {features.map((feature) => {
                     const Icon = feature.icon;
-                    const count = badgeCounts[feature.badgeKey];
+                    const count = feature.badgeKey ? (badgeCounts[feature.badgeKey] ?? 0) : 0;
 
                     return (
                         <Link

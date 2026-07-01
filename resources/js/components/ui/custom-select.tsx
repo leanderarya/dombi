@@ -92,14 +92,14 @@ export default function CustomSelect({ options, value, onChange, placeholder = '
                 {/* Search */}
                 {searchable && (
                     <div className="border-b border-border px-3 py-2.5">
-                        <div className="relative">
-                            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+                        <div className="flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2">
+                            <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari produk..."
-                                className="w-full rounded-lg bg-surface-muted py-2 pl-8 pr-3 text-sm outline-none"
+                                className="w-full bg-transparent text-sm outline-none"
                                 autoFocus
                             />
                         </div>
