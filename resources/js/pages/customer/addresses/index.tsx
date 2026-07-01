@@ -49,14 +49,14 @@ return addresses;
                 <Head title="Alamat Saya" />
 
                 {/* Search */}
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <div className="flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white px-3.5">
+                    <Search className="h-4 w-4 shrink-0 text-slate-400" />
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari alamat..."
-                        className="min-h-11 w-full rounded-xl border border-zinc-200 bg-white pl-10 pr-4 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                        className="min-h-11 w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
                     />
                 </div>
 

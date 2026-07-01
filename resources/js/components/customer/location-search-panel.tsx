@@ -252,8 +252,8 @@ export default function LocationSearchPanel({
             {/* Search */}
             <div className="relative">
                 <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Cari alamat</label>
-                <div className="relative mt-2">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 mt-2">
+                    <Search className="h-4 w-4 shrink-0 text-slate-400" />
                     <input
                         value={query}
                         onChange={(event) => {
@@ -265,7 +265,7 @@ export default function LocationSearchPanel({
                                 setShowSuggestions(true);
                             }
                         }}
-                        className="min-h-11 w-full rounded-lg border border-slate-200 bg-white pl-10 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                        className="min-h-11 w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
                         placeholder="Contoh: Jl. Ngesrep Timur V"
                     />
                 </div>

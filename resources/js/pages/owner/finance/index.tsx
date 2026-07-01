@@ -119,20 +119,20 @@ function TagihanTab({ kpis, outlets }: any) {
                 <div className="sticky top-0 z-20 -mx-4 px-4 py-3 sm:-mx-6 sm:px-6 lg:mx-0 lg:px-0">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <FinanceFilterTabs tabs={TAGIHAN_FILTER_TABS} active={filter} onChange={setFilter} />
-                        <div className="relative sm:w-56">
-                            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+                        <div className="flex items-center gap-2 rounded-full border border-border bg-white px-3 sm:w-56">
+                            <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                             <input
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 placeholder="Cari outlet..."
-                                className="w-full rounded-full border border-border bg-white py-2 pl-9 pr-8 text-sm placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/30"
+                                className="w-full bg-transparent py-2 pr-1 text-sm placeholder:text-text-subtle focus:outline-none"
                             />
                             {search && (
                                 <button
                                     type="button"
                                     onClick={() => setSearch('')}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-subtle hover:text-text-muted"
+                                    className="shrink-0 text-text-subtle hover:text-text-muted"
                                 >
                                     ✕
                                 </button>

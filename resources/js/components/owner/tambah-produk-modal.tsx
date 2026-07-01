@@ -129,14 +129,14 @@ return null;
 
                 {/* Search */}
                 <div className="border-b border-slate-100 px-5 py-3">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3">
+                        <Search className="h-4 w-4 shrink-0 text-slate-400" />
                         <input
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder="Cari produk..."
-                            className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm placeholder:text-slate-400 focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            className="w-full bg-transparent py-2 text-sm placeholder:text-slate-400 focus:outline-none"
                         />
                     </div>
                     <div className="mt-2 flex items-center justify-between">
