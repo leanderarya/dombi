@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2, ChevronLeft, Clock, Copy, MapPin, Navigation, Package, Phone, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, Clock, MapPin, Navigation, Package, Phone, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
@@ -112,7 +112,6 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
 };
 
 export default function TrackPage({ order, found, cancellationReasons = [], canCancel = false, canCreateAccount = false, accountPhone, accountName }: Props) {
-    const [copied, setCopied] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [cancelNote, setCancelNote] = useState('');
@@ -130,32 +129,6 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
     const statusConfig = STATUS_LABELS[order.status] ?? { label: order.status, description: '' };
     const trackingUrl = order.tracking_url;
-
-    function handleCopy() {
-        const text = order?.recovery_token;
-        if (!text) return;
-        if (navigator.clipboard?.writeText) {
-            navigator.clipboard.writeText(text).then(() => {
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            }).catch(() => fallbackCopy(text));
-        } else {
-            fallbackCopy(text);
-        }
-    }
-
-    function fallbackCopy(text: string) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-    }
 
     function handleShare() {
         const text = `Lacak pesanan Dombi saya:\n${trackingUrl}`;
@@ -306,33 +279,17 @@ return;
                     </div>
                 )}
 
-                {/* Order Code Card — hidden when completed */}
-                {!isTerminal && order.recovery_token && (
-                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1 min-w-0">
-                                <div className="text-[11px] font-semibold text-text-subtle uppercase tracking-wider">Kode Pelacakan</div>
-                                <div className="mt-1 text-xl font-bold tabular-nums tracking-wider text-text">{order.recovery_token}</div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleCopy}
-                                className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600 px-4 text-xs font-bold text-white active:opacity-80"
-                            >
-                                {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                                {copied ? 'Tersalin' : 'Salin'}
-                            </button>
-                        </div>
-                        <div className="mt-3">
-                            <button
-                                type="button"
-                                onClick={handleShare}
-                                className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
-                            >
-                                <Share2 className="h-4 w-4" />
-                                Kirim ke WhatsApp
-                            </button>
-                        </div>
+                {/* Share Tracking — hidden when completed */}
+                {!isTerminal && trackingUrl && (
+                    <div className="mt-4">
+                        <button
+                            type="button"
+                            onClick={handleShare}
+                            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                        >
+                            <Share2 className="h-4 w-4" />
+                            Kirim Lacak Pesanan ke WhatsApp
+                        </button>
                     </div>
                 )}
 

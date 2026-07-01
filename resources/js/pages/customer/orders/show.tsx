@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, Copy, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, UserCheck } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, UserCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
@@ -85,7 +85,6 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
     const isPickup = order.fulfillment_type === 'pickup';
     const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
     const { addOrder } = useOrderRecovery();
-    const [copied, setCopied] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [cancelLast4Hp, setCancelLast4Hp] = useState('');
@@ -103,14 +102,6 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
 
     const trackingUrl = order.tracking_url
         ?? (order.recovery_token ? `${window.location.origin}/track/${order.recovery_token}` : null);
-
-    function handleCopy() {
-        if (order.recovery_token) {
-            navigator.clipboard.writeText(order.recovery_token);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-        }
-    }
 
     function handleShare() {
         if (!trackingUrl) return;
@@ -303,35 +294,17 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                     </div>
                 )}
 
-                {/* Recovery Token — hidden when completed */}
-                {!isTerminal && order.recovery_token && (
-                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex-1 min-w-0">
-                                <div className="text-[11px] font-semibold text-text-subtle uppercase tracking-wider">Kode Pelacakan</div>
-                                <div className="mt-1 text-xl font-bold tabular-nums tracking-wider text-text">{order.recovery_token}</div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleCopy}
-                                className="flex h-11 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
-                            >
-                                {copied ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-                                {copied ? 'Tersalin' : 'Salin'}
-                            </button>
-                        </div>
-                        {trackingUrl && (
-                            <div className="mt-3">
-                                <button
-                                    type="button"
-                                    onClick={handleShare}
-                                    className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
-                                >
-                                    <Share2 className="h-4 w-4" />
-                                    Kirim ke WhatsApp
-                                </button>
-                            </div>
-                        )}
+                {/* Share Tracking — hidden when completed */}
+                {!isTerminal && trackingUrl && (
+                    <div className="mt-4">
+                        <button
+                            type="button"
+                            onClick={handleShare}
+                            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                        >
+                            <Share2 className="h-4 w-4" />
+                            Kirim Lacak Pesanan ke WhatsApp
+                        </button>
                     </div>
                 )}
 
