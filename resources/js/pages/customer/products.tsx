@@ -191,14 +191,14 @@ continue;
 
             {/* Search Input */}
             <div className="sticky top-0 z-10 bg-[#fbf9f7] px-4 py-3">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+                <div className="flex items-center gap-2.5 rounded-xl border border-border bg-white px-3.5">
+                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari produk..."
-                        className="w-full rounded-xl border border-border bg-white py-2.5 pl-10 pr-4 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                        className="w-full bg-transparent py-2.5 text-sm text-text placeholder:text-text-subtle focus:outline-none"
                     />
                 </div>
             </div>
