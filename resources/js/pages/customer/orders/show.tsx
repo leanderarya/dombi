@@ -26,6 +26,59 @@ const REPORT_STATUS_LABELS: Record<string, { label: string; variant: string }> =
 
 const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
 
+const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; cta?: { label: string; href?: string; action?: string } }> = {
+    pending_confirmation: {
+        description: 'Menunggu outlet mengkonfirmasi pesanan Anda',
+        nextStep: 'Biasanya dikonfirmasi dalam beberapa menit',
+    },
+    confirmed: {
+        description: 'Pesanan sudah dikonfirmasi oleh outlet',
+        nextStep: 'Outlet sedang menyiapkan pesanan Anda',
+    },
+    preparing: {
+        description: 'Pesanan sedang disiapkan',
+        nextStep: 'Pesanan akan segera siap',
+    },
+    ready_for_pickup: {
+        description: 'Pesanan sudah siap diambil!',
+        nextStep: 'Silakan ambil di outlet sebelum jam tutup',
+        cta: { label: 'Navigasi ke Outlet', action: 'navigate' },
+    },
+    out_for_delivery: {
+        description: 'Kurir sedang dalam perjalanan',
+        nextStep: 'Pesanan akan diantar ke lokasi Anda',
+    },
+    completed: {
+        description: 'Pesanan telah selesai',
+        nextStep: 'Terima kasih sudah pesan di Dombi!',
+        cta: { label: 'Pesan Lagi', href: '/customer/products' },
+    },
+    rejected_by_outlet: {
+        description: 'Outlet tidak dapat memproses pesanan',
+        nextStep: 'Silakan coba pesan dari outlet lain',
+        cta: { label: 'Pesan Lagi', href: '/customer/products' },
+    },
+    cancelled_by_customer: {
+        description: 'Pesanan telah Anda batalkan',
+        cta: { label: 'Pesan Lagi', href: '/customer/products' },
+    },
+    cancelled_by_outlet: {
+        description: 'Pesanan dibatalkan oleh outlet',
+        nextStep: 'Silakan coba pesan lagi',
+        cta: { label: 'Pesan Lagi', href: '/customer/products' },
+    },
+    failed_delivery: {
+        description: 'Pengiriman gagal',
+        nextStep: 'Silakan hubungi kami untuk bantuan',
+        cta: { label: 'Hubungi WhatsApp', href: 'https://wa.me/6281111111111' },
+    },
+    expired: {
+        description: 'Pesanan kadaluarsa',
+        nextStep: 'Outlet tidak konfirmasi dalam batas waktu',
+        cta: { label: 'Pesan Lagi', href: '/customer/products' },
+    },
+};
+
 export default function OrderShow({ order, cancellationReasons = [], isConfirmation = false, activeReport = null, hasRecentReport = false, canReport = false }: any) {
     const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
     const isPending = order.status === 'pending_confirmation';
@@ -177,6 +230,43 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                 <div className="flex items-center justify-center">
                     <StatusBadge status={order.status} />
                 </div>
+
+                {/* What's Next Guidance */}
+                {STATUS_GUIDANCE[order.status] && (() => {
+                    const guidance = STATUS_GUIDANCE[order.status];
+                    const isPickupReady = order.status === 'ready_for_pickup' && order.outlet?.latitude && order.outlet?.longitude;
+
+                    return (
+                        <div className="mt-3 rounded-xl border border-border bg-white p-4">
+                            <div className="text-sm font-semibold text-text">{guidance.description}</div>
+                            {guidance.nextStep && (
+                                <div className="mt-1 text-xs text-text-muted">{guidance.nextStep}</div>
+                            )}
+                            {guidance.cta && (
+                                <div className="mt-3">
+                                    {isPickupReady && guidance.cta.action === 'navigate' ? (
+                                        <a
+                                            href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                                        >
+                                            <MapPin className="h-4 w-4" />
+                                            {guidance.cta.label}
+                                        </a>
+                                    ) : guidance.cta.href ? (
+                                        <Link
+                                            href={guidance.cta.href}
+                                            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                                        >
+                                            {guidance.cta.label}
+                                        </Link>
+                                    ) : null}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
 
                 {/* QR Code — pickup ready */}
                 {isPickup && order.status === 'ready_for_pickup' && (
