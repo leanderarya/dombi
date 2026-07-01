@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useForm } from '@inertiajs/react';
 import CustomSelect from '@/components/ui/custom-select';
 import { X, Plus, Minus, Camera, Trash2 } from 'lucide-react';
@@ -99,7 +100,7 @@ export default function ReturnCreateDialog({ open, variants = [], reasons = {}, 
         { totalItems: 0, totalValue: 0 },
     );
 
-    return (
+    return createPortal(
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={onClose}
@@ -231,6 +232,7 @@ export default function ReturnCreateDialog({ open, variants = [], reasons = {}, 
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

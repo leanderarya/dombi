@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Link, useForm, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { ArrowLeftRight, CheckCircle2, Clock, Package, Truck, XCircle } from 'lucide-react';
@@ -213,7 +214,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 </div>
             </div>
 
-            {showApprove && (
+            {showApprove && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
                     <div className="w-full max-w-lg rounded-2xl bg-white p-6">
                         <h3 className="text-lg font-bold text-text">Setujui Tukar Produk</h3>
@@ -223,10 +224,11 @@ export default function OwnerExchangesShow({ exchange }: any) {
                             <button onClick={handleApprove} disabled={approveForm.processing} className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-white">{approveForm.processing ? 'Memproses...' : 'Setujui'}</button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body,
             )}
 
-            {showReject && (
+            {showReject && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
                     <div className="w-full max-w-lg rounded-2xl bg-white p-6">
                         <h3 className="text-lg font-bold text-text">Tolak Tukar Produk</h3>
@@ -237,10 +239,11 @@ export default function OwnerExchangesShow({ exchange }: any) {
                             <button onClick={handleReject} disabled={rejectForm.processing} className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-bold text-white">{rejectForm.processing ? 'Memproses...' : 'Tolak'}</button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body,
             )}
 
-            {showComplete && (
+            {showComplete && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
                     <div className="w-full max-w-lg rounded-2xl bg-white p-6">
                         <h3 className="text-lg font-bold text-text">Selesaikan Tukar Produk</h3>
@@ -257,7 +260,8 @@ export default function OwnerExchangesShow({ exchange }: any) {
                             </button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body,
             )}
         </OwnerPageShell>
     );

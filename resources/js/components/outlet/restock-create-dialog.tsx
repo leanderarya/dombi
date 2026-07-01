@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useForm } from '@inertiajs/react';
 import CustomSelect from '@/components/ui/custom-select';
 import { X, Plus, Minus, StickyNote, ChevronDown } from 'lucide-react';
@@ -60,7 +61,7 @@ export default function RestockCreateDialog({ open, families = [], inventories =
     const selectedCount = form.data.items.filter((i) => i.variant_id).length;
     const totalQty = form.data.items.reduce((sum, i) => sum + i.quantity, 0);
 
-    return (
+    return createPortal(
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={onClose}
@@ -162,6 +163,7 @@ export default function RestockCreateDialog({ open, families = [], inventories =
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

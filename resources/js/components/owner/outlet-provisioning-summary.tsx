@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 
 type Provisioning = {
@@ -40,7 +41,7 @@ return null;
         }
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-0 lg:items-center lg:px-4" role="dialog" aria-modal="true">
             <div className="w-full max-w-md rounded-t-xl border border-slate-200 bg-white p-4 lg:rounded-xl">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Branch Provisioned</p>
@@ -76,7 +77,8 @@ return null;
                     Close
                 </button>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }
 

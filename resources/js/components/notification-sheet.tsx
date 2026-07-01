@@ -1,5 +1,6 @@
 import { CircleCheck, CircleX, Clock, Ban, Truck, Package, Bike, TriangleAlert, Undo2, RefreshCw, Bell, ClipboardList, Mail } from 'lucide-react';
 import { useState, useEffect, useCallback  } from 'react';
+import { createPortal } from 'react-dom';
 import type {ReactNode} from 'react';
 
 interface Notification {
@@ -114,7 +115,7 @@ onClose();
 return null;
 }
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
             <div className="relative w-full max-w-lg rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)]" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
@@ -177,6 +178,7 @@ return null;
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

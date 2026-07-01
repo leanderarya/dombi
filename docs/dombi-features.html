@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dombi — Fitur Aplikasi</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            color: #1e293b;
+            line-height: 1.6;
+            background: white;
+        }
+
+        .page {
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 40px 50px;
+            page-break-after: always;
+        }
+
+        .page:last-child {
+            page-break-after: avoid;
+        }
+
+        /* Cover Page */
+        .cover {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+            color: white;
+            padding: 60px;
+        }
+
+        .cover-logo {
+            font-size: 72px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 8px;
+        }
+
+        .cover-tagline {
+            font-size: 20px;
+            font-weight: 500;
+            opacity: 0.9;
+            margin-bottom: 60px;
+        }
+
+        .cover-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .cover-subtitle {
+            font-size: 18px;
+            font-weight: 400;
+            opacity: 0.85;
+            max-width: 500px;
+        }
+
+        .cover-date {
+            margin-top: 80px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        /* Section Headers */
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #047857;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #334155;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        p {
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+
+        /* Role Badge */
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .role-customer { background: #dbeafe; color: #1d4ed8; }
+        .role-outlet { background: #fef3c7; color: #b45309; }
+        .role-courier { background: #ede9fe; color: #7c3aed; }
+        .role-owner { background: #d1fae5; color: #047857; }
+
+        /* Feature Cards */
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+
+        .feature-card:hover {
+            border-color: #94a3b8;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .feature-card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+
+        .feature-card-desc {
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }
+
+        /* Flow Diagram */
+        .flow {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 20px 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .flow-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .flow-number {
+            width: 32px;
+            height: 32px;
+            background: #047857;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .flow-content {
+            flex: 1;
+        }
+
+        .flow-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 2px;
+        }
+
+        .flow-desc {
+            font-size: 13px;
+            color: #64748b;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 18px;
+            margin: 4px 0;
+            padding-left: 16px;
+        }
+
+        /* Status Flow */
+        .status-flow {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            margin: 16px 0;
+        }
+
+        .status-chip {
+            padding: 6px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending { background: #fef3c7; color: #b45309; }
+        .status-confirmed { background: #dbeafe; color: #1d4ed8; }
+        .status-preparing { background: #ffedd5; color: #c2410c; }
+        .status-ready { background: #d1fae5; color: #047857; }
+        .status-completed { background: #f1f5f9; color: #475569; }
+        .status-cancelled { background: #fee2e2; color: #dc2626; }
+
+        .status-arrow {
+            color: #94a3b8;
+            font-size: 16px;
+        }
+
+        /* Info Box */
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin: 16px 0;
+        }
+
+        .info-box-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1d4ed8;
+            margin-bottom: 4px;
+        }
+
+        .info-box-text {
+            font-size: 13px;
+            color: #1e40af;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 13px;
+        }
+
+        th {
+            background: #f1f5f9;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 700;
+            color: #334155;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #475569;
+        }
+
+        tr:hover td {
+            background: #f8fafc;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 0 20px;
+            color: #94a3b8;
+            font-size: 12px;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .page {
+                padding: 30px 40px;
+            }
+
+            .cover {
+                min-height: 100vh;
+            }
+
+            .feature-card:hover {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+    <div class="cover-logo">dombi</div>
+    <div class="cover-tagline">Susu Kambing Segar</div>
+    <div class="cover-title">Dokumen Fitur Aplikasi</div>
+    <div class="cover-subtitle">Penjelasan lengkap semua fitur untuk setiap role: Customer, Outlet, Kurir, dan Owner</div>
+    <div class="cover-date">Juni 2026</div>
+</div>
+
+<!-- CUSTOMER -->
+<div class="page">
+    <span class="role-badge role-customer">Customer</span>
+    <h1>Fitur untuk Customer</h1>
+    <p>Customer adalah pengguna akhir yang memesan produk susu kambing. Mereka bisa pesan sebagai guest (tanpa login) atau dengan akun terdaftar.</p>
+
+    <h2>Alur Pemesanan</h2>
+    <div class="flow">
+        <div class="flow-step">
+            <div class="flow-number">1</div>
+            <div class="flow-content">
+                <div class="flow-title">Pilih Produk</div>
+                <div class="flow-desc">Browse katalog, pilih varian produk, tambah ke keranjang</div>
+            </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+            <div class="flow-number">2</div>
+            <div class="flow-content">
+                <div class="flow-title">Isi Informasi</div>
+                <div class="flow-desc">Nama, nomor HP, alamat pengiriman (jika delivery)</div>
+            </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+            <div class="flow-number">3</div>
+            <div class="flow-content">
+                <div class="flow-title">Pilih Outlet & Pengiriman</div>
+                <div class="flow-desc">Pickup (ambil di outlet) atau Delivery (diantar kurir). Outlet direkomendasikan berdasarkan lokasi terdekat.</div>
+            </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+            <div class="flow-number">4</div>
+            <div class="flow-content">
+                <div class="flow-title">Bayar</div>
+                <div class="flow-desc">Pilih metode: COD, QRIS, Transfer Bank, atau Kartu</div>
+            </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+            <div class="flow-number">5</div>
+            <div class="flow-content">
+                <div class="flow-title">Lacak Pesanan</div>
+                <div class="flow-desc">Lihat status real-time, dapatkan QR code untuk pickup, atau lacak kurir untuk delivery</div>
+            </div>
+        </div>
+    </div>
+
+    <h2>Daftar Fitur</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Katalog Produk</div>
+            <div class="feature-card-desc">Lihat semua produk, filter kategori, lihat detail dan harga</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Keranjang Belanja</div>
+            <div class="feature-card-desc">Tambah, hapus, ubah jumlah item sebelum checkout</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Rekomendasi Outlet</div>
+            <div class="feature-card-desc">Outlet terdekat berdasarkan lokasi, cek ketersediaan stok</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Pembayaran</div>
+            <div class="feature-card-desc">4 metode: COD, QRIS, Transfer, Kartu kredit/debit</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Lacak Pesanan</div>
+            <div class="feature-card-desc">Status real-time, QR code untuk pickup, info kurir</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Simpan & Bagikan</div>
+            <div class="feature-card-desc">Download QR code, bagikan link lacak via WhatsApp</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Batalkan Pesanan</div>
+            <div class="feature-card-desc">Cancel dengan alasan (hanya saat outlet belum proses)</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Laporan Masalah</div>
+            <div class="feature-card-desc">Laporkan jika pesanan bermasalah (salah, rusak, tidak sampai)</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Riwayat Pesanan</div>
+            <div class="feature-card-desc">Daftar semua pesanan sebelumnya dengan filter status</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Profil & Alamat</div>
+            <div class="feature-card-desc">Kelola info akun dan simpan alamat pengiriman</div>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-box-title">Mode Guest (Tanpa Login)</div>
+        <div class="info-box-text">Customer bisa pesan tanpa membuat akun. Cukup isi nomor HP. Pesanan bisa dilacak menggunakan kode pelacakan. Jika kemudian membuat akun, semua pesanan guest otomatis tergabung.</div>
+    </div>
+</div>
+
+<!-- OUTLET -->
+<div class="page">
+    <span class="role-badge role-outlet">Outlet</span>
+    <h1>Fitur untuk Outlet</h1>
+    <p>Outlet adalah toko yang menerima dan memproses pesanan dari customer. Mereka juga mengelola inventaris dan pengiriman.</p>
+
+    <h2>Alur Pemrosesan Pesanan</h2>
+    <div class="status-flow">
+        <span class="status-chip status-pending">Menunggu</span>
+        <span class="status-arrow">→</span>
+        <span class="status-chip status-confirmed">Diterima</span>
+        <span class="status-arrow">→</span>
+        <span class="status-chip status-preparing">Disiapkan</span>
+        <span class="status-arrow">→</span>
+        <span class="status-chip status-ready">Siap</span>
+        <span class="status-arrow">→</span>
+        <span class="status-chip status-completed">Selesai</span>
+    </div>
+
+    <h2>Daftar Fitur</h2>
+
+    <h3>Pesanan</h3>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Notifikasi Pesanan Baru</div>
+            <div class="feature-card-desc">Badge merah + suara alert saat pesanan masuk. Banner peringatan jika ada pesanan yang belum diproses.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Tab Aktif & Riwayat</div>
+            <div class="feature-card-desc">Pisahkan pesanan yang perlu diproses dengan yang sudah selesai.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Konfirmasi & Tolak</div>
+            <div class="feature-card-desc">Terima pesanan (mulai proses) atau tolak dengan alasan.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Serahkan ke Customer</div>
+            <div class="feature-card-desc">Tandai pesanan selesai saat customer sudah ambil atau kurir sudah antar.</div>
+        </div>
+    </div>
+
+    <h3>Pengiriman</h3>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Assign Kurir</div>
+            <div class="feature-card-desc">Pilih kurir untuk mengantarkan pesanan ke customer.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Lacak Pengiriman</div>
+            <div class="feature-card-desc">Pantau status pengiriman dari pickup sampai delivered.</div>
+        </div>
+    </div>
+
+    <h3>Inventaris</h3>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Monitor Stok</div>
+            <div class="feature-card-desc">Lihat stok per produk, status kritis/rendah/sehat dengan warna.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Request Restock</div>
+            <div class="feature-card-desc">Minta stok tambahan dari pusat. Bisa cancel jika belum diproses.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Return Produk</div>
+            <div class="feature-card-desc">Ajukan return produk tidak terjual atau rusak ke pusat.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Tukar Produk</div>
+            <div class="feature-card-desc">Ajukan tukar produk dengan mapping: produk dikembalikan → produk pengganti.</div>
+        </div>
+    </div>
+
+    <h3>Lainnya</h3>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Scan QR</div>
+            <div class="feature-card-desc">Scan QR code customer untuk lookup pesanan cepat.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Analitik</div>
+            <div class="feature-card-desc">Grafik penjualan, produk terlaris, trend revenue.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Laporan</div>
+            <div class="feature-card-desc">Export laporan penjualan ke CSV, kelola laporan masalah.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Settlement</div>
+            <div class="feature-card-desc">Pantau tagihan, upload bukti pembayaran ke pusat.</div>
+        </div>
+    </div>
+</div>
+
+<!-- COURIER -->
+<div class="page">
+    <span class="role-badge role-courier">Kurir</span>
+    <h1>Fitur untuk Kurir</h1>
+    <p>Kurir bertugas mengambil pesanan dari outlet dan mengantarkannya ke alamat customer.</p>
+
+    <h2>Alur Pengiriman</h2>
+    <div class="flow">
+        <div class="flow-step">
+            <div class="flow-number">1</div>
+            <div class="flow-content">
+                <div class="flow-title">Lihat Tugas</div>
+                <div class="flow-desc">Daftar pesanan yang perlu diambil dari outlet muncul di dashboard</div>
+            </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+            <div class="flow-number">2</div>
+            <div class="flow-content">
+                <div class="flow-title">Ambil dari Outlet</div>
+                <div class="flow-desc">Konfirmasi pickup, ambil pesanan dari outlet</div>
+            </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+            <div class="flow-number">3</div>
+            <div class="flow-content">
+                <div class="flow-title">Antar ke Customer</div>
+                <div class="flow-desc">Buka navigasi Maps, antar ke alamat tujuan</div>
+            </div>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+            <div class="flow-number">4</div>
+            <div class="flow-content">
+                <div class="flow-title">Selesai</div>
+                <div class="flow-desc">Tandai berhasil sampai atau gagal dengan alasan</div>
+            </div>
+        </div>
+    </div>
+
+    <h2>Daftar Fitur</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Dashboard Tugas</div>
+            <div class="feature-card-desc">Ringkasan: menunggu pickup, dalam perjalanan, selesai hari ini.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Status Online/Offline</div>
+            <div class="feature-card-desc">Toggle ketersediaan. Offline = tidak dapat tugas baru.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Detail Pengiriman</div>
+            <div class="feature-card-desc">Info customer, alamat, item, tombol buka Google Maps.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Konfirmasi Pickup</div>
+            <div class="feature-card-desc">Tandai sudah ambil pesanan dari outlet.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Navigasi Maps</div>
+            <div class="feature-card-desc">Buka Google Maps langsung dari detail pengiriman.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Selesaikan/Gagal</div>
+            <div class="feature-card-desc">Tandai berhasil atau gagal dengan alasan.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Riwayat</div>
+            <div class="feature-card-desc">Daftar semua pengiriman yang sudah selesai.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Profil</div>
+            <div class="feature-card-desc">Info kurir dan tombol keluar.</div>
+        </div>
+    </div>
+</div>
+
+<!-- OWNER -->
+<div class="page">
+    <span class="role-badge role-owner">Owner</span>
+    <h1>Fitur untuk Owner</h1>
+    <p>Owner memiliki akses penuh ke semua data operasional, keuangan, dan pengaturan. Aplikasi owner dioptimasi untuk desktop.</p>
+
+    <h2>Dashboard</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">KPI Cards</div>
+            <div class="feature-card-desc">Ringkasan: total tagihan, tugas pending, stok kritis.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Butuh Tindakan</div>
+            <div class="feature-card-desc">Daftar restock, return, exchange yang perlu diproses.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Tagihan Tertunggak</div>
+            <div class="feature-card-desc">Banner tagihan outlet yang belum bayar.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Stok Kritis</div>
+            <div class="feature-card-desc">Produk yang stoknya di bawah threshold, tombol restock cepat.</div>
+        </div>
+    </div>
+
+    <h2>Operasional</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Pesanan</div>
+            <div class="feature-card-desc">Semua pesanan dari semua outlet. Filter status, search, assign kurir.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Pengiriman</div>
+            <div class="feature-card-desc">Monitor semua delivery. Filter kurir dan status.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Return & Tukar</div>
+            <div class="feature-card-desc">Approve/reject request return dan tukar dari outlet.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Restock & Distribusi</div>
+            <div class="feature-card-desc">Proses restock, kelola distribusi stok ke outlet.</div>
+        </div>
+    </div>
+
+    <h2>Keuangan</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Tagihan Outlet</div>
+            <div class="feature-card-desc">Daftar tagihan per outlet, status pembayaran.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Verifikasi Pembayaran</div>
+            <div class="feature-card-desc">Review bukti bayar, approve/reject pembayaran.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Rekening Bank</div>
+            <div class="feature-card-desc">Kelola rekening tujuan pembayaran outlet.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Riwayat Pembayaran</div>
+            <div class="feature-card-desc">Log semua transaksi pembayaran.</div>
+        </div>
+    </div>
+
+    <h2>Master Data</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Produk & Varian</div>
+            <div class="feature-card-desc">Kelola product family, varian, SKU, harga.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Harga</div>
+            <div class="feature-card-desc">Atur harga pusat dan harga per outlet. Reset ke harga pusat.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Inventaris</div>
+            <div class="feature-card-desc">Monitor stok pusat dan stok semua outlet. Quick edit stok.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Outlets</div>
+            <div class="feature-card-desc">Daftar outlet, status, performa, kelola pengaturan.</div>
+        </div>
+    </div>
+
+    <h2>Analitik & Laporan</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Dashboard Analitik</div>
+            <div class="feature-card-desc">Grafik revenue, top outlet, top produk, trend.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Audit Trail</div>
+            <div class="feature-card-desc">Log semua perubahan sistem untuk tracking.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Export Laporan</div>
+            <div class="feature-card-desc">Download laporan penjualan dalam format CSV.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Laporan Masalah</div>
+            <div class="feature-card-desc">Monitor dan tanggapi laporan masalah dari customer.</div>
+        </div>
+    </div>
+</div>
+
+<!-- FITUR UMUM -->
+<div class="page">
+    <h1>Fitur Umum</h1>
+    <p>Fitur yang tersedia di semua role untuk pengalaman pengguna yang lebih baik.</p>
+
+    <h2>Pengalaman Aplikasi Native</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Touch Feedback</div>
+            <div class="feature-card-desc">Animasi halus saat tombol ditekan, terasa seperti aplikasi native.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Transisi Halaman</div>
+            <div class="feature-card-desc">Animasi fade-in saat berpindah halaman, tidak ada kedipan.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Auto-Hide Navigation</div>
+            <div class="feature-card-desc">Bottom navigation otomatis hide saat scroll down, muncul saat scroll up.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Smooth Scrolling</div>
+            <div class="feature-card-desc">Scroll yang halus dan natural di semua halaman.</div>
+        </div>
+    </div>
+
+    <h2>PWA (Progressive Web App)</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Bisa Di-Install</div>
+            <div class="feature-card-desc">Install sebagai aplikasi di home screen HP, tanpa perlu App Store.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Halaman Offline</div>
+            <div class="feature-card-desc">Tetap bisa dibuka walau tidak ada koneksi internet.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Status Bar</div>
+            <div class="feature-card-desc">Warna status bar sesuai brand saat di-install.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Full Screen</div>
+            <div class="feature-card-desc">Tampilan full screen tanpa address bar browser.</div>
+        </div>
+    </div>
+
+    <h2>Notifikasi</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Push Notification</div>
+            <div class="feature-card-desc">Notifikasi masuk walau aplikasi di background.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Sound Alert</div>
+            <div class="feature-card-desc">Suara notifikasi untuk pesanan baru (outlet).</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Badge Counter</div>
+            <div class="feature-card-desc">Angka di tab menunjukkan jumlah pesanan yang perlu diproses.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">In-App Notifications</div>
+            <div class="feature-card-desc">Pusat notifikasi di dalam aplikasi.</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Dombi &mdash; Susu Kambing Segar &bull; Juni 2026</p>
+    </div>
+</div>
+
+<!-- TEKNOLOGI -->
+<div class="page">
+    <h1>Teknologi yang Digunakan</h1>
+    <p>Aplikasi dibangun dengan teknologi modern untuk performa dan keamanan terbaik.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Komponen</th>
+                <th>Teknologi</th>
+                <th>Keterangan</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Backend</strong></td>
+                <td>Laravel 11</td>
+                <td>Framework PHP untuk API dan logika bisnis</td>
+            </tr>
+            <tr>
+                <td><strong>Frontend</strong></td>
+                <td>React + TypeScript</td>
+                <td>UI interaktif dan type-safe</td>
+            </tr>
+            <tr>
+                <td><strong>Routing</strong></td>
+                <td>Inertia.js</td>
+                <td>SPA tanpa API terpisah, lebih cepat</td>
+            </tr>
+            <tr>
+                <td><strong>Styling</strong></td>
+                <td>Tailwind CSS v4</td>
+                <td>Design system konsisten</td>
+            </tr>
+            <tr>
+                <td><strong>Database</strong></td>
+                <td>MySQL</td>
+                <td>Database relational untuk data konsisten</td>
+            </tr>
+            <tr>
+                <td><strong>Cache</strong></td>
+                <td>Redis</td>
+                <td>Performa cepat untuk data sering diakses</td>
+            </tr>
+            <tr>
+                <td><strong>Queue</strong></td>
+                <td>Database</td>
+                <td>Proses background (email, notifikasi)</td>
+            </tr>
+            <tr>
+                <td><strong>PWA</strong></td>
+                <td>Service Worker</td>
+                <td>Installable, offline support</td>
+            </tr>
+            <tr>
+                <td><strong>Push</strong></td>
+                <td>Web Push API</td>
+                <td>Notifikasi real-time</td>
+            </tr>
+            <tr>
+                <td><strong>Payment</strong></td>
+                <td>Multi-channel</td>
+                <td>QRIS, Transfer, Card, COD</td>
+            </tr>
+            <tr>
+                <td><strong>Maps</strong></td>
+                <td>Google Maps</td>
+                <td>Navigasi kurir, lokasi outlet</td>
+            </tr>
+            <tr>
+                <td><strong>Auth</strong></td>
+                <td>Google OAuth + Session</td>
+                <td>Login aman, session management</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>Keamanan</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <div class="feature-card-title">Autentikasi</div>
+            <div class="feature-card-desc">Login dengan Google atau session. Setiap role punya akses terbatas sesuai kebutuhan.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Proteksi Guest</div>
+            <div class="feature-card-desc">Guest hanya bisa bayar non-COD dan tidak bisa cancel. Mencegah order fiktif.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">Session Policy</div>
+            <div class="feature-card-desc">Auto-logout setelah idle timeout. Session expire untuk keamanan.</div>
+        </div>
+        <div class="feature-card">
+            <div class="feature-card-title">CSRF Protection</div>
+            <div class="feature-card-desc">Semua form dilindungi dari serangan cross-site.</div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Dombi &mdash; Susu Kambing Segar &bull; Juni 2026</p>
+    </div>
+</div>
+
+</body>
+</html>

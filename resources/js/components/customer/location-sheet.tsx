@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { LocateFixed, MapPin, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
@@ -135,7 +136,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
 
     const showSaved = location && hasUsedLocation;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40" onClick={onClose}>
             <div
                 className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
@@ -268,7 +269,9 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
                 </div>
             </div>
         </div>
-    );
+    ,
+        document.body,
+    );;
 }
 
 function toDraft(location: CustomerLocation | null): LocationDraft | null {

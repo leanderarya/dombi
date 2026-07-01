@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useForm } from '@inertiajs/react';
 import { Package, TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -103,7 +104,7 @@ return null;
 
     const order = delivery.order;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -206,5 +207,7 @@ return null;
                 </div>
             </div>
         </div>
-    );
+    ,
+        document.body,
+    );;
 }

@@ -46,13 +46,13 @@ pending → paid → settled
 
 ### Status Mapping
 
-| Midtrans Status | Payment Status | Order Action |
-|-----------------|----------------|--------------|
-| `capture` | `paid` | Auto-confirm |
-| `settlement` | `settled` | No change |
-| `pending` | `pending` | Wait |
-| `expire` | `expired` | Cancel order |
-| `deny` | `failed` | Notify customer |
+| Midtrans Status | Payment Status | Order Action    |
+| --------------- | -------------- | --------------- |
+| `capture`       | `paid`         | Auto-confirm    |
+| `settlement`    | `settled`      | No change       |
+| `pending`       | `pending`      | Wait            |
+| `expire`        | `expired`      | Cancel order    |
+| `deny`          | `failed`       | Notify customer |
 
 ## Backend
 
@@ -120,6 +120,7 @@ class PaymentTransaction extends Model
 ### Database
 
 **payment_transactions table:**
+
 ```
 - id
 - order_id (FK)
@@ -132,6 +133,7 @@ class PaymentTransaction extends Model
 ```
 
 **orders table additions:**
+
 ```
 - payment_status (enum: pending, paid, settled, expired, failed, null)
 - midtrans_order_id (string, nullable, unique)
@@ -149,11 +151,13 @@ Route::post('/api/midtrans/webhook', [MidtransWebhookController::class, 'handle'
 ### Payment Method Selector
 
 **Tab structure:**
+
 ```
 [QRIS] [Virtual Account] [E-wallet]
 ```
 
 **Per tab:**
+
 - QRIS: Single option, no sub-selection
 - VA: Select bank (BCA, BNI, Mandiri, BRI)
 - E-wallet: Select provider (GoPay, OVO, Dana, ShopeePay)
@@ -161,12 +165,17 @@ Route::post('/api/midtrans/webhook', [MidtransWebhookController::class, 'handle'
 ### Midtrans Snap Integration
 
 **Script loading:**
+
 ```html
 <!-- sandbox -->
-<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="..."></script>
+<script
+    src="https://app.sandbox.midtrans.com/snap/snap.js"
+    data-client-key="..."
+></script>
 ```
 
 **Snap popup:**
+
 ```typescript
 window.snap.pay(snapToken, {
     onSuccess: (result) => {
@@ -192,27 +201,27 @@ window.snap.pay(snapToken, {
 
 ## Files to Create/Modify
 
-| # | File | Action | Purpose |
-|---|------|--------|---------|
-| 1 | `config/midtrans.php` | Create | Midtrans config |
-| 2 | `.env.example` | Modify | Add MIDTRANS_* vars |
-| 3 | `composer.json` | Modify | Add midtrans/midtrans SDK |
-| 4 | `database/migrations/xxx_create_payment_transactions_table.php` | Create | Transaction log table |
-| 5 | `database/migrations/xxx_add_payment_fields_to_orders_table.php` | Create | payment_status, midtrans_order_id, paid_at |
-| 6 | `app/Models/PaymentTransaction.php` | Create | Transaction model |
-| 7 | `app/Models/Order.php` | Modify | Add payment_status, midtrans_order_id, paid_at to fillable |
-| 8 | `app/Services/MidtransService.php` | Create | Snap token, webhook handling |
-| 9 | `app/Http/Controllers/MidtransWebhookController.php` | Create | Webhook endpoint |
-| 10 | `routes/web.php` | Modify | Add webhook route |
-| 11 | `resources/views/midtrans-snap.blade.php` | Create | Snap.js script tag |
-| 12 | `resources/js/pages/customer/checkout/payment.tsx` | Modify | Midtrans Snap integration |
-| 13 | `app/Http/Controllers/Customer/CheckoutController.php` | Modify | Create Snap token |
+| #   | File                                                             | Action | Purpose                                                    |
+| --- | ---------------------------------------------------------------- | ------ | ---------------------------------------------------------- |
+| 1   | `config/midtrans.php`                                            | Create | Midtrans config                                            |
+| 2   | `.env.example`                                                   | Modify | Add MIDTRANS\_\* vars                                      |
+| 3   | `composer.json`                                                  | Modify | Add midtrans/midtrans SDK                                  |
+| 4   | `database/migrations/xxx_create_payment_transactions_table.php`  | Create | Transaction log table                                      |
+| 5   | `database/migrations/xxx_add_payment_fields_to_orders_table.php` | Create | payment_status, midtrans_order_id, paid_at                 |
+| 6   | `app/Models/PaymentTransaction.php`                              | Create | Transaction model                                          |
+| 7   | `app/Models/Order.php`                                           | Modify | Add payment_status, midtrans_order_id, paid_at to fillable |
+| 8   | `app/Services/MidtransService.php`                               | Create | Snap token, webhook handling                               |
+| 9   | `app/Http/Controllers/MidtransWebhookController.php`             | Create | Webhook endpoint                                           |
+| 10  | `routes/web.php`                                                 | Modify | Add webhook route                                          |
+| 11  | `resources/views/midtrans-snap.blade.php`                        | Create | Snap.js script tag                                         |
+| 12  | `resources/js/pages/customer/checkout/payment.tsx`               | Modify | Midtrans Snap integration                                  |
+| 13  | `app/Http/Controllers/Customer/CheckoutController.php`           | Modify | Create Snap token                                          |
 
 ## Environment Variables
 
 ```
-MIDTRANS_SERVER_KEY=SB-Mid-server-xxx
-MIDTRANS_CLIENT_KEY=SB-Mid-client-xxx
+MIDTRANS_SERVER_KEY=SB-Mid-server-Kt_Z3Qo-rYXmrtBkyN3HbQeV
+MIDTRANS_CLIENT_KEY=SB-Mid-client-dXugv5VDtvhfViKR
 MIDTRANS_IS_PRODUCTION=false
 ```
 
