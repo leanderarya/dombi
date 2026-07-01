@@ -36,7 +36,7 @@ export default function CreateRestock({ families, inventories }: any) {
     };
 
     return (
-        <OutletLayout title="Buat Restock" backHref="/outlet/restocks" hideNav>
+        <OutletLayout title="Buat Restock" backHref="/outlet/restocks">
             <Head title="Buat Restock" />
 
             {/* Items */}

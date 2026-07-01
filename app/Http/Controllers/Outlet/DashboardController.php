@@ -121,33 +121,6 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function more(): Response
-    {
-        $outlet = auth()->user()->outlet;
-        abort_unless($outlet, 403);
-
-        return Inertia::render('outlet/more', [
-            'pendingReturns' => ReturnRequest::where('outlet_id', $outlet->id)
-                ->whereIn('status', ['submitted', 'approved'])
-                ->count(),
-            'pendingExchanges' => ExchangeRequest::where('outlet_id', $outlet->id)
-                ->whereIn('status', ['submitted', 'approved', 'preparing', 'shipped'])
-                ->count(),
-            'pendingRestocks' => RestockRequest::where('outlet_id', $outlet->id)
-                ->whereIn('status', ['requested', 'preparing', 'shipped'])
-                ->count(),
-            'activeDeliveries' => Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
-                ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
-                ->count(),
-            'pendingSettlementPayments' => SettlementPayment::where('outlet_id', $outlet->id)
-                ->where('status', SettlementPayment::STATUS_PENDING)
-                ->count(),
-            'pendingReports' => OrderReport::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
-                ->active()
-                ->count(),
-        ]);
-    }
-
     public function badgeCounts(): array
     {
         $outlet = auth()->user()->outlet;

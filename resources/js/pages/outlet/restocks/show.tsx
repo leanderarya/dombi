@@ -31,7 +31,7 @@ export default function OutletRestockShow({ restock }: any) {
     };
 
     return (
-        <OutletLayout title={`Restock #${restock.id}`} backHref="/outlet/restocks" hideNav>
+        <OutletLayout title={`Restock #${restock.id}`} backHref="/outlet/restocks">
             <Head title={`Restock #${restock.id}`} />
 
             {/* Status + Cancel */}

@@ -13,7 +13,7 @@ export default function OutletExchangesShow({ exchange }: any) {
     };
 
     return (
-        <OutletLayout title={`Tukar Produk #${exchange.id}`} subtitle={status.label} backHref="/outlet/exchanges" hideNav>
+        <OutletLayout title={`Tukar Produk #${exchange.id}`} subtitle={status.label} backHref="/outlet/exchanges">
             <Head title={`Tukar Produk #${exchange.id}`} />
 
             <div className="mt-4 pb-24">

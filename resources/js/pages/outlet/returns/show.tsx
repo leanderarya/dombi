@@ -10,7 +10,7 @@ export default function OutletReturnsShow({ return: ret }: any) {
     const status = getReturnStatus(ret.status);
 
     return (
-        <OutletLayout title={`Return #${ret.id}`} subtitle={status.label} backHref="/outlet/returns" hideNav>
+        <OutletLayout title={`Return #${ret.id}`} subtitle={status.label} backHref="/outlet/returns">
             <Head title={`Return #${ret.id}`} />
 
             <div className="mt-4 pb-24">

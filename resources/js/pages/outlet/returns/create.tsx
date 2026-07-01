@@ -76,7 +76,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
     };
 
     return (
-        <OutletLayout title="Ajukan Return" subtitle="Return stok outlet" backHref="/outlet/returns" hideNav>
+        <OutletLayout title="Ajukan Return" subtitle="Return stok outlet" backHref="/outlet/returns">
             <Head title="Ajukan Return" />
 
             <div className="mt-4 pb-40">

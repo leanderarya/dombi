@@ -263,7 +263,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
     // Outlet routes
     Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')->name('outlet.')->group(function (): void {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
-        Route::get('/more', [DashboardController::class, 'more'])->name('more');
         Route::get('/badge-counts', [DashboardController::class, 'badgeCounts'])->name('badge-counts');
         Route::get('/inventory', OutletInventoryController::class)->name('inventory');
         Route::post('/inventory/opname', [OutletInventoryController::class, 'opname'])->name('inventory.opname');
