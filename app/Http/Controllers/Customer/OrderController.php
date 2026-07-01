@@ -93,6 +93,36 @@ class OrderController extends Controller
         ]);
     }
 
+    public function confirm(Request $request, string $orderCode): Response
+    {
+        $order = Order::where('order_code', $orderCode)->firstOrFail();
+
+        // Verify the user owns this order
+        $user = $request->user();
+        if ($user && $order->customer_id && $order->customer_id !== $user->getCustomerOrCreate()->id) {
+            abort(403);
+        }
+
+        return Inertia::render('customer/orders/confirm', [
+            'order' => [
+                'id' => $order->id,
+                'order_code' => $order->order_code,
+                'items' => $order->items->map(fn ($item) => [
+                    'product_name' => $item->product_name,
+                    'variant_name' => $item->variant_name,
+                    'quantity' => $item->quantity,
+                    'subtotal' => $item->subtotal,
+                ]),
+                'total' => $order->total,
+                'fulfillment_type' => $order->fulfillment_type,
+                'recovery_token' => $order->recovery_token,
+                'outlet' => $order->outlet ? [
+                    'name' => $order->outlet->name,
+                ] : null,
+            ],
+        ]);
+    }
+
     public function cancel(CancelOrderRequest $request, Order $order, OrderStatusService $orderStatusService): RedirectResponse
     {
         $user = $request->user();

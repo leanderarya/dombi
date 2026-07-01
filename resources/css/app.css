@@ -264,6 +264,11 @@ select:focus {
     to { opacity: 0; transform: scale(0.95); }
 }
 
+@keyframes scaleIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
 /* SweetAlert2 Dombi operational theme */
 .dombi-swal-popup {
     border-radius: 1rem !important;

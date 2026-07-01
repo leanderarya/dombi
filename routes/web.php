@@ -106,6 +106,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
         Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
         Route::get('/orders/{order}/confirmation/{token}', [CustomerOrderController::class, 'confirmation'])->name('orders.confirmation');
+        Route::get('/orders/confirm/{orderCode}', [CustomerOrderController::class, 'confirm'])->name('orders.confirm');
         Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
         Route::post('/register', [AccountPromotionController::class, 'register'])->middleware('throttle:3,1')->name('register');
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
@@ -282,6 +283,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('/push-subscribe', [\App\Http\Controllers\Outlet\PushController::class, 'subscribe'])->name('push-subscribe');
         Route::get('/offline-sales', [\App\Http\Controllers\Outlet\OfflineSaleController::class, 'index'])->name('offline-sales.index');
         Route::post('/offline-sales', [\App\Http\Controllers\Outlet\OfflineSaleController::class, 'store'])->name('offline-sales.store');
+        Route::delete('/offline-sales/{offlineSale}', [\App\Http\Controllers\Outlet\OfflineSaleController::class, 'destroy'])->name('offline-sales.destroy');
         Route::get('/scan', [OutletScanController::class, 'index'])->name('scan');
         Route::get('/scan/{order_code}', [OutletScanController::class, 'lookup'])->name('scan.lookup');
         Route::get('/restocks', [OutletRestockController::class, 'index'])->name('restocks.index');
