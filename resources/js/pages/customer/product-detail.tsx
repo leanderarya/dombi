@@ -60,6 +60,8 @@ export default function ProductDetail({ family, otherFamilies = [] }: Props) {
 function ProductDetailInner({ family, otherFamilies = [] }: Props) {
     const cart = useCart();
     const [added, setAdded] = useState(false);
+    const [toast, setToast] = useState(false);
+    const [toastData, setToastData] = useState<{ name: string; qty: number } | null>(null);
 
     const flavors = useMemo(
         () => [...new Set(family.variants.map((v) => v.flavor).filter(Boolean))] as string[],
@@ -154,8 +156,11 @@ return;
         setAdding(false);
         setAdded(true);
         setQuantity(1);
+        setToastData({ name: family.name, qty: quantity });
+        setToast(true);
 
         setTimeout(() => setAdded(false), 1500);
+        setTimeout(() => setToast(false), 2500);
     };
 
     return (
@@ -194,6 +199,26 @@ return;
                         </Link>
                     </div>
                 </header>
+
+                {/* Toast Notification */}
+                {toast && toastData && (
+                    <div
+                        className="fixed right-4 z-50 max-w-xs"
+                        style={{ top: 'calc(env(safe-area-inset-top) + 60px)', animation: 'toastSlideIn 0.3s ease-out' }}
+                    >
+                        <div className="flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 shadow-lg">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                                <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <div className="min-w-0">
+                                <div className="text-sm font-semibold text-text truncate">{toastData.name}</div>
+                                <div className="text-xs text-text-muted">Ditambahkan ke keranjang</div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
                     {/* Product Image */}

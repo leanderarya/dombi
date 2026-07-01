@@ -276,6 +276,11 @@ select:focus {
     100% { transform: scale(1); }
 }
 
+@keyframes toastSlideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
 /* SweetAlert2 Dombi operational theme */
 .dombi-swal-popup {
     border-radius: 1rem !important;
