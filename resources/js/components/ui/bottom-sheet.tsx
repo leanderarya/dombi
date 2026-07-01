@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface Props {
@@ -67,7 +68,8 @@ export default function BottomSheet({ open, onClose, title, children, maxHeight 
 
     const isDragging = translateY > 0;
 
-    return (
+    // Portal to body — avoids containing-block issues
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-slate-950/40" onClick={onClose} />
             <div
@@ -110,6 +112,7 @@ export default function BottomSheet({ open, onClose, title, children, maxHeight 
                     {children}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }

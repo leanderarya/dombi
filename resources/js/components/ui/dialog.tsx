@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import { useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 interface DialogProps {
     open: boolean;
@@ -28,14 +29,16 @@ export default function Dialog({ open, onClose, title, children, maxWidth = 'max
 
     if (!open) return null;
 
-    return (
+    // Portal to body — avoids containing-block issues from
+    // backdrop-blur, transform, will-change on parent elements
+    return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             {/* Backdrop */}
-            <div 
-                className="absolute inset-0 bg-black/50" 
+            <div
+                className="absolute inset-0 bg-black/50"
                 onClick={onClose}
             />
-            
+
             {/* Dialog */}
             <div className={`relative w-full ${maxWidth} rounded-2xl bg-white shadow-xl`}>
                 {/* Header */}
@@ -49,12 +52,13 @@ export default function Dialog({ open, onClose, title, children, maxWidth = 'max
                         <X className="h-5 w-5" />
                     </button>
                 </div>
-                
+
                 {/* Content */}
                 <div className="px-5 py-4">
                     {children}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body,
     );
 }
