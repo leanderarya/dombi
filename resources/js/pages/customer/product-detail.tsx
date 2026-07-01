@@ -247,9 +247,9 @@ return;
                             <StockBadge status={stockStatus} />
                         </div>
                     ) : startingPrice > 0 ? (
-                        <div className="mt-1 flex items-baseline gap-1.5">
-                            <span className="shrink-0 text-sm text-text-muted">Mulai</span>
-                            <span className="text-2xl font-bold tabular-nums text-emerald-700">{formatCurrency(startingPrice)}</span>
+                        <div className="mt-1">
+                            <div className="text-sm text-text-muted">Mulai</div>
+                            <div className="text-2xl font-bold tabular-nums text-emerald-700">{formatCurrency(startingPrice)}</div>
                         </div>
                     ) : null}
 
@@ -407,10 +407,12 @@ return;
                                             </div>
                                             <div className="p-2">
                                                 <div className="text-xs font-semibold text-text leading-tight truncate">{other.name}</div>
-                                                <div className="mt-1 flex items-baseline gap-1">
-                                                    {minPrice > 0 && <span className="shrink-0 text-[10px] text-text-muted">Mulai</span>}
-                                                    {minPrice > 0 && <span className="text-xs font-bold tabular-nums text-emerald-700">{formatCurrency(minPrice)}</span>}
-                                                </div>
+                                                {minPrice > 0 && (
+                                                    <div className="mt-1">
+                                                        <div className="text-[10px] text-text-muted leading-tight">Mulai</div>
+                                                        <div className="text-xs font-bold tabular-nums text-emerald-700">{formatCurrency(minPrice)}</div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </Link>
                                     );
