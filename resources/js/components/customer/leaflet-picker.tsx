@@ -125,15 +125,15 @@ return;
     }, [lat, lng]);
 
     return (
-        <div className="relative overflow-hidden rounded-lg border border-zinc-200">
+        <div className="relative overflow-hidden rounded-lg border border-border">
             <div ref={mapRef} className="h-[260px] w-full bg-zinc-100 sm:h-[300px]" style={{ touchAction: 'pan-x pan-y' }} />
             {!loaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-zinc-50">
-                    <span className="text-xs text-slate-400">Memuat peta...</span>
+                <div className="absolute inset-0 flex items-center justify-center bg-surface-muted">
+                    <span className="text-xs text-text-subtle">Memuat peta...</span>
                 </div>
             )}
             {loaded && !hasCoords && (
-                <div className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg border border-white/70 bg-white/95 px-3 py-2 text-[11px] font-semibold text-slate-600 shadow-sm">
+                <div className="pointer-events-none absolute inset-x-3 bottom-3 rounded-lg border border-white/70 bg-white/95 px-3 py-2 text-[11px] font-semibold text-text-muted shadow-sm">
                     Cari alamat atau tap peta untuk menentukan titik pengiriman.
                 </div>
             )}

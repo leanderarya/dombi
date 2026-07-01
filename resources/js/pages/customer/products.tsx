@@ -263,7 +263,7 @@ continue;
                         {/* Variant Rows */}
                         <div className="mt-2 overflow-hidden rounded-xl bg-white">
                             {section.flavorGroups.map((group, index) => (
-                                <div key={`${group.familyId}-${group.flavor ?? 'default'}`} className={index < section.flavorGroups.length - 1 ? 'border-b border-zinc-100' : ''}>
+                                <div key={`${group.familyId}-${group.flavor ?? 'default'}`} className={index < section.flavorGroups.length - 1 ? 'border-b border-border' : ''}>
                                     <VariantListItem
                                         variant={group.representativeVariant}
                                         familyId={group.familyId}

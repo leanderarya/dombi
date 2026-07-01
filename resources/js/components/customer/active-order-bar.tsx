@@ -14,7 +14,7 @@ return null;
         <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-4">
             <Link
                 href={`/customer/orders/${order.id}`}
-                className="mx-auto flex max-w-lg items-center gap-3 rounded-xl bg-slate-900 px-4 py-3 shadow-lg active:bg-slate-800"
+                className="mx-auto flex max-w-lg items-center gap-3 rounded-xl bg-text px-4 py-3 shadow-lg active:bg-text/90"
             >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600/20">
                     <svg className="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

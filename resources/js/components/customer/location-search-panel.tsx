@@ -227,20 +227,20 @@ export default function LocationSearchPanel({
     return (
         <div className="space-y-4">
             {showSavedLocation && savedLocation && (
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <div className="rounded-xl border border-border bg-surface-muted p-4">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Lokasi Terakhir</span>
+                                <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Lokasi Terakhir</span>
                             </div>
-                            <div className="mt-2 text-sm font-semibold text-slate-900">{lastUsedSummary || savedLocation.address_line || 'Lokasi tersimpan'}</div>
+                            <div className="mt-2 text-sm font-semibold text-text">{lastUsedSummary || savedLocation.address_line || 'Lokasi tersimpan'}</div>
                         </div>
                         {onUseSavedLocation && (
                             <button
                                 type="button"
                                 onClick={onUseSavedLocation}
-                                className="min-h-10 shrink-0 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
+                                className="min-h-10 shrink-0 rounded-lg border border-border bg-white px-3 text-xs font-semibold text-text active:bg-surface-muted"
                             >
                                 Gunakan Lagi
                             </button>
@@ -251,9 +251,9 @@ export default function LocationSearchPanel({
 
             {/* Search */}
             <div className="relative">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Cari alamat</label>
-                <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-white px-3 mt-2">
-                    <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                <label className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Cari alamat</label>
+                <div className="flex items-center gap-2.5 rounded-lg border border-border bg-white px-3 mt-2">
+                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
                         value={query}
                         onChange={(event) => {
@@ -265,15 +265,15 @@ export default function LocationSearchPanel({
                                 setShowSuggestions(true);
                             }
                         }}
-                        className="min-h-11 w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                        className="min-h-11 w-full bg-transparent text-sm text-text placeholder:text-text-subtle focus:outline-none"
                         placeholder="Contoh: Jl. Ngesrep Timur V"
                     />
                 </div>
 
                 {showSuggestions && (searchState !== 'idle' || suggestions.length > 0) && (
-                    <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
+                    <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-xl border border-border bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
                         {searchState === 'searching' && (
-                            <div className="px-4 py-3 text-sm text-slate-500">Mencari alamat...</div>
+                            <div className="px-4 py-3 text-sm text-text-muted">Mencari alamat...</div>
                         )}
 
                         {searchState === 'found' && suggestions.map((suggestion) => (
@@ -281,33 +281,33 @@ export default function LocationSearchPanel({
                                 key={suggestion.id}
                                 type="button"
                                 onClick={() => selectSuggestion(suggestion)}
-                                className="block w-full border-b border-slate-100 px-4 py-3 text-left last:border-b-0 active:bg-slate-50"
+                                className="block w-full border-b border-border px-4 py-3 text-left last:border-b-0 active:bg-surface-muted"
                             >
-                                <div className="text-sm font-semibold text-slate-900">{suggestion.title}</div>
-                                <div className="mt-1 text-xs text-slate-500">{suggestion.subtitle || suggestion.formatted_address}</div>
+                                <div className="text-sm font-semibold text-text">{suggestion.title}</div>
+                                <div className="mt-1 text-xs text-text-muted">{suggestion.subtitle || suggestion.formatted_address}</div>
                             </button>
                         ))}
 
                         {searchState === 'empty' && (
-                            <div className="px-4 py-3 text-sm text-slate-500">Alamat belum ditemukan. Coba kata kunci lain.</div>
+                            <div className="px-4 py-3 text-sm text-text-muted">Alamat belum ditemukan. Coba kata kunci lain.</div>
                         )}
 
                         {searchState === 'error' && (
-                            <div className="px-4 py-3 text-sm text-slate-500">Pencarian sedang bermasalah. Anda tetap bisa pilih titik di peta.</div>
+                            <div className="px-4 py-3 text-sm text-text-muted">Pencarian sedang bermasalah. Anda tetap bisa pilih titik di peta.</div>
                         )}
                     </div>
                 )}
 
-                <p className="mt-2 text-[11px] font-semibold text-slate-500">
+                <p className="mt-2 text-[11px] font-semibold text-text-muted">
                     Cari alamat, lalu geser pin untuk menyesuaikan lokasi tepat.
                 </p>
             </div>
 
             {/* Section 1: Map Pin */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="rounded-xl border border-border bg-white p-4">
                 <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Lokasi Pin</span>
+                    <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Lokasi Pin</span>
                 </div>
                 <div className="mt-3">
                     <LeafletPicker latitude={value.latitude} longitude={value.longitude} onChange={handleMarkerChange} />
@@ -318,24 +318,24 @@ export default function LocationSearchPanel({
                         <span>Lokasi Pin Diperbarui</span>
                     </div>
                 ) : (
-                    <p className="mt-3 text-xs text-slate-500">Pastikan pin berada tepat di lokasi tujuan.</p>
+                    <p className="mt-3 text-xs text-text-muted">Pastikan pin berada tepat di lokasi tujuan.</p>
                 )}
             </div>
 
             {/* Section 2: Detected Address (editable) */}
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Alamat Terdeteksi</div>
+            <div className="rounded-xl border border-border bg-white p-4">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Alamat Terdeteksi</div>
                 <div className="mt-3 space-y-3">
                     <label className="block">
-                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Alamat</span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Alamat</span>
                         <input
                             value={value.address_line ?? ''}
                             onChange={(event) => onChange({ address_line: event.target.value })}
-                            className="mt-1 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                            className="mt-1 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
                             placeholder={hasPin ? 'Alamat akan terisi otomatis' : 'Pilih lokasi di peta terlebih dahulu'}
                         />
                     </label>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-text-muted">
                         {[value.village, value.district, value.city].filter(Boolean).join(', ') || (hasPin ? 'Mendeteksi wilayah...' : '-')}
                     </div>
                 </div>
@@ -358,36 +358,36 @@ export default function LocationSearchPanel({
             {showDetail && (
                 <>
                     {/* Detail Alamat */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Detail Alamat</div>
+                    <div className="rounded-xl border border-border bg-white p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Detail Alamat</div>
                         <div className="mt-3">
                             <label className="block">
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Detail</span>
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Detail</span>
                                 <input
                                     value={value.address_detail ?? ''}
                                     onChange={(event) => onChange({ address_detail: event.target.value })}
-                                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                                    className="mt-1 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
                                     placeholder="Blok B3 No 27"
                                 />
                             </label>
-                            <p className="mt-1.5 text-xs text-slate-500">Nomor rumah, blok, lantai, atau unit.</p>
+                            <p className="mt-1.5 text-xs text-text-muted">Nomor rumah, blok, lantai, atau unit.</p>
                         </div>
                     </div>
 
                     {/* Patokan */}
-                    <div className="rounded-xl border border-slate-200 bg-white p-4">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Patokan / Ciri Rumah</div>
+                    <div className="rounded-xl border border-border bg-white p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Patokan / Ciri Rumah</div>
                         <div className="mt-3">
                             <label className="block">
-                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Patokan</span>
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Patokan</span>
                                 <input
                                     value={value.landmark ?? ''}
                                     onChange={(event) => onChange({ landmark: event.target.value })}
-                                    className="mt-1 min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
+                                    className="mt-1 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-300 focus:ring-1 focus:ring-emerald-200"
                                     placeholder="Rumah cat hijau dekat mushola"
                                 />
                             </label>
-                            <p className="mt-1.5 text-xs text-slate-500">Informasi ini membantu kurir menemukan lokasi dengan lebih cepat.</p>
+                            <p className="mt-1.5 text-xs text-text-muted">Informasi ini membantu kurir menemukan lokasi dengan lebih cepat.</p>
                         </div>
                     </div>
                 </>

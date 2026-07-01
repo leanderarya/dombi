@@ -101,7 +101,7 @@ return;
                                 className={`flex w-full items-center gap-3 rounded-xl border p-3.5 text-left transition-all active:opacity-80 disabled:opacity-40 ${
                                     isSelected
                                         ? 'border-emerald-500 bg-emerald-50'
-                                        : 'border-zinc-200 bg-white'
+                                        : 'border-border bg-white'
                                 }`}
                             >
                                 <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
@@ -110,9 +110,9 @@ return;
                                     {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />}
                                 </div>
                                 <div className="flex-1">
-                                    <div className="text-sm font-medium text-slate-900">{variant.size ?? variant.name}</div>
+                                    <div className="text-sm font-medium text-text">{variant.size ?? variant.name}</div>
                                 </div>
-                                <div className="text-sm font-bold tabular-nums text-slate-900">
+                                <div className="text-sm font-bold tabular-nums text-text">
                                     {formatCurrency(variant.selling_price)}
                                 </div>
                             </button>
@@ -123,7 +123,7 @@ return;
                 {/* Quantity + Add */}
                 {selectedVariant && (
                     <div className="flex items-center gap-3">
-                        <div className="flex items-center rounded-xl border border-zinc-200 bg-white">
+                        <div className="flex items-center rounded-xl border border-border bg-white">
                             <button
                                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
                                 className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-l-xl"
@@ -132,7 +132,7 @@ return;
                                     <path strokeLinecap="round" d="M5 12h14" />
                                 </svg>
                             </button>
-                            <span className="w-10 text-center text-sm font-bold text-slate-900">{quantity}</span>
+                            <span className="w-10 text-center text-sm font-bold text-text">{quantity}</span>
                             <button
                                 onClick={() => setQuantity(quantity + 1)}
                                 className="flex h-11 w-11 items-center justify-center text-zinc-600 active:bg-zinc-50 rounded-r-xl"

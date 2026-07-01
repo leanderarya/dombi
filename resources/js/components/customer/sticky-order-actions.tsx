@@ -7,7 +7,7 @@ interface Props {
 
 export default function StickyOrderActions({ orderId, showReorder = true }: Props) {
     return (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white px-4 pb-[env(safe-area-inset-bottom)] pt-3">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white px-4 pb-[env(safe-area-inset-bottom)] pt-3">
             <div className="mx-auto max-w-lg space-y-2">
                 {showReorder && (
                     <Link
@@ -22,7 +22,7 @@ export default function StickyOrderActions({ orderId, showReorder = true }: Prop
                 )}
                 <Link
                     href={`/customer/orders`}
-                    className="flex min-h-10 w-full items-center justify-center text-xs font-bold uppercase tracking-wide text-slate-500 active:text-slate-700"
+                    className="flex min-h-10 w-full items-center justify-center text-xs font-bold uppercase tracking-wide text-text-muted active:text-text"
                 >
                     Kembali ke Riwayat
                 </Link>

@@ -137,17 +137,17 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
     const showSaved = location && hasUsedLocation;
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40" onClick={onClose}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
             <div
                 className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
                 <div className="shrink-0 px-5 pt-4 pb-2">
-                    <div className="mx-auto h-1.5 w-10 rounded-full bg-slate-200" />
+                    <div className="mx-auto h-1.5 w-10 rounded-full bg-border" />
                     <div className="mt-3 flex items-center justify-between">
-                        <h2 className="text-[15px] font-semibold text-slate-900">Tentukan Lokasi Anda</h2>
-                        <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 active:bg-slate-100">
+                        <h2 className="text-[15px] font-semibold text-text">Tentukan Lokasi Anda</h2>
+                        <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-text-subtle active:bg-zinc-100">
                             <X className="h-4 w-4" />
                         </button>
                     </div>
@@ -162,10 +162,10 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
                                 type="button"
                                 onClick={handleUseCurrentLocation}
                                 disabled={loadingCurrent}
-                                className="flex h-14 w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white px-4 transition-all active:opacity-80 active:bg-slate-50 disabled:opacity-60"
+                                className="flex h-14 w-full items-center gap-3.5 rounded-xl border border-border bg-white px-4 transition-all active:opacity-80 active:bg-zinc-50 disabled:opacity-60"
                             >
-                                <LocateFixed className="h-5 w-5 shrink-0 text-emerald-600" />
-                                <span className="text-sm font-semibold text-slate-900">
+                                <LocateFixed className="h-5 w-5 shrink-0 text-primary" />
+                                <span className="text-sm font-semibold text-text">
                                     {loadingCurrent ? 'Mengambil lokasi...' : 'Gunakan Lokasi Saya'}
                                 </span>
                             </button>
@@ -173,26 +173,26 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
                             <button
                                 type="button"
                                 onClick={() => setMode('manual')}
-                                className="flex h-14 w-full items-center gap-3.5 rounded-2xl border border-slate-200 bg-white px-4 transition-all active:opacity-80 active:bg-slate-50"
+                                className="flex h-14 w-full items-center gap-3.5 rounded-xl border border-border bg-white px-4 transition-all active:opacity-80 active:bg-zinc-50"
                             >
-                                <Search className="h-5 w-5 shrink-0 text-slate-500" />
-                                <span className="text-sm font-semibold text-slate-900">Cari Alamat Manual</span>
+                                <Search className="h-5 w-5 shrink-0 text-text-muted" />
+                                <span className="text-sm font-semibold text-text">Cari Alamat Manual</span>
                             </button>
 
                             {/* Saved Location — returning users only */}
                             {showSaved && (
                                 <>
-                                    <div className="h-px bg-slate-100" />
-                                    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                                    <div className="h-px bg-border" />
+                                    <div className="rounded-xl border border-border bg-surface-muted px-4 py-3">
                                         <div className="flex items-center gap-2">
-                                            <MapPin className="h-4 w-4 shrink-0 text-slate-400" />
-                                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Lokasi Terakhir</span>
+                                            <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
+                                            <span className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Lokasi Terakhir</span>
                                         </div>
-                                        <div className="mt-2 text-sm font-semibold text-slate-900">
+                                        <div className="mt-2 text-sm font-semibold text-text">
                                             {[location.village, location.district].filter(Boolean).join(', ') || 'Lokasi tersimpan'}
                                         </div>
                                         {location.city && (
-                                            <div className="mt-0.5 text-xs text-slate-500">{location.city}</div>
+                                            <div className="mt-0.5 text-xs text-text-muted">{location.city}</div>
                                         )}
                                         <button
                                             type="button"
@@ -200,7 +200,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
                                                 setDraft(toDraft(location));
                                                 setMode('manual');
                                             }}
-                                            className="mt-3 flex h-9 items-center rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 active:bg-slate-50"
+                                            className="mt-3 flex h-9 items-center rounded-lg border border-border bg-white px-3 text-xs font-semibold text-text active:bg-zinc-50"
                                         >
                                             Gunakan Lagi
                                         </button>
@@ -216,7 +216,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
 
                     {mode === 'manual' && (
                         <div className="mt-2 space-y-4">
-                            <button type="button" onClick={() => setMode('options')} className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 active:text-slate-700">
+                            <button type="button" onClick={() => setMode('options')} className="flex items-center gap-1.5 text-xs font-semibold text-text-muted active:text-text">
                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                                 </svg>
@@ -260,7 +260,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
                                 type="button"
                                 onClick={confirmManualLocation}
                                 disabled={!draft || draft.latitude === null || draft.longitude === null}
-                                className="flex h-12 w-full items-center justify-center rounded-xl bg-emerald-600 text-sm font-bold text-white transition-all active:opacity-80 active:bg-emerald-700 disabled:bg-slate-300 "
+                                className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white transition-all active:opacity-80 active:bg-primary-hover disabled:bg-border"
                             >
                                 Simpan Lokasi
                             </button>

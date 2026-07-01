@@ -289,7 +289,7 @@ return;
                 {isLoggedIn ? (
                     <Link
                         href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
-                        className="group flex items-center gap-3 rounded-2xl border border-border bg-white px-4 py-3 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                        className="group flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 transition-all duration-200 hover:shadow-sm active:opacity-80"
                     >
                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
                             <User className="h-5 w-5 text-emerald-600" />
@@ -330,7 +330,7 @@ return;
                 <div className="mt-3 grid grid-cols-2 gap-3">
                     <Link
                         href="/customer/products"
-                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                        className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
                             <Milk className="h-5 w-5 text-emerald-600" />
@@ -343,7 +343,7 @@ return;
 
                     <Link
                         href="/customer/products"
-                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                        className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 transition-transform duration-200 group-hover:scale-105">
                             <MapPinned className="h-5 w-5 text-blue-600" />
@@ -359,7 +359,7 @@ return;
                     {isLoggedIn ? (
                         <Link
                             href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
-                            className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                            className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                         >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
                                 <Package className="h-5 w-5 text-amber-600" />
@@ -374,7 +374,7 @@ return;
                     ) : (
                         <a
                             href="/oauth/google"
-                            className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                            className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                         >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
                                 <Package className="h-5 w-5 text-amber-600" />
@@ -390,7 +390,7 @@ return;
                         href="https://wa.me/6281111111111"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                        className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 transition-transform duration-200 group-hover:scale-105">
                             <MessageCircle className="h-5 w-5 text-purple-600" />

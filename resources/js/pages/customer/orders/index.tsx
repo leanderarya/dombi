@@ -210,7 +210,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
                 <div className="mt-8 flex flex-col items-center px-4 text-center">
                     <EmptyOrderState type="no-orders" />
 
-                    <div className="mt-8 w-full max-w-sm rounded-2xl border border-border bg-white p-5 shadow-sm">
+                    <div className="mt-8 w-full max-w-sm rounded-xl border border-border bg-white p-5 shadow-sm">
                         <p className="text-sm font-semibold text-text">
                             Pernah pesan sebelumnya?
                         </p>

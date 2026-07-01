@@ -29,7 +29,7 @@ export default function Welcome() {
             <div className="flex min-h-dvh items-center justify-center bg-white">
                 <div className="text-center">
                     <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-emerald-600" />
-                    <p className="mt-4 text-sm font-medium text-slate-500">Menyiapkan Dombi...</p>
+                    <p className="mt-4 text-sm font-medium text-text-muted">Menyiapkan Dombi...</p>
                 </div>
             </div>
         );
@@ -68,13 +68,13 @@ export default function Welcome() {
             {/* SECTION 2 — CAROUSEL INDICATOR */}
             <div className="flex justify-center gap-2 pt-5">
                 <div className="h-2 w-2 rounded-full bg-emerald-600" />
-                <div className="h-2 w-2 rounded-full bg-slate-200" />
-                <div className="h-2 w-2 rounded-full bg-slate-200" />
+                <div className="h-2 w-2 rounded-full bg-border" />
+                <div className="h-2 w-2 rounded-full bg-border" />
             </div>
 
             {/* SECTION 3 — HEADLINE */}
             <div className="px-8 pt-4">
-                <h1 className="text-center text-[1.75rem] font-bold leading-tight tracking-tight text-slate-900">
+                <h1 className="text-center text-[1.75rem] font-bold leading-tight tracking-tight text-text">
                     Pengalaman Terbaik
                     <br />
                     Menikmati Susu Kambing
@@ -83,7 +83,7 @@ export default function Welcome() {
 
             {/* SECTION 4 — SUBTITLE */}
             <div className="px-8 pt-3">
-                <p className="text-center text-sm leading-relaxed text-slate-500">
+                <p className="text-center text-sm leading-relaxed text-text-muted">
                     Nikmati susu kambing segar dan produk olahan berkualitas langsung dari Dombi.
                 </p>
             </div>
@@ -112,7 +112,7 @@ export default function Welcome() {
                     <button
                         type="button"
                         onClick={handleGuestMode}
-                        className="flex h-12 w-full items-center justify-center text-sm font-semibold text-slate-600 underline active:text-slate-800"
+                        className="flex h-12 w-full items-center justify-center text-sm font-semibold text-text-muted underline active:text-text"
                     >
                         Lewati Tahap Ini
                     </button>

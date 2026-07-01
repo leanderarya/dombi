@@ -21,8 +21,8 @@ export default function OrderFilterChips({ options, active, onChange }: Props) {
                         onClick={() => onChange(option.key)}
                         className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition-colors active:opacity-80 ${
                             isActive
-                                ? 'bg-slate-900 text-white'
-                                : 'border border-zinc-200 bg-white text-slate-600'
+                                ? 'bg-text text-white'
+                                : 'border border-border bg-white text-text-muted'
                         }`}
                     >
                         {option.label}

@@ -50,10 +50,10 @@ export default function CurrentLocationButton({ onLocation }: Props) {
                 type="button"
                 onClick={handleClick}
                 disabled={loading}
-                className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white text-xs font-semibold text-slate-700 active:bg-zinc-50 disabled:opacity-60"
+                className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-border bg-white text-xs font-semibold text-text active:bg-surface-muted disabled:opacity-60"
             >
                 {loading ? (
-                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-slate-400 border-t-transparent" />
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-text-subtle border-t-transparent" />
                 ) : (
                     <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />

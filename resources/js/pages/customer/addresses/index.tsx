@@ -26,19 +26,19 @@ return addresses;
     }
 
     return (
-        <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
+        <div className="min-h-dvh bg-[#fbf9f7] text-text">
             <OfflineBanner />
 
             {/* Sticky Header */}
-            <header className="sticky top-0 z-30 border-b border-zinc-100 bg-white pt-[env(safe-area-inset-top)]">
+            <header className="sticky top-0 z-30 border-b border-border bg-white pt-[env(safe-area-inset-top)]">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link href="/customer/profile" className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
+                    <Link href="/customer/profile" className="flex h-10 w-10 items-center justify-center rounded-lg text-text active:bg-zinc-100">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                         </svg>
                     </Link>
-                    <h1 className="text-sm font-semibold text-slate-900">Alamat Saya</h1>
-                    <Link href="/customer/addresses/create" className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 active:bg-zinc-100">
+                    <h1 className="text-sm font-semibold text-text">Alamat Saya</h1>
+                    <Link href="/customer/addresses/create" className="flex h-10 w-10 items-center justify-center rounded-lg text-text active:bg-zinc-100">
                         <Plus className="h-5 w-5" />
                     </Link>
                 </div>
@@ -49,25 +49,25 @@ return addresses;
                 <Head title="Alamat Saya" />
 
                 {/* Search */}
-                <div className="flex items-center gap-2.5 rounded-xl border border-zinc-200 bg-white px-3.5">
-                    <Search className="h-4 w-4 shrink-0 text-slate-400" />
+                <div className="flex items-center gap-2.5 rounded-xl border border-border bg-white px-3.5">
+                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari alamat..."
-                        className="min-h-11 w-full bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
+                        className="min-h-11 w-full bg-transparent text-sm text-text placeholder:text-text-subtle focus:outline-none"
                     />
                 </div>
 
                 {/* Address List */}
                 {filtered.length === 0 ? (
                     <div className="mt-8 flex flex-col items-center py-10 text-center">
-                        <MapPin className="h-12 w-12 text-slate-200" />
-                        <p className="mt-3 text-sm font-semibold text-slate-600">
+                        <MapPin className="h-12 w-12 text-text-subtle" />
+                        <p className="mt-3 text-sm font-semibold text-text-muted">
                             {search ? 'Tidak ditemukan' : 'Belum ada alamat'}
                         </p>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="mt-1 text-xs text-text-subtle">
                             {search ? 'Coba kata kunci lain.' : 'Tambah alamat untuk mulai memesan.'}
                         </p>
                     </div>
@@ -88,7 +88,7 @@ return addresses;
             <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-4">
                 <Link
                     href="/customer/addresses/create"
-                    className="mx-auto flex max-w-lg min-h-12 items-center justify-center gap-2 rounded-xl bg-slate-900 text-sm font-bold text-white shadow-lg active:bg-slate-800"
+                    className="mx-auto flex max-w-lg min-h-12 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white shadow-lg active:bg-primary-hover"
                 >
                     <MapPin className="h-4 w-4" />
                     + Tambah Alamat Baru
@@ -105,37 +105,37 @@ function AddressCard({ address, onSetDefault }: { address: any; onSetDefault: ()
     const locationSummary = [address.village || address.kelurahan, address.district || address.kecamatan].filter(Boolean).join(', ');
 
     return (
-        <div className={`rounded-xl border bg-white p-4 ${isDefault ? 'border-emerald-300' : 'border-zinc-200'}`}>
+        <div className={`rounded-xl border bg-white p-4 ${isDefault ? 'border-emerald-300' : 'border-border'}`}>
             {/* Header */}
             <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-slate-900">{address.label || 'Alamat'}</span>
+                <span className="text-sm font-bold text-text">{address.label || 'Alamat'}</span>
                 {isDefault && (
                     <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-700">Utama</span>
                 )}
             </div>
 
             {/* Details */}
-            <div className="mt-2 text-sm font-medium text-slate-700">{address.recipient_name}</div>
-            <div className="mt-0.5 text-xs text-slate-500">{address.phone}</div>
-            <div className="mt-1.5 text-xs leading-relaxed text-slate-600">{address.address_line || address.address}</div>
+            <div className="mt-2 text-sm font-medium text-text">{address.recipient_name}</div>
+            <div className="mt-0.5 text-xs text-text-muted">{address.phone}</div>
+            <div className="mt-1.5 text-xs leading-relaxed text-text-muted">{address.address_line || address.address}</div>
             {address.address_detail && (
-                <div className="mt-1 text-xs text-slate-500">Detail: {address.address_detail}</div>
+                <div className="mt-1 text-xs text-text-muted">Detail: {address.address_detail}</div>
             )}
             {locationSummary && (
-                <div className="mt-1 text-xs text-slate-500">{locationSummary}</div>
+                <div className="mt-1 text-xs text-text-muted">{locationSummary}</div>
             )}
             {address.landmark && (
-                <div className="mt-1 text-xs text-slate-500">Patokan: {address.landmark}</div>
+                <div className="mt-1 text-xs text-text-muted">Patokan: {address.landmark}</div>
             )}
 
             {/* Actions */}
-            <div className="mt-3 flex items-center gap-3 border-t border-zinc-50 pt-3">
+            <div className="mt-3 flex items-center gap-3 border-t border-border pt-3">
                 {!isDefault && (
-                    <button onClick={onSetDefault} className="text-xs font-bold uppercase tracking-wide text-emerald-700 active:text-emerald-800">
+                    <button onClick={onSetDefault} className="text-xs font-bold uppercase tracking-wide text-primary active:text-primary-hover">
                         Pilih Utama
                     </button>
                 )}
-                <Link href={`/customer/addresses/${address.id}/edit`} className="flex items-center gap-1 text-xs font-medium text-slate-500 active:text-slate-700">
+                <Link href={`/customer/addresses/${address.id}/edit`} className="flex items-center gap-1 text-xs font-medium text-text-muted active:text-text">
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                     Edit
                 </Link>

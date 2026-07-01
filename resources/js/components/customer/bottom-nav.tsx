@@ -16,7 +16,7 @@ export default function CustomerBottomNav({ visible = true }: Props) {
 
     return (
         <nav
-            className="fixed inset-x-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)]"
+            className="fixed inset-x-0 z-40 border-t border-border bg-white pb-[env(safe-area-inset-bottom)]"
             style={{
                 bottom: visible ? 0 : -100,
                 transition: 'bottom 200ms ease',

@@ -31,13 +31,13 @@ export default function ActiveOrderCard({ order }: Props) {
         : `/track/${order.recovery_token}`;
 
     return (
-        <div className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-white p-4 shadow-sm">
             {/* Header */}
             <Link href={trackingHref} className="block active:opacity-80">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                        <div className="text-xs font-medium text-slate-400">{order.order_code}</div>
-                        <div className="mt-0.5 text-sm font-semibold text-slate-900">{order.outlet?.name ?? 'Outlet sedang dipilih'}</div>
+                        <div className="text-xs font-medium text-text-subtle">{order.order_code}</div>
+                        <div className="mt-0.5 text-sm font-semibold text-text">{order.outlet?.name ?? 'Outlet sedang dipilih'}</div>
                     </div>
                     <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-[11px] font-semibold ring-1 ${tone}`}>
                         {orderStatusLabel(order.status)}
@@ -46,7 +46,7 @@ export default function ActiveOrderCard({ order }: Props) {
 
                 {/* Items */}
                 {itemSummary && (
-                    <div className="mt-2 truncate text-xs text-slate-500">{itemSummary}</div>
+                    <div className="mt-2 truncate text-xs text-text-muted">{itemSummary}</div>
                 )}
 
                 {/* Timeline Preview */}
@@ -60,17 +60,17 @@ export default function ActiveOrderCard({ order }: Props) {
 
                 {/* Total */}
                 {order.total !== undefined && (
-                    <div className="mt-3 border-t border-slate-100 pt-3">
-                        <div className="text-sm font-bold tabular-nums text-slate-900">{formatCurrency(order.total)}</div>
+                    <div className="mt-3 border-t border-border pt-3">
+                        <div className="text-sm font-bold tabular-nums text-text">{formatCurrency(order.total)}</div>
                     </div>
                 )}
             </Link>
 
             {/* CTA */}
-            <div className="mt-3 flex gap-2 border-t border-slate-100 pt-3">
+            <div className="mt-3 flex gap-2 border-t border-border pt-3">
                 <Link
                     href={trackingHref}
-                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2.5 text-xs font-semibold text-white active:bg-slate-800"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-text px-3 py-2.5 text-xs font-semibold text-white active:bg-text/90"
                 >
                     <Truck className="h-3.5 w-3.5" />
                     Lacak Pesanan
@@ -78,7 +78,7 @@ export default function ActiveOrderCard({ order }: Props) {
                 {isTerminal && (
                     <Link
                         href={`/customer/orders/${order.id}/restore-cart`}
-                        className="flex items-center justify-center gap-1.5 rounded-lg border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-700 active:bg-slate-50"
+                        className="flex items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2.5 text-xs font-semibold text-text active:bg-surface-muted"
                     >
                         <RotateCcw className="h-3.5 w-3.5" />
                         Pesan Lagi

@@ -15,23 +15,23 @@ interface Props {
 }
 
 export default function OrderCard({ order, showReorder = false }: Props) {
-    const tone = orderStatusTone[order.status] ?? 'bg-zinc-50 text-zinc-700 ring-zinc-200';
+    const tone = orderStatusTone[order.status] ?? 'bg-surface-muted text-zinc-700 ring-zinc-200';
 
     return (
-        <div className="rounded-lg border border-zinc-100 bg-white p-4">
+        <div className="rounded-lg border border-border bg-white p-4">
             <Link href={`/customer/orders/${order.id}`} className="block active:opacity-80">
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                        <div className="text-sm font-semibold text-slate-900">{order.order_code}</div>
-                        <div className="mt-0.5 text-xs text-slate-500">{order.outlet?.name ?? '-'} · {formatDate(order.created_at)}</div>
+                        <div className="text-sm font-semibold text-text">{order.order_code}</div>
+                        <div className="mt-0.5 text-xs text-text-muted">{order.outlet?.name ?? '-'} · {formatDate(order.created_at)}</div>
                     </div>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-bold ring-1 ${tone}`}>
                         {orderStatusLabel(order.status)}
                     </span>
                 </div>
                 <div className="mt-3 flex items-center justify-between border-t border-zinc-50 pt-3">
-                    <span className="text-xs text-slate-400">Total</span>
-                    <span className="text-sm font-semibold text-slate-900">{formatCurrency(order.total)}</span>
+                    <span className="text-xs text-text-subtle">Total</span>
+                    <span className="text-sm font-semibold text-text">{formatCurrency(order.total)}</span>
                 </div>
             </Link>
             {showReorder && (
