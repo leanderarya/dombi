@@ -2,7 +2,12 @@ import { Head, router } from '@inertiajs/react';
 import { Receipt } from 'lucide-react';
 import { useState } from 'react';
 import EmptyState from '@/components/ui/empty-state';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import Pagination from '@/components/pagination';
 import StatusBadge from '@/components/ui/status-badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
 
@@ -84,14 +89,11 @@ export default function OutletSettlementPayments({ payments }: Props) {
     return (
         <OutletLayout title="Riwayat Pembayaran" subtitle="Daftar pembayaran yang sudah dikirim">
             <Head title="Riwayat Pembayaran" />
-            <div className="mt-4 p-4">
-                <div className="mb-4 flex items-center justify-between">
-                    <button
-                        onClick={() => setShowForm(!showForm)}
-                        className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary"
-                    >
+            <OutletPageShell>
+                <div className="flex items-center justify-between">
+                    <Button size="lg" onClick={() => setShowForm(!showForm)}>
                         {showForm ? 'Batal' : 'Bayar'}
-                    </button>
+                    </Button>
                 </div>
 
                 {/* Payment Form */}
@@ -100,77 +102,61 @@ export default function OutletSettlementPayments({ payments }: Props) {
                         <h2 className="mb-3 text-sm font-semibold text-text">Submit Pembayaran</h2>
 
                         <div className="space-y-3">
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-text-muted">Jumlah (Rp)</label>
-                                <input
-                                    type="number"
-                                    value={amount}
-                                    onChange={(e) => setAmount(e.target.value)}
-                                    min="1"
-                                    required
-                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                                    placeholder="1200000"
-                                />
-                                {errors.amount && <p className="mt-1 text-xs text-red-600">{errors.amount}</p>}
-                            </div>
+                            <Input
+                                type="number"
+                                label="Jumlah (Rp)"
+                                value={amount}
+                                onChange={(e) => setAmount(e.target.value)}
+                                min="1"
+                                required
+                                placeholder="1200000"
+                                error={errors.amount}
+                            />
+
+                            <Input
+                                type="text"
+                                label="Nomor Referensi"
+                                value={referenceNumber}
+                                onChange={(e) => setReferenceNumber(e.target.value)}
+                                required
+                                maxLength={100}
+                                placeholder="TRF-20260605-001"
+                                error={errors.reference_number}
+                            />
+
+                            <Input
+                                type="date"
+                                label="Tanggal Pembayaran"
+                                value={paymentDate}
+                                onChange={(e) => setPaymentDate(e.target.value)}
+                                required
+                                max={new Date().toISOString().split('T')[0]}
+                                error={errors.payment_date}
+                            />
+
+                            <Textarea
+                                label="Catatan (opsional)"
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                maxLength={500}
+                                rows={2}
+                                placeholder="Transfer via BCA..."
+                            />
 
                             <div>
-                                <label className="mb-1 block text-xs font-medium text-text-muted">Nomor Referensi</label>
-                                <input
-                                    type="text"
-                                    value={referenceNumber}
-                                    onChange={(e) => setReferenceNumber(e.target.value)}
-                                    required
-                                    maxLength={100}
-                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                                    placeholder="TRF-20260605-001"
-                                />
-                                {errors.reference_number && <p className="mt-1 text-xs text-red-600">{errors.reference_number}</p>}
-                            </div>
-
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-text-muted">Tanggal Pembayaran</label>
-                                <input
-                                    type="date"
-                                    value={paymentDate}
-                                    onChange={(e) => setPaymentDate(e.target.value)}
-                                    required
-                                    max={new Date().toISOString().split('T')[0]}
-                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                                />
-                                {errors.payment_date && <p className="mt-1 text-xs text-red-600">{errors.payment_date}</p>}
-                            </div>
-
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-text-muted">Catatan (opsional)</label>
-                                <textarea
-                                    value={notes}
-                                    onChange={(e) => setNotes(e.target.value)}
-                                    maxLength={500}
-                                    rows={2}
-                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                                    placeholder="Transfer via BCA..."
-                                />
-                            </div>
-
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-text-muted">Bukti Transfer (opsional)</label>
+                                <label className="mb-1 block text-sm font-medium text-text">Bukti Transfer (opsional)</label>
                                 <input
                                     type="file"
                                     accept="image/*"
                                     onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
+                                    className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
                                 />
-                                {errors.proof_image && <p className="mt-1 text-xs text-red-600">{errors.proof_image}</p>}
+                                {errors.proof_image && <p className="mt-1 text-xs text-danger">{errors.proof_image}</p>}
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={saving}
-                                className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
-                            >
-                                {saving ? 'Mengirim...' : 'Kirim Pembayaran'}
-                            </button>
+                            <Button type="submit" size="lg" loading={saving} className="w-full">
+                                Kirim Pembayaran
+                            </Button>
                         </div>
                     </form>
                 )}
@@ -222,24 +208,8 @@ export default function OutletSettlementPayments({ payments }: Props) {
                 </div>
 
                 {/* Pagination */}
-                {payments.last_page > 1 && (
-                    <div className="mt-4 flex justify-center gap-2">
-                        {Array.from({ length: payments.last_page }, (_, i) => i + 1).map((page) => (
-                            <button
-                                key={page}
-                                onClick={() => router.get(`/outlet/settlement-payments?page=${page}`)}
-                                className={`h-8 w-8 rounded-lg text-sm ${
-                                    page === payments.current_page
-                                        ? 'bg-primary text-white'
-                                        : 'bg-surface-muted text-text-muted'
-                                }`}
-                            >
-                                {page}
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
+                <Pagination links={payments.links ?? []} />
+            </OutletPageShell>
         </OutletLayout>
     );
 }
