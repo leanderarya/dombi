@@ -95,19 +95,18 @@ a:disabled:active {
 /* ─── Page Transitions ─────────────────────────────────── */
 
 /* Smooth page transition — no flash, just subtle slide */
+/* NOTE: Do NOT use will-change here — it creates a containing block
+   that breaks position:fixed on modals/dialogs inside the page */
 [data-page] {
     animation: pageEnter 120ms ease-out;
-    will-change: transform, opacity;
 }
 
 @keyframes pageEnter {
     from {
         opacity: 0.6;
-        transform: translateY(2px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
