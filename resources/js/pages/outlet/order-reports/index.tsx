@@ -3,6 +3,8 @@ import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import Pagination from '@/components/pagination';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatDate } from '@/lib/format';
@@ -37,7 +39,8 @@ export default function OutletOrderReportsIndex({ reports, filters }: any) {
         >
             <Head title="Laporan Masalah" />
 
-            <div className="mt-4 space-y-2">
+            <OutletPageShell>
+            <div className="space-y-2">
                 {reports.data.length === 0 ? (
                     <EmptyState
                         icon={<AlertTriangle className="h-8 w-8 text-text-subtle" />}
@@ -67,18 +70,8 @@ export default function OutletOrderReportsIndex({ reports, filters }: any) {
                 )}
             </div>
 
-            {reports.last_page > 1 && (
-                <div className="mt-4 flex justify-center gap-2">
-                    {reports.links?.map((link: any, i: number) => (
-                        <Link
-                            key={i}
-                            href={link.url ?? '#'}
-                            className={`min-h-11 min-w-11 flex items-center justify-center rounded-lg text-sm ${link.active ? 'bg-primary text-white' : 'bg-surface-muted text-text-muted'}`}
-                            dangerouslySetInnerHTML={{ __html: link.label }}
-                        />
-                    ))}
-                </div>
-            )}
+            <Pagination links={reports.links} />
+            </OutletPageShell>
         </OutletLayout>
     );
 }
