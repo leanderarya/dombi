@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ChevronRight, MapPinned, MessageCircle, Milk, Package, ShieldCheck, Store, Truck, User } from 'lucide-react';
+import { ChevronRight, MapPinned, MessageCircle, Milk, Package, Store, Truck, User } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
@@ -178,7 +178,7 @@ return;
             {/* SECTION 1 — HERO CAROUSEL */}
             <section className="-mx-4 -mt-5 overflow-hidden rounded-b-[2rem]">
                 <div
-                    className="relative flex h-[320px] items-center justify-center transition-all duration-700"
+                    className="relative flex h-65 items-center justify-center transition-all duration-700"
                     style={{ backgroundImage: 'none' }}
                 >
                     <div className={`absolute inset-0 bg-gradient-to-br ${HERO_SLIDES[slideIndex].gradient} transition-all duration-700`} />
@@ -202,9 +202,9 @@ return;
                         {HERO_SLIDES[slideIndex].cta && (
                             <Link
                                 href={HERO_SLIDES[slideIndex].ctaHref!}
-                                className="mt-4 inline-flex min-h-11 items-center px-2 text-sm font-semibold text-white/80 active:text-white"
+                                className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-white/20 backdrop-blur-sm px-6 text-sm font-bold text-white active:bg-white/30"
                             >
-                                Lihat Produk →
+                                {HERO_SLIDES[slideIndex].cta}
                             </Link>
                         )}
                     </div>
@@ -350,21 +350,25 @@ return;
                         </div>
                         <div>
                             <div className="text-sm font-bold text-text">Outlet Terdekat</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Pesanan diproses dari outlet terbaik</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">
+                                {nearestOutlet?.name ? nearestOutlet.name : 'Pesanan diproses dari outlet terbaik'}
+                            </div>
                         </div>
                     </Link>
 
                     {isLoggedIn ? (
                         <Link
-                            href="/customer/orders"
+                            href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
                             className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
                         >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
                                 <Package className="h-5 w-5 text-amber-600" />
                             </div>
                             <div>
-                                <div className="text-sm font-bold text-text">Riwayat Pesanan</div>
-                                <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Lihat pesanan sebelumnya</div>
+                                <div className="text-sm font-bold text-text">{activeOrder ? 'Pesanan Aktif' : 'Riwayat Pesanan'}</div>
+                                <div className="mt-0.5 text-xs leading-relaxed text-text-muted">
+                                    {activeOrder ? activeOrder.order_code : 'Lihat pesanan sebelumnya'}
+                                </div>
                             </div>
                         </Link>
                     ) : (
@@ -382,38 +386,24 @@ return;
                         </a>
                     )}
 
-                    <div className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50">
-                            <ShieldCheck className="h-5 w-5 text-purple-600" />
+                    <a
+                        href="https://wa.me/6281111111111"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                    >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 transition-transform duration-200 group-hover:scale-105">
+                            <MessageCircle className="h-5 w-5 text-purple-600" />
                         </div>
                         <div>
-                            <div className="text-sm font-bold text-text">Kualitas Terjamin</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Diproses dengan standar kualitas Dombi</div>
+                            <div className="text-sm font-bold text-text">Butuh Bantuan?</div>
+                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Hubungi tim Dombi via WhatsApp</div>
                         </div>
-                    </div>
+                    </a>
                 </div>
             </section>
 
-            {/* SECTION 5 — BANTUAN */}
-            <section className="mt-6">
-                <a
-                    href="https://wa.me/6281111111111"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center gap-4 rounded-2xl border border-border bg-white px-4 py-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
-                >
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
-                        <MessageCircle className="h-6 w-6 text-emerald-600" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <div className="text-sm font-bold text-text">Butuh Bantuan?</div>
-                        <div className="mt-0.5 text-xs text-text-muted">Hubungi tim Dombi via WhatsApp</div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-text-subtle" />
-                </a>
-            </section>
-
-            {/* SECTION 6 — TRUST */}
+            {/* SECTION 5 — TRUST */}
             <section className="mt-6 mb-4">
                 <div className="flex items-center justify-center gap-3 text-xs text-text-subtle">
                     <span>Sertifikasi Halal</span>
