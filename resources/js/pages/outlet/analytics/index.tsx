@@ -1,4 +1,6 @@
 import { Head, router } from '@inertiajs/react';
+import FilterChips from '@/components/ui/filter-chips';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
@@ -40,22 +42,8 @@ export default function OutletAnalytics({ outlet, kpis, topProducts, dailyRevenu
         <OutletLayout title="Analitik Performa" subtitle={`Analitik untuk ${outlet.name}`}>
             <Head title="Analitik Performa" />
 
-            <div className="mt-4 space-y-4">
-                <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
-                    {periods.map((p) => (
-                        <button
-                            key={p.key}
-                            onClick={() => handlePeriodChange(p.key)}
-                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                period === p.key
-                                    ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
-                            }`}
-                        >
-                            {p.label}
-                        </button>
-                    ))}
-                </div>
+            <OutletPageShell>
+                <FilterChips options={periods} active={period} onChange={handlePeriodChange} size="sm" variant="ring" />
 
                 <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-xl border border-border bg-white p-4">
@@ -111,7 +99,7 @@ export default function OutletAnalytics({ outlet, kpis, topProducts, dailyRevenu
                         </div>
                     )}
                 </div>
-            </div>
+            </OutletPageShell>
         </OutletLayout>
     );
 }
