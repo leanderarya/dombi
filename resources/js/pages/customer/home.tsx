@@ -202,7 +202,7 @@ return;
                         {HERO_SLIDES[slideIndex].cta && (
                             <Link
                                 href={HERO_SLIDES[slideIndex].ctaHref!}
-                                className="mt-4 inline-flex min-h-[44px] items-center px-2 text-sm font-semibold text-white/80 active:text-white"
+                                className="mt-4 inline-flex min-h-11 items-center px-2 text-sm font-semibold text-white/80 active:text-white"
                             >
                                 Lihat Produk →
                             </Link>
@@ -216,7 +216,7 @@ return;
                                 key={i}
                                 type="button"
                                 onClick={() => setSlideIndex(i)}
-                                className={`flex min-h-[44px] min-w-[44px] items-center justify-center active:opacity-80`}
+                                className={`flex min-h-11 min-w-11 items-center justify-center active:opacity-80`}
                                 aria-label={`Slide ${i + 1}`}
                             >
                                 <span className={`block h-2 rounded-full transition-all duration-300 ${
@@ -315,7 +315,7 @@ return;
                             </div>
                             <a
                                 href="/oauth/google"
-                                className="flex min-h-[44px] shrink-0 items-center rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
+                                className="flex min-h-11 shrink-0 items-center rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
                             >
                                 Masuk Google
                             </a>
@@ -448,17 +448,30 @@ return;
                             <div className="text-center">
                                 <div className="text-lg font-bold text-white">Gagal mendapatkan lokasi</div>
                                 <div className="mt-2 text-sm text-emerald-100">Aktifkan izin lokasi atau pilih outlet secara manual.</div>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setPickupLoading(false);
-                                        setPickupError(null);
-                                        setFoundOutletName(null);
-                                    }}
-                                    className="mt-5 min-h-[44px] rounded-full bg-white/20 px-6 text-sm font-bold text-white active:opacity-80"
-                                >
-                                    Tutup
-                                </button>
+                                <div className="mt-5 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setPickupError(null);
+                                            setFoundOutletName(null);
+                                            handlePickup();
+                                        }}
+                                        className="min-h-11 rounded-full bg-white/20 px-6 text-sm font-bold text-white active:opacity-80"
+                                    >
+                                        Coba Lagi
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setPickupLoading(false);
+                                            setPickupError(null);
+                                            setFoundOutletName(null);
+                                        }}
+                                        className="min-h-11 rounded-full bg-white/10 px-6 text-sm font-medium text-white/80 active:opacity-80"
+                                    >
+                                        Tutup
+                                    </button>
+                                </div>
                             </div>
                         </>
                     ) : (
@@ -469,10 +482,16 @@ return;
                                     <>
                                         <div className="text-[11px] font-bold uppercase tracking-widest text-emerald-200">Outlet Terdekat</div>
                                         <div className="mt-2 text-2xl font-bold text-white">{foundOutletName}</div>
-                                        <div className="mt-3 text-sm text-emerald-100">Mengarahkan...</div>
+                                        {nearestOutlet?.distance_km && (
+                                            <div className="mt-1 text-sm text-emerald-200">{nearestOutlet.distance_km.toFixed(1)} km dari lokasi Anda</div>
+                                        )}
+                                        <div className="mt-3 text-sm text-emerald-100">Mengarahkan ke daftar produk...</div>
                                     </>
                                 ) : (
+                                        <>
                                     <div className="text-sm font-medium text-emerald-100">Mencari outlet terdekat dari lokasi Anda</div>
+                                    <div className="mt-2 text-xs text-emerald-200/70">Pastikan GPS aktif untuk hasil terbaik</div>
+                                    </>
                                 )}
                             </div>
                         </>
