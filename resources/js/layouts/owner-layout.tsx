@@ -8,7 +8,6 @@ import NotificationSheet from '@/components/notification-sheet';
 import OfflineBanner from '@/components/offline-banner';
 import OwnerCommandSheet from '@/components/owner/owner-command-sheet';
 import OwnerSidebarNav from '@/components/owner/owner-sidebar-nav';
-import OwnerMobileNav from '@/components/owner-mobile-nav';
 import UpdateBanner from '@/components/update-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
@@ -92,8 +91,8 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             <OfflineBanner />
             <UpdateBanner />
 
-            {/* Sidebar — hidden on mobile, visible on desktop */}
-            <aside className="fixed inset-y-0 left-0 z-50 hidden w-56 bg-surface shadow-sm lg:block">
+            {/* Sidebar — desktop only */}
+            <aside className="fixed inset-y-0 left-0 z-50 w-56 bg-surface shadow-sm">
                 <div className="flex h-full flex-col">
                     {/* Brand */}
                     <div className="border-b border-border px-4 pt-5 pb-4">
@@ -117,28 +116,12 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
             </aside>
 
             {/* Main content */}
-            <main id="main-content" className="pb-16 lg:pb-0 lg:pl-56">
-                {/* Mobile header */}
-                <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-surface px-4 py-3 lg:hidden">
-                    <span className="text-sm font-semibold text-text">Dombi</span>
-                    <div className="flex items-center gap-2">
-                        <NotificationBell onClick={() => setNotificationOpen(true)} />
-                        <button
-                            type="button"
-                            onClick={() => setCommandOpen(true)}
-                            aria-label="Menu"
-                            className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary"
-                        >
-                            <User className="h-5 w-5" />
-                        </button>
-                    </div>
-                </div>
-                <div className="mx-auto max-w-300 px-6 py-6 lg:px-8 lg:py-8">
+            <main id="main-content" className="pl-56">
+                <div className="mx-auto max-w-300 px-6 py-8">
                     {loading ? <OwnerPageSkeleton /> : children}
                 </div>
             </main>
             <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
-            <OwnerMobileNav />
             <OwnerCommandSheet open={commandOpen} onClose={() => setCommandOpen(false)} />
         </div>
     );
