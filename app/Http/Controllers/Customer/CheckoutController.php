@@ -490,17 +490,10 @@ class CheckoutController extends Controller
 
         $isDelivery = in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
 
-        // Pickup guests go to track page (has last4 cancel verification);
-        // all other orders go to success confirmation page.
-        if ($fulfillmentType === 'pickup' && ! $request->user()) {
-            $redirect = redirect()->route('track', [
-                'token' => $order->recovery_token,
-            ])->with('success', 'Order berhasil dibuat.');
-        } else {
-            $redirect = redirect()->route('customer.orders.confirm', [
-                'orderCode' => $order->order_code,
-            ]);
-        }
+        // All orders go to success confirmation page.
+        $redirect = redirect()->route('customer.orders.confirm', [
+            'orderCode' => $order->order_code,
+        ]);
 
         return $redirect;
     }

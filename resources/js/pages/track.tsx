@@ -63,6 +63,53 @@ const STATUS_LABELS: Record<string, { label: string; description: string }> = {
 
 const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
 
+const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; cta?: { label: string; href?: string; action?: string } }> = {
+    pending_confirmation: {
+        description: 'Menunggu outlet mengkonfirmasi pesanan Anda',
+        nextStep: 'Biasanya dikonfirmasi dalam beberapa menit',
+    },
+    confirmed: {
+        description: 'Pesanan sudah dikonfirmasi oleh outlet',
+        nextStep: 'Outlet sedang menyiapkan pesanan Anda',
+    },
+    preparing: {
+        description: 'Pesanan sedang disiapkan',
+        nextStep: 'Pesanan akan segera siap',
+    },
+    ready_for_pickup: {
+        description: 'Pesanan sudah siap diambil!',
+        nextStep: 'Silakan ambil di outlet sebelum jam tutup',
+        cta: { label: 'Navigasi ke Outlet', action: 'navigate' },
+    },
+    out_for_delivery: {
+        description: 'Kurir sedang dalam perjalanan',
+        nextStep: 'Pesanan akan diantar ke lokasi Anda',
+    },
+    completed: {
+        description: 'Pesanan telah selesai',
+        nextStep: 'Terima kasih sudah pesan di Dombi!',
+    },
+    rejected_by_outlet: {
+        description: 'Outlet tidak dapat memproses pesanan',
+        nextStep: 'Silakan coba pesan dari outlet lain',
+    },
+    cancelled_by_customer: {
+        description: 'Pesanan telah Anda batalkan',
+    },
+    cancelled_by_outlet: {
+        description: 'Pesanan dibatalkan oleh outlet',
+        nextStep: 'Silakan coba pesan lagi',
+    },
+    failed_delivery: {
+        description: 'Pengiriman gagal',
+        nextStep: 'Silakan hubungi kami untuk bantuan',
+    },
+    expired: {
+        description: 'Pesanan kadaluarsa',
+        nextStep: 'Outlet tidak konfirmasi dalam batas waktu',
+    },
+};
+
 export default function TrackPage({ order, found, cancellationReasons = [], canCancel = false, canCreateAccount = false, accountPhone, accountName }: Props) {
     const [copied, setCopied] = useState(false);
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -193,6 +240,43 @@ return;
                     <StatusBadge status={order.status} />
                 </div>
 
+                {/* What's Next Guidance */}
+                {STATUS_GUIDANCE[order.status] && (() => {
+                    const guidance = STATUS_GUIDANCE[order.status];
+                    const isPickupReady = order.status === 'ready_for_pickup' && order.outlet?.latitude && order.outlet?.longitude;
+
+                    return (
+                        <div className="mt-3 rounded-xl border border-border bg-white p-4">
+                            <div className="text-sm font-semibold text-text">{guidance.description}</div>
+                            {guidance.nextStep && (
+                                <div className="mt-1 text-xs text-text-muted">{guidance.nextStep}</div>
+                            )}
+                            {guidance.cta && (
+                                <div className="mt-3">
+                                    {isPickupReady && guidance.cta.action === 'navigate' ? (
+                                        <a
+                                            href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet!.latitude},${order.outlet!.longitude}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                                        >
+                                            <MapPin className="h-4 w-4" />
+                                            {guidance.cta.label}
+                                        </a>
+                                    ) : guidance.cta.href ? (
+                                        <Link
+                                            href={guidance.cta.href}
+                                            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                                        >
+                                            {guidance.cta.label}
+                                        </Link>
+                                    ) : null}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
+
                 {/* QR Code — promoted above fold for pickup ready_for_pickup */}
                 {isPickup && order.status === 'ready_for_pickup' && (
                     <OrderQRCard orderCode={order.order_code} />
@@ -252,7 +336,7 @@ return;
                 </div>
 
                 {/* Order Items */}
-                <div className="mt-4 rounded-2xl border border-border bg-white p-4">
+                <div className="mt-4 rounded-xl border border-border bg-white p-4">
                     <div className="flex items-center gap-2 mb-3">
                         <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-surface-muted">
                             <Package className="h-3.5 w-3.5 text-text-muted" />
@@ -289,7 +373,7 @@ return;
                 </div>
 
                 {/* Order Info */}
-                <div className="mt-4 rounded-2xl border border-border bg-white p-4">
+                <div className="mt-4 rounded-xl border border-border bg-white p-4">
                     <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                             <span className="text-text-muted">Metode</span>
@@ -569,7 +653,7 @@ function NotFoundState() {
         <div className="min-h-dvh bg-surface">
             <Head title="Pesanan Tidak Ditemukan" />
             <div className="mx-auto flex max-w-lg flex-col items-center justify-center px-4 py-20 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
+                <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-surface-muted">
                     <XCircle className="h-8 w-8 text-text-subtle" />
                 </div>
                 <h1 className="mt-4 text-lg font-semibold text-text">Pesanan Tidak Ditemukan</h1>
@@ -623,7 +707,7 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
     };
 
     return (
-        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+        <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
             <div className="text-[13px] text-emerald-600">Buat Akun</div>
             <div className="mt-2 text-sm text-emerald-800">
                 Buat akun untuk melacak pesanan, menyimpan alamat, dan memesan lebih mudah.
