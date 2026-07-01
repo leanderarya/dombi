@@ -12,7 +12,7 @@ export default function MobileRoleLayout({ children, footerSlot }: Props) {
 
     const bottomPad = footerSlot
         ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]'
-        : 'pb-8';
+        : 'pb-[calc(2rem+env(safe-area-inset-bottom))]';
 
     return (
         <div className="min-h-dvh bg-surface text-text">
