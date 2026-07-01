@@ -6,8 +6,10 @@ import AssignCourierSheet from '@/components/operations/assign-courier-sheet';
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import FilterSheet from '@/components/operations/filter-sheet';
 import EmptyState from '@/components/ui/empty-state';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
+import { Button } from '@/components/ui/button';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDeliveryAge, formatDistance } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
@@ -46,8 +48,9 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
     return (
         <OutletLayout title="Pengiriman" subtitle={outlet.name}>
             <Head title="Pengiriman" />
+            <OutletPageShell>
             {/* Stats */}
-            <div className="mt-4 mb-4 grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2">
                 <StatCard label="Perlu Dikirim" value={stats.needsDispatch} alert={stats.needsDispatch > 0} />
                 <StatCard label="Menunggu Pickup" value={stats.waitingPickup} />
                 <StatCard label="Dalam Perjalanan" value={stats.inTransit} />
@@ -59,7 +62,7 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
                 <SectionCard label="Perlu Assign Kurir" >
                     <div className="mt-2 space-y-2">
                         {unassignedOrders.map((order: any) => (
-                            <div key={order.id} className="rounded-lg border border-border bg-surface-muted p-3">
+                            <div key={order.id} className="rounded-xl border border-border bg-surface-muted p-3">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="min-w-0 flex-1">
                                         <div className="text-sm font-bold tabular-nums text-text">{order.order_code}</div>
@@ -74,13 +77,14 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
                                     </div>
                                     {order.sla_health && <DeliverySlaBadge health={order.sla_health} />}
                                 </div>
-                                <button
+                                <Button
+                                    size="lg"
                                     onClick={() => handleAssignCourier(order.id)}
-                                    className="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-white active:opacity-80"
+                                    icon={Truck}
+                                    className="mt-2 w-full"
                                 >
-                                    <Truck className="h-4 w-4" />
                                     Assign Kurir
-                                </button>
+                                </Button>
                             </div>
                         ))}
                     </div>
@@ -101,7 +105,7 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
                             <Link
                                 key={d.id}
                                 href={`/outlet/deliveries/${d.id}`}
-                                className="flex items-center gap-3 rounded-lg border border-border bg-white p-3 active:bg-surface-muted"
+                                className="flex items-center gap-3 rounded-xl border border-border bg-white p-3 active:bg-surface-muted"
                             >
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2">
@@ -125,6 +129,8 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
                     </div>
                 )}
             </SectionCard>
+
+            </OutletPageShell>
 
             {/* Assign Courier Sheet */}
             {selectedOrder && (
