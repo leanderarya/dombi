@@ -124,6 +124,7 @@ return;
                     </div>
                 )}
                 <div className="mt-1 text-base font-semibold text-zinc-900 tabular-nums">
+                    <span className="text-xs font-normal text-zinc-400">Mulai dari </span>
                     {formatCurrency(displayPrice)}
                 </div>
                 {variant.available_stock !== undefined && (

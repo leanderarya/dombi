@@ -155,6 +155,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                         title="Ambil di Outlet"
                         icon={<Store className="h-5 w-5 text-text-muted" />}
                         description="Ambil langsung di outlet terdekat."
+                        estimate="Siap dalam 15-30 menit"
                         onClick={() => setFulfillmentType('pickup')}
                         detail={nearestOutlet ? {
                             outletName: nearestOutlet.name,
@@ -167,6 +168,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                         title="Kurir Dombi"
                         icon={<Truck className="h-5 w-5 text-text-muted" />}
                         description="Diantar oleh kurir Dombi."
+                        estimate="Diantar dalam 30-60 menit"
                         onClick={() => {
                             if (!isLoggedIn) {
                                 setDeliverySheetOpen(true);
@@ -196,7 +198,7 @@ type FulfillmentDetail = {
     deliveryFee?: number;
 };
 
-function FulfillmentCard({ active, title, icon, description, onClick, detail }: { active: boolean; title: string; icon: ReactNode; description: string; onClick: () => void; detail?: FulfillmentDetail }) {
+function FulfillmentCard({ active, title, icon, description, estimate, onClick, detail }: { active: boolean; title: string; icon: ReactNode; description: string; estimate?: string; onClick: () => void; detail?: FulfillmentDetail }) {
     return (
         <button
             type="button"
@@ -212,6 +214,9 @@ function FulfillmentCard({ active, title, icon, description, onClick, detail }: 
                 <div className="min-w-0 flex-1">
                     <div className="text-sm font-semibold text-text">{title}</div>
                     <div className="mt-1 text-xs leading-relaxed text-text-muted">{description}</div>
+                    {estimate && (
+                        <div className="mt-1.5 text-xs font-medium text-emerald-700">⏱ {estimate}</div>
+                    )}
                     {detail?.outletName && (
                         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
                             <span className="font-semibold text-text">{detail.outletName}</span>
