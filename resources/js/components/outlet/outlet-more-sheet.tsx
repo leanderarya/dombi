@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { AlertTriangle, BarChart3, DollarSign, FileText, LogOut, Package, RefreshCw, RotateCcw, Truck } from 'lucide-react';
+import { AlertTriangle, BarChart3, DollarSign, FileText, LogOut, Package, RefreshCw, RotateCcw, ShoppingBag, Truck } from 'lucide-react';
 import BottomSheet from '@/components/ui/bottom-sheet';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
 
 const sheetItems = [
     { href: '/outlet/restocks', label: 'Restock', icon: Package },
+    { href: '/outlet/offline-sales', label: 'Penjualan Offline', icon: ShoppingBag },
     { href: '/outlet/settlement', label: 'Settlement', icon: DollarSign },
     { href: '/outlet/deliveries', label: 'Pengiriman', icon: Truck },
     { divider: true },
