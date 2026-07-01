@@ -233,12 +233,6 @@ select:focus {
     opacity: 1;
 }
 
-/* ─── PWA Standalone Mode ──────────────────────────────── */
-
-.pwa-standalone {
-    padding-top: env(safe-area-inset-top);
-}
-
 /* Mobile operational utilities */
 @utility pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
