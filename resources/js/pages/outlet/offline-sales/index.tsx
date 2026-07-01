@@ -1,8 +1,10 @@
-import { Head } from '@inertiajs/react';
-import { Plus, ShoppingBag } from 'lucide-react';
+import { Head, router } from '@inertiajs/react';
+import { Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import EmptyState from '@/components/ui/empty-state';
 import OfflineSaleDialog from '@/components/outlet/offline-sale-dialog';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import { Button } from '@/components/ui/button';
 import OutletLayout from '@/layouts/outlet-layout';
 import Pagination from '@/components/pagination';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -10,18 +12,19 @@ import { formatCurrency, formatDate } from '@/lib/format';
 export default function OfflineSalesIndex({ sales, variants }: any) {
     const [showCreate, setShowCreate] = useState(false);
 
+    const handleDelete = (saleId: number) => {
+        if (!confirm('Hapus penjualan ini? Stok akan dikembalikan.')) return;
+        router.delete(`/outlet/offline-sales/${saleId}`);
+    };
+
     return (
         <OutletLayout title="Penjualan Offline" subtitle="Catat penjualan di luar aplikasi">
             <Head title="Penjualan Offline" />
-
-            <div className="mt-4 mb-4 flex justify-end">
-                <button
-                    onClick={() => setShowCreate(true)}
-                    className="flex min-h-11 items-center gap-1.5 rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
-                >
-                    <Plus className="h-4 w-4" />
+            <OutletPageShell>
+            <div className="flex justify-end">
+                <Button size="lg" onClick={() => setShowCreate(true)} icon={Plus}>
                     Catat Penjualan
-                </button>
+                </Button>
             </div>
 
             {sales.data.length === 0 ? (
@@ -32,12 +35,20 @@ export default function OfflineSalesIndex({ sales, variants }: any) {
                     action={{ label: 'Catat Penjualan', onClick: () => setShowCreate(true) }}
                 />
             ) : (
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                     {sales.data.map((sale: any) => (
                         <div key={sale.id} className="rounded-xl border border-border bg-white px-3.5 py-2.5">
                             <div className="flex items-center justify-between">
-                                <span className="text-sm font-semibold text-text">{sale.variant?.name ?? '-'}</span>
-                                <span className="text-sm font-bold tabular-nums text-text">{formatCurrency(sale.total_amount)}</span>
+                                <span className="text-sm font-semibold text-text">{sale.variant?.family?.name ? `${sale.variant.family.name} - ${sale.variant.name}` : sale.variant?.name ?? '-'}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm font-bold tabular-nums text-text">{formatCurrency(sale.total_amount)}</span>
+                                    <button
+                                        onClick={() => handleDelete(sale.id)}
+                                        className="flex h-8 w-8 items-center justify-center rounded-lg text-text-subtle active:bg-red-50 active:text-red-600"
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </button>
+                                </div>
                             </div>
                             <div className="mt-1 flex items-center justify-between text-xs text-text-muted">
                                 <span>{sale.quantity} x {formatCurrency(sale.center_price)}</span>
@@ -50,6 +61,7 @@ export default function OfflineSalesIndex({ sales, variants }: any) {
             )}
 
             <Pagination links={sales.links} />
+            </OutletPageShell>
 
             <OfflineSaleDialog
                 open={showCreate}
