@@ -1,6 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { CheckCircle } from 'lucide-react';
 import { useState } from 'react';
+import FilterChips from '@/components/ui/filter-chips';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import OutletLayout from '@/layouts/outlet-layout';
 
 interface Props {
@@ -32,22 +34,8 @@ export default function OutletReports({ outlet }: Props) {
         <OutletLayout title="Laporan Penjualan" subtitle={`Laporan untuk ${outlet.name}`}>
             <Head title="Laporan Penjualan" />
 
-            <div className="mt-4 space-y-4">
-                <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
-                    {periods.map((p) => (
-                        <button
-                            key={p.key}
-                            onClick={() => setPeriod(p.key)}
-                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                period === p.key
-                                    ? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
-                            }`}
-                        >
-                            {p.label}
-                        </button>
-                    ))}
-                </div>
+            <OutletPageShell>
+                <FilterChips options={periods} active={period} onChange={setPeriod} size="sm" variant="ring" />
 
                 <div className="rounded-xl border border-border bg-white p-4">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-2">Export Laporan</div>
@@ -90,7 +78,7 @@ export default function OutletReports({ outlet }: Props) {
                         </li>
                     </ul>
                 </div>
-            </div>
+            </OutletPageShell>
         </OutletLayout>
     );
 }
