@@ -74,7 +74,7 @@ export default function OutletExchangesCreate({ variants, outletInventory, pendi
     const getVariantName = (id: number) => allVariants.find((v: any) => v.id === id)?.full_name ?? allVariants.find((v: any) => v.id === id)?.name ?? '-';
 
     return (
-        <OutletLayout title="Ajukan Tukar Produk" subtitle="Tukar produk lama dengan produk baru" backHref="/outlet/exchanges" hideNav>
+        <OutletLayout title="Ajukan Tukar Produk" subtitle="Tukar produk lama dengan produk baru" backHref="/outlet/exchanges">
             <Head title="Ajukan Tukar Produk" />
 
             <div className="mt-4 pb-40">

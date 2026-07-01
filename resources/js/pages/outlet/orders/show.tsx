@@ -106,7 +106,7 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
     }
 
     return (
-        <OutletLayout title={order.order_code} backHref="/outlet/orders" hideNav>
+        <OutletLayout title={order.order_code} backHref="/outlet/orders">
             <Head title={order.order_code} />
 
             <div className="mt-4">

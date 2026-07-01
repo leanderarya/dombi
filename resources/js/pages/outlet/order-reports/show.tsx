@@ -32,7 +32,7 @@ export default function OutletOrderReportShow({ report }: any) {
     };
 
     return (
-        <OutletLayout title={`Laporan #${report.id}`} backHref="/outlet/order-reports" hideNav>
+        <OutletLayout title={`Laporan #${report.id}`} backHref="/outlet/order-reports">
             <Head title={`Laporan #${report.id}`} />
 
             {/* Status */}

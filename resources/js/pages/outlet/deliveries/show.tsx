@@ -12,7 +12,7 @@ export default function OutletDeliveryShow({ delivery }: any) {
     const order = delivery.order;
 
     return (
-        <OutletLayout title={delivery.order_code} backHref="/outlet/deliveries" hideNav>
+        <OutletLayout title={delivery.order_code} backHref="/outlet/deliveries">
             <Head title={delivery.order_code} />
 
             {/* Status Strip */}
