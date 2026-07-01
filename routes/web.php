@@ -280,6 +280,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/order-reports/{report}', [\App\Http\Controllers\Outlet\OrderReportController::class, 'show'])->name('order-reports.show');
         Route::put('/order-reports/{report}', [\App\Http\Controllers\Outlet\OrderReportController::class, 'update'])->name('order-reports.update');
         Route::post('/push-subscribe', [\App\Http\Controllers\Outlet\PushController::class, 'subscribe'])->name('push-subscribe');
+        Route::get('/offline-sales', [\App\Http\Controllers\Outlet\OfflineSaleController::class, 'index'])->name('offline-sales.index');
+        Route::post('/offline-sales', [\App\Http\Controllers\Outlet\OfflineSaleController::class, 'store'])->name('offline-sales.store');
         Route::get('/scan', [OutletScanController::class, 'index'])->name('scan');
         Route::get('/scan/{order_code}', [OutletScanController::class, 'lookup'])->name('scan.lookup');
         Route::get('/restocks', [OutletRestockController::class, 'index'])->name('restocks.index');

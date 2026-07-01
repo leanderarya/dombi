@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { AlertTriangle, RotateCcw, Repeat2, PackagePlus, Truck, Receipt, BarChart3, FileText, ChevronRight } from 'lucide-react';
+import { AlertTriangle, RotateCcw, Repeat2, PackagePlus, Truck, Receipt, BarChart3, FileText, ChevronRight, ShoppingBag } from 'lucide-react';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
@@ -60,6 +60,14 @@ const features = [
         description: 'Request stok tambahan dari pusat',
         badgeKey: 'restocks' as const,
         color: 'bg-emerald-50 text-emerald-600',
+    },
+    {
+        href: '/outlet/offline-sales',
+        icon: ShoppingBag,
+        title: 'Penjualan Offline',
+        description: 'Catat penjualan di luar aplikasi (WhatsApp, walk-in)',
+        badgeKey: null,
+        color: 'bg-orange-50 text-orange-600',
     },
     {
         href: '/outlet/deliveries',
