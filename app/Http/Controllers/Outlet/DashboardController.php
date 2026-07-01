@@ -148,6 +148,33 @@ class DashboardController extends Controller
         ]);
     }
 
+    public function badgeCounts(): array
+    {
+        $outlet = auth()->user()->outlet;
+        abort_unless($outlet, 403);
+
+        return [
+            'returns' => ReturnRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['submitted', 'approved'])
+                ->count(),
+            'exchanges' => ExchangeRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['submitted', 'approved', 'preparing', 'shipped'])
+                ->count(),
+            'restocks' => RestockRequest::where('outlet_id', $outlet->id)
+                ->whereIn('status', ['requested', 'preparing', 'shipped'])
+                ->count(),
+            'deliveries' => Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
+                ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
+                ->count(),
+            'payments' => SettlementPayment::where('outlet_id', $outlet->id)
+                ->where('status', SettlementPayment::STATUS_PENDING)
+                ->count(),
+            'reports' => OrderReport::whereHas('order', fn ($q) => $q->where('outlet_id', $outlet->id))
+                ->active()
+                ->count(),
+        ];
+    }
+
     private function avgDispatchTime(int $outletId): ?int
     {
         $orders = Order::where('outlet_id', $outletId)
