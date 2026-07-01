@@ -1,6 +1,6 @@
 import { usePage } from '@inertiajs/react';
 import { User } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PropsWithChildren } from 'react';
 import NotificationBell from '@/components/notification-bell';
@@ -11,6 +11,7 @@ import MobileRoleLayout from '@/components/ui/mobile-role-layout';
 import PageHeader from '@/components/ui/page-header';
 import { useOrderAlert } from '@/hooks/use-order-alert';
 import { usePushNotification } from '@/hooks/use-push-notification';
+import type { OutletMoreBadgeCounts } from '@/pages/outlet/more';
 
 interface Props extends PropsWithChildren {
     title?: string;
@@ -31,6 +32,19 @@ export default function OutletLayout({ children, title, subtitle, backHref, hide
     const { pendingCount } = useOrderAlert();
     usePushNotification();
 
+    // Extract badge counts from page props (available on dashboard/more pages)
+    const badgeCounts: OutletMoreBadgeCounts = useMemo(() => {
+        const p = page.props;
+        return {
+            returns: p.pendingReturns ?? p.stats?.pendingReturns ?? 0,
+            exchanges: p.pendingExchanges ?? p.stats?.pendingExchanges ?? 0,
+            restocks: p.pendingRestocks ?? p.stats?.pendingRestocks ?? 0,
+            deliveries: p.activeDeliveries ?? p.deliveryStats?.inTransit ?? 0,
+            payments: p.pendingSettlementPayments ?? 0,
+            reports: p.pendingReports ?? 0,
+        };
+    }, [page.props]);
+
     const rightSlot = headerRight ?? (
         <div className="flex items-center gap-1">
             <NotificationBell onClick={() => setNotificationOpen(true)} />
@@ -47,7 +61,7 @@ export default function OutletLayout({ children, title, subtitle, backHref, hide
 
     return (
         <MobileRoleLayout
-            bottomNav={!hideNav ? <OutletBottomNav pendingCount={pendingCount} /> : undefined}
+            bottomNav={!hideNav ? <OutletBottomNav pendingCount={pendingCount} badgeCounts={badgeCounts} /> : undefined}
             hideBottomNav={hideNav}
         >
             <PageHeader

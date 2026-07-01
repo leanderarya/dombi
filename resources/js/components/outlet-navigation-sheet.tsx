@@ -109,7 +109,7 @@ export default function OutletNavigationSheet({ open, onClose, pendingCount, bad
                                         key={item.href}
                                         href={item.href}
                                         onClick={onClose}
-                                        className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] transition-all duration-150 ${
+                                        className={`flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] transition-all duration-150 ${
                                             active
                                                 ? 'bg-emerald-50 font-semibold text-emerald-700'
                                                 : 'font-medium text-text-muted active:bg-surface-muted'
@@ -137,7 +137,7 @@ export default function OutletNavigationSheet({ open, onClose, pendingCount, bad
                 <button
                     type="button"
                     onClick={() => { onClose(); router.post('/logout'); }}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium text-red-600 active:bg-red-50"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-medium text-red-600 active:bg-red-50"
                 >
                     <LogOut className="h-5 w-5" />
                     <span>Keluar</span>
