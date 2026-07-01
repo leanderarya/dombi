@@ -156,7 +156,7 @@ return;
         setAdding(false);
         setAdded(true);
         setQuantity(1);
-        setToastData({ name: family.name, qty: quantity });
+        setToastData({ name: selectedVariant?.name ?? family.name, qty: quantity });
         setToast(true);
 
         setTimeout(() => setAdded(false), 1500);
