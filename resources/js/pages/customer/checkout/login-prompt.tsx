@@ -34,7 +34,7 @@ export default function LoginPrompt() {
 
                     <Link
                         href="/oauth/google"
-                        className="mt-8 flex min-h-[48px] w-full max-w-sm items-center justify-center gap-3 rounded-xl border border-border bg-white px-6 text-sm font-semibold text-text active:opacity-80"
+                        className="mt-8 flex min-h-11 w-full max-w-sm items-center justify-center gap-3 rounded-xl border border-border bg-white px-6 text-sm font-semibold text-text active:opacity-80"
                     >
                         <svg className="h-5 w-5" viewBox="0 0 24 24">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />

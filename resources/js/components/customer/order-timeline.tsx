@@ -127,7 +127,7 @@ function TimelineSteps({ steps, effectiveIndex, isTerminal, historyMap, fulfillm
                 return (
                     <div key={step.key} className="relative flex gap-3 pb-5 last:pb-0">
                         {!isLast && (
-                            <div className={`absolute left-[11px] top-6 bottom-0 w-px ${isCompleted ? 'bg-emerald-200' : 'bg-slate-200'}`} />
+                            <div className={`absolute left-[11px] top-6 bottom-0 w-px ${isCompleted ? 'bg-emerald-200' : 'bg-border'}`} />
                         )}
 
                         <div className="relative shrink-0 pt-0.5">
@@ -141,27 +141,27 @@ function TimelineSteps({ steps, effectiveIndex, isTerminal, historyMap, fulfillm
                                 </div>
                             ) : (
                                 <div className="flex h-6 w-6 items-center justify-center">
-                                    <Circle className="h-3 w-3 text-slate-300" />
+                                    <Circle className="h-3 w-3 text-text-subtle" />
                                 </div>
                             )}
                         </div>
 
                         <div className="min-w-0 flex-1 pt-0.5">
                             <div className="flex items-start justify-between gap-2">
-                                <div className={`text-sm font-semibold ${isCurrent ? (isTerminal ? 'text-red-700' : 'text-emerald-700') : isCompleted ? 'text-slate-900' : 'text-slate-400'}`}>
+                                <div className={`text-sm font-semibold ${isCurrent ? (isTerminal ? 'text-red-700' : 'text-emerald-700') : isCompleted ? 'text-text' : 'text-text-subtle'}`}>
                                     {getStepLabel(step, fulfillmentType)}
                                 </div>
                                 {history?.created_at && (
-                                    <span className={`shrink-0 text-xs tabular-nums ${isCurrent ? (isTerminal ? 'font-semibold text-red-700' : 'font-semibold text-emerald-700') : 'text-slate-400'}`}>
+                                    <span className={`shrink-0 text-xs tabular-nums ${isCurrent ? (isTerminal ? 'font-semibold text-red-700' : 'font-semibold text-emerald-700') : 'text-text-subtle'}`}>
                                         {formatTime(history.created_at)}
                                     </span>
                                 )}
                             </div>
                             {history?.notes && (
-                                <div className="mt-0.5 text-xs leading-relaxed text-slate-500">{history.notes}</div>
+                                <div className="mt-0.5 text-xs leading-relaxed text-text-muted">{history.notes}</div>
                             )}
                             {history?.reason && (
-                                <div className="mt-0.5 text-xs font-medium text-slate-600">Alasan: {history.reason}</div>
+                                <div className="mt-0.5 text-xs font-medium text-text-muted">Alasan: {history.reason}</div>
                             )}
                         </div>
                     </div>
@@ -180,9 +180,9 @@ function CompactTimeline({ steps, effectiveIndex }: { steps: TimelineStep[]; eff
 
                 return (
                     <div key={step.key} className="flex items-center gap-1">
-                        <div className={`h-2 w-2 rounded-full ${isCompleted ? 'bg-emerald-500' : isCurrent ? 'bg-emerald-400 ring-2 ring-emerald-200' : 'bg-slate-200'}`} />
+                        <div className={`h-2 w-2 rounded-full ${isCompleted ? 'bg-emerald-500' : isCurrent ? 'bg-emerald-400 ring-2 ring-emerald-200' : 'bg-border'}`} />
                         {index < steps.length - 1 && (
-                            <div className={`h-px w-3 ${isCompleted ? 'bg-emerald-300' : 'bg-slate-200'}`} />
+                            <div className={`h-px w-3 ${isCompleted ? 'bg-emerald-300' : 'bg-border'}`} />
                         )}
                     </div>
                 );

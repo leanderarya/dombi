@@ -10,10 +10,10 @@ export default function DeliveryLoginSheet({ open, onClose }: Props) {
     return (
         <Dialog open={open} onClose={onClose} title="Login untuk Delivery">
             <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50">
-                    <Truck className="h-6 w-6 text-emerald-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary-light">
+                    <Truck className="h-6 w-6 text-primary" />
                 </div>
-                <p className="text-xs text-slate-500">Diperlukan untuk keamanan pengiriman</p>
+                <p className="text-xs text-text-muted">Diperlukan untuk keamanan pengiriman</p>
             </div>
 
             <div className="mt-5 space-y-3">
@@ -23,17 +23,17 @@ export default function DeliveryLoginSheet({ open, onClose }: Props) {
                     { icon: Shield, text: 'Riwayat pesanan tersimpan' },
                 ].map(({ icon: Icon, text }) => (
                     <div key={text} className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50">
-                            <Icon className="h-4 w-4 text-emerald-600" />
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-light">
+                            <Icon className="h-4 w-4 text-primary" />
                         </div>
-                        <span className="text-sm text-slate-700">{text}</span>
+                        <span className="text-sm text-text">{text}</span>
                     </div>
                 ))}
             </div>
 
             <a
                 href="/oauth/google"
-                className="mt-6 flex min-h-[48px] w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 text-sm font-bold text-white active:bg-emerald-700"
+                className="mt-6 flex min-h-11 w-full items-center justify-center gap-3 rounded-xl bg-primary text-sm font-bold text-white active:bg-primary-hover"
             >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -47,7 +47,7 @@ export default function DeliveryLoginSheet({ open, onClose }: Props) {
             <button
                 type="button"
                 onClick={onClose}
-                className="mt-3 flex min-h-[44px] w-full items-center justify-center text-sm font-semibold text-slate-500 active:text-slate-700"
+                className="mt-3 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-text-muted active:text-text"
             >
                 Tetap Pickup
             </button>

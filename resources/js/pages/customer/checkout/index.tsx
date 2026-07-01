@@ -1,5 +1,5 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { ShoppingCart, Store, Truck } from 'lucide-react';
+import { Clock, ShoppingCart, Store, Truck } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
@@ -215,7 +215,10 @@ function FulfillmentCard({ active, title, icon, description, estimate, onClick, 
                     <div className="text-sm font-semibold text-text">{title}</div>
                     <div className="mt-1 text-xs leading-relaxed text-text-muted">{description}</div>
                     {estimate && (
-                        <div className="mt-1.5 text-xs font-medium text-emerald-700">⏱ {estimate}</div>
+                        <div className="mt-1.5 flex items-center gap-1 text-xs font-medium text-emerald-700">
+                            <Clock className="h-3 w-3" />
+                            {estimate}
+                        </div>
                     )}
                     {detail?.outletName && (
                         <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">

@@ -23,7 +23,7 @@ export default function FloatingCartBar() {
             <button
                 type="button"
                 onClick={handleCheckout}
-                className="mx-auto flex max-w-lg w-full items-center gap-3 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2.5 shadow-lg active:bg-slate-800"
+                className="mx-auto flex max-w-lg w-full items-center gap-3 rounded-xl border border-white/10 bg-slate-900 px-4 py-2.5 shadow-lg active:bg-slate-800"
             >
                 <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
                     <svg className="h-4.5 w-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

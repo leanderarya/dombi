@@ -285,7 +285,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                         <p className="mt-1 text-sm text-text-muted">Terima kasih sudah pesan di Dombi 🎉</p>
                         <Link
                             href={`/customer/orders/${order.id}/restore-cart`}
-                            className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-8 text-sm font-bold text-white active:opacity-80"
+                            className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-8 text-sm font-bold text-white active:opacity-80"
                         >
                             <RotateCcw className="h-4 w-4" />
                             Pesan Lagi
@@ -516,7 +516,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                         <button
                             type="button"
                             onClick={() => setCancelDialogOpen(true)}
-                            className="flex h-11 w-full items-center justify-center rounded-xl border border-red-200 text-sm font-semibold text-red-600 active:opacity-80"
+                            className="flex h-11 w-full items-center justify-center rounded-lg border border-red-200 text-sm font-semibold text-red-600 active:opacity-80"
                         >
                             Batalkan Pesanan
                         </button>
@@ -540,7 +540,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                 {/* Reorder — for non-completed terminal states */}
                 {isTerminal && order.status !== 'completed' && (
                     <div className="mt-6">
-                        <Link href={`/customer/orders/${order.id}/restore-cart`} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:opacity-80">
+                        <Link href={`/customer/orders/${order.id}/restore-cart`} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80">
                             <RotateCcw className="h-4 w-4" />
                             Pesan Lagi
                         </Link>
@@ -584,7 +584,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                         <button
                             type="button"
                             onClick={() => setReportSheetOpen(true)}
-                            className="flex h-11 w-full items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                            className="flex h-11 w-full items-center justify-center rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                         >
                             <AlertTriangle className="mr-2 h-4 w-4 text-text-muted" />
                             Laporkan Masalah
@@ -656,7 +656,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                     <button
                         type="button"
                         onClick={() => { setCancelDialogOpen(false); setCancelLast4Hp(''); setCancelError(null); }}
-                        className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                        className="flex h-12 flex-1 items-center justify-center rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                     >
                         Kembali
                     </button>
@@ -664,7 +664,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                         type="button"
                         onClick={handleCancel}
                         disabled={!cancelForm.data.reason || cancelForm.processing || (isPickup && isConfirmation && cancelLast4Hp.length !== 4)}
-                        className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
+                        className="flex h-12 flex-1 items-center justify-center rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
                     >
                         {cancelForm.processing ? 'Membatalkan...' : 'Ya, Batalkan'}
                     </button>

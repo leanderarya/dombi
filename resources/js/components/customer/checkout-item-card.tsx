@@ -15,7 +15,7 @@ export default function CheckoutItemCard({ name, price, quantity, image, onQuant
     const subtotal = unitPrice * quantity;
 
     return (
-        <div className="flex items-center gap-3 border-b border-border py-3 last:border-b-0">
+        <div className="flex items-center gap-3 border-b border-border py-3 last:border-b-0 active:bg-zinc-50">
             {/* Thumbnail */}
             <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface">
                 {image ? (
@@ -37,18 +37,18 @@ export default function CheckoutItemCard({ name, price, quantity, image, onQuant
                 <button
                     type="button"
                     onClick={() => quantity > 1 ? onQuantityChange(quantity - 1) : onRemove()}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-l-lg border border-border px-2 text-sm font-semibold text-text active:opacity-80"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-l-lg border border-border px-2 text-sm font-semibold text-text active:opacity-80"
                     aria-label="Kurangi"
                 >
                     −
                 </button>
-                <span className="flex min-h-[44px] min-w-[44px] items-center justify-center border-y border-border px-2 text-xs font-bold tabular-nums text-text">
+                <span className="flex min-h-11 min-w-11 items-center justify-center border-y border-border px-2 text-xs font-bold tabular-nums text-text">
                     {quantity}
                 </span>
                 <button
                     type="button"
                     onClick={() => onQuantityChange(quantity + 1)}
-                    className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-r-lg border border-emerald-600 bg-emerald-600 px-2 text-sm font-semibold text-white active:opacity-80"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-r-lg border border-emerald-600 bg-emerald-600 px-2 text-sm font-semibold text-white active:opacity-80"
                     aria-label="Tambah"
                 >
                     +

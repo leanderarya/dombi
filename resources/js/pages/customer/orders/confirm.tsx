@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2, ChevronRight, Home, MapPin, Package, Truck } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Clock, Home, MapPin, Package, Truck } from 'lucide-react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { formatCurrency } from '@/lib/format';
 
@@ -50,7 +50,7 @@ export default function OrderConfirm({ order }: Props) {
                 </div>
 
                 {/* Summary Card */}
-                <div className="mt-6 w-full max-w-sm rounded-xl border border-border bg-white p-4 text-left">
+                <div className="mt-6 w-full rounded-xl border border-border bg-white p-4 text-left">
                     <div className="space-y-2.5">
                         <div className="flex items-center gap-3 text-sm">
                             <Package className="h-4 w-4 shrink-0 text-text-subtle" />
@@ -71,7 +71,7 @@ export default function OrderConfirm({ order }: Props) {
                             )}
                         </div>
                         <div className="flex items-center gap-3 text-sm">
-                            <span className="h-4 w-4 shrink-0 text-center text-xs">⏱</span>
+                            <Clock className="h-4 w-4 shrink-0 text-text-subtle" />
                             <span className="text-text-muted">Estimasi</span>
                             <span className="ml-auto font-medium text-text">{estimatedTime}</span>
                         </div>
@@ -79,7 +79,7 @@ export default function OrderConfirm({ order }: Props) {
                 </div>
 
                 {/* CTAs */}
-                <div className="mt-8 w-full max-w-sm space-y-3">
+                <div className="mt-8 w-full space-y-3">
                     <Link
                         href={`/customer/orders/${order.id}`}
                         className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:opacity-80"
