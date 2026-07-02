@@ -38,7 +38,11 @@ class ReportController extends Controller
         return Inertia::render('owner/reports/index', [
             'summary' => [
                 'totalOrders' => (clone $ordersQuery)->count(),
-                'totalRevenue' => (clone $ordersQuery)->where('status', 'completed')->sum('total'),
+                'totalRevenue' => Order::query()
+                    ->whereBetween('completed_at', [$dateFrom->startOfDay(), $dateTo->endOfDay()])
+                    ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
+                    ->where('status', 'completed')
+                    ->sum('total'),
                 'completedOrders' => (clone $ordersQuery)->where('status', 'completed')->count(),
                 'cancelledOrders' => (clone $ordersQuery)->whereIn('status', ['cancelled_by_customer', 'cancelled_by_outlet'])->count(),
                 'cancelledByCustomer' => (clone $ordersQuery)->where('status', 'cancelled_by_customer')->count(),
@@ -125,9 +129,9 @@ class ReportController extends Controller
         [$from, $to] = $this->resolvePeriod($period);
 
         $orders = Order::where('status', 'completed')
-            ->whereBetween('created_at', [$from, $to])
+            ->whereBetween('completed_at', [$from, $to])
             ->with(['outlet:id,name', 'items'])
-            ->latest()
+            ->latest('completed_at')
             ->get();
 
         $filename = 'orders-'.$from->format('Y-m-d').'-'.$to->format('Y-m-d').'.csv';
@@ -138,7 +142,7 @@ class ReportController extends Controller
 
             foreach ($orders as $order) {
                 fputcsv($handle, [
-                    $order->created_at->format('d/m/Y'),
+                    $order->completed_at->format('d/m/Y'),
                     $order->order_code,
                     $order->outlet->name,
                     $order->customer_name,

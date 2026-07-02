@@ -41,13 +41,13 @@ class ReportController extends Controller
                 ->where('status', 'completed')
                 ->whereBetween('completed_at', [$from, $to])
                 ->with('items')
-                ->latest()
+                ->latest('completed_at')
                 ->chunk(200, function ($orders) use ($handle): void {
                     foreach ($orders as $order) {
                         foreach ($order->items as $item) {
-                            $margin = ($item->selling_price_snapshot - $item->center_price_snapshot) * $item->quantity;
+                            $margin = (float) $item->outlet_margin_snapshot * $item->quantity;
                             fputcsv($handle, [
-                                $order->created_at->format('d/m/Y'),
+                                $order->completed_at->format('d/m/Y'),
                                 $order->order_code,
                                 $item->product_name,
                                 $item->variant_name_snapshot,
