@@ -1,4 +1,5 @@
 import { Head, router } from '@inertiajs/react';
+import { useState } from 'react';
 import FilterChips from '@/components/ui/filter-chips';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import OutletLayout from '@/layouts/outlet-layout';
@@ -25,17 +26,31 @@ interface Props {
     topProducts: TopProduct[];
     dailyRevenue: DailyRevenue[];
     period: string;
+    dateFrom: string;
+    dateTo: string;
 }
 
 const periods = [
     { key: 'today', label: 'Hari Ini' },
     { key: 'week', label: 'Minggu Ini' },
     { key: 'month', label: 'Bulan Ini' },
+    { key: 'custom', label: 'Pilih Tanggal' },
 ];
 
-export default function OutletAnalytics({ outlet, kpis, topProducts, dailyRevenue, period }: Props) {
+export default function OutletAnalytics({ outlet, kpis, topProducts, dailyRevenue, period, dateFrom, dateTo }: Props) {
+    const [from, setFrom] = useState(dateFrom);
+    const [to, setTo] = useState(dateTo);
+
     const handlePeriodChange = (newPeriod: string) => {
-        router.get('/outlet/analytics', { period: newPeriod }, { preserveState: true });
+        if (newPeriod === 'custom') {
+            router.get('/outlet/analytics', { period: 'custom', date_from: from, date_to: to }, { preserveState: true });
+        } else {
+            router.get('/outlet/analytics', { period: newPeriod }, { preserveState: true });
+        }
+    };
+
+    const handleCustomApply = () => {
+        router.get('/outlet/analytics', { period: 'custom', date_from: from, date_to: to }, { preserveState: true });
     };
 
     return (
@@ -44,6 +59,31 @@ export default function OutletAnalytics({ outlet, kpis, topProducts, dailyRevenu
 
             <OutletPageShell>
                 <FilterChips options={periods} active={period} onChange={handlePeriodChange} size="sm" variant="ring" />
+
+                {period === 'custom' && (
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="date"
+                            value={from}
+                            onChange={(e) => setFrom(e.target.value)}
+                            className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
+                        />
+                        <span className="text-xs text-text-muted">sampai</span>
+                        <input
+                            type="date"
+                            value={to}
+                            onChange={(e) => setTo(e.target.value)}
+                            className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleCustomApply}
+                            className="min-h-11 shrink-0 rounded-lg bg-primary px-4 text-sm font-bold text-white active:opacity-80"
+                        >
+                            Terapkan
+                        </button>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-xl border border-border bg-white p-4">

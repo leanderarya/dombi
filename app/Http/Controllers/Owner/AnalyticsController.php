@@ -72,6 +72,8 @@ class AnalyticsController extends Controller
             'outletRevenue' => $outletRevenue,
             'topProducts' => $topProducts,
             'period' => $period,
+            'dateFrom' => $from->toDateString(),
+            'dateTo' => $to->toDateString(),
         ]);
     }
 
@@ -184,7 +186,16 @@ class AnalyticsController extends Controller
             'today' => [now()->startOfDay(), now()->endOfDay()],
             'week' => [now()->startOfWeek(), now()->endOfWeek()],
             'month' => [now()->startOfMonth(), now()->endOfMonth()],
+            'custom' => $this->resolveCustomRange($request),
             default => [now()->startOfMonth(), now()->endOfMonth()],
         };
+    }
+
+    private function resolveCustomRange(Request $request): array
+    {
+        $from = $request->date('date_from') ?? now()->startOfDay();
+        $to = $request->date('date_to') ?? $from->copy()->endOfDay();
+
+        return [$from->startOfDay(), $to->endOfDay()];
     }
 }
