@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Package, RotateCcw } from 'lucide-react';
-import { orderStatusLabel, orderStatusTone, isTerminalOrder } from '@/lib/customer-status';
+import { orderStatusLabel, isTerminalOrder } from '@/lib/customer-status';
+import { getOrderStatusTone } from '@/lib/status-labels';
 import { formatCurrency, formatRelativeDate } from '@/lib/format';
 
 interface OrderItem {
@@ -23,7 +24,7 @@ interface Props {
 }
 
 export default function OrderHistoryCard({ order }: Props) {
-    const tone = orderStatusTone[order.status] ?? 'bg-zinc-100 text-zinc-700 ring-zinc-200';
+    const tone = getOrderStatusTone(order.status);
     const itemCount = order.items?.length ?? 0;
     const itemSummary = order.items?.map((i) => i.product_name).join(', ') ?? '';
     const dateStr = formatRelativeDate(order.created_at);

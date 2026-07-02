@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { orderStatusLabel, orderStatusTone } from '@/lib/customer-status';
+import { orderStatusLabel } from '@/lib/customer-status';
+import { getOrderStatusTone } from '@/lib/status-labels';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 interface Props {
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export default function OrderCard({ order, showReorder = false }: Props) {
-    const tone = orderStatusTone[order.status] ?? 'bg-surface-muted text-zinc-700 ring-zinc-200';
+    const tone = getOrderStatusTone(order.status);
 
     return (
         <div className="rounded-lg border border-border bg-white p-4">
@@ -29,7 +30,7 @@ export default function OrderCard({ order, showReorder = false }: Props) {
                         {orderStatusLabel(order.status)}
                     </span>
                 </div>
-                <div className="mt-3 flex items-center justify-between border-t border-zinc-50 pt-3">
+                <div className="mt-3 flex items-center justify-between border-t border-border pt-3">
                     <span className="text-xs text-text-subtle">Total</span>
                     <span className="text-sm font-semibold text-text">{formatCurrency(order.total)}</span>
                 </div>

@@ -66,10 +66,6 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
         nextStep: 'Silakan ambil di outlet sebelum jam tutup',
         cta: { label: 'Navigasi ke Outlet', action: 'navigate' },
     },
-    out_for_delivery: {
-        description: 'Kurir sedang dalam perjalanan',
-        nextStep: 'Pesanan akan diantar ke lokasi Anda',
-    },
     completed: {
         description: 'Pesanan telah selesai',
         nextStep: 'Terima kasih sudah pesan di Dombi!',

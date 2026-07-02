@@ -1,7 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
 import { RotateCcw, Truck } from 'lucide-react';
 import OrderTimeline from '@/components/customer/order-timeline';
-import { orderStatusLabel, orderStatusTone, isTerminalOrder } from '@/lib/customer-status';
+import { orderStatusLabel, isTerminalOrder } from '@/lib/customer-status';
+import { getOrderStatusTone } from '@/lib/status-labels';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
@@ -21,7 +22,7 @@ interface Props {
 
 export default function ActiveOrderCard({ order }: Props) {
     const { auth } = usePage<any>().props;
-    const tone = orderStatusTone[order.status] ?? 'bg-zinc-100 text-zinc-700 ring-zinc-200';
+    const tone = getOrderStatusTone(order.status);
     const itemSummary = order.items?.map((i) => `${i.product_name} x${i.quantity}`).join(', ') ?? '';
     const isTerminal = isTerminalOrder(order.status);
 

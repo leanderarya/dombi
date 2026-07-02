@@ -87,6 +87,19 @@ const EXCHANGE_STATUSES: Record<string, StatusConfig> = {
 
 // ─── HELPERS ───────────────────────────────────────────────────
 
+/**
+ * Merged status map for auto-detection (order takes precedence for shared keys like 'preparing').
+ * Used by StatusBadge component.
+ */
+export const ALL_STATUSES: Record<string, StatusConfig> = {
+    ...EXCHANGE_STATUSES,
+    ...RETURN_STATUSES,
+    ...DISTRIBUTION_STATUSES,
+    ...RESTOCK_STATUSES,
+    ...DELIVERY_STATUSES,
+    ...ORDER_STATUSES,
+};
+
 export function getOrderStatus(status: string): StatusConfig {
     return ORDER_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
 }
@@ -109,6 +122,27 @@ export function getReturnStatus(status: string): StatusConfig {
 
 export function getExchangeStatus(status: string): StatusConfig {
     return EXCHANGE_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
+}
+
+// ─── ORDER STATUS TONE (ring badge classes) ────────────────────
+
+const ORDER_STATUS_TONE: Record<string, string> = {
+    pending_confirmation: 'bg-amber-50 text-amber-800 ring-amber-200',
+    confirmed: 'bg-blue-50 text-blue-800 ring-blue-200',
+    preparing: 'bg-orange-50 text-orange-800 ring-orange-200',
+    ready_for_pickup: 'bg-purple-50 text-purple-800 ring-purple-200',
+    picked_up: 'bg-blue-50 text-blue-800 ring-blue-200',
+    delivering: 'bg-indigo-50 text-indigo-800 ring-indigo-200',
+    completed: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
+    cancelled_by_customer: 'bg-red-50 text-red-800 ring-red-200',
+    cancelled_by_outlet: 'bg-red-50 text-red-800 ring-red-200',
+    rejected_by_outlet: 'bg-red-50 text-red-800 ring-red-200',
+    failed_delivery: 'bg-red-50 text-red-800 ring-red-200',
+    expired: 'bg-slate-50 text-slate-800 ring-slate-200',
+};
+
+export function getOrderStatusTone(status: string): string {
+    return ORDER_STATUS_TONE[status] ?? 'bg-surface-muted text-text-muted ring-border';
 }
 
 export type { StatusConfig, StatusVariant };

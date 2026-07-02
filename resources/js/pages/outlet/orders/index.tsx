@@ -8,6 +8,7 @@ import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import OutletLayout from '@/layouts/outlet-layout';
 import { useOrderAlert } from '@/hooks/use-order-alert';
 import { formatCurrency, formatRelativeDate } from '@/lib/format';
+import { getOrderStatus } from '@/lib/status-labels';
 
 const operationalFilters = [
     { key: '', label: 'Semua' },
@@ -40,21 +41,6 @@ const statusDotColors: Record<string, string> = {
     rejected_by_outlet: 'bg-red-400',
     failed_delivery: 'bg-red-400',
     expired: 'bg-zinc-300',
-};
-
-const statusLabels: Record<string, string> = {
-    pending_confirmation: 'Menunggu',
-    confirmed: 'Diterima',
-    preparing: 'Disiapkan',
-    ready_for_pickup: 'Siap',
-    picked_up: 'Diambil',
-    delivering: 'Dikirim',
-    completed: 'Selesai',
-    cancelled_by_customer: 'Batal',
-    cancelled_by_outlet: 'Batal',
-    rejected_by_outlet: 'Ditolak',
-    failed_delivery: 'Gagal',
-    expired: 'Kadaluarsa',
 };
 
 function getWaitMinutes(orderedAt: string): number {
@@ -135,7 +121,7 @@ export default function OutletOrdersIndex({ outlet, orders, filters, tab, pendin
                 <div className="space-y-2">
                     {orders.data.map((order: any) => {
                         const dotColor = statusDotColors[order.status] ?? 'bg-zinc-400';
-                        const statusLabel = statusLabels[order.status] ?? order.status;
+                        const statusLabel = getOrderStatus(order.status).label;
                         const isPending = order.status === 'pending_confirmation';
                         const waitMin = order.ordered_at ? getWaitMinutes(order.ordered_at) : null;
                         const isUrgent = isPending && waitMin !== null && waitMin > 15;
