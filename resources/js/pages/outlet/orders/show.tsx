@@ -114,7 +114,11 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
     }
 
     return (
-        <OutletLayout title={order.order_code} backHref="/outlet/orders">
+        <OutletLayout
+            title={order.order_code}
+            backHref="/outlet/orders"
+            actionBarSlot={actions.length > 0 ? <StickyActionBar actions={actions} /> : undefined}
+        >
             <Head title={order.order_code} />
 
             <div className="mt-4">
@@ -247,9 +251,8 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
             )}
             </div>
 
-            {/* Sticky Actions */}
-            {actions.length > 0 && <StickyActionBar actions={actions} />}
-            {actions.length > 0 && <div className="h-20" />}
+            {/* Spacer for sticky action bar */}
+            {actions.length > 0 && <div className="h-4" />}
 
             {/* Status Confirmation Dialog */}
             {confirmAction && confirmAction !== 'complete_pickup' && (

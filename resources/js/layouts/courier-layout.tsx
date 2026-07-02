@@ -17,9 +17,11 @@ interface Props extends PropsWithChildren {
     hideNav?: boolean;
     /** Extra content below the header (e.g. filter chips) */
     headerBelow?: ReactNode;
+    /** Fixed action bar rendered outside <main> — position:fixed works correctly */
+    actionBarSlot?: ReactNode;
 }
 
-export default function CourierLayout({ children, title, subtitle, backHref, hideNav = false, headerBelow }: Props) {
+export default function CourierLayout({ children, title, subtitle, backHref, hideNav = false, headerBelow, actionBarSlot }: Props) {
     const page = usePage<any>();
     const { auth } = page.props;
     const [notificationOpen, setNotificationOpen] = useState(false);
@@ -49,6 +51,7 @@ export default function CourierLayout({ children, title, subtitle, backHref, hid
     return (
         <MobileRoleLayout
             footerSlot={!hideNav ? <CourierBottomNav visible={visible} /> : undefined}
+            actionBarSlot={actionBarSlot}
         >
             <PageHeader
                 title={headerTitle}

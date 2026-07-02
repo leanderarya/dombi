@@ -36,7 +36,22 @@ export default function CreateRestock({ families, inventories }: any) {
     };
 
     return (
-        <OutletLayout title="Buat Restock" backHref="/outlet/restocks">
+        <OutletLayout
+            title="Buat Restock"
+            backHref="/outlet/restocks"
+            actionBarSlot={
+                <StickyActionBar
+                    actions={[
+                        {
+                            label: 'Kirim Request Restock',
+                            variant: 'primary',
+                            onClick: handleSubmit,
+                            loading: form.processing,
+                        },
+                    ]}
+                />
+            }
+        >
             <Head title="Buat Restock" />
 
             {/* Items */}
@@ -131,19 +146,6 @@ export default function CreateRestock({ families, inventories }: any) {
             </div>
 
             {form.errors.items && <div className="mt-2 text-xs text-red-600">{form.errors.items}</div>}
-
-            {/* Sticky Submit */}
-            <StickyActionBar
-                actions={[
-                    {
-                        label: 'Kirim Request Restock',
-                        variant: 'primary',
-                        onClick: handleSubmit,
-                        loading: form.processing,
-                    },
-                ]}
-            />
-            <div className="h-20" />
         </OutletLayout>
     );
 }

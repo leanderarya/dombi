@@ -118,9 +118,19 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
             title="Settlement"
             subtitle="Setoran ke pusat"
             headerBelow={<FilterChips options={periods} active={period} onChange={handlePeriodChange} />}
+            actionBarSlot={hasSales && !isSettled && !hasPendingPayment ? (
+                <StickyActionBar
+                    actions={[
+                        {
+                            label: 'Ajukan Pembayaran',
+                            onClick: () => setPaymentSheetOpen(true),
+                        },
+                    ]}
+                />
+            ) : undefined}
         >
             <Head title="Settlement" />
-            <OutletPageShell hasStickyBar>
+            <OutletPageShell>
             {/* Hero Card */}
             {isSettled ? (
                 <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
@@ -313,17 +323,6 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
                 </SectionCard>
             )}
 
-            {/* Sticky Payment CTA */}
-            {hasSales && !isSettled && !hasPendingPayment && (
-                <StickyActionBar
-                    actions={[
-                        {
-                            label: 'Ajukan Pembayaran',
-                            onClick: () => setPaymentSheetOpen(true),
-                        },
-                    ]}
-                />
-            )}
             </OutletPageShell>
 
             {/* Payment Bottom Sheet */}

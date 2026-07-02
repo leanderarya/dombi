@@ -31,7 +31,27 @@ export default function OutletRestockShow({ restock }: any) {
     };
 
     return (
-        <OutletLayout title={`Restock #${restock.id}`} backHref="/outlet/restocks">
+        <OutletLayout
+            title={`Restock #${restock.id}`}
+            backHref="/outlet/restocks"
+            actionBarSlot={canConfirmReceived ? (
+                <StickyActionBar
+                    actions={[
+                        showForm
+                            ? {
+                                  label: 'Konfirmasi Diterima',
+                                  variant: 'primary',
+                                  onClick: handleConfirmReceived,
+                              }
+                            : {
+                                  label: 'Konfirmasi Diterima',
+                                  variant: 'primary',
+                                  onClick: () => setShowForm(true),
+                              },
+                    ]}
+                />
+            ) : undefined}
+        >
             <Head title={`Restock #${restock.id}`} />
 
             {/* Status + Cancel */}
@@ -132,24 +152,6 @@ export default function OutletRestockShow({ restock }: any) {
                     </div>
                 </SectionCard>
             )}
-            {canConfirmReceived && (
-                <StickyActionBar
-                    actions={[
-                        showForm
-                            ? {
-                                  label: 'Konfirmasi Diterima',
-                                  variant: 'primary',
-                                  onClick: handleConfirmReceived,
-                              }
-                            : {
-                                  label: 'Konfirmasi Diterima',
-                                  variant: 'primary',
-                                  onClick: () => setShowForm(true),
-                              },
-                    ]}
-                />
-            )}
-            {canConfirmReceived && <div className="h-20" />}
 
             {/* Cancel Confirmation Dialog */}
             {showCancelDialog && (

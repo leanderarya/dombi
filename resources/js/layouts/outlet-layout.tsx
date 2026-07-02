@@ -21,9 +21,11 @@ interface Props extends PropsWithChildren {
     headerBelow?: ReactNode;
     /** Right-side header actions */
     headerRight?: ReactNode;
+    /** Fixed action bar rendered outside <main> — position:fixed works correctly */
+    actionBarSlot?: ReactNode;
 }
 
-export default function OutletLayout({ children, title, subtitle, backHref, headerBelow, headerRight }: Props) {
+export default function OutletLayout({ children, title, subtitle, backHref, headerBelow, headerRight, actionBarSlot }: Props) {
     const page = usePage<any>();
     const { auth } = page.props;
     const [notificationOpen, setNotificationOpen] = useState(false);
@@ -37,7 +39,7 @@ export default function OutletLayout({ children, title, subtitle, backHref, head
     );
 
     return (
-        <MobileRoleLayout>
+        <MobileRoleLayout actionBarSlot={actionBarSlot}>
             <PageHeader
                 title={title}
                 subtitle={subtitle}

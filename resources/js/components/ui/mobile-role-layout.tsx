@@ -5,14 +5,18 @@ import { useFlashToast } from '@/hooks/use-flash-toast';
 interface Props extends PropsWithChildren {
     /** Optional floating footer slot (e.g. active order bar) */
     footerSlot?: ReactNode;
+    /** Optional fixed action bar slot — rendered outside <main> so position:fixed works */
+    actionBarSlot?: ReactNode;
 }
 
-export default function MobileRoleLayout({ children, footerSlot }: Props) {
+export default function MobileRoleLayout({ children, footerSlot, actionBarSlot }: Props) {
     useFlashToast();
 
     const bottomPad = footerSlot
         ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]'
-        : 'pb-[calc(2rem+env(safe-area-inset-bottom))]';
+        : actionBarSlot
+            ? 'pb-[calc(5rem+env(safe-area-inset-bottom))]'
+            : 'pb-[calc(2rem+env(safe-area-inset-bottom))]';
 
     return (
         <div className="min-h-dvh bg-surface text-text">
@@ -22,6 +26,7 @@ export default function MobileRoleLayout({ children, footerSlot }: Props) {
                 {children}
             </main>
 
+            {actionBarSlot}
             {footerSlot}
         </div>
     );

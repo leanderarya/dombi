@@ -199,6 +199,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             subtitle={order.customer_name}
             backHref="/courier/dashboard"
             hideNav
+            actionBarSlot={hasActions ? <StickyActionBar actions={buildActions()} /> : undefined}
         >
             <Head title={`Delivery ${order.order_code}`} />
 
@@ -410,9 +411,6 @@ export default function CourierDeliveryShow({ delivery }: Props) {
                 </SectionCard>
             )}
 
-            {/* Sticky Action Bar */}
-            {hasActions && <StickyActionBar actions={buildActions()} />}
-            {hasActions && <div className="h-24" />}
 
             {/* Complete Sheet */}
             <BottomSheet open={showCompleteSheet} onClose={() => setShowCompleteSheet(false)} title="Selesaikan Pengiriman">
