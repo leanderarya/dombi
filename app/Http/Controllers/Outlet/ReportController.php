@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -40,7 +39,7 @@ class ReportController extends Controller
 
             Order::where('outlet_id', $outlet->id)
                 ->where('status', 'completed')
-                ->whereBetween('created_at', [$from, $to])
+                ->whereBetween('completed_at', [$from, $to])
                 ->with('items')
                 ->latest()
                 ->chunk(200, function ($orders) use ($handle): void {
@@ -73,11 +72,16 @@ class ReportController extends Controller
             'today' => [now()->startOfDay(), now()->endOfDay()],
             'week' => [now()->startOfWeek(), now()->endOfWeek()],
             'month' => [now()->startOfMonth(), now()->endOfMonth()],
-            'custom' => [
-                Carbon::parse($request->string('from', now()->startOfMonth()->toDateString())),
-                Carbon::parse($request->string('to', now()->toDateString()))->endOfDay(),
-            ],
+            'custom' => $this->resolveCustomRange($request),
             default => [now()->startOfMonth(), now()->endOfMonth()],
         };
+    }
+
+    private function resolveCustomRange(Request $request): array
+    {
+        $from = $request->date('date_from') ?? now()->startOfDay();
+        $to = $request->date('date_to') ?? $from->copy()->endOfDay();
+
+        return [$from->startOfDay(), $to->endOfDay()];
     }
 }
