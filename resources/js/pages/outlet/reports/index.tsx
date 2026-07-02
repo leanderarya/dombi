@@ -1,5 +1,5 @@
-import { Head, router } from '@inertiajs/react';
-import { CheckCircle } from 'lucide-react';
+import { Head } from '@inertiajs/react';
+import { CheckCircle, Download } from 'lucide-react';
 import { useState } from 'react';
 import FilterChips from '@/components/ui/filter-chips';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
@@ -20,23 +20,12 @@ export default function OutletReports({ outlet }: Props) {
     const [period, setPeriod] = useState('month');
     const [dateFrom, setDateFrom] = useState(() => new Date().toISOString().split('T')[0]);
     const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0]);
-    const [exporting, setExporting] = useState(false);
 
-    const handlePeriodChange = (key: string) => {
-        setPeriod(key);
-        if (key !== 'custom') {
-            setExporting(true);
-            router.get(`/outlet/reports/sales/export?period=${key}`, {}, { onFinish: () => setExporting(false) });
+    const buildExportUrl = () => {
+        if (period === 'custom') {
+            return `/outlet/reports/sales/export?period=custom&date_from=${dateFrom}&date_to=${dateTo}`;
         }
-    };
-
-    const handleCustomExport = () => {
-        setExporting(true);
-        router.get(
-            `/outlet/reports/sales/export?period=custom&date_from=${dateFrom}&date_to=${dateTo}`,
-            {},
-            { onFinish: () => setExporting(false) },
-        );
+        return `/outlet/reports/sales/export?period=${period}`;
     };
 
     return (
@@ -44,7 +33,7 @@ export default function OutletReports({ outlet }: Props) {
             <Head title="Laporan Penjualan" />
 
             <OutletPageShell>
-                <FilterChips options={periods} active={period} onChange={handlePeriodChange} size="sm" variant="ring" />
+                <FilterChips options={periods} active={period} onChange={setPeriod} size="sm" variant="ring" />
 
                 {period === 'custom' && (
                     <div className="flex items-center gap-2">
@@ -61,30 +50,16 @@ export default function OutletReports({ outlet }: Props) {
                             onChange={(e) => setDateTo(e.target.value)}
                             className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
                         />
-                        <button
-                            type="button"
-                            onClick={handleCustomExport}
-                            disabled={exporting}
-                            className="min-h-11 shrink-0 rounded-lg bg-primary px-4 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
-                        >
-                            {exporting ? 'Export...' : 'Download'}
-                        </button>
                     </div>
                 )}
 
-                {period !== 'custom' && (
-                    <div className="rounded-xl border border-border bg-white p-4">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-2">Export Laporan</div>
-                        <p className="text-sm text-text-muted mb-4">Download laporan penjualan dalam format CSV untuk periode yang dipilih.</p>
-                        <button
-                            onClick={() => handlePeriodChange(period)}
-                            disabled={exporting}
-                            className="w-full rounded-lg bg-primary px-4 py-3 text-sm font-bold text-white active:bg-primary disabled:opacity-50"
-                        >
-                            {exporting ? 'Mengexport...' : 'Download CSV'}
-                        </button>
-                    </div>
-                )}
+                <a
+                    href={buildExportUrl()}
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:opacity-80"
+                >
+                    <Download className="h-4 w-4" />
+                    Download CSV
+                </a>
 
                 <div className="rounded-xl border border-border bg-white p-4">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-2">Konten Laporan</div>
