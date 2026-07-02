@@ -23,12 +23,12 @@ class AnalyticsController extends Controller
 
         $totalRevenue = Order::where('outlet_id', $outlet->id)
             ->where('status', 'completed')
-            ->whereBetween('created_at', [$from, $to])
+            ->whereBetween('completed_at', [$from, $to])
             ->sum('total');
 
         $totalOrders = Order::where('outlet_id', $outlet->id)
             ->where('status', 'completed')
-            ->whereBetween('created_at', [$from, $to])
+            ->whereBetween('completed_at', [$from, $to])
             ->count();
 
         $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
@@ -36,7 +36,7 @@ class AnalyticsController extends Controller
         $topProducts = OrderItem::whereHas('order', function ($query) use ($outlet, $from, $to) {
             $query->where('outlet_id', $outlet->id)
                 ->where('status', 'completed')
-                ->whereBetween('created_at', [$from, $to]);
+                ->whereBetween('completed_at', [$from, $to]);
         })
             ->select('product_name', DB::raw('SUM(quantity) as total_qty'), DB::raw('SUM(subtotal) as total_revenue'))
             ->groupBy('product_name')
@@ -46,8 +46,8 @@ class AnalyticsController extends Controller
 
         $dailyRevenue = Order::where('outlet_id', $outlet->id)
             ->where('status', 'completed')
-            ->whereBetween('created_at', [$from, $to])
-            ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(total) as revenue'))
+            ->whereBetween('completed_at', [$from, $to])
+            ->select(DB::raw('DATE(completed_at) as date'), DB::raw('SUM(total) as revenue'))
             ->groupBy('date')
             ->orderBy('date')
             ->get();

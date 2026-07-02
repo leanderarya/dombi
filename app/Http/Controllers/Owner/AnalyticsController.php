@@ -36,17 +36,17 @@ class AnalyticsController extends Controller
         [$from, $to] = $this->resolvePeriod($period, $request);
 
         $totalRevenue = Order::where('status', Order::STATUS_COMPLETED)
-            ->whereBetween('created_at', [$from, $to])
+            ->whereBetween('completed_at', [$from, $to])
             ->sum('total');
 
         $totalOrders = Order::where('status', Order::STATUS_COMPLETED)
-            ->whereBetween('created_at', [$from, $to])
+            ->whereBetween('completed_at', [$from, $to])
             ->count();
 
         $activeOutlets = Outlet::query()->active()->count();
 
         $outletRevenue = Order::where('status', Order::STATUS_COMPLETED)
-            ->whereBetween('created_at', [$from, $to])
+            ->whereBetween('completed_at', [$from, $to])
             ->select('outlet_id', DB::raw('SUM(total) as revenue'), DB::raw('COUNT(*) as orders'))
             ->groupBy('outlet_id')
             ->with('outlet:id,name')
@@ -55,7 +55,7 @@ class AnalyticsController extends Controller
 
         $topProducts = OrderItem::whereHas('order', function ($query) use ($from, $to) {
             $query->where('status', Order::STATUS_COMPLETED)
-                ->whereBetween('created_at', [$from, $to]);
+                ->whereBetween('completed_at', [$from, $to]);
         })
             ->select('product_name', DB::raw('SUM(quantity) as total_qty'), DB::raw('SUM(subtotal) as total_revenue'))
             ->groupBy('product_name')
@@ -115,9 +115,11 @@ class AnalyticsController extends Controller
             ->when($outletId, fn ($q) => $q->whereHas('order', fn ($oq) => $oq->where('outlet_id', $outletId)));
 
         // Single query for order stats using conditional aggregation
+        // Revenue uses completed_at (when money was received), not created_at
         $orderStats = (clone $ordersQuery)
             ->selectRaw('COUNT(*) as total')
-            ->selectRaw("SUM(CASE WHEN status = 'completed' THEN total ELSE 0 END) as revenue")
+            ->selectRaw("SUM(CASE WHEN status = 'completed' AND completed_at BETWEEN ? AND ? THEN total ELSE 0 END) as revenue")
+            ->addBinding([$dateFrom->startOfDay(), $dateTo->endOfDay()], 'select')
             ->selectRaw("SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed")
             ->selectRaw("SUM(CASE WHEN status IN ('cancelled_by_customer', 'cancelled_by_outlet') THEN 1 ELSE 0 END) as cancelled")
             ->first();
