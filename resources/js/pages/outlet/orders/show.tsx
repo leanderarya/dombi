@@ -105,6 +105,14 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
         });
     }
 
+    if (isReadyForCustomerPickup) {
+        actions.push({
+            label: 'Serahkan ke Customer',
+            variant: 'primary' as const,
+            onClick: () => setConfirmAction('complete_pickup'),
+        });
+    }
+
     return (
         <OutletLayout title={order.order_code} backHref="/outlet/orders">
             <Head title={order.order_code} />
@@ -191,12 +199,6 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                     <div>
                         <div className="text-sm font-medium text-text">Siap Diambil Customer</div>
                         <div className="mt-1 text-xs text-text-muted">Serahkan ke customer saat datang mengambil.</div>
-                        <button
-                            onClick={() => setConfirmAction('complete_pickup')}
-                            className="mt-3 flex min-h-11 w-full items-center justify-center rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                        >
-                            Serahkan ke Customer
-                        </button>
                     </div>
                 ) : isReadyForPickup ? (
                     <div className="text-sm text-text-muted">Siap assign kurir untuk pengiriman.</div>

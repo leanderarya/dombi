@@ -17,14 +17,14 @@ interface Props {
 }
 
 const variantStyles = {
-    primary: 'bg-emerald-700 text-white active:bg-emerald-800 disabled:bg-zinc-300',
-    secondary: 'border border-zinc-200 bg-white text-slate-700 active:bg-zinc-50',
-    danger: 'bg-red-600 text-white active:bg-red-700 disabled:bg-zinc-300',
+    primary: 'bg-emerald-700 text-white active:bg-emerald-800 disabled:opacity-50',
+    secondary: 'border border-border bg-white text-text active:bg-surface-muted',
+    danger: 'bg-red-600 text-white active:bg-red-700 disabled:opacity-50',
 };
 
 export default function StickyActionBar({ actions, leading }: Props) {
     return (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white/95 backdrop-blur-sm px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-3">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 backdrop-blur-sm px-4 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-3">
             <div className="mx-auto max-w-lg space-y-2">
                 {leading}
                 {actions.map((action, i) => (
