@@ -3,13 +3,13 @@ import { User } from 'lucide-react';
 import { useState } from 'react';
 import type {ReactNode} from 'react';
 import type { PropsWithChildren } from 'react';
-import NotificationBell from '@/components/notification-bell';
-import NotificationSheet from '@/components/notification-sheet';
-import OfflineBanner from '@/components/offline-banner';
+import NotificationBell from '@/components/shared/notification-bell';
+import NotificationSheet from '@/components/shared/notification-sheet';
+import OfflineBanner from '@/components/shared/offline-banner';
 import OwnerCommandSheet from '@/components/owner/owner-command-sheet';
 import OwnerPageSkeleton from '@/components/owner/owner-page-skeleton';
 import OwnerSidebarNav from '@/components/owner/owner-sidebar-nav';
-import UpdateBanner from '@/components/update-banner';
+import UpdateBanner from '@/components/shared/update-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 

@@ -22,8 +22,14 @@ class HomeController extends Controller
             $customerId = $user->customer->id;
 
             $activeOrders = Order::where('customer_id', $customerId)
-                ->whereIn('status', ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup', 'out_for_delivery'])
-                ->with(['outlet:id,name', 'delivery'])
+                ->whereIn('status', Order::ACTIVE_STATUSES)
+                ->whereNotIn('payment_status', ['expired', 'failed'])
+                ->where(function ($q) {
+                    $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
+                      ->orWhereNull('confirmation_expires_at')
+                      ->orWhere('confirmation_expires_at', '>', now());
+                })
+                ->with(['outlet:id,name', 'delivery', 'items.variant.family'])
                 ->latest()
                 ->limit(5)
                 ->get();

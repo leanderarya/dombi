@@ -34,29 +34,40 @@ class GuestOrderRecoveryService
             return $this->notFoundResponse();
         }
 
-        // Include both active AND expired orders for guests — expired needs "Pesan Ulang" action
-        $queryStatuses = $activeOnly
-            ? array_merge(Order::ACTIVE_STATUSES, [Order::STATUS_EXPIRED])
-            : Order::ACTIVE_STATUSES;
-
         $activeOrders = Order::query()
             ->where('customer_id', $customer->id)
-            ->whereIn('status', $queryStatuses)
-            ->with(['outlet:id,name', 'items'])
+            ->whereIn('status', Order::ACTIVE_STATUSES)
+            ->whereNotIn('payment_status', ['expired', 'failed'])
+            ->where(function ($q) {
+                $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
+                  ->orWhereNull('confirmation_expires_at')
+                  ->orWhere('confirmation_expires_at', '>', now());
+            })
+            ->with(['outlet:id,name', 'items.variant.family'])
             ->latest()
             ->get()
             ->map(fn (Order $order) => $this->formatOrder($order));
 
-        // Guest users only see active orders — no history
-        $recentOrders = $activeOnly ? collect() : Order::query()
-            ->where('customer_id', $customer->id)
-            ->whereIn('status', Order::HISTORY_STATUSES)
-            ->where('ordered_at', '>=', now()->subDays(self::MAX_DAYS))
-            ->with(['outlet:id,name', 'items'])
-            ->latest()
-            ->limit(self::MAX_ORDERS)
-            ->get()
-            ->map(fn (Order $order) => $this->formatOrder($order));
+        // Guest users also see recent history (includes expired/cancelled for "Pesan Ulang")
+        $recentOrders = $activeOnly
+            ? Order::query()
+                ->where('customer_id', $customer->id)
+                ->whereIn('status', array_merge(Order::HISTORY_STATUSES, [Order::STATUS_EXPIRED]))
+                ->where('ordered_at', '>=', now()->subDays(self::MAX_DAYS))
+                ->with(['outlet:id,name', 'items.variant.family'])
+                ->latest()
+                ->limit(self::MAX_ORDERS)
+                ->get()
+                ->map(fn (Order $order) => $this->formatOrder($order))
+            : Order::query()
+                ->where('customer_id', $customer->id)
+                ->whereIn('status', Order::HISTORY_STATUSES)
+                ->where('ordered_at', '>=', now()->subDays(self::MAX_DAYS))
+                ->with(['outlet:id,name', 'items'])
+                ->latest()
+                ->limit(self::MAX_ORDERS)
+                ->get()
+                ->map(fn (Order $order) => $this->formatOrder($order));
 
         return [
             'found' => true,
@@ -84,6 +95,7 @@ class GuestOrderRecoveryService
             'recovery_token' => $order->recovery_token,
             'tracking_url' => $order->tracking_url,
             'status' => $order->status,
+            'payment_status' => $order->payment_status,
             'fulfillment_type' => $order->fulfillment_type,
             'total' => (float) $order->total,
             'customer_name' => $order->customer_name,
@@ -91,6 +103,7 @@ class GuestOrderRecoveryService
             'items' => $order->items->map(fn ($item) => [
                 'product_name' => $item->product_name,
                 'quantity' => $item->quantity,
+                'image' => $item->variant?->family?->image,
             ])->values()->all(),
             'ordered_at' => $order->ordered_at?->toISOString(),
             'created_at' => $order->ordered_at?->toISOString(),

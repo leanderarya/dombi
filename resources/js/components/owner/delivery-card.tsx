@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import DeliveryStatusBadge from '@/components/delivery-status-badge';
+import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
 import { formatCurrency, formatDeliveryAge, formatDistance } from '@/lib/format';
 import DeliverySlaBadge from './delivery-sla-badge';
 

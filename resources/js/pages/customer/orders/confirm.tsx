@@ -14,6 +14,12 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     const [copied, setCopied] = useState(false);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
+    // Replace history entry so browser Back skips the payment gateway
+    useEffect(() => {
+        const backUrl = isLoggedIn ? '/customer/orders' : '/';
+        window.history.replaceState(null, '', backUrl);
+    }, [isLoggedIn]);
+
     // Poll payment status as webhook fallback
     useEffect(() => {
         if (paymentStatus !== 'pending') {
@@ -134,7 +140,7 @@ return;
                     {/* Pending: continue to payment */}
                     {paymentStatus === 'pending' && (
                         <button
-                            onClick={() => router.visit(`/customer/orders/${order.id}/pay`)}
+                            onClick={() => router.post(`/customer/orders/${order.id}/pay`)}
                             className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
                         >
                             Lanjutkan Pembayaran

@@ -6,10 +6,58 @@ import EmptyOrderState from '@/components/customer/empty-order-state';
 import OrderFilterChips from '@/components/customer/order-filter-chips';
 import OrderHistoryCard from '@/components/customer/order-history-card';
 import RecoverySheet from '@/components/customer/recovery-sheet';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/ui/pagination';
 import { SkeletonList } from '@/components/ui/skeleton';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useOrderRecovery } from '@/lib/order-recovery';
+
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+
+interface OrderOutlet {
+    id: number;
+    name: string;
+}
+
+interface OrderItem {
+    product_name: string;
+    quantity: number;
+}
+
+interface Order {
+    id: number;
+    order_code: string;
+    status: string;
+    payment_status: string;
+    fulfillment_type: 'pickup' | 'delivery';
+    total: number;
+    ordered_at: string | null;
+    created_at: string;
+    outlet_id: number;
+    recovery_token: string;
+    customer_address: string | null;
+    outlet: OrderOutlet;
+    items: OrderItem[];
+}
+
+interface PaginatedOrders {
+    data: Order[];
+    links: { url: string | null; label: string; active: boolean }[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
+interface Props {
+    activeOrders: Order[];
+    historyOrders: PaginatedOrders;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Component                                                          */
+/* ------------------------------------------------------------------ */
 
 const filterOptions = [
     { key: 'all', label: 'Semua' },
@@ -19,7 +67,7 @@ const filterOptions = [
 
 type ViewState = 'recovered' | 'empty';
 
-export default function OrdersIndex({ activeOrders, historyOrders }: any) {
+export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
     const { phone, maskedPhone, saveRecovery, clearRecovery } =
         useOrderRecovery();
     const [filter, setFilter] = useState('all');

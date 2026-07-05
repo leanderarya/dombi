@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\DokuPaymentException;
 use App\Models\Order;
 use App\Models\PaymentTransaction;
 use Illuminate\Support\Facades\Cache;
@@ -29,24 +30,40 @@ class DokuService
     {
         $requestId = 'DMB-'.$order->id.'-'.time();
         $invoiceNumber = $order->order_code;
-        $amount = (int) $order->total;
+        // Use subtotal (line items sum), not total — DOKU requires amount to match line_items
+        $amount = (int) $order->subtotal;
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
 
         $body = [
             'order' => [
                 'invoice_number' => $invoiceNumber,
                 'amount' => $amount,
+                'currency' => 'IDR',
+                'callback_url' => route('customer.orders.confirm', ['orderCode' => $order->order_code]),
+                'callback_url_result' => route('customer.orders.confirmation', ['order' => $order->id, 'token' => $order->recovery_token]),
+                'auto_redirect' => true,
+                'payment_due_date' => config('doku.payment_timeout', 30),
+                'line_items' => $this->buildLineItems($order),
             ],
+            'payment' => [
+                'payment_method_types' => [$this->mapPaymentMethod($order->payment_method)],
+            ],
+            'customer' => $this->buildCustomerInfo($order),
         ];
 
         $bodyJson = json_encode($body);
         $endpoint = '/checkout/v1/payment';
 
+        Log::debug('DOKU request body', ['body' => $bodyJson]);
+
         $headers = $this->generateHeaders($requestId, $timestamp, $endpoint, $bodyJson);
+
+        Log::debug('DOKU request headers', ['headers' => $headers]);
 
         $response = Http::withHeaders($headers)
             ->timeout(30)
-            ->post($this->baseUrl.$endpoint, $body);
+            ->withBody($bodyJson, 'application/json')
+            ->post($this->baseUrl.$endpoint);
 
         if (! $response->successful()) {
             Log::error('DOKU createPayment failed', [
@@ -54,15 +71,22 @@ class DokuService
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
-            throw new \Exception('DOKU payment creation failed: '.$response->body());
+            throw new DokuPaymentException(
+                message: 'DOKU payment creation failed',
+                responseCode: $response->status(),
+                errors: $response->json('error_messages', []),
+                original: $response
+            );
         }
 
         $data = $response->json();
         $paymentUrl = $data['response']['payment']['url'] ?? $data['payment']['url'] ?? null;
         $sessionId = $data['response']['order']['session_id'] ?? null;
+        $tokenId = $data['response']['payment']['token_id'] ?? null;
 
         if (! $paymentUrl) {
-            throw new \Exception('DOKU response missing payment URL: '.json_encode($data));
+            Log::error('DOKU response missing payment URL', ['response' => $data]);
+            throw new DokuPaymentException('Invalid DOKU response structure');
         }
 
         // Log transaction
@@ -72,6 +96,8 @@ class DokuService
             'payment_method' => 'qris',
             'amount' => $order->total,
             'status' => 'pending',
+            'session_id' => $sessionId,
+            'token_id' => $tokenId,
             'raw_response' => $data,
         ]);
 
@@ -127,6 +153,11 @@ class DokuService
             $this->markOrderPaid($order);
         } elseif (in_array($status, ['failed', 'expired']) && $order->payment_status === 'pending') {
             $order->update(['payment_status' => $status]);
+
+            // Immediately expire the order if still pending — release stock, don't wait for timeout
+            if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
+                app(OrderStatusService::class)->expireOrder($order, reason: "Payment {$status}");
+            }
         }
 
         Log::info('DOKU webhook processed', [
@@ -148,11 +179,12 @@ class DokuService
 
         $digest = base64_encode(hash('sha256', $rawBody, true));
 
-        $assembled = "Client-Id:{$this->clientId}\n"
-            ."Request-Id:{$requestId}\n"
-            ."Request-Timestamp:{$timestamp}\n"
-            ."Request-Target:{$requestTarget}\n"
-            ."Digest:{$digest}";
+        // DOKU signature uses actual newline characters (\n in double quotes)
+        $assembled = "Client-Id:".$this->clientId."\n"
+            ."Request-Id:".$requestId."\n"
+            ."Request-Timestamp:".$timestamp."\n"
+            ."Request-Target:".$requestTarget."\n"
+            ."Digest:".$digest;
 
         $expected = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
         $provided = $payload['signature'] ?? '';
@@ -222,6 +254,11 @@ class DokuService
             $this->markOrderPaid($order);
         } elseif (in_array($status, ['failed', 'expired']) && $order->payment_status === 'pending') {
             $order->update(['payment_status' => $status]);
+
+            // Immediately expire the order if still pending — release stock
+            if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
+                app(OrderStatusService::class)->expireOrder($order, reason: "Payment {$status}");
+            }
         }
 
         return $status;
@@ -238,6 +275,18 @@ class DokuService
             'FAILED' => 'failed',
             'EXPIRED' => 'expired',
             default => 'pending',
+        };
+    }
+
+    /**
+     * Map Dombi payment method to DOKU payment_method_types value.
+     */
+    private function mapPaymentMethod(?string $method): string
+    {
+        return match ($method) {
+            'credit_card' => 'CREDIT_CARD',
+            'qris' => 'QRIS',
+            default => 'QRIS',
         };
     }
 
@@ -263,17 +312,45 @@ class DokuService
     }
 
     /**
+     * Build line items from order items.
+     */
+    private function buildLineItems(Order $order): array
+    {
+        return $order->items->map(fn ($item) => [
+            'id' => (string) ($item->product_id ?: $item->id),
+            'name' => $item->product_name,
+            'quantity' => $item->quantity,
+            'price' => (int) $item->price,
+        ])->toArray();
+    }
+
+    /**
+     * Build customer info from order.
+     */
+    private function buildCustomerInfo(Order $order): array
+    {
+        $customer = $order->customer;
+
+        return [
+            'name' => $customer->name ?? $order->customer_name,
+            'email' => $customer->email ?? null,
+            'phone' => $customer->phone ?? $order->customer_phone,
+        ];
+    }
+
+    /**
      * Generate DOKU Non-SNAP API headers with HMAC-SHA256 signature.
      */
     private function generateHeaders(string $requestId, string $timestamp, string $endpoint, string $body): array
     {
         $digest = base64_encode(hash('sha256', $body, true));
 
-        $assembled = "Client-Id:{$this->clientId}\n"
-            ."Request-Id:{$requestId}\n"
-            ."Request-Timestamp:{$timestamp}\n"
-            ."Request-Target:{$endpoint}\n"
-            ."Digest:{$digest}";
+        // DOKU signature uses actual newline characters (\n in double quotes)
+        $assembled = "Client-Id:".$this->clientId."\n"
+            ."Request-Id:".$requestId."\n"
+            ."Request-Timestamp:".$timestamp."\n"
+            ."Request-Target:".$endpoint."\n"
+            ."Digest:".$digest;
 
         $signature = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
 

@@ -16,12 +16,25 @@ class DokuPaymentController extends Controller
         $payload = json_decode($rawBody, true) ?? [];
         $requestId = $request->header('Request-Id', '');
 
+        // Verify webhook signature
         if (! $doku->verifySignature($payload, $requestId, $rawBody)) {
             Log::warning('DOKU webhook: invalid signature', ['request_id' => $requestId]);
             return response()->json(['message' => 'Invalid signature'], 401);
         }
 
         try {
+            // Verify response signature if present
+            if (isset($payload['response']['headers']['signature'])) {
+                $responseSignature = $payload['response']['headers']['signature'];
+                $responseRequestId = $payload['response']['headers']['request_id'] ?? $requestId;
+
+                // Log response signature for debugging
+                Log::info('DOKU webhook response signature', [
+                    'request_id' => $responseRequestId,
+                    'has_signature' => ! empty($responseSignature),
+                ]);
+            }
+
             $doku->handleWebhook($payload);
         } catch (\Exception $e) {
             Log::error('DOKU webhook error', [

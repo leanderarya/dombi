@@ -325,8 +325,14 @@ export default function Home({ customerName, activeOrders }: any) {
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
                                 <span className="text-sm font-bold text-text">Pesanan Aktif</span>
-                                <span className="fore-badge-success">
-                                    {activeOrder.status === 'preparing' ? 'Disiapkan' : activeOrder.status === 'ready_for_pickup' ? 'Siap Diambil' : 'Aktif'}
+                                <span className={activeOrder.status === 'pending_confirmation' ? 'fore-badge-warning' : 'fore-badge-success'}>
+                                    {activeOrder.status === 'pending_confirmation' ? 'Menunggu Konfirmasi'
+                                    : activeOrder.status === 'confirmed' ? 'Dikonfirmasi'
+                                    : activeOrder.status === 'preparing' ? 'Disiapkan'
+                                    : activeOrder.status === 'ready_for_pickup' ? 'Siap Diambil'
+                                    : activeOrder.status === 'picked_up' ? 'Diambil Kurir'
+                                    : activeOrder.status === 'delivering' ? 'Dikirim'
+                                    : 'Aktif'}
                                 </span>
                             </div>
                             <div className="mt-0.5 text-xs text-text-muted">{activeOrder.order_code} · {activeOrder.outlet?.name ?? 'Outlet'}</div>

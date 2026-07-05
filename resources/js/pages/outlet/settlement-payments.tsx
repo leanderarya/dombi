@@ -2,7 +2,7 @@ import { Head, router } from '@inertiajs/react';
 import { Receipt } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';

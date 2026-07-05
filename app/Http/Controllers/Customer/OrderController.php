@@ -28,13 +28,21 @@ class OrderController extends Controller
         if ($customer) {
             $activeOrders = $customer->orders()
                 ->whereIn('status', Order::ACTIVE_STATUSES)
-                ->with(['outlet', 'items'])
+                ->whereNotIn('payment_status', ['expired', 'failed'])
+                ->where(function ($q) {
+                    $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
+                      ->orWhereNull('confirmation_expires_at')
+                      ->orWhere('confirmation_expires_at', '>', now());
+                })
+                ->with(['outlet', 'items.variant.family'])
+                ->select(['id', 'order_code', 'status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
                 ->orderByDesc('ordered_at')
                 ->get();
 
             $historyOrders = $customer->orders()
                 ->whereIn('status', Order::HISTORY_STATUSES)
                 ->with(['outlet', 'items'])
+                ->select(['id', 'order_code', 'status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
                 ->orderByDesc('ordered_at')
                 ->paginate(10)
                 ->withQueryString();
@@ -133,14 +141,14 @@ class OrderController extends Controller
      * Create DOKU payment for a confirmed order and redirect to payment page.
      * Accessible by: logged-in customer, recovered guest, OR fresh checkout guest (CSRF-protected).
      */
-    public function pay(Order $order): \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
+    public function pay(Order $order): RedirectResponse
     {
         // Ownership verification — permissive for checkout flow
         $user = auth()->user();
         if ($user) {
             // Logged-in user — check ownership
             if (! $user->isOwner() && $user->getCustomerOrCreate()->id !== $order->customer_id) {
-                return response()->json(['error' => 'Unauthorized'], 403);
+                abort(403, 'Unauthorized');
             }
         } elseif ($order->customer_id) {
             // Guest — verify via recovery session OR via recent order (within 30 min)
@@ -152,7 +160,7 @@ class OrderController extends Controller
             $isFreshOrder = $order->created_at && $order->created_at->gt(now()->subMinutes(30));
 
             if (! $hasRecovery && ! $isFreshOrder) {
-                return response()->json(['error' => 'Unauthorized'], 403);
+                abort(403, 'Unauthorized');
             }
         }
 
@@ -166,23 +174,19 @@ class OrderController extends Controller
             Order::STATUS_EXPIRED,
         ];
         if (in_array($order->status, $terminalStatuses, true)) {
-            return response()->json([
-                'error' => 'Pesanan sudah tidak aktif.',
-            ], 422);
+            return back()->with('error', 'Pesanan sudah tidak aktif.');
         }
 
         // Guard: order must not already be paid
         if ($order->payment_status === 'paid') {
-            return response()->json([
-                'error' => 'Pesanan sudah dibayar.',
-            ], 422);
+            return redirect()->route('customer.orders.confirm', [
+                'orderCode' => $order->order_code,
+            ]);
         }
 
         // Only for non-COD orders
         if ($order->payment_method === 'cod') {
-            return response()->json([
-                'error' => 'COD tidak memerlukan pembayaran online.',
-            ], 422);
+            return back()->with('error', 'COD tidak memerlukan pembayaran online.');
         }
 
         try {
@@ -213,9 +217,7 @@ class OrderController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            return response()->json([
-                'error' => 'Gagal membuat pembayaran. Silakan coba lagi.',
-            ], 500);
+            return back()->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
         }
     }
 

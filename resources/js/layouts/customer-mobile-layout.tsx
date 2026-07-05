@@ -4,7 +4,7 @@ import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import CustomerTopBar from '@/components/customer/customer-top-bar';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
-import OfflineBanner from '@/components/offline-banner';
+import OfflineBanner from '@/components/shared/offline-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 import { useCart } from '@/lib/use-cart';

@@ -1,8 +1,8 @@
 import { Link, router, useForm } from '@inertiajs/react';
-import DistributionStatusBadge from '@/components/distribution-status-badge';
+import DistributionStatusBadge from '@/components/ui/distribution-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import RestockStatusBadge from '@/components/restock-status-badge';
-import StockLevelBadge from '@/components/stock-level-badge';
+import RestockStatusBadge from '@/components/ui/restock-status-badge';
+import StockLevelBadge from '@/components/ui/stock-level-badge';
 import { formatDate } from '@/lib/format';
 
 type TimelineEvent = {

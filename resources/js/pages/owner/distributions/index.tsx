@@ -2,7 +2,7 @@ import { Link, router } from '@inertiajs/react';
 import { ArrowDownRight, CheckCircle, CheckCircle2, MapPin, Package, Truck } from 'lucide-react';
 import { useEffect } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatDate } from '@/lib/format';

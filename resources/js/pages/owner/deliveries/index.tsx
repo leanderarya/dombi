@@ -7,9 +7,9 @@ import {
     Truck,
     XCircle,
 } from 'lucide-react';
-import DeliveryStatusBadge from '@/components/delivery-status-badge';
+import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/ui/pagination';
 import EmptyState from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
 import { SkeletonPage } from '@/components/ui/skeleton';

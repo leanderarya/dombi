@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, MapPin, Navigation, Pa
 import { useEffect, useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
-import OfflineBanner from '@/components/offline-banner';
+import OfflineBanner from '@/components/shared/offline-banner';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import Dialog from '@/components/ui/dialog';
 import StatusBadge from '@/components/ui/status-badge';

@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import DistributionStatusBadge from '@/components/distribution-status-badge';
+import DistributionStatusBadge from '@/components/ui/distribution-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 
 export default function OwnerDistributionShow({ distribution }: any) {

@@ -1,4 +1,4 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, MapPin, Store } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NoticeBanner from '@/components/customer/checkout/notice-banner';
@@ -17,12 +17,11 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const isDelivery = fulfillmentType === 'delivery_dombi';
     const [itemsExpanded, setItemsExpanded] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [processing, setProcessing] = useState(false);
     const [paymentExpanded, setPaymentExpanded] = useState(false);
     const paymentOptions = summary.payment_options ?? [];
-    const form = useForm({
-        payment_method: paymentOptions[0]?.value ?? 'qris',
-    });
-    const selectedOption = paymentOptions.find((option: any) => option.value === form.data.payment_method) ?? paymentOptions[0];
+    const [paymentMethod, setPaymentMethod] = useState(paymentOptions[0]?.value ?? 'qris');
+    const selectedOption = paymentOptions.find((option: any) => option.value === paymentMethod) ?? paymentOptions[0];
     const paymentFee = Math.round((summary.subtotal ?? 0) * (selectedOption?.fee_rate ?? 0) * 100) / 100;
     const total = (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
     const deliveryBlocked = isDelivery && !!summary.delivery_quote && summary.delivery_quote.is_serviceable === false;
@@ -42,23 +41,46 @@ export default function CheckoutPayment({ draft, summary }: any) {
         recipient_phone: draft?.customer?.recipient_phone,
     });
 
-    const submit = () => {
+    const submit = async () => {
         setSubmitError(null);
-        form.post('/customer/checkout/payment', {
-            onSuccess: () => {
+        setProcessing(true);
+
+        try {
+            const response = await fetch('/customer/checkout/payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                },
+                body: JSON.stringify({ payment_method: paymentMethod }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                const errorMsg = data.message || data.errors
+                    ? Object.values(data.errors ?? {}).flat()[0]
+                    : 'Terjadi kesalahan. Silakan coba lagi.';
+                setSubmitError(typeof errorMsg === 'string' ? errorMsg : 'Terjadi kesalahan. Silakan coba lagi.');
+                setProcessing(false);
+                return;
+            }
+
+            if (data.payment_url) {
                 cart.clear();
                 markUsedForOrder();
-            },
-            onError: (errors) => {
-                if (errors.error) {
-                    setSubmitError(errors.error);
-                } else if (Object.keys(errors).length > 0) {
-                    setSubmitError(Object.values(errors)[0] as string);
-                } else {
-                    setSubmitError('Terjadi kesalahan. Silakan coba lagi.');
-                }
-            },
-        });
+                // Full-page navigation to DOKU payment page (no CORS issue)
+                window.location.href = data.payment_url;
+            } else {
+                setSubmitError('Tidak ada URL pembayaran. Silakan coba lagi.');
+                setProcessing(false);
+            }
+        } catch {
+            setSubmitError('Terjadi kesalahan jaringan. Silakan coba lagi.');
+            setProcessing(false);
+        }
     };
 
     return (
@@ -69,8 +91,8 @@ export default function CheckoutPayment({ draft, summary }: any) {
             footerSlot={
                 <StepButton
                     label={ctaLabel}
-                    disabled={form.processing || deliveryBlocked}
-                    processing={form.processing}
+                    disabled={processing || deliveryBlocked}
+                    processing={processing}
                     onClick={submit}
                 />
             }
@@ -88,12 +110,12 @@ export default function CheckoutPayment({ draft, summary }: any) {
             />
 
             {/* Error Banner */}
-            {(submitError || Object.keys(form.errors).length > 0) && (
+            {submitError && (
                 <div className="mt-4">
                     <NoticeBanner
                         variant="error"
                         title="Pesanan gagal dibuat"
-                        message={submitError || (Object.values(form.errors)[0] as string) || 'Periksa data dan coba lagi.'}
+                        message={submitError}
                         onDismiss={() => setSubmitError(null)}
                     />
                 </div>
@@ -197,13 +219,13 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 {paymentExpanded && (
                     <div className="mt-2 space-y-2">
                         {paymentOptions
-                            .filter((option: any) => option.value !== form.data.payment_method)
+                            .filter((option: any) => option.value !== paymentMethod)
                             .map((option: any) => (
                                 <button
                                     key={option.value}
                                     type="button"
                                     onClick={() => {
-                                        form.setData('payment_method', option.value);
+                                        setPaymentMethod(option.value);
                                         setPaymentExpanded(false);
                                     }}
                                     className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-left transition-all active:opacity-80"

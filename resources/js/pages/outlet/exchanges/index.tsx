@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import ExchangeCreateDialog from '@/components/outlet/exchange-create-dialog';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';

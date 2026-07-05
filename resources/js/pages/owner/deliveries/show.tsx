@@ -1,8 +1,8 @@
 import { router } from '@inertiajs/react';
 import { MapPin } from 'lucide-react';
 import { useState } from 'react';
-import DeliveryStatusBadge from '@/components/delivery-status-badge';
-import OrderStatusBadge from '@/components/order-status-badge';
+import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
+import OrderStatusBadge from '@/components/ui/order-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { formatDate } from '@/lib/format';

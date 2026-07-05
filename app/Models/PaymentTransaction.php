@@ -13,6 +13,8 @@ class PaymentTransaction extends Model
         'payment_method',
         'amount',
         'status',
+        'session_id',
+        'token_id',
         'raw_response',
     ];
 

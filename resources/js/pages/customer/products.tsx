@@ -3,6 +3,7 @@ import { Search, ThumbsUp } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
+import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
 import FulfillmentToggle from '@/components/customer/fulfillment-toggle';
 import SizeSelectorSheet from '@/components/customer/size-selector-sheet';
@@ -12,6 +13,7 @@ import FilterChips from '@/components/ui/filter-chips';
 import { Skeleton } from '@/components/ui/skeleton';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import { useCart } from '@/lib/use-cart';
 import { sizeToMl } from '@/lib/size';
 import FavoritesProvider from '@/providers/favorites-provider';
 
@@ -70,6 +72,7 @@ function ProductsInner() {
     const cacheRef = useRef<Map<number, Family[]>>(new Map());
 
     useFlashToast();
+    const { totalItems } = useCart();
     const scrollRef = useRef<HTMLDivElement>(null);
     const sectionRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
@@ -375,6 +378,7 @@ function ProductsInner() {
                 flavorName={sheetFlavorName}
                 variants={sheetVariants}
             />
+            {totalItems > 0 && <FloatingCartBar />}
             <CustomerBottomNav />
         </>
     );

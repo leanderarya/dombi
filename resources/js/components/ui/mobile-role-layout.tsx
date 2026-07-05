@@ -1,5 +1,5 @@
 import type { PropsWithChildren, ReactNode } from 'react';
-import OfflineBanner from '@/components/offline-banner';
+import OfflineBanner from '@/components/shared/offline-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 
 interface Props extends PropsWithChildren {

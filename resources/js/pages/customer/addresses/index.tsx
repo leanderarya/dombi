@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { MapPin, Plus, Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
-import OfflineBanner from '@/components/offline-banner';
+import OfflineBanner from '@/components/shared/offline-banner';
 
 export default function AddressesIndex({ addresses }: any) {
     const [search, setSearch] = useState('');

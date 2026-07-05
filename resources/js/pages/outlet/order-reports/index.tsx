@@ -2,7 +2,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
-import Pagination from '@/components/pagination';
+import Pagination from '@/components/ui/pagination';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import StatusBadge from '@/components/ui/status-badge';

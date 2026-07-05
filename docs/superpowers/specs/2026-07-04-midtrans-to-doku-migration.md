@@ -1,7 +1,7 @@
 # Midtrans → DOKU Payment Gateway Migration
 
 **Date:** 2026-07-04
-**Status:** Approved
+**Status:** Approved — ready for implementation
 
 ## Problem
 
@@ -78,7 +78,7 @@ return [
     'merchant_code' => env('DOKU_MERCHANT_CODE'),
     'sandbox' => env('DOKU_IS_SANDBOX', true),
     'base_url' => env('DOKU_IS_SANDBOX', true)
-        ? 'https://sandbox.doku.com'
+        ? 'https://api-sandbox.doku.com'
         : 'https://api.doku.com',
 ];
 ```
@@ -90,6 +90,8 @@ return [
 MIDTRANS_CLIENT_KEY=
 MIDTRANS_SERVER_KEY=
 MIDTRANS_IS_PRODUCTION=
+VITE_MIDTRANS_CLIENT_KEY=
+VITE_MIDTRANS_IS_PRODUCTION=
 
 # Add
 DOKU_CLIENT_ID=
@@ -118,22 +120,39 @@ Model updates:
 
 ## Frontend Changes
 
+### Remove Snap.js entirely
+
+`resources/js/pages/customer/orders/confirm.tsx`:
+- Remove `SNAP_JS_URL` constant (line 18-20)
+- Remove Snap.js script injection (`document.getElementById('midtrans-snap-js')`, lines 41-53)
+- Remove `snapLoaded`, `snapOpened`, `snapAttempted` state
+- Remove `window.snap.pay(snapToken, ...)` logic (lines 137-157)
+- Remove `snap_token` prop dependency
+- Replace with simple "continue to payment" link (redirect to DOKU URL from backend)
+
 ### CheckoutController::submit()
 
 Instead of returning Snap token via Inertia props, return `redirect()` to DOKU payment URL.
 
-No Snap JS script needed — DOKU hosted page handles all payment UI.
+```php
+// Before (Midtrans)
+$snapToken = app(MidtransService::class)->createSnapToken($order);
+return Inertia::render('customer/orders/confirm', [...])->with('snap_token', $snapToken);
+
+// After (DOKU)
+$paymentUrl = app(DokuService::class)->createPayment($order);
+return redirect()->away($paymentUrl);
+```
 
 ### OrderController
 
-- `syncStatusFromMidtrans()` → `syncStatusFromDoku()`
+- `syncStatusFromMidtrans()` → `syncStatusFromDoku()` via DokuService
+- Remove all `snap_token` references (lines 129, 199, 208, 255)
 - All `midtrans_order_id` references → `doku_order_id`
 
-### CheckoutController
+### QRIS fee
 
-- `createSnapToken()` → `createPayment()` via DokuService
-- QRIS fee: keep 0.7% rate
-- Return redirect to DOKU URL
+Keep 0.7% QRIS fee rate — apply in DokuService if needed.
 
 ## Routes
 
@@ -170,14 +189,17 @@ Route::get('/payment/doku/redirect', [DokuPaymentController::class, 'redirect'])
 | File | Change |
 |---|---|
 | `routes/web.php` | Remove Midtrans route, add DOKU routes |
-| `app/Models/Order.php` | `midtrans_order_id` → `doku_order_id` |
-| `app/Models/PaymentTransaction.php` | `midtrans_order_id` → `doku_order_id` |
-| `app/Http/Controllers/Customer/CheckoutController.php` | Use DokuService |
-| `app/Http/Controllers/Customer/OrderController.php` | Use DokuService |
+| `app/Models/Order.php` | `midtrans_order_id` → `doku_order_id` in `$fillable` |
+| `app/Models/PaymentTransaction.php` | `midtrans_order_id` → `doku_order_id` in `$fillable` |
+| `app/Http/Controllers/Customer/CheckoutController.php` | Use DokuService, return redirect instead of Snap token |
+| `app/Http/Controllers/Customer/OrderController.php` | Remove snap_token refs, use DokuService for status sync |
+| `resources/js/pages/customer/orders/confirm.tsx` | Remove Snap.js, replace with redirect link |
 | `.env.example` | Swap env vars |
 
 ### Composer
-- Remove `midtrans/midtrans-php` package
+```bash
+composer remove midtrans/midtrans-php
+```
 
 ## Testing
 
