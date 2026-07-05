@@ -58,6 +58,7 @@ function ProductsInner() {
     const { selectedOutlet, loading: outletLoading } = useOutlet();
     const [families, setFamilies] = useState<Family[]>([]);
     const [productsLoading, setProductsLoading] = useState(true);
+    const [productsError, setProductsError] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
     const [sheetOpen, setSheetOpen] = useState(false);
@@ -77,6 +78,7 @@ function ProductsInner() {
         const cacheKey = outletId ?? 0;
         if (cacheRef.current.has(cacheKey)) {
             setFamilies(cacheRef.current.get(cacheKey)!);
+            setProductsError(null);
             setProductsLoading(false);
             return;
         }
@@ -106,11 +108,13 @@ function ProductsInner() {
                     const fetched = data.families ?? [];
                     cacheRef.current.set(cacheKey, fetched);
                     setFamilies(fetched);
+                    setProductsError(null);
                     setProductsLoading(false);
                 }
             })
             .catch((err) => {
                 if (err.name !== 'AbortError') {
+                    setProductsError('Gagal memuat produk');
                     setProductsLoading(false);
                 }
             });
@@ -279,6 +283,20 @@ function ProductsInner() {
                                 />
                             </div>
                         </div>
+
+                        {/* Error State */}
+                        {!productsLoading && productsError && (
+                            <div className="rounded-2xl border border-border/60 bg-white p-6 text-center">
+                                <p className="text-sm text-text-muted mb-3">{productsError}</p>
+                                <button
+                                    type="button"
+                                    onClick={() => selectedOutlet && fetchProducts(selectedOutlet.id)}
+                                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white active:opacity-80"
+                                >
+                                    Coba Lagi
+                                </button>
+                            </div>
+                        )}
 
                         {/* Product Count */}
                         <p className="text-xs text-text-muted">{loading ? '...' : `${productCount} Produk`}</p>
