@@ -36,27 +36,16 @@ class CustomerProductApiController extends Controller
 
         $result = $families->map(function ($family) use ($outletId) {
             $variants = $family->variants->map(function ($variant) use ($outletId) {
-                // Calculate outlet-specific stock
+                // Stock
                 $availableStock = 0;
                 if ($outletId && $variant->relationLoaded('inventories')) {
-                    $availableStock = (int) $variant->inventories->sum(
+                    $availableStock = max(0, (int) $variant->inventories->sum(
                         fn ($inv) => $inv->current_stock - $inv->reserved_stock
-                    );
-                } elseif (!$outletId && $variant->relationLoaded('inventories')) {
-                    // No outlet: sum across all outlets
-                    $availableStock = (int) $variant->inventories->sum(
-                        fn ($inv) => $inv->current_stock - $inv->reserved_stock
-                    );
+                    ));
                 }
 
-                // Calculate outlet-specific price
-                $price = (float) $variant->selling_price;
-                if ($outletId && $variant->relationLoaded('outletPrices')) {
-                    $override = $variant->outletPrices->first();
-                    if ($override) {
-                        $price = (float) $override->selling_price;
-                    }
-                }
+                // Price
+                $price = $outletId ? $variant->priceForOutlet($outletId) : (float) $variant->selling_price;
 
                 return [
                     'id' => $variant->id,
