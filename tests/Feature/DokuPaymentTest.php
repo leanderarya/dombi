@@ -44,9 +44,11 @@ class DokuPaymentTest extends TestCase
         ]);
 
         Http::fake([
-            '*/v1/payment-url' => Http::response([
-                'order' => ['invoice_number' => 'INV-001'],
-                'payment' => ['url' => 'https://sandbox.doku.com/pay/abc123'],
+            '*/checkout/v1/payment' => Http::response([
+                'response' => [
+                    'order' => ['session_id' => 'sess-123'],
+                    'payment' => ['url' => 'https://sandbox.doku.com/pay/abc123'],
+                ],
             ], 200),
         ]);
 
