@@ -10,12 +10,14 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\DeliveryPricingService;
 use App\Services\OrderService;
+use App\Services\OrderStatusService;
 use App\Services\RecommendOutletService;
 use App\Support\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -45,11 +47,7 @@ class CheckoutController extends Controller
 
         // Load variants with family info
         $variantIds = $draftItems->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $variants = ProductVariant::query()
-            ->whereIn('id', $variantIds)
-            ->where('is_active', true)
-            ->with('family')
-            ->get();
+        $variants = $this->loadCartVariants($variantIds);
 
         $items = $this->mapVariantItems($draftItems, $variants);
         $location = $request->session()->get('checkout.location');
@@ -154,11 +152,7 @@ class CheckoutController extends Controller
 
         // Load variants with family info
         $variantIds = $cart->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $variants = ProductVariant::query()
-            ->whereIn('id', $variantIds)
-            ->where('is_active', true)
-            ->with('family')
-            ->get();
+        $variants = $this->loadCartVariants($variantIds);
 
         $fulfillment = $request->session()->get('checkout.fulfillment.fulfillment_type');
         $location = $request->session()->get('checkout.location');
@@ -343,11 +337,7 @@ class CheckoutController extends Controller
 
         // Load variants with family info
         $variantIds = $cart->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $variants = ProductVariant::query()
-            ->whereIn('id', $variantIds)
-            ->where('is_active', true)
-            ->with('family')
-            ->get();
+        $variants = $this->loadCartVariants($variantIds);
 
         $items = $this->mapVariantItems($cart, $variants);
         $subtotal = (float) collect($items)->sum('subtotal');
@@ -415,12 +405,12 @@ class CheckoutController extends Controller
         ]);
 
         // Idempotency: prevent duplicate order from double-tap/refresh
-        $fingerprint = md5(serialize([
+        $fingerprint = md5(json_encode([
             'user' => $request->user()?->id ?: $request->session()->getId(),
             'cart' => $cart,
             'payment' => $validated['payment_method'],
             'outlet' => $request->session()->get('checkout.fulfillment.selected_outlet_id'),
-        ]));
+        ], JSON_THROW_ON_ERROR));
         $idempotencyKey = 'checkout_submit:'.$fingerprint;
         $cachedOrderId = Cache::get($idempotencyKey);
 
@@ -491,23 +481,29 @@ class CheckoutController extends Controller
 
             return redirect()->away($paymentUrl);
         } catch (\App\Exceptions\DokuPaymentException $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to create DOKU payment', [
+            Log::error('Failed to create DOKU payment', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
                 'response_code' => $e->responseCode,
                 'doku_errors' => $e->getErrors(),
             ]);
-            return redirect()->route('customer.orders.confirm', [
-                'orderCode' => $order->order_code,
-            ])->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
+
+            // Compensate: expire order to release reserved stock
+            app(OrderStatusService::class)->expireOrder($order, reason: 'Payment gateway unavailable');
+
+            return redirect()->route('customer.checkout.index')
+                ->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to create DOKU payment', [
+            Log::error('Failed to create DOKU payment', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
             ]);
-            return redirect()->route('customer.orders.confirm', [
-                'orderCode' => $order->order_code,
-            ])->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
+
+            // Compensate: expire order to release reserved stock
+            app(OrderStatusService::class)->expireOrder($order, reason: 'Payment gateway error');
+
+            return redirect()->route('customer.checkout.index')
+                ->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
         }
     }
 
@@ -573,6 +569,28 @@ class CheckoutController extends Controller
         return response()->json($recommendations);
     }
 
+    /**
+     * Load cart variants with eager-loaded family. Cached per request to avoid
+     * re-querying the same variants across checkout steps.
+     */
+    private function loadCartVariants(array $variantIds): \Illuminate\Support\Collection
+    {
+        static $cache = [];
+
+        $key = implode(',', $variantIds);
+        if (isset($cache[$key])) {
+            return $cache[$key];
+        }
+
+        $cache[$key] = ProductVariant::query()
+            ->whereIn('id', $variantIds)
+            ->where('is_active', true)
+            ->with('family')
+            ->get();
+
+        return $cache[$key];
+    }
+
     private function mapVariantItems($rawItems, $variants)
     {
         $variantMap = $variants->keyBy('id');
@@ -629,11 +647,7 @@ class CheckoutController extends Controller
     private function calculateSubtotal(array $cart): float
     {
         $variantIds = collect($cart)->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $variants = ProductVariant::query()
-            ->whereIn('id', $variantIds)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('id');
+        $variants = $this->loadCartVariants($variantIds)->keyBy('id');
 
         $productIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
         $products = Product::query()

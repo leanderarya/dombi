@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Services\DokuService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class DokuPaymentController extends Controller
@@ -22,20 +23,18 @@ class DokuPaymentController extends Controller
             return response()->json(['message' => 'Invalid signature'], 401);
         }
 
+        // Idempotency: use Request-Id as dedup key (DOKU retries with same ID)
+        $idempotencyKey = 'doku_webhook:'.$requestId;
+        if (Cache::has($idempotencyKey)) {
+            Log::info('DOKU webhook: duplicate, already processed', ['request_id' => $requestId]);
+            return response()->json(['message' => 'OK']);
+        }
+
         try {
-            // Verify response signature if present
-            if (isset($payload['response']['headers']['signature'])) {
-                $responseSignature = $payload['response']['headers']['signature'];
-                $responseRequestId = $payload['response']['headers']['request_id'] ?? $requestId;
-
-                // Log response signature for debugging
-                Log::info('DOKU webhook response signature', [
-                    'request_id' => $responseRequestId,
-                    'has_signature' => ! empty($responseSignature),
-                ]);
-            }
-
             $doku->handleWebhook($payload);
+
+            // Mark as processed after successful handling
+            Cache::put($idempotencyKey, true, 86400); // 24h TTL
         } catch (\Exception $e) {
             Log::error('DOKU webhook error', [
                 'error' => $e->getMessage(),
