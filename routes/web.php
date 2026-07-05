@@ -155,8 +155,9 @@ Route::get('/customer/orders/{order}/payment-status', [CustomerOrderController::
 // Cancel route — requires authentication to prevent unauthorized cancellation
 Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware(['auth', 'throttle:track-cancel'])->name('track.cancel');
 
-// Midtrans webhook — no auth, signature-verified
-Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('midtrans.webhook');
+// DOKU payment — no auth, signature-verified (called by DOKU servers)
+Route::post('/payment/doku/notify', [\App\Http\Controllers\DokuPaymentController::class, 'notify'])->name('doku.notify');
+Route::get('/payment/doku/redirect', [\App\Http\Controllers\DokuPaymentController::class, 'redirect'])->name('doku.redirect');
 
 Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): void {
     // System endpoints
