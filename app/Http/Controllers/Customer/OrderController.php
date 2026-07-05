@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Models\Order;
-use App\Services\MidtransService;
+use App\Services\DokuService;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
 use Illuminate\Http\RedirectResponse;
@@ -126,15 +126,14 @@ class OrderController extends Controller
                 ] : null,
             ],
             'isLoggedIn' => $request->user() !== null,
-            'snapToken' => $request->session()->get('snap_token'),
         ]);
     }
 
     /**
-     * Create Snap payment token for a confirmed order.
+     * Create DOKU payment for a confirmed order and redirect to payment page.
      * Accessible by: logged-in customer, recovered guest, OR fresh checkout guest (CSRF-protected).
      */
-    public function pay(Order $order): \Illuminate\Http\JsonResponse
+    public function pay(Order $order): \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
     {
         // Ownership verification — permissive for checkout flow
         $user = auth()->user();
@@ -187,42 +186,42 @@ class OrderController extends Controller
         }
 
         try {
-            $midtrans = app(MidtransService::class);
+            $doku = app(DokuService::class);
 
-            // If already has a pending Snap token, return it
+            // Check for existing pending transaction
             $pendingTx = $order->paymentTransactions()
                 ->where('status', 'pending')
                 ->first();
 
-            if ($pendingTx) {
-                return response()->json([
-                    'snap_token' => $pendingTx->raw_response?->snap_token ?? null,
-                    'midtrans_order_id' => $pendingTx->midtrans_order_id,
-                    'message' => 'Token pembayaran sudah tersedia.',
-                ]);
+            if ($pendingTx && $order->doku_order_id) {
+                // Already has a pending payment — sync status
+                $doku->syncStatusFromDoku($order);
+                $order->refresh();
+
+                if ($order->payment_status === 'paid') {
+                    return redirect()->route('customer.orders.confirm', [
+                        'orderCode' => $order->order_code,
+                    ]);
+                }
             }
 
-            $snapToken = $midtrans->createSnapToken($order);
-
-            return response()->json([
-                'snap_token' => $snapToken,
-                'midtrans_order_id' => $order->midtrans_order_id,
-            ]);
+            $paymentUrl = $doku->createPayment($order);
+            return redirect()->away($paymentUrl);
         } catch (\Exception $e) {
-            Log::error('Failed to create Snap token', [
+            Log::error('Failed to create DOKU payment', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'error' => 'Gagal membuat token pembayaran. Silakan coba lagi.',
+                'error' => 'Gagal membuat pembayaran. Silakan coba lagi.',
             ], 500);
         }
     }
 
     /**
      * Payment status polling endpoint.
-     * Returns current payment status and Snap token for recovery.
+     * Returns current payment status and DOKU order ID.
      */
     public function paymentStatus(Order $order): \Illuminate\Http\JsonResponse
     {
@@ -232,11 +231,11 @@ class OrderController extends Controller
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
-        // If still pending, try to sync from Midtrans (webhook fallback)
-        if ($order->payment_status === 'pending' && $order->midtrans_order_id) {
+        // If still pending, try to sync from DOKU (webhook fallback)
+        if ($order->payment_status === 'pending' && $order->doku_order_id) {
             try {
-                $midtrans = app(MidtransService::class);
-                $midtrans->syncStatusFromMidtrans($order);
+                $doku = app(DokuService::class);
+                $doku->syncStatusFromDoku($order);
                 $order->refresh();
             } catch (\Exception $e) {
                 Log::warning('Payment status sync failed', [
@@ -246,19 +245,9 @@ class OrderController extends Controller
             }
         }
 
-        // Get existing Snap token for retry
-        $snapToken = null;
-        if ($order->payment_status === 'pending') {
-            $pendingTx = $order->paymentTransactions()
-                ->where('status', 'pending')
-                ->first();
-            $snapToken = $pendingTx?->raw_response?->snap_token ?? null;
-        }
-
         return response()->json([
             'payment_status' => $order->payment_status,
-            'snap_token' => $snapToken,
-            'midtrans_order_id' => $order->midtrans_order_id,
+            'doku_order_id' => $order->doku_order_id,
             'paid_at' => $order->paid_at?->toISOString(),
         ]);
     }
