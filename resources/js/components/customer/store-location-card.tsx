@@ -7,7 +7,7 @@ import OutletSheet from '@/components/customer/outlet-sheet';
 import LocationSheet from '@/components/customer/location-sheet';
 
 export default function StoreLocationCard() {
-    const { selectedOutlet, loading, error, retry } = useOutlet();
+    const { selectedOutlet, outlets, loading, error, retry } = useOutlet();
     const { summary: locationSummary } = useCustomerLocation();
     const [outletSheetOpen, setOutletSheetOpen] = useState(false);
     const [locationSheetOpen, setLocationSheetOpen] = useState(false);
@@ -72,7 +72,7 @@ export default function StoreLocationCard() {
                     <div className="truncate text-sm font-bold text-text">{selectedOutlet.name}</div>
                     <div className="text-[11px] text-text-muted">
                         {distanceText ? (
-                            <>{distanceText} · <span className="font-semibold text-primary">Terdekat</span></>
+                            <>{distanceText}{selectedOutlet.id === outlets[0]?.id && <> · <span className="font-semibold text-primary">Terdekat</span></>}</>
                         ) : locationSummary ? (
                             <span>{locationSummary}</span>
                         ) : (

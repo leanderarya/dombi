@@ -24,6 +24,7 @@ class CustomerOutletController extends Controller
 
         $outlets = Outlet::query()
             ->active()
+            ->with(['inventories' => fn ($q) => $q->where('is_active', true)])
             ->get();
 
         $result = $outlets->map(function (Outlet $outlet) use ($latitude, $longitude): array {
@@ -38,10 +39,7 @@ class CustomerOutletController extends Controller
                 ), 2);
             }
 
-            $hasStock = $outlet->inventories()
-                ->where('is_active', true)
-                ->whereRaw('current_stock - reserved_stock > 0')
-                ->exists();
+            $hasStock = $outlet->inventories->contains(fn ($inv) => ($inv->current_stock - $inv->reserved_stock) > 0);
 
             return [
                 'id' => $outlet->id,

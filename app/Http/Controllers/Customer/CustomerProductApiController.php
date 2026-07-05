@@ -69,7 +69,6 @@ class CustomerProductApiController extends Controller
                 'name' => $family->name,
                 'brand' => $family->brand,
                 'description' => $family->description,
-                'image_url' => $family->image,
                 'variants' => $variants->values(),
             ];
         });

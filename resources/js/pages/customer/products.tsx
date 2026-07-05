@@ -94,7 +94,7 @@ function ProductsInner() {
             params.set('outlet_id', String(outletId));
         }
 
-        fetch(`/customer/products?${params.toString()}`, {
+        fetch(`/customer/products/api?${params.toString()}`, {
             headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin',
             signal: controller.signal,
