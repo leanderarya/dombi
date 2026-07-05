@@ -12,17 +12,17 @@ class DokuService
 {
     private string $baseUrl;
     private string $clientId;
-    private string $apiKey;
+    private string $secretKey;
 
     public function __construct()
     {
         $this->baseUrl = config('doku.base_url') ?? 'https://api-sandbox.doku.com';
         $this->clientId = config('doku.client_id') ?? '';
-        $this->apiKey = config('doku.api_key') ?? '';
+        $this->secretKey = config('doku.api_key') ?? '';
     }
 
     /**
-     * Create a DOKU payment for an order.
+     * Create a DOKU Checkout payment for an order.
      * Returns the DOKU hosted payment page URL.
      */
     public function createPayment(Order $order): string
@@ -30,26 +30,23 @@ class DokuService
         $requestId = 'DMB-'.$order->id.'-'.time();
         $invoiceNumber = $order->order_code;
         $amount = (int) $order->total;
+        $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
 
         $body = [
             'order' => [
                 'invoice_number' => $invoiceNumber,
                 'amount' => $amount,
             ],
-            'payment' => [
-                'payment_due_date' => now()->addMinutes(30)->format('Y-m-d H:i:s'),
-                'payment_method' => 'QRIS',
-            ],
-            'customer' => [
-                'name' => $order->customer_name,
-                'email' => $order->customer_email ?? '',
-                'phone' => $order->customer_phone ?? '',
-            ],
         ];
 
-        $response = Http::withHeaders($this->generateHeaders($requestId, json_encode($body)))
+        $bodyJson = json_encode($body);
+        $endpoint = '/checkout/v1/payment';
+
+        $headers = $this->generateHeaders($requestId, $timestamp, $endpoint, $bodyJson);
+
+        $response = Http::withHeaders($headers)
             ->timeout(30)
-            ->post($this->baseUrl.'/v1/payment-url', $body);
+            ->post($this->baseUrl.$endpoint, $body);
 
         if (! $response->successful()) {
             Log::error('DOKU createPayment failed', [
@@ -61,17 +58,17 @@ class DokuService
         }
 
         $data = $response->json();
-        $paymentUrl = $data['payment']['url'] ?? null;
-        $dokuOrderId = $data['order']['invoice_number'] ?? $invoiceNumber;
+        $paymentUrl = $data['response']['payment']['url'] ?? $data['payment']['url'] ?? null;
+        $sessionId = $data['response']['order']['session_id'] ?? null;
 
         if (! $paymentUrl) {
-            throw new \Exception('DOKU response missing payment URL');
+            throw new \Exception('DOKU response missing payment URL: '.json_encode($data));
         }
 
         // Log transaction
         PaymentTransaction::create([
             'order_id' => $order->id,
-            'doku_order_id' => $dokuOrderId,
+            'doku_order_id' => $invoiceNumber,
             'payment_method' => 'qris',
             'amount' => $order->total,
             'status' => 'pending',
@@ -80,7 +77,7 @@ class DokuService
 
         // Update order
         $order->update([
-            'doku_order_id' => $dokuOrderId,
+            'doku_order_id' => $invoiceNumber,
             'payment_status' => 'pending',
         ]);
 
@@ -142,12 +139,22 @@ class DokuService
 
     /**
      * Verify DOKU webhook signature.
-     * SHA256(clientId + requestId + requestBody + apiKey)
+     * DOKU Non-SNAP signature: HMAC-SHA256 of assembled header/body fields.
      */
     public function verifySignature(array $payload, string $requestId, string $rawBody): bool
     {
-        $signatureInput = $this->clientId.$requestId.$rawBody.$this->apiKey;
-        $expected = hash('sha256', $signatureInput);
+        $timestamp = $payload['timestamp'] ?? '';
+        $requestTarget = '/payment/doku/notify';
+
+        $digest = base64_encode(hash('sha256', $rawBody, true));
+
+        $assembled = "Client-Id:{$this->clientId}\n"
+            ."Request-Id:{$requestId}\n"
+            ."Request-Timestamp:{$timestamp}\n"
+            ."Request-Target:{$requestTarget}\n"
+            ."Digest:{$digest}";
+
+        $expected = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
         $provided = $payload['signature'] ?? '';
 
         return hash_equals($expected, $provided);
@@ -163,11 +170,13 @@ class DokuService
         }
 
         $requestId = 'CHK-'.$order->id.'-'.time();
+        $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
+        $endpoint = '/checkout/v1/payment/'.$order->doku_order_id;
 
         try {
-            $response = Http::withHeaders($this->generateHeaders($requestId, ''))
+            $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, ''))
                 ->timeout(10)
-                ->get($this->baseUrl.'/v1/orders/'.$order->doku_order_id);
+                ->get($this->baseUrl.$endpoint);
 
             if ($response->successful()) {
                 return $response->json();
@@ -254,15 +263,24 @@ class DokuService
     }
 
     /**
-     * Generate DOKU API headers with signature.
+     * Generate DOKU Non-SNAP API headers with HMAC-SHA256 signature.
      */
-    private function generateHeaders(string $requestId, string $body): array
+    private function generateHeaders(string $requestId, string $timestamp, string $endpoint, string $body): array
     {
-        $signature = hash('sha256', $this->clientId.$requestId.$body.$this->apiKey);
+        $digest = base64_encode(hash('sha256', $body, true));
+
+        $assembled = "Client-Id:{$this->clientId}\n"
+            ."Request-Id:{$requestId}\n"
+            ."Request-Timestamp:{$timestamp}\n"
+            ."Request-Target:{$endpoint}\n"
+            ."Digest:{$digest}";
+
+        $signature = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
 
         return [
             'Client-Id' => $this->clientId,
             'Request-Id' => $requestId,
+            'Request-Timestamp' => $timestamp,
             'Signature' => $signature,
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
