@@ -93,7 +93,7 @@ class Order extends Model
     protected $fillable = [
         'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'recovery_token', 'status', 'fulfillment_type',
         'subtotal', 'delivery_fee', 'payment_method', 'payment_fee', 'total', 'customer_name', 'customer_phone',
-        'payment_status', 'midtrans_order_id', 'paid_at',
+        'payment_status', 'doku_order_id', 'paid_at',
         'recipient_name', 'recipient_phone',
         'customer_address', 'customer_address_detail', 'customer_landmark', 'latitude', 'longitude',
         'delivery_distance_km', 'notes', 'ordered_at', 'confirmation_expires_at',
