@@ -12,7 +12,7 @@ interface Variant {
     name: string;
     flavor: string | null;
     size: string | null;
-    selling_price: number;
+    price: number;
     is_active: boolean;
     available_stock?: number;
     stock_status?: string;

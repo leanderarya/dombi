@@ -9,7 +9,7 @@ interface Variant {
     name: string;
     flavor: string | null;
     size: string | null;
-    selling_price: number;
+    price: number;
     is_active: boolean;
     available_stock?: number;
     stock_status?: string;
@@ -52,7 +52,7 @@ return;
 }
 
         setAdding(true);
-        cart.addItem(selectedVariant.id, quantity, selectedVariant.selling_price);
+        cart.addItem(selectedVariant.id, quantity, selectedVariant.price);
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -113,7 +113,7 @@ return;
                                     <div className="text-sm font-medium text-text">{variant.size ?? variant.name}</div>
                                 </div>
                                 <div className="text-sm font-bold tabular-nums text-text">
-                                    {formatCurrency(variant.selling_price)}
+                                    {formatCurrency(variant.price)}
                                 </div>
                             </button>
                         );
@@ -154,7 +154,7 @@ return;
                                 <>
                                     <span>{adding ? 'Menambahkan...' : 'Tambah'}</span>
                                     <span className="text-white/80">&middot;</span>
-                                    <span>{formatCurrency(selectedVariant.selling_price * quantity)}</span>
+                                    <span>{formatCurrency(selectedVariant.price * quantity)}</span>
                                 </>
                             )}
                         </button>

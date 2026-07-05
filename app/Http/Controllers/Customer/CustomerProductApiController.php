@@ -47,6 +47,10 @@ class CustomerProductApiController extends Controller
                 // Price
                 $price = $outletId ? $variant->priceForOutlet($outletId) : (float) $variant->selling_price;
 
+                $stockStatus = $availableStock <= 0
+                    ? 'out_of_stock'
+                    : ($availableStock <= 5 ? 'low' : 'available');
+
                 return [
                     'id' => $variant->id,
                     'name' => $variant->name,
@@ -55,6 +59,7 @@ class CustomerProductApiController extends Controller
                     'price' => $price,
                     'sku' => $variant->sku,
                     'available_stock' => $availableStock,
+                    'stock_status' => $stockStatus,
                     'is_active' => $variant->is_active,
                 ];
             });

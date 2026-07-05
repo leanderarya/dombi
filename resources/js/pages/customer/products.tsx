@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Search, ThumbsUp } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
@@ -10,8 +10,8 @@ import StoreLocationCard from '@/components/customer/store-location-card';
 import VariantListItem from '@/components/customer/variant-list-item';
 import FilterChips from '@/components/ui/filter-chips';
 import { Skeleton } from '@/components/ui/skeleton';
+import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
-import { useCustomerLocation } from '@/lib/customer-location';
 import { sizeToMl } from '@/lib/size';
 import FavoritesProvider from '@/providers/favorites-provider';
 
@@ -20,7 +20,7 @@ interface Variant {
     name: string;
     flavor: string | null;
     size: string | null;
-    selling_price: number;
+    price: number;
     is_active: boolean;
     available_stock?: number;
     stock_status?: string;
@@ -54,29 +54,75 @@ interface FamilySection {
     totalVariants: number;
 }
 
-interface Props {
-    families: Family[];
-}
-
-export default function Products({ families }: Props) {
+function ProductsInner() {
+    const { selectedOutlet, loading: outletLoading } = useOutlet();
+    const [families, setFamilies] = useState<Family[]>([]);
+    const [productsLoading, setProductsLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
     const [sheetOpen, setSheetOpen] = useState(false);
     const [sheetVariants, setSheetVariants] = useState<Variant[]>([]);
     const [sheetFlavorName, setSheetFlavorName] = useState('');
     const [sheetFamilyName, setSheetFamilyName] = useState('');
-    const [loading, setLoading] = useState(true);
     const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>('pickup');
+    const abortRef = useRef<AbortController | null>(null);
+    const cacheRef = useRef<Map<number, Family[]>>(new Map());
+
     useFlashToast();
-    const { summary: locationSummary } = useCustomerLocation();
     const scrollRef = useRef<HTMLDivElement>(null);
     const sectionRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
-    useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 300);
+    // Fetch products when selected outlet changes
+    const fetchProducts = useCallback((outletId: number | null) => {
+        const cacheKey = outletId ?? 0;
+        if (cacheRef.current.has(cacheKey)) {
+            setFamilies(cacheRef.current.get(cacheKey)!);
+            setProductsLoading(false);
+            return;
+        }
 
-        return () => clearTimeout(timer);
+        abortRef.current?.abort();
+        const controller = new AbortController();
+        abortRef.current = controller;
+
+        setProductsLoading(true);
+
+        const params = new URLSearchParams();
+        if (outletId) {
+            params.set('outlet_id', String(outletId));
+        }
+
+        fetch(`/customer/products?${params.toString()}`, {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+            signal: controller.signal,
+        })
+            .then(async (res) => {
+                if (!res.ok) throw new Error('Failed to load products');
+                return res.json();
+            })
+            .then((data) => {
+                if (!controller.signal.aborted) {
+                    const fetched = data.families ?? [];
+                    cacheRef.current.set(cacheKey, fetched);
+                    setFamilies(fetched);
+                    setProductsLoading(false);
+                }
+            })
+            .catch((err) => {
+                if (err.name !== 'AbortError') {
+                    setProductsLoading(false);
+                }
+            });
     }, []);
+
+    useEffect(() => {
+        if (!outletLoading && selectedOutlet) {
+            fetchProducts(selectedOutlet.id);
+        }
+    }, [selectedOutlet, outletLoading, fetchProducts]);
+
+    const loading = outletLoading || productsLoading;
 
     const filterOptions = useMemo(() => {
         const options: { key: string; label: string; icon?: React.ReactNode }[] = [{ key: 'all', label: 'Semua', icon: <ThumbsUp className="h-3.5 w-3.5" /> }];
@@ -90,8 +136,8 @@ export default function Products({ families }: Props) {
 
     const filteredFamilies = useMemo(() => {
         if (!search) {
-return families;
-}
+            return families;
+        }
 
         const q = search.toLowerCase();
 
@@ -106,14 +152,14 @@ return families;
 
         for (const family of filteredFamilies) {
             if (activeFilter !== 'all' && String(family.id) !== activeFilter) {
-continue;
-}
+                continue;
+            }
 
             const activeVariants = (family.variants ?? []).filter(v => v.is_active);
 
             if (activeVariants.length === 0) {
-continue;
-}
+                continue;
+            }
 
             const flavorMap = new Map<string | null, Variant[]>();
 
@@ -121,8 +167,8 @@ continue;
                 const key = variant.flavor ?? '__no_flavor__';
 
                 if (!flavorMap.has(key)) {
-flavorMap.set(key, []);
-}
+                    flavorMap.set(key, []);
+                }
 
                 flavorMap.get(key)!.push(variant);
             }
@@ -131,8 +177,8 @@ flavorMap.set(key, []);
 
             for (const [key, variants] of flavorMap) {
                 const flavor = key === '__no_flavor__' ? null : key;
-                const sortedByPrice = [...variants].sort((a, b) => a.selling_price - b.selling_price);
-                const lowestPrice = sortedByPrice[0]?.selling_price ?? 0;
+                const sortedByPrice = [...variants].sort((a, b) => a.price - b.price);
+                const lowestPrice = sortedByPrice[0]?.price ?? 0;
                 const displayLabel = flavor ? `${family.name} ${flavor}` : family.name;
                 flavorGroups.push({
                     flavor, familyId: family.id, familyName: family.name,
@@ -187,10 +233,7 @@ flavorMap.set(key, []);
     }, [loading, familySections]);
 
     return (
-        <FavoritesProvider>
-            <Head title="Produk" />
-            <CustomerLocationBootstrap />
-
+        <>
             <div className="min-h-dvh bg-background" ref={scrollRef}>
                 {/* ── GREEN HEADER — bg extends into safe area ── */}
                 <div className="bg-primary">
@@ -212,10 +255,7 @@ flavorMap.set(key, []);
                 <div className="relative -mt-8 z-10 rounded-t-[1.5rem] bg-white">
                     <div className="px-4 pt-6 pb-24 space-y-4">
                         {/* Outlet Card */}
-                        <StoreLocationCard
-                            name="Outlet Dombi"
-                            distance={locationSummary || undefined}
-                        />
+                        <StoreLocationCard />
 
                         {/* Sticky search + chips */}
                         <div className="sticky top-safe z-20 -mx-4 bg-white/80 px-4 pb-3 pt-2 backdrop-blur-lg">
@@ -318,6 +358,18 @@ flavorMap.set(key, []);
                 variants={sheetVariants}
             />
             <CustomerBottomNav />
+        </>
+    );
+}
+
+export default function Products() {
+    return (
+        <FavoritesProvider>
+            <OutletProvider>
+                <Head title="Produk" />
+                <CustomerLocationBootstrap />
+                <ProductsInner />
+            </OutletProvider>
         </FavoritesProvider>
     );
 }

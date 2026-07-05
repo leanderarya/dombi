@@ -11,15 +11,7 @@ class ProductController extends Controller
 {
     public function index(): Response
     {
-        $families = ProductFamily::query()
-            ->where('is_active', true)
-            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
-            ->orderBy('name')
-            ->get();
-
-        return Inertia::render('customer/products', [
-            'families' => $families,
-        ]);
+        return Inertia::render('customer/products');
     }
 
     public function show(ProductFamily $family): Response
