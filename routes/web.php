@@ -14,6 +14,7 @@ use App\Http\Controllers\Customer\CustomerOutletController;
 use App\Http\Controllers\Customer\GuestOrderRecoveryController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
+use App\Http\Controllers\Customer\CustomerProductApiController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
 use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\Customer\RecipientController;
@@ -93,6 +94,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::get('/about', fn () => Inertia::render('customer/about'))->name('about');
         Route::get('/outlets', [CustomerOutletController::class, 'index'])->name('outlets.index');
         Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
+        Route::get('/products/api', [CustomerProductApiController::class, 'index'])->name('products.api');
         Route::get('/products/{family}', [CustomerProductController::class, 'show'])->name('products.show');
         Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
         Route::post('/cart/remove', [CartController::class, 'removeItem'])->name('cart.remove');
