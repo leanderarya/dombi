@@ -1,10 +1,3 @@
-import DeliveryStatusBadge from '@/components/delivery-status-badge';
-import OwnerPageShell from '@/components/owner/owner-page-shell';
-import Pagination from '@/components/pagination';
-import EmptyState from '@/components/ui/empty-state';
-import { Select } from '@/components/ui/select';
-import { SkeletonPage } from '@/components/ui/skeleton';
-import { formatDate } from '@/lib/format';
 import { Link, router } from '@inertiajs/react';
 import {
     ArrowDownRight,
@@ -14,6 +7,13 @@ import {
     Truck,
     XCircle,
 } from 'lucide-react';
+import DeliveryStatusBadge from '@/components/delivery-status-badge';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
+import Pagination from '@/components/pagination';
+import EmptyState from '@/components/ui/empty-state';
+import { Select } from '@/components/ui/select';
+import { SkeletonPage } from '@/components/ui/skeleton';
+import { formatDate } from '@/lib/format';
 
 const statusOptions = [
     { value: '', label: 'Semua' },
@@ -70,6 +70,7 @@ export default function OwnerDeliveriesIndex({
                                     'text-emerald-600 bg-emerald-50 ring-emerald-200',
                                 failed: 'text-red-600 bg-red-50 ring-red-200',
                             };
+
                             return (
                                 <button
                                     key={opt.value}

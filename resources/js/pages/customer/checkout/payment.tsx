@@ -20,13 +20,13 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const [paymentExpanded, setPaymentExpanded] = useState(false);
     const paymentOptions = summary.payment_options ?? [];
     const form = useForm({
-        payment_method: paymentOptions[0]?.value ?? 'cod',
+        payment_method: paymentOptions[0]?.value ?? 'qris',
     });
     const selectedOption = paymentOptions.find((option: any) => option.value === form.data.payment_method) ?? paymentOptions[0];
     const paymentFee = Math.round((summary.subtotal ?? 0) * (selectedOption?.fee_rate ?? 0) * 100) / 100;
     const total = (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
     const deliveryBlocked = isDelivery && !!summary.delivery_quote && summary.delivery_quote.is_serviceable === false;
-    const ctaLabel = buildCtaLabel(form.data.payment_method, total);
+    const ctaLabel = `Bayar ${formatCurrency(total)}`;
 
     // Guard: redirect to cart if no items
     useEffect(() => {
@@ -168,7 +168,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
             {/* Pembayaran */}
             <section className="mt-4 rounded-xl border border-border bg-white p-4">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-[13px] text-text-subtle">Pembayaran</span>
+                    <span className="text-[13px] text-text-subtle">Metode Pembayaran</span>
                     <button
                         type="button"
                         onClick={() => setPaymentExpanded(!paymentExpanded)}
@@ -181,12 +181,9 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 {/* Selected payment */}
                 <div className="flex items-center justify-between rounded-xl bg-surface-muted px-4 py-3">
                     <div>
-                        <div className="text-sm font-semibold text-text">{selectedOption?.label ?? 'COD'}</div>
+                        <div className="text-sm font-semibold text-text">{selectedOption?.label ?? 'QRIS'}</div>
                         <div className="mt-0.5 text-xs text-text-muted">
-                            {form.data.payment_method === 'cod' && 'Bayar saat produk diterima'}
-                            {form.data.payment_method === 'qris' && 'Scan QR untuk membayar'}
-                            {form.data.payment_method === 'transfer' && 'Transfer bank'}
-                            {form.data.payment_method === 'card' && 'Kartu kredit/debit'}
+                            {selectedOption?.description ?? 'Scan QR untuk membayar'}
                         </div>
                     </div>
                     {paymentFee > 0 && (
@@ -213,11 +210,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                 >
                                     <div>
                                         <div className="text-sm font-medium text-text">{option.label}</div>
-                                        <div className="mt-0.5 text-[11px] text-text-subtle">
-                                            {option.value === 'qris' && 'Scan QR untuk membayar'}
-                                            {option.value === 'card' && 'Kartu kredit/debit'}
-                                            {option.value === 'transfer' && 'Transfer bank'}
-                                        </div>
+                                        <div className="mt-0.5 text-[11px] text-text-subtle">{option.description}</div>
                                     </div>
                                     {option.fee_rate > 0 && (
                                         <div className="text-xs font-bold tabular-nums text-text-muted">
@@ -235,7 +228,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 <div className="space-y-1">
                     <SummaryRow label="Subtotal" value={formatCurrency(summary.subtotal)} />
                     {summary.delivery_fee > 0 && <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />}
-                    {paymentFee > 0 && <SummaryRow label="Biaya admin" value={formatCurrency(paymentFee)} />}
+                    {paymentFee > 0 && <SummaryRow label="Biaya Layanan" value={formatCurrency(paymentFee)} />}
                 </div>
                 <div className="mt-2 border-t border-white/20 pt-2 flex items-center justify-between">
                     <span className="text-sm font-semibold text-white">Total</span>
@@ -281,14 +274,4 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
             <span className="font-medium tabular-nums text-white/90">{value}</span>
         </div>
     );
-}
-
-function buildCtaLabel(paymentMethod: string, total: number): string {
-    const formattedTotal = formatCurrency(total);
-
-    if (paymentMethod === 'qris' || paymentMethod === 'card') {
-        return `Bayar ${formattedTotal}`;
-    }
-
-    return `Buat Pesanan ${formattedTotal}`;
 }

@@ -1,7 +1,7 @@
-import { createPortal } from 'react-dom';
 import { useForm } from '@inertiajs/react';
-import CustomSelect from '@/components/ui/custom-select';
 import { X, Plus, Minus, StickyNote, ChevronDown } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import CustomSelect from '@/components/ui/custom-select';
 
 interface Variant {
     id: number;
@@ -56,7 +56,9 @@ export default function RestockCreateDialog({ open, families = [], inventories =
         });
     };
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     const selectedCount = form.data.items.filter((i) => i.variant_id).length;
     const totalQty = form.data.items.reduce((sum, i) => sum + i.quantity, 0);
@@ -103,7 +105,10 @@ export default function RestockCreateDialog({ open, families = [], inventories =
                                     type="button"
                                     onClick={() => {
                                         const current = form.data.items[0]?.quantity ?? 1;
-                                        if (current > 1) updateItem(0, 'quantity', current - 1);
+
+                                        if (current > 1) {
+updateItem(0, 'quantity', current - 1);
+}
                                     }}
                                     className="w-9 h-9 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors"
                                 >

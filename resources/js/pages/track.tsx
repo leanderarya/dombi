@@ -1,11 +1,12 @@
 import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2, ChevronLeft, Clock, MapPin, Navigation, Package, Phone, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, Clock, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/offline-banner';
-import StatusBadge from '@/components/ui/status-badge';
 import Dialog from '@/components/ui/dialog';
+import StatusBadge from '@/components/ui/status-badge';
+import { useCountdown } from '@/hooks/use-countdown';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 type TrackOrder = {
@@ -19,6 +20,8 @@ type TrackOrder = {
     subtotal: number;
     delivery_fee: number;
     payment_method: string;
+    confirmation_expires_at?: string | null;
+    payment_status?: string | null;
     ordered_at?: string;
     outlet?: { name: string; address?: string; phone?: string; operating_hours?: string; latitude?: number; longitude?: number };
     items: { product_name: string; quantity: number; price: number; subtotal: number }[];
@@ -99,6 +102,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     const [cancelLast4Hp, setCancelLast4Hp] = useState('');
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [cancelLoading, setCancelLoading] = useState(false);
+    const countdown = useCountdown(order?.confirmation_expires_at);
 
     if (!found || !order) {
         return <NotFoundState />;
@@ -198,10 +202,22 @@ return;
                 {STATUS_GUIDANCE[order.status] && (() => {
                     const guidance = STATUS_GUIDANCE[order.status];
                     const isPickupReady = order.status === 'ready_for_pickup' && order.outlet?.latitude && order.outlet?.longitude;
+                    const showCountdown = order.status === 'pending_confirmation' && !countdown.expired && countdown.totalSeconds > 0;
 
                     return (
                         <div className="mt-3 rounded-xl border border-border bg-white p-4">
                             <div className="text-sm font-semibold text-text">{guidance.description}</div>
+                            {showCountdown && (
+                                <div className="mt-2 flex items-center gap-2">
+                                    <div className="flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5">
+                                        <Clock className="h-3.5 w-3.5 text-amber-600" />
+                                        <span className="text-sm font-bold tabular-nums text-amber-700">
+                                            {String(countdown.minutes).padStart(2, '0')}:{String(countdown.seconds).padStart(2, '0')}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs text-text-subtle">sisa waktu konfirmasi</span>
+                                </div>
+                            )}
                             {guidance.nextStep && (
                                 <div className="mt-1 text-xs text-text-muted">{guidance.nextStep}</div>
                             )}
@@ -469,6 +485,13 @@ return;
                             <div className="text-[13px] text-text">Pesanan Kadaluarsa</div>
                         </div>
                         <div className="mt-2 text-sm text-text-muted">Outlet tidak memberikan konfirmasi dalam batas waktu.</div>
+                        <Link
+                            href="/customer/home"
+                            className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                        >
+                            <RotateCcw className="h-4 w-4" />
+                            Pesan Ulang
+                        </Link>
                     </div>
                 )}
 

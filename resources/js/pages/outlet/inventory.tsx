@@ -1,12 +1,12 @@
 import { Head, useForm } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, ClipboardCheck, Package, Plus } from 'lucide-react';
 import { useState } from 'react';
-import BottomSheet from '@/components/ui/bottom-sheet';
-import EmptyState from '@/components/ui/empty-state';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
-import StatusBadge from '@/components/ui/status-badge';
+import BottomSheet from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
 export default function OutletInventory({ outlet, inventories, families }: any) {

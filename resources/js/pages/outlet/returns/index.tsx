@@ -1,14 +1,14 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import ReturnCreateDialog from '@/components/outlet/return-create-dialog';
+import Pagination from '@/components/pagination';
+import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
-import OutletPageShell from '@/components/outlet/outlet-page-shell';
-import Pagination from '@/components/pagination';
 import StatusBadge from '@/components/ui/status-badge';
-import { Button } from '@/components/ui/button';
 import OutletLayout from '@/layouts/outlet-layout';
-import ReturnCreateDialog from '@/components/outlet/return-create-dialog';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 const statusFilters = [

@@ -85,6 +85,11 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(3)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Pay (Snap token retry): 5 per minute per user/IP (allow retry after Snap close/error)
+        RateLimiter::for('pay-token', function (Request $request) {
+            return Limit::perMinute(5)->by($request->user()?->id ?: $request->ip());
+        });
+
         // Tracking: 30 per minute per IP (prevent abuse of public tracking endpoint)
         RateLimiter::for('track', function (Request $request) {
             return Limit::perMinute(30)->by($request->ip());

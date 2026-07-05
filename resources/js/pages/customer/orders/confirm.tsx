@@ -1,107 +1,321 @@
-import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2, ChevronRight, Clock, Home, MapPin, Package, Truck } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { ArrowLeft, CheckCircle2, Clock, Copy, Loader2, Package, Shield, XCircle } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { formatCurrency } from '@/lib/format';
 
-interface OrderItem {
-    product_name: string;
-    variant_name: string | null;
-    quantity: number;
-    subtotal: number;
+type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired';
+
+interface SnapWindow extends Window {
+    snap?: {
+        pay: (token: string, options: Record<string, any>) => void;
+    };
 }
 
-interface Order {
-    id: number;
-    order_code: string;
-    items: OrderItem[];
-    total: number;
-    fulfillment_type: string;
-    recovery_token: string;
-    outlet: { name: string } | null;
+declare const window: SnapWindow;
+
+// Snap JS URL based on environment
+const SNAP_JS_URL = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === 'true'
+    ? 'https://app.midtrans.com/snap/snap.js'
+    : 'https://app.sandbox.midtrans.com/snap/snap.js';
+
+export default function ConfirmPage({ order, isLoggedIn, flash, ...props }: any) {
+    const snapToken = props.snap_token ?? flash?.snap_token ?? null;
+    const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
+        order.payment_status === 'paid' ? 'paid' : 'pending'
+    );
+    const [snapLoaded, setSnapLoaded] = useState(false);
+    const [snapOpened, setSnapOpened] = useState(false);
+    const [countdown, setCountdown] = useState<number | null>(null);
+    const [copied, setCopied] = useState(false);
+    const snapAttempted = useRef(false);
+    const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+
+    // Load Snap JS dynamically
+    useEffect(() => {
+        if (!snapToken || order.payment_status === 'paid') {
+return;
 }
 
-interface Props {
-    order: Order;
-    isLoggedIn: boolean;
+        // Already loaded?
+        if (document.getElementById('midtrans-snap-js')) {
+            setSnapLoaded(true);
+
+            return;
+        }
+
+        const script = document.createElement('script');
+        script.id = 'midtrans-snap-js';
+        script.src = SNAP_JS_URL;
+        script.setAttribute('data-client-key', import.meta.env.VITE_MIDTRANS_CLIENT_KEY ?? '');
+        script.onload = () => setSnapLoaded(true);
+        script.onerror = () => console.error('Failed to load Snap JS');
+        document.head.appendChild(script);
+    }, [snapToken, order.payment_status]);
+
+    // Auto-open Snap once loaded (first visit only)
+    useEffect(() => {
+        if (!snapLoaded || !snapToken || snapAttempted.current) {
+return;
 }
 
-export default function OrderConfirm({ order, isLoggedIn }: Props) {
-    const isPickup = order.fulfillment_type === 'pickup';
-    const itemCount = order.items.reduce((sum, item) => sum + item.quantity, 0);
-    const estimatedTime = isPickup ? '15-30 menit' : '30-60 menit';
+        if (order.payment_status === 'paid' || paymentStatus === 'paid') {
+return;
+}
+
+        snapAttempted.current = true;
+        openSnap();
+    }, [snapLoaded, snapToken]);
+
+    // Poll payment status as webhook fallback
+    useEffect(() => {
+        if (paymentStatus !== 'pending') {
+return;
+}
+
+        pollInterval.current = setInterval(async () => {
+            try {
+                const response = await fetch(`/customer/orders/${order.id}/payment-status`, {
+                    headers: { 'Accept': 'application/json' },
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.payment_status === 'paid') {
+                        setPaymentStatus('paid');
+
+                        if (pollInterval.current) {
+clearInterval(pollInterval.current);
+}
+
+                        router.reload();
+                    } else if (['failed', 'expired', 'cancelled'].includes(data.payment_status)) {
+                        setPaymentStatus(data.payment_status as PaymentStatus);
+
+                        if (pollInterval.current) {
+clearInterval(pollInterval.current);
+}
+                    }
+                }
+            } catch {
+                // Silent fail — will retry next interval
+            }
+        }, 5000);
+
+        return () => {
+            if (pollInterval.current) {
+clearInterval(pollInterval.current);
+}
+        };
+    }, [paymentStatus]);
+
+    // Countdown timer
+    useEffect(() => {
+        if (!order.confirmation_expires_at) {
+return;
+}
+
+        const target = new Date(order.confirmation_expires_at).getTime();
+
+        const tick = () => {
+            const remaining = Math.max(0, Math.floor((target - Date.now()) / 1000));
+            setCountdown(remaining);
+
+            if (remaining <= 0) {
+                setPaymentStatus('expired');
+            }
+        };
+
+        tick();
+        const timer = setInterval(tick, 1000);
+
+        return () => clearInterval(timer);
+    }, [order.confirmation_expires_at]);
+
+    const openSnap = useCallback(() => {
+        if (!snapToken || !window.snap) {
+return;
+}
+
+        setSnapOpened(true);
+        window.snap.pay(snapToken, {
+            onSuccess: () => {
+                setPaymentStatus('paid');
+                router.reload();
+            },
+            onPending: () => {
+                // Snap shown with QR/instructions — polling will catch settlement
+            },
+            onError: () => {
+                setSnapOpened(false);
+            },
+            onClose: () => {
+                setSnapOpened(false);
+            },
+        });
+    }, [snapToken]);
+
+    const handleCopy = useCallback(() => {
+        navigator.clipboard.writeText(order.order_code).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        });
+    }, [order.order_code]);
+
+    const statusConfig: Record<PaymentStatus, { icon: typeof CheckCircle2; color: string; bg: string; border: string; title: string; message: string }> = {
+        paid: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', title: 'Pembayaran Berhasil', message: 'Pesanan Anda sedang diproses oleh outlet.' },
+        pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', title: 'Menunggu Pembayaran', message: snapToken ? 'Selesaikan pembayaran di Snap.' : 'Menyiapkan token pembayaran...' },
+        failed: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Pembayaran Gagal', message: 'Pembayaran tidak berhasil diproses.' },
+        expired: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', title: 'Waktu Habis', message: 'Batas waktu pembayaran telah berakhir.' },
+    };
+
+    const status = statusConfig[paymentStatus];
+    const StatusIcon = status.icon;
 
     return (
         <CustomerMobileLayout hideTopBar hideCartBar hideBottomNav>
-            <Head title="Pesanan Berhasil" />
-
-            <div className="flex flex-col items-center pt-8 text-center">
-                {/* Animated Checkmark */}
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 animate-[scaleIn_0.5s_ease-out]">
-                    <CheckCircle2 className="h-10 w-10 text-emerald-600" />
-                </div>
-
-                <h1 className="mt-5 text-xl font-bold text-text">Pesanan Berhasil!</h1>
-
-                {/* Order Code */}
-                <div className="mt-3 rounded-xl bg-surface-muted px-4 py-2">
-                    <span className="text-xs text-text-muted">Kode Pesanan</span>
-                    <div className="mt-0.5 text-lg font-bold tabular-nums tracking-wider text-text">
-                        {order.order_code}
+            <div className="flex min-h-[80dvh] flex-col">
+                {/* Header */}
+                <div className="mb-6 flex items-center gap-3">
+                    <button
+                        onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/')}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm"
+                    >
+                        <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <div>
+                        <h1 className="text-lg font-bold text-slate-900">Konfirmasi Pesanan</h1>
+                        <p className="text-xs text-slate-500">#{order.order_code}</p>
                     </div>
                 </div>
 
-                {/* Summary Card */}
-                <div className="mt-6 w-full rounded-xl border border-border bg-white p-4 text-left">
-                    <div className="space-y-2.5">
-                        <div className="flex items-center gap-3 text-sm">
-                            <Package className="h-4 w-4 shrink-0 text-text-subtle" />
-                            <span className="text-text-muted">{itemCount} Produk</span>
-                            <span className="ml-auto font-semibold tabular-nums text-text">{formatCurrency(order.total)}</span>
+                {/* Status Card */}
+                <div className={`rounded-2xl border ${status.border} ${status.bg} p-6 text-center`}>
+                    <StatusIcon className={`mx-auto mb-3 h-12 w-12 ${status.color}`} />
+                    <h2 className={`text-lg font-bold ${status.color}`}>{status.title}</h2>
+                    <p className="mt-1 text-sm text-slate-600">{status.message}</p>
+
+                    {/* Countdown for pending */}
+                    {paymentStatus === 'pending' && countdown !== null && countdown > 0 && (
+                        <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-600">
+                            <Clock className="h-3 w-3" />
+                            <span>{formatTime(countdown)}</span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm">
-                            {isPickup ? (
-                                <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
-                            ) : (
-                                <Truck className="h-4 w-4 shrink-0 text-text-subtle" />
-                            )}
-                            <span className="text-text-muted">
-                                {isPickup ? 'Ambil di Outlet' : 'Kurir Dombi'}
-                            </span>
-                            {order.outlet && (
-                                <span className="ml-auto text-xs text-text-subtle">{order.outlet.name}</span>
-                            )}
+                    )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="mt-4 space-y-3">
+                    {/* Pending: show retry button if Snap closed */}
+                    {paymentStatus === 'pending' && snapToken && !snapOpened && (
+                        <button
+                            onClick={openSnap}
+                            className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
+                        >
+                            {snapAttempted.current ? 'Lanjutkan Pembayaran' : 'Bayar Sekarang'}
+                        </button>
+                    )}
+
+                    {/* Pending: loading indicator while Snap is opening */}
+                    {paymentStatus === 'pending' && snapOpened && (
+                        <div className="flex items-center justify-center gap-2 rounded-xl bg-white py-3.5 text-sm text-slate-500">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Menunggu pembayaran...</span>
                         </div>
-                        <div className="flex items-center gap-3 text-sm">
-                            <Clock className="h-4 w-4 shrink-0 text-text-subtle" />
-                            <span className="text-text-muted">Estimasi</span>
-                            <span className="ml-auto font-medium text-text">{estimatedTime}</span>
+                    )}
+
+                    {/* Pending: no token yet */}
+                    {paymentStatus === 'pending' && !snapToken && (
+                        <div className="flex items-center justify-center gap-2 rounded-xl bg-white py-3.5 text-sm text-slate-500">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Menyiapkan pembayaran...</span>
+                        </div>
+                    )}
+
+                    {/* Paid: go to order */}
+                    {paymentStatus === 'paid' && (
+                        <button
+                            onClick={() => isLoggedIn ? router.visit(`/customer/orders/${order.id}`) : router.visit(`/track/${order.recovery_token}`)}
+                            className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
+                        >
+                            Lihat Pesanan
+                        </button>
+                    )}
+
+                    {/* Failed/Expired: retry or go home */}
+                    {(paymentStatus === 'failed' || paymentStatus === 'expired') && (
+                        <>
+                            <button
+                                onClick={() => router.visit('/customer/checkout')}
+                                className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
+                            >
+                                Coba Lagi
+                            </button>
+                            <button
+                                onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/')}
+                                className="w-full rounded-xl bg-white py-3.5 text-sm font-bold text-slate-600 shadow-sm active:scale-[0.98]"
+                            >
+                                Kembali
+                            </button>
+                        </>
+                    )}
+                </div>
+
+                {/* Order Summary */}
+                <div className="mt-auto pt-6">
+                    <div className="rounded-2xl bg-white p-4 shadow-sm">
+                        <div className="mb-3 flex items-center justify-between">
+                            <span className="text-xs font-medium text-slate-500">Kode Pesanan</span>
+                            <button onClick={handleCopy} className="flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <Copy className="h-3 w-3" />
+                                {copied ? 'Disalin!' : 'Salin'}
+                            </button>
+                        </div>
+                        <p className="mb-4 text-center font-mono text-lg font-bold tracking-widest text-slate-900">{order.order_code}</p>
+                        <div className="space-y-2 border-t border-slate-100 pt-3">
+                            {order.items?.map((item: any, idx: number) => (
+                                <div key={idx} className="flex justify-between text-sm">
+                                    <span className="text-slate-600">{item.product_name}{item.variant_name ? ` - ${item.variant_name}` : ''} x{item.quantity}</span>
+                                    <span className="font-medium text-slate-900">{formatCurrency(item.subtotal)}</span>
+                                </div>
+                            ))}
+                            <div className="flex justify-between border-t border-slate-100 pt-2 text-sm font-bold">
+                                <span className="text-slate-900">Total</span>
+                                <span className="text-emerald-600">{formatCurrency(order.total)}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* CTAs */}
-                <div className="mt-8 w-full space-y-3">
-                    <Link
-                        href={isLoggedIn ? `/customer/orders/${order.id}` : `/track/${order.recovery_token}`}
-                        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:opacity-80"
-                    >
-                        Lacak Pesanan
-                        <ChevronRight className="h-4 w-4" />
-                    </Link>
-                    <Link
-                        href="/customer/home"
-                        className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
-                    >
-                        <Home className="h-4 w-4" />
-                        Kembali ke Beranda
-                    </Link>
-                </div>
+                    {/* Trust badges */}
+                    <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-400">
+                        <span className="flex items-center gap-1">
+                            <Shield className="h-3 w-3" />
+                            Pembayaran Aman
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <Package className="h-3 w-3" />
+                            Midtrans
+                        </span>
+                    </div>
 
-                {/* Helper text */}
-                <p className="mt-6 px-8 text-xs leading-relaxed text-text-subtle">
-                    Simpan kode pelacakan untuk cek pesanan nanti.
-                </p>
+                    {/* Guest recovery */}
+                    {!isLoggedIn && (
+                        <div className="mt-4 rounded-xl bg-blue-50 p-3 text-center">
+                            <p className="text-xs text-blue-700">
+                                Simpan kode pesanan untuk melacak pesanan Anda.
+                            </p>
+                        </div>
+                    )}
+                </div>
             </div>
         </CustomerMobileLayout>
     );
+}
+
+function formatTime(seconds: number): string {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+
+    return `${m}:${s.toString().padStart(2, '0')}`;
 }

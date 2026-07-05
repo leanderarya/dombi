@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { MapPin } from 'lucide-react';
 import { lazy, Suspense } from 'react';
+import PhoneInput from '@/components/ui/phone-input';
 import CurrentLocationButton from './current-location-button';
 
 const LeafletPicker = lazy(() => import('./leaflet-picker'));
@@ -73,7 +74,7 @@ export default function AddressForm({ data, errors, processing, setData, onSubmi
             <Field label="Nama Penerima" placeholder="Nama lengkap penerima" value={data.recipient_name} error={errors.recipient_name} onChange={(v) => setData('recipient_name', v)} required />
 
             {/* Phone */}
-            <Field label="Nomor Telepon" placeholder="08xxxxxxxxxx" value={data.phone} error={errors.phone} onChange={(v) => setData('phone', v)} type="tel" required />
+            <PhoneInput label="Nomor Telepon" value={data.phone} error={errors.phone} onChange={(v) => setData('phone', v)} required />
 
             {/* Address */}
             <div>

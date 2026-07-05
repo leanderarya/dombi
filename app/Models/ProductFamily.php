@@ -11,7 +11,7 @@ class ProductFamily extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'name', 'brand', 'description', 'is_active',
+        'name', 'brand', 'description', 'image', 'is_active',
     ];
 
     protected function casts(): array

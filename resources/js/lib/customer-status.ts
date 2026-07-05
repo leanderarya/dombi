@@ -8,6 +8,7 @@ export function orderStatusLabel(status?: string | null): string {
     if (!status) {
         return '-';
     }
+
     return getOrderStatus(status).label;
 }
 
@@ -17,6 +18,7 @@ export function deliveryStatusLabel(status?: string | null): string {
     if (!status) {
         return '-';
     }
+
     return getDeliveryStatus(status).label;
 }
 

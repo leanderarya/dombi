@@ -1,7 +1,7 @@
-import { createPortal } from 'react-dom';
 import { useForm } from '@inertiajs/react';
 import { Package, TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatDate } from '@/lib/format';
 
 interface Props {
@@ -110,7 +110,7 @@ return null;
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
             {/* Sheet */}
-            <div className="relative w-full max-w-lg animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)]" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="relative w-full max-w-lg animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-safe" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
                 {/* Drag handle */}
                 <div className="sticky top-0 z-10 flex justify-center bg-white pt-3 pb-2">
                     <div className="h-1 w-12 rounded-full bg-slate-300" />
@@ -209,5 +209,7 @@ return null;
         </div>
     ,
         document.body,
-    );;
+    );
+
+;
 }

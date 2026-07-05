@@ -31,6 +31,7 @@ class CartStore {
 
         if (existing) {
             existing.quantity += qty;
+
             if (price > 0) {
                 existing.price = price;
             }

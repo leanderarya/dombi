@@ -21,16 +21,15 @@ interface Variant {
 interface Props {
     variant: Variant;
     familyId: number;
-    familyName: string;
     familyDescription: string | null;
-    familyBrand: string | null;
     displayPrice: number;
     displayLabel: string;
+    variantCount?: number;
     onQuickAdd?: () => void;
     loading?: boolean;
 }
 
-const VariantListItem = memo(function VariantListItem({ variant, familyId, familyName, familyDescription, familyBrand, displayPrice, displayLabel, onQuickAdd, loading }: Props) {
+const VariantListItem = memo(function VariantListItem({ variant, familyId, familyDescription, displayPrice, displayLabel, variantCount = 1, onQuickAdd, loading }: Props) {
     const [adding, setAdding] = useState(false);
     const [toast, setToast] = useState(false);
     const cart = useCart();
@@ -38,14 +37,15 @@ const VariantListItem = memo(function VariantListItem({ variant, familyId, famil
 
     const isFav = isFavorite(variant.id);
     const isOutOfStock = variant.stock_status === 'out_of_stock';
+    const showMulaiDari = variantCount > 1;
 
     const handleQuickAdd = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
         if (adding || isOutOfStock) {
-return;
-}
+            return;
+        }
 
         if (onQuickAdd) {
             onQuickAdd();
@@ -89,7 +89,7 @@ return;
     return (
         <Link
             href={`/customer/products/${familyId}`}
-            className="flex items-center gap-3.5 px-4 py-3 active:bg-surface-muted"
+            className={`flex items-center gap-3.5 p-3 active:bg-surface-muted transition-colors ${isOutOfStock ? 'opacity-50' : ''}`}
         >
             {/* Image */}
             <div className="relative shrink-0">
@@ -102,7 +102,7 @@ return;
                         <button
                             type="button"
                             onClick={handleFavorite}
-                            className="absolute -right-1 -top-1 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm"
+                            className="absolute -right-1 -top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm"
                             aria-label={isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'}
                         >
                             <Heart
@@ -115,7 +115,7 @@ return;
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium text-text">
+                <div className="text-sm font-semibold text-text">
                     {displayLabel}
                 </div>
                 {familyDescription && (
@@ -123,21 +123,25 @@ return;
                         {familyDescription}
                     </div>
                 )}
-                <div className="mt-1">
-                    <div className="text-xs text-text-muted">Mulai dari</div>
-                    <div className="text-base font-semibold tabular-nums text-text">{formatCurrency(displayPrice)}</div>
-                </div>
-                {variant.available_stock !== undefined && (
-                    <div className="mt-0.5 text-xs text-text-muted">
-                        Stok: {variant.available_stock}
+                <div className="mt-1 flex items-center justify-between">
+                    <div>
+                        {showMulaiDari && (
+                            <div className="text-[10px] text-text-muted">Mulai dari</div>
+                        )}
+                        <div className="text-sm font-bold tabular-nums text-text">{formatCurrency(displayPrice)}</div>
                     </div>
-                )}
+                    {isOutOfStock ? (
+                        <span className="stock-badge stock-badge-out">Habis</span>
+                    ) : variant.available_stock !== undefined && variant.available_stock <= 3 ? (
+                        <span className="stock-badge stock-badge-low">Sisa {variant.available_stock}</span>
+                    ) : null}
+                </div>
             </div>
 
             {/* Quick Add / Toast */}
             <div className="shrink-0">
                 {toast ? (
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
                         <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
@@ -147,10 +151,10 @@ return;
                         type="button"
                         onClick={handleQuickAdd}
                         disabled={adding || isOutOfStock}
-                        className={`flex h-11 w-11 items-center justify-center rounded-lg transition-all active:opacity-80 disabled:opacity-40 ${
+                        className={`flex h-10 w-10 items-center justify-center rounded-full transition-all active:opacity-80 disabled:opacity-40 ${
                             isOutOfStock
                                 ? 'bg-surface-muted text-text-muted'
-                                : 'bg-emerald-600 text-white active:bg-emerald-700'
+                                : 'bg-primary text-white active:bg-primary-hover'
                         }`}
                         aria-label={isOutOfStock ? 'Habis' : 'Tambah ke keranjang'}
                     >

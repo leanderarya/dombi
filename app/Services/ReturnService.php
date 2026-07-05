@@ -16,6 +16,10 @@ use Illuminate\Validation\ValidationException;
 
 class ReturnService
 {
+    public function __construct(
+        private readonly SettlementGeneratorService $settlementGeneratorService,
+    ) {}
+
     public function createRequest(Outlet $outlet, User $requester, array $data, array $evidenceImages = []): ReturnRequest
     {
         return DB::transaction(function () use ($outlet, $requester, $data, $evidenceImages) {
@@ -172,6 +176,11 @@ class ReturnService
 
             if ($recordAdjustment) {
                 $this->recordReturnAdjustment($return, $owner);
+                // Sync adjustment to settlement
+                $outlet = $return->outlet;
+                if ($outlet) {
+                    $this->settlementGeneratorService->syncAdjustments($outlet, $return->created_at);
+                }
             }
 
             $from = $return->status;

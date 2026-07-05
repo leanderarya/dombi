@@ -1,19 +1,22 @@
 import { Head, router } from '@inertiajs/react';
 import { Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
-import EmptyState from '@/components/ui/empty-state';
 import OfflineSaleDialog from '@/components/outlet/offline-sale-dialog';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
-import { Button } from '@/components/ui/button';
-import OutletLayout from '@/layouts/outlet-layout';
 import Pagination from '@/components/pagination';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
 
 export default function OfflineSalesIndex({ sales, variants }: any) {
     const [showCreate, setShowCreate] = useState(false);
 
     const handleDelete = (saleId: number) => {
-        if (!confirm('Hapus penjualan ini? Stok akan dikembalikan.')) return;
+        if (!confirm('Hapus penjualan ini? Stok akan dikembalikan.')) {
+return;
+}
+
         router.delete(`/outlet/offline-sales/${saleId}`);
     };
 

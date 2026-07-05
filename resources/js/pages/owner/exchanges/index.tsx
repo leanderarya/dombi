@@ -61,6 +61,7 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                                     completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
                                     rejected: 'text-red-600 bg-red-50 ring-red-200',
                                 };
+
                                 return (
                                     <button
                                         key={status}

@@ -74,7 +74,7 @@ export default function BottomSheet({ open, onClose, title, children, maxHeight 
             <div className="absolute inset-0 bg-slate-950/40" onClick={onClose} />
             <div
                 ref={sheetRef}
-                className="relative flex w-full max-w-lg flex-col rounded-t-3xl bg-white pb-[env(safe-area-inset-bottom)]"
+                className="relative flex w-full max-w-lg flex-col rounded-t-3xl bg-white pb-safe"
                 style={{
                     maxHeight,
                     transform: `translateY(${translateY}px)`,

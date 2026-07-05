@@ -7,11 +7,11 @@ import NotificationBell from '@/components/notification-bell';
 import NotificationSheet from '@/components/notification-sheet';
 import OfflineBanner from '@/components/offline-banner';
 import OwnerCommandSheet from '@/components/owner/owner-command-sheet';
+import OwnerPageSkeleton from '@/components/owner/owner-page-skeleton';
 import OwnerSidebarNav from '@/components/owner/owner-sidebar-nav';
 import UpdateBanner from '@/components/update-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
-import OwnerPageSkeleton from '@/components/owner/owner-page-skeleton';
 
 interface NavGroup {
     label: string;

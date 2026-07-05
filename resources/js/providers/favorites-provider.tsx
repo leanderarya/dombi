@@ -1,5 +1,6 @@
 import { usePage } from '@inertiajs/react';
-import { type ReactNode, useEffect, useRef } from 'react';
+import {  useEffect, useRef } from 'react';
+import type {ReactNode} from 'react';
 import { favoritesStore } from '@/lib/use-favorites';
 
 interface Props {

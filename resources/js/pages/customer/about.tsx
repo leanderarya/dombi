@@ -11,7 +11,7 @@ export default function About() {
             <Head title="Tentang Dombi" />
 
             {/* Header */}
-            <header className="sticky top-0 z-30 -mx-4 -mt-5 mb-5 border-b border-border bg-white px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top))]">
+            <header className="sticky top-0 z-30 -mx-4 -mt-5 mb-5 border-b border-border bg-white px-4 py-3 pt-[calc(0.75rem+env(safe-area-inset-top,0))]">
                 <div className="flex items-center gap-3">
                     <Link href="/customer/profile" className="flex h-10 w-10 items-center justify-center rounded-lg text-text active:bg-zinc-100">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

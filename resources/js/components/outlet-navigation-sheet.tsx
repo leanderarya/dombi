@@ -1,11 +1,11 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import {
     LayoutDashboard, Package, QrCode, Box, Truck, PackagePlus, ShoppingBag,
-    BarChart3, FileText, AlertTriangle, RotateCcw, Repeat2, Receipt, LogOut,
+    BarChart3, FileText, AlertTriangle, RotateCcw, Repeat2, Receipt, DollarSign, LogOut,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import SideSheet from '@/components/ui/side-sheet';
 import type { OutletBadgeCounts } from '@/hooks/use-outlet-badges';
-import type { ReactNode } from 'react';
 
 interface NavItem {
     href: string;
@@ -26,6 +26,7 @@ const navGroups: NavGroup[] = [
             { href: '/outlet/dashboard', label: 'Dashboard', icon: <LayoutDashboard className="h-5 w-5" /> },
             { href: '/outlet/orders', label: 'Pesanan', icon: <Package className="h-5 w-5" />, badgeKey: 'orders' },
             { href: '/outlet/scan', label: 'Scan QR', icon: <QrCode className="h-5 w-5" /> },
+            { href: '/outlet/settlement', label: 'Settlement', icon: <DollarSign className="h-5 w-5" /> },
         ],
     },
     {
@@ -53,7 +54,7 @@ const navGroups: NavGroup[] = [
         ],
     },
     {
-        label: 'Keuangan',
+        label: 'Lainnya',
         items: [
             { href: '/outlet/settlement-payments', label: 'Riwayat Pembayaran', icon: <Receipt className="h-5 w-5" />, badgeKey: 'payments' },
         ],
@@ -74,12 +75,19 @@ export default function OutletNavigationSheet({ open, onClose, pendingCount, bad
 
     const isItemActive = (item: NavItem): boolean => {
         const pathname = url.split('?')[0];
+
         return pathname === item.href || pathname.startsWith(item.href + '/');
     };
 
     const getBadgeCount = (item: NavItem): number => {
-        if (!item.badgeKey) return 0;
-        if (item.badgeKey === 'orders') return pendingCount;
+        if (!item.badgeKey) {
+return 0;
+}
+
+        if (item.badgeKey === 'orders') {
+return pendingCount;
+}
+
         return badgeCounts[item.badgeKey as keyof OutletBadgeCounts] ?? 0;
     };
 
@@ -136,7 +144,9 @@ export default function OutletNavigationSheet({ open, onClose, pendingCount, bad
             <div className="border-t border-border px-3 py-3">
                 <button
                     type="button"
-                    onClick={() => { onClose(); router.post('/logout'); }}
+                    onClick={() => {
+ onClose(); router.post('/logout'); 
+}}
                     className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-[13px] font-medium text-red-600 active:bg-red-50"
                 >
                     <LogOut className="h-5 w-5" />

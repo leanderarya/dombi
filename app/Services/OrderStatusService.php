@@ -106,8 +106,9 @@ class OrderStatusService
 
             // Record settlement payable when order is completed
             if ($status === 'completed') {
-                $this->settlementService->recordSale($order->fresh('items'));
-                // Generate or update daily settlement for this outlet
+                $this->inventoryService->completeOrderStock($order);
+                $this->settlementService->recordSale($order);
+                // Generate or update weekly settlement for this outlet
                 if ($order->outlet_id) {
                     $outlet = Outlet::find($order->outlet_id);
                     if ($outlet) {
@@ -258,7 +259,8 @@ class OrderStatusService
                 'created_at' => now(),
             ]);
 
-            $this->settlementService->recordSale($order->fresh('items'));
+            $this->inventoryService->completeOrderStock($order);
+            $this->settlementService->recordSale($order);
             if ($order->outlet_id) {
                 $outlet = Outlet::find($order->outlet_id);
                 if ($outlet) {

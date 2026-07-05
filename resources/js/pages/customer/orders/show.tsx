@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/offline-banner';
-import StatusBadge from '@/components/ui/status-badge';
-import Dialog from '@/components/ui/dialog';
 import BottomSheet from '@/components/ui/bottom-sheet';
+import Dialog from '@/components/ui/dialog';
+import StatusBadge from '@/components/ui/status-badge';
+import { useCountdown } from '@/hooks/use-countdown';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { useOrderRecovery } from '@/lib/order-recovery';
 
@@ -83,6 +84,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
 
     const cancelForm = useForm({ reason: '', note: '' });
     const reportForm = useForm({ type: '', notes: '' });
+    const countdown = useCountdown(order.confirmation_expires_at);
 
     useEffect(() => {
         if (order.customer_phone && order.order_code) {
@@ -94,7 +96,9 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
         ?? (order.recovery_token ? `${window.location.origin}/track/${order.recovery_token}` : null);
 
     function handleShare() {
-        if (!trackingUrl) return;
+        if (!trackingUrl) {
+return;
+}
 
         const text = `Lacak pesanan Dombi saya:\n${trackingUrl}`;
 
@@ -144,7 +148,9 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
     }
 
     async function handleReport() {
-        if (!reportForm.data.type) return;
+        if (!reportForm.data.type) {
+return;
+}
 
         setReportError(null);
 
@@ -179,12 +185,12 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
     }
 
     return (
-        <div className="min-h-dvh bg-surface">
+        <div className="min-h-dvh bg-background">
             <Head title={`Pesanan ${order.order_code}`} />
             <OfflineBanner />
 
             {/* Header */}
-            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-[env(safe-area-inset-top)]">
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-safe">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <button
                         type="button"
@@ -216,10 +222,22 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                 {STATUS_GUIDANCE[order.status] && (() => {
                     const guidance = STATUS_GUIDANCE[order.status];
                     const isPickupReady = order.status === 'ready_for_pickup' && order.outlet?.latitude && order.outlet?.longitude;
+                    const showCountdown = order.status === 'pending_confirmation' && !countdown.expired && countdown.totalSeconds > 0;
 
                     return (
                         <div className="mt-3 rounded-xl border border-border bg-white p-4">
                             <div className="text-sm font-semibold text-text">{guidance.description}</div>
+                            {showCountdown && (
+                                <div className="mt-2 flex items-center gap-2">
+                                    <div className="flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5">
+                                        <Clock className="h-3.5 w-3.5 text-amber-600" />
+                                        <span className="text-sm font-bold tabular-nums text-amber-700">
+                                            {String(countdown.minutes).padStart(2, '0')}:{String(countdown.seconds).padStart(2, '0')}
+                                        </span>
+                                    </div>
+                                    <span className="text-xs text-text-subtle">sisa waktu konfirmasi</span>
+                                </div>
+                            )}
                             {guidance.nextStep && (
                                 <div className="mt-1 text-xs text-text-muted">{guidance.nextStep}</div>
                             )}
@@ -482,6 +500,13 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                             <div className="text-[13px] text-text">Pesanan Kadaluarsa</div>
                         </div>
                         <div className="mt-2 text-sm text-text-muted">Outlet tidak memberikan konfirmasi dalam batas waktu.</div>
+                        <Link
+                            href={`/customer/orders/${order.id}/restore-cart`}
+                            className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
+                        >
+                            <RotateCcw className="h-4 w-4" />
+                            Pesan Ulang
+                        </Link>
                     </div>
                 )}
 
@@ -630,7 +655,9 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
                 <div className="mt-4 flex gap-2">
                     <button
                         type="button"
-                        onClick={() => { setCancelDialogOpen(false); setCancelLast4Hp(''); setCancelError(null); }}
+                        onClick={() => {
+ setCancelDialogOpen(false); setCancelLast4Hp(''); setCancelError(null); 
+}}
                         className="flex h-12 flex-1 items-center justify-center rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
                     >
                         Kembali
@@ -647,7 +674,9 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
             </Dialog>
 
             {/* Report Sheet */}
-            <BottomSheet open={reportSheetOpen} onClose={() => { setReportSheetOpen(false); setReportError(null); reportForm.reset(); }} title="Laporkan Masalah">
+            <BottomSheet open={reportSheetOpen} onClose={() => {
+ setReportSheetOpen(false); setReportError(null); reportForm.reset(); 
+}} title="Laporkan Masalah">
                 <p className="text-sm text-text-muted">Pilih jenis masalah yang Anda alami.</p>
 
                 <div className="mt-4 space-y-2">

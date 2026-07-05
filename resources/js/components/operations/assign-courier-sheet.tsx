@@ -1,6 +1,6 @@
-import { createPortal } from 'react-dom';
 import { useForm } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatCurrency } from '@/lib/format';
 
 interface Courier {
@@ -76,7 +76,7 @@ return;
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-            <div className="relative w-full max-w-lg animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)]" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
+            <div className="relative w-full max-w-lg animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-safe" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
                 {/* Handle */}
                 <div className="sticky top-0 z-10 flex justify-center rounded-t-2xl bg-white pt-3 pb-2">
                     <div className="h-1 w-12 rounded-full bg-slate-300" />
@@ -166,5 +166,7 @@ return;
         </div>
     ,
         document.body,
-    );;
+    );
+
+;
 }

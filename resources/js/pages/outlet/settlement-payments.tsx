@@ -1,12 +1,12 @@
 import { Head, router } from '@inertiajs/react';
 import { Receipt } from 'lucide-react';
 import { useState } from 'react';
-import EmptyState from '@/components/ui/empty-state';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import Pagination from '@/components/pagination';
-import StatusBadge from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
+import StatusBadge from '@/components/ui/status-badge';
 import { Textarea } from '@/components/ui/textarea';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';

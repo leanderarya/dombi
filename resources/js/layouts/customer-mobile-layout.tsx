@@ -13,13 +13,14 @@ import FavoritesProvider from '@/providers/favorites-provider';
 interface Props extends PropsWithChildren {
     activeOrder?: any;
     topAddress?: string | null;
+    customerName?: string | null;
     footerSlot?: ReactNode;
     hideTopBar?: boolean;
     hideCartBar?: boolean;
     hideBottomNav?: boolean;
 }
 
-export default function CustomerMobileLayout({ children, activeOrder, topAddress, footerSlot, hideTopBar = false, hideCartBar = false, hideBottomNav = false }: Props) {
+export default function CustomerMobileLayout({ children, activeOrder, topAddress, customerName, footerSlot, hideTopBar = false, hideCartBar = false, hideBottomNav = false }: Props) {
     useFlashToast();
     const { visible } = useHideOnScroll();
     const { totalItems } = useCart();
@@ -29,12 +30,12 @@ export default function CustomerMobileLayout({ children, activeOrder, topAddress
 
     return (
         <FavoritesProvider>
-            <div className="min-h-dvh bg-[#fbf9f7] text-slate-950">
+            <div className="min-h-dvh bg-background text-text">
                 <CustomerLocationBootstrap />
                 <OfflineBanner />
-                {!hideTopBar && <CustomerTopBar addressOverride={topAddress} />}
+                {!hideTopBar && <CustomerTopBar addressOverride={topAddress} customerName={customerName} />}
 
-                <main className={`mx-auto max-w-lg px-4 pt-5 ${hasFloatingBar ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]' : 'pb-[calc(5rem+env(safe-area-inset-bottom))]'}`}>
+                <main className={`mx-auto max-w-lg px-4 ${hideTopBar ? '' : 'pt-5'} ${hasFloatingBar ? 'pb-[calc(8rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(5rem+env(safe-area-inset-bottom,0))]'}`}>
                     {children}
                 </main>
 

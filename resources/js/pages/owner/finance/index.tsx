@@ -30,6 +30,7 @@ export default function FinanceIndex(props: any) {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get('tab');
+
         if (tab && TABS.some((t) => t.key === tab)) {
             setActiveTab(tab);
         }
@@ -138,6 +139,22 @@ function TagihanTab({ kpis, outlets }: any) {
                                 </button>
                             )}
                         </div>
+                    </div>
+                </div>
+
+                {/* Mobile KPI Strip */}
+                <div className="mb-4 grid grid-cols-3 gap-2 lg:hidden">
+                    <div className="rounded-xl border border-border bg-white p-3 text-center">
+                        <div className="text-[11px] font-medium text-text-muted">Belum Dibayar</div>
+                        <div className="mt-1 text-lg font-bold tabular-nums text-text">{formatCurrency(kpis.total_unpaid)}</div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-white p-3 text-center">
+                        <div className="text-[11px] font-medium text-text-muted">Outlet</div>
+                        <div className="mt-1 text-lg font-bold tabular-nums text-text">{kpis.outlets_unpaid}</div>
+                    </div>
+                    <div className="rounded-xl border border-border bg-white p-3 text-center">
+                        <div className="text-[11px] font-medium text-text-muted">Jatuh Tempo</div>
+                        <div className="mt-1 text-lg font-bold tabular-nums text-text">{formatCurrency(kpis.due_this_week)}</div>
                     </div>
                 </div>
 
@@ -312,6 +329,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
         if (!confirm(`Verifikasi semua ${pendingPayments.length} pembayaran yang pending?`)) {
             return;
         }
+
         setBatchVerifying(true);
         router.post('/owner/finance/settlement-payments/bulk-verify', {}, {
             onFinish: () => setBatchVerifying(false),
@@ -377,7 +395,9 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => { setRejectingId(null); setRejectReason(''); }}
+                                onClick={() => {
+ setRejectingId(null); setRejectReason(''); 
+}}
                                 className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold text-text hover:bg-surface-muted"
                             >
                                 Batal
@@ -402,7 +422,9 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                                     key={payment.id}
                                     payment={payment}
                                     onVerify={handleVerify}
-                                    onReject={(id) => { setRejectingId(id); setRejectReason(''); }}
+                                    onReject={(id) => {
+ setRejectingId(id); setRejectReason(''); 
+}}
                                     onShowProof={(url) => setProofUrl(url)}
                                     processing={processing}
                                 />
@@ -413,7 +435,9 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                                     key={payment.id}
                                     payment={payment}
                                     onVerify={handleVerify}
-                                    onReject={(id) => { setRejectingId(id); setRejectReason(''); }}
+                                    onReject={(id) => {
+ setRejectingId(id); setRejectReason(''); 
+}}
                                     onShowProof={(url) => setProofUrl(url)}
                                     processing={processing}
                                 />

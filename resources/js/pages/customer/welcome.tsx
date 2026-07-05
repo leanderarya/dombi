@@ -92,7 +92,7 @@ export default function Welcome() {
             <div className="flex-1" />
 
             {/* SECTION 5 & 6 — CTAs */}
-            <div className="px-6 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-4">
+            <div className="px-6 pb-[calc(2rem+env(safe-area-inset-bottom,0))] pt-4">
                 <div className="mx-auto max-w-sm space-y-3">
                     {/* Primary: Google Login */}
                     <a

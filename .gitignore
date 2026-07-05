@@ -35,3 +35,8 @@ yarn-error.log
 /.vscode
 /.zed
 .github/workflows/
+
+# Cleanup
+.DS_Store
+docs/archive/
+

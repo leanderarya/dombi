@@ -24,6 +24,7 @@ export default function OwnerRestockCreate({ outlets, selectedOutletId, selected
         if (!outletId) {
             setFamilies([]);
             setInventories([]);
+
             return;
         }
 
@@ -40,6 +41,7 @@ export default function OwnerRestockCreate({ outlets, selectedOutletId, selected
                     const allVariants = data.families.flatMap((f: any) =>
                         (f.variants || []).map((v: any) => v.id)
                     );
+
                     if (allVariants.includes(selectedProductId)) {
                         form.setData('items', [{ product_variant_id: selectedProductId, requested_quantity: 1 }]);
                     }

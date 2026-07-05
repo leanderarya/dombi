@@ -1,3 +1,6 @@
+import { Head } from '@inertiajs/react';
+import { Search } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import ActiveOrderCard from '@/components/customer/active-order-card';
 import EmptyOrderState from '@/components/customer/empty-order-state';
 import OrderFilterChips from '@/components/customer/order-filter-chips';
@@ -7,9 +10,6 @@ import Pagination from '@/components/pagination';
 import { SkeletonList } from '@/components/ui/skeleton';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useOrderRecovery } from '@/lib/order-recovery';
-import { Head, Link } from '@inertiajs/react';
-import { Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
 
 const filterOptions = [
     { key: 'all', label: 'Semua' },
@@ -20,7 +20,7 @@ const filterOptions = [
 type ViewState = 'recovered' | 'empty';
 
 export default function OrdersIndex({ activeOrders, historyOrders }: any) {
-    const { hasRecovery, phone, maskedPhone, saveRecovery, clearRecovery } =
+    const { phone, maskedPhone, saveRecovery, clearRecovery } =
         useOrderRecovery();
     const [filter, setFilter] = useState('all');
     const [recoverySheetOpen, setRecoverySheetOpen] = useState(false);
@@ -76,51 +76,23 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
         <CustomerMobileLayout hideTopBar>
             <Head title="Pesanan Saya" />
 
-            {/* Sticky Page Header */}
-            <header className="fixed inset-x-0 top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-[env(safe-area-inset-top)]">
-                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link
-                        href="/customer/home"
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
-                    >
-                        <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            strokeWidth={2}
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
-                    </Link>
-                    <h1 className="text-sm font-semibold text-text">
-                        Pesanan Saya
-                    </h1>
-                    <div className="h-10 w-10" />
+            {/* Page Title */}
+            <header className="sticky top-0 z-30 bg-white/95 backdrop-blur pt-safe">
+                <div className="mx-auto flex max-w-lg items-center justify-center px-4 py-3">
+                    <h1 className="text-base font-bold text-text">Riwayat Pesanan</h1>
                 </div>
-                {viewState === 'recovered' &&
-                    (hasActiveOrders || hasHistory) && (
-                        <div className="mx-auto max-w-lg px-4 pb-3">
-                            <OrderFilterChips
-                                options={filterOptions}
-                                active={filter}
-                                onChange={setFilter}
-                            />
-                        </div>
-                    )}
+                {viewState === 'recovered' && (hasActiveOrders || hasHistory) && (
+                    <div className="mx-auto max-w-lg px-4 pb-3">
+                        <OrderFilterChips
+                            options={filterOptions}
+                            active={filter}
+                            onChange={setFilter}
+                        />
+                    </div>
+                )}
             </header>
 
-            <div
-                className={
-                    viewState === 'recovered' && (hasActiveOrders || hasHistory)
-                        ? 'h-26'
-                        : 'h-16'
-                }
-            />
+            <div className="pt-4">
 
             {/* STATE: Recovered — show orders with info card */}
             {viewState === 'recovered' && !recoveryLoading && (
@@ -229,6 +201,8 @@ export default function OrdersIndex({ activeOrders, historyOrders }: any) {
                     </div>
                 </div>
             )}
+
+            </div> {/* close pt-4 px-4 wrapper */}
 
             {/* Pagination — only for server-side results */}
             {viewState === 'recovered' &&

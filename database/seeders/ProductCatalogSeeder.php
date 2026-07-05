@@ -15,6 +15,7 @@ class ProductCatalogSeeder extends Seeder
                 'name' => 'Domilk Original',
                 'brand' => 'Domilk',
                 'description' => 'Susu kambing murni original tanpa perisa',
+                'image' => 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=400&h=400&fit=crop&q=80',
                 'variants' => [
                     ['flavor' => 'Original', 'size' => '250ml', 'center_price' => 10000, 'selling_price' => 12000],
                     ['flavor' => 'Original', 'size' => '1L', 'center_price' => 35000, 'selling_price' => 42000],
@@ -24,6 +25,7 @@ class ProductCatalogSeeder extends Seeder
                 'name' => 'Domilk Premium Taste',
                 'brand' => 'Domilk',
                 'description' => 'Susu kambing premium dengan berbagai pilihan rasa',
+                'image' => 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=400&h=400&fit=crop&q=80',
                 'variants' => [
                     ['flavor' => 'Coklat', 'size' => '250ml', 'center_price' => 12000, 'selling_price' => 15000],
                     ['flavor' => 'Coklat', 'size' => '1L', 'center_price' => 40000, 'selling_price' => 48000],
@@ -39,6 +41,7 @@ class ProductCatalogSeeder extends Seeder
                 'name' => 'Biogoat',
                 'brand' => 'Biogoat',
                 'description' => 'Susu kambing biogoat berkualitas tinggi',
+                'image' => 'https://images.unsplash.com/photo-1587334274328-64186a80aaee?w=400&h=400&fit=crop&q=80',
                 'variants' => [
                     ['flavor' => 'Original', 'size' => '250ml', 'center_price' => 11000, 'selling_price' => 13000],
                     ['flavor' => 'Original', 'size' => '1L', 'center_price' => 38000, 'selling_price' => 45000],
@@ -48,6 +51,7 @@ class ProductCatalogSeeder extends Seeder
                 'name' => 'Raw Milk by Domilk',
                 'brand' => 'Domilk',
                 'description' => 'Susu kambing mentah segar tanpa pasteurisasi',
+                'image' => 'https://images.unsplash.com/photo-1523473827533-2a64d0d36748?w=400&h=400&fit=crop&q=80',
                 'variants' => [
                     ['flavor' => 'Fresh', 'size' => '1L', 'center_price' => 25000, 'selling_price' => 30000],
                 ],

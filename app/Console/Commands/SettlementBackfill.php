@@ -10,17 +10,25 @@ use Illuminate\Console\Command;
 
 class SettlementBackfill extends Command
 {
-    protected $signature = 'settlement:backfill {--dry-run : Show what would be created without writing}';
+    protected $signature = 'settlement:backfill
+        {--dry-run : Show what would be created without writing}
+        {--delete-old : Delete old daily settlements before regenerating}';
 
-    protected $description = 'Generate settlements for completed orders that have no settlement yet';
+    protected $description = 'Generate weekly settlements for completed orders';
 
     public function handle(SettlementGeneratorService $generator): int
     {
         $dryRun = $this->option('dry-run');
+        $deleteOld = $this->option('delete-old');
 
-        // Find all completed orders
+        if ($deleteOld && ! $dryRun) {
+            $deleted = Settlement::where('period_type', '!=', 'weekly')->delete();
+            $this->info("Deleted {$deleted} non-weekly settlements.");
+        }
+
+        // Find all completed orders grouped by outlet + ISO week
         $completedOrders = Order::where('status', 'completed')
-            ->orderBy('created_at')
+            ->orderBy('completed_at')
             ->get();
 
         if ($completedOrders->isEmpty()) {
@@ -31,50 +39,53 @@ class SettlementBackfill extends Command
 
         $this->info("Found {$completedOrders->count()} completed orders.");
 
-        // Group by outlet + date to find unique settlement periods
+        // Group by outlet + ISO week
         $periods = [];
         foreach ($completedOrders as $order) {
-            $key = $order->outlet_id.'_'.$order->created_at->toDateString();
+            $completedAt = $order->completed_at ?? $order->created_at;
+            if (! $completedAt) {
+                continue;
+            }
+            $weekStart = $completedAt->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->toDateString();
+            $key = $order->outlet_id.'_'.$weekStart;
+
             if (! isset($periods[$key])) {
                 $periods[$key] = [
                     'outlet_id' => $order->outlet_id,
-                    'date' => $order->created_at,
-                    'order_ids' => [],
+                    'date' => $completedAt,
+                    'week_start' => $weekStart,
                 ];
             }
-            $periods[$key]['order_ids'][] = $order->id;
         }
 
-        $this->info('Found '.count($periods).' unique outlet-date periods.');
+        $this->info('Found '.count($periods).' unique outlet-week periods.');
 
-        // Check which already have settlements
         $created = 0;
         $skipped = 0;
 
         foreach ($periods as $period) {
             $existing = Settlement::where('outlet_id', $period['outlet_id'])
-                ->where('period_date', $period['date']->toDateString())
+                ->where('period_type', 'weekly')
+                ->where('period_start', $period['week_start'])
                 ->exists();
 
             if ($existing) {
                 $skipped++;
-
                 continue;
             }
 
             $outlet = Outlet::find($period['outlet_id']);
             if (! $outlet) {
                 $this->warn("Outlet #{$period['outlet_id']} not found, skipping.");
-
                 continue;
             }
 
             if ($dryRun) {
-                $this->line("  [DRY RUN] Would create settlement for outlet {$outlet->name} on {$period['date']->toDateString()}");
+                $this->line("  [DRY RUN] Would create weekly settlement for {$outlet->name} week {$period['week_start']}");
             } else {
                 $settlement = $generator->generateForOutlet($outlet, $period['date']);
                 if ($settlement) {
-                    $this->line("  Created settlement #{$settlement->id} for {$outlet->name} on {$period['date']->toDateString()} — {$settlement->amount_due}");
+                    $this->line("  Created settlement #{$settlement->id} for {$outlet->name} — {$settlement->period_label} — {$settlement->amount_due}");
                 }
             }
             $created++;

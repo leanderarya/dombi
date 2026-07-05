@@ -56,6 +56,8 @@ class TrackController extends Controller
                 'subtotal' => (float) $order->subtotal,
                 'delivery_fee' => (float) $order->delivery_fee,
                 'payment_method' => $order->payment_method,
+                'confirmation_expires_at' => $order->confirmation_expires_at?->toISOString(),
+                'payment_status' => $order->payment_status,
                 'ordered_at' => $order->ordered_at?->toISOString(),
                 'outlet' => $order->outlet ? [
                     'name' => $order->outlet->name,

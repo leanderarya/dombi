@@ -10,7 +10,10 @@ export function useHideOnScroll(threshold = 10) {
         lastY.current = window.scrollY;
 
         const handleScroll = () => {
-            if (ticking.current) return;
+            if (ticking.current) {
+return;
+}
+
             ticking.current = true;
 
             requestAnimationFrame(() => {
@@ -36,6 +39,7 @@ export function useHideOnScroll(threshold = 10) {
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
+
         return () => window.removeEventListener('scroll', handleScroll);
     }, [threshold]);
 

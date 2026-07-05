@@ -2,11 +2,11 @@ import { Link, router } from '@inertiajs/react';
 import { Head } from '@inertiajs/react';
 import { Truck, Route, Clock, MapPin, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import StatusBadge from '@/components/ui/status-badge';
 import Pagination from '@/components/pagination';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import SectionCard from '@/components/ui/section-card';
+import StatusBadge from '@/components/ui/status-badge';
 import CourierLayout from '@/layouts/courier-layout';
 
 const filterOptions = [

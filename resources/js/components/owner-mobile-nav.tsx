@@ -32,7 +32,7 @@ export default function OwnerMobileNav() {
     const { url } = usePage();
 
     return (
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)] lg:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-zinc-100 bg-white pb-safe lg:hidden">
             <div className="mx-auto grid h-14 max-w-lg grid-cols-4">
                 {navItems.map((item) => {
                     const active = item.match.some((href) => url === href || url.startsWith(`${href}/`));

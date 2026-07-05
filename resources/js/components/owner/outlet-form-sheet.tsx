@@ -4,6 +4,7 @@ import type { FormEvent, ReactNode } from 'react';
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import PhoneInput from '@/components/ui/phone-input';
 import { Select } from '@/components/ui/select';
 import { reverseGeocode } from '@/lib/geocoding';
 import { cn } from '@/lib/utils';
@@ -106,7 +107,7 @@ setGeocodingState('failed');
                         {/* Section 1: Informasi Outlet */}
                         <Section title="Informasi Outlet" subtitle="Identitas singkat untuk operasional cabang.">
                             <Field label="Nama Outlet" value={form.data.name} onChange={(value) => form.setData('name', value)} error={form.errors.name} required />
-                            <Field label="Nomor Telepon" value={form.data.phone ?? ''} onChange={(value) => form.setData('phone', value)} error={form.errors.phone} type="tel" />
+                            <PhoneInput label="Nomor Telepon" value={form.data.phone ?? ''} onChange={(value) => form.setData('phone', value)} error={form.errors.phone} />
                         </Section>
 
                         {/* Section 2: Lokasi Terpilih (readonly from map) */}

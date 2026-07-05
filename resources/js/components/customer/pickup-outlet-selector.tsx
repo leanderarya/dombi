@@ -1,7 +1,7 @@
+import { ChevronDown, MapPin, Check } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import { useCustomerLocation } from '@/lib/customer-location';
-import { ChevronDown, MapPin, Check } from 'lucide-react';
 
 type CheckoutItem = {
     product_id: number;

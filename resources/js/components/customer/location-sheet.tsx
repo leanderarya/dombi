@@ -1,6 +1,6 @@
-import { createPortal } from 'react-dom';
 import { LocateFixed, MapPin, Search, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
 import {  syncCustomerLocationDraft, useCustomerLocation } from '@/lib/customer-location';
 import type {CustomerLocation} from '@/lib/customer-location';
@@ -271,7 +271,9 @@ export default function LocationSheet({ open, onClose, onLocationSaved }: Props)
         </div>
     ,
         document.body,
-    );;
+    );
+
+;
 }
 
 function toDraft(location: CustomerLocation | null): LocationDraft | null {

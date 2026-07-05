@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Models\Order;
+use App\Services\MidtransService;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -115,12 +117,149 @@ class OrderController extends Controller
                 ]),
                 'total' => $order->total,
                 'fulfillment_type' => $order->fulfillment_type,
+                'confirmation_expires_at' => $order->confirmation_expires_at?->toISOString(),
+                'payment_method' => $order->payment_method,
+                'payment_status' => $order->payment_status,
                 'recovery_token' => $order->recovery_token,
                 'outlet' => $order->outlet ? [
                     'name' => $order->outlet->name,
                 ] : null,
             ],
             'isLoggedIn' => $request->user() !== null,
+            'snapToken' => $request->session()->get('snap_token'),
+        ]);
+    }
+
+    /**
+     * Create Snap payment token for a confirmed order.
+     * Accessible by: logged-in customer, recovered guest, OR fresh checkout guest (CSRF-protected).
+     */
+    public function pay(Order $order): \Illuminate\Http\JsonResponse
+    {
+        // Ownership verification — permissive for checkout flow
+        $user = auth()->user();
+        if ($user) {
+            // Logged-in user — check ownership
+            if (! $user->isOwner() && $user->getCustomerOrCreate()->id !== $order->customer_id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+        } elseif ($order->customer_id) {
+            // Guest — verify via recovery session OR via recent order (within 30 min)
+            $recovery = session('guest_recovery');
+            $hasRecovery = is_array($recovery)
+                && ($recovery['customer_id'] ?? null) === $order->customer_id
+                && in_array($order->id, $recovery['order_ids'] ?? [], true);
+
+            $isFreshOrder = $order->created_at && $order->created_at->gt(now()->subMinutes(30));
+
+            if (! $hasRecovery && ! $isFreshOrder) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+        }
+
+        // Guard: order must be pending or confirmed (not already terminal)
+        $terminalStatuses = [
+            Order::STATUS_COMPLETED,
+            Order::STATUS_CANCELLED_BY_CUSTOMER,
+            Order::STATUS_CANCELLED_BY_OUTLET,
+            Order::STATUS_REJECTED_BY_OUTLET,
+            Order::STATUS_FAILED_DELIVERY,
+            Order::STATUS_EXPIRED,
+        ];
+        if (in_array($order->status, $terminalStatuses, true)) {
+            return response()->json([
+                'error' => 'Pesanan sudah tidak aktif.',
+            ], 422);
+        }
+
+        // Guard: order must not already be paid
+        if ($order->payment_status === 'paid') {
+            return response()->json([
+                'error' => 'Pesanan sudah dibayar.',
+            ], 422);
+        }
+
+        // Only for non-COD orders
+        if ($order->payment_method === 'cod') {
+            return response()->json([
+                'error' => 'COD tidak memerlukan pembayaran online.',
+            ], 422);
+        }
+
+        try {
+            $midtrans = app(MidtransService::class);
+
+            // If already has a pending Snap token, return it
+            $pendingTx = $order->paymentTransactions()
+                ->where('status', 'pending')
+                ->first();
+
+            if ($pendingTx) {
+                return response()->json([
+                    'snap_token' => $pendingTx->raw_response?->snap_token ?? null,
+                    'midtrans_order_id' => $pendingTx->midtrans_order_id,
+                    'message' => 'Token pembayaran sudah tersedia.',
+                ]);
+            }
+
+            $snapToken = $midtrans->createSnapToken($order);
+
+            return response()->json([
+                'snap_token' => $snapToken,
+                'midtrans_order_id' => $order->midtrans_order_id,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to create Snap token', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => 'Gagal membuat token pembayaran. Silakan coba lagi.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Payment status polling endpoint.
+     * Returns current payment status and Snap token for recovery.
+     */
+    public function paymentStatus(Order $order): \Illuminate\Http\JsonResponse
+    {
+        // Ownership check — same as pay()
+        $user = auth()->user();
+        if ($user && ! $user->isOwner() && $user->getCustomerOrCreate()->id !== $order->customer_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // If still pending, try to sync from Midtrans (webhook fallback)
+        if ($order->payment_status === 'pending' && $order->midtrans_order_id) {
+            try {
+                $midtrans = app(MidtransService::class);
+                $midtrans->syncStatusFromMidtrans($order);
+                $order->refresh();
+            } catch (\Exception $e) {
+                Log::warning('Payment status sync failed', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Get existing Snap token for retry
+        $snapToken = null;
+        if ($order->payment_status === 'pending') {
+            $pendingTx = $order->paymentTransactions()
+                ->where('status', 'pending')
+                ->first();
+            $snapToken = $pendingTx?->raw_response?->snap_token ?? null;
+        }
+
+        return response()->json([
+            'payment_status' => $order->payment_status,
+            'snap_token' => $snapToken,
+            'midtrans_order_id' => $order->midtrans_order_id,
+            'paid_at' => $order->paid_at?->toISOString(),
         ]);
     }
 

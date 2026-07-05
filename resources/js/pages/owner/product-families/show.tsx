@@ -61,8 +61,12 @@ export default function ProductFamilyShow({ family }: Props) {
 
     // Auto-generate name from flavor + size
     useEffect(() => {
-        if (editingVariant) return; // don't auto-fill when editing
+        if (editingVariant) {
+return;
+} // don't auto-fill when editing
+
         const parts = [variantForm.data.flavor, variantForm.data.size].filter(Boolean);
+
         if (parts.length > 0) {
             variantForm.setData('name', parts.join(' '));
         }
@@ -70,11 +74,15 @@ export default function ProductFamilyShow({ family }: Props) {
 
     // Auto-generate SKU from family name + flavor + size
     useEffect(() => {
-        if (editingVariant) return;
+        if (editingVariant) {
+return;
+}
+
         const prefix = family.name.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, '');
         const flavorCode = variantForm.data.flavor ? variantForm.data.flavor.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, '') : '';
         const sizeCode = variantForm.data.size ? variantForm.data.size.toUpperCase().replace(/[^A-Z0-9]/g, '') : '';
         const parts = [prefix, flavorCode, sizeCode].filter(Boolean);
+
         if (parts.length > 0) {
             variantForm.setData('sku', parts.join('-'));
         }
@@ -82,8 +90,12 @@ export default function ProductFamilyShow({ family }: Props) {
 
     // Auto-generate selling_price from center_price + markup
     useEffect(() => {
-        if (editingVariant) return;
+        if (editingVariant) {
+return;
+}
+
         const center = parseFloat(variantForm.data.center_price);
+
         if (!isNaN(center) && center > 0) {
             const markup = Math.round(center * (1 + DEFAULT_MARKUP_PERCENT / 100));
             // Round to nearest 500

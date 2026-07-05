@@ -4,11 +4,11 @@ import { useState } from 'react';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import Dialog from '@/components/ui/dialog';
 import SectionCard from '@/components/ui/section-card';
-import { isDifferentRecipient } from '@/lib/recipient';
 import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
+import { isDifferentRecipient } from '@/lib/recipient';
 import { getOrderStatus } from '@/lib/status-labels';
 
 const STATUS_CONFIRM_LABELS: Record<string, { title: string; message: string; confirm: string }> = {

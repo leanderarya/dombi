@@ -1,5 +1,5 @@
-import { QRCodeSVG } from 'qrcode.react';
 import { Download } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useCallback, useRef } from 'react';
 
 interface Props {
@@ -11,7 +11,10 @@ export default function OrderQRCard({ orderCode }: Props) {
 
     const handleSave = useCallback(() => {
         const svg = containerRef.current?.querySelector('svg');
-        if (!svg) return;
+
+        if (!svg) {
+return;
+}
 
         const canvas = document.createElement('canvas');
         const size = 640; // 4x for high quality
@@ -19,7 +22,10 @@ export default function OrderQRCard({ orderCode }: Props) {
         canvas.height = size;
 
         const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+
+        if (!ctx) {
+return;
+}
 
         // White background
         ctx.fillStyle = '#ffffff';
@@ -46,7 +52,10 @@ export default function OrderQRCard({ orderCode }: Props) {
 
             // Trigger download
             canvas.toBlob((blob) => {
-                if (!blob) return;
+                if (!blob) {
+return;
+}
+
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
                 link.download = `dombi-${orderCode}.png`;

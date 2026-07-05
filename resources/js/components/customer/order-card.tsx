@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { orderStatusLabel } from '@/lib/customer-status';
-import { getOrderStatusTone } from '@/lib/status-labels';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { getOrderStatusTone } from '@/lib/status-labels';
 
 interface Props {
     order: {

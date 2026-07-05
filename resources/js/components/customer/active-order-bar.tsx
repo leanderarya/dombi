@@ -11,7 +11,7 @@ return null;
 }
 
     return (
-        <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-4">
+        <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0))] z-30 px-4">
             <Link
                 href={`/customer/orders/${order.id}`}
                 className="mx-auto flex max-w-lg items-center gap-3 rounded-xl bg-text px-4 py-3 shadow-lg active:bg-text/90"

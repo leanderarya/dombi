@@ -61,6 +61,7 @@ export default function OutletsIndex({ outlets }: any) {
                                 inactive: 'text-text-muted bg-surface-muted ring-border',
                                 low_stock: 'text-amber-600 bg-amber-50 ring-amber-200',
                             };
+
                             return (
                                 <button
                                     key={f.key}
@@ -141,14 +142,18 @@ export default function OutletsIndex({ outlets }: any) {
                                             </Link>
                                             <button
                                                 type="button"
-                                                onClick={(e) => { e.stopPropagation(); router.visit(`/owner/outlets/${outlet.id}/edit`); }}
+                                                onClick={(e) => {
+ e.stopPropagation(); router.visit(`/owner/outlets/${outlet.id}/edit`); 
+}}
                                                 className="rounded-lg px-2.5 py-1 text-xs font-semibold text-text-muted hover:bg-surface-muted"
                                             >
                                                 Edit
                                             </button>
                                             <button
                                                 type="button"
-                                                onClick={(e) => { e.stopPropagation(); router.visit(`/owner/inventories?outlet_id=${outlet.id}`); }}
+                                                onClick={(e) => {
+ e.stopPropagation(); router.visit(`/owner/inventories?outlet_id=${outlet.id}`); 
+}}
                                                 className="rounded-lg px-2.5 py-1 text-xs font-semibold text-text-muted hover:bg-surface-muted"
                                             >
                                                 Inv

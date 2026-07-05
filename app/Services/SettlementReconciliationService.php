@@ -11,47 +11,47 @@ class SettlementReconciliationService
 {
     /**
      * Get reconciliation summary for an outlet.
+     * Uses weekly settlements as single source of truth.
      */
     public function getOutletReconciliation(int $outletId, ?Carbon $from = null, ?Carbon $to = null): array
     {
-        $from = $from ?? now()->startOfMonth();
-        $to = $to ?? now()->endOfDay();
-
-        // Center share from settlements (amount_due represents the obligation)
-        $centerShare = (float) Settlement::query()
+        // All-time: get ALL weekly settlements for this outlet (no date filter for outstanding)
+        $settlementsQuery = Settlement::query()
             ->where('outlet_id', $outletId)
-            ->whereDate('period_date', '>=', $from->toDateString())
-            ->whereDate('period_date', '<=', $to->toDateString())
-            ->sum('amount_due');
+            ->where('period_type', 'weekly');
 
-        // Verified payments
-        $verifiedPayments = SettlementPayment::query()
+        // Center share = total amount_due across all weekly settlements
+        $centerShare = (float) (clone $settlementsQuery)->sum('amount_due');
+
+        // Sales amount (products only, excluding delivery fee)
+        $salesAmount = (float) (clone $settlementsQuery)->sum('sales_amount');
+
+        // Delivery fees
+        $deliveryFees = (float) (clone $settlementsQuery)->sum('delivery_fee_amount');
+
+        // Adjustments = total adjustment_amount (returns + exchanges)
+        $adjustments = (float) (clone $settlementsQuery)->sum('adjustment_amount');
+
+        // Verified payments (all-time for this outlet)
+        $verifiedPayments = (float) SettlementPayment::query()
             ->where('outlet_id', $outletId)
             ->where('status', SettlementPayment::STATUS_VERIFIED)
-            ->whereBetween('payment_date', [$from->toDateString(), $to->copy()->endOfDay()->toDateTimeString()])
             ->sum('amount');
 
         // Pending payments
-        $pendingPayments = SettlementPayment::query()
+        $pendingPayments = (float) SettlementPayment::query()
             ->where('outlet_id', $outletId)
             ->where('status', SettlementPayment::STATUS_PENDING)
             ->sum('amount');
 
         // Rejected payments
-        $rejectedPayments = SettlementPayment::query()
+        $rejectedPayments = (float) SettlementPayment::query()
             ->where('outlet_id', $outletId)
             ->where('status', SettlementPayment::STATUS_REJECTED)
-            ->whereBetween('payment_date', [$from->toDateString(), $to->copy()->endOfDay()->toDateTimeString()])
             ->sum('amount');
 
-        // Adjustments (returns + exchanges) for this period
-        $adjustments = (float) Settlement::query()
-            ->where('outlet_id', $outletId)
-            ->whereDate('period_date', '>=', $from->toDateString())
-            ->whereDate('period_date', '<=', $to->toDateString())
-            ->sum('adjustment_amount');
-
-        $outstanding = (float) $centerShare - (float) $verifiedPayments + $adjustments;
+        // Outstanding = center_share - verified_payments + adjustments (adjustments can be negative for returns)
+        $outstanding = max(0, $centerShare - $verifiedPayments + $adjustments);
 
         // Last payment
         $lastPayment = SettlementPayment::query()
@@ -61,12 +61,15 @@ class SettlementReconciliationService
             ->first();
 
         return [
-            'center_share' => (float) $centerShare,
-            'verified_payments' => (float) $verifiedPayments,
-            'pending_payments' => (float) $pendingPayments,
-            'rejected_payments' => (float) $rejectedPayments,
+            'center_share' => $centerShare,
+            'sales_amount' => $salesAmount,
+            'delivery_fees' => $deliveryFees,
+            'gross_revenue' => $salesAmount + $deliveryFees,
+            'verified_payments' => $verifiedPayments,
+            'pending_payments' => $pendingPayments,
+            'rejected_payments' => $rejectedPayments,
             'adjustments' => $adjustments,
-            'outstanding' => max(0, $outstanding),
+            'outstanding' => $outstanding,
             'last_payment' => $lastPayment ? [
                 'date' => $lastPayment->payment_date->toDateString(),
                 'amount' => (float) $lastPayment->amount,

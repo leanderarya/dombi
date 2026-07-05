@@ -7,7 +7,7 @@ interface Props {
 
 export default function StickyOrderActions({ orderId, showReorder = true }: Props) {
     return (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white px-4 pb-[env(safe-area-inset-bottom)] pt-3">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white px-4 pb-safe pt-3">
             <div className="mx-auto max-w-lg space-y-2">
                 {showReorder && (
                     <Link

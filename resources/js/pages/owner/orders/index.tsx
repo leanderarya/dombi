@@ -1,12 +1,3 @@
-import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
-import OwnerPageShell from '@/components/owner/owner-page-shell';
-import Pagination from '@/components/pagination';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
-import { SkeletonPage } from '@/components/ui/skeleton';
-import StatusBadge from '@/components/ui/status-badge';
-import { formatCurrency } from '@/lib/format';
-import { getOrderStatus } from '@/lib/status-labels';
 import { router } from '@inertiajs/react';
 import {
     ArrowDownRight,
@@ -17,6 +8,15 @@ import {
     TrendingUp,
 } from 'lucide-react';
 import { useState } from 'react';
+import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
+import Pagination from '@/components/pagination';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { SkeletonPage } from '@/components/ui/skeleton';
+import StatusBadge from '@/components/ui/status-badge';
+import { formatCurrency } from '@/lib/format';
+import { getOrderStatus } from '@/lib/status-labels';
 
 const statusFilters = [
     { key: 'needs_action', label: 'Butuh Tindakan' },
@@ -71,6 +71,7 @@ export default function OwnerOrdersIndex({
                             cancelled: 'text-text-muted bg-surface-muted ring-border',
                             failed: 'text-red-600 bg-red-50 ring-red-200',
                         };
+
                         return (
                             <button
                                 key={sf.key}

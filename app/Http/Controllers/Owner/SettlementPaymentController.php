@@ -68,23 +68,30 @@ class SettlementPaymentController extends Controller
     }
 
     /**
-     * Bulk verify multiple payments at once.
+     * Bulk verify payments in a single transaction.
+     * If payment_ids provided, verify those specific payments.
+     * If no payment_ids, verify ALL pending payments.
      */
     public function bulkVerify(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'payment_ids' => ['required', 'array', 'min:1'],
+            'payment_ids' => ['nullable', 'array', 'min:1'],
             'payment_ids.*' => ['integer'],
         ]);
 
-        $count = 0;
-        foreach ($validated['payment_ids'] as $paymentId) {
-            $payment = SettlementPayment::find($paymentId);
-            if ($payment && $payment->isPending()) {
-                $this->paymentService->verifyPayment($payment, $request->user());
-                $count++;
-            }
+        // If no specific IDs provided, get all pending payment IDs
+        $paymentIds = $validated['payment_ids'] ?? SettlementPayment::where('status', SettlementPayment::STATUS_PENDING)
+            ->pluck('id')
+            ->toArray();
+
+        if (empty($paymentIds)) {
+            return redirect()->back()->with('success', 'Tidak ada pembayaran yang perlu diverifikasi.');
         }
+
+        $count = $this->paymentService->bulkVerifyPayments(
+            $paymentIds,
+            $request->user(),
+        );
 
         return redirect()->back()->with('success', "{$count} pembayaran berhasil diverifikasi.");
     }

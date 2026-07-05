@@ -1,6 +1,7 @@
 import { Search } from 'lucide-react';
 import { useState } from 'react';
 import Dialog from '@/components/ui/dialog';
+import PhoneInput from '@/components/ui/phone-input';
 import { recoverOrders, useOrderRecovery } from '@/lib/order-recovery';
 
 type Props = {
@@ -39,6 +40,7 @@ export default function RecoverySheet({ open, onClose, onRecovered, onLoadingCha
 
         if (trimmed.length < 8) {
             setError('Masukkan nomor WhatsApp yang valid.');
+
             return;
         }
 
@@ -52,6 +54,7 @@ export default function RecoverySheet({ open, onClose, onRecovered, onLoadingCha
             if (!result.found) {
                 setError('Pesanan tidak ditemukan untuk nomor ini.');
                 setLoading(false);
+
                 return;
             }
 
@@ -72,23 +75,16 @@ export default function RecoverySheet({ open, onClose, onRecovered, onLoadingCha
             <p className="text-sm text-text-muted">Masukkan nomor WhatsApp yang digunakan saat memesan.</p>
 
             <div className="mt-5">
-                <label className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Nomor WhatsApp</label>
-                <input
+                <PhoneInput
+                    label="Nomor WhatsApp"
                     value={phone}
-                    onChange={(e) => {
-                        setPhone(e.target.value);
+                    onChange={(value) => {
+                        setPhone(value);
                         setError(null);
                     }}
-                    onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                            handleRecover();
-                        }
-                    }}
-                    inputMode="tel"
-                    placeholder="081234567890"
-                    className="mt-2 min-h-11 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100"
+                    error={error ?? undefined}
+                    required
                 />
-                {error && <p className="mt-2 text-xs text-red-600">{error}</p>}
             </div>
 
             <button

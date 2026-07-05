@@ -35,7 +35,7 @@ createInertiaApp({
 });
 
 // Register service worker for PWA
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(() => {
             // SW registration failed - non-critical
@@ -44,6 +44,6 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 }
 
 // Detect standalone PWA mode
-if (window.matchMedia('(display-mode: standalone)').matches) {
+if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
     document.documentElement.classList.add('pwa-standalone');
 }

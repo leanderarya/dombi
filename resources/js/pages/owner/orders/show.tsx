@@ -7,8 +7,8 @@ import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
-import { getOrderStatus } from '@/lib/status-labels';
 import { isDifferentRecipient } from '@/lib/recipient';
+import { getOrderStatus } from '@/lib/status-labels';
 
 export default function OwnerOrderShow({ order, couriers }: any) {
     const form = useForm({ courier_id: couriers[0]?.id ?? '' });

@@ -14,12 +14,17 @@ class Settlement extends Model
     protected $fillable = [
         'outlet_id',
         'period_date',
+        'period_start',
+        'period_end',
+        'period_type',
         'sales_amount',
+        'delivery_fee_amount',
         'amount_due',
         'due_date',
         'status',
         'paid_amount',
         'adjustment_amount',
+        'overpaid_amount',
         'paid_at',
         'notes',
         'last_invoice_sent_at',
@@ -29,11 +34,15 @@ class Settlement extends Model
     {
         return [
             'period_date' => 'date',
+            'period_start' => 'date',
+            'period_end' => 'date',
             'due_date' => 'date',
             'sales_amount' => 'decimal:2',
+            'delivery_fee_amount' => 'decimal:2',
             'amount_due' => 'decimal:2',
             'paid_amount' => 'decimal:2',
             'adjustment_amount' => 'decimal:2',
+            'overpaid_amount' => 'decimal:2',
             'paid_at' => 'datetime',
             'last_invoice_sent_at' => 'datetime',
         ];
@@ -83,6 +92,11 @@ class Settlement extends Model
         return $this->status === self::STATUS_OVERDUE;
     }
 
+    public function isOverpaid(): bool
+    {
+        return (float) $this->overpaid_amount > 0;
+    }
+
     public function getRemainingAmountAttribute(): float
     {
         return max(0, (float) $this->amount_due - (float) $this->paid_amount);
@@ -103,25 +117,49 @@ class Settlement extends Model
     }
 
     /**
+     * Human-readable period label, e.g. "23 Jun – 29 Jun 2026".
+     */
+    public function getPeriodLabelAttribute(): string
+    {
+        $start = $this->period_start;
+        $end = $this->period_end;
+
+        if ($start->isSameDay($end)) {
+            return $start->format('d M Y');
+        }
+
+        if ($start->month === $end->month) {
+            return $start->format('d').' – '.$end->format('d M Y');
+        }
+
+        return $start->format('d M').' – '.$end->format('d M Y');
+    }
+
+    /**
      * Recalculate status based on due date and credited amount.
      */
     public function recalculateStatus(): void
     {
         $totalCredited = (float) $this->paid_amount + (float) $this->adjustment_amount;
+        $amountDue = (float) $this->amount_due;
 
-        if ($totalCredited >= (float) $this->amount_due) {
+        if ($totalCredited >= $amountDue) {
             $this->status = self::STATUS_PAID;
+            $this->overpaid_amount = max(0, $totalCredited - $amountDue);
             if (! $this->paid_at) {
                 $this->paid_at = now();
             }
-        } elseif ($totalCredited > 0) {
-            $this->status = self::STATUS_PARTIAL;
-        } elseif ($this->due_date->isToday()) {
-            $this->status = self::STATUS_DUE_TODAY;
-        } elseif ($this->due_date->isPast()) {
-            $this->status = self::STATUS_OVERDUE;
         } else {
-            $this->status = self::STATUS_GENERATED;
+            $this->overpaid_amount = 0;
+            if ($totalCredited > 0) {
+                $this->status = self::STATUS_PARTIAL;
+            } elseif ($this->due_date->isToday()) {
+                $this->status = self::STATUS_DUE_TODAY;
+            } elseif ($this->due_date->isPast()) {
+                $this->status = self::STATUS_OVERDUE;
+            } else {
+                $this->status = self::STATUS_GENERATED;
+            }
         }
 
         $this->save();

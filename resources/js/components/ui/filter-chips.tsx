@@ -1,33 +1,33 @@
 import { cn } from '@/lib/utils';
+import type { ReactNode } from 'react';
 
 interface FilterOption {
     key: string;
     label: string;
+    icon?: ReactNode;
 }
 
 interface Props {
     options: FilterOption[];
     active: string;
     onChange: (key: string) => void;
-    /** Chip size. Default: 'md' */
     size?: 'sm' | 'md';
-    /** Visual variant. Default: 'solid' */
     variant?: 'solid' | 'ring';
 }
 
 const sizeStyles = {
     sm: 'px-3.5 py-1.5 text-xs',
-    md: 'px-4 py-2.5 text-sm',
+    md: 'px-4 py-2 text-xs',
 };
 
 const variantStyles = {
     solid: {
         active: 'bg-primary text-white',
-        inactive: 'border border-border bg-white text-text',
+        inactive: 'border border-border bg-white text-text-muted',
     },
     ring: {
         active: 'bg-primary/10 text-primary ring-1 ring-primary/20',
-        inactive: 'bg-surface text-text-muted ring-1 ring-border hover:bg-surface-muted',
+        inactive: 'bg-surface text-text-muted ring-1 ring-border',
     },
 };
 
@@ -48,7 +48,14 @@ export default function FilterChips({ options, active, onChange, size = 'md', va
                             isActive ? styles.active : styles.inactive
                         )}
                     >
-                        {option.label}
+                        {option.icon ? (
+                            <span className="flex items-center gap-1.5">
+                                {option.icon}
+                                {option.label}
+                            </span>
+                        ) : (
+                            option.label
+                        )}
                     </button>
                 );
             })}

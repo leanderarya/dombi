@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ChevronRight, MapPinned, MessageCircle, Milk, Package, Store, Truck, User } from 'lucide-react';
+import { ChevronRight, MapPinned, MessageCircle, Milk, Package, Store, Truck } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
@@ -11,6 +11,7 @@ const HERO_SLIDES = [
         subtitle: 'Kualitas terbaik langsung dari Dombi',
         cta: 'Pesan Sekarang',
         ctaHref: '/customer/products',
+        image: 'https://images.unsplash.com/photo-1550583724-b2692b85b150?w=800&q=80',
         gradient: 'from-emerald-600 via-emerald-500 to-teal-500',
     },
     {
@@ -18,6 +19,7 @@ const HERO_SLIDES = [
         subtitle: 'Pesanan dikirim langsung ke rumah Anda',
         cta: 'Pesan Sekarang',
         ctaHref: '/customer/products',
+        image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80',
         gradient: 'from-emerald-700 via-emerald-600 to-emerald-500',
     },
     {
@@ -25,6 +27,7 @@ const HERO_SLIDES = [
         subtitle: 'Ambil langsung tanpa antre',
         cta: 'Pesan Sekarang',
         ctaHref: '/customer/products',
+        image: 'https://images.unsplash.com/photo-1559181567-c3190ca9959b?w=800&q=80',
         gradient: 'from-teal-600 via-emerald-500 to-emerald-400',
     },
 ];
@@ -32,7 +35,6 @@ const HERO_SLIDES = [
 export default function Home({ customerName, activeOrders }: any) {
     const { auth } = usePage<any>().props;
     const isLoggedIn = !!auth?.user;
-    const hasLinkedCustomer = !!auth?.user?.customer;
     const [slideIndex, setSlideIndex] = useState(0);
     const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
     const [nearestOutlet, setNearestOutlet] = useState<{ name: string; distance_km: number } | null>(null);
@@ -60,8 +62,8 @@ export default function Home({ customerName, activeOrders }: any) {
         const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         if (prefersReducedMotion) {
-return;
-}
+            return;
+        }
 
         const timer = setInterval(() => {
             setSlideIndex((prev) => (prev + 1) % HERO_SLIDES.length);
@@ -73,22 +75,20 @@ return;
     // Auto-detect location and fetch nearest outlet
     useEffect(() => {
         if (!navigator.geolocation) {
-return;
-}
+            return;
+        }
 
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 try {
                     const { latitude, longitude } = position.coords;
 
-                    // Save location to localStorage
                     saveLocation({
                         latitude,
                         longitude,
                         timestamp: Date.now(),
                     });
 
-                    // Sync location to server session for checkout
                     syncCustomerLocationDraft({
                         latitude,
                         longitude,
@@ -118,7 +118,9 @@ return;
     const activeOrder = activeOrders?.[0] ?? null;
 
     const handlePickup = useCallback(async () => {
-        if (pickupLoading) return;
+        if (pickupLoading) {
+            return;
+        }
 
         setPickupLoading(true);
         setPickupError(null);
@@ -128,7 +130,6 @@ return;
         if (nearestOutlet?.name) {
             setFoundOutletName(nearestOutlet.name);
 
-            // Keep overlay visible for at least 2 seconds before navigating
             timerRef.current = setTimeout(() => {
                 router.get('/customer/products');
             }, 2000);
@@ -151,13 +152,11 @@ return;
         }
 
         if (!outletName) {
-            // Fallback to default outlet name
             outletName = 'Outlet Dombi';
         }
 
         setFoundOutletName(outletName);
 
-        // Keep overlay visible for at least 2 seconds before navigating
         timerRef.current = setTimeout(() => {
             router.get('/customer/products');
         }, 2000);
@@ -172,37 +171,40 @@ return;
     }, [isLoggedIn]);
 
     return (
-        <CustomerMobileLayout>
+        <CustomerMobileLayout customerName={customerName} hideTopBar>
             <Head title="Home" />
 
-            {/* SECTION 1 — HERO CAROUSEL */}
-            <section className="-mx-4 -mt-5 overflow-hidden rounded-b-[2rem]">
-                <div
-                    className="relative flex h-65 items-center justify-center transition-all duration-700"
-                    style={{ backgroundImage: 'none' }}
-                >
-                    <div className={`absolute inset-0 bg-gradient-to-br ${HERO_SLIDES[slideIndex].gradient} transition-all duration-700`} />
-                    {/* Decorative circles */}
-                    <div className="absolute inset-0 overflow-hidden opacity-10">
-                        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-white" />
-                        <div className="absolute -bottom-24 -left-16 h-80 w-80 rounded-full bg-white" />
-                        <div className="absolute bottom-8 right-8 h-32 w-32 rounded-full bg-white" />
-                    </div>
+            {/* Safe area spacer for PWA */}
+            <div className="h-[env(safe-area-inset-top,0)]" />
 
-                    <div className="relative z-10 flex flex-col items-center px-8 text-center">
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-                            <span className="text-3xl font-bold text-white">D</span>
-                        </div>
-                        <h1 className="mt-5 text-2xl font-bold leading-tight text-white">
+            {/* SECTION 1 — HERO CAROUSEL */}
+            <section className="-mx-4 overflow-hidden rounded-b-[2rem]">
+                <div className="relative h-72 transition-all duration-700">
+                    {/* Gradient fallback */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${HERO_SLIDES[slideIndex].gradient} transition-all duration-700`} />
+                    {/* Image */}
+                    {HERO_SLIDES[slideIndex].image && (
+                        <img
+                            src={HERO_SLIDES[slideIndex].image}
+                            alt=""
+                            className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700"
+                        />
+                    )}
+                    {/* Gradient overlay — bottom text area */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+                    {/* Text — bottom left */}
+                    <div className="absolute bottom-16 left-5 right-5 z-10">
+                        <h1 className="text-2xl font-bold leading-tight text-white drop-shadow-md">
                             {HERO_SLIDES[slideIndex].title}
                         </h1>
-                        <p className="mt-2 text-sm text-white/80">
+                        <p className="mt-1 text-sm text-white/80 drop-shadow-sm">
                             {HERO_SLIDES[slideIndex].subtitle}
                         </p>
                         {HERO_SLIDES[slideIndex].cta && (
                             <Link
                                 href={HERO_SLIDES[slideIndex].ctaHref!}
-                                className="mt-4 inline-flex min-h-11 items-center rounded-xl bg-white/20 backdrop-blur-sm px-6 text-sm font-bold text-white active:bg-white/30"
+                                className="mt-3 inline-flex min-h-11 items-center rounded-xl bg-white/20 backdrop-blur-sm px-6 text-sm font-bold text-white active:bg-white/30"
                             >
                                 {HERO_SLIDES[slideIndex].cta}
                             </Link>
@@ -210,13 +212,13 @@ return;
                     </div>
 
                     {/* Dot indicators */}
-                    <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2">
+                    <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 gap-2">
                         {HERO_SLIDES.map((_, i) => (
                             <button
                                 key={i}
                                 type="button"
                                 onClick={() => setSlideIndex(i)}
-                                className={`flex min-h-11 min-w-11 items-center justify-center active:opacity-80`}
+                                className="flex min-h-11 min-w-11 items-center justify-center active:opacity-80"
                                 aria-label={`Slide ${i + 1}`}
                             >
                                 <span className={`block h-2 rounded-full transition-all duration-300 ${
@@ -228,6 +230,28 @@ return;
                 </div>
             </section>
 
+            {/* Greeting Card — overlaps hero bottom */}
+            <div className="relative -mt-8 z-20 mx-4 rounded-2xl bg-white px-5 py-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className="text-lg font-bold text-text">
+                            {isLoggedIn ? `Hai ${customerName ?? auth.user.name}!` : 'Selamat Datang di Dombi!'}
+                        </div>
+                        <div className="mt-1 text-xs text-text-muted">
+                            {isLoggedIn ? 'Yuk pesan susu kambing segar hari ini.' : 'Masuk untuk pengalaman penuh.'}
+                        </div>
+                    </div>
+                    {!isLoggedIn && (
+                        <a
+                            href="/oauth/google"
+                            className="shrink-0 rounded-full border-2 border-primary px-4 py-2 text-xs font-bold text-primary active:bg-primary-light"
+                        >
+                            Masuk
+                        </a>
+                    )}
+                </div>
+            </div>
+
             {/* Phone Banner — optional, dismissible */}
             {showPhoneBanner && (
                 <div className="mt-4 flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3">
@@ -236,7 +260,7 @@ return;
                     </div>
                     <a
                         href="/customer/verify-phone"
-                        className="shrink-0 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+                        className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
                     >
                         Tambah
                     </a>
@@ -255,133 +279,119 @@ return;
 
             {/* SECTION 2 — PESAN SEKARANG */}
             <section className="mt-6">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Pesan Sekarang</h2>
-                <p className="mt-1 text-xs text-text-muted">Pilih cara belanja. Untuk pickup, kami rekomendasikan outlet terdekat.</p>
+                <h2 className="fore-section-header">Pesan Sekarang</h2>
+                <p className="mt-1 text-xs text-text-muted">Pilih cara belanja favoritmu.</p>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                     <button
                         type="button"
                         onClick={handlePickup}
                         disabled={pickupLoading}
-                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:opacity-80 active:bg-emerald-100 disabled:opacity-50 disabled:active:bg-emerald-50"
+                        className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-primary/30 bg-primary-light/50 p-4 transition-all active:opacity-80 active:scale-[0.98] disabled:opacity-50"
                     >
-                        <div className="transition-transform duration-200 group-hover:scale-105">
-                            <Store className="h-6 w-6 text-emerald-600" />
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-light">
+                            <Store className="h-5 w-5 text-primary" />
                         </div>
-                        <div className="text-sm font-bold text-emerald-700">Ambil di Outlet</div>
-                        <div className="text-xs text-emerald-600">Tanpa antre</div>
+                        <div className="text-center">
+                            <div className="text-sm font-bold text-primary">Pick Up</div>
+                            <div className="mt-0.5 text-[11px] text-text-muted">Ambil di outlet</div>
+                        </div>
                     </button>
                     <button
                         type="button"
                         onClick={handleDelivery}
-                        className="group flex flex-col items-center gap-2 rounded-xl border border-border bg-emerald-50 p-4 transition-all duration-200 hover:shadow-sm active:opacity-80 active:bg-emerald-100"
+                        className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-amber-200 bg-amber-50/50 p-4 transition-all active:opacity-80 active:scale-[0.98]"
                     >
-                        <div className="transition-transform duration-200 group-hover:scale-105">
-                            <Truck className="h-6 w-6 text-emerald-600" />
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100">
+                            <Truck className="h-5 w-5 text-amber-600" />
                         </div>
-                        <div className="text-sm font-bold text-emerald-700">Kurir Dombi</div>
-                        <div className="text-xs text-emerald-600">Diantar ke rumah</div>
+                        <div className="text-center">
+                            <div className="text-sm font-bold text-amber-700">Delivery</div>
+                            <div className="mt-0.5 text-[11px] text-text-muted">Diantar ke rumah</div>
+                        </div>
                     </button>
                 </div>
             </section>
 
-            {/* SECTION 3 — ACCOUNT SUMMARY */}
-            <section className="mt-6">
-                {isLoggedIn ? (
+            {/* SECTION 3 — ACTIVE ORDER (compact, only when active) */}
+            {activeOrder && (
+                <section className="mt-6">
                     <Link
-                        href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
-                        className="group flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                        href={`/customer/orders/${activeOrder.id}`}
+                        className="group flex items-center gap-3 rounded-2xl border-2 border-primary/30 bg-white p-4 shadow-sm active:opacity-80"
                     >
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
-                            <User className="h-5 w-5 text-emerald-600" />
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-light">
+                            <Package className="h-5 w-5 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <div className="text-sm font-semibold text-text">
-                                Halo, {customerName ?? auth.user.name}
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-bold text-text">Pesanan Aktif</span>
+                                <span className="fore-badge-success">
+                                    {activeOrder.status === 'preparing' ? 'Disiapkan' : activeOrder.status === 'ready_for_pickup' ? 'Siap Diambil' : 'Aktif'}
+                                </span>
                             </div>
-                            <div className="mt-0.5 text-xs text-text-muted">
-                                {activeOrder
-                                    ? `Pesanan Aktif · ${activeOrder.order_code}`
-                                    : 'Belum Ada Pesanan Aktif'}
-                            </div>
+                            <div className="mt-0.5 text-xs text-text-muted">{activeOrder.order_code} · {activeOrder.outlet?.name ?? 'Outlet'}</div>
                         </div>
                         <ChevronRight className="h-4 w-4 text-text-subtle" />
                     </Link>
-                ) : (
-                    <div className="rounded-xl border border-border bg-white px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                                <div className="text-sm font-medium text-text">Masuk untuk pengalaman penuh</div>
-                                <div className="mt-0.5 text-xs text-text-muted">Lacak pesanan, simpan alamat.</div>
-                            </div>
-                            <a
-                                href="/oauth/google"
-                                className="flex min-h-11 shrink-0 items-center rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
-                            >
-                                Masuk Google
-                            </a>
-                        </div>
-                    </div>
-                )}
-            </section>
+                </section>
+            )}
 
             {/* SECTION 4 — YANG MENARIK DI DOMBI */}
             <section className="mt-6">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Yang Menarik di Dombi</h2>
+                <h2 className="fore-section-header">Jelajahi Dombi</h2>
                 <div className="mt-3 grid grid-cols-2 gap-3">
                     <Link
                         href="/customer/products"
-                        className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                        className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 transition-transform duration-200 group-hover:scale-105">
-                            <Milk className="h-5 w-5 text-emerald-600" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-light">
+                            <Milk className="h-4 w-4 text-primary" />
                         </div>
-                        <div>
-                            <div className="text-sm font-bold text-text">Produk Segar</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Susu kambing pilihan setiap hari</div>
+                        <div className="min-w-0">
+                            <div className="text-xs font-bold text-text">Produk Segar</div>
+                            <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted">Susu kambing pilihan</div>
                         </div>
                     </Link>
 
                     <Link
                         href="/customer/products"
-                        className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                        className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 transition-transform duration-200 group-hover:scale-105">
-                            <MapPinned className="h-5 w-5 text-blue-600" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50">
+                            <MapPinned className="h-4 w-4 text-blue-600" />
                         </div>
-                        <div>
-                            <div className="text-sm font-bold text-text">Outlet Terdekat</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">
-                                {nearestOutlet?.name ? nearestOutlet.name : 'Pesanan diproses dari outlet terbaik'}
+                        <div className="min-w-0">
+                            <div className="text-xs font-bold text-text">Outlet Terdekat</div>
+                            <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted">
+                                {nearestOutlet?.name ?? 'Cari outlet terdekat'}
                             </div>
                         </div>
                     </Link>
 
                     {isLoggedIn ? (
                         <Link
-                            href={activeOrder ? `/customer/orders/${activeOrder.id}` : '/customer/orders'}
-                            className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                            href="/customer/orders"
+                            className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
                         >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
-                                <Package className="h-5 w-5 text-amber-600" />
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50">
+                                <Package className="h-4 w-4 text-amber-600" />
                             </div>
-                            <div>
-                                <div className="text-sm font-bold text-text">{activeOrder ? 'Pesanan Aktif' : 'Riwayat Pesanan'}</div>
-                                <div className="mt-0.5 text-xs leading-relaxed text-text-muted">
-                                    {activeOrder ? activeOrder.order_code : 'Lihat pesanan sebelumnya'}
-                                </div>
+                            <div className="min-w-0">
+                                <div className="text-xs font-bold text-text">Riwayat Pesanan</div>
+                                <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted">Lihat pesanan sebelumnya</div>
                             </div>
                         </Link>
                     ) : (
                         <a
                             href="/oauth/google"
-                            className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                            className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
                         >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 transition-transform duration-200 group-hover:scale-105">
-                                <Package className="h-5 w-5 text-amber-600" />
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50">
+                                <Package className="h-4 w-4 text-amber-600" />
                             </div>
-                            <div>
-                                <div className="text-sm font-bold text-text">Riwayat Pesanan</div>
-                                <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Login untuk melihat pesanan</div>
+                            <div className="min-w-0">
+                                <div className="text-xs font-bold text-text">Riwayat Pesanan</div>
+                                <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted">Login untuk melihat</div>
                             </div>
                         </a>
                     )}
@@ -390,20 +400,20 @@ return;
                         href="https://wa.me/6281111111111"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex items-start gap-3 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm active:opacity-80"
+                        className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
                     >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-50 transition-transform duration-200 group-hover:scale-105">
-                            <MessageCircle className="h-5 w-5 text-purple-600" />
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-purple-50">
+                            <MessageCircle className="h-4 w-4 text-purple-600" />
                         </div>
-                        <div>
-                            <div className="text-sm font-bold text-text">Butuh Bantuan?</div>
-                            <div className="mt-0.5 text-xs leading-relaxed text-text-muted">Hubungi tim Dombi via WhatsApp</div>
+                        <div className="min-w-0">
+                            <div className="text-xs font-bold text-text">Butuh Bantuan?</div>
+                            <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted">Hubungi via WhatsApp</div>
                         </div>
                     </a>
                 </div>
             </section>
 
-            {/* SECTION 5 — TRUST */}
+            {/* SECTION 6 — TRUST */}
             <section className="mt-6 mb-4">
                 <div className="flex items-center justify-center gap-3 text-xs text-text-subtle">
                     <span>Sertifikasi Halal</span>
@@ -478,9 +488,9 @@ return;
                                         <div className="mt-3 text-sm text-emerald-100">Mengarahkan ke daftar produk...</div>
                                     </>
                                 ) : (
-                                        <>
-                                    <div className="text-sm font-medium text-emerald-100">Mencari outlet terdekat dari lokasi Anda</div>
-                                    <div className="mt-2 text-xs text-emerald-200/70">Pastikan GPS aktif untuk hasil terbaik</div>
+                                    <>
+                                        <div className="text-sm font-medium text-emerald-100">Mencari outlet terdekat dari lokasi Anda</div>
+                                        <div className="mt-2 text-xs text-emerald-200/70">Pastikan GPS aktif untuk hasil terbaik</div>
                                     </>
                                 )}
                             </div>

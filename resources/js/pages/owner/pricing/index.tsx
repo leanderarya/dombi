@@ -131,6 +131,7 @@ export default function PricingIndex(props: Props) {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get('tab');
+
         if (tab && TABS.some((t) => t.key === tab)) {
             setActiveTab(tab as TabKey);
         }
@@ -139,9 +140,11 @@ export default function PricingIndex(props: Props) {
     const handleTabChange = (tab: TabKey) => {
         setActiveTab(tab);
         const params: Record<string, string> = { tab };
+
         if (tab === 'outlet' && props.selectedOutlet) {
             params.outlet_id = String(props.selectedOutlet.id);
         }
+
         router.get('/owner/pricing', params, { preserveState: true, replace: true });
     };
 
@@ -201,11 +204,24 @@ function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?: PusatK
         return variants.filter((v) => {
             if (search) {
                 const q = search.toLowerCase();
-                if (!v.name.toLowerCase().includes(q) && !(v.family_name ?? '').toLowerCase().includes(q)) return false;
+
+                if (!v.name.toLowerCase().includes(q) && !(v.family_name ?? '').toLowerCase().includes(q)) {
+return false;
+}
             }
-            if (marginFilter === 'high' && v.margin <= 20000) return false;
-            if (marginFilter === 'low' && (v.margin < 5000 || v.margin > 20000)) return false;
-            if (marginFilter === 'negative' && v.margin >= 0) return false;
+
+            if (marginFilter === 'high' && v.margin <= 20000) {
+return false;
+}
+
+            if (marginFilter === 'low' && (v.margin < 5000 || v.margin > 20000)) {
+return false;
+}
+
+            if (marginFilter === 'negative' && v.margin >= 0) {
+return false;
+}
+
             return true;
         });
     }, [variants, search, marginFilter]);
@@ -215,6 +231,7 @@ function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?: PusatK
             const aVal = a[sortKey];
             const bVal = b[sortKey];
             const cmp = typeof aVal === 'string' ? aVal.localeCompare(String(bVal)) : Number(aVal) - Number(bVal);
+
             return sortDir === 'asc' ? cmp : -cmp;
         });
     }, [filtered, sortKey, sortDir]);
@@ -225,8 +242,12 @@ function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?: PusatK
 
     const toggleSort = useCallback(
         (key: SortKey) => {
-            if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-            else { setSortKey(key); setSortDir('asc'); }
+            if (sortKey === key) {
+setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+} else {
+ setSortKey(key); setSortDir('asc'); 
+}
+
             setPage(1);
         },
         [sortKey],
@@ -242,13 +263,17 @@ function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?: PusatK
                         <Input
                             type="text"
                             value={search}
-                            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                            onChange={(e) => {
+ setSearch(e.target.value); setPage(1); 
+}}
                             placeholder="Cari produk..."
                         />
                     </div>
                     <Select
                         value={marginFilter}
-                        onChange={(e) => { setMarginFilter(e.target.value as MarginFilter); setPage(1); }}
+                        onChange={(e) => {
+ setMarginFilter(e.target.value as MarginFilter); setPage(1); 
+}}
                         options={[
                             { value: 'all', label: 'Semua Margin' },
                             { value: 'high', label: 'Margin Tinggi (>20rb)' },
@@ -278,7 +303,9 @@ function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?: PusatK
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => { setSelectedVariant(v); setModalOpen(true); }}
+                                    onClick={() => {
+ setSelectedVariant(v); setModalOpen(true); 
+}}
                                     className="shrink-0 text-primary"
                                 >
                                     Ubah
@@ -325,7 +352,9 @@ function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?: PusatK
                 <GlobalPriceModal
                     open={modalOpen}
                     variant={selectedVariant}
-                    onClose={() => { setModalOpen(false); setSelectedVariant(null); }}
+                    onClose={() => {
+ setModalOpen(false); setSelectedVariant(null); 
+}}
                 />
             )}
         </div>
@@ -441,11 +470,24 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
         return prices.filter((p) => {
             if (search) {
                 const q = search.toLowerCase();
-                if (!p.name.toLowerCase().includes(q) && !(p.family_name ?? '').toLowerCase().includes(q)) return false;
+
+                if (!p.name.toLowerCase().includes(q) && !(p.family_name ?? '').toLowerCase().includes(q)) {
+return false;
+}
             }
-            if (marginFilter === 'high' && p.margin <= 20000) return false;
-            if (marginFilter === 'low' && (p.margin < 5000 || p.margin > 20000)) return false;
-            if (marginFilter === 'negative' && p.margin >= 0) return false;
+
+            if (marginFilter === 'high' && p.margin <= 20000) {
+return false;
+}
+
+            if (marginFilter === 'low' && (p.margin < 5000 || p.margin > 20000)) {
+return false;
+}
+
+            if (marginFilter === 'negative' && p.margin >= 0) {
+return false;
+}
+
             return true;
         });
     }, [prices, search, marginFilter]);
@@ -455,6 +497,7 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
             const aVal = a[sortKey];
             const bVal = b[sortKey];
             const cmp = typeof aVal === 'string' ? aVal.localeCompare(String(bVal)) : Number(aVal) - Number(bVal);
+
             return sortDir === 'asc' ? cmp : -cmp;
         });
     }, [filtered, sortKey, sortDir]);
@@ -465,8 +508,12 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
 
     const toggleSort = useCallback(
         (key: SortKey) => {
-            if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-            else { setSortKey(key); setSortDir('asc'); }
+            if (sortKey === key) {
+setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+} else {
+ setSortKey(key); setSortDir('asc'); 
+}
+
             setPage(1);
         },
         [sortKey],
@@ -474,33 +521,58 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
 
     const handleBulkUpdate = useCallback(() => {
         const amount = parseFloat(bulkAmount);
-        if (isNaN(amount)) return;
-        if (!confirm(`${sorted.length} produk akan diperbarui. Lanjutkan?`)) return;
+
+        if (isNaN(amount)) {
+return;
+}
+
+        if (!confirm(`${sorted.length} produk akan diperbarui. Lanjutkan?`)) {
+return;
+}
+
         setSaving(true);
         router.post(`/owner/pricing/outlets/${outlet.id}/bulk-update`, { adjustment: amount }, {
-            onFinish: () => { setSaving(false); setBulkOpen(false); setBulkAmount(''); },
+            onFinish: () => {
+ setSaving(false); setBulkOpen(false); setBulkAmount(''); 
+},
         });
     }, [bulkAmount, outlet.id, sorted.length]);
 
     const handleCopy = useCallback(() => {
-        if (!copySource) return;
-        if (!confirm('Ini akan menimpa semua harga outlet ini. Lanjutkan?')) return;
+        if (!copySource) {
+return;
+}
+
+        if (!confirm('Ini akan menimpa semua harga outlet ini. Lanjutkan?')) {
+return;
+}
+
         setSaving(true);
         router.post(`/owner/pricing/outlets/${outlet.id}/copy`, { source_outlet_id: parseInt(copySource) }, {
-            onFinish: () => { setSaving(false); setCopyOpen(false); setCopySource(''); },
+            onFinish: () => {
+ setSaving(false); setCopyOpen(false); setCopySource(''); 
+},
         });
     }, [copySource, outlet.id]);
 
     const handleReset = useCallback((variantId: number, productName: string) => {
-        if (!confirm(`Reset ${productName} ke Harga Pusat?`)) return;
+        if (!confirm(`Reset ${productName} ke Harga Pusat?`)) {
+return;
+}
+
         router.delete(`/owner/pricing/outlets/${outlet.id}/variants/${variantId}`);
     }, [outlet.id]);
 
     const handleSave = useCallback((newPrice: number) => {
-        if (!selectedRow) return;
+        if (!selectedRow) {
+return;
+}
+
         setSaving(true);
         router.patch(`/owner/pricing/outlets/${outlet.id}/variants/${selectedRow.variant_id}`, { selling_price: newPrice }, {
-            onFinish: () => { setSaving(false); setModalOpen(false); setSelectedRow(null); },
+            onFinish: () => {
+ setSaving(false); setModalOpen(false); setSelectedRow(null); 
+},
         });
     }, [selectedRow, outlet.id]);
 
@@ -530,13 +602,17 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
                     <Input
                         type="text"
                         value={search}
-                        onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                        onChange={(e) => {
+ setSearch(e.target.value); setPage(1); 
+}}
                         placeholder="Cari produk..."
                     />
                 </div>
                 <Select
                     value={marginFilter}
-                    onChange={(e) => { setMarginFilter(e.target.value as MarginFilter); setPage(1); }}
+                    onChange={(e) => {
+ setMarginFilter(e.target.value as MarginFilter); setPage(1); 
+}}
                     options={[
                         { value: 'all', label: 'Semua Margin' },
                         { value: 'high', label: 'Margin Tinggi (>20rb)' },
@@ -560,7 +636,9 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
                     amount={bulkAmount}
                     onChange={setBulkAmount}
                     onApply={handleBulkUpdate}
-                    onCancel={() => { setBulkOpen(false); setBulkAmount(''); }}
+                    onCancel={() => {
+ setBulkOpen(false); setBulkAmount(''); 
+}}
                     saving={saving}
                     count={sorted.length}
                 />
@@ -573,7 +651,9 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
                     source={copySource}
                     onChange={setCopySource}
                     onApply={handleCopy}
-                    onCancel={() => { setCopyOpen(false); setCopySource(''); }}
+                    onCancel={() => {
+ setCopyOpen(false); setCopySource(''); 
+}}
                     saving={saving}
                 />
             )}
@@ -613,7 +693,9 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => { setSelectedRow(row); setModalOpen(true); }}
+                                    onClick={() => {
+ setSelectedRow(row); setModalOpen(true); 
+}}
                                     className="shrink-0 text-primary"
                                 >
                                     Ubah
@@ -645,7 +727,9 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
                 <OutletPriceModal
                     open={modalOpen}
                     row={selectedRow}
-                    onClose={() => { setModalOpen(false); setSelectedRow(null); }}
+                    onClose={() => {
+ setModalOpen(false); setSelectedRow(null); 
+}}
                     onSave={handleSave}
                     saving={saving}
                 />
@@ -758,7 +842,10 @@ function RiwayatTab({ logs, actionFilter }: { logs?: PaginatedLogs; actionFilter
 
 function SortBar({ sortKey, toggleSort }: { sortKey: SortKey; toggleSort: (key: SortKey) => void }) {
     const SortIcon = ({ column }: { column: SortKey }) => {
-        if (sortKey !== column) return <ChevronDown className="h-3 w-3 text-text-subtle" />;
+        if (sortKey !== column) {
+return <ChevronDown className="h-3 w-3 text-text-subtle" />;
+}
+
         return sortKey === 'asc' ? <ChevronUp className="h-3 w-3 text-primary" /> : <ChevronDown className="h-3 w-3 text-primary" />;
     };
 
@@ -893,18 +980,31 @@ function GlobalPriceModal({ open, variant, onClose }: {
         const newCenter = parseFloat(centerPrice);
         const newSelling = parseFloat(sellingPrice);
 
-        if (!isNaN(newCenter) && newCenter !== variant.center_price) updates.center_price = newCenter;
-        if (!isNaN(newSelling) && newSelling !== variant.selling_price) updates.selling_price = newSelling;
+        if (!isNaN(newCenter) && newCenter !== variant.center_price) {
+updates.center_price = newCenter;
+}
 
-        if (Object.keys(updates).length === 0) { onClose(); return; }
+        if (!isNaN(newSelling) && newSelling !== variant.selling_price) {
+updates.selling_price = newSelling;
+}
+
+        if (Object.keys(updates).length === 0) {
+ onClose();
+
+ return; 
+}
 
         setSaving(true);
         router.patch(`/owner/pricing/variants/${variant.variant_id}`, updates, {
-            onFinish: () => { setSaving(false); onClose(); },
+            onFinish: () => {
+ setSaving(false); onClose(); 
+},
         });
     };
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
@@ -969,7 +1069,9 @@ function OutletPriceModal({ open, row, onClose, onSave, saving }: {
     const margin = (parseFloat(price) || 0) - row.center_price;
     const isNegative = margin < 0;
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>

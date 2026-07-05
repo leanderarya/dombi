@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\OfflineSale;
 use App\Models\OutletInventory;
+use App\Models\OutletPayable;
 use App\Models\ProductVariant;
+use App\Models\Settlement;
 use App\Models\StockMovement;
+use App\Services\SettlementGeneratorService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,17 +25,23 @@ class OfflineSaleController extends Controller
         abort_unless($outlet, 403);
 
         $sales = OfflineSale::where('outlet_id', $outlet->id)
-            ->with('variant:id,name')
+            ->with(['variant' => function ($q) {
+                $q->select('id', 'product_family_id', 'name')
+                    ->with('family:id,name');
+            }])
             ->latest()
             ->paginate(20);
 
         $variants = OutletInventory::where('outlet_id', $outlet->id)
             ->where('current_stock', '>', 0)
-            ->with('variant:id,name,center_price')
+            ->with(['variant' => function ($q) {
+                $q->select('id', 'product_family_id', 'name', 'center_price')
+                    ->with('family:id,name');
+            }])
             ->get()
             ->map(fn ($inv) => [
                 'id' => $inv->variant->id,
-                'name' => $inv->variant->name,
+                'name' => $inv->variant->family->name . ' - ' . $inv->variant->name,
                 'center_price' => (float) $inv->variant->center_price,
                 'stock' => $inv->current_stock,
             ]);
@@ -43,7 +52,7 @@ class OfflineSaleController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, SettlementGeneratorService $settlementGenerator): RedirectResponse
     {
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
@@ -69,7 +78,7 @@ class OfflineSaleController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($outlet, $variant, $validated, $centerPrice, $totalAmount, $inventory, $request) {
+        DB::transaction(function () use ($outlet, $variant, $validated, $centerPrice, $totalAmount, $inventory, $request, $settlementGenerator) {
             $before = $inventory->current_stock;
             $inventory->decrement('current_stock', $validated['quantity']);
 
@@ -94,8 +103,67 @@ class OfflineSaleController extends Controller
                 'notes' => "Penjualan offline: {$validated['quantity']}x {$variant->name}",
                 'created_by' => $request->user()->id,
             ]);
+
+            // Audit trail in outlet_payables
+            OutletPayable::create([
+                'outlet_id' => $outlet->id,
+                'type' => 'sale',
+                'amount' => $totalAmount,
+                'center_share' => $totalAmount,
+                'outlet_margin' => 0,
+                'due_date' => now()->endOfWeek(\Carbon\Carbon::SUNDAY)->addDays(7)->toDateString(),
+                'paid_amount' => 0,
+                'remaining_amount' => $totalAmount,
+                'notes' => "Penjualan offline: {$validated['quantity']}x {$variant->name}",
+                'created_by' => $request->user()->id,
+            ]);
+
+            // Upsert weekly settlement via generator (single source of truth)
+            $settlementGenerator->generateForOutlet($outlet, now());
         });
 
         return back()->with('success', 'Penjualan offline berhasil dicatat.');
+    }
+
+    public function destroy(Request $request, OfflineSale $offlineSale, SettlementGeneratorService $settlementGenerator): RedirectResponse
+    {
+        $outlet = $request->user()->outlet;
+        abort_unless($outlet && $offlineSale->outlet_id === $outlet->id, 403);
+
+        DB::transaction(function () use ($outlet, $offlineSale, $settlementGenerator) {
+            // Reverse stock
+            $inventory = OutletInventory::where('outlet_id', $outlet->id)
+                ->where('product_variant_id', $offlineSale->product_variant_id)
+                ->first();
+
+            if ($inventory) {
+                $inventory->increment('current_stock', $offlineSale->quantity);
+            }
+
+            // Delete related stock movement
+            StockMovement::where('outlet_id', $outlet->id)
+                ->where('product_variant_id', $offlineSale->product_variant_id)
+                ->where('type', 'offline_sale')
+                ->where('quantity', -$offlineSale->quantity)
+                ->where('created_by', $offlineSale->created_by)
+                ->where('created_at', $offlineSale->created_at)
+                ->delete();
+
+            // Delete related outlet payable (audit trail)
+            // Use exact notes match to avoid false positives (e.g. "10x" matching "100x")
+            OutletPayable::where('outlet_id', $outlet->id)
+                ->where('type', 'sale')
+                ->where('notes', "Penjualan offline: {$offlineSale->quantity}x {$offlineSale->variant->name}")
+                ->where('created_by', $offlineSale->created_by)
+                ->delete();
+
+            // Delete the sale
+            $offlineSale->delete();
+
+            // Recalculate weekly settlement from remaining orders (source of truth)
+            $settlementGenerator->recalculateForWeek($outlet, $offlineSale->created_at);
+        });
+
+        return back()->with('success', 'Penjualan offline berhasil dihapus.');
     }
 }

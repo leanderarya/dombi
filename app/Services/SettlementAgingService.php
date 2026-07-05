@@ -128,6 +128,7 @@ class SettlementAgingService
     public function getAgingSummary(): array
     {
         $rows = DB::table('settlements')
+            ->where('period_type', 'weekly')
             ->selectRaw("
                 outlet_id,
                 SUM(amount_due) as total_amount_due,
@@ -187,6 +188,7 @@ class SettlementAgingService
 
         // Collection rate
         $totals = DB::table('settlements')
+            ->where('period_type', 'weekly')
             ->selectRaw('
                 SUM(amount_due) as total_sales,
                 SUM(paid_amount) as total_paid
@@ -216,6 +218,7 @@ class SettlementAgingService
     public function getOutletAgingStatus(int $outletId): array
     {
         $row = DB::table('settlements')
+            ->where('period_type', 'weekly')
             ->selectRaw("
                 SUM(CASE WHEN status != 'paid' THEN (amount_due - paid_amount - adjustment_amount) ELSE 0 END) as total_remaining,
                 MIN(CASE WHEN status != 'paid' THEN due_date END) as earliest_due_date

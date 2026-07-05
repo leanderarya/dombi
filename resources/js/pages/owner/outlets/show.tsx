@@ -30,9 +30,18 @@ const OutletLocationMap = lazy(
 );
 
 function getOutletStatusMeta(outlet: any): { label: string; variant: 'success' | 'warning' | 'info' | 'neutral'; color: string } {
-    if (outlet.status !== 'active') return { label: 'Nonaktif', variant: 'neutral', color: 'text-gray-600' };
-    if (Number(outlet.low_stock_count) > 0) return { label: 'Stok Rendah', variant: 'warning', color: 'text-amber-600' };
-    if (Number(outlet.active_orders_count) >= 3) return { label: 'Sibuk', variant: 'info', color: 'text-blue-600' };
+    if (outlet.status !== 'active') {
+return { label: 'Nonaktif', variant: 'neutral', color: 'text-gray-600' };
+}
+
+    if (Number(outlet.low_stock_count) > 0) {
+return { label: 'Stok Rendah', variant: 'warning', color: 'text-amber-600' };
+}
+
+    if (Number(outlet.active_orders_count) >= 3) {
+return { label: 'Sibuk', variant: 'info', color: 'text-blue-600' };
+}
+
     return { label: 'Aktif', variant: 'success', color: 'text-emerald-600' };
 }
 

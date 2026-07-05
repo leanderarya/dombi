@@ -1,8 +1,8 @@
 import { Head } from '@inertiajs/react';
 import { CheckCircle, Download } from 'lucide-react';
 import { useState } from 'react';
-import FilterChips from '@/components/ui/filter-chips';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
 
 interface Props {
@@ -25,6 +25,7 @@ export default function OutletReports({ outlet }: Props) {
         if (period === 'custom') {
             return `/outlet/reports/sales/export?period=custom&date_from=${dateFrom}&date_to=${dateTo}`;
         }
+
         return `/outlet/reports/sales/export?period=${period}`;
     };
 

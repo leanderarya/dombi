@@ -1,12 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Package } from 'lucide-react';
 import { useState } from 'react';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import Pagination from '@/components/pagination';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
-import OutletPageShell from '@/components/outlet/outlet-page-shell';
-import OutletLayout from '@/layouts/outlet-layout';
 import { useOrderAlert } from '@/hooks/use-order-alert';
+import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatRelativeDate } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
 

@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
-import { useCart } from '@/lib/use-cart';
 import { formatCurrency } from '@/lib/format';
+import { useCart } from '@/lib/use-cart';
 
 export default function FloatingCartBar() {
     const { items, totalItems, totalPrice } = useCart();
@@ -19,7 +19,7 @@ export default function FloatingCartBar() {
     };
 
     return (
-        <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-4">
+        <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0))] z-30 px-4">
             <button
                 type="button"
                 onClick={handleCheckout}

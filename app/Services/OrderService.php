@@ -191,7 +191,7 @@ class OrderService
             'fulfillment_type' => $previousOrder->fulfillment_type,
             'customer_name' => $customer->name,
             'phone_number' => $customer->phone,
-            'payment_method' => 'cod',
+            'payment_method' => $previousOrder->payment_method,
         ]);
     }
 

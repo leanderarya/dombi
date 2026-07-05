@@ -48,6 +48,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
     const outlets = useMemo(() => {
         const unique = [...new Set(items.map((item: any) => item.outlet_name))];
+
         return unique.sort();
     }, [items]);
 
@@ -70,6 +71,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
         if (stockFilter !== 'all') {
             result = result.filter((item: any) => {
                 const available = item.current_stock - item.reserved_stock;
+
                 switch (stockFilter) {
                     case 'critical': return available <= 0;
                     case 'low': return available > 0 && available <= item.minimum_stock;
@@ -81,6 +83,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
         result.sort((a: any, b: any) => {
             let cmp = 0;
+
             switch (sortField) {
                 case 'outlet':
                     cmp = a.outlet_name.localeCompare(b.outlet_name);
@@ -95,6 +98,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                     cmp = (a.current_stock - a.reserved_stock) - (b.current_stock - b.reserved_stock);
                     break;
             }
+
             return sortDir === 'asc' ? cmp : -cmp;
         });
 
@@ -165,7 +169,9 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                             <button
                                 key={tab.key}
                                 type="button"
-                                onClick={() => { setStockFilter(tab.key); setCurrentPage(1); }}
+                                onClick={() => {
+ setStockFilter(tab.key); setCurrentPage(1); 
+}}
                                 className={cn(
                                     'rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all',
                                     stockFilter === tab.key
@@ -185,13 +191,17 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                             type="text"
                             placeholder="Cari outlet atau produk..."
                             value={search}
-                            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                            onChange={(e) => {
+ setSearch(e.target.value); setCurrentPage(1); 
+}}
                             aria-label="Cari inventaris"
                             className="flex-1"
                         />
                         <Select
                             value={outletFilter}
-                            onChange={(e) => { setOutletFilter(e.target.value); setCurrentPage(1); }}
+                            onChange={(e) => {
+ setOutletFilter(e.target.value); setCurrentPage(1); 
+}}
                             options={[
                                 { value: 'all', label: 'Semua Outlet' },
                                 ...outlets.map((outlet: string) => ({ value: outlet, label: outlet })),
@@ -255,7 +265,9 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                                     variant="secondary"
                                     size="sm"
                                     className="mt-4"
-                                    onClick={() => { setSearch(''); setOutletFilter('all'); setStockFilter('all'); setCurrentPage(1); }}
+                                    onClick={() => {
+ setSearch(''); setOutletFilter('all'); setStockFilter('all'); setCurrentPage(1); 
+}}
                                 >
                                     Reset Filter
                                 </Button>
@@ -439,10 +451,20 @@ function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any })
     const filtered = variants.filter((v) => {
         if (search) {
             const q = search.toLowerCase();
-            if (!v.name.toLowerCase().includes(q) && !(v.sku ?? '').toLowerCase().includes(q)) return false;
+
+            if (!v.name.toLowerCase().includes(q) && !(v.sku ?? '').toLowerCase().includes(q)) {
+return false;
+}
         }
-        if (stockFilter === 'zero' && v.center_stock > 0) return false;
-        if (stockFilter === 'low' && (v.center_stock <= 0 || v.center_stock > 10)) return false;
+
+        if (stockFilter === 'zero' && v.center_stock > 0) {
+return false;
+}
+
+        if (stockFilter === 'low' && (v.center_stock <= 0 || v.center_stock > 10)) {
+return false;
+}
+
         return true;
     });
 
@@ -501,7 +523,9 @@ function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any })
                                             {v.center_stock} pcs
                                         </span>
                                         <button
-                                            onClick={() => { setEditModal(v); setNewStock(String(v.center_stock)); setReason(''); }}
+                                            onClick={() => {
+ setEditModal(v); setNewStock(String(v.center_stock)); setReason(''); 
+}}
                                             className="rounded-lg px-2 py-1 text-xs font-semibold text-primary hover:bg-primary-light"
                                         >
                                             Edit

@@ -16,6 +16,10 @@ use Illuminate\Validation\ValidationException;
 
 class ExchangeService
 {
+    public function __construct(
+        private readonly SettlementGeneratorService $settlementGeneratorService,
+    ) {}
+
     public function createRequest(Outlet $outlet, User $requester, array $data): ExchangeRequest
     {
         return DB::transaction(function () use ($outlet, $requester, $data) {
@@ -253,6 +257,12 @@ class ExchangeService
             }
 
             $this->recordExchangeAdjustment($exchange, $owner);
+
+            // Sync adjustment to settlement
+            $outlet = $exchange->outlet;
+            if ($outlet) {
+                $this->settlementGeneratorService->syncAdjustments($outlet, $exchange->created_at);
+            }
 
             $from = $exchange->status;
             $exchange->update([

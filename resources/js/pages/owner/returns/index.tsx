@@ -30,6 +30,7 @@ export default function OwnerReturnsIndex(props: any) {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const t = params.get('tab');
+
         if (t && TABS.some((tab) => tab.key === t)) {
             setActiveTab(t as TabKey);
         }
@@ -95,6 +96,7 @@ function PengembalianTab({ returns, filters, dashboard, outlets, reasons }: any)
     if (!returns || !dashboard) {
         return <div className="h-20 animate-pulse rounded-xl border border-border bg-white" />;
     }
+
     const handleApprove = (id: number, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -141,6 +143,7 @@ function PengembalianTab({ returns, filters, dashboard, outlets, reasons }: any)
                     ) : (
                         returns.data.map((ret: any) => {
                             const status = getReturnStatus(ret.status);
+
                             return (
                                 <Link key={ret.id} href={`/owner/returns/${ret.id}`} className="block rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md">
                                     <div className="flex items-center justify-between">
@@ -210,6 +213,7 @@ function PenukaranTab({ exchanges, filters, dashboard, outlets }: any) {
     if (!exchanges || !dashboard) {
         return <div className="h-20 animate-pulse rounded-xl border border-border bg-white" />;
     }
+
     const handleApprove = (id: number, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -250,6 +254,7 @@ function PenukaranTab({ exchanges, filters, dashboard, outlets }: any) {
                     ) : (
                         exchanges.data.map((ex: any) => {
                             const status = getExchangeStatus(ex.status);
+
                             return (
                                 <Link key={ex.id} href={`/owner/exchanges/${ex.id}`} className="block rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md">
                                     <div className="flex items-center justify-between">
@@ -325,6 +330,7 @@ function StatusFilterPills({ filters, active, onChange, getStatus }: {
         <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
             {filters.map((f) => {
                 const isActive = active === f.key;
+
                 return (
                     <button
                         key={f.key}

@@ -110,6 +110,7 @@ export default function AnalyticsIndex(props: Props) {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get('tab');
+
         if (tab && TABS.some((t) => t.key === tab)) {
             setActiveTab(tab as TabKey);
         }
@@ -515,9 +516,19 @@ function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = {}, out
 
     function handleExport() {
         const params = new URLSearchParams();
-        if (filters.date_from) params.set('date_from', filters.date_from);
-        if (filters.date_to) params.set('date_to', filters.date_to);
-        if (filters.outlet_id) params.set('outlet_id', String(filters.outlet_id));
+
+        if (filters.date_from) {
+params.set('date_from', filters.date_from);
+}
+
+        if (filters.date_to) {
+params.set('date_to', filters.date_to);
+}
+
+        if (filters.outlet_id) {
+params.set('outlet_id', String(filters.outlet_id));
+}
+
         window.location.href = `/owner/reports/export-csv?${params.toString()}`;
     }
 
@@ -788,6 +799,7 @@ function MasalahTab({ reports, filters = {} }: Props) {
                             resolved: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
                             rejected: 'text-red-600 bg-red-50 ring-red-200',
                         };
+
                         return (
                             <button
                                 key={option.key}
@@ -824,6 +836,7 @@ function MasalahTab({ reports, filters = {} }: Props) {
                         resolved: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
                         rejected: 'text-red-600 bg-red-50 ring-red-200',
                     };
+
                     return (
                         <button
                             key={option.key}

@@ -34,9 +34,14 @@ class GuestOrderRecoveryService
             return $this->notFoundResponse();
         }
 
+        // Include both active AND expired orders for guests — expired needs "Pesan Ulang" action
+        $queryStatuses = $activeOnly
+            ? array_merge(Order::ACTIVE_STATUSES, [Order::STATUS_EXPIRED])
+            : Order::ACTIVE_STATUSES;
+
         $activeOrders = Order::query()
             ->where('customer_id', $customer->id)
-            ->whereIn('status', Order::ACTIVE_STATUSES)
+            ->whereIn('status', $queryStatuses)
             ->with(['outlet:id,name', 'items'])
             ->latest()
             ->get()

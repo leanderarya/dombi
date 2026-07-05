@@ -2,12 +2,12 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import ExchangeCreateDialog from '@/components/outlet/exchange-create-dialog';
-import EmptyState from '@/components/ui/empty-state';
-import FilterChips from '@/components/ui/filter-chips';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import Pagination from '@/components/pagination';
-import StatusBadge from '@/components/ui/status-badge';
 import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
+import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
 

@@ -10,7 +10,9 @@
  * - Canonical form: always starts with 62, no +
  */
 export function normalizePhone(phone: string | null | undefined): string {
-    if (!phone) return '';
+    if (!phone) {
+return '';
+}
 
     // Strip everything except digits
     const digits = phone.replace(/\D/g, '');
@@ -37,7 +39,9 @@ export function isDifferentRecipient(order: {
     const rp = order.recipient_phone?.trim();
 
     // No recipient data → same as orderer
-    if (!rn && !rp) return false;
+    if (!rn && !rp) {
+return false;
+}
 
     const nameDiffers = !!rn && rn !== order.customer_name?.trim();
     const phoneDiffers = !!rp && normalizePhone(rp) !== normalizePhone(order.customer_phone);
@@ -57,5 +61,6 @@ export function getContactPhone(order: {
     if (isDifferentRecipient(order)) {
         return order.recipient_phone || order.customer_phone || null;
     }
+
     return order.customer_phone || null;
 }

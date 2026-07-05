@@ -1,3 +1,6 @@
+import { Head, useForm } from '@inertiajs/react';
+import { MapPin } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import NoticeBanner from '@/components/customer/checkout/notice-banner';
 import DeliveryQuoteCard from '@/components/customer/delivery-quote-card';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
@@ -5,12 +8,10 @@ import LocationSheet from '@/components/customer/location-sheet';
 import PickupOutletSelector from '@/components/customer/pickup-outlet-selector';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
+import PhoneInput from '@/components/ui/phone-input';
 import SectionCard from '@/components/ui/section-card';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation } from '@/lib/customer-location';
-import { Head, useForm } from '@inertiajs/react';
-import { MapPin } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 type CustomerForm = {
     customer_name: string;
@@ -174,6 +175,7 @@ export default function CheckoutCustomer({
         } else {
             form.setData('save_recipient', saveRecipient);
         }
+
         form.post('/customer/checkout/customer');
     };
 
@@ -221,20 +223,19 @@ export default function CheckoutCustomer({
                         error={form.errors.customer_name}
                         placeholder="Nama kamu"
                     />
-                    <Field
+                    <PhoneInput
                         label="Nomor WhatsApp"
                         value={form.data.phone_number}
                         onChange={(value) =>
                             form.setData('phone_number', value)
                         }
                         error={form.errors.phone_number}
-                        placeholder="081234567890"
-                        inputMode="tel"
                         hint={
                             isLoggedIn && authUser?.phone
                                 ? 'Dari akun kamu'
                                 : undefined
                         }
+                        required
                     />
                 </div>
 
@@ -279,15 +280,13 @@ export default function CheckoutCustomer({
                             error={form.errors.recipient_name}
                             placeholder="Nama penerima"
                         />
-                        <Field
+                        <PhoneInput
                             label="Nomor WhatsApp Penerima"
                             value={form.data.recipient_phone}
                             onChange={(value) =>
                                 form.setData('recipient_phone', value)
                             }
                             error={form.errors.recipient_phone}
-                            placeholder="081234567890"
-                            inputMode="tel"
                         />
                     </div>
 

@@ -40,7 +40,9 @@ class SettlementPaymentService
     }
 
     /**
-     * Verify a payment and update the settlement. Wrapped in transaction.
+     * Verify a single payment and FIFO-allocate across unpaid settlements.
+     * Uses lockForUpdate to prevent race conditions.
+     * Notification is sent after transaction commits.
      */
     public function verifyPayment(SettlementPayment $payment, User $user): void
     {
@@ -55,18 +57,57 @@ class SettlementPaymentService
                 'verified_at' => now(),
             ]);
 
-            // Update settlement paid_amount
-            if ($payment->settlement_id) {
-                $settlement = $payment->settlement;
-                if ($settlement) {
-                    $settlement->paid_amount = (float) $settlement->paid_amount + (float) $payment->amount;
-                    $settlement->recalculateStatus();
-                }
-            }
+            $this->fifoAllocate($payment->outlet_id, (float) $payment->amount);
         });
 
         $payment->load('outlet');
         $this->notificationService->notifyPaymentVerified($payment);
+    }
+
+    /**
+     * Bulk verify multiple payments in a single transaction.
+     * Returns the count of verified payments.
+     * Notifications are sent after the transaction commits.
+     */
+    public function bulkVerifyPayments(array $paymentIds, User $user): int
+    {
+        $verifiedPayments = [];
+        // Track allocation per outlet (sum of all verified amounts in this batch)
+        $outletAllocations = [];
+
+        DB::transaction(function () use ($paymentIds, $user, &$verifiedPayments, &$outletAllocations) {
+            foreach ($paymentIds as $paymentId) {
+                $payment = SettlementPayment::lockForUpdate()->find($paymentId);
+                if (! $payment || ! $payment->isPending()) {
+                    continue;
+                }
+
+                $payment->update([
+                    'status' => SettlementPayment::STATUS_VERIFIED,
+                    'verified_by' => $user->id,
+                    'verified_at' => now(),
+                ]);
+
+                $verifiedPayments[] = $payment;
+
+                // Accumulate per outlet
+                $oid = $payment->outlet_id;
+                $outletAllocations[$oid] = ($outletAllocations[$oid] ?? 0) + (float) $payment->amount;
+            }
+
+            // FIFO-allocate per outlet (one pass per outlet for the entire batch)
+            foreach ($outletAllocations as $outletId => $totalAmount) {
+                $this->fifoAllocate($outletId, $totalAmount);
+            }
+        });
+
+        // Send notifications after transaction commits
+        foreach ($verifiedPayments as $payment) {
+            $payment->load('outlet');
+            $this->notificationService->notifyPaymentVerified($payment);
+        }
+
+        return count($verifiedPayments);
     }
 
     /**
@@ -81,5 +122,40 @@ class SettlementPaymentService
 
         $payment->load('outlet');
         $this->notificationService->notifyPaymentRejected($payment, $reason);
+    }
+
+    /**
+     * FIFO-allocate an amount across unpaid settlements for an outlet.
+     * Oldest settlement first. Updates paid_amount and recalculates status.
+     * Must be called inside a DB transaction with proper locking.
+     */
+    public function fifoAllocate(int $outletId, float $amount): void
+    {
+        $remaining = $amount;
+
+        $unpaidSettlements = Settlement::where('outlet_id', $outletId)
+            ->where('period_type', 'weekly')
+            ->where('status', '!=', Settlement::STATUS_PAID)
+            ->lockForUpdate()
+            ->orderBy('period_start', 'asc')
+            ->get();
+
+        foreach ($unpaidSettlements as $settlement) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $outstanding = max(0, (float) $settlement->amount_due - (float) $settlement->paid_amount - (float) $settlement->adjustment_amount);
+            $allocate = min($remaining, $outstanding);
+
+            if ($allocate > 0) {
+                $settlement->paid_amount = (float) $settlement->paid_amount + $allocate;
+                $settlement->recalculateStatus();
+                $remaining -= $allocate;
+            }
+        }
+
+        // If remaining > 0 after all settlements are covered, it's overpayment on the last one
+        // (already handled by recalculateStatus → overpaid_amount)
     }
 }

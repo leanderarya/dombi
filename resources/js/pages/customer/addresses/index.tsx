@@ -26,11 +26,11 @@ return addresses;
     }
 
     return (
-        <div className="min-h-dvh bg-[#fbf9f7] text-text">
+        <div className="min-h-dvh bg-background text-text">
             <OfflineBanner />
 
             {/* Sticky Header */}
-            <header className="sticky top-0 z-30 border-b border-border bg-white pt-[env(safe-area-inset-top)]">
+            <header className="sticky top-0 z-30 border-b border-border bg-white pt-safe">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <Link href="/customer/profile" className="flex h-10 w-10 items-center justify-center rounded-lg text-text active:bg-zinc-100">
                         <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -45,7 +45,7 @@ return addresses;
             </header>
 
             {/* Content */}
-            <main className="mx-auto max-w-lg px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+            <main className="mx-auto max-w-lg px-4 pt-4 pb-[calc(6rem+env(safe-area-inset-bottom,0))]">
                 <Head title="Alamat Saya" />
 
                 {/* Search */}
@@ -85,7 +85,7 @@ return addresses;
             </main>
 
             {/* Sticky Add Button */}
-            <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 px-4">
+            <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0))] z-30 px-4">
                 <Link
                     href="/customer/addresses/create"
                     className="mx-auto flex max-w-lg min-h-12 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white shadow-lg active:bg-primary-hover"

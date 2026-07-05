@@ -33,7 +33,7 @@ export function useOutlet(): OutletContextValue {
 }
 
 export default function OutletProvider({ children }: { children: ReactNode }) {
-    const { outletId, save, clear } = useOutletStore();
+    const { outletId, save } = useOutletStore();
     const { location } = useCustomerLocation();
     const [outlets, setOutlets] = useState<OutletOption[]>([]);
     const [loading, setLoading] = useState(true);
@@ -94,7 +94,7 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         }
 
         // 2. Auto-select first (nearest by distance or first alphabetically)
-        return null;
+        return outlets[0];
     }, [outlets, outletId]);
 
     // Persist default selection when none saved

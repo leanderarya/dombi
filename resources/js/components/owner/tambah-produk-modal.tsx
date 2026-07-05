@@ -1,6 +1,6 @@
-import { createPortal } from 'react-dom';
 import { Search, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatCurrency } from '@/lib/format';
 
 interface AvailableProduct {
@@ -212,5 +212,7 @@ return null;
         </div>
     ,
         document.body,
-    );;
+    );
+
+;
 }

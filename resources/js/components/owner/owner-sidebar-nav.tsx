@@ -33,26 +33,36 @@ export default function OwnerSidebarNav({ navGroups, pendingCounts }: Props) {
             setExpandedGroups((prev) => {
                 const next = new Set(prev);
                 next.add(activeGroup.label);
+
                 return next;
             });
         }
     }, [url, navGroups]);
 
     const isItemActive = (item: NavItem, currentUrl: string): boolean => {
-        if (!currentUrl) return false;
-        if (item.isActive) return item.isActive(currentUrl);
+        if (!currentUrl) {
+return false;
+}
+
+        if (item.isActive) {
+return item.isActive(currentUrl);
+}
+
         const pathname = currentUrl.split('?')[0];
+
         return pathname === item.href || pathname.startsWith(item.href + '/');
     };
 
     const toggleGroup = (label: string) => {
         setExpandedGroups((prev) => {
             const next = new Set(prev);
+
             if (next.has(label)) {
                 next.delete(label);
             } else {
                 next.add(label);
             }
+
             return next;
         });
     };

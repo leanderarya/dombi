@@ -1,9 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { AlertCircle, ArrowRight, MapPin, Package } from 'lucide-react';
 import { useState } from 'react';
-import StatusBadge from '@/components/ui/status-badge';
 import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
+import StatusBadge from '@/components/ui/status-badge';
 import CourierLayout from '@/layouts/courier-layout';
 import { usePolling } from '@/lib/use-polling';
 

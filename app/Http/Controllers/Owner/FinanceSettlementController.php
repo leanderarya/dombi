@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -30,15 +31,15 @@ class FinanceSettlementController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        // Aggregate completed orders per outlet
+        // Aggregate completed orders per outlet (exclude delivery_fee from sales)
         $orderAgg = Order::where('status', 'completed')
-            ->selectRaw('outlet_id, COUNT(*) as total_orders, SUM(total) as total_sales, MAX(created_at) as last_order_date')
+            ->selectRaw('outlet_id, COUNT(*) as total_orders, SUM(total - delivery_fee) as total_sales, MAX(created_at) as last_order_date')
             ->groupBy('outlet_id')
             ->get()
             ->keyBy('outlet_id');
 
-        // Get ALL settlements for aggregation
-        $allSettlements = Settlement::with('outlet:id,name')->get();
+        // Get ALL weekly settlements for aggregation
+        $allSettlements = Settlement::where('period_type', 'weekly')->with('outlet:id,name')->get();
 
         // Group settlements by outlet
         $settlementMap = [];
@@ -208,8 +209,9 @@ class FinanceSettlementController extends Controller
     public function outletDetail(Outlet $outlet): Response
     {
         $settlements = Settlement::where('outlet_id', $outlet->id)
+            ->where('period_type', 'weekly')
             ->with('outlet:id,name')
-            ->orderBy('period_date', 'asc')
+            ->orderBy('period_start', 'asc')
             ->get();
 
         $unpaidSettlements = $settlements->filter(fn (Settlement $s) => $s->status !== Settlement::STATUS_PAID);
@@ -233,7 +235,9 @@ class FinanceSettlementController extends Controller
         // Unpaid breakdown for invoice modal
         $unpaidBreakdown = $unpaidSettlements->map(fn (Settlement $s) => [
             'id' => $s->id,
-            'period_date' => $s->period_date->toDateString(),
+            'period_label' => $s->period_label,
+            'period_start' => $s->period_start->toDateString(),
+            'period_end' => $s->period_end->toDateString(),
             'outstanding' => (float) $s->outstanding_amount,
             'due_date' => $s->due_date->toDateString(),
         ])->values();
@@ -242,17 +246,25 @@ class FinanceSettlementController extends Controller
             'outlet' => $outlet->only(['id', 'name']),
             'settlements' => $settlements->map(fn (Settlement $s) => [
                 'id' => $s->id,
-                'period_date' => $s->period_date->toDateString(),
+                'period_label' => $s->period_label,
+                'period_start' => $s->period_start->toDateString(),
+                'period_end' => $s->period_end->toDateString(),
+                'sales_amount' => (float) $s->sales_amount,
+                'delivery_fee_amount' => (float) $s->delivery_fee_amount,
                 'amount_due' => (float) $s->amount_due,
                 'paid_amount' => (float) $s->paid_amount,
                 'outstanding' => (float) $s->outstanding_amount,
+                'overpaid_amount' => (float) $s->overpaid_amount,
                 'due_date' => $s->due_date->toDateString(),
                 'status' => $s->status,
             ]),
             'summary' => [
+                'total_sales' => (float) $settlements->sum('sales_amount'),
+                'total_delivery_fee' => (float) $settlements->sum('delivery_fee_amount'),
                 'total_due' => (float) $settlements->sum('amount_due'),
                 'paid_total' => (float) $paidTotal,
                 'outstanding' => (float) $outstanding,
+                'overpaid' => (float) $settlements->sum('overpaid_amount'),
                 'oldest_due_date' => $oldestUnpaid?->due_date?->toDateString(),
                 'days_overdue' => $daysOverdue,
                 'display_status' => $displayStatus,
@@ -263,6 +275,7 @@ class FinanceSettlementController extends Controller
 
     /**
      * Record a payment with FIFO allocation.
+     * Owner-recorded payments are immediately verified (owner = authoritative source).
      */
     public function recordPayment(
         Request $request,
@@ -274,7 +287,7 @@ class FinanceSettlementController extends Controller
             'payment_method' => ['required', 'string'],
             'reference_number' => ['nullable', 'string', 'max:100'],
             'notes' => ['nullable', 'string', 'max:500'],
-            'proof_image' => ['nullable', 'file', 'max:5120'],
+            'proof_image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
         ]);
 
         $proofPath = null;
@@ -282,36 +295,28 @@ class FinanceSettlementController extends Controller
             $proofPath = $request->file('proof_image')->store('payment-proofs', 'public');
         }
 
-        // FIFO: allocate to oldest unpaid settlement first
-        $remaining = (float) $validated['amount'];
-        $unpaidSettlements = Settlement::where('outlet_id', $outlet->id)
-            ->where('status', '!=', Settlement::STATUS_PAID)
-            ->orderBy('due_date', 'asc')
-            ->get();
+        // Create a single payment record, immediately verified
+        $payment = DB::transaction(function () use ($validated, $outlet, $request, $proofPath) {
+            $payment = SettlementPayment::create([
+                'outlet_id' => $outlet->id,
+                'reference_number' => $validated['reference_number'] ?? 'PAY-'.strtoupper(\Illuminate\Support\Str::random(8)),
+                'payment_date' => now()->toDateString(),
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'proof_image' => $proofPath,
+                'notes' => $validated['notes'] ?? null,
+                'status' => SettlementPayment::STATUS_VERIFIED,
+                'verified_by' => $request->user()->id,
+                'verified_at' => now(),
+            ]);
 
-        foreach ($unpaidSettlements as $settlement) {
-            if ($remaining <= 0) {
-                break;
-            }
+            // FIFO allocate to unpaid settlements
+            $this->paymentService->fifoAllocate($outlet->id, (float) $validated['amount']);
 
-            $outstanding = (float) $settlement->outstanding_amount;
-            $allocate = min($remaining, $outstanding);
+            return $payment;
+        });
 
-            if ($allocate > 0) {
-                $paymentService->recordPayment(
-                    $settlement,
-                    $allocate,
-                    $validated['reference_number'] ?? null,
-                    $validated['notes'] ?? null,
-                    $request->user(),
-                    $proofPath,
-                    $validated['payment_method'],
-                );
-                $remaining -= $allocate;
-            }
-        }
-
-        return back()->with('success', 'Pembayaran berhasil dicatat.');
+        return back()->with('success', 'Pembayaran berhasil dicatat dan diverifikasi.');
     }
 
     /**
@@ -342,8 +347,9 @@ class FinanceSettlementController extends Controller
      */
     public function export(Request $request): StreamedResponse
     {
-        $settlements = Settlement::with('outlet:id,name')
-            ->orderBy('period_date', 'desc')
+        $settlements = Settlement::where('period_type', 'weekly')
+            ->with('outlet:id,name')
+            ->orderBy('period_start', 'desc')
             ->get();
 
         $filename = 'settlements-'.now()->format('Y-m-d').'.csv';
@@ -355,13 +361,15 @@ class FinanceSettlementController extends Controller
 
         $callback = function () use ($settlements) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['Outlet', 'Periode', 'Jatuh Tempo', 'Total Tagihan', 'Sudah Dibayar', 'Sisa', 'Status']);
+            fputcsv($file, ['Outlet', 'Periode', 'Jatuh Tempo', 'Omset Produk', 'Ongkos Kirim', 'Kewajiban', 'Sudah Dibayar', 'Sisa', 'Status']);
 
             foreach ($settlements as $s) {
                 fputcsv($file, [
                     $s->outlet->name,
-                    $s->period_date->format('d/m/Y'),
+                    $s->period_label,
                     $s->due_date->format('d/m/Y'),
+                    $s->sales_amount,
+                    $s->delivery_fee_amount,
                     $s->amount_due,
                     $s->paid_amount,
                     $s->outstanding_amount,

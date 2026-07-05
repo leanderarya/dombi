@@ -11,6 +11,7 @@ use App\Models\OutletInventory;
 use App\Models\OutletPayable;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
+use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Services\DeliveryIntelligenceService;
 use App\Services\SettlementReconciliationService;
@@ -112,11 +113,11 @@ class DashboardController extends Controller
                 'outstanding' => (float) $reconciliation['outstanding'],
                 'pendingPayments' => (float) $reconciliation['pending_payments'],
                 'verifiedPayments' => (float) $reconciliation['verified_payments'],
-                'margin' => (float) OutletPayable::where('outlet_id', $outlet->id)
-                    ->where('type', 'sale')
-                    ->whereMonth('created_at', now()->month)
-                    ->whereYear('created_at', now()->year)
-                    ->sum('outlet_margin'),
+                'margin' => (float) Settlement::where('outlet_id', $outlet->id)
+                    ->where('period_type', 'weekly')
+                    ->whereMonth('period_start', now()->month)
+                    ->whereYear('period_start', now()->year)
+                    ->sum(DB::raw('sales_amount - amount_due')),
             ],
         ]);
     }

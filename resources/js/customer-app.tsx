@@ -37,7 +37,7 @@ createInertiaApp({
 });
 
 // Register service worker for PWA
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && import.meta.env.PROD) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(() => {
             // SW registration failed - non-critical

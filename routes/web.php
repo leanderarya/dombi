@@ -142,8 +142,17 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
     });
 });
 
+// Pay — must be accessible to guest (no auth required, ownership checked in controller)
+Route::post('/customer/orders/{order}/pay', [CustomerOrderController::class, 'pay'])->middleware('throttle:pay-token')->name('orders.pay');
+
+// Payment status polling — accessible to guest (same ownership check as pay)
+Route::get('/customer/orders/{order}/payment-status', [CustomerOrderController::class, 'paymentStatus'])->middleware('throttle:60,1')->name('orders.payment-status');
+
 // Cancel route — requires authentication to prevent unauthorized cancellation
 Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware(['auth', 'throttle:track-cancel'])->name('track.cancel');
+
+// Midtrans webhook — no auth, signature-verified
+Route::post('/api/midtrans/webhook', [\App\Http\Controllers\MidtransWebhookController::class, 'handle'])->name('midtrans.webhook');
 
 Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): void {
     // System endpoints

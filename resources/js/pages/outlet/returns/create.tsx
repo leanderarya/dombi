@@ -186,7 +186,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
             </div>
 
             {/* Sticky Submit */}
-            <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-white/95 backdrop-blur pb-3 pt-3">
+            <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0))] z-30 border-t border-border bg-white/95 backdrop-blur pb-3 pt-3">
                 <div className="mx-auto max-w-lg px-4">
                     <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-surface-muted px-3 py-2">
                         <div>

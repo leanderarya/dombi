@@ -6,7 +6,7 @@ export default function LoginPrompt() {
         <div className="min-h-dvh bg-surface text-text">
             <Head title="Login Diperlukan" />
 
-            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-[env(safe-area-inset-top)]">
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-safe">
                 <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3">
                     <Link
                         href="/customer/checkout"

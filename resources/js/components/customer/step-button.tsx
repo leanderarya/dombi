@@ -7,7 +7,7 @@ interface Props {
 
 export default function StepButton({ label, disabled, processing, onClick }: Props) {
     return (
-        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3">
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-white/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom,0))] pt-3">
             <div className="mx-auto max-w-lg">
                 <button
                     type="button"

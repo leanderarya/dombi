@@ -1,22 +1,33 @@
 import { Head, Link } from '@inertiajs/react';
-import { Package, QrCode } from 'lucide-react';
-import EmptyState from '@/components/ui/empty-state';
-import StatusBadge from '@/components/ui/status-badge';
+import { Package, QrCode, DollarSign } from 'lucide-react';
 import OutletDashboardSkeleton from '@/components/outlet/outlet-dashboard-skeleton';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
-import OutletLayout from '@/layouts/outlet-layout';
+import EmptyState from '@/components/ui/empty-state';
+import StatusBadge from '@/components/ui/status-badge';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import OutletLayout from '@/layouts/outlet-layout';
+import { formatCurrency } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
 
 function getGreeting(): string {
     const hour = new Date().getHours();
-    if (hour < 11) return 'Selamat pagi';
-    if (hour < 15) return 'Selamat siang';
-    if (hour < 18) return 'Selamat sore';
+
+    if (hour < 11) {
+return 'Selamat pagi';
+}
+
+    if (hour < 15) {
+return 'Selamat siang';
+}
+
+    if (hour < 18) {
+return 'Selamat sore';
+}
+
     return 'Selamat malam';
 }
 
-export default function OutletDashboard({ outlet, stats, deliveryStats, lowStockItems }: any) {
+export default function OutletDashboard({ outlet, stats, deliveryStats, lowStockItems, settlementStats }: any) {
     usePolling(20000);
     const { loading } = useInertiaLoading();
 
@@ -93,6 +104,54 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                 <QrCode className="h-5 w-5" />
                 Scan QR Ambil Pesanan
             </Link>
+
+            {/* Settlement Summary — financial obligation at a glance */}
+            {settlementStats && (settlementStats.outstanding > 0 || settlementStats.margin > 0) && (
+                <Link
+                    href="/outlet/settlement"
+                    className="mb-4 block rounded-xl border border-border bg-white"
+                >
+                    {settlementStats.outstanding > 0 ? (
+                        /* Outstanding — urgent red card */
+                        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Belum Disetor</div>
+                                    <div className="mt-1 text-2xl font-bold tabular-nums text-red-600">
+                                        {formatCurrency(settlementStats.outstanding)}
+                                    </div>
+                                </div>
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
+                                    <DollarSign className="h-5 w-5 text-red-600" />
+                                </div>
+                            </div>
+                            <div className="mt-2 flex items-center gap-1 text-[11px] font-medium text-red-700">
+                                <span>Ketuk untuk lihat detail & bayar</span>
+                                <span>→</span>
+                            </div>
+                        </div>
+                    ) : (
+                        /* All paid — subtle green indicator */
+                        <div className="flex items-center justify-between rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+                            <div>
+                                <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Settlement</div>
+                                <div className="mt-0.5 text-sm font-semibold text-emerald-700">Semua lunas</div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                {settlementStats.margin > 0 && (
+                                    <div className="text-right">
+                                        <div className="text-[11px] text-text-subtle">Margin</div>
+                                        <div className="text-sm font-bold tabular-nums text-emerald-700">{formatCurrency(settlementStats.margin)}</div>
+                                    </div>
+                                )}
+                                <svg className="h-5 w-5 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                    )}
+                </Link>
+            )}
 
             {/* Stats — compact grid */}
             <div className="rounded-xl border border-border bg-white p-4">

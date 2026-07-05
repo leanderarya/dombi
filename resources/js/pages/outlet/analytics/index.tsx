@@ -1,7 +1,7 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
-import FilterChips from '@/components/ui/filter-chips';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 

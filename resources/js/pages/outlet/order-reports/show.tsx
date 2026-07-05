@@ -128,7 +128,9 @@ export default function OutletOrderReportShow({ report }: any) {
                     <div className="mt-3 flex gap-2">
                         <button
                             type="button"
-                            onClick={() => { setRespondMode(false); form.reset(); }}
+                            onClick={() => {
+ setRespondMode(false); form.reset(); 
+}}
                             className="flex h-11 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
                         >
                             Batal

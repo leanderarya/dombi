@@ -26,7 +26,7 @@ class CheckoutController extends Controller
 
     private const CHECKOUT_VISIBLE_FULFILLMENT_TYPES = ['pickup', 'delivery_dombi'];
 
-    private const PAYMENT_METHODS = ['cod', 'qris', 'transfer', 'card'];
+    private const PAYMENT_METHODS = ['qris', 'gopay', 'shopeepay', 'dana'];
 
     public function redirect(Request $request): RedirectResponse
     {
@@ -362,17 +362,13 @@ class CheckoutController extends Controller
             : null;
 
         // Guest users cannot use COD — must pay online to prevent fake orders
-        $isGuest = ! auth()->check();
+        // QRIS + e-wallet only. Fee = Biaya Layanan (customer-borne, sopan)
         $paymentOptions = [
-            ['value' => 'cod', 'label' => 'COD', 'fee_rate' => 0],
-            ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007],
-            ['value' => 'transfer', 'label' => 'Transfer', 'fee_rate' => 0],
-            ['value' => 'card', 'label' => 'Card', 'fee_rate' => 0.04],
+            ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007, 'description' => 'Scan QR untuk membayar'],
+            ['value' => 'gopay', 'label' => 'GoPay', 'fee_rate' => 0.015, 'description' => 'Bayar dengan GoPay'],
+            ['value' => 'shopeepay', 'label' => 'ShopeePay', 'fee_rate' => 0.015, 'description' => 'Bayar dengan ShopeePay'],
+            ['value' => 'dana', 'label' => 'DANA', 'fee_rate' => 0.015, 'description' => 'Bayar dengan DANA'],
         ];
-        if ($isGuest) {
-            $paymentOptions = array_filter($paymentOptions, fn ($opt) => $opt['value'] !== 'cod');
-            $paymentOptions = array_values($paymentOptions);
-        }
 
         return Inertia::render('customer/checkout/payment', [
             'draft' => [
@@ -418,11 +414,6 @@ class CheckoutController extends Controller
         $validated = $request->validate([
             'payment_method' => ['required', Rule::in(self::PAYMENT_METHODS)],
         ]);
-
-        // Guest users cannot use COD
-        if (! auth()->check() && $validated['payment_method'] === 'cod') {
-            return redirect()->route('customer.checkout.payment')->withErrors(['payment_method' => 'COD tidak tersedia untuk guest. Silakan login atau pilih metode pembayaran lain.']);
-        }
 
         // Idempotency: prevent duplicate order from double-tap/refresh
         $fingerprint = md5(serialize([
@@ -488,14 +479,21 @@ class CheckoutController extends Controller
             'checkout.location',
         ]);
 
-        $isDelivery = in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
+        // Create Snap token immediately — customer pays before outlet confirms.
+        // If outlet rejects/rejects after payment, refund handled via Midtrans.
+        $snapToken = null;
+        try {
+            $snapToken = app(\App\Services\MidtransService::class)->createSnapToken($order);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to create Snap token at checkout', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
-        // All orders go to success confirmation page.
-        $redirect = redirect()->route('customer.orders.confirm', [
+        return redirect()->route('customer.orders.confirm', [
             'orderCode' => $order->order_code,
-        ]);
-
-        return $redirect;
+        ])->with('snap_token', $snapToken);
     }
 
     public function lookupCustomer(Request $request): JsonResponse
@@ -654,8 +652,10 @@ class CheckoutController extends Controller
     private function calculatePaymentFee(string $paymentMethod, float $subtotal): float
     {
         return match ($paymentMethod) {
-            'qris' => round($subtotal * 0.007, 2),
-            'card' => round($subtotal * 0.04, 2),
+            'qris' => round($subtotal * 0.007, 2),    // 0.7% Midtrans QRIS
+            'gopay' => round($subtotal * 0.015, 2),   // 1.5% e-wallet
+            'shopeepay' => round($subtotal * 0.015, 2),
+            'dana' => round($subtotal * 0.015, 2),
             default => 0,
         };
     }

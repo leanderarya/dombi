@@ -14,6 +14,7 @@ export default function FinanceFilterTabs({ tabs, active, onChange }: Props) {
         <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
             {tabs.map((tab) => {
                 const isActive = active === tab.key;
+
                 return (
                     <button
                         key={tab.key}

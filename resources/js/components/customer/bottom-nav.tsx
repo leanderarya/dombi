@@ -16,7 +16,7 @@ export default function CustomerBottomNav({ visible = true }: Props) {
 
     return (
         <nav
-            className="fixed inset-x-0 z-40 border-t border-border bg-white pb-[env(safe-area-inset-bottom)]"
+            className="fixed inset-x-0 z-40 bg-white/95 backdrop-blur pb-safe shadow-[0_-1px_3px_rgba(0,0,0,0.06)]"
             style={{
                 bottom: visible ? 0 : -100,
                 transition: 'bottom 200ms ease',
@@ -31,11 +31,13 @@ export default function CustomerBottomNav({ visible = true }: Props) {
                         <Link
                             key={item.href}
                             href={item.href}
-                            className={`flex flex-col items-center justify-center gap-0.5 text-xs font-semibold ${
-                                active ? 'text-emerald-700' : 'text-zinc-400'
+                            className={`flex flex-col items-center justify-center gap-0.5 text-xs ${
+                                active ? 'text-primary font-bold' : 'text-zinc-400 font-medium'
                             }`}
                         >
-                            <Icon active={active} />
+                            <div className="p-1.5">
+                                <Icon active={active} />
+                            </div>
                             <span>{item.label}</span>
                         </Link>
                     );

@@ -1,8 +1,8 @@
-import { createPortal } from 'react-dom';
 import { useForm } from '@inertiajs/react';
-import CustomSelect from '@/components/ui/custom-select';
 import { X, Plus, Minus, Camera, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import CustomSelect from '@/components/ui/custom-select';
 
 interface VariantOption {
     id: number;
@@ -44,12 +44,14 @@ export default function ReturnCreateDialog({ open, variants = [], reasons = {}, 
 
     const toggleVariant = (variantId: number) => {
         const next = new Map(selectedVariants);
+
         if (next.has(variantId)) {
             next.delete(variantId);
         } else {
             const variant = variants.find((v) => v.id === variantId);
             next.set(variantId, Math.min(1, variant?.available_stock ?? 1));
         }
+
         setSelectedVariants(next);
         form.setData('items', Array.from(next.entries()).map(([id, qty]) => ({ product_variant_id: id, quantity: qty })));
     };
@@ -65,7 +67,11 @@ export default function ReturnCreateDialog({ open, variants = [], reasons = {}, 
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = Array.from(e.target.files || []);
-        if (files.length + form.data.evidence_images.length > 5) return;
+
+        if (files.length + form.data.evidence_images.length > 5) {
+return;
+}
+
         form.setData('evidence_images', [...form.data.evidence_images, ...files]);
         setImagePreviews((prev) => [...prev, ...files.map((f) => URL.createObjectURL(f))]);
     };
@@ -87,11 +93,14 @@ export default function ReturnCreateDialog({ open, variants = [], reasons = {}, 
         });
     };
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     const selectedSummary = Array.from(selectedVariants.entries()).reduce(
         (acc, [variantId, quantity]) => {
             const variant = variants.find((v) => v.id === variantId);
+
             return {
                 totalItems: acc.totalItems + quantity,
                 totalValue: acc.totalValue + Number(variant?.selling_price ?? 0) * quantity,
@@ -180,6 +189,7 @@ export default function ReturnCreateDialog({ open, variants = [], reasons = {}, 
                             <div className="space-y-2">
                                 {variants.map((v) => {
                                     const isSelected = selectedVariants.has(v.id);
+
                                     return (
                                         <div
                                             key={v.id}

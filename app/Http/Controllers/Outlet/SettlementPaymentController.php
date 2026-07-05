@@ -8,6 +8,7 @@ use App\Models\SettlementPayment;
 use App\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -54,6 +55,20 @@ class SettlementPaymentController extends Controller
             'notes' => ['nullable', 'string', 'max:500'],
             'proof_image' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        // Guard: outlet must have outstanding > 0
+        $totalOutstanding = (float) Settlement::where('outlet_id', $outlet->id)
+            ->where('period_type', 'weekly')
+            ->sum(DB::raw('amount_due - paid_amount - adjustment_amount'));
+
+        if ($totalOutstanding <= 0) {
+            return back()->with('error', 'Tidak ada tagihan yang belum dibayar.');
+        }
+
+        // Guard: amount must not exceed total outstanding
+        if ((float) $validated['amount'] > $totalOutstanding) {
+            return back()->with('error', "Jumlah pembayaran (Rp " . number_format($validated['amount'], 0, ',', '.') . ") melebihi total tagihan (Rp " . number_format($totalOutstanding, 0, ',', '.') . ").");
+        }
 
         $proofPath = null;
         if ($request->hasFile('proof_image')) {

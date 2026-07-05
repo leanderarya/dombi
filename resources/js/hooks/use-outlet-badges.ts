@@ -26,7 +26,11 @@ export function useOutletBadges() {
         const fetchCounts = async () => {
             try {
                 const res = await fetch('/outlet/badge-counts');
-                if (!res.ok) return;
+
+                if (!res.ok) {
+return;
+}
+
                 const data = await res.json();
                 setBadgeCounts({
                     returns: data.returns ?? 0,

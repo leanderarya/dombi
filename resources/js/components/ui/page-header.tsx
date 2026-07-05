@@ -18,7 +18,7 @@ interface Props {
 
 export default function PageHeader({ title, subtitle, backHref, right, below, transparent, onMenuClick }: Props) {
     return (
-        <header className={`sticky top-0 z-30 pt-[env(safe-area-inset-top)] ${transparent ? '' : 'border-b border-border bg-surface/95 backdrop-blur'}`}>
+        <header className={`sticky top-0 z-30 pt-safe ${transparent ? '' : 'border-b border-border bg-surface/95 backdrop-blur'}`}>
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                 {/* Left side: back button, hamburger, or spacer */}
                 <div className="flex items-center gap-1">

@@ -1,6 +1,6 @@
-import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
@@ -71,7 +71,7 @@ return;
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-            <div className="relative w-full max-w-md animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-[env(safe-area-inset-bottom)] lg:animate-none lg:rounded-xl lg:pb-0 lg:shadow-xl">
+            <div className="relative w-full max-w-md animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-safe lg:animate-none lg:rounded-xl lg:pb-0 lg:shadow-xl">
                 <div className="flex justify-center pt-3 pb-2 lg:hidden">
                     <div className="h-1 w-12 rounded-full bg-slate-300" />
                 </div>
@@ -153,5 +153,7 @@ return;
         </div>
     ,
         document.body,
-    );;
+    );
+
+;
 }

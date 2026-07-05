@@ -31,7 +31,7 @@ export default function CourierBottomNav({ visible = true }: Props) {
 
     return (
         <nav
-            className="fixed inset-x-0 z-40 border-t border-zinc-100 bg-white pb-[env(safe-area-inset-bottom)]"
+            className="fixed inset-x-0 z-40 border-t border-zinc-100 bg-white pb-safe"
             style={{
                 bottom: visible ? 0 : -100,
                 transition: 'bottom 200ms ease',

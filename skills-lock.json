@@ -61,6 +61,12 @@
       "skillPath": "skills/brutalist-skill/SKILL.md",
       "computedHash": "8fc355c4aadb7d29c53ca28bc41be3cd6eea765d121e3737c4dc2d0f90a8effa"
     },
+    "integrate-midtrans-payments": {
+      "source": "veritrans/midtrans-agent-skills",
+      "sourceType": "github",
+      "skillPath": "integrate-midtrans-payments/SKILL.md",
+      "computedHash": "1041407bbe904a3256f0dd8aa3aaf130a8e0946fbbf6bd6553b634cbe77aa5ad"
+    },
     "ios-hig-design": {
       "source": "wondelai/skills",
       "sourceType": "github",

@@ -1,7 +1,7 @@
-import { createPortal } from 'react-dom';
 import { useForm } from '@inertiajs/react';
-import CustomSelect from '@/components/ui/custom-select';
 import { X, Plus, Minus } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import CustomSelect from '@/components/ui/custom-select';
 
 interface VariantOption {
     id: number;
@@ -50,7 +50,9 @@ export default function ExchangeCreateDialog({ open, variants = [], outletInvent
         form.post('/outlet/exchanges', { onSuccess: () => onClose() });
     };
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -158,5 +160,7 @@ export default function ExchangeCreateDialog({ open, variants = [], outletInvent
         </div>
     ,
         document.body,
-    );;
+    );
+
+;
 }

@@ -19,7 +19,7 @@ export default function Profile({ defaultAddress }: any) {
             <Head title="Pengaturan" />
 
             {/* Safe area spacer for PWA standalone mode */}
-            <div className="h-[env(safe-area-inset-top)]" />
+            <div className="h-[env(safe-area-inset-top,0)]" />
 
             {/* User Info */}
             <div className="flex items-center gap-3">

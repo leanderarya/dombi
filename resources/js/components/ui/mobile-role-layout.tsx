@@ -13,10 +13,10 @@ export default function MobileRoleLayout({ children, footerSlot, actionBarSlot }
     useFlashToast();
 
     const bottomPad = footerSlot
-        ? 'pb-[calc(8rem+env(safe-area-inset-bottom))]'
+        ? 'pb-[calc(8rem+env(safe-area-inset-bottom,0))]'
         : actionBarSlot
-            ? 'pb-[calc(5rem+env(safe-area-inset-bottom))]'
-            : 'pb-[calc(2rem+env(safe-area-inset-bottom))]';
+            ? 'pb-[calc(5rem+env(safe-area-inset-bottom,0))]'
+            : 'pb-[calc(2rem+env(safe-area-inset-bottom,0))]';
 
     return (
         <div className="min-h-dvh bg-surface text-text">
