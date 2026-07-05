@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Exceptions\DokuPaymentException;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Outlet;
@@ -26,7 +27,7 @@ class CheckoutController extends Controller
 
     private const CHECKOUT_VISIBLE_FULFILLMENT_TYPES = ['pickup', 'delivery_dombi'];
 
-    private const PAYMENT_METHODS = ['qris'];
+    private const PAYMENT_METHODS = ['qris', 'credit_card'];
 
     public function redirect(Request $request): RedirectResponse
     {
@@ -362,9 +363,10 @@ class CheckoutController extends Controller
             : null;
 
         // Guest users cannot use COD — must pay online to prevent fake orders
-        // QRIS only via DOKU. Fee = Biaya Layanan (customer-borne, sopan)
+        // Payment via DOKU. Fee = Biaya Layanan (customer-borne, sopan)
         $paymentOptions = [
             ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007, 'description' => 'Scan QR untuk membayar'],
+            ['value' => 'credit_card', 'label' => 'Kartu Kredit', 'fee_rate' => 0.029, 'description' => 'Bayar dengan kartu kredit'],
         ];
 
         return Inertia::render('customer/checkout/payment', [
@@ -385,7 +387,7 @@ class CheckoutController extends Controller
         ]);
     }
 
-    public function submit(Request $request, OrderService $orderService, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): RedirectResponse
+    public function submit(Request $request, OrderService $orderService, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): RedirectResponse|JsonResponse
     {
         $fulfillmentType = $request->session()->get('checkout.fulfillment.fulfillment_type');
         $customer = $request->session()->get('checkout.customer');
@@ -480,7 +482,24 @@ class CheckoutController extends Controller
         // If outlet rejects after payment, refund handled via DOKU.
         try {
             $paymentUrl = app(\App\Services\DokuService::class)->createPayment($order);
+
+            // Inertia/XHR requests can't follow cross-origin redirects (CORS).
+            // Return JSON and let the frontend do a full-page navigation.
+            if ($request->expectsJson()) {
+                return response()->json(['payment_url' => $paymentUrl]);
+            }
+
             return redirect()->away($paymentUrl);
+        } catch (\App\Exceptions\DokuPaymentException $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to create DOKU payment', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+                'response_code' => $e->responseCode,
+                'doku_errors' => $e->getErrors(),
+            ]);
+            return redirect()->route('customer.orders.confirm', [
+                'orderCode' => $order->order_code,
+            ])->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Failed to create DOKU payment', [
                 'order_id' => $order->id,
@@ -648,8 +667,9 @@ class CheckoutController extends Controller
     private function calculatePaymentFee(string $paymentMethod, float $subtotal): float
     {
         return match ($paymentMethod) {
-            'qris' => round($subtotal * 0.007, 2),    // 0.7% QRIS fee
-            'gopay' => round($subtotal * 0.015, 2),   // 1.5% e-wallet
+            'qris' => round($subtotal * 0.007, 2),       // 0.7% QRIS fee
+            'credit_card' => round($subtotal * 0.029, 2), // 2.9% credit card fee
+            'gopay' => round($subtotal * 0.015, 2),       // 1.5% e-wallet
             'shopeepay' => round($subtotal * 0.015, 2),
             'dana' => round($subtotal * 0.015, 2),
             default => 0,

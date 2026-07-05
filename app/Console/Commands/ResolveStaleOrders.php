@@ -12,12 +12,13 @@ use Illuminate\Console\Command;
 class ResolveStaleOrders extends Command
 {
     protected $signature = 'orders:resolve-stale
+        {--preparing-hours=24 : Hours before stale preparing orders are cancelled}
         {--ready-hours=24 : Hours before stale ready_for_pickup orders are cancelled}
         {--failed-days=7 : Days before unresolved failed_deliveries are auto-resolved}
         {--delivering-hours=48 : Hours before stalled deliveries are auto-failed}
         {--dry-run : Show what would be resolved without making changes}';
 
-    protected $description = 'Resolve stuck orders: stale ready_for_pickup, unresolved failed_delivery, stalled delivering';
+    protected $description = 'Resolve stuck orders: stale preparing, stale ready_for_pickup, unresolved failed_delivery, stalled delivering';
 
     public function handle(
         DeliveryService $deliveryService,
@@ -26,7 +27,44 @@ class ResolveStaleOrders extends Command
         $dryRun = $this->option('dry-run');
         $totalResolved = 0;
 
-        // 1. Cancel stale ready_for_pickup orders
+        // 1. Cancel stale preparing orders (outlet started but never finished)
+        $preparingHours = (int) $this->option('preparing-hours');
+        $stalePreparing = Order::query()
+            ->where('status', 'preparing')
+            ->where('updated_at', '<', now()->subHours($preparingHours))
+            ->get();
+
+        $this->info("Found {$stalePreparing->count()} stale preparing orders (>{$preparingHours}h).");
+
+        foreach ($stalePreparing as $order) {
+            if ($dryRun) {
+                $this->line("  [DRY RUN] Would cancel order #{$order->id} ({$order->order_code})");
+            } else {
+                try {
+                    $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
+                    $inventoryService->releaseReservedStock($order);
+                    $order->update([
+                        'status' => 'cancelled_by_outlet',
+                        'cancelled_at' => now(),
+                        'cancellation_reason' => 'Auto-cancelled: stale preparing',
+                    ]);
+                    $order->statusHistories()->create([
+                        'from_status' => 'preparing',
+                        'to_status' => 'cancelled_by_outlet',
+                        'notes' => "Auto-cancelled: outlet did not complete preparation within {$preparingHours} hours.",
+                        'changed_by_type' => 'system',
+                        'created_at' => now(),
+                    ]);
+                    $this->line("  Cancelled order #{$order->id} ({$order->order_code})");
+                    $totalResolved++;
+                } catch (\Throwable $e) {
+                    $this->error("  Failed to cancel order #{$order->id}: {$e->getMessage()}");
+                    report($e);
+                }
+            }
+        }
+
+        // 2. Cancel stale ready_for_pickup orders (ready but never picked up)
         $readyHours = (int) $this->option('ready-hours');
         $staleReady = Order::query()
             ->where('status', 'ready_for_pickup')

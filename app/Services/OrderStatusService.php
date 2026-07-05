@@ -272,9 +272,9 @@ class OrderStatusService
         });
     }
 
-    public function expireOrder(Order $order): Order
+    public function expireOrder(Order $order, string $reason = 'Confirmation timeout'): Order
     {
-        return DB::transaction(function () use ($order): Order {
+        return DB::transaction(function () use ($order, $reason): Order {
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
 
             if (! $order->isPendingConfirmation()) {
@@ -286,14 +286,18 @@ class OrderStatusService
             $order->update([
                 'status' => Order::EXPIRED,
                 'expired_at' => now(),
-                'expired_reason' => 'Confirmation timeout',
+                'expired_reason' => $reason,
             ]);
+
+            $notes = $reason === 'Confirmation timeout'
+                ? 'Pesanan kadaluarsa. Outlet tidak memberikan konfirmasi dalam batas waktu yang ditentukan.'
+                : "Pesanan kadaluarsa. {$reason}.";
 
             $order->statusHistories()->create([
                 'from_status' => Order::STATUS_PENDING_CONFIRMATION,
                 'to_status' => Order::EXPIRED,
-                'notes' => 'Pesanan kadaluarsa. Outlet tidak memberikan konfirmasi dalam batas waktu yang ditentukan.',
-                'reason' => 'Confirmation timeout',
+                'notes' => $notes,
+                'reason' => $reason,
                 'changed_by' => null,
                 'changed_by_type' => 'system',
                 'created_at' => now(),

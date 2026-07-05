@@ -10,7 +10,7 @@ class ExpirePendingOrders extends Command
 {
     protected $signature = 'orders:expire-pending';
 
-    protected $description = 'Expire orders that have passed the confirmation deadline';
+    protected $description = 'Expire pending orders: timed-out confirmations and orders with failed/expired payments';
 
     public function handle(OrderStatusService $orderStatusService): int
     {
@@ -18,12 +18,22 @@ class ExpirePendingOrders extends Command
 
         Order::query()
             ->where('status', Order::STATUS_PENDING_CONFIRMATION)
-            ->whereNotNull('confirmation_expires_at')
-            ->where('confirmation_expires_at', '<', now())
+            ->where(function ($query) {
+                // Timed out: outlet didn't confirm within 15 minutes
+                $query->where(function ($q) {
+                    $q->whereNotNull('confirmation_expires_at')
+                      ->where('confirmation_expires_at', '<', now());
+                })
+                // Zombie: payment already failed/expired but order still pending
+                ->orWhereIn('payment_status', ['failed', 'expired']);
+            })
             ->chunkById(50, function ($orders) use ($orderStatusService, &$expiredCount): void {
                 foreach ($orders as $order) {
                     try {
-                        $orderStatusService->expireOrder($order);
+                        $reason = in_array($order->payment_status, ['failed', 'expired'])
+                            ? "Payment {$order->payment_status}"
+                            : 'Confirmation timeout';
+                        $orderStatusService->expireOrder($order, $reason);
                         $expiredCount++;
                     } catch (\Throwable $e) {
                         \Log::error("Failed to expire order {$order->id}: {$e->getMessage()}");
