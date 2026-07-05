@@ -1,71 +1,18 @@
 import { router } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, Clock, Copy, Loader2, Package, Shield, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, Copy, Package, Shield, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { formatCurrency } from '@/lib/format';
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired';
 
-interface SnapWindow extends Window {
-    snap?: {
-        pay: (token: string, options: Record<string, any>) => void;
-    };
-}
-
-declare const window: SnapWindow;
-
-// Snap JS URL based on environment
-const SNAP_JS_URL = import.meta.env.VITE_MIDTRANS_IS_PRODUCTION === 'true'
-    ? 'https://app.midtrans.com/snap/snap.js'
-    : 'https://app.sandbox.midtrans.com/snap/snap.js';
-
-export default function ConfirmPage({ order, isLoggedIn, flash, ...props }: any) {
-    const snapToken = props.snap_token ?? flash?.snap_token ?? null;
+export default function ConfirmPage({ order, isLoggedIn }: any) {
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
         order.payment_status === 'paid' ? 'paid' : 'pending'
     );
-    const [snapLoaded, setSnapLoaded] = useState(false);
-    const [snapOpened, setSnapOpened] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
     const [copied, setCopied] = useState(false);
-    const snapAttempted = useRef(false);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-
-    // Load Snap JS dynamically
-    useEffect(() => {
-        if (!snapToken || order.payment_status === 'paid') {
-return;
-}
-
-        // Already loaded?
-        if (document.getElementById('midtrans-snap-js')) {
-            setSnapLoaded(true);
-
-            return;
-        }
-
-        const script = document.createElement('script');
-        script.id = 'midtrans-snap-js';
-        script.src = SNAP_JS_URL;
-        script.setAttribute('data-client-key', import.meta.env.VITE_MIDTRANS_CLIENT_KEY ?? '');
-        script.onload = () => setSnapLoaded(true);
-        script.onerror = () => console.error('Failed to load Snap JS');
-        document.head.appendChild(script);
-    }, [snapToken, order.payment_status]);
-
-    // Auto-open Snap once loaded (first visit only)
-    useEffect(() => {
-        if (!snapLoaded || !snapToken || snapAttempted.current) {
-return;
-}
-
-        if (order.payment_status === 'paid' || paymentStatus === 'paid') {
-return;
-}
-
-        snapAttempted.current = true;
-        openSnap();
-    }, [snapLoaded, snapToken]);
 
     // Poll payment status as webhook fallback
     useEffect(() => {
@@ -133,29 +80,6 @@ return;
         return () => clearInterval(timer);
     }, [order.confirmation_expires_at]);
 
-    const openSnap = useCallback(() => {
-        if (!snapToken || !window.snap) {
-return;
-}
-
-        setSnapOpened(true);
-        window.snap.pay(snapToken, {
-            onSuccess: () => {
-                setPaymentStatus('paid');
-                router.reload();
-            },
-            onPending: () => {
-                // Snap shown with QR/instructions — polling will catch settlement
-            },
-            onError: () => {
-                setSnapOpened(false);
-            },
-            onClose: () => {
-                setSnapOpened(false);
-            },
-        });
-    }, [snapToken]);
-
     const handleCopy = useCallback(() => {
         navigator.clipboard.writeText(order.order_code).then(() => {
             setCopied(true);
@@ -165,7 +89,7 @@ return;
 
     const statusConfig: Record<PaymentStatus, { icon: typeof CheckCircle2; color: string; bg: string; border: string; title: string; message: string }> = {
         paid: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', title: 'Pembayaran Berhasil', message: 'Pesanan Anda sedang diproses oleh outlet.' },
-        pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', title: 'Menunggu Pembayaran', message: snapToken ? 'Selesaikan pembayaran di Snap.' : 'Menyiapkan token pembayaran...' },
+        pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', title: 'Menunggu Pembayaran', message: 'Selesaikan pembayaran Anda.' },
         failed: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Pembayaran Gagal', message: 'Pembayaran tidak berhasil diproses.' },
         expired: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', title: 'Waktu Habis', message: 'Batas waktu pembayaran telah berakhir.' },
     };
@@ -207,30 +131,14 @@ return;
 
                 {/* Action Buttons */}
                 <div className="mt-4 space-y-3">
-                    {/* Pending: show retry button if Snap closed */}
-                    {paymentStatus === 'pending' && snapToken && !snapOpened && (
+                    {/* Pending: continue to payment */}
+                    {paymentStatus === 'pending' && (
                         <button
-                            onClick={openSnap}
+                            onClick={() => router.visit(`/customer/orders/${order.id}/pay`)}
                             className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
                         >
-                            {snapAttempted.current ? 'Lanjutkan Pembayaran' : 'Bayar Sekarang'}
+                            Lanjutkan Pembayaran
                         </button>
-                    )}
-
-                    {/* Pending: loading indicator while Snap is opening */}
-                    {paymentStatus === 'pending' && snapOpened && (
-                        <div className="flex items-center justify-center gap-2 rounded-xl bg-white py-3.5 text-sm text-slate-500">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Menunggu pembayaran...</span>
-                        </div>
-                    )}
-
-                    {/* Pending: no token yet */}
-                    {paymentStatus === 'pending' && !snapToken && (
-                        <div className="flex items-center justify-center gap-2 rounded-xl bg-white py-3.5 text-sm text-slate-500">
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Menyiapkan pembayaran...</span>
-                        </div>
                     )}
 
                     {/* Paid: go to order */}
@@ -295,7 +203,7 @@ return;
                         </span>
                         <span className="flex items-center gap-1">
                             <Package className="h-3 w-3" />
-                            Midtrans
+                            DOKU
                         </span>
                     </div>
 
