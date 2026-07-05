@@ -26,7 +26,7 @@ class CheckoutController extends Controller
 
     private const CHECKOUT_VISIBLE_FULFILLMENT_TYPES = ['pickup', 'delivery_dombi'];
 
-    private const PAYMENT_METHODS = ['qris', 'gopay', 'shopeepay', 'dana'];
+    private const PAYMENT_METHODS = ['qris'];
 
     public function redirect(Request $request): RedirectResponse
     {
@@ -362,12 +362,9 @@ class CheckoutController extends Controller
             : null;
 
         // Guest users cannot use COD — must pay online to prevent fake orders
-        // QRIS + e-wallet only. Fee = Biaya Layanan (customer-borne, sopan)
+        // QRIS only via DOKU. Fee = Biaya Layanan (customer-borne, sopan)
         $paymentOptions = [
             ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007, 'description' => 'Scan QR untuk membayar'],
-            ['value' => 'gopay', 'label' => 'GoPay', 'fee_rate' => 0.015, 'description' => 'Bayar dengan GoPay'],
-            ['value' => 'shopeepay', 'label' => 'ShopeePay', 'fee_rate' => 0.015, 'description' => 'Bayar dengan ShopeePay'],
-            ['value' => 'dana', 'label' => 'DANA', 'fee_rate' => 0.015, 'description' => 'Bayar dengan DANA'],
         ];
 
         return Inertia::render('customer/checkout/payment', [
@@ -479,21 +476,20 @@ class CheckoutController extends Controller
             'checkout.location',
         ]);
 
-        // Create Snap token immediately — customer pays before outlet confirms.
-        // If outlet rejects/rejects after payment, refund handled via Midtrans.
-        $snapToken = null;
+        // Create DOKU payment immediately — customer pays before outlet confirms.
+        // If outlet rejects after payment, refund handled via DOKU.
         try {
-            $snapToken = app(\App\Services\MidtransService::class)->createSnapToken($order);
+            $paymentUrl = app(\App\Services\DokuService::class)->createPayment($order);
+            return redirect()->away($paymentUrl);
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to create Snap token at checkout', [
+            \Illuminate\Support\Facades\Log::error('Failed to create DOKU payment', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
             ]);
+            return redirect()->route('customer.orders.confirm', [
+                'orderCode' => $order->order_code,
+            ])->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
         }
-
-        return redirect()->route('customer.orders.confirm', [
-            'orderCode' => $order->order_code,
-        ])->with('snap_token', $snapToken);
     }
 
     public function lookupCustomer(Request $request): JsonResponse
