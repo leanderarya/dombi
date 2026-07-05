@@ -10,6 +10,7 @@ use App\Http\Controllers\Customer\AddressController as CustomerAddressController
 use App\Http\Controllers\Customer\CartController;
 use App\Http\Controllers\Customer\FavoriteController;
 use App\Http\Controllers\Customer\CheckoutController as CustomerCheckoutController;
+use App\Http\Controllers\Customer\CustomerOutletController;
 use App\Http\Controllers\Customer\GuestOrderRecoveryController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
@@ -90,6 +91,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::post('/location', [CustomerCheckoutController::class, 'storeLocationDraft'])->name('location.store');
         Route::get('/help', fn () => Inertia::render('customer/help'))->name('help');
         Route::get('/about', fn () => Inertia::render('customer/about'))->name('about');
+        Route::get('/outlets', [CustomerOutletController::class, 'index'])->name('outlets.index');
         Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
         Route::get('/products/{family}', [CustomerProductController::class, 'show'])->name('products.show');
         Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
