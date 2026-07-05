@@ -40,3 +40,7 @@ yarn-error.log
 .DS_Store
 docs/archive/
 
+
+# Claude Code
+.agents/
+.claude/
