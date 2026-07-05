@@ -648,7 +648,7 @@ class CheckoutController extends Controller
     private function calculatePaymentFee(string $paymentMethod, float $subtotal): float
     {
         return match ($paymentMethod) {
-            'qris' => round($subtotal * 0.007, 2),    // 0.7% Midtrans QRIS
+            'qris' => round($subtotal * 0.007, 2),    // 0.7% QRIS fee
             'gopay' => round($subtotal * 0.015, 2),   // 1.5% e-wallet
             'shopeepay' => round($subtotal * 0.015, 2),
             'dana' => round($subtotal * 0.015, 2),
