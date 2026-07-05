@@ -76,16 +76,23 @@ export default function StoreLocationCard() {
                         ) : locationSummary ? (
                             <span>{locationSummary}</span>
                         ) : (
-                            <button
-                                type="button"
+                            <span
+                                role="button"
+                                tabIndex={0}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     setLocationSheetOpen(true);
                                 }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.stopPropagation();
+                                        setLocationSheetOpen(true);
+                                    }
+                                }}
                                 className="font-semibold text-primary"
                             >
                                 Atur lokasi
-                            </button>
+                            </span>
                         )}
                     </div>
                 </div>
