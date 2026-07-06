@@ -30,7 +30,7 @@ class CheckoutControllerTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->withSession(['cart' => [
+            ->withSession(['checkout.cart' => [
                 ['product_variant_id' => $variant->id, 'quantity' => 5],
             ]])
             ->getJson('/customer/checkout/validate-stock')
@@ -65,7 +65,7 @@ class CheckoutControllerTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->withSession(['cart' => [
+            ->withSession(['checkout.cart' => [
                 ['product_variant_id' => $variant->id, 'quantity' => 5],
             ]])
             ->getJson('/customer/checkout/validate-stock')
@@ -142,7 +142,7 @@ class CheckoutControllerTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->withSession(['cart' => [
+            ->withSession(['checkout.cart' => [
                 ['product_variant_id' => $variant->id, 'quantity' => 5],
             ]])
             ->getJson('/customer/checkout/validate-stock')

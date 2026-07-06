@@ -609,7 +609,7 @@ class CheckoutController extends Controller
 
     public function validateStock(Request $request): JsonResponse
     {
-        $cart = $request->session()->get('cart', []);
+        $cart = $request->session()->get('checkout.cart', []);
 
         if (empty($cart)) {
             return response()->json([

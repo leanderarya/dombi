@@ -18,8 +18,8 @@ class CartController extends Controller
     public function addItem(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
-            'quantity' => ['required', 'integer', 'min:1'],
+            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id,is_active,1'],
+            'quantity' => ['required', 'integer', 'min:1', 'max:999'],
         ]);
 
         $variant = ProductVariant::findOrFail($validated['product_variant_id']);
