@@ -126,7 +126,7 @@ Backend validate (lockForUpdate)
 |-------|----------|
 | Stok cukup | Normal, bisa ubah qty |
 | Stok berkurang | Warning banner: "Stok [produk] tersisa X, jumlah disesuaikan" + auto-adjust qty |
-| Stok habis | Item disabled, tombol "Hapus" |
+| Stok habis | Item tetap di cart (disabled, opacity 50%), badge "Habis", tombol "Hapus". Tidak ikut dihitung di checkout total. Customer hapus manual. |
 
 ---
 
@@ -164,11 +164,34 @@ Backend validate (lockForUpdate)
       "requested_qty": 5,
       "available_stock": 3,
       "adjusted": true,
-      "adjusted_qty": 3
+      "adjusted_qty": 3,
+      "removed": false
     }
   ],
   "warnings": [
     "Susu Kambing Original 250ml: jumlah dikurangi dari 5 ke 3 (stok tersisa 3)"
+  ]
+}
+```
+
+**Response dengan item habis:**
+```json
+{
+  "valid": false,
+  "items": [
+    {
+      "product_variant_id": 5,
+      "name": "Susu Kambing Original",
+      "variant_name": "250ml",
+      "requested_qty": 3,
+      "available_stock": 0,
+      "adjusted": true,
+      "adjusted_qty": 0,
+      "removed": true
+    }
+  ],
+  "warnings": [
+    "Susu Kambing Original 250ml: stok habis, item dihapus dari pesanan"
   ]
 }
 ```
@@ -192,26 +215,87 @@ Frontend kirim order ke backend
         ▼
 Backend validate (lockForUpdate)
         │
-        ├── Stok cukup → Buat order, redirect payment
+        ├── Stok cukup semua → Buat order, redirect payment
         │
-        └── Stok kurang → Auto-adjust
+        ├── Stok kurang sebagian → Auto-adjust
+        │       │
+        │       ▼
+        │   Return JSON (bukan redirect):
+        │   {
+        │     "adjusted": true,
+        │     "order": { ... },
+        │     "warnings": ["Susu Original: 5 → 3"]
+        │   }
+        │       │
+        │       ▼
+        │   Frontend tampilkan konfirmasi modal
+        │       │
+        │       ▼
+        │   User klik "Konfirmasi" → Redirect payment
+        │
+        └── Semua item habis → Return error
                 │
                 ▼
-        Return JSON (bukan redirect):
-        {
-          "adjusted": true,
-          "order": { ... },
-          "warnings": ["Susu Original: 5 → 3"]
-        }
+            {
+              "adjusted": true,
+              "all_removed": true,
+              "warnings": ["Semua produk dalam pesanan sudah habis"]
+            }
                 │
                 ▼
-        Frontend tampilkan konfirmasi modal
-                │
-                ▼
-        User klik "Konfirmasi" → Redirect payment
+            Frontend redirect ke cart dengan error banner
 ```
 
-### 5.4 Backend Changes
+**Rules:**
+- Jika semua items habis → jangan buat order, return error, redirect ke cart
+- Jika sebagian items habis → buat order dengan items yang tersisa, kurangi total, tampilkan konfirmasi
+- Jika stok cukup semua → buat order normal
+
+### 5.4 Frontend Submit Handling
+
+Frontend harus handle 2 jenis response dari submit:
+
+**1. Response 422 dari backend (stock changed between validate & submit):**
+```typescript
+// checkout/payment.tsx
+const handleSubmit = async () => {
+  const res = await fetch('/customer/checkout/submit', { ... });
+  
+  if (res.status === 422) {
+    const data = await res.json();
+    
+    if (data.all_removed) {
+      // Semua item habis → redirect ke cart
+      router.visit('/customer/cart', { 
+        error: 'Semua produk dalam pesanan sudah habis' 
+      });
+      return;
+    }
+    
+    if (data.adjusted) {
+      // Sebagian item berkurang → tampilkan konfirmasi
+      setAdjustmentModal({
+        warnings: data.warnings,
+        order: data.order,
+      });
+      return;
+    }
+  }
+  
+  // Success → redirect ke payment
+  if (res.ok) {
+    const data = await res.json();
+    window.location.href = data.payment_url;
+  }
+};
+```
+
+**2. Response 422 dari validate-stock (page load):**
+```typescript
+// Sudah dihandle di section 5.2 — banner warning
+```
+
+### 5.5 Backend Changes
 
 **File:** `OrderService.php` — `createCheckoutOrder()`
 
@@ -362,6 +446,16 @@ export function getStockLabel(
 | `CheckoutControllerTest` | Validate-stock endpoint |
 | `OrderServiceTest` | Auto-adjust logic |
 | `StockValidationTest` | Edge cases (race condition) |
+
+**Race Condition Test Case:**
+```php
+// Test: concurrent checkout — 2 customer reserve stok yang sama
+// Setup: Stock = 3 untuk variant X
+// Customer A: checkout qty 3
+// Customer B: checkout qty 3 (concurrent)
+// Expected: Salah satu dapat adjust ke 0 atau reject
+// Pastikan tidak ada overselling (stok tidak minus)
+```
 
 ---
 
