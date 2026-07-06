@@ -189,7 +189,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     <div
                         className="flex transition-transform duration-300 ease-in-out"
                         style={{
-                            transform: fulfillmentType === 'pickup' ? 'translateX(0)' : 'translateX(-100%)',
+                            transform: fulfillmentType === 'pickup' ? 'translateX(0)' : 'translateX(-50%)',
                             width: '200%',
                         }}
                     >
