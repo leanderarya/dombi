@@ -3,19 +3,29 @@ import { useEffect, useRef, useCallback } from 'react';
 
 export function usePolling(intervalMs: number = 30000, only: string[] = []) {
     const isOnline = useRef(true);
-    const isVisible = useRef(true);
+    const wasHidden = useRef(false);
 
     const handleOnline = useCallback(() => {
         isOnline.current = true;
-    }, []);
+        // Reload immediately when coming back online
+        router.reload({ only: only.length > 0 ? only : undefined });
+    }, [only]);
 
     const handleOffline = useCallback(() => {
         isOnline.current = false;
     }, []);
 
     const handleVisibilityChange = useCallback(() => {
-        isVisible.current = !document.hidden;
-    }, []);
+        const isHidden = document.hidden;
+
+        if (isHidden) {
+            wasHidden.current = true;
+        } else if (wasHidden.current && isOnline.current) {
+            // Page just became visible after being hidden — reload immediately
+            wasHidden.current = false;
+            router.reload({ only: only.length > 0 ? only : undefined });
+        }
+    }, [only]);
 
     useEffect(() => {
         window.addEventListener('online', handleOnline);
@@ -31,7 +41,7 @@ export function usePolling(intervalMs: number = 30000, only: string[] = []) {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (isOnline.current && isVisible.current) {
+            if (isOnline.current && !document.hidden) {
                 router.reload({ only: only.length > 0 ? only : undefined });
             }
         }, intervalMs);
