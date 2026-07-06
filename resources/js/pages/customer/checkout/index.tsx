@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { ShoppingCart, Store, Truck } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useState } from 'react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import StepButton from '@/components/customer/step-button';
@@ -28,49 +28,9 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
         draft?.fulfillment?.fulfillment_type ?? ''
     );
     const [processing, setProcessing] = useState(false);
-    const [overlayState, setOverlayState] = useState<'hidden' | 'entering' | 'visible' | 'exiting'>('hidden');
-    const [overlayTarget, setOverlayTarget] = useState<string>('');
-    const overlayTimeout = useRef<ReturnType<typeof setTimeout>>();
 
     const subtotal = items.reduce((sum, item) => sum + Number(item.subtotal), 0);
     const itemCount = items.reduce((sum, item) => sum + Number(item.quantity), 0);
-
-    // Inject keyframes into document head
-    useEffect(() => {
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideInFromLeft {
-                from { transform: translateX(-100%); }
-                to { transform: translateX(0); }
-            }
-        `;
-        document.head.appendChild(style);
-        return () => { style.remove(); };
-    }, []);
-
-    const switchFulfillment = (target: string) => {
-        if (target === fulfillmentType) return;
-
-        // Start overlay off-screen left, then animate in
-        setOverlayTarget(target);
-        setOverlayState('entering');
-
-        // After enter animation (400ms), show briefly then exit
-        overlayTimeout.current = setTimeout(() => {
-            setFulfillmentType(target);
-            setOverlayState('visible');
-
-            // After visible (300ms), start exit animation to right
-            overlayTimeout.current = setTimeout(() => {
-                setOverlayState('exiting');
-
-                // After exit animation (400ms), hide
-                overlayTimeout.current = setTimeout(() => {
-                    setOverlayState('hidden');
-                }, 400);
-            }, 300);
-        }, 400);
-    };
 
     const updateQuantity = useCallback((variantId: number, newQty: number) => {
         if (newQty <= 0) {
@@ -198,7 +158,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     />
                     <button
                         type="button"
-                        onClick={() => switchFulfillment('pickup')}
+                        onClick={() => setFulfillmentType('pickup')}
                         className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
                             fulfillmentType === 'pickup' ? 'text-text' : 'text-text-muted'
                         }`}
@@ -213,7 +173,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                                 setDeliverySheetOpen(true);
                                 return;
                             }
-                            switchFulfillment('delivery_dombi');
+                            setFulfillmentType('delivery_dombi');
                         }}
                         className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
                             fulfillmentType === 'delivery_dombi' ? 'text-text' : 'text-text-muted'
@@ -264,41 +224,8 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
 
                 <DeliveryLoginSheet open={deliverySheetOpen} onClose={() => setDeliverySheetOpen(false)} />
             </section>
-
-            {/* Full-page overlay transition */}
-            {overlayState !== 'hidden' && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-primary"
-                    style={{
-                        transform: overlayState === 'exiting'
-                            ? 'translateX(100%)'
-                            : 'translateX(0)',
-                        ...(overlayState === 'entering' && {
-                            animation: 'slideInFromLeft 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
-                        }),
-                        ...(overlayState === 'exiting' && {
-                            transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
-                        }),
-                    }}
-                >
-                    <div className="flex flex-col items-center gap-3 text-white">
-                        {overlayTarget === 'pickup' ? (
-                            <Store className="h-12 w-12" />
-                        ) : (
-                            <Truck className="h-12 w-12" />
-                        )}
-                        <div className="text-xl font-bold">
-                            {overlayTarget === 'pickup' ? 'Ambil di Outlet' : 'Kurir Dombi'}
-                        </div>
-                        <div className="text-sm text-white/70">
-                            {overlayTarget === 'pickup' ? 'Siap dalam 15-30 menit' : 'Diantar dalam 30-60 menit'}
-                        </div>
-                    </div>
-                </div>
-            )}
             {/* Spacer for sticky footer */}
             <div className="h-24" />
         </CustomerMobileLayout>
     );
 }
-

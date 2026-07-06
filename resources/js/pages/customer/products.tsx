@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { Search, ThumbsUp } from 'lucide-react';
+import { Search, Store, ThumbsUp, Truck } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
@@ -68,6 +68,9 @@ function ProductsInner() {
     const [sheetFlavorName, setSheetFlavorName] = useState('');
     const [sheetFamilyName, setSheetFamilyName] = useState('');
     const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>('pickup');
+    const [overlayState, setOverlayState] = useState<'hidden' | 'entering' | 'visible' | 'exiting'>('hidden');
+    const [overlayTarget, setOverlayTarget] = useState<'pickup' | 'delivery'>('pickup');
+    const overlayTimeout = useRef<ReturnType<typeof setTimeout>>();
     const abortRef = useRef<AbortController | null>(null);
     const cacheRef = useRef<Map<number, { data: Family[]; timestamp: number }>>(new Map());
     const CACHE_TTL_MS = 30_000; // 30 seconds — stock may change when navigating back
@@ -76,6 +79,39 @@ function ProductsInner() {
     const { totalItems } = useCart();
     const scrollRef = useRef<HTMLDivElement>(null);
     const sectionRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+
+    // Inject keyframes for overlay animation
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes overlaySlideIn {
+                from { transform: translateX(-100%); }
+                to { transform: translateX(0); }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => { style.remove(); };
+    }, []);
+
+    const switchFulfillment = (target: 'pickup' | 'delivery') => {
+        if (target === fulfillmentType) return;
+
+        setOverlayTarget(target);
+        setOverlayState('entering');
+
+        overlayTimeout.current = setTimeout(() => {
+            setFulfillmentType(target);
+            setOverlayState('visible');
+
+            overlayTimeout.current = setTimeout(() => {
+                setOverlayState('exiting');
+
+                overlayTimeout.current = setTimeout(() => {
+                    setOverlayState('hidden');
+                }, 400);
+            }, 300);
+        }, 400);
+    };
 
     // Invalidate stale cache entries on mount (when user navigates back)
     useEffect(() => {
@@ -273,7 +309,7 @@ return;
                         <ForeGreenHeader title="Produk" backHref="/customer/home" />
                         <FulfillmentToggle
                             value={fulfillmentType}
-                            onChange={setFulfillmentType}
+                            onChange={switchFulfillment}
                         />
                         <p className="mt-2 text-center text-[11px] text-white/60">
                             {fulfillmentType === 'pickup'
@@ -405,6 +441,36 @@ return;
             />
             {totalItems > 0 && <FloatingCartBar />}
             <CustomerBottomNav />
+
+            {/* Full-page overlay transition */}
+            {overlayState !== 'hidden' && (
+                <div
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-primary"
+                    style={{
+                        transform: overlayState === 'exiting' ? 'translateX(100%)' : 'translateX(0)',
+                        ...(overlayState === 'entering' && {
+                            animation: 'overlaySlideIn 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                        }),
+                        ...(overlayState === 'exiting' && {
+                            transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                        }),
+                    }}
+                >
+                    <div className="flex flex-col items-center gap-3 text-white">
+                        {overlayTarget === 'pickup' ? (
+                            <Store className="h-12 w-12" />
+                        ) : (
+                            <Truck className="h-12 w-12" />
+                        )}
+                        <div className="text-xl font-bold">
+                            {overlayTarget === 'pickup' ? 'Ambil di Outlet' : 'Kurir Dombi'}
+                        </div>
+                        <div className="text-sm text-white/70">
+                            {overlayTarget === 'pickup' ? 'Siap dalam 15-30 menit' : 'Diantar dalam 30-60 menit'}
+                        </div>
+                    </div>
+                </div>
+            )}
         </>
     );
 }
