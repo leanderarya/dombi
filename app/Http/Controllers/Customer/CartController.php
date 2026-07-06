@@ -18,99 +18,74 @@ class CartController extends Controller
     public function addItem(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'product_variant_id' => ['required', 'integer', Rule::exists('product_variants', 'id')->where('is_active', true)],
-            'quantity' => ['required', 'integer', 'min:1', 'max:999'],
+            'product_variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'quantity' => ['required', 'integer', 'min:1'],
         ]);
 
-        $variantId = (int) $validated['product_variant_id'];
-        $quantity = (int) $validated['quantity'];
+        $variant = ProductVariant::findOrFail($validated['product_variant_id']);
+        $quantity = $validated['quantity'];
 
-        // Resolve outlet from session or request
-        $outletId = $request->integer('outlet_id')
-            ?: session('checkout.fulfillment.selected_outlet_id');
+        // Get available stock from outlet inventory
+        $inventory = OutletInventory::where('product_variant_id', $variant->id)
+            ->where('is_active', true)
+            ->first();
 
-        // Validate stock availability if outlet is known
-        if ($outletId) {
-            $inventory = OutletInventory::query()
-                ->where('outlet_id', $outletId)
-                ->where('product_variant_id', $variantId)
-                ->where('is_active', true)
-                ->first();
+        $availableStock = $inventory
+            ? max(0, (int) $inventory->current_stock - (int) $inventory->reserved_stock)
+            : 0;
 
-            if ($inventory) {
-                $availableStock = max(0, $inventory->current_stock - $inventory->reserved_stock);
-                $existingQty = $this->getExistingCartQuantity($request, $variantId);
-                $requestedTotal = $existingQty + $quantity;
+        $maxQuantity = $availableStock;
 
-                if ($availableStock <= 0) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Stok produk ini sudah habis.',
-                        'error_code' => 'out_of_stock',
-                        'available_stock' => 0,
-                    ], 422);
-                }
-
-                if ($requestedTotal > $availableStock) {
-                    $maxAddable = max(0, $availableStock - $existingQty);
-
-                    if ($maxAddable <= 0) {
-                        return response()->json([
-                            'success' => false,
-                            'message' => "Stok tidak cukup. Maksimal {$availableStock} item di keranjang.",
-                            'error_code' => 'insufficient_stock',
-                            'available_stock' => $availableStock,
-                            'max_addable' => 0,
-                        ], 422);
-                    }
-
-                    // Auto-clamp to available stock
-                    $quantity = $maxAddable;
-                }
-            }
+        // Check if out of stock
+        if ($availableStock <= 0) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Stok produk ini sudah habis',
+                'item' => [
+                    'product_variant_id' => $variant->id,
+                    'quantity' => 0,
+                    'available_stock' => 0,
+                    'max_quantity' => 0,
+                ],
+            ]);
         }
 
-        $cart = collect($request->session()->get('checkout.cart', []));
+        // Auto-adjust if exceeds available stock
+        $originalQuantity = $quantity;
+        if ($quantity > $availableStock) {
+            $quantity = $availableStock;
+        }
 
-        // Check if variant already in cart
-        $existingIndex = $cart->search(fn ($item) => ((int) ($item['product_variant_id'] ?? 0)) === $variantId);
+        // Store in session cart
+        $cart = $request->session()->get('checkout.cart', []);
+        $existingKey = collect($cart)->search(fn ($item) => $item['product_variant_id'] === $variant->id);
 
-        if ($existingIndex !== false) {
-            // Update quantity
-            $items = $cart->toArray();
-            $items[$existingIndex]['quantity'] = ((int) $items[$existingIndex]['quantity']) + $quantity;
+        if ($existingKey !== false) {
+            $cart[$existingKey]['quantity'] = $quantity;
         } else {
-            // Add new item
-            $items = $cart->push([
-                'product_variant_id' => $variantId,
+            $cart[] = [
+                'product_variant_id' => $variant->id,
                 'quantity' => $quantity,
-            ])->toArray();
+            ];
         }
 
-        $request->session()->put('checkout.cart', $items);
+        $request->session()->put('checkout.cart', $cart);
 
-        // Load variant info for response
-        $variant = ProductVariant::query()
-            ->with('family')
-            ->find($variantId);
+        $warning = null;
+        if ($originalQuantity > $availableStock) {
+            $warning = "Jumlah dikurangi dari {$originalQuantity} ke {$availableStock} (stok tersisa {$availableStock})";
+        }
 
-        $response = [
+        return response()->json([
             'success' => true,
             'item' => [
-                'product_variant_id' => $variantId,
+                'product_variant_id' => $variant->id,
                 'quantity' => $quantity,
-                'name' => $variant?->family?->name ?? $variant?->name ?? 'Produk',
-                'variant_name' => $variant?->name ?? '',
+                'available_stock' => $availableStock,
+                'max_quantity' => $maxQuantity,
             ],
-            'cart_count' => collect($items)->sum('quantity'),
-        ];
-
-        // Warn if quantity was clamped
-        if ($quantity < (int) $validated['quantity']) {
-            $response['warning'] = "Jumlah disesuaikan ke {$quantity} (stok terbatas).";
-        }
-
-        return response()->json($response);
+            'warning' => $warning,
+        ]);
     }
 
     /**
