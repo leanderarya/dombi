@@ -147,39 +147,81 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
             )}
 
             <section className="mt-4">
-                <div className="rounded-xl border border-border bg-white p-4">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            {fulfillmentType === 'pickup' ? (
-                                <Store className="h-5 w-5 text-emerald-600" />
-                            ) : (
-                                <Truck className="h-5 w-5 text-emerald-600" />
-                            )}
-                            <div>
-                                <div className="text-sm font-semibold text-text">
-                                    {fulfillmentType === 'pickup' ? 'Ambil di Outlet' : 'Kurir Dombi'}
-                                </div>
-                                {fulfillmentType === 'pickup' && nearestOutlet && (
-                                    <div className="text-[11px] text-text-muted">
-                                        {nearestOutlet.name} · {nearestOutlet.distance_km?.toFixed(1)} km
-                                    </div>
-                                )}
-                                {fulfillmentType === 'delivery_dombi' && deliveryPreview?.delivery_fee !== undefined && (
-                                    <div className="text-[11px] text-text-muted">
-                                        Ongkir: Rp {deliveryPreview.delivery_fee.toLocaleString('id-ID')}
-                                    </div>
-                                )}
+                {/* Segmented Toggle */}
+                <div className="relative flex rounded-xl bg-surface-muted p-1">
+                    <div
+                        className="absolute top-1 bottom-1 rounded-lg bg-white shadow-sm transition-all duration-300 ease-in-out"
+                        style={{
+                            left: fulfillmentType === 'pickup' ? '4px' : '50%',
+                            width: 'calc(50% - 4px)',
+                        }}
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setFulfillmentType('pickup')}
+                        className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
+                            fulfillmentType === 'pickup' ? 'text-text' : 'text-text-muted'
+                        }`}
+                    >
+                        <Store className="h-4 w-4" />
+                        Pickup
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            if (!isLoggedIn) {
+                                setDeliverySheetOpen(true);
+                                return;
+                            }
+                            setFulfillmentType('delivery_dombi');
+                        }}
+                        className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
+                            fulfillmentType === 'delivery_dombi' ? 'text-text' : 'text-text-muted'
+                        }`}
+                    >
+                        <Truck className="h-4 w-4" />
+                        Delivery
+                    </button>
+                </div>
+
+                {/* Detail Card — animated */}
+                <div className="mt-3 overflow-hidden rounded-xl border border-border bg-white">
+                    <div
+                        className="flex transition-transform duration-300 ease-in-out"
+                        style={{
+                            transform: fulfillmentType === 'pickup' ? 'translateX(0)' : 'translateX(-100%)',
+                            width: '200%',
+                        }}
+                    >
+                        {/* Pickup Detail */}
+                        <div className="w-1/2 shrink-0 p-4">
+                            <div className="flex items-center gap-2">
+                                <Store className="h-4 w-4 text-emerald-600" />
+                                <span className="text-sm font-semibold text-text">Ambil di Outlet</span>
                             </div>
+                            {nearestOutlet && (
+                                <div className="mt-1.5 text-[11px] text-text-muted">
+                                    {nearestOutlet.name} · {nearestOutlet.distance_km?.toFixed(1)} km
+                                </div>
+                            )}
+                            <div className="mt-1 text-[11px] text-emerald-700 font-medium">Siap dalam 15-30 menit</div>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => setFulfillmentType(fulfillmentType === 'pickup' ? 'delivery_dombi' : 'pickup')}
-                            className="text-[11px] font-semibold text-primary active:opacity-80"
-                        >
-                            Ubah
-                        </button>
+                        {/* Delivery Detail */}
+                        <div className="w-1/2 shrink-0 p-4">
+                            <div className="flex items-center gap-2">
+                                <Truck className="h-4 w-4 text-emerald-600" />
+                                <span className="text-sm font-semibold text-text">Kurir Dombi</span>
+                            </div>
+                            {deliveryPreview?.delivery_fee !== undefined && (
+                                <div className="mt-1.5 text-[11px] text-text-muted">
+                                    Ongkir: <span className="font-bold text-text">Rp {deliveryPreview.delivery_fee.toLocaleString('id-ID')}</span>
+                                </div>
+                            )}
+                            <div className="mt-1 text-[11px] text-emerald-700 font-medium">Diantar dalam 30-60 menit</div>
+                        </div>
                     </div>
                 </div>
+
                 <DeliveryLoginSheet open={deliverySheetOpen} onClose={() => setDeliverySheetOpen(false)} />
             </section>
             {/* Spacer for sticky footer */}
