@@ -101,6 +101,7 @@ class Order extends Model
         'rejected_at', 'rejected_by', 'rejection_reason', 'rejection_note',
         'cancelled_at', 'cancelled_by', 'cancellation_reason', 'cancellation_note',
         'expired_at', 'expired_reason',
+        'credit_applied',
     ];
 
     protected $appends = [
@@ -137,6 +138,7 @@ class Order extends Model
             'completed_at' => 'datetime',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
+            'credit_applied' => 'decimal:2',
         ];
     }
 

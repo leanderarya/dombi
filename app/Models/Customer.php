@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Customer extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'name',
         'phone',
@@ -15,6 +17,7 @@ class Customer extends Model
         'is_registered',
         'user_id',
         'last_order_at',
+        'credit_balance',
     ];
 
     protected function casts(): array
@@ -22,6 +25,7 @@ class Customer extends Model
         return [
             'is_registered' => 'boolean',
             'last_order_at' => 'datetime',
+            'credit_balance' => 'decimal:2',
         ];
     }
 
