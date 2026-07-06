@@ -478,8 +478,15 @@ class CheckoutController extends Controller
             // Cache order ID for idempotency (60s TTL)
             Cache::put($idempotencyKey, $order->id, 60);
         } catch (StockAdjustedException $e) {
-            $warnings = collect($e->adjustments)->map(function ($adj) {
-                $variant = ProductVariant::with('family')->find($adj['variant_id']);
+            // Batch load variants to avoid N+1
+            $variantIds = collect($e->adjustments)->pluck('variant_id')->unique()->toArray();
+            $variants = ProductVariant::whereIn('id', $variantIds)
+                ->with('family')
+                ->get()
+                ->keyBy('id');
+
+            $warnings = collect($e->adjustments)->map(function ($adj) use ($variants) {
+                $variant = $variants->get($adj['variant_id']);
                 $name = $variant?->family?->name ?? $variant?->name ?? 'Produk';
 
                 if ($adj['adjusted_qty'] <= 0) {
