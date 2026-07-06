@@ -520,6 +520,7 @@ export default function CheckoutCustomer({
             <LocationSheet
                 open={locationSheetOpen}
                 onClose={() => setLocationSheetOpen(false)}
+                isLoggedIn={isLoggedIn}
                 onLocationSaved={(location) => {
                     form.setData({
                         ...form.data,

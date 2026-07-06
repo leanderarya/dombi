@@ -1,4 +1,5 @@
 import { Store, MapPin } from 'lucide-react';
+import { usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import OutletSheet from '@/components/customer/outlet-sheet';
@@ -7,6 +8,8 @@ import { useOutlet } from '@/contexts/outlet-context';
 import { useCustomerLocation } from '@/lib/customer-location';
 
 export default function StoreLocationCard() {
+    const { auth } = usePage<any>().props;
+    const isLoggedIn = !!auth?.user;
     const { selectedOutlet, outlets, loading, error, retry } = useOutlet();
     const { summary: locationSummary } = useCustomerLocation();
     const [outletSheetOpen, setOutletSheetOpen] = useState(false);
@@ -102,7 +105,7 @@ export default function StoreLocationCard() {
             </button>
 
             <OutletSheet open={outletSheetOpen} onClose={() => setOutletSheetOpen(false)} />
-            <LocationSheet open={locationSheetOpen} onClose={() => setLocationSheetOpen(false)} />
+            <LocationSheet open={locationSheetOpen} onClose={() => setLocationSheetOpen(false)} isLoggedIn={isLoggedIn} />
         </>
     );
 }

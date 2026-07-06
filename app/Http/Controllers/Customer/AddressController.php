@@ -7,6 +7,7 @@ use App\Http\Requests\Customer\StoreCustomerAddressRequest;
 use App\Http\Requests\Customer\UpdateCustomerAddressRequest;
 use App\Models\CustomerAddress;
 use App\Services\CustomerAddressService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,6 +20,23 @@ class AddressController extends Controller
     {
         return Inertia::render('customer/addresses/index', [
             'addresses' => collect(),
+        ]);
+    }
+
+    public function apiIndex(): JsonResponse
+    {
+        $user = auth()->user();
+        $customer = $user->getCustomerOrCreate();
+
+        $addresses = $customer->addresses()
+            ->orderByDesc('is_default')
+            ->orderByDesc('updated_at')
+            ->get(['id', 'label', 'address_line', 'address_detail', 'village', 'district', 'city', 'province', 'postal_code', 'latitude', 'longitude', 'landmark', 'delivery_notes', 'is_default']);
+
+        return response()->json([
+            'addresses' => $addresses,
+            'max_addresses' => 5,
+            'can_add' => $addresses->count() < 5,
         ]);
     }
 
@@ -66,6 +84,27 @@ class AddressController extends Controller
         $this->addressService->setDefault($address);
 
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat utama berhasil diperbarui.');
+    }
+
+    /**
+     * Save checkout location as a new saved address.
+     */
+    public function storeFromCheckout(StoreCustomerAddressRequest $request): JsonResponse
+    {
+        $user = auth()->user();
+        $customer = $user->getCustomerOrCreate();
+
+        try {
+            $address = $this->addressService->storeFromLocation(
+                $customer,
+                $request->validated(),
+                $request->input('label'),
+            );
+
+            return response()->json(['address' => $address, 'success' => true]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 
     private function authorizeAddress(CustomerAddress $address): void

@@ -132,8 +132,10 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/orders/{order}/report', [OrderReportController::class, 'store'])->name('orders.report')->middleware('throttle:order-report');
         Route::get('/addresses', [CustomerAddressController::class, 'index'])->name('addresses.index');
+        Route::get('/addresses/api', [CustomerAddressController::class, 'apiIndex'])->name('addresses.api');
         Route::get('/addresses/create', [CustomerAddressController::class, 'create'])->name('addresses.create');
         Route::post('/addresses', [CustomerAddressController::class, 'store'])->name('addresses.store');
+        Route::post('/addresses/from-checkout', [CustomerAddressController::class, 'storeFromCheckout'])->name('addresses.store-from-checkout');
         Route::get('/addresses/{address}/edit', [CustomerAddressController::class, 'edit'])->name('addresses.edit');
         Route::put('/addresses/{address}', [CustomerAddressController::class, 'update'])->name('addresses.update');
         Route::delete('/addresses/{address}', [CustomerAddressController::class, 'destroy'])->name('addresses.destroy');

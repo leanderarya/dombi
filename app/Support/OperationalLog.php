@@ -45,7 +45,7 @@ class OperationalLog
         ]);
     }
 
-    public static function inventoryException(int $outletId, int $productId, string $type, int $required, int $available): void
+    public static function inventoryException(int $outletId, ?int $productId, string $type, int $required, int $available): void
     {
         Log::channel('operational')->error('Inventory exception', [
             'event' => 'inventory_exception',

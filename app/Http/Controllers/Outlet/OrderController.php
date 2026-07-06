@@ -47,8 +47,11 @@ class OrderController extends Controller
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($tab === 'aktif', fn ($q) => $q
                 ->where(function ($q) {
-                    $q->whereNull('confirmation_expires_at')
-                        ->orWhere('confirmation_expires_at', '>', now());
+                    $q->where('status', '!=', 'pending_confirmation')
+                        ->orWhere(function ($q2) {
+                            $q2->whereNull('confirmation_expires_at')
+                                ->orWhere('confirmation_expires_at', '>', now());
+                        });
                 })
                 ->oldest(),
                 fn ($q) => $q->latest()
@@ -139,6 +142,10 @@ class OrderController extends Controller
             fn () => Order::where('outlet_id', $outlet->id)
                 ->where('status', 'pending_confirmation')
                 ->where('payment_status', 'paid')
+                ->where(function ($q) {
+                    $q->whereNull('confirmation_expires_at')
+                        ->orWhere('confirmation_expires_at', '>', now());
+                })
                 ->count()
         );
 
