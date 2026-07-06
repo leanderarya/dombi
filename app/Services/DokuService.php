@@ -210,7 +210,7 @@ class DokuService
                 return $response->json();
             }
 
-            Log::warning('DOKU status check failed', [
+            Log::info('DOKU status check: session may have expired', [
                 'order_id' => $order->id,
                 'status_code' => $response->status(),
             ]);
