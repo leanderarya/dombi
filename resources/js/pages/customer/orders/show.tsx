@@ -49,6 +49,10 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
         nextStep: 'Silakan ambil di outlet sebelum jam tutup',
         cta: { label: 'Navigasi ke Outlet', action: 'navigate' },
     },
+    ready_for_pickup_delivery: {
+        description: 'Pesanan sudah siap, menunggu kurir',
+        nextStep: 'Kurir akan segera menjemput dan mengantar ke alamat Anda',
+    },
     completed: {
         description: 'Pesanan telah selesai',
         nextStep: 'Terima kasih sudah pesan di Dombi!',
@@ -298,7 +302,11 @@ return;
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <StatusBadge status={hasPaymentIssue ? 'payment_failed' : (order.status === 'pending_confirmation' && order.payment_status !== 'paid') ? 'pending_payment' : order.status} />
+                    {order.status === 'ready_for_pickup' && !isPickup ? (
+                        <StatusBadge variant="info">Menunggu Kurir</StatusBadge>
+                    ) : (
+                        <StatusBadge status={hasPaymentIssue ? 'payment_failed' : (order.status === 'pending_confirmation' && order.payment_status !== 'paid') ? 'pending_payment' : order.status} />
+                    )}
                 </div>
 
                 {/* What's Next Guidance */}
@@ -306,9 +314,11 @@ return;
                     const isPendingUnpaid = order.status === 'pending_confirmation'
                         && order.payment_status !== 'paid';
                     const isPaymentFailed = order.payment_status === 'failed' || order.payment_status === 'expired';
-                    const guidanceKey = isPendingUnpaid
-                        ? (isPaymentFailed ? 'pending_confirmation_payment_failed' : 'pending_confirmation_unpaid')
-                        : order.status;
+                    const guidanceKey = order.status === 'ready_for_pickup' && !isPickup
+                        ? 'ready_for_pickup_delivery'
+                        : isPendingUnpaid
+                            ? (isPaymentFailed ? 'pending_confirmation_payment_failed' : 'pending_confirmation_unpaid')
+                            : order.status;
                     const guidance = STATUS_GUIDANCE[guidanceKey];
 
                     if (!guidance) {
