@@ -7,6 +7,7 @@ use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Models\Order;
 use App\Models\OrderReport;
+use App\Models\PaymentTransaction;
 use App\Services\DokuService;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
@@ -197,6 +198,14 @@ class OrderController extends Controller
             return redirect()->route('customer.orders.confirm', [
                 'orderCode' => $order->order_code,
             ]);
+        }
+
+        // Guard: max payment retry attempts
+        $paymentAttempts = PaymentTransaction::where('order_id', $order->id)->count();
+        $maxPaymentAttempts = config('order.max_payment_attempts', 3);
+
+        if ($paymentAttempts >= $maxPaymentAttempts) {
+            return back()->with('error', 'Batas maksimum percobaan pembayaran tercapai.');
         }
 
         // Guard: if payment failed/expired, reset so user can retry
