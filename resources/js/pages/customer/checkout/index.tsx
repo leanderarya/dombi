@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { ShoppingCart, Store, Truck } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import StepButton from '@/components/customer/step-button';
@@ -28,9 +28,36 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
         draft?.fulfillment?.fulfillment_type ?? ''
     );
     const [processing, setProcessing] = useState(false);
+    const [overlayState, setOverlayState] = useState<'hidden' | 'entering' | 'visible' | 'exiting'>('hidden');
+    const [overlayTarget, setOverlayTarget] = useState<string>('');
+    const overlayTimeout = useRef<ReturnType<typeof setTimeout>>();
 
     const subtotal = items.reduce((sum, item) => sum + Number(item.subtotal), 0);
     const itemCount = items.reduce((sum, item) => sum + Number(item.quantity), 0);
+
+    const switchFulfillment = (target: string) => {
+        if (target === fulfillmentType) return;
+
+        // Start overlay enter animation
+        setOverlayTarget(target);
+        setOverlayState('entering');
+
+        // After enter animation (400ms), show briefly then exit
+        overlayTimeout.current = setTimeout(() => {
+            setFulfillmentType(target);
+            setOverlayState('visible');
+
+            // After visible (200ms), start exit animation
+            overlayTimeout.current = setTimeout(() => {
+                setOverlayState('exiting');
+
+                // After exit animation (400ms), hide
+                overlayTimeout.current = setTimeout(() => {
+                    setOverlayState('hidden');
+                }, 400);
+            }, 200);
+        }, 400);
+    };
 
     const updateQuantity = useCallback((variantId: number, newQty: number) => {
         if (newQty <= 0) {
@@ -158,7 +185,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     />
                     <button
                         type="button"
-                        onClick={() => setFulfillmentType('pickup')}
+                        onClick={() => switchFulfillment('pickup')}
                         className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
                             fulfillmentType === 'pickup' ? 'text-text' : 'text-text-muted'
                         }`}
@@ -173,7 +200,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                                 setDeliverySheetOpen(true);
                                 return;
                             }
-                            setFulfillmentType('delivery_dombi');
+                            switchFulfillment('delivery_dombi');
                         }}
                         className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
                             fulfillmentType === 'delivery_dombi' ? 'text-text' : 'text-text-muted'
@@ -184,7 +211,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     </button>
                 </div>
 
-                {/* Detail Card — animated */}
+                {/* Detail Card */}
                 <div className="mt-3 overflow-hidden rounded-xl border border-border bg-white">
                     <div
                         className="flex transition-transform duration-300 ease-in-out"
@@ -224,6 +251,50 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
 
                 <DeliveryLoginSheet open={deliverySheetOpen} onClose={() => setDeliverySheetOpen(false)} />
             </section>
+
+            {/* Full-page overlay transition */}
+            {overlayState !== 'hidden' && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center"
+                    style={{
+                        animation: overlayState === 'entering'
+                            ? 'overlaySlideIn 400ms ease-out forwards'
+                            : overlayState === 'visible'
+                                ? 'overlayVisible 200ms ease-in-out forwards'
+                                : 'overlaySlideOut 400ms ease-in forwards',
+                    }}
+                >
+                    <div className="absolute inset-0 bg-primary" />
+                    <div className="relative z-10 flex flex-col items-center gap-3 text-white">
+                        {overlayTarget === 'pickup' ? (
+                            <Store className="h-12 w-12" />
+                        ) : (
+                            <Truck className="h-12 w-12" />
+                        )}
+                        <div className="text-xl font-bold">
+                            {overlayTarget === 'pickup' ? 'Ambil di Outlet' : 'Kurir Dombi'}
+                        </div>
+                        <div className="text-sm text-white/70">
+                            {overlayTarget === 'pickup' ? 'Siap dalam 15-30 menit' : 'Diantar dalam 30-60 menit'}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style>{`
+                @keyframes overlaySlideIn {
+                    from { clip-path: inset(0 100% 0 0); }
+                    to { clip-path: inset(0 0 0 0); }
+                }
+                @keyframes overlayVisible {
+                    from { opacity: 1; }
+                    to { opacity: 1; }
+                }
+                @keyframes overlaySlideOut {
+                    from { clip-path: inset(0 0 0 0); }
+                    to { clip-path: inset(0 0 0 100%); }
+                }
+            `}</style>
             {/* Spacer for sticky footer */}
             <div className="h-24" />
         </CustomerMobileLayout>
