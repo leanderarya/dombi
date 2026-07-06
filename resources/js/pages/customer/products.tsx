@@ -104,21 +104,20 @@ function ProductsInner() {
 
                 {/* ── White section ── */}
                 <div className="rounded-t-[1.5rem] bg-white">
-                    <div className="px-4 pb-24">
-                        {/* Outlet card (floats into green) */}
-                        <div className="-mt-7">
+                    <div className="px-4 pt-6 pb-24">
+                        <div className="mb-3">
                             <StoreLocationCard />
                         </div>
 
-                        <div className="mt-4 space-y-4">
+                        <SearchBar search={search} onSearchChange={setSearch} />
 
-                        <SearchBar search={search} onSearchChange={setSearch}>
+                        <div className="mb-3">
                             <FilterChips options={filterOptions} active={activeFilter} onChange={setActiveFilter} />
-                        </SearchBar>
+                        </div>
 
                         {!loading && error && <ErrorState message={error} onRetry={retry} />}
 
-                        <p className="text-xs text-text-muted">{loading ? '...' : `${productCount} Produk`}</p>
+                        <p className="mb-2 text-xs text-text-muted">{loading ? '...' : `${productCount} Produk`}</p>
 
                         {loading ? (
                             <ProductSkeletons />
@@ -161,7 +160,6 @@ function ProductsInner() {
                     </div>
                 </div>
             </div>
-            </div>
 
             <SizeSelectorSheet
                 open={sheetOpen}
@@ -179,7 +177,7 @@ function ProductsInner() {
 
 /* ─── Sub-components ───────────────────────────────────────── */
 
-function SearchBar({ search, onSearchChange, children }: { search: string; onSearchChange: (v: string) => void; children: React.ReactNode }) {
+function SearchBar({ search, onSearchChange }: { search: string; onSearchChange: (v: string) => void }) {
     return (
         <div className="sticky top-safe z-20 -mx-4 bg-white/80 px-4 pb-3 pt-2 backdrop-blur-lg">
             <div className="rounded-2xl bg-white shadow-sm">
@@ -194,7 +192,6 @@ function SearchBar({ search, onSearchChange, children }: { search: string; onSea
                     />
                 </div>
             </div>
-            <div className="mt-3">{children}</div>
         </div>
     );
 }
