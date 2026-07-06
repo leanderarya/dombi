@@ -104,11 +104,13 @@ function ProductsInner() {
 
                 {/* ── White section ── */}
                 <div className="rounded-t-[1.5rem] bg-white">
-                    {/* Outlet card (floats into green) */}
-                    <div className="-mt-7 mx-4">
-                        <StoreLocationCard />
-                    </div>
-                    <div className="px-4 pt-4 pb-24 space-y-4">
+                    <div className="px-4 pb-24">
+                        {/* Outlet card (floats into green) */}
+                        <div className="-mt-7">
+                            <StoreLocationCard />
+                        </div>
+
+                        <div className="mt-4 space-y-4">
 
                         <SearchBar search={search} onSearchChange={setSearch}>
                             <FilterChips options={filterOptions} active={activeFilter} onChange={setActiveFilter} />
@@ -158,6 +160,7 @@ function ProductsInner() {
                         )}
                     </div>
                 </div>
+            </div>
             </div>
 
             <SizeSelectorSheet
