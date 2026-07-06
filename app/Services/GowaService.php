@@ -13,8 +13,8 @@ class GowaService
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('services.gowa.base_url'), '/');
-        $this->apiKey = config('services.gowa.api_key', '');
+        $this->baseUrl = rtrim((string) config('services.gowa.base_url', 'http://localhost:3000'), '/');
+        $this->apiKey = (string) config('services.gowa.api_key', '');
     }
 
     /**
