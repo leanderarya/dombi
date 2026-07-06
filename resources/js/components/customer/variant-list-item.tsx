@@ -5,7 +5,6 @@ import ProductImage from '@/components/customer/product-image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutlet } from '@/contexts/outlet-context';
 import { formatCurrency } from '@/lib/format';
-import { getCustomerStockStatus } from '@/lib/status-labels';
 import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
 
@@ -41,10 +40,6 @@ const VariantListItem = memo(function VariantListItem({ variant, familyId, famil
     const isFav = isFavorite(variant.id);
     const isOutOfStock = variant.stock_status === 'out_of_stock';
     const showMulaiDari = variantCount > 1;
-    const { displayLabel: stockLabel } = getCustomerStockStatus(
-      variant.stock_status ?? '',
-      variant.available_stock
-    );
 
     const productHref = selectedOutlet
         ? `/customer/products/${familyId}?outlet_id=${selectedOutlet.id}`
@@ -141,9 +136,6 @@ const VariantListItem = memo(function VariantListItem({ variant, familyId, famil
                         )}
                         <div className="text-sm font-bold tabular-nums text-text">{formatCurrency(displayPrice)}</div>
                     </div>
-                    {stockLabel && (
-                        <span className="stock-badge stock-badge-low">{stockLabel}</span>
-                    )}
                 </div>
             </div>
 
