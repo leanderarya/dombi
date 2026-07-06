@@ -188,7 +188,7 @@ function SearchBar({ search, onSearchChange, children }: { search: string; onSea
                     />
                 </div>
             </div>
-            <div className="mt-2">{children}</div>
+            <div className="mt-3">{children}</div>
         </div>
     );
 }
