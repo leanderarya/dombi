@@ -74,7 +74,7 @@ return;
                 credentials: 'same-origin',
             });
             const data = await response.json();
-            if (data.item?.max_quantity) {
+            if (data.item?.max_quantity !== undefined) {
                 setMaxQuantity(data.item.max_quantity);
             }
         } catch {
