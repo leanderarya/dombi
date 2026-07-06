@@ -93,7 +93,7 @@ function ProductsInner() {
             <div className="min-h-dvh bg-background" ref={scrollRef}>
                 {/* ── Green header ── */}
                 <div className="bg-primary">
-                    <div className="px-4 pb-10 pt-safe">
+                    <div className="px-4 pb-14 pt-safe">
                         <ForeGreenHeader title="Produk" backHref="/customer/home" />
                         <FulfillmentToggle value={fulfillmentType} onChange={switchTo} />
                         <p className="mt-2 text-center text-[11px] text-white/60">
@@ -102,10 +102,14 @@ function ProductsInner() {
                     </div>
                 </div>
 
+                {/* ── Outlet card (floats between green & white) ── */}
+                <div className="relative z-20 -mt-3 mx-4">
+                    <StoreLocationCard />
+                </div>
+
                 {/* ── White section ── */}
                 <div className="relative -mt-8 z-10 rounded-t-[1.5rem] bg-white">
-                    <div className="px-4 pt-6 pb-24 space-y-4">
-                        <StoreLocationCard />
+                    <div className="px-4 pt-4 pb-24 space-y-4">
 
                         <SearchBar search={search} onSearchChange={setSearch}>
                             <FilterChips options={filterOptions} active={activeFilter} onChange={setActiveFilter} />

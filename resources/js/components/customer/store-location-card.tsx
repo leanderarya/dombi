@@ -18,7 +18,7 @@ export default function StoreLocationCard() {
     // Loading skeleton
     if (loading && !selectedOutlet) {
         return (
-            <div className="flex items-center gap-3 rounded-2xl border border-border/60 bg-white p-3.5 shadow-sm">
+            <div className="flex items-center gap-3 rounded-2xl bg-white p-3.5 shadow-elevated">
                 <Skeleton className="h-9 w-9 rounded-full shrink-0" />
                 <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-4 w-1/2" />
@@ -32,7 +32,7 @@ export default function StoreLocationCard() {
     // Error state
     if (error && !selectedOutlet) {
         return (
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-white p-3.5 shadow-sm">
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-3.5 shadow-elevated">
                 <span className="text-xs text-text-muted">{error}</span>
                 <button
                     type="button"
@@ -48,7 +48,7 @@ export default function StoreLocationCard() {
     // No outlet available
     if (!selectedOutlet) {
         return (
-            <div className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-white p-3.5 shadow-sm">
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white p-3.5 shadow-elevated">
                 <div className="flex items-center gap-2 text-xs text-text-muted">
                     <MapPin className="h-3.5 w-3.5 shrink-0" />
                     <span>Tidak ada outlet tersedia</span>
@@ -66,7 +66,7 @@ export default function StoreLocationCard() {
             <button
                 type="button"
                 onClick={() => setOutletSheetOpen(true)}
-                className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-white p-3.5 shadow-sm text-left active:bg-surface-muted transition-colors"
+                className="flex w-full items-center gap-3 rounded-2xl bg-white p-3.5 shadow-elevated text-left active:bg-surface-muted transition-colors"
             >
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-light">
                     <Store className="h-4 w-4 text-primary" />
