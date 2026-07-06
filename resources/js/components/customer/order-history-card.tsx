@@ -47,9 +47,9 @@ export default function OrderHistoryCard({ order }: Props) {
                     <span className={`text-sm font-bold ${isDead ? 'text-gray-400' : 'text-primary'}`}>D</span>
                 </div>
                 <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                        <span className={`text-sm font-bold ${isDead ? 'text-text-muted' : 'text-text'}`}>{isPickup ? 'Pick Up' : 'Delivery'}</span>
-                        <span className={statusCfg.className}>{statusCfg.label}</span>
+                    <div className="flex items-center justify-between gap-2">
+                        <span className={`text-sm font-bold truncate ${isDead ? 'text-text-muted' : 'text-text'}`}>{isPickup ? 'Pick Up' : 'Delivery'}</span>
+                        <span className={`shrink-0 ${statusCfg.className}`}>{statusCfg.label}</span>
                     </div>
                     <div className="text-[11px] text-text-muted">{dateStr}</div>
                     {statusCfg.reason && (
