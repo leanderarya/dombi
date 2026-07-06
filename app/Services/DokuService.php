@@ -41,7 +41,7 @@ class DokuService
                 'invoice_number' => $invoiceNumber,
                 'amount' => $amount,
                 'currency' => 'IDR',
-                'callback_url' => route('customer.orders.confirm', ['orderCode' => $order->order_code]),
+                'callback_url' => route('doku.redirect', ['invoice_number' => $order->order_code]),
                 'callback_url_result' => route('customer.orders.confirmation', ['order' => $order->id, 'token' => $order->recovery_token]),
                 'auto_redirect' => true,
                 'payment_due_date' => config('doku.payment_timeout', 30),
@@ -154,16 +154,7 @@ class DokuService
             'raw_response' => $payload,
         ]);
 
-        if ($status === 'paid') {
-            $this->markOrderPaid($order);
-        } elseif (in_array($status, ['failed', 'expired']) && $order->payment_status === 'pending') {
-            $order->update(['payment_status' => $status]);
-
-            // Immediately expire the order if still pending — release stock, don't wait for timeout
-            if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
-                app(OrderStatusService::class)->expireOrder($order, reason: "Payment {$status}");
-            }
-        }
+        $this->processPaymentStatusChange($order, $status);
 
         Log::info('DOKU webhook processed', [
             'order_id' => $order->id,
@@ -256,16 +247,7 @@ class DokuService
             ]);
         }
 
-        if ($status === 'paid' && $order->payment_status !== 'paid') {
-            $this->markOrderPaid($order);
-        } elseif (in_array($status, ['failed', 'expired']) && $order->payment_status === 'pending') {
-            $order->update(['payment_status' => $status]);
-
-            // Immediately expire the order if still pending — release stock
-            if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
-                app(OrderStatusService::class)->expireOrder($order, reason: "Payment {$status}");
-            }
-        }
+        $this->processPaymentStatusChange($order, $status);
 
         return $status;
     }
@@ -278,7 +260,7 @@ class DokuService
         return match (strtoupper($dokuStatus ?? '')) {
             'SUCCESS' => 'paid',
             'PENDING' => 'pending',
-            'FAILED' => 'failed',
+            'FAILED', 'REJECTED', 'DENIED', 'CANCELLED' => 'failed',
             'EXPIRED' => 'expired',
             default => 'pending',
         };
@@ -312,9 +294,29 @@ class DokuService
             app(NotificationService::class)->notifyOrderConfirmed($order);
         }
 
+        // Notify outlet about new paid order (non-COD orders are skipped in OrderService)
+        app(NotificationService::class)->notifyOrderCreated($order);
+
         Cache::forget("outlet:{$order->outlet_id}:pending_orders");
         Cache::forget('owner:pending_counts');
         Cache::forget('owner:order_stats');
+    }
+
+    /**
+     * Process payment status change — shared by webhook and status sync.
+     * Handles: paid, failed, expired transitions.
+     */
+    private function processPaymentStatusChange(Order $order, string $status): void
+    {
+        if ($status === 'paid' && $order->payment_status !== 'paid') {
+            $this->markOrderPaid($order);
+        } elseif (in_array($status, ['failed', 'expired'], true) && $order->payment_status === 'pending') {
+            $order->update(['payment_status' => $status]);
+
+            if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
+                app(OrderStatusService::class)->expireOrder($order, reason: "Payment {$status}");
+            }
+        }
     }
 
     /**
