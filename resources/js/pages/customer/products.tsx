@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Search, Store, ThumbsUp, Truck } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
@@ -13,28 +13,14 @@ import FilterChips from '@/components/ui/filter-chips';
 import { Skeleton } from '@/components/ui/skeleton';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
+import { useFulfillmentOverlay } from '@/hooks/use-fulfillment-overlay';
+import { type Family, useProducts } from '@/hooks/use-products';
+import { useSectionReveal } from '@/hooks/use-section-reveal';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
 import FavoritesProvider from '@/providers/favorites-provider';
 
-interface Variant {
-    id: number;
-    name: string;
-    flavor: string | null;
-    size: string | null;
-    price: number;
-    is_active: boolean;
-    available_stock?: number;
-    stock_status?: string;
-}
-
-interface Family {
-    id: number;
-    name: string;
-    brand: string | null;
-    description: string | null;
-    variants: Variant[];
-}
+/* ─── Derived types ────────────────────────────────────────── */
 
 interface FlavorGroup {
     flavor: string | null;
@@ -42,10 +28,10 @@ interface FlavorGroup {
     familyName: string;
     familyDescription: string | null;
     familyBrand: string | null;
-    variants: Variant[];
+    variants: Family['variants'];
     lowestPrice: number;
     displayLabel: string;
-    representativeVariant: Variant;
+    representativeVariant: Family['variants'][number];
 }
 
 interface FamilySection {
@@ -56,336 +42,81 @@ interface FamilySection {
     totalVariants: number;
 }
 
+/* ─── Main ─────────────────────────────────────────────────── */
+
 function ProductsInner() {
     const { selectedOutlet, loading: outletLoading } = useOutlet();
-    const [families, setFamilies] = useState<Family[]>([]);
-    const [productsLoading, setProductsLoading] = useState(true);
-    const [productsError, setProductsError] = useState<string | null>(null);
+    const { families, loading, error, retry } = useProducts(selectedOutlet?.id ?? null, outletLoading);
+    const { fulfillmentType, overlayState, overlayTarget, switchTo } = useFulfillmentOverlay();
+
     const [search, setSearch] = useState('');
     const [activeFilter, setActiveFilter] = useState('all');
     const [sheetOpen, setSheetOpen] = useState(false);
-    const [sheetVariants, setSheetVariants] = useState<Variant[]>([]);
-    const [sheetFlavorName, setSheetFlavorName] = useState('');
-    const [sheetFamilyName, setSheetFamilyName] = useState('');
-    const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>('pickup');
-    const [overlayState, setOverlayState] = useState<'hidden' | 'entering' | 'visible' | 'exiting'>('hidden');
-    const [overlayTarget, setOverlayTarget] = useState<'pickup' | 'delivery'>('pickup');
-    const overlayTimeout = useRef<ReturnType<typeof setTimeout>>();
-    const abortRef = useRef<AbortController | null>(null);
-    const cacheRef = useRef<Map<number, { data: Family[]; timestamp: number }>>(new Map());
-    const CACHE_TTL_MS = 30_000; // 30 seconds — stock may change when navigating back
+    const [sheetData, setSheetData] = useState<{ variants: Family['variants']; flavor: string; family: string }>({ variants: [], flavor: '', family: '' });
 
     useFlashToast();
     const { totalItems } = useCart();
     const scrollRef = useRef<HTMLDivElement>(null);
-    const sectionRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
-    // Inject keyframes for overlay animation
-    useEffect(() => {
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes overlaySlideIn {
-                from { transform: translateX(-100%); }
-                to { transform: translateX(0); }
-            }
-        `;
-        document.head.appendChild(style);
-        return () => { style.remove(); };
-    }, []);
-
-    const switchFulfillment = (target: 'pickup' | 'delivery') => {
-        if (target === fulfillmentType) return;
-
-        setOverlayTarget(target);
-        setOverlayState('entering');
-
-        overlayTimeout.current = setTimeout(() => {
-            setFulfillmentType(target);
-            setOverlayState('visible');
-
-            overlayTimeout.current = setTimeout(() => {
-                setOverlayState('exiting');
-
-                overlayTimeout.current = setTimeout(() => {
-                    setOverlayState('hidden');
-                }, 400);
-            }, 300);
-        }, 400);
-    };
-
-    // Invalidate stale cache entries on mount (when user navigates back)
-    useEffect(() => {
-        const now = Date.now();
-
-        for (const [key, entry] of cacheRef.current) {
-            if (now - entry.timestamp > CACHE_TTL_MS) {
-                cacheRef.current.delete(key);
-            }
-        }
-    });
-
-    // Fetch products when selected outlet changes
-    const fetchProducts = useCallback((outletId: number | null) => {
-        const cacheKey = outletId ?? 0;
-        const cached = cacheRef.current.get(cacheKey);
-
-        if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-            setFamilies(cached.data);
-            setProductsError(null);
-            setProductsLoading(false);
-
-            return;
-        }
-
-        abortRef.current?.abort();
-        const controller = new AbortController();
-        abortRef.current = controller;
-
-        setProductsLoading(true);
-
-        const params = new URLSearchParams();
-
-        if (outletId) {
-            params.set('outlet_id', String(outletId));
-        }
-
-        fetch(`/customer/products/api?${params.toString()}`, {
-            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin',
-            signal: controller.signal,
-        })
-            .then(async (res) => {
-                if (!res.ok) {
-throw new Error('Failed to load products');
-}
-
-                return res.json();
-            })
-            .then((data) => {
-                if (!controller.signal.aborted) {
-                    const fetched = data.families ?? [];
-                    cacheRef.current.set(cacheKey, { data: fetched, timestamp: Date.now() });
-                    setFamilies(fetched);
-                    setProductsError(null);
-                    setProductsLoading(false);
-                }
-            })
-            .catch((err) => {
-                if (err.name !== 'AbortError') {
-                    setProductsError('Gagal memuat produk');
-                    setProductsLoading(false);
-                }
-            });
-    }, []);
-
-    useEffect(() => {
-        if (!outletLoading && selectedOutlet) {
-            fetchProducts(selectedOutlet.id);
-        }
-    }, [selectedOutlet, outletLoading, fetchProducts]);
-
-    const loading = outletLoading || productsLoading;
-
+    /* ── Filter options ── */
     const filterOptions = useMemo(() => {
-        const options: { key: string; label: string; icon?: React.ReactNode }[] = [{ key: 'all', label: 'Semua', icon: <ThumbsUp className="h-3.5 w-3.5" /> }];
-
-        for (const family of families) {
-            options.push({ key: String(family.id), label: family.name });
-        }
-
-        return options;
+        const opts: { key: string; label: string; icon?: React.ReactNode }[] = [
+            { key: 'all', label: 'Semua', icon: <ThumbsUp className="h-3.5 w-3.5" /> },
+        ];
+        for (const f of families) opts.push({ key: String(f.id), label: f.name });
+        return opts;
     }, [families]);
 
-    const filteredFamilies = useMemo(() => {
-        if (!search) {
-            return families;
-        }
-
-        const q = search.toLowerCase();
-
-        return families.filter(f =>
-            f.name.toLowerCase().includes(q) ||
-            f.variants.some(v => v.name.toLowerCase().includes(q))
-        );
-    }, [families, search]);
-
+    /* ── Search → filter → group into sections ── */
     const familySections = useMemo(() => {
-        const sections: FamilySection[] = [];
+        const q = search.toLowerCase();
+        const list = q
+            ? families.filter((f) => f.name.toLowerCase().includes(q) || f.variants.some((v) => v.name.toLowerCase().includes(q)))
+            : families;
 
-        for (const family of filteredFamilies) {
-            if (activeFilter !== 'all' && String(family.id) !== activeFilter) {
-                continue;
-            }
+        return buildSections(list, activeFilter);
+    }, [families, search, activeFilter]);
 
-            const activeVariants = (family.variants ?? []).filter(v => v.is_active);
+    const productCount = familySections.reduce((s, sec) => s + sec.totalVariants, 0);
+    const setSectionRef = useSectionReveal([loading, familySections]);
 
-            if (activeVariants.length === 0) {
-                continue;
-            }
-
-            const flavorMap = new Map<string | null, Variant[]>();
-
-            for (const variant of activeVariants) {
-                const key = variant.flavor ?? '__no_flavor__';
-
-                if (!flavorMap.has(key)) {
-                    flavorMap.set(key, []);
-                }
-
-                flavorMap.get(key)!.push(variant);
-            }
-
-            const flavorGroups: FlavorGroup[] = [];
-
-            for (const [key, variants] of flavorMap) {
-                const flavor = key === '__no_flavor__' ? null : key;
-                const sortedByPrice = [...variants].sort((a, b) => a.price - b.price);
-                const lowestPrice = sortedByPrice[0]?.price ?? 0;
-                const displayLabel = flavor ? `${family.name} ${flavor}` : family.name;
-                flavorGroups.push({
-                    flavor, familyId: family.id, familyName: family.name,
-                    familyDescription: family.description, familyBrand: family.brand,
-                    variants, lowestPrice, displayLabel, representativeVariant: sortedByPrice[0],
-                });
-            }
-
-            sections.push({
-                familyId: family.id, familyName: family.name, familyBrand: family.brand,
-                flavorGroups, totalVariants: activeVariants.length,
-            });
-        }
-
-        return sections;
-    }, [filteredFamilies, activeFilter]);
-
-    const productCount = useMemo(() => {
-        return familySections.reduce((sum, s) => sum + s.totalVariants, 0);
-    }, [familySections]);
-
-    const handleQuickAdd = (group: FlavorGroup) => {
-        if (group.variants.length > 1) {
-            const sorted = [...group.variants].sort((a, b) => sizeToMl(a.size) - sizeToMl(b.size));
-            setSheetVariants(sorted);
-            setSheetFlavorName(group.flavor ?? '');
-            setSheetFamilyName(group.familyName);
-            setSheetOpen(true);
-        }
+    /* ── Quick-add handler ── */
+    const openSizeSelector = (group: FlavorGroup) => {
+        const sorted = [...group.variants].sort((a, b) => sizeToMl(a.size) - sizeToMl(b.size));
+        setSheetData({ variants: sorted, flavor: group.flavor ?? '', family: group.familyName });
+        setSheetOpen(true);
     };
 
-    const setSectionRef = (id: number, el: HTMLDivElement | null) => {
-        if (el) {
-sectionRefs.current.set(id, el);
-}
-    };
-
-    // IntersectionObserver for slide-in
-    useEffect(() => {
-        if (loading) {
-return;
-}
-
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('visible');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            },
-            { root: scrollRef.current, threshold: 0.1 }
-        );
-        sectionRefs.current.forEach((el) => observer.observe(el));
-
-        return () => observer.disconnect();
-    }, [loading, familySections]);
-
+    /* ── Render ── */
     return (
         <>
             <div className="min-h-dvh bg-background" ref={scrollRef}>
-                {/* ── GREEN HEADER — bg extends into safe area ── */}
+                {/* ── Green header ── */}
                 <div className="bg-primary">
                     <div className="px-4 pb-10 pt-safe">
                         <ForeGreenHeader title="Produk" backHref="/customer/home" />
-                        <FulfillmentToggle
-                            value={fulfillmentType}
-                            onChange={switchFulfillment}
-                        />
+                        <FulfillmentToggle value={fulfillmentType} onChange={switchTo} />
                         <p className="mt-2 text-center text-[11px] text-white/60">
-                            {fulfillmentType === 'pickup'
-                                ? 'Ambil di outlet tanpa antre'
-                                : 'Diantar ke alamat Anda'}
+                            {fulfillmentType === 'pickup' ? 'Ambil di outlet tanpa antre' : 'Diantar ke alamat Anda'}
                         </p>
                     </div>
                 </div>
 
-                {/* ── WHITE SECTION — rounded top, overlaps green ── */}
+                {/* ── White section ── */}
                 <div className="relative -mt-8 z-10 rounded-t-[1.5rem] bg-white">
                     <div className="px-4 pt-6 pb-24 space-y-4">
-                        {/* Outlet Card */}
                         <StoreLocationCard />
 
-                        {/* Sticky search + chips */}
-                        <div className="sticky top-safe z-20 -mx-4 bg-white/80 px-4 pb-3 pt-2 backdrop-blur-lg">
-                            <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
-                                <div className="flex items-center gap-2.5 px-3.5">
-                                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
-                                    <input
-                                        type="text"
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        placeholder="Cari produk..."
-                                        className="search-input w-full bg-transparent py-2.5 text-sm text-text placeholder:text-text-subtle"
-                                    />
-                                </div>
-                            </div>
-                            <div className="mt-2">
-                                <FilterChips
-                                    options={filterOptions}
-                                    active={activeFilter}
-                                    onChange={setActiveFilter}
-                                />
-                            </div>
-                        </div>
+                        <SearchBar search={search} onSearchChange={setSearch}>
+                            <FilterChips options={filterOptions} active={activeFilter} onChange={setActiveFilter} />
+                        </SearchBar>
 
-                        {/* Error State */}
-                        {!productsLoading && productsError && (
-                            <div className="rounded-2xl border border-border/60 bg-white p-6 text-center">
-                                <p className="text-sm text-text-muted mb-3">{productsError}</p>
-                                <button
-                                    type="button"
-                                    onClick={() => selectedOutlet && fetchProducts(selectedOutlet.id)}
-                                    className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white active:opacity-80"
-                                >
-                                    Coba Lagi
-                                </button>
-                            </div>
-                        )}
+                        {!loading && error && <ErrorState message={error} onRetry={retry} />}
 
-                        {/* Product Count */}
                         <p className="text-xs text-text-muted">{loading ? '...' : `${productCount} Produk`}</p>
 
-                        {/* Family Sections */}
                         {loading ? (
-                            <div className="space-y-3">
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} className="rounded-2xl border border-border/60 bg-white p-4">
-                                        <Skeleton className="h-5 w-1/3 mb-3" />
-                                        <div className="space-y-3">
-                                            {[1, 2].map((j) => (
-                                                <div key={j} className="flex items-center gap-3.5 py-2">
-                                                    <Skeleton className="h-16 w-16 rounded-xl shrink-0" />
-                                                    <div className="flex-1 space-y-2">
-                                                        <Skeleton className="h-4 w-2/3" />
-                                                        <Skeleton className="h-5 w-1/3" />
-                                                    </div>
-                                                    <Skeleton className="h-9 w-9 rounded-full shrink-0" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <ProductSkeletons />
                         ) : familySections.length > 0 ? (
                             <div className="space-y-3">
                                 {familySections.map((section) => (
@@ -399,8 +130,11 @@ return;
                                             <span className="text-xs text-text-muted">{section.totalVariants} varian</span>
                                         </div>
                                         <div>
-                                            {section.flavorGroups.map((group, index) => (
-                                                <div key={`${group.familyId}-${group.flavor ?? 'default'}`} className={index < section.flavorGroups.length - 1 ? 'border-b border-border/30' : ''}>
+                                            {section.flavorGroups.map((group, i) => (
+                                                <div
+                                                    key={`${group.familyId}-${group.flavor ?? 'default'}`}
+                                                    className={i < section.flavorGroups.length - 1 ? 'border-b border-border/30' : ''}
+                                                >
                                                     <VariantListItem
                                                         variant={group.representativeVariant}
                                                         familyId={group.familyId}
@@ -408,7 +142,7 @@ return;
                                                         displayPrice={group.lowestPrice}
                                                         displayLabel={group.displayLabel}
                                                         variantCount={group.variants.length}
-                                                        onQuickAdd={group.variants.length > 1 ? () => handleQuickAdd(group) : undefined}
+                                                        onQuickAdd={group.variants.length > 1 ? () => openSizeSelector(group) : undefined}
                                                     />
                                                 </div>
                                             ))}
@@ -416,17 +150,8 @@ return;
                                     </div>
                                 ))}
                             </div>
-                        ) : null}
-
-                        {/* Empty State */}
-                        {!loading && familySections.length === 0 && (
-                            <div className="mt-12 flex flex-col items-center text-center">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
-                                    <span className="text-3xl">&#129371;</span>
-                                </div>
-                                <p className="mt-3 text-sm font-semibold text-text">Belum ada produk</p>
-                                <p className="mt-1 text-xs text-text-muted">Produk akan segera tersedia.</p>
-                            </div>
+                        ) : (
+                            <EmptyProducts />
                         )}
                     </div>
                 </div>
@@ -435,45 +160,153 @@ return;
             <SizeSelectorSheet
                 open={sheetOpen}
                 onClose={() => setSheetOpen(false)}
-                familyName={sheetFamilyName}
-                flavorName={sheetFlavorName}
-                variants={sheetVariants}
+                familyName={sheetData.family}
+                flavorName={sheetData.flavor}
+                variants={sheetData.variants}
             />
             {totalItems > 0 && <FloatingCartBar />}
             <CustomerBottomNav />
-
-            {/* Full-page overlay transition */}
-            {overlayState !== 'hidden' && (
-                <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-primary"
-                    style={{
-                        transform: overlayState === 'exiting' ? 'translateX(100%)' : 'translateX(0)',
-                        ...(overlayState === 'entering' && {
-                            animation: 'overlaySlideIn 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
-                        }),
-                        ...(overlayState === 'exiting' && {
-                            transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
-                        }),
-                    }}
-                >
-                    <div className="flex flex-col items-center gap-3 text-white">
-                        {overlayTarget === 'pickup' ? (
-                            <Store className="h-12 w-12" />
-                        ) : (
-                            <Truck className="h-12 w-12" />
-                        )}
-                        <div className="text-xl font-bold">
-                            {overlayTarget === 'pickup' ? 'Ambil di Outlet' : 'Kurir Dombi'}
-                        </div>
-                        <div className="text-sm text-white/70">
-                            {overlayTarget === 'pickup' ? 'Siap dalam 15-30 menit' : 'Diantar dalam 30-60 menit'}
-                        </div>
-                    </div>
-                </div>
-            )}
+            <FulfillmentOverlay state={overlayState} target={overlayTarget} />
         </>
     );
 }
+
+/* ─── Sub-components ───────────────────────────────────────── */
+
+function SearchBar({ search, onSearchChange, children }: { search: string; onSearchChange: (v: string) => void; children: React.ReactNode }) {
+    return (
+        <div className="sticky top-safe z-20 -mx-4 bg-white/80 px-4 pb-3 pt-2 backdrop-blur-lg">
+            <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
+                <div className="flex items-center gap-2.5 px-3.5">
+                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        placeholder="Cari produk..."
+                        className="search-input w-full bg-transparent py-2.5 text-sm text-text placeholder:text-text-subtle"
+                    />
+                </div>
+            </div>
+            <div className="mt-2">{children}</div>
+        </div>
+    );
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+    return (
+        <div className="rounded-2xl border border-border/60 bg-white p-6 text-center">
+            <p className="text-sm text-text-muted mb-3">{message}</p>
+            <button
+                type="button"
+                onClick={onRetry}
+                className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white active:opacity-80"
+            >
+                Coba Lagi
+            </button>
+        </div>
+    );
+}
+
+function ProductSkeletons() {
+    return (
+        <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+                <div key={i} className="rounded-2xl border border-border/60 bg-white p-4">
+                    <Skeleton className="h-5 w-1/3 mb-3" />
+                    <div className="space-y-3">
+                        {[1, 2].map((j) => (
+                            <div key={j} className="flex items-center gap-3.5 py-2">
+                                <Skeleton className="h-16 w-16 rounded-xl shrink-0" />
+                                <div className="flex-1 space-y-2">
+                                    <Skeleton className="h-4 w-2/3" />
+                                    <Skeleton className="h-5 w-1/3" />
+                                </div>
+                                <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+function EmptyProducts() {
+    return (
+        <div className="mt-12 flex flex-col items-center text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted">
+                <span className="text-3xl">&#129371;</span>
+            </div>
+            <p className="mt-3 text-sm font-semibold text-text">Belum ada produk</p>
+            <p className="mt-1 text-xs text-text-muted">Produk akan segera tersedia.</p>
+        </div>
+    );
+}
+
+function FulfillmentOverlay({ state, target }: { state: string; target: 'pickup' | 'delivery' }) {
+    if (state === 'hidden') return null;
+
+    return (
+        <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-primary"
+            style={{
+                transform: state === 'exiting' ? 'translateX(100%)' : 'translateX(0)',
+                ...(state === 'entering' && { animation: 'overlaySlideIn 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards' }),
+                ...(state === 'exiting' && { transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)' }),
+            }}
+        >
+            <div className="flex flex-col items-center gap-3 text-white">
+                {target === 'pickup' ? <Store className="h-12 w-12" /> : <Truck className="h-12 w-12" />}
+                <div className="text-xl font-bold">{target === 'pickup' ? 'Ambil di Outlet' : 'Kurir Dombi'}</div>
+                <div className="text-sm text-white/70">{target === 'pickup' ? 'Siap dalam 15-30 menit' : 'Diantar dalam 30-60 menit'}</div>
+            </div>
+        </div>
+    );
+}
+
+/* ─── Helpers ──────────────────────────────────────────────── */
+
+function buildSections(families: Family[], activeFilter: string): FamilySection[] {
+    const sections: FamilySection[] = [];
+
+    for (const family of families) {
+        if (activeFilter !== 'all' && String(family.id) !== activeFilter) continue;
+
+        const active = family.variants.filter((v) => v.is_active);
+        if (active.length === 0) continue;
+
+        const flavorMap = new Map<string, Family['variants']>();
+        for (const v of active) {
+            const key = v.flavor ?? '__none__';
+            const arr = flavorMap.get(key);
+            if (arr) arr.push(v); else flavorMap.set(key, [v]);
+        }
+
+        const flavorGroups: FlavorGroup[] = [];
+        for (const [key, variants] of flavorMap) {
+            const flavor = key === '__none__' ? null : key;
+            const sorted = [...variants].sort((a, b) => a.price - b.price);
+            flavorGroups.push({
+                flavor,
+                familyId: family.id,
+                familyName: family.name,
+                familyDescription: family.description,
+                familyBrand: family.brand,
+                variants,
+                lowestPrice: sorted[0]?.price ?? 0,
+                displayLabel: flavor ? `${family.name} ${flavor}` : family.name,
+                representativeVariant: sorted[0],
+            });
+        }
+
+        sections.push({ familyId: family.id, familyName: family.name, familyBrand: family.brand, flavorGroups, totalVariants: active.length });
+    }
+
+    return sections;
+}
+
+/* ─── Page wrapper ─────────────────────────────────────────── */
 
 export default function Products() {
     return (
