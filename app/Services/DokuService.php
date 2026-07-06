@@ -280,14 +280,24 @@ class DokuService
 
     /**
      * Mark order as paid and trigger side effects.
+     * Uses atomic update to prevent race condition from concurrent webhook + redirect.
      */
     private function markOrderPaid(Order $order): void
     {
-        if ($order->payment_status === 'paid') {
-            return;
+        // Atomic update — only one concurrent request can succeed
+        $updated = Order::where('id', $order->id)
+            ->where('payment_status', '!=', 'paid')
+            ->update([
+                'paid_at' => now(),
+                'payment_status' => 'paid',
+            ]);
+
+        if ($updated === 0) {
+            return; // Already paid by concurrent request
         }
 
-        $order->update(['paid_at' => now(), 'payment_status' => 'paid']);
+        // Reload to get fresh state
+        $order->refresh();
 
         if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
             $order->update(['status' => Order::STATUS_CONFIRMED, 'confirmed_at' => now()]);
