@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Customer\StoreAddressFromLocationRequest;
 use App\Http\Requests\Customer\StoreCustomerAddressRequest;
 use App\Http\Requests\Customer\UpdateCustomerAddressRequest;
 use App\Models\CustomerAddress;
@@ -89,7 +90,7 @@ class AddressController extends Controller
     /**
      * Save checkout location as a new saved address.
      */
-    public function storeFromCheckout(StoreCustomerAddressRequest $request): JsonResponse
+    public function storeFromCheckout(StoreAddressFromLocationRequest $request): JsonResponse
     {
         $user = auth()->user();
         $customer = $user->getCustomerOrCreate();
