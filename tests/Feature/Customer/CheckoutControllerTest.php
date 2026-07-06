@@ -86,6 +86,46 @@ class CheckoutControllerTest extends TestCase
             ->assertJsonStructure(['warnings']);
     }
 
+    public function test_submit_returns_422_with_adjustments_when_stock_insufficient(): void
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        $customer = Customer::factory()->create(['user_id' => $user->id]);
+        $outlet = Outlet::factory()->create(['status' => 'active']);
+
+        $family = \App\Models\ProductFamily::create(['name' => 'Susu Kambing Original', 'is_active' => true]);
+        $variant = ProductVariant::factory()->create([
+            'product_family_id' => $family->id,
+            'name' => '250ml',
+            'selling_price' => 25000,
+            'center_price' => 18000,
+        ]);
+
+        OutletInventory::factory()->create([
+            'outlet_id' => $outlet->id,
+            'product_variant_id' => $variant->id,
+            'current_stock' => 10,
+            'reserved_stock' => 8,
+            'minimum_stock' => 2,
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)
+            ->session([
+                'checkout.cart' => [['product_variant_id' => $variant->id, 'quantity' => 5]],
+                'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $outlet->id],
+                'checkout.customer' => ['customer_name' => 'Test', 'phone_number' => '6281234567890'],
+            ])
+            ->postJson('/customer/checkout/payment', ['payment_method' => 'qris'])
+            ->assertStatus(422)
+            ->assertJson([
+                'adjusted' => true,
+                'warnings' => [
+                    'Susu Kambing Original: jumlah dikurangi dari 5 ke 2 (stok tersisa 2)',
+                ],
+            ])
+            ->assertJsonStructure(['adjustments', 'warnings']);
+    }
+
     public function test_validate_stock_detects_out_of_stock(): void
     {
         $user = User::factory()->create(['role' => 'customer']);

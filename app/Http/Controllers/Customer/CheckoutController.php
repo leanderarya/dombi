@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Exceptions\DokuPaymentException;
+use App\Exceptions\StockAdjustedException;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Order;
@@ -476,6 +477,26 @@ class CheckoutController extends Controller
 
             // Cache order ID for idempotency (60s TTL)
             Cache::put($idempotencyKey, $order->id, 60);
+        } catch (StockAdjustedException $e) {
+            $warnings = collect($e->adjustments)->map(function ($adj) {
+                $variant = ProductVariant::with('family')->find($adj['variant_id']);
+                $name = $variant?->family?->name ?? $variant?->name ?? 'Produk';
+
+                if ($adj['adjusted_qty'] <= 0) {
+                    return "{$name}: stok habis, item dihapus dari pesanan";
+                }
+
+                return "{$name}: jumlah dikurangi dari {$adj['original_qty']} ke {$adj['adjusted_qty']} (stok tersisa {$adj['available_stock']})";
+            })->toArray();
+
+            $allRemoved = collect($e->adjustments)->every(fn ($adj) => $adj['adjusted_qty'] <= 0);
+
+            return response()->json([
+                'adjusted' => true,
+                'all_removed' => $allRemoved,
+                'adjustments' => $e->adjustments,
+                'warnings' => $warnings,
+            ], 422);
         } catch (ValidationException $e) {
             return back()->withErrors($e->validator->errors())->withInput();
         } catch (\Exception $e) {
