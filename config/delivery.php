@@ -33,6 +33,8 @@ return [
 
     'max_retry_attempts' => env('DELIVERY_MAX_RETRY_ATTEMPTS', 3),
 
+    'max_assign_attempts' => env('DELIVERY_MAX_ASSIGN_ATTEMPTS', 3),
+
     'failure_reasons' => [
         'Customer Tidak Ditemukan',
         'Penerima Tidak Ada',

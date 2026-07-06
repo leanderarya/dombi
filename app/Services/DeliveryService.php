@@ -61,6 +61,18 @@ class DeliveryService
                 $order->delivery->delete();
             }
 
+            // Assign attempt limit check
+            $assignAttempts = Delivery::where('order_id', $order->id)
+                ->whereIn('status', ['rejected_by_courier', 'waiting_pickup', 'picked_up', 'delivering'])
+                ->count();
+
+            $maxAssignAttempts = config('delivery.max_assign_attempts', 3);
+            if ($assignAttempts >= $maxAssignAttempts) {
+                throw new DeliveryException(
+                    "Batas maksimum percobaan assign kurir ({$maxAssignAttempts}) telah tercapai."
+                );
+            }
+
             // Capacity check
             $maxActive = config('delivery.capacity.max_active_deliveries', 3);
             $activeCount = $this->getCourierActiveDeliveryCount($courier);
