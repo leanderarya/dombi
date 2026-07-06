@@ -7,6 +7,7 @@ use App\Models\DeliveryResolutionLog;
 use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\CustomerCreditService;
 use App\Support\OperationalLog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -382,6 +383,10 @@ class DeliveryService
             'changed_by_type' => 'owner',
             'created_at' => now(),
         ]);
+
+        if ($order->payment_status === 'paid') {
+            app(CustomerCreditService::class)->refund($order);
+        }
     }
 
     /**
