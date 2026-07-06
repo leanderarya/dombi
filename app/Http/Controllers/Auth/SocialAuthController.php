@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\User;
 use App\Services\GuestOrderMerger;
-use App\Services\PhoneVerificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,8 +20,15 @@ class SocialAuthController extends Controller
     /**
      * Redirect to Google OAuth consent screen.
      */
-    public function redirect(): RedirectResponse
+    public function redirect(Request $request): RedirectResponse
     {
+        if ($redirect = $request->query('redirect')) {
+            // Only allow relative paths to prevent open redirect attacks
+            if (str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')) {
+                $request->session()->put('redirect_after_login', $redirect);
+            }
+        }
+
         return Socialite::driver('google')
             ->scopes(['openid', 'email', 'profile'])
             ->redirect();
@@ -134,112 +140,86 @@ class SocialAuthController extends Controller
                 'email' => $user->email,
                 'avatar' => $user->avatar,
             ],
-            'otpLength' => PhoneVerificationService::OTP_LENGTH,
-            'ttlSeconds' => PhoneVerificationService::OTP_TTL_SECONDS,
         ]);
     }
 
     /**
-     * Send OTP for phone verification.
+     * Verify phone and link Customer (direct, no OTP).
      */
-    public function sendPhoneOtp(Request $request, PhoneVerificationService $otpService): JsonResponse
+    public function verifyPhone(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'phone' => ['required', 'string', 'regex:/^62[0-9]{9,13}$/'],
-        ]);
-
-        $otpService->sendOtp($request, $validated['phone']);
-
-        return response()->json(['sent' => true]);
-    }
-
-    /**
-     * Verify OTP and link Customer.
-     */
-    public function verifyPhone(Request $request, PhoneVerificationService $otpService): JsonResponse
-    {
-        $validated = $request->validate([
-            'phone' => ['required', 'string', 'regex:/^62[0-9]{9,13}$/'],
-            'code' => ['required', 'string', 'size:6'],
         ]);
 
         $phone = $validated['phone'];
-        $code = $validated['code'];
-
-        if (! $otpService->verify($request, $code, $phone)) {
-            return response()->json([
-                'verified' => false,
-                'error' => 'Kode OTP tidak valid atau sudah kadaluarsa.',
-            ], 422);
-        }
-
-        // OTP verified — now link Customer
         $user = $request->user();
 
         if (! $user) {
-            return response()->json(['verified' => false, 'error' => 'Sesi tidak ditemukan.'], 401);
+            return response()->json(['error' => 'Sesi tidak ditemukan.'], 401);
         }
 
         $result = DB::transaction(function () use ($user, $phone) {
-            // Check if Customer exists with this phone
-            $customer = Customer::where('phone', $phone)->first();
+            // Reject if phone already linked to another registered user
+            $existing = Customer::where('phone', $phone)
+                ->where('is_registered', true)
+                ->where('user_id', '!=', $user->id)
+                ->whereNotNull('user_id')
+                ->lockForUpdate()
+                ->first();
 
-            if ($customer) {
-                // Scenario B: Unlinked guest customer — link
-                if (! $customer->is_registered && $customer->user_id === null) {
-                    $customer->linkToUser($user);
-
-                    return [
-                        'status' => 'linked',
-                        'message' => 'Akun berhasil dihubungkan. Riwayat pesanan Anda tersedia.',
-                    ];
-                }
-
-                // Scenario C: Already linked to another user — REJECT
-                if ($customer->is_registered && $customer->user_id !== null && $customer->user_id !== $user->id) {
-                    return [
-                        'status' => 'rejected',
-                        'message' => 'Nomor HP sudah terdaftar dengan akun lain.',
-                    ];
-                }
-
-                // Scenario E: Already linked to this user
-                if ($customer->user_id === $user->id) {
-                    return [
-                        'status' => 'already_linked',
-                        'message' => 'Akun sudah terhubung.',
-                    ];
-                }
+            if ($existing) {
+                return ['status' => 'rejected', 'message' => 'Nomor HP sudah terdaftar dengan akun lain.'];
             }
 
-            // Scenario A: New customer
-            $newCustomer = Customer::create([
-                'name' => $user->name,
-                'phone' => $phone,
-                'email' => $user->email,
-                'is_registered' => true,
-                'user_id' => $user->id,
-            ]);
+            // Link unlinked guest customer
+            $guestCustomer = Customer::where('phone', $phone)
+                ->whereNull('user_id')
+                ->lockForUpdate()
+                ->first();
 
-            return [
-                'status' => 'created',
-                'message' => 'Akun berhasil dibuat.',
-            ];
+            if ($guestCustomer) {
+                $registeredCustomer = $user->customer;
+
+                if ($registeredCustomer) {
+                    // Reassign guest data to registered customer
+                    $guestCustomer->orders()->update(['customer_id' => $registeredCustomer->id]);
+                    $guestCustomer->addresses()->update(['customer_id' => $registeredCustomer->id]);
+                    $guestCustomer->recipients()->update(['customer_id' => $registeredCustomer->id]);
+                    $guestCustomer->favorites()->update(['customer_id' => $registeredCustomer->id]);
+                    \App\Models\Notification::where('customer_id', $guestCustomer->id)->update(['customer_id' => $registeredCustomer->id]);
+                    \App\Models\OrderReport::where('customer_id', $guestCustomer->id)->update(['customer_id' => $registeredCustomer->id]);
+                    $guestCustomer->delete();
+                } else {
+                    $guestCustomer->linkToUser($user);
+                }
+
+                return ['status' => 'linked', 'message' => 'Akun berhasil dihubungkan. Riwayat pesanan Anda tersedia.'];
+            }
+
+            // Update or create registered customer with phone
+            $registeredCustomer = $user->customer;
+
+            if ($registeredCustomer && ! $registeredCustomer->phone) {
+                $registeredCustomer->update(['phone' => $phone]);
+            } elseif (! $registeredCustomer) {
+                Customer::create([
+                    'name' => $user->name,
+                    'phone' => $phone,
+                    'email' => $user->email,
+                    'is_registered' => true,
+                    'user_id' => $user->id,
+                ]);
+            }
+
+            app(GuestOrderMerger::class)->merge($user);
+
+            return ['status' => 'created', 'message' => 'Nomor HP berhasil dihubungkan.'];
         });
 
         if ($result['status'] === 'rejected') {
-            $otpService->clear($request);
-
-            return response()->json([
-                'verified' => false,
-                'error' => $result['message'],
-            ], 422);
+            return response()->json(['error' => $result['message']], 422);
         }
-
-        $otpService->clear($request);
-
-        // Merge guest orders into this account
-        app(GuestOrderMerger::class)->merge($user);
 
         $redirectUrl = $request->session()->pull('redirect_after_login', route('customer.home'));
 
