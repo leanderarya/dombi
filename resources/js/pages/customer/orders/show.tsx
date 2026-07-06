@@ -280,8 +280,8 @@ return;
                                 </div>
                                 <div className="mt-1 text-xs text-red-600">
                                     {isPaymentFailed
-                                        ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar lagi.'
-                                        : 'Batas waktu pembayaran telah habis. Silakan buat pesanan baru.'}
+                                        ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar ulang.'
+                                        : 'Batas waktu pembayaran telah habis. Silakan coba bayar ulang.'}
                                 </div>
                                 <button
                                     type="button"
@@ -289,7 +289,7 @@ return;
                                     disabled={payLoading}
                                     className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                                 >
-                                    {payLoading ? 'Memproses...' : 'Bayar Sekarang'}
+                                    {payLoading ? 'Memproses...' : (hasPaymentIssue ? 'Bayar Ulang' : 'Bayar Sekarang')}
                                 </button>
                             </div>
                         </div>
@@ -298,7 +298,7 @@ return;
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <StatusBadge status={hasPaymentIssue ? 'payment_failed' : (order.status === 'pending_confirmation' && order.payment_method !== 'cod' && order.payment_status !== 'paid' && order.payment_status !== 'failed' && order.payment_status !== 'expired') ? 'pending_payment' : order.status} />
+                    <StatusBadge status={hasPaymentIssue ? 'payment_failed' : (order.status === 'pending_confirmation' && order.payment_method !== 'cod' && order.payment_status !== 'paid') ? 'pending_payment' : order.status} />
                 </div>
 
                 {/* What's Next Guidance */}
@@ -306,7 +306,10 @@ return;
                     const isPendingUnpaid = order.status === 'pending_confirmation'
                         && order.payment_method !== 'cod'
                         && order.payment_status !== 'paid';
-                    const guidanceKey = isPendingUnpaid ? 'pending_confirmation_unpaid' : order.status;
+                    const isPaymentFailed = order.payment_status === 'failed' || order.payment_status === 'expired';
+                    const guidanceKey = isPendingUnpaid
+                        ? (isPaymentFailed ? 'pending_confirmation_payment_failed' : 'pending_confirmation_unpaid')
+                        : order.status;
                     const guidance = STATUS_GUIDANCE[guidanceKey];
 
                     if (!guidance) {
@@ -448,6 +451,12 @@ return null;
                             <div className="flex items-center justify-between text-xs text-text-muted">
                                 <span>Ongkir</span>
                                 <span className="font-medium text-text">{formatCurrency(order.delivery_fee)}</span>
+                            </div>
+                        )}
+                        {Number(order.credit_applied) > 0 && (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-text-muted">Saldo Kredit</span>
+                                <span className="font-medium text-emerald-600">-Rp {formatCurrency(order.credit_applied)}</span>
                             </div>
                         )}
                         <div className="flex items-center justify-between text-sm font-semibold text-text pt-1 border-t border-border">
