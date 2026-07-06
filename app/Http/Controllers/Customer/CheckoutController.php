@@ -598,6 +598,12 @@ class CheckoutController extends Controller
             ->get()
             ->keyBy('id');
 
+        // Batch load inventories to avoid N+1
+        $inventories = OutletInventory::whereIn('product_variant_id', $variantIds)
+            ->where('is_active', true)
+            ->get()
+            ->keyBy('product_variant_id');
+
         $items = [];
         $warnings = [];
         $valid = true;
@@ -611,9 +617,7 @@ class CheckoutController extends Controller
                 continue;
             }
 
-            $inventory = OutletInventory::where('product_variant_id', $variantId)
-                ->where('is_active', true)
-                ->first();
+            $inventory = $inventories->get($variantId);
 
             $availableStock = $inventory
                 ? max(0, (int) $inventory->current_stock - (int) $inventory->reserved_stock)
