@@ -211,6 +211,6 @@ class OutletProductController extends Controller
             return 'low';
         }
 
-        return 'ok';
+        return 'available';
     }
 }

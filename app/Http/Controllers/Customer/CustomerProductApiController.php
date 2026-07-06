@@ -38,7 +38,9 @@ class CustomerProductApiController extends Controller
             $variants = $family->variants->map(function ($variant) use ($outletId) {
                 // Stock
                 $availableStock = 0;
+                $inventory = null;
                 if ($outletId && $variant->relationLoaded('inventories')) {
+                    $inventory = $variant->inventories->first();
                     $availableStock = max(0, (int) $variant->inventories->sum(
                         fn ($inv) => $inv->current_stock - $inv->reserved_stock
                     ));
@@ -49,7 +51,7 @@ class CustomerProductApiController extends Controller
 
                 $stockStatus = $availableStock <= 0
                     ? 'out_of_stock'
-                    : ($availableStock <= 5 ? 'low' : 'available');
+                    : ($inventory && $availableStock <= ($inventory->minimum_stock ?? 0) ? 'low' : 'available');
 
                 return [
                     'id' => $variant->id,
