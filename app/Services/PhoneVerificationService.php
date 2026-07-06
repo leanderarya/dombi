@@ -39,8 +39,12 @@ class PhoneVerificationService
         $request->session()->put(self::SESSION_KEY_ATTEMPTS, 0);
         $request->session()->forget(self::SESSION_KEY_VERIFIED);
 
-        if (app()->isLocal()) {
-            logger()->info('Phone verification OTP generated', [
+        $message = "Kode verifikasi Dombi Anda: {$code}\n\nBerlaku selama ".(self::OTP_TTL_SECONDS / 60)." menit. Jangan bagikan kode ini ke siapa pun.";
+
+        $sent = app(GowaService::class)->sendText($phone, $message);
+
+        if (! $sent && app()->isLocal()) {
+            logger()->info('Phone verification OTP generated (GOWA unavailable)', [
                 'phone' => $phone,
                 'code' => $code,
             ]);
