@@ -265,9 +265,9 @@ export default function ActiveOrderCard({ order }: Props) {
         <OrderCardShell orderId={order.id} recoveryToken={order.recovery_token} status={order.status} clickable={false}>
             {/* Header: Order code + Status badge + Date */}
             <div>
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-text">{order.order_code}</span>
-                    <span className={displayStatus.className}>{displayStatus.label}</span>
+                <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-bold text-text truncate">{order.order_code}</span>
+                    <span className={`shrink-0 ${displayStatus.className}`}>{displayStatus.label}</span>
                 </div>
                 <div className="text-[11px] text-text-muted">{dateStr}</div>
                 {/* Countdown — show for all pending orders with expiry (including failed payment) */}
