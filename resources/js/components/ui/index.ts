@@ -10,6 +10,7 @@ export { default as FilterChips } from './filter-chips';
 export * from './input';
 export { default as MobileRoleLayout } from './mobile-role-layout';
 export { default as OrderStatusBadge } from './order-status-badge';
+export { default as OtpInput } from './otp-input';
 export { default as PageHeader } from './page-header';
 export { default as Pagination } from './pagination';
 export { default as PhoneInput } from './phone-input';
