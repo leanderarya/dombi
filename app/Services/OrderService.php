@@ -3,11 +3,13 @@
 namespace App\Services;
 
 use App\Exceptions\RegisteredPhoneException;
+use App\Exceptions\StockAdjustedException;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Outlet;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -38,6 +40,51 @@ class OrderService
             $customer = $this->resolveCustomer($user, $payload);
             $items = $this->buildOrderItems($payload['items']);
             $fulfillmentType = $payload['fulfillment_type'] ?? 'delivery_dombi';
+
+            // Auto-adjust stock check for pickup orders with selected outlet
+            if ($fulfillmentType === 'pickup' && ! empty($payload['selected_outlet_id'])) {
+                $outletId = (int) $payload['selected_outlet_id'];
+                $adjustments = [];
+
+                foreach ($items as $index => $item) {
+                    $variantId = $item['product_variant_id'];
+                    $requestedQty = $item['quantity'];
+
+                    $inventory = OutletInventory::query()
+                        ->where('product_variant_id', $variantId)
+                        ->where('outlet_id', $outletId)
+                        ->lockForUpdate()
+                        ->first();
+
+                    if (! $inventory) {
+                        continue;
+                    }
+
+                    $availableStock = max(0, (int) $inventory->current_stock - (int) $inventory->reserved_stock);
+
+                    if ($availableStock <= 0) {
+                        $adjustments[] = [
+                            'variant_id' => $variantId,
+                            'original_qty' => $requestedQty,
+                            'adjusted_qty' => 0,
+                            'available_stock' => 0,
+                        ];
+                        unset($items[$index]);
+                    } elseif ($availableStock < $requestedQty) {
+                        $adjustments[] = [
+                            'variant_id' => $variantId,
+                            'original_qty' => $requestedQty,
+                            'adjusted_qty' => $availableStock,
+                            'available_stock' => $availableStock,
+                        ];
+                        $items[$index]['quantity'] = $availableStock;
+                    }
+                }
+
+                if (! empty($adjustments)) {
+                    throw new StockAdjustedException($adjustments);
+                }
+            }
             $address = $this->shouldUseDeliveryAddress($fulfillmentType)
                 ? $this->resolveCheckoutAddress($customer, $payload)
                 : null;
