@@ -1,17 +1,20 @@
 import { router } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, Clock, Copy, Package, Shield, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, Copy, Loader2, Package, Shield, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { formatCurrency } from '@/lib/format';
 
-type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired';
+type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 export default function ConfirmPage({ order, isLoggedIn }: any) {
-    const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(
-        order.payment_status === 'paid' ? 'paid' : 'pending'
-    );
+    const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
+        const s = order.payment_status;
+        if (s === 'paid' || s === 'failed' || s === 'expired') return s;
+        return 'pending';
+    });
     const [countdown, setCountdown] = useState<number | null>(null);
     const [copied, setCopied] = useState(false);
+    const [payLoading, setPayLoading] = useState(false);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
     // Replace history entry so browser Back skips the payment gateway
@@ -93,14 +96,46 @@ return;
         });
     }, [order.order_code]);
 
+    const handlePay = useCallback(async () => {
+        setPayLoading(true);
+
+        try {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+            const res = await fetch(`/customer/orders/${order.id}/pay`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (res.redirected) {
+                window.location.replace(res.url);
+
+                return;
+            }
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => null);
+                alert(data?.message ?? 'Gagal membuat pembayaran. Coba lagi.');
+            }
+        } catch {
+            alert('Terjadi kesalahan. Coba lagi.');
+        } finally {
+            setPayLoading(false);
+        }
+    }, [order.id]);
+
     const statusConfig: Record<PaymentStatus, { icon: typeof CheckCircle2; color: string; bg: string; border: string; title: string; message: string }> = {
         paid: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', title: 'Pembayaran Berhasil', message: 'Pesanan Anda sedang diproses oleh outlet.' },
         pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', title: 'Menunggu Pembayaran', message: 'Selesaikan pembayaran Anda.' },
         failed: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Pembayaran Gagal', message: 'Pembayaran tidak berhasil diproses.' },
         expired: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', title: 'Waktu Habis', message: 'Batas waktu pembayaran telah berakhir.' },
+        cancelled: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Dibatalkan', message: 'Pembayaran dibatalkan.' },
     };
 
-    const status = statusConfig[paymentStatus];
+    const status = statusConfig[paymentStatus] ?? statusConfig.pending;
     const StatusIcon = status.icon;
 
     return (
@@ -140,10 +175,16 @@ return;
                     {/* Pending: continue to payment */}
                     {paymentStatus === 'pending' && (
                         <button
-                            onClick={() => router.post(`/customer/orders/${order.id}/pay`)}
-                            className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
+                            onClick={handlePay}
+                            disabled={payLoading}
+                            className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98] disabled:opacity-50"
                         >
-                            Lanjutkan Pembayaran
+                            {payLoading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                    Memproses...
+                                </span>
+                            ) : 'Lanjutkan Pembayaran'}
                         </button>
                     )}
 
@@ -161,7 +202,7 @@ return;
                     {(paymentStatus === 'failed' || paymentStatus === 'expired') && (
                         <>
                             <button
-                                onClick={() => router.visit('/customer/checkout')}
+                                onClick={() => router.visit(`/customer/orders/${order.id}/restore-cart`)}
                                 className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
                             >
                                 Coba Lagi
