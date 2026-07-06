@@ -37,14 +37,14 @@ class OrderController extends Controller
                         ->orWhere('confirmation_expires_at', '>', now());
                 })
                 ->with(['outlet', 'items.variant.family'])
-                ->select(['id', 'order_code', 'status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
+                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
                 ->orderByDesc('ordered_at')
                 ->get();
 
             $historyOrders = $customer->orders()
                 ->whereIn('status', Order::HISTORY_STATUSES)
                 ->with(['outlet', 'items'])
-                ->select(['id', 'order_code', 'status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
+                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
                 ->orderByDesc('ordered_at')
                 ->paginate(10)
                 ->withQueryString();
@@ -186,6 +186,32 @@ class OrderController extends Controller
             ]);
         }
 
+        // Guard: if payment failed/expired, reset so user can retry
+        if (in_array($order->payment_status, ['failed', 'expired'], true)) {
+            try {
+                $doku = app(DokuService::class);
+                $doku->syncStatusFromDoku($order);
+                $order->refresh();
+
+                // If paid after sync, redirect to confirm
+                if ($order->payment_status === 'paid') {
+                    return redirect()->route('customer.orders.confirm', [
+                        'orderCode' => $order->order_code,
+                    ]);
+                }
+
+                // Still failed — clean up old transaction, allow retry
+                $order->paymentTransactions()->where('status', 'failed')->delete();
+                $order->update(['payment_status' => null, 'doku_order_id' => null]);
+                $order->refresh();
+            } catch (\Exception $e) {
+                Log::warning('Payment status sync failed', [
+                    'order_id' => $order->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         // Only for non-COD orders
         if ($order->payment_method === 'cod') {
             return back()->with('error', 'COD tidak memerlukan pembayaran online.');
@@ -232,12 +258,26 @@ class OrderController extends Controller
     {
         // Ownership check — same as pay()
         $user = auth()->user();
-        if ($user && ! $user->isOwner() && $user->getCustomerOrCreate()->id !== $order->customer_id) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if ($user) {
+            if (! $user->isOwner() && $user->getCustomerOrCreate()->id !== $order->customer_id) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+        } elseif ($order->customer_id) {
+            $recovery = session('guest_recovery');
+            $hasRecovery = is_array($recovery)
+                && ($recovery['customer_id'] ?? null) === $order->customer_id
+                && in_array($order->id, $recovery['order_ids'] ?? [], true);
+
+            $isFreshOrder = $order->created_at && $order->created_at->gt(now()->subMinutes(30));
+
+            if (! $hasRecovery && ! $isFreshOrder) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
         }
 
-        // If still pending, try to sync from DOKU (webhook fallback)
-        if ($order->payment_status === 'pending' && $order->doku_order_id) {
+        // Always sync from DOKU API to ensure accurate status
+        // This handles cases where webhook hasn't arrived yet
+        if ($order->doku_order_id) {
             try {
                 $doku = app(DokuService::class);
                 $doku->syncStatusFromDoku($order);
