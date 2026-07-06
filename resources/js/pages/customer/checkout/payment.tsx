@@ -1,9 +1,10 @@
 import { Head, router } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, MapPin, Store } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ChevronUp, MapPin, Store } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NoticeBanner from '@/components/customer/checkout/notice-banner';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
+import Dialog from '@/components/ui/dialog';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';
@@ -19,6 +20,8 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const [submitError, setSubmitError] = useState<string | null>(null);
     const [processing, setProcessing] = useState(false);
     const [paymentExpanded, setPaymentExpanded] = useState(false);
+    const [stockWarnings, setStockWarnings] = useState<string[]>([]);
+    const [adjustmentModal, setAdjustmentModal] = useState<{ warnings: string[]; adjustments: any[] } | null>(null);
     const paymentOptions = summary.payment_options ?? [];
     const [paymentMethod, setPaymentMethod] = useState(paymentOptions[0]?.value ?? 'qris');
     const selectedOption = paymentOptions.find((option: any) => option.value === paymentMethod) ?? paymentOptions[0];
@@ -33,6 +36,29 @@ export default function CheckoutPayment({ draft, summary }: any) {
             router.visit('/customer/checkout');
         }
     }, [draft?.items]);
+
+    // Validate stock on page load
+    useEffect(() => {
+        const validateStock = async () => {
+            try {
+                const res = await fetch('/customer/checkout/validate-stock', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
+                const data = await res.json();
+
+                if (!data.valid) {
+                    setStockWarnings(data.warnings);
+                }
+            } catch (err) {
+                console.error('Failed to validate stock:', err);
+            }
+        };
+
+        validateStock();
+    }, []);
 
     const hasDifferentRecipient = isDifferentRecipient({
         customer_name: draft?.customer?.customer_name,
@@ -59,6 +85,29 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
             const data = await response.json();
 
+            if (response.status === 422) {
+                if (data.all_removed) {
+                    cart.clear();
+                    router.visit('/customer/cart', {
+                        only: [],
+                        onError: () => {
+                            setSubmitError('Semua produk dalam pesanan sudah habis');
+                        },
+                    });
+                    return;
+                }
+
+                if (data.adjusted) {
+                    setAdjustmentModal({
+                        warnings: data.warnings,
+                        adjustments: data.adjustments,
+                    });
+                    setProcessing(false);
+
+                    return;
+                }
+            }
+
             if (!response.ok) {
                 const errorMsg = data.message || data.errors
                     ? Object.values(data.errors ?? {}).flat()[0]
@@ -73,6 +122,45 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 cart.clear();
                 markUsedForOrder();
                 // replace() removes DOKU from browser history — back button goes to orders, not DOKU
+                window.location.replace(data.payment_url);
+            } else {
+                setSubmitError('Tidak ada URL pembayaran. Silakan coba lagi.');
+                setProcessing(false);
+            }
+        } catch {
+            setSubmitError('Terjadi kesalahan jaringan. Silakan coba lagi.');
+            setProcessing(false);
+        }
+    };
+
+    const handleConfirmAdjusted = async () => {
+        setAdjustmentModal(null);
+        setProcessing(true);
+
+        try {
+            const response = await fetch('/customer/checkout/payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                },
+                body: JSON.stringify({ payment_method: paymentMethod, confirm_adjusted: true }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setSubmitError(data.message || 'Terjadi kesalahan. Silakan coba lagi.');
+                setProcessing(false);
+
+                return;
+            }
+
+            if (data.payment_url) {
+                cart.clear();
+                markUsedForOrder();
                 window.location.replace(data.payment_url);
             } else {
                 setSubmitError('Tidak ada URL pembayaran. Silakan coba lagi.');
@@ -119,6 +207,21 @@ export default function CheckoutPayment({ draft, summary }: any) {
                         message={submitError}
                         onDismiss={() => setSubmitError(null)}
                     />
+                </div>
+            )}
+
+            {/* Stock Warning Banner */}
+            {stockWarnings.length > 0 && (
+                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                    <div className="flex items-center gap-2">
+                        <AlertTriangle className="h-5 w-5 text-amber-600" />
+                        <h3 className="font-semibold text-amber-800">Stok Berubah</h3>
+                    </div>
+                    <ul className="mt-2 space-y-1 text-sm text-amber-700">
+                        {stockWarnings.map((warning, i) => (
+                            <li key={i}>{warning}</li>
+                        ))}
+                    </ul>
                 </div>
             )}
 
@@ -282,6 +385,34 @@ export default function CheckoutPayment({ draft, summary }: any) {
                         </div>
                     </div>
                 </section>
+            )}
+
+            {/* Adjustment Confirmation Modal */}
+            {adjustmentModal && (
+                <Dialog open={!!adjustmentModal} onClose={() => setAdjustmentModal(null)} title="Stok Berubah">
+                    <p className="text-sm text-zinc-600 mb-3">Beberapa produk dalam pesanan Anda mengalami perubahan stok:</p>
+                    <ul className="space-y-2 mb-4">
+                        {adjustmentModal.warnings.map((w: string, i: number) => (
+                            <li key={i} className="text-sm text-zinc-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">{w}</li>
+                        ))}
+                    </ul>
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setAdjustmentModal(null)}
+                            className="flex-1 rounded-xl border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-700 active:opacity-80"
+                        >
+                            Kembali
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleConfirmAdjusted}
+                            className="flex-1 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white active:opacity-80"
+                        >
+                            Konfirmasi & Bayar
+                        </button>
+                    </div>
+                </Dialog>
             )}
 
             {/* Spacer for sticky footer */}
