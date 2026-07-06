@@ -7,7 +7,7 @@ use App\Models\OutletInventory;
 use App\Models\ProductVariant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+
 
 class CartController extends Controller
 {
@@ -25,9 +25,13 @@ class CartController extends Controller
         $variant = ProductVariant::findOrFail($validated['product_variant_id']);
         $quantity = $validated['quantity'];
 
+        // Get outlet from session
+        $outletId = session('checkout.fulfillment.selected_outlet_id');
+
         // Get available stock from outlet inventory
         $inventory = OutletInventory::where('product_variant_id', $variant->id)
             ->where('is_active', true)
+            ->when($outletId, fn ($q) => $q->where('outlet_id', $outletId))
             ->first();
 
         $availableStock = $inventory
@@ -58,10 +62,11 @@ class CartController extends Controller
 
         // Store in session cart
         $cart = $request->session()->get('checkout.cart', []);
-        $existingKey = collect($cart)->search(fn ($item) => $item['product_variant_id'] === $variant->id);
+        $existingKey = collect($cart)->search(fn ($item) => ((int) ($item['product_variant_id'] ?? 0)) === $variant->id);
 
         if ($existingKey !== false) {
-            $cart[$existingKey]['quantity'] = $quantity;
+            $newQuantity = $cart[$existingKey]['quantity'] + $quantity;
+            $cart[$existingKey]['quantity'] = min($newQuantity, $maxQuantity);
         } else {
             $cart[] = [
                 'product_variant_id' => $variant->id,
@@ -179,11 +184,4 @@ class CartController extends Controller
         ]);
     }
 
-    private function getExistingCartQuantity(Request $request, int $variantId): int
-    {
-        $cart = collect($request->session()->get('checkout.cart', []));
-        $existing = $cart->first(fn ($item) => ((int) ($item['product_variant_id'] ?? 0)) === $variantId);
-
-        return $existing ? (int) $existing['quantity'] : 0;
-    }
 }
