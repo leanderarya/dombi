@@ -1,5 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
-import { CheckCircle2, ChevronLeft, Clock, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { CheckCircle2, ChevronLeft, Clock, MapPin, MessageCircle, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
@@ -96,6 +96,8 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
 };
 
 export default function TrackPage({ order, found, cancellationReasons = [], canCancel = false, canCreateAccount = false, accountPhone, accountName }: Props) {
+    const { auth } = usePage().props as any;
+    const isLoggedIn = !!auth?.user;
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [cancelNote, setCancelNote] = useState('');
@@ -512,16 +514,39 @@ return;
                 )}
 
                 {/* Login CTA for cancel — guest users */}
-                {isCancellable && !canCancel && (
+                {isCancellable && !canCancel && !isLoggedIn && (
                     <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
                         <div className="text-sm font-medium text-text">Ingin membatalkan pesanan?</div>
                         <div className="mt-1 text-xs text-text-muted">Masuk atau buat akun untuk mengelola pesanan Anda.</div>
                         <a
-                            href="/oauth/google"
+                            href={`/oauth/google?redirect=${encodeURIComponent(`/track/${order.recovery_token}`)}`}
                             className="mt-3 inline-flex h-11 items-center justify-center rounded-xl bg-primary px-6 text-sm font-bold text-white active:opacity-80"
                         >
                             Masuk dengan Google
                         </a>
+                    </div>
+                )}
+
+                {/* Verify phone prompt — authenticated but phone not linked */}
+                {isCancellable && !canCancel && isLoggedIn && (
+                    <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+                        <div className="flex items-start gap-3">
+                            <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+                            <div className="flex-1 space-y-2">
+                                <div>
+                                    <h3 className="text-sm font-medium text-amber-900">Verifikasi HP untuk kelola pesanan</h3>
+                                    <p className="text-xs text-amber-700">
+                                        Verifikasi nomor HP Anda untuk dapat membatalkan dan mengelola pesanan ini.
+                                    </p>
+                                </div>
+                                <a
+                                    href="/customer/verify-phone"
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-amber-700"
+                                >
+                                    Verifikasi Sekarang
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 )}
 
