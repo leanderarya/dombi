@@ -1,8 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
-import { LogIn, MapPin } from 'lucide-react';
+import { AlertCircle, LogIn, MapPin, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NoticeBanner from '@/components/customer/checkout/notice-banner';
-import DeliveryQuoteCard from '@/components/customer/delivery-quote-card';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
 import LocationSheet from '@/components/customer/location-sheet';
 import PickupOutletSelector from '@/components/customer/pickup-outlet-selector';
@@ -12,6 +11,7 @@ import PhoneInput from '@/components/ui/phone-input';
 import SectionCard from '@/components/ui/section-card';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation } from '@/lib/customer-location';
+import { formatCurrency, formatDistance } from '@/lib/format';
 
 type CustomerForm = {
     customer_name: string;
@@ -367,49 +367,65 @@ export default function CheckoutCustomer({
             {isDelivery && (
                 <>
                     {hasKnownLocation ? (
-                        <section className="mt-4 space-y-4">
-                            <div className="rounded-xl bg-white p-4">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-start gap-2">
-                                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle" />
-                                            <div className="min-w-0">
-                                                {form.data.address_line || [form.data.village, form.data.district, form.data.city].filter(Boolean).join(', ') ? (
-                                                    <div className="line-clamp-2 text-sm font-semibold text-text">
-                                                        {form.data.address_line || [form.data.village, form.data.district, form.data.city].filter(Boolean).join(', ')}
-                                                    </div>
-                                                ) : (
-                                                    <div className="text-sm font-semibold text-amber-600">Pilih lokasi di peta</div>
-                                                )}
-                                            </div>
-                                        </div>
+                        <section className="mt-4">
+                            <div className="rounded-xl border border-border bg-white">
+                                {/* Header */}
+                                <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                        <Truck className="h-4 w-4 text-emerald-600" />
+                                        <span className="text-sm font-semibold text-text">Pengiriman</span>
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() =>
-                                            setLocationSheetOpen(true)
-                                        }
-                                        className="min-h-11 shrink-0 rounded-lg border border-border px-3 text-xs font-semibold text-text active:opacity-80"
+                                        onClick={() => setLocationSheetOpen(true)}
+                                        className="text-[11px] font-semibold text-primary active:opacity-80"
                                     >
-                                        Ubah Lokasi
+                                        Ubah
                                     </button>
                                 </div>
-                            </div>
 
-                            {deliveryQuote && (
-                                <DeliveryQuoteCard
-                                    outlet={deliveryQuote.outlet}
-                                    distance_km={Number(
-                                        deliveryQuote.distance_km ?? 0,
-                                    )}
-                                    delivery_fee={Number(
-                                        deliveryQuote.delivery_fee ?? 0,
-                                    )}
-                                    is_serviceable={
-                                        deliveryQuote.is_serviceable ?? false
-                                    }
-                                />
-                            )}
+                                {/* Address */}
+                                <div className="px-4 py-3">
+                                    <div className="flex items-start gap-2">
+                                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle" />
+                                        <div className="min-w-0">
+                                            {form.data.address_line || [form.data.village, form.data.district, form.data.city].filter(Boolean).join(', ') ? (
+                                                <div className="line-clamp-2 text-sm text-text">
+                                                    {form.data.address_line || [form.data.village, form.data.district, form.data.city].filter(Boolean).join(', ')}
+                                                </div>
+                                            ) : (
+                                                <div className="text-sm text-amber-600">Pilih lokasi di peta</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Divider */}
+                                {deliveryQuote && <div className="h-px bg-border mx-4" />}
+
+                                {/* Delivery quote */}
+                                {deliveryQuote && (
+                                    <div className="px-4 py-3">
+                                        {deliveryQuote.is_serviceable ? (
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <div className="text-xs text-text-muted">{deliveryQuote.outlet?.name}</div>
+                                                    <div className="text-[11px] text-text-subtle mt-0.5">{formatDistance(Number(deliveryQuote.distance_km ?? 0))}</div>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="text-[10px] text-text-subtle">Ongkir</div>
+                                                    <div className="text-sm font-bold tabular-nums text-text">{formatCurrency(Number(deliveryQuote.delivery_fee ?? 0))}</div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <AlertCircle className="h-4 w-4 shrink-0 text-red-500" />
+                                                <span className="text-xs font-medium text-red-700">Luar jangkauan Kurir Dombi</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </section>
                     ) : (
                         <section className="mt-4">
