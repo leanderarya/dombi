@@ -95,8 +95,8 @@ class DokuService
         PaymentTransaction::create([
             'order_id' => $order->id,
             'doku_order_id' => $invoiceNumber,
-            'payment_method' => 'qris',
-            'amount' => $order->total,
+            'payment_method' => $order->payment_method ?? 'qris',
+            'amount' => (int) $order->subtotal,
             'status' => 'pending',
             'session_id' => $sessionId,
             'token_id' => $tokenId,
@@ -257,12 +257,16 @@ class DokuService
      */
     public function mapStatus(?string $dokuStatus): string
     {
-        return match (strtoupper($dokuStatus ?? '')) {
+        $upper = strtoupper($dokuStatus ?? '');
+
+        return match ($upper) {
             'SUCCESS' => 'paid',
             'PENDING' => 'pending',
             'FAILED', 'REJECTED', 'DENIED', 'CANCELLED' => 'failed',
             'EXPIRED' => 'expired',
-            default => 'pending',
+            default => tap('pending', function () use ($upper) {
+                Log::warning('DOKU: unmapped status', ['status' => $upper]);
+            }),
         };
     }
 
@@ -350,9 +354,9 @@ class DokuService
         $customer = $order->customer;
 
         return [
-            'name' => $customer->name ?? $order->customer_name,
-            'email' => $customer->email ?? null,
-            'phone' => $customer->phone ?? $order->customer_phone,
+            'name' => $customer?->name ?? $order->customer_name,
+            'email' => $customer?->email ?? null,
+            'phone' => $customer?->phone ?? $order->customer_phone,
         ];
     }
 
