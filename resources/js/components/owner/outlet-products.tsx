@@ -15,7 +15,7 @@ interface ProductItem {
     is_active: boolean;
     current_stock: number;
     available_stock: number;
-    stock_status: 'ok' | 'low' | 'out_of_stock';
+    stock_status: 'available' | 'low' | 'out_of_stock';
 }
 
 interface Props {
