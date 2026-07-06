@@ -125,8 +125,8 @@ function ProductsInner() {
                                         ref={(el) => setSectionRef(section.familyId, el)}
                                         className="product-section-reveal overflow-hidden rounded-2xl border border-border/60 bg-white"
                                     >
-                                        <div className="flex items-baseline justify-between px-4 pt-4 pb-2">
-                                            <h2 className="fore-section-header">{section.familyName}</h2>
+                                        <div className="flex items-baseline justify-between px-4 pt-4 pb-3">
+                                            <h2 className="text-base font-semibold text-text">{section.familyName}</h2>
                                             <span className="text-xs text-text-muted">{section.totalVariants} varian</span>
                                         </div>
                                         <div>
@@ -176,7 +176,7 @@ function ProductsInner() {
 function SearchBar({ search, onSearchChange, children }: { search: string; onSearchChange: (v: string) => void; children: React.ReactNode }) {
     return (
         <div className="sticky top-safe z-20 -mx-4 bg-white/80 px-4 pb-3 pt-2 backdrop-blur-lg">
-            <div className="rounded-2xl border border-border/60 bg-white shadow-sm">
+            <div className="rounded-2xl bg-white shadow-sm">
                 <div className="flex items-center gap-2.5 px-3.5">
                     <Search className="h-4 w-4 shrink-0 text-text-subtle" />
                     <input
@@ -195,7 +195,7 @@ function SearchBar({ search, onSearchChange, children }: { search: string; onSea
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
     return (
-        <div className="rounded-2xl border border-border/60 bg-white p-6 text-center">
+        <div className="rounded-2xl border border-border/60 bg-white p-4 text-center">
             <p className="text-sm text-text-muted mb-3">{message}</p>
             <button
                 type="button"
