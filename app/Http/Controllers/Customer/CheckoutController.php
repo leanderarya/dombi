@@ -555,9 +555,12 @@ class CheckoutController extends Controller
                 'doku_errors' => $e->getErrors(),
             ]);
 
-            // Don't expire the order — let customer retry payment from confirm page.
-            // The order stays pending_confirmation with payment_status = null.
-            // ExpirePendingOrders will clean it up if customer never returns.
+            // Reset confirmation_expires_at so customer gets fresh retry window
+            $order->update([
+                'confirmation_expires_at' => now()->addMinutes(
+                    $order->outlet->confirmation_timeout_minutes ?? config('order.confirmation_timeout_minutes', 15)
+                ),
+            ]);
 
             return redirect()->route('customer.orders.confirm', [
                 'orderCode' => $order->order_code,
@@ -568,7 +571,13 @@ class CheckoutController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
-            // Don't expire the order — let customer retry payment from confirm page.
+            // Reset confirmation_expires_at so customer gets fresh retry window
+            $order->update([
+                'confirmation_expires_at' => now()->addMinutes(
+                    $order->outlet->confirmation_timeout_minutes ?? config('order.confirmation_timeout_minutes', 15)
+                ),
+            ]);
+
             return redirect()->route('customer.orders.confirm', [
                 'orderCode' => $order->order_code,
             ])->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
