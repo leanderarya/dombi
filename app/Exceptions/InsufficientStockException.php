@@ -8,7 +8,7 @@ class InsufficientStockException extends RuntimeException
 {
     public function __construct(
         public readonly int $outletId,
-        public readonly int $productId,
+        public readonly ?int $productId,
         public readonly string $stockType,
         public readonly int $required,
         public readonly int $available,

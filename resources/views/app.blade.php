@@ -17,8 +17,6 @@
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
         <link rel="manifest" href="/manifest.json">
 
-        @fonts
-
         @viteReactRefresh
         @vite(['resources/css/app.css', 'resources/js/app.tsx'])
 
