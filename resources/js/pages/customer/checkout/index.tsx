@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { ShoppingCart, Store, Truck } from 'lucide-react';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import StepButton from '@/components/customer/step-button';
@@ -35,10 +35,23 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
     const subtotal = items.reduce((sum, item) => sum + Number(item.subtotal), 0);
     const itemCount = items.reduce((sum, item) => sum + Number(item.quantity), 0);
 
+    // Inject keyframes into document head
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInFromLeft {
+                from { transform: translateX(-100%); }
+                to { transform: translateX(0); }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => { style.remove(); };
+    }, []);
+
     const switchFulfillment = (target: string) => {
         if (target === fulfillmentType) return;
 
-        // Start overlay enter animation
+        // Start overlay off-screen left, then animate in
         setOverlayTarget(target);
         setOverlayState('entering');
 
@@ -47,7 +60,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
             setFulfillmentType(target);
             setOverlayState('visible');
 
-            // After visible (200ms), start exit animation
+            // After visible (300ms), start exit animation to right
             overlayTimeout.current = setTimeout(() => {
                 setOverlayState('exiting');
 
@@ -55,7 +68,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                 overlayTimeout.current = setTimeout(() => {
                     setOverlayState('hidden');
                 }, 400);
-            }, 200);
+            }, 300);
         }, 400);
     };
 
@@ -255,17 +268,20 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
             {/* Full-page overlay transition */}
             {overlayState !== 'hidden' && (
                 <div
-                    className="fixed inset-0 z-50 flex items-center justify-center"
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-primary"
                     style={{
-                        animation: overlayState === 'entering'
-                            ? 'overlaySlideIn 400ms ease-out forwards'
-                            : overlayState === 'visible'
-                                ? 'overlayVisible 200ms ease-in-out forwards'
-                                : 'overlaySlideOut 400ms ease-in forwards',
+                        transform: overlayState === 'exiting'
+                            ? 'translateX(100%)'
+                            : 'translateX(0)',
+                        ...(overlayState === 'entering' && {
+                            animation: 'slideInFromLeft 400ms cubic-bezier(0.4, 0, 0.2, 1) forwards',
+                        }),
+                        ...(overlayState === 'exiting' && {
+                            transition: 'transform 400ms cubic-bezier(0.4, 0, 0.2, 1)',
+                        }),
                     }}
                 >
-                    <div className="absolute inset-0 bg-primary" />
-                    <div className="relative z-10 flex flex-col items-center gap-3 text-white">
+                    <div className="flex flex-col items-center gap-3 text-white">
                         {overlayTarget === 'pickup' ? (
                             <Store className="h-12 w-12" />
                         ) : (
@@ -280,21 +296,6 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     </div>
                 </div>
             )}
-
-            <style>{`
-                @keyframes overlaySlideIn {
-                    from { clip-path: inset(0 100% 0 0); }
-                    to { clip-path: inset(0 0 0 0); }
-                }
-                @keyframes overlayVisible {
-                    from { opacity: 1; }
-                    to { opacity: 1; }
-                }
-                @keyframes overlaySlideOut {
-                    from { clip-path: inset(0 0 0 0); }
-                    to { clip-path: inset(0 0 0 100%); }
-                }
-            `}</style>
             {/* Spacer for sticky footer */}
             <div className="h-24" />
         </CustomerMobileLayout>
