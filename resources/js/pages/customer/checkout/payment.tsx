@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { AlertTriangle, ChevronDown, ChevronUp, MapPin, Store } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, Store } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import NoticeBanner from '@/components/customer/checkout/notice-banner';
 import StepButton from '@/components/customer/step-button';
@@ -212,16 +212,13 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
             {/* Stock Warning Banner */}
             {stockWarnings.length > 0 && (
-                <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-                    <div className="flex items-center gap-2">
-                        <AlertTriangle className="h-5 w-5 text-amber-600" />
-                        <h3 className="font-semibold text-amber-800">Stok Berubah</h3>
-                    </div>
-                    <ul className="mt-2 space-y-1 text-sm text-amber-700">
-                        {stockWarnings.map((warning, i) => (
-                            <li key={i}>{warning}</li>
-                        ))}
-                    </ul>
+                <div className="mt-4">
+                    <NoticeBanner
+                        variant="warning"
+                        title="Stok Berubah"
+                        message={stockWarnings.join('. ')}
+                        onDismiss={() => setStockWarnings([])}
+                    />
                 </div>
             )}
 
