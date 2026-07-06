@@ -111,7 +111,8 @@ class VariantCommerceFlowTest extends TestCase
 
         // Step 4: Submit payment and create order
         $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         // Verify order created
@@ -276,7 +277,8 @@ class VariantCommerceFlowTest extends TestCase
         $this->seedVariantCheckoutDraft();
 
         $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $inventory = OutletInventory::where('outlet_id', $this->outlet->id)
@@ -293,7 +295,8 @@ class VariantCommerceFlowTest extends TestCase
         $this->seedVariantCheckoutDraft();
 
         $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $order = Order::latest()->firstOrFail();
@@ -319,7 +322,8 @@ class VariantCommerceFlowTest extends TestCase
         $this->seedVariantCheckoutDraft();
 
         $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $order = Order::latest()->firstOrFail();
@@ -410,7 +414,8 @@ class VariantCommerceFlowTest extends TestCase
                 'phone_number' => '6281234567890',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $order = Order::latest()->firstOrFail();

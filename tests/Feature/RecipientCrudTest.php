@@ -296,7 +296,8 @@ class RecipientCrudTest extends TestCase
         ]);
 
         $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $order = Order::latest()->firstOrFail();

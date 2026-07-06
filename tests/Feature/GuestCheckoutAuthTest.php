@@ -32,7 +32,8 @@ class GuestCheckoutAuthTest extends TestCase
                 'phone_number' => '6281234567890',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $this->assertFalse(auth()->check(), 'Guest should NOT be authenticated after checkout');
@@ -56,7 +57,8 @@ class GuestCheckoutAuthTest extends TestCase
                 'phone_number' => '6281234567891',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ]);
 
         $order = Order::latest()->firstOrFail();
@@ -84,7 +86,8 @@ class GuestCheckoutAuthTest extends TestCase
                 ],
             ])
             ->post('/customer/checkout/payment', [
-                'payment_method' => 'cod',
+                'payment_method' => 'qris',
+            'payment_status' => 'paid',
             ]);
 
         $order = Order::latest()->firstOrFail();
@@ -110,7 +113,8 @@ class GuestCheckoutAuthTest extends TestCase
                     'phone_number' => "628123456789$i",
                 ],
             ])->post('/customer/checkout/payment', [
-                'payment_method' => 'cod',
+                'payment_method' => 'qris',
+            'payment_status' => 'paid',
             ]);
 
             $this->assertFalse(auth()->check(), "Guest should not be authenticated after checkout $i");
@@ -133,7 +137,8 @@ class GuestCheckoutAuthTest extends TestCase
                 'phone_number' => '6281234567893',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ]);
 
         $order = Order::latest()->firstOrFail();
@@ -169,7 +174,8 @@ class GuestCheckoutAuthTest extends TestCase
                 'phone_number' => '6281234567894',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ]);
 
         $order = Order::latest()->firstOrFail();
@@ -202,7 +208,8 @@ class GuestCheckoutAuthTest extends TestCase
                 'phone_number' => '6281234567895',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ]);
 
         $this->assertFalse(auth()->check(), 'Should not be authenticated after guest checkout');

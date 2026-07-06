@@ -81,7 +81,8 @@ class CustomerLocationRecommendationTest extends TestCase
                 'longitude' => 110.4345678,
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $order = Order::latest()->firstOrFail();

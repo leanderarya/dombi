@@ -94,7 +94,8 @@ class P0CheckoutHardeningTest extends TestCase
 
         // First submission
         $response1 = $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ]);
 
         $response1->assertRedirect();
@@ -114,7 +115,8 @@ class P0CheckoutHardeningTest extends TestCase
 
         // Second submission with same fingerprint should return same order
         $response2 = $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ]);
 
         $response2->assertRedirect();
@@ -279,7 +281,8 @@ class P0CheckoutHardeningTest extends TestCase
             'fulfillment_type' => 'pickup',
             'subtotal' => 50000,
             'delivery_fee' => 0,
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
             'payment_fee' => 0,
             'total' => 50000,
             'customer_name' => 'Test Customer',

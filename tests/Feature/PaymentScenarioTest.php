@@ -205,7 +205,8 @@ class PaymentScenarioTest extends TestCase
         ]);
 
         $order = $this->createOrder($customer, [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
             'payment_status' => 'pending',
         ]);
 

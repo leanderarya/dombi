@@ -91,7 +91,8 @@ class DeliveryPricingTest extends TestCase
                 'longitude' => 110.7000000,
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect('/customer/checkout/customer')
             ->assertSessionHasErrors(['latitude']);
 

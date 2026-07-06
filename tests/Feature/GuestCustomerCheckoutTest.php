@@ -84,7 +84,8 @@ class GuestCustomerCheckoutTest extends TestCase
                 'phone_number' => '6281234567890',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $order = Order::latest()->firstOrFail();

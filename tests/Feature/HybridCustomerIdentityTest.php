@@ -87,7 +87,8 @@ class HybridCustomerIdentityTest extends TestCase
                 'phone_number' => '6281234567890',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ]);
 
         $order = Order::latest()->firstOrFail();
@@ -117,7 +118,8 @@ class HybridCustomerIdentityTest extends TestCase
                 'phone_number' => '6281234567891',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ]);
 
         $this->assertFalse(auth()->check(), 'Guest should NOT be authenticated after checkout');
@@ -137,7 +139,8 @@ class HybridCustomerIdentityTest extends TestCase
                 'phone_number' => '6281234567892',
             ],
         ])->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ]);
 
         $order = Order::latest()->firstOrFail();

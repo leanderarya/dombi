@@ -143,7 +143,8 @@ class RecipientCheckoutTest extends TestCase
 
         // Submit order
         $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $order = Order::latest()->firstOrFail();
@@ -189,7 +190,8 @@ class RecipientCheckoutTest extends TestCase
         ]);
 
         $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $order = Order::latest()->firstOrFail();
@@ -237,7 +239,8 @@ class RecipientCheckoutTest extends TestCase
         ]);
 
         $this->post('/customer/checkout/payment', [
-            'payment_method' => 'cod',
+            'payment_method' => 'qris',
+            'payment_status' => 'paid',
         ])->assertRedirect();
 
         $order = Order::latest()->firstOrFail();
