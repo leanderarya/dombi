@@ -106,35 +106,28 @@ return;
         setPayLoading(true);
 
         try {
+            // Use form submission — follows cross-origin redirects natively
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/customer/orders/${order.id}/pay`;
+
+            // CSRF token
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
-            const res = await fetch(`/customer/orders/${order.id}/pay`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': csrf,
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json',
-                },
-                credentials: 'same-origin',
-            });
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = csrf;
+            form.appendChild(csrfInput);
 
-            // Redirect to DOKU payment page (external URL)
-            if (res.redirected && res.url && !res.url.startsWith(window.location.origin)) {
-                window.location.href = res.url;
+            // XMLHttpRequest flag for Laravel
+            const xhrInput = document.createElement('input');
+            xhrInput.type = 'hidden';
+            xhrInput.name = '_method';
+            xhrInput.value = 'POST';
+            form.appendChild(xhrInput);
 
-                return;
-            }
-
-            // Error response (back() with flash or JSON error)
-            if (!res.ok) {
-                const data = await res.json().catch(() => null);
-                alert(data?.message ?? data?.error ?? 'Gagal membuat pembayaran. Silakan coba lagi.');
-                setPayLoading(false);
-
-                return;
-            }
-
-            // Success but not external redirect — reload to get fresh state
-            router.reload();
+            document.body.appendChild(form);
+            form.submit();
         } catch {
             alert('Terjadi kesalahan. Coba lagi.');
             setPayLoading(false);
