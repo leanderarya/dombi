@@ -27,9 +27,10 @@ return Application::configure(basePath: dirname(__DIR__))
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        // Exclude guest cancel route from CSRF verification
+        // Exclude guest cancel route and DOKU webhook from CSRF verification
         $middleware->validateCsrfTokens(except: [
             'track/*/cancel',
+            'payment/doku/notify',
         ]);
 
         $middleware->alias([

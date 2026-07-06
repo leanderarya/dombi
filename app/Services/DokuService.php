@@ -42,7 +42,7 @@ class DokuService
                 'amount' => $amount,
                 'currency' => 'IDR',
                 'callback_url' => route('doku.redirect', ['invoice_number' => $order->order_code]),
-                'callback_url_result' => route('customer.orders.confirmation', ['order' => $order->id, 'token' => $order->recovery_token]),
+                'callback_url_result' => route('doku.notify'),
                 'auto_redirect' => true,
                 'payment_due_date' => config('doku.payment_timeout', 30),
                 'line_items' => $this->buildLineItems($order),
