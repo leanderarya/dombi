@@ -246,6 +246,12 @@ class OrderController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'error' => 'Gagal membuat pembayaran. Silakan coba lagi.',
+                ], 422);
+            }
+
             return back()->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
         }
     }

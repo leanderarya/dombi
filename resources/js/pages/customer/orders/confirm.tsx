@@ -17,10 +17,16 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     const [payLoading, setPayLoading] = useState(false);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
 
-    // Replace history entry so browser Back skips the payment gateway
+    // Push history so browser Back goes to orders list (skips payment gateway)
     useEffect(() => {
         const backUrl = isLoggedIn ? '/customer/orders' : '/';
-        window.history.replaceState(null, '', backUrl);
+        window.history.pushState(null, '', window.location.href);
+        const onPop = () => {
+            window.location.href = backUrl;
+        };
+        window.addEventListener('popstate', onPop);
+
+        return () => window.removeEventListener('popstate', onPop);
     }, [isLoggedIn]);
 
     // Poll payment status as webhook fallback
@@ -106,23 +112,31 @@ return;
                 headers: {
                     'X-CSRF-TOKEN': csrf,
                     'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
                 },
                 credentials: 'same-origin',
             });
 
-            if (res.redirected) {
-                window.location.replace(res.url);
+            // Redirect to DOKU payment page (external URL)
+            if (res.redirected && res.url && !res.url.startsWith(window.location.origin)) {
+                window.location.href = res.url;
 
                 return;
             }
 
+            // Error response (back() with flash or JSON error)
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-                alert(data?.message ?? 'Gagal membuat pembayaran. Coba lagi.');
+                alert(data?.message ?? data?.error ?? 'Gagal membuat pembayaran. Silakan coba lagi.');
+                setPayLoading(false);
+
+                return;
             }
+
+            // Success but not external redirect — reload to get fresh state
+            router.reload();
         } catch {
             alert('Terjadi kesalahan. Coba lagi.');
-        } finally {
             setPayLoading(false);
         }
     }, [order.id]);
@@ -198,14 +212,20 @@ return;
                         </button>
                     )}
 
-                    {/* Failed/Expired: retry or go home */}
+                    {/* Failed/Expired: retry payment or go home */}
                     {(paymentStatus === 'failed' || paymentStatus === 'expired') && (
                         <>
                             <button
-                                onClick={() => router.visit(`/customer/orders/${order.id}/restore-cart`)}
-                                className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
+                                onClick={handlePay}
+                                disabled={payLoading}
+                                className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98] disabled:opacity-50"
                             >
-                                Coba Lagi
+                                {payLoading ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Memproses...
+                                    </span>
+                                ) : 'Bayar Sekarang'}
                             </button>
                             <button
                                 onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/')}
