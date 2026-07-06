@@ -105,7 +105,7 @@ function ProductsInner() {
                 {/* ── White section ── */}
                 <div className="rounded-t-[1.5rem] bg-white">
                     {/* Outlet card (floats into green) */}
-                    <div className="-mt-6 mx-4">
+                    <div className="-mt-10 mx-4">
                         <StoreLocationCard />
                     </div>
                     <div className="px-4 pt-4 pb-24 space-y-4">
