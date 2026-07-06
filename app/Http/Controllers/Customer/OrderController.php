@@ -237,6 +237,10 @@ class OrderController extends Controller
                 }
             }
 
+            // Clean up old transactions before creating new one (prevents duplicate doku_order_id)
+            $order->paymentTransactions()->delete();
+            $order->update(['doku_order_id' => null, 'payment_status' => null]);
+
             $paymentUrl = $doku->createPayment($order);
 
             return redirect()->away($paymentUrl);
