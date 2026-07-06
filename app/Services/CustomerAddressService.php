@@ -82,6 +82,9 @@ class CustomerAddressService
 
         return $this->create($customer, [
             'label' => $label,
+            'recipient_name' => $customer->name ?? '',
+            'phone' => $customer->phone ?? '',
+            'address' => $location['address_line'] ?? $location['village'] ?? '',
             'address_line' => $location['address_line'] ?? '',
             'address_detail' => $location['address_detail'] ?? '',
             'province' => $location['province'] ?? '',
@@ -89,6 +92,8 @@ class CustomerAddressService
             'district' => $location['district'] ?? '',
             'village' => $location['village'] ?? '',
             'postal_code' => $location['postal_code'] ?? '',
+            'kelurahan' => $location['village'] ?? '',
+            'kecamatan' => $location['district'] ?? '',
             'latitude' => $location['latitude'] ?? 0,
             'longitude' => $location['longitude'] ?? 0,
             'landmark' => $location['landmark'] ?? '',
