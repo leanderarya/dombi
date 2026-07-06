@@ -88,4 +88,44 @@ class OrderServiceTest extends TestCase
         $this->assertInstanceOf(Order::class, $order);
         $this->assertEquals($outlet->id, $order->outlet_id);
     }
+
+    public function test_create_order_throws_exception_when_stock_zero(): void
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        $customer = Customer::factory()->create(['user_id' => $user->id]);
+        $outlet = Outlet::factory()->create();
+        $variant = ProductVariant::factory()->create();
+
+        OutletInventory::factory()->create([
+            'outlet_id' => $outlet->id,
+            'product_variant_id' => $variant->id,
+            'current_stock' => 10,
+            'reserved_stock' => 10,
+            'minimum_stock' => 2,
+        ]);
+
+        $orderService = app(OrderService::class);
+
+        $this->expectException(StockAdjustedException::class);
+
+        try {
+            $orderService->createCheckoutOrder($user, [
+                'items' => [
+                    ['product_variant_id' => $variant->id, 'quantity' => 5],
+                ],
+                'fulfillment_type' => 'pickup',
+                'selected_outlet_id' => $outlet->id,
+                'customer_name' => 'Test Customer',
+                'phone_number' => '6281234567890',
+                'payment_method' => 'qris',
+            ]);
+        } catch (StockAdjustedException $e) {
+            $this->assertCount(1, $e->adjustments);
+            $this->assertEquals($variant->id, $e->adjustments[0]['variant_id']);
+            $this->assertEquals(5, $e->adjustments[0]['original_qty']);
+            $this->assertEquals(0, $e->adjustments[0]['adjusted_qty']);
+            $this->assertEquals(0, $e->adjustments[0]['available_stock']);
+            throw $e;
+        }
+    }
 }

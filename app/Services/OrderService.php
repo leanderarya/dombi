@@ -82,6 +82,7 @@ class OrderService
                 }
 
                 if (! empty($adjustments)) {
+                    $items = array_values($items);
                     throw new StockAdjustedException($adjustments);
                 }
             }
