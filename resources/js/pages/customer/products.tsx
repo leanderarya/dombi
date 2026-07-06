@@ -93,7 +93,7 @@ function ProductsInner() {
             <div className="min-h-dvh bg-background" ref={scrollRef}>
                 {/* ── Green header ── */}
                 <div className="bg-primary">
-                    <div className="px-4 pb-14 pt-safe">
+                    <div className="px-4 pb-10 pt-safe">
                         <ForeGreenHeader title="Produk" backHref="/customer/home" />
                         <FulfillmentToggle value={fulfillmentType} onChange={switchTo} />
                         <p className="mt-2 text-center text-[11px] text-white/60">
@@ -103,7 +103,7 @@ function ProductsInner() {
                 </div>
 
                 {/* ── White section ── */}
-                <div className="rounded-t-[1.5rem] bg-white">
+                <div className="relative -mt-8 z-10 rounded-t-[1.5rem] bg-white">
                     <div className="px-4 pt-6 pb-24">
                         <div className="mb-3">
                             <StoreLocationCard />
