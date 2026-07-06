@@ -14,8 +14,11 @@ class TrackCancelOwnershipTest extends TestCase
     use RefreshDatabase;
 
     private User $owner;
+
     private User $otherUser;
+
     private Order $order;
+
     private Customer $customer;
 
     protected function setUp(): void

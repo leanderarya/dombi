@@ -18,7 +18,9 @@ function parseExpiry(raw: string | null | undefined): Date | null {
     if (!raw) {
         return null;
     }
+
     const d = new Date(raw);
+
     return Number.isNaN(d.getTime()) ? null : d;
 }
 
@@ -28,9 +30,11 @@ function calculateTimeRemaining(expiresAt: string): {
     total: number;
 } {
     const diff = new Date(expiresAt).getTime() - Date.now();
+
     if (diff <= 0) {
         return { minutes: 0, seconds: 0, total: 0 };
     }
+
     return {
         minutes: Math.floor(diff / 60000),
         seconds: Math.floor((diff % 60000) / 1000),
@@ -40,9 +44,11 @@ function calculateTimeRemaining(expiresAt: string): {
 
 function formatTimeRemaining(expiresAt: string): string {
     const { minutes, seconds, total } = calculateTimeRemaining(expiresAt);
+
     if (total <= 0) {
         return 'Kadaluarsa';
     }
+
     return `${pad(minutes)}:${pad(seconds)}`;
 }
 
@@ -64,6 +70,7 @@ function useCountdown(expiresAt: string | null | undefined) {
         const tick = () => {
             const r = calculateTimeRemaining(deadline.toISOString());
             setRemaining(r);
+
             if (r.total <= 0) {
                 clearInterval(id);
             }
@@ -112,11 +119,13 @@ function useCancelOrder() {
             if (res.status === 401) {
                 setRequiresLogin(true);
                 setLoading(false);
+
                 return;
             }
 
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
+
                 throw new Error(
                     data?.message ??
                         `Gagal membatalkan pesanan (${res.status})`,
@@ -131,7 +140,9 @@ function useCancelOrder() {
         }
     }, []);
 
-    return { cancel, loading, error, requiresLogin, clearError: () => { setError(null); setRequiresLogin(false); } };
+    return { cancel, loading, error, requiresLogin, clearError: () => {
+ setError(null); setRequiresLogin(false); 
+} };
 }
 
 /* ------------------------------------------------------------------ */

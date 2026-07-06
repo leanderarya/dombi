@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\ExchangeRequest;
 use App\Models\OutletInventory;
+use App\Models\ProductVariant;
 use App\Models\ReturnRequest;
 use App\Services\ExchangeService;
 use Illuminate\Http\RedirectResponse;
@@ -52,11 +53,11 @@ class ExchangeController extends Controller
             ->values();
 
         // All active variants (what can be requested as replacement)
-        $variants = \App\Models\ProductVariant::where('is_active', true)
+        $variants = ProductVariant::where('is_active', true)
             ->with('family:id,name')
             ->orderBy('name')
             ->get()
-            ->map(fn (\App\Models\ProductVariant $v) => [
+            ->map(fn (ProductVariant $v) => [
                 'id' => $v->id,
                 'name' => $v->name,
                 'full_name' => $v->full_name,
@@ -105,11 +106,11 @@ class ExchangeController extends Controller
             ->values();
 
         // All active variants (what can be requested as replacement)
-        $variants = \App\Models\ProductVariant::where('is_active', true)
+        $variants = ProductVariant::where('is_active', true)
             ->with('family:id,name')
             ->orderBy('name')
             ->get()
-            ->map(fn (\App\Models\ProductVariant $v) => [
+            ->map(fn (ProductVariant $v) => [
                 'id' => $v->id,
                 'name' => $v->name,
                 'full_name' => $v->full_name,

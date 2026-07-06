@@ -19,7 +19,7 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, HasPushSubscriptions;
+    use HasFactory, HasPushSubscriptions, Notifiable;
 
     /**
      * Get the attributes that should be cast.

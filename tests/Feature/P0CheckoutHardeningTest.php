@@ -3,13 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
 
 class P0CheckoutHardeningTest extends TestCase
@@ -122,13 +123,13 @@ class P0CheckoutHardeningTest extends TestCase
     public function test_payment_rate_limit_configured(): void
     {
         // Verify rate limiter can be resolved without error
-        $limiter = \Illuminate\Support\Facades\RateLimiter::limiter('payment-submit');
+        $limiter = RateLimiter::limiter('payment-submit');
         $this->assertNotNull($limiter);
     }
 
     // ─── P0-3: CART QUANTITY MAX ───────────────────────────────────
 
-    public function test_setQuantity_rejects_qty_above_999(): void
+    public function test_set_quantity_rejects_qty_above_999(): void
     {
         // Add item first
         $this->postJson('/customer/cart/add', [
@@ -143,7 +144,7 @@ class P0CheckoutHardeningTest extends TestCase
         ])->assertUnprocessable();
     }
 
-    public function test_setQuantity_accepts_qty_999(): void
+    public function test_set_quantity_accepts_qty_999(): void
     {
         $this->postJson('/customer/cart/add', [
             'product_variant_id' => $this->variant->id,
@@ -156,7 +157,7 @@ class P0CheckoutHardeningTest extends TestCase
         ])->assertOk();
     }
 
-    public function test_addItem_rejects_qty_above_999(): void
+    public function test_add_item_rejects_qty_above_999(): void
     {
         $this->postJson('/customer/cart/add', [
             'product_variant_id' => $this->variant->id,
@@ -164,7 +165,7 @@ class P0CheckoutHardeningTest extends TestCase
         ])->assertUnprocessable();
     }
 
-    public function test_checkout_storeIndex_rejects_qty_above_999(): void
+    public function test_checkout_store_index_rejects_qty_above_999(): void
     {
         $response = $this->post('/customer/checkout', [
             'items' => [
@@ -263,14 +264,14 @@ class P0CheckoutHardeningTest extends TestCase
         ]);
     }
 
-    private function createOrder(array $overrides = []): \App\Models\Order
+    private function createOrder(array $overrides = []): Order
     {
         $customer = Customer::create([
             'name' => 'Test Customer',
             'phone' => '6281234567890',
         ]);
 
-        $order = \App\Models\Order::create(array_merge([
+        $order = Order::create(array_merge([
             'customer_id' => $customer->id,
             'outlet_id' => $this->outlet->id,
             'order_code' => 'DOMBI-P0-'.strtoupper(uniqid()),

@@ -253,9 +253,13 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
 
             <Toolbar
                 search={search}
-                onSearchChange={(v) => { setSearch(v); setPage(1); }}
+                onSearchChange={(v) => {
+ setSearch(v); setPage(1); 
+}}
                 marginFilter={marginFilter}
-                onMarginFilterChange={(v) => { setMarginFilter(v); setPage(1); }}
+                onMarginFilterChange={(v) => {
+ setMarginFilter(v); setPage(1); 
+}}
             >
                 <Button type="button" variant="secondary" size="sm" icon={Plus} onClick={() => setBulkOpen(!bulkOpen)}>
                     Atur Massal
@@ -272,7 +276,9 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
                     amount={bulkAmount}
                     onChange={setBulkAmount}
                     onApply={handleBulkUpdate}
-                    onCancel={() => { setBulkOpen(false); setBulkAmount(''); }}
+                    onCancel={() => {
+ setBulkOpen(false); setBulkAmount(''); 
+}}
                     saving={saving}
                     count={sorted.length}
                 />
@@ -284,7 +290,9 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
                     source={copySource}
                     onChange={setCopySource}
                     onApply={handleCopy}
-                    onCancel={() => { setCopyOpen(false); setCopySource(''); }}
+                    onCancel={() => {
+ setCopyOpen(false); setCopySource(''); 
+}}
                     saving={saving}
                 />
             )}
@@ -322,7 +330,9 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => { setSelectedRow(row); setModalOpen(true); }}
+                                    onClick={() => {
+ setSelectedRow(row); setModalOpen(true); 
+}}
                                     className="shrink-0 text-primary"
                                 >
                                     Ubah
@@ -353,7 +363,9 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
                 <OutletPriceModal
                     open={modalOpen}
                     row={selectedRow}
-                    onClose={() => { setModalOpen(false); setSelectedRow(null); }}
+                    onClose={() => {
+ setModalOpen(false); setSelectedRow(null); 
+}}
                     onSave={handleSave}
                     saving={saving}
                 />

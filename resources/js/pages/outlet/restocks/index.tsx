@@ -3,10 +3,10 @@ import { Plus, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
-import Pagination from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
+import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 

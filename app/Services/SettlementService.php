@@ -32,7 +32,7 @@ class SettlementService
             'amount' => (float) $order->total,
             'center_share' => $centerShare,
             'outlet_margin' => $outletMargin,
-            'due_date' => now()->endOfWeek(\Carbon\Carbon::SUNDAY)->addDays(7)->toDateString(),
+            'due_date' => now()->endOfWeek(Carbon::SUNDAY)->addDays(7)->toDateString(),
             'paid_amount' => 0,
             'remaining_amount' => $centerShare,
             'notes' => "Penjualan order {$order->order_code}",

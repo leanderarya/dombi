@@ -1,9 +1,9 @@
+const fs = require("fs");
 const {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
   WidthType, AlignmentType, HeadingLevel, BorderStyle, ShadingType,
   PageBreak, convertInchesToTwip, LevelFormat, Header, Footer, PageNumber,
 } = require("docx");
-const fs = require("fs");
 
 // ── Color palette ──────────────────────────────────────────────────────────
 const FOREST = "137e5b";
@@ -49,6 +49,7 @@ function bullet(text, level = 0) {
 function placeholderBox(label, width = 6, height = 2.5) {
   const heightTwip = convertInchesToTwip(height);
   const widthTwip = convertInchesToTwip(width);
+
   return new Table({
     width: { size: widthTwip, type: WidthType.DXA },
     rows: [

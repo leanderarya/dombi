@@ -92,7 +92,7 @@ class FulfillmentAwarenessTest extends TestCase
             'status' => Order::STATUS_READY_FOR_PICKUP,
         ]);
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('order.fulfillment_type', 'pickup')
@@ -107,7 +107,7 @@ class FulfillmentAwarenessTest extends TestCase
             'status' => Order::STATUS_READY_FOR_PICKUP,
         ]);
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('order.fulfillment_type', 'delivery_dombi')
@@ -135,7 +135,7 @@ class FulfillmentAwarenessTest extends TestCase
     private function createOutlet(): Outlet
     {
         return Outlet::create([
-            'name' => 'Outlet Test ' . uniqid(),
+            'name' => 'Outlet Test '.uniqid(),
             'kelurahan' => 'Test',
             'kecamatan' => 'Test',
             'address' => 'Jl. Test',
@@ -149,7 +149,7 @@ class FulfillmentAwarenessTest extends TestCase
     {
         return User::create([
             'name' => 'Outlet Staff',
-            'email' => 'outlet-' . uniqid() . '@test.com',
+            'email' => 'outlet-'.uniqid().'@test.com',
             'password' => bcrypt('password'),
             'role' => 'outlet',
             'outlet_id' => $outlet->id,
@@ -161,12 +161,12 @@ class FulfillmentAwarenessTest extends TestCase
     {
         $customer = Customer::create([
             'name' => 'Test Customer',
-            'phone' => '6281234567890' . rand(1000, 9999),
+            'phone' => '6281234567890'.rand(1000, 9999),
         ]);
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-fa-' . uniqid(),
+            'slug' => 'susu-kambing-500ml-fa-'.uniqid(),
             'unit' => 'botol',
             'price' => 25000,
             'is_active' => true,
@@ -175,7 +175,7 @@ class FulfillmentAwarenessTest extends TestCase
         $order = Order::create(array_merge([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'DOMBI-FA-' . strtoupper(uniqid()),
+            'order_code' => 'DOMBI-FA-'.strtoupper(uniqid()),
             'status' => Order::STATUS_READY_FOR_PICKUP,
             'fulfillment_type' => 'pickup',
             'subtotal' => 50000,

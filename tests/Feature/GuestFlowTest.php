@@ -18,7 +18,7 @@ class GuestFlowTest extends TestCase
     {
         $order = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('found', true)
@@ -30,7 +30,7 @@ class GuestFlowTest extends TestCase
     {
         $order = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
-        $response = $this->postJson('/track/' . $order->recovery_token . '/cancel', [
+        $response = $this->postJson('/track/'.$order->recovery_token.'/cancel', [
             'reason' => 'Salah Pesan',
             'last4_hp' => '6789',
         ]);
@@ -45,7 +45,7 @@ class GuestFlowTest extends TestCase
     {
         $order = $this->createOrder(['status' => Order::STATUS_COMPLETED]);
 
-        $this->post('/track/' . $order->recovery_token . '/cancel', [
+        $this->post('/track/'.$order->recovery_token.'/cancel', [
             'reason' => 'Salah Pesan',
         ])->assertJson(['success' => false]);
     }
@@ -55,7 +55,7 @@ class GuestFlowTest extends TestCase
         $order = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
         // No actingAs() — pure guest
-        $this->post('/track/' . $order->recovery_token . '/cancel', [
+        $this->post('/track/'.$order->recovery_token.'/cancel', [
             'reason' => 'Salah Pesan',
             'last4_hp' => '6789',
         ])->assertJson(['success' => true]);
@@ -77,7 +77,7 @@ class GuestFlowTest extends TestCase
             'status' => Order::STATUS_READY_FOR_PICKUP,
         ]);
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('order.fulfillment_type', 'pickup')
@@ -92,7 +92,7 @@ class GuestFlowTest extends TestCase
             'status' => Order::STATUS_READY_FOR_PICKUP,
         ]);
 
-        $this->get('/track/' . $order->recovery_token)
+        $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->where('order.fulfillment_type', 'delivery_dombi')
@@ -104,7 +104,7 @@ class GuestFlowTest extends TestCase
         $customer = Customer::create(['name' => 'Test', 'phone' => '6281234567890123']);
         $user = User::create([
             'name' => 'Test',
-            'email' => 'test-' . uniqid() . '@test.com',
+            'email' => 'test-'.uniqid().'@test.com',
             'password' => bcrypt('password'),
             'role' => 'customer',
             'is_active' => true,
@@ -113,7 +113,7 @@ class GuestFlowTest extends TestCase
 
         // Guest cancel
         $guestOrder = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
-        $this->post('/track/' . $guestOrder->recovery_token . '/cancel', [
+        $this->post('/track/'.$guestOrder->recovery_token.'/cancel', [
             'reason' => 'Salah Pesan',
             'last4_hp' => '6789',
         ])->assertJson(['success' => true]);
@@ -124,7 +124,7 @@ class GuestFlowTest extends TestCase
             'customer_id' => $customer->id,
         ]);
         $this->actingAs($user)
-            ->post('/customer/orders/' . $customerOrder->id . '/cancel', [
+            ->post('/customer/orders/'.$customerOrder->id.'/cancel', [
                 'reason' => 'Salah Pesan',
             ])
             ->assertRedirect();
@@ -139,7 +139,7 @@ class GuestFlowTest extends TestCase
     private function createOutlet(): Outlet
     {
         return Outlet::create([
-            'name' => 'Test Outlet ' . uniqid(),
+            'name' => 'Test Outlet '.uniqid(),
             'kelurahan' => 'Test',
             'kecamatan' => 'Test',
             'address' => 'Jl. Test',
@@ -152,10 +152,10 @@ class GuestFlowTest extends TestCase
     private function createOrder(array $overrides = []): Order
     {
         $outlet = $this->createOutlet();
-        $customer = Customer::create(['name' => 'Guest', 'phone' => '628123456789' . rand(1000, 9999)]);
+        $customer = Customer::create(['name' => 'Guest', 'phone' => '628123456789'.rand(1000, 9999)]);
         $product = Product::create([
             'name' => 'Test Product',
-            'slug' => 'test-' . uniqid(),
+            'slug' => 'test-'.uniqid(),
             'unit' => 'pcs',
             'price' => 25000,
             'is_active' => true,
@@ -164,7 +164,7 @@ class GuestFlowTest extends TestCase
         $order = Order::create(array_merge([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'TEST-' . strtoupper(uniqid()),
+            'order_code' => 'TEST-'.strtoupper(uniqid()),
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'fulfillment_type' => 'pickup',
             'subtotal' => 50000,

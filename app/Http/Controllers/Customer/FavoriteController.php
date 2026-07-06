@@ -101,5 +101,4 @@ class FavoriteController extends Controller
 
         return response()->json(['variant_ids' => $allVariantIds, 'merged' => true]);
     }
-
 }

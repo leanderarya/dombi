@@ -1,6 +1,7 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useOutletStore } from '@/lib/outlet-store';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState  } from 'react';
+import type {ReactNode} from 'react';
 import { useCustomerLocation } from '@/lib/customer-location';
+import { useOutletStore } from '@/lib/outlet-store';
 
 export type OutletOption = {
     id: number;
@@ -26,9 +27,11 @@ const OutletContext = createContext<OutletContextValue | null>(null);
 
 export function useOutlet(): OutletContextValue {
     const ctx = useContext(OutletContext);
+
     if (!ctx) {
         throw new Error('useOutlet must be used within OutletProvider');
     }
+
     return ctx;
 }
 
@@ -51,9 +54,11 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         setError(null);
 
         const params = new URLSearchParams();
+
         if (location?.latitude !== undefined) {
             params.set('latitude', String(location.latitude));
         }
+
         if (location?.longitude !== undefined) {
             params.set('longitude', String(location.longitude));
         }
@@ -64,7 +69,10 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
             signal: controller.signal,
         })
             .then(async (res) => {
-                if (!res.ok) throw new Error('Failed to load outlets');
+                if (!res.ok) {
+throw new Error('Failed to load outlets');
+}
+
                 return res.json();
             })
             .then((data) => {
@@ -85,12 +93,17 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
 
     // Auto-select logic: localStorage → nearest → null
     const selectedOutlet = useMemo(() => {
-        if (outlets.length === 0) return null;
+        if (outlets.length === 0) {
+return null;
+}
 
         // 1. Try localStorage saved ID
         if (outletId !== null) {
             const saved = outlets.find((o) => o.id === outletId);
-            if (saved) return saved;
+
+            if (saved) {
+return saved;
+}
         }
 
         // 2. Auto-select first (nearest by distance or first alphabetically)

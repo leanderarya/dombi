@@ -2,9 +2,9 @@ import { router, useForm } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import StockLevelBadge from '@/components/ui/stock-level-badge';
 import SectionCard from '@/components/ui/section-card';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
+import StockLevelBadge from '@/components/ui/stock-level-badge';
 
 export default function OwnerRestockCreate({ outlets, selectedOutletId, selectedProductId, returnTo }: any) {
     const backHref = returnTo || '/owner/restocks';

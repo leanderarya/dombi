@@ -3,8 +3,8 @@ import { AlertTriangle, ArrowDownRight, Clock, Store, TrendingUp } from 'lucide-
 import { useState } from 'react';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import Pagination from '@/components/ui/pagination';
 import { buttonVariants } from '@/components/ui/button';
+import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils';
 

@@ -96,5 +96,4 @@ class OutletAssignmentService
 
         return true;
     }
-
 }

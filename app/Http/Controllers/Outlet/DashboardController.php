@@ -8,7 +8,6 @@ use App\Models\ExchangeRequest;
 use App\Models\Order;
 use App\Models\OrderReport;
 use App\Models\OutletInventory;
-use App\Models\OutletPayable;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
 use App\Models\Settlement;

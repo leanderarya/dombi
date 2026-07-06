@@ -15,10 +15,10 @@ class OrderFactory extends Factory
         return [
             'customer_id' => fn () => Customer::create([
                 'name' => fake()->name(),
-                'phone' => '0812' . fake()->unique()->numerify('########'),
+                'phone' => '0812'.fake()->unique()->numerify('########'),
             ])->id,
             'outlet_id' => null,
-            'order_code' => 'ORD-' . strtoupper($this->faker->unique()->bothify('??####')),
+            'order_code' => 'ORD-'.strtoupper($this->faker->unique()->bothify('??####')),
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'fulfillment_type' => Order::FULFILLMENT_PICKUP,
             'subtotal' => 50000,
@@ -26,7 +26,7 @@ class OrderFactory extends Factory
             'payment_fee' => 0,
             'total' => 50000,
             'customer_name' => $this->faker->name(),
-            'customer_phone' => '0812' . $this->faker->numerify('########'),
+            'customer_phone' => '0812'.$this->faker->numerify('########'),
             'customer_address' => $this->faker->address(),
             'payment_status' => 'pending',
             'ordered_at' => now(),

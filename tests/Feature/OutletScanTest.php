@@ -37,7 +37,7 @@ class OutletScanTest extends TestCase
     {
         $user = User::create([
             'name' => 'Customer User',
-            'email' => 'cust-' . uniqid() . '@test.com',
+            'email' => 'cust-'.uniqid().'@test.com',
             'password' => bcrypt('password'),
             'role' => 'customer',
         ]);
@@ -175,7 +175,7 @@ class OutletScanTest extends TestCase
         ]);
 
         $this->actingAs($user)
-            ->get('/outlet/scan/' . strtolower($order->order_code))
+            ->get('/outlet/scan/'.strtolower($order->order_code))
             ->assertOk()
             ->assertJson(['found' => true]);
     }
@@ -245,7 +245,7 @@ class OutletScanTest extends TestCase
     private function createOutlet(): Outlet
     {
         return Outlet::create([
-            'name' => 'Outlet Test ' . uniqid(),
+            'name' => 'Outlet Test '.uniqid(),
             'kelurahan' => 'Test',
             'kecamatan' => 'Test',
             'address' => 'Jl. Test',
@@ -259,7 +259,7 @@ class OutletScanTest extends TestCase
     {
         return User::create([
             'name' => 'Outlet Staff',
-            'email' => 'outlet-' . uniqid() . '@test.com',
+            'email' => 'outlet-'.uniqid().'@test.com',
             'password' => bcrypt('password'),
             'role' => 'outlet',
             'outlet_id' => $outlet->id,
@@ -271,12 +271,12 @@ class OutletScanTest extends TestCase
     {
         $customer = Customer::create([
             'name' => 'Test Customer',
-            'phone' => '6281234567890' . rand(1000, 9999),
+            'phone' => '6281234567890'.rand(1000, 9999),
         ]);
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-scan-' . uniqid(),
+            'slug' => 'susu-kambing-500ml-scan-'.uniqid(),
             'unit' => 'botol',
             'price' => 25000,
             'is_active' => true,
@@ -285,7 +285,7 @@ class OutletScanTest extends TestCase
         $order = Order::create(array_merge([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'DOMBI-SCAN-' . strtoupper(uniqid()),
+            'order_code' => 'DOMBI-SCAN-'.strtoupper(uniqid()),
             'status' => Order::STATUS_READY_FOR_PICKUP,
             'fulfillment_type' => 'pickup',
             'subtotal' => 50000,

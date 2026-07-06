@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
 import { router } from '@inertiajs/react';
-import PhoneInput from '@/components/ui/phone-input';
 import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import PhoneInput from '@/components/ui/phone-input';
 
 interface Props {
     user: { name: string; email: string; avatar?: string };
@@ -18,6 +18,7 @@ export default function VerifyPhone() {
     const submitPhone = useCallback(async () => {
         if (!phone || phone.length < 9) {
             setError('Nomor HP tidak valid');
+
             return;
         }
 
@@ -40,6 +41,7 @@ export default function VerifyPhone() {
 
             if (res.ok && data.verified) {
                 setStep('done');
+
                 if (data.redirect) {
                     setTimeout(() => router.visit(data.redirect), 1500);
                 }
@@ -57,8 +59,10 @@ export default function VerifyPhone() {
         if (step === 'phone') {
             if (!phone || phone.length < 9) {
                 setError('Nomor HP tidak valid');
+
                 return;
             }
+
             setError('');
             setStep('confirm');
         } else if (step === 'confirm') {

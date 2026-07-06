@@ -2,15 +2,18 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
 
 class OrderReport extends Model
 {
     public const TYPE_NOT_RECEIVED = 'not_received';
+
     public const TYPE_WRONG_ITEMS = 'wrong_items';
+
     public const TYPE_DAMAGED = 'damaged';
+
     public const TYPE_OTHER = 'other';
 
     public const TYPES = [
@@ -21,8 +24,11 @@ class OrderReport extends Model
     ];
 
     public const STATUS_PENDING = 'pending';
+
     public const STATUS_INVESTIGATING = 'investigating';
+
     public const STATUS_RESOLVED = 'resolved';
+
     public const STATUS_REJECTED = 'rejected';
 
     public const STATUSES = [

@@ -22,9 +22,9 @@ class OrderController extends Controller
                 $status = $request->string('status', 'needs_action')->toString();
                 $compoundMap = [
                     'needs_action' => ['pending_confirmation', 'ready_for_pickup'],
-                    'active'       => ['confirmed', 'preparing', 'delivering'],
-                    'cancelled'    => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'],
-                    'failed'       => ['failed_delivery'],
+                    'active' => ['confirmed', 'preparing', 'delivering'],
+                    'cancelled' => ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'],
+                    'failed' => ['failed_delivery'],
                 ];
                 if (isset($compoundMap[$status])) {
                     $query->whereIn('status', $compoundMap[$status]);

@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Models\Order;
+use App\Models\OrderReport;
 use App\Services\DokuService;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -31,8 +33,8 @@ class OrderController extends Controller
                 ->whereNotIn('payment_status', ['expired', 'failed'])
                 ->where(function ($q) {
                     $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
-                      ->orWhereNull('confirmation_expires_at')
-                      ->orWhere('confirmation_expires_at', '>', now());
+                        ->orWhereNull('confirmation_expires_at')
+                        ->orWhere('confirmation_expires_at', '>', now());
                 })
                 ->with(['outlet', 'items.variant.family'])
                 ->select(['id', 'order_code', 'status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
@@ -70,11 +72,11 @@ class OrderController extends Controller
         }
 
         $customer = $user->getCustomerOrCreate();
-        $activeReport = \App\Models\OrderReport::where('order_id', $order->id)
+        $activeReport = OrderReport::where('order_id', $order->id)
             ->where('customer_id', $customer->id)
             ->active()
             ->first();
-        $hasRecentReport = \App\Models\OrderReport::where('order_id', $order->id)
+        $hasRecentReport = OrderReport::where('order_id', $order->id)
             ->where('customer_id', $customer->id)
             ->exists();
 
@@ -83,7 +85,7 @@ class OrderController extends Controller
             'cancellationReasons' => OrderStatusService::cancellationReasons(),
             'activeReport' => $activeReport,
             'hasRecentReport' => $hasRecentReport,
-            'canReport' => $order->status === \App\Models\Order::STATUS_COMPLETED
+            'canReport' => $order->status === Order::STATUS_COMPLETED
                 && (! $order->completed_at || $order->completed_at->gt(now()->subDays(7)))
                 && ! $hasRecentReport,
         ]);
@@ -210,6 +212,7 @@ class OrderController extends Controller
             }
 
             $paymentUrl = $doku->createPayment($order);
+
             return redirect()->away($paymentUrl);
         } catch (\Exception $e) {
             Log::error('Failed to create DOKU payment', [
@@ -225,7 +228,7 @@ class OrderController extends Controller
      * Payment status polling endpoint.
      * Returns current payment status and DOKU order ID.
      */
-    public function paymentStatus(Order $order): \Illuminate\Http\JsonResponse
+    public function paymentStatus(Order $order): JsonResponse
     {
         // Ownership check — same as pay()
         $user = auth()->user();

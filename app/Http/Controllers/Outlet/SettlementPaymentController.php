@@ -67,7 +67,7 @@ class SettlementPaymentController extends Controller
 
         // Guard: amount must not exceed total outstanding
         if ((float) $validated['amount'] > $totalOutstanding) {
-            return back()->with('error', "Jumlah pembayaran (Rp " . number_format($validated['amount'], 0, ',', '.') . ") melebihi total tagihan (Rp " . number_format($totalOutstanding, 0, ',', '.') . ").");
+            return back()->with('error', 'Jumlah pembayaran (Rp '.number_format($validated['amount'], 0, ',', '.').') melebihi total tagihan (Rp '.number_format($totalOutstanding, 0, ',', '.').').');
         }
 
         $proofPath = null;

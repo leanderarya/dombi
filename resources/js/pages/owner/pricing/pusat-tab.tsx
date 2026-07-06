@@ -79,9 +79,13 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
             <div>
                 <Toolbar
                     search={search}
-                    onSearchChange={(v) => { setSearch(v); setPage(1); }}
+                    onSearchChange={(v) => {
+ setSearch(v); setPage(1); 
+}}
                     marginFilter={marginFilter}
-                    onMarginFilterChange={(v) => { setMarginFilter(v); setPage(1); }}
+                    onMarginFilterChange={(v) => {
+ setMarginFilter(v); setPage(1); 
+}}
                 />
 
                 <SortBar sortKey={sortKey} sortDir={sortDir} toggleSort={toggleSort} />
@@ -102,7 +106,9 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => { setSelectedVariant(v); setModalOpen(true); }}
+                                    onClick={() => {
+ setSelectedVariant(v); setModalOpen(true); 
+}}
                                     className="shrink-0 text-primary"
                                 >
                                     Ubah
@@ -147,7 +153,9 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                 <GlobalPriceModal
                     open={modalOpen}
                     variant={selectedVariant}
-                    onClose={() => { setModalOpen(false); setSelectedVariant(null); }}
+                    onClose={() => {
+ setModalOpen(false); setSelectedVariant(null); 
+}}
                 />
             )}
         </div>

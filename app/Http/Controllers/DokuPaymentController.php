@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Services\DokuService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -20,6 +21,7 @@ class DokuPaymentController extends Controller
         // Verify webhook signature
         if (! $doku->verifySignature($payload, $requestId, $rawBody)) {
             Log::warning('DOKU webhook: invalid signature', ['request_id' => $requestId]);
+
             return response()->json(['message' => 'Invalid signature'], 401);
         }
 
@@ -27,6 +29,7 @@ class DokuPaymentController extends Controller
         $idempotencyKey = 'doku_webhook:'.$requestId;
         if (Cache::has($idempotencyKey)) {
             Log::info('DOKU webhook: duplicate, already processed', ['request_id' => $requestId]);
+
             return response()->json(['message' => 'OK']);
         }
 
@@ -40,13 +43,14 @@ class DokuPaymentController extends Controller
                 'error' => $e->getMessage(),
                 'payload' => $payload,
             ]);
+
             return response()->json(['message' => 'Internal error'], 500);
         }
 
         return response()->json(['message' => 'OK']);
     }
 
-    public function redirect(Request $request): \Illuminate\Http\RedirectResponse
+    public function redirect(Request $request): RedirectResponse
     {
         $invoiceNumber = $request->query('invoice_number') ?? $request->query('order_id');
         $status = $request->query('status');

@@ -113,7 +113,7 @@ class TrackController extends Controller
                 'cancellation_reason' => $order->cancellation_reason,
                 'cancellation_note' => $order->cancellation_note,
             ],
-            'cancellationReasons' => \App\Services\OrderStatusService::cancellationReasons(),
+            'cancellationReasons' => OrderStatusService::cancellationReasons(),
             'notifications' => $notifications,
             'found' => true,
             'canCancel' => auth()->check() && $order->customer && $order->customer->user_id === auth()->id(),

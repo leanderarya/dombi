@@ -38,7 +38,7 @@ return new class extends Migration
             Schema::table('settlements', function (Blueprint $table): void {
                 $table->dropUnique(['outlet_id', 'period_date']);
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Constraint may already be dropped
         }
 

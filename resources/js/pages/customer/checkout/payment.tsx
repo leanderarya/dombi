@@ -65,6 +65,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     : 'Terjadi kesalahan. Silakan coba lagi.';
                 setSubmitError(typeof errorMsg === 'string' ? errorMsg : 'Terjadi kesalahan. Silakan coba lagi.');
                 setProcessing(false);
+
                 return;
             }
 

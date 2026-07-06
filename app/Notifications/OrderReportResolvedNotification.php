@@ -26,7 +26,7 @@ class OrderReportResolvedNotification extends Notification implements ShouldQueu
 
         return [
             'type' => 'order_report_resolved',
-            'title' => 'Laporan Pesanan ' . ucfirst($statusText),
+            'title' => 'Laporan Pesanan '.ucfirst($statusText),
             'message' => "Laporan Anda untuk pesanan {$this->report->order->order_code} {$statusText}.",
             'order_id' => $this->report->order_id,
             'report_id' => $this->report->id,

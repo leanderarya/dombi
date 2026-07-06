@@ -14,6 +14,7 @@ use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Models\StockDistribution;
 use App\Models\User;
+use App\Notifications\NewOrderNotification;
 
 class NotificationService
 {
@@ -139,7 +140,7 @@ class NotificationService
             );
 
             // Send web push notification
-            $outletUser->notify(new \App\Notifications\NewOrderNotification($order));
+            $outletUser->notify(new NewOrderNotification($order));
         }
     }
 

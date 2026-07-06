@@ -4,6 +4,7 @@ use App\Http\Middleware\AllowCustomerOrRecoveredGuest;
 use App\Http\Middleware\AllowGuestOrCustomer;
 use App\Http\Middleware\CustomerInertiaRoot;
 use App\Http\Middleware\DevOnly;
+use App\Http\Middleware\EnforceSessionPolicy;
 use App\Http\Middleware\EnsurePasswordIsChanged;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\InternalInertiaRoot;
@@ -11,7 +12,6 @@ use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -38,7 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'customer.or.recovered' => AllowCustomerOrRecoveredGuest::class,
             'role' => RoleMiddleware::class,
             'password.changed' => EnsurePasswordIsChanged::class,
-            'enforce.session' => \App\Http\Middleware\EnforceSessionPolicy::class,
+            'enforce.session' => EnforceSessionPolicy::class,
             'dev' => DevOnly::class,
         ]);
     })

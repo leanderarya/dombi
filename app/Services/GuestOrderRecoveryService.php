@@ -40,8 +40,8 @@ class GuestOrderRecoveryService
             ->whereNotIn('payment_status', ['expired', 'failed'])
             ->where(function ($q) {
                 $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
-                  ->orWhereNull('confirmation_expires_at')
-                  ->orWhere('confirmation_expires_at', '>', now());
+                    ->orWhereNull('confirmation_expires_at')
+                    ->orWhere('confirmation_expires_at', '>', now());
             })
             ->with(['outlet:id,name', 'items.variant.family'])
             ->latest()

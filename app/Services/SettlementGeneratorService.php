@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\OfflineSale;
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\OutletPayable;
 use App\Models\Settlement;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -30,7 +31,7 @@ class SettlementGeneratorService
         $orders = Order::where('outlet_id', $outlet->id)
             ->where('status', 'completed')
             ->whereRaw('COALESCE(completed_at, created_at) >= ?', [$weekStart])
-            ->whereRaw('COALESCE(completed_at, created_at) <= ?', [$weekEnd . ' 23:59:59'])
+            ->whereRaw('COALESCE(completed_at, created_at) <= ?', [$weekEnd.' 23:59:59'])
             ->get();
 
         // Get all offline sales for this outlet within the same week
@@ -102,7 +103,7 @@ class SettlementGeneratorService
             $orders = Order::where('outlet_id', $outlet->id)
                 ->where('status', 'completed')
                 ->whereRaw('COALESCE(completed_at, created_at) >= ?', [$from->toDateString()])
-                ->whereRaw('COALESCE(completed_at, created_at) <= ?', [$to->toDateString() . ' 23:59:59'])
+                ->whereRaw('COALESCE(completed_at, created_at) <= ?', [$to->toDateString().' 23:59:59'])
                 ->get();
 
             $orderWeeks = $orders
@@ -149,9 +150,9 @@ class SettlementGeneratorService
         $weekStart = Carbon::parse($date)->startOfWeek(Carbon::MONDAY)->toDateString();
         $weekEnd = Carbon::parse($date)->endOfWeek(Carbon::SUNDAY)->toDateString();
 
-        $adjustmentTotal = (float) \App\Models\OutletPayable::where('outlet_id', $outlet->id)
+        $adjustmentTotal = (float) OutletPayable::where('outlet_id', $outlet->id)
             ->where('type', 'adjustment')
-            ->whereBetween('created_at', [$weekStart, $weekEnd . ' 23:59:59'])
+            ->whereBetween('created_at', [$weekStart, $weekEnd.' 23:59:59'])
             ->sum('amount');
 
         $settlement = Settlement::where('outlet_id', $outlet->id)

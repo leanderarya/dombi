@@ -13,8 +13,8 @@ import FilterChips from '@/components/ui/filter-chips';
 import { Skeleton } from '@/components/ui/skeleton';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
-import { useCart } from '@/lib/use-cart';
 import { sizeToMl } from '@/lib/size';
+import { useCart } from '@/lib/use-cart';
 import FavoritesProvider from '@/providers/favorites-provider';
 
 interface Variant {
@@ -79,10 +79,12 @@ function ProductsInner() {
     // Fetch products when selected outlet changes
     const fetchProducts = useCallback((outletId: number | null) => {
         const cacheKey = outletId ?? 0;
+
         if (cacheRef.current.has(cacheKey)) {
             setFamilies(cacheRef.current.get(cacheKey)!);
             setProductsError(null);
             setProductsLoading(false);
+
             return;
         }
 
@@ -93,6 +95,7 @@ function ProductsInner() {
         setProductsLoading(true);
 
         const params = new URLSearchParams();
+
         if (outletId) {
             params.set('outlet_id', String(outletId));
         }
@@ -103,7 +106,10 @@ function ProductsInner() {
             signal: controller.signal,
         })
             .then(async (res) => {
-                if (!res.ok) throw new Error('Failed to load products');
+                if (!res.ok) {
+throw new Error('Failed to load products');
+}
+
                 return res.json();
             })
             .then((data) => {
@@ -218,12 +224,17 @@ function ProductsInner() {
     };
 
     const setSectionRef = (id: number, el: HTMLDivElement | null) => {
-        if (el) sectionRefs.current.set(id, el);
+        if (el) {
+sectionRefs.current.set(id, el);
+}
     };
 
     // IntersectionObserver for slide-in
     useEffect(() => {
-        if (loading) return;
+        if (loading) {
+return;
+}
+
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
@@ -236,6 +247,7 @@ function ProductsInner() {
             { root: scrollRef.current, threshold: 0.1 }
         );
         sectionRefs.current.forEach((el) => observer.observe(el));
+
         return () => observer.disconnect();
     }, [loading, familySections]);
 

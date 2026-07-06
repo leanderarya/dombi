@@ -23,13 +23,13 @@ class NewOrderNotification extends Notification
 
     public function toWebPush(object $notifiable, mixed $notification): WebPushMessage
     {
-        return (new WebPushMessage())
+        return (new WebPushMessage)
             ->title('Pesanan Baru')
             ->body("Pesanan {$this->order->order_code} dari {$this->order->customer_name}")
             ->icon('/icons/icon-192.png')
-            ->action('/outlet/orders/' . $this->order->id, 'Lihat Pesanan')
+            ->action('/outlet/orders/'.$this->order->id, 'Lihat Pesanan')
             ->options([
-                'tag' => 'new-order-' . $this->order->id,
+                'tag' => 'new-order-'.$this->order->id,
                 'renotify' => true,
                 'vibrate' => [200, 100, 200],
             ]);

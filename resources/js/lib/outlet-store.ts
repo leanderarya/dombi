@@ -18,6 +18,7 @@ class OutletStore {
 
     subscribe(listener: Listener): () => void {
         this.listeners.add(listener);
+
         return () => this.listeners.delete(listener);
     }
 
@@ -54,8 +55,10 @@ class OutletStore {
     private load(): void {
         try {
             const stored = localStorage.getItem(STORAGE_KEY);
+
             if (stored) {
                 const parsed = JSON.parse(stored);
+
                 if (typeof parsed === 'number') {
                     this.outletId = parsed;
                 }

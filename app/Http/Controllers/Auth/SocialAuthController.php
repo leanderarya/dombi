@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\Notification;
+use App\Models\OrderReport;
 use App\Models\User;
 use App\Services\GuestOrderMerger;
 use Illuminate\Http\JsonResponse;
@@ -187,8 +189,8 @@ class SocialAuthController extends Controller
                     $guestCustomer->addresses()->update(['customer_id' => $registeredCustomer->id]);
                     $guestCustomer->recipients()->update(['customer_id' => $registeredCustomer->id]);
                     $guestCustomer->favorites()->update(['customer_id' => $registeredCustomer->id]);
-                    \App\Models\Notification::where('customer_id', $guestCustomer->id)->update(['customer_id' => $registeredCustomer->id]);
-                    \App\Models\OrderReport::where('customer_id', $guestCustomer->id)->update(['customer_id' => $registeredCustomer->id]);
+                    Notification::where('customer_id', $guestCustomer->id)->update(['customer_id' => $registeredCustomer->id]);
+                    OrderReport::where('customer_id', $guestCustomer->id)->update(['customer_id' => $registeredCustomer->id]);
                     $guestCustomer->delete();
                 } else {
                     $guestCustomer->linkToUser($user);

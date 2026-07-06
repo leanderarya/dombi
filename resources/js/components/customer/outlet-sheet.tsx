@@ -1,7 +1,8 @@
 import { Check, MapPin } from 'lucide-react';
 import Dialog from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useOutlet, type OutletOption } from '@/contexts/outlet-context';
+import { useOutlet  } from '@/contexts/outlet-context';
+import type {OutletOption} from '@/contexts/outlet-context';
 
 interface Props {
     open: boolean;

@@ -1,10 +1,10 @@
 import { router } from '@inertiajs/react';
 import { MapPin } from 'lucide-react';
 import { useState } from 'react';
-import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
-import OrderStatusBadge from '@/components/ui/order-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
+import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
+import OrderStatusBadge from '@/components/ui/order-status-badge';
 import { formatDate } from '@/lib/format';
 
 export default function OwnerDeliveryShow({ delivery }: any) {

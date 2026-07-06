@@ -1,6 +1,6 @@
 import { Link, router, useForm } from '@inertiajs/react';
-import DistributionStatusBadge from '@/components/ui/distribution-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import DistributionStatusBadge from '@/components/ui/distribution-status-badge';
 import RestockStatusBadge from '@/components/ui/restock-status-badge';
 import StockLevelBadge from '@/components/ui/stock-level-badge';
 import { formatDate } from '@/lib/format';

@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -299,7 +300,7 @@ class FinanceSettlementController extends Controller
         $payment = DB::transaction(function () use ($validated, $outlet, $request, $proofPath) {
             $payment = SettlementPayment::create([
                 'outlet_id' => $outlet->id,
-                'reference_number' => $validated['reference_number'] ?? 'PAY-'.strtoupper(\Illuminate\Support\Str::random(8)),
+                'reference_number' => $validated['reference_number'] ?? 'PAY-'.strtoupper(Str::random(8)),
                 'payment_date' => now()->toDateString(),
                 'amount' => $validated['amount'],
                 'payment_method' => $validated['payment_method'],

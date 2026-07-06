@@ -5,8 +5,6 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Date;
-use Carbon\Carbon;
 use Tests\TestCase;
 
 class SessionPolicyTest extends TestCase
@@ -180,7 +178,7 @@ class SessionPolicyTest extends TestCase
         if ($role === 'customer') {
             Customer::forceCreate([
                 'name' => $user->name,
-                'phone' => '628123456' . rand(10000, 99999),
+                'phone' => '628123456'.rand(10000, 99999),
                 'email' => $user->email,
                 'user_id' => $user->id,
                 'is_registered' => true,

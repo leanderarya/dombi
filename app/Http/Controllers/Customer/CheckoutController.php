@@ -5,10 +5,12 @@ namespace App\Http\Controllers\Customer;
 use App\Exceptions\DokuPaymentException;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\DeliveryPricingService;
+use App\Services\DokuService;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
 use App\Services\RecommendOutletService;
@@ -16,10 +18,11 @@ use App\Support\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -415,7 +418,7 @@ class CheckoutController extends Controller
         $cachedOrderId = Cache::get($idempotencyKey);
 
         if ($cachedOrderId) {
-            $order = \App\Models\Order::find($cachedOrderId);
+            $order = Order::find($cachedOrderId);
             if ($order) {
                 return redirect()->route('customer.orders.confirmation', [
                     'order' => $order->id,
@@ -455,7 +458,7 @@ class CheckoutController extends Controller
 
             // Cache order ID for idempotency (60s TTL)
             Cache::put($idempotencyKey, $order->id, 60);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return back()->withErrors($e->validator->errors())->withInput();
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.'])->withInput();
@@ -471,7 +474,7 @@ class CheckoutController extends Controller
         // Create DOKU payment immediately — customer pays before outlet confirms.
         // If outlet rejects after payment, refund handled via DOKU.
         try {
-            $paymentUrl = app(\App\Services\DokuService::class)->createPayment($order);
+            $paymentUrl = app(DokuService::class)->createPayment($order);
 
             // Inertia/XHR requests can't follow cross-origin redirects (CORS).
             // Return JSON and let the frontend do a full-page navigation.
@@ -480,7 +483,7 @@ class CheckoutController extends Controller
             }
 
             return redirect()->away($paymentUrl);
-        } catch (\App\Exceptions\DokuPaymentException $e) {
+        } catch (DokuPaymentException $e) {
             Log::error('Failed to create DOKU payment', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
@@ -573,7 +576,7 @@ class CheckoutController extends Controller
      * Load cart variants with eager-loaded family. Cached per request to avoid
      * re-querying the same variants across checkout steps.
      */
-    private function loadCartVariants(array $variantIds): \Illuminate\Support\Collection
+    private function loadCartVariants(array $variantIds): Collection
     {
         static $cache = [];
 

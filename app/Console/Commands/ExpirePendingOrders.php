@@ -22,10 +22,10 @@ class ExpirePendingOrders extends Command
                 // Timed out: outlet didn't confirm within 15 minutes
                 $query->where(function ($q) {
                     $q->whereNotNull('confirmation_expires_at')
-                      ->where('confirmation_expires_at', '<', now());
+                        ->where('confirmation_expires_at', '<', now());
                 })
                 // Zombie: payment already failed/expired but order still pending
-                ->orWhereIn('payment_status', ['failed', 'expired']);
+                    ->orWhereIn('payment_status', ['failed', 'expired']);
             })
             ->chunkById(50, function ($orders) use ($orderStatusService, &$expiredCount): void {
                 foreach ($orders as $order) {

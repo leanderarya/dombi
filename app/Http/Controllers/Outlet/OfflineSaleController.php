@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use App\Models\Settlement;
 use App\Models\StockMovement;
 use App\Services\SettlementGeneratorService;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +42,7 @@ class OfflineSaleController extends Controller
             ->get()
             ->map(fn ($inv) => [
                 'id' => $inv->variant->id,
-                'name' => $inv->variant->family->name . ' - ' . $inv->variant->name,
+                'name' => $inv->variant->family->name.' - '.$inv->variant->name,
                 'center_price' => (float) $inv->variant->center_price,
                 'stock' => $inv->current_stock,
             ]);
@@ -71,7 +72,7 @@ class OfflineSaleController extends Controller
             ->where('product_variant_id', $variant->id)
             ->first();
 
-        if (!$inventory || $inventory->current_stock < $validated['quantity']) {
+        if (! $inventory || $inventory->current_stock < $validated['quantity']) {
             $available = $inventory?->current_stock ?? 0;
             throw ValidationException::withMessages([
                 'quantity' => "Stok tidak mencukupi. Tersedia: {$available}",
@@ -111,7 +112,7 @@ class OfflineSaleController extends Controller
                 'amount' => $totalAmount,
                 'center_share' => $totalAmount,
                 'outlet_margin' => 0,
-                'due_date' => now()->endOfWeek(\Carbon\Carbon::SUNDAY)->addDays(7)->toDateString(),
+                'due_date' => now()->endOfWeek(Carbon::SUNDAY)->addDays(7)->toDateString(),
                 'paid_amount' => 0,
                 'remaining_amount' => $totalAmount,
                 'notes' => "Penjualan offline: {$validated['quantity']}x {$variant->name}",

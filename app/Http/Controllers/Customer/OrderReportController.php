@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderReport;
+use App\Models\User;
 use App\Notifications\NewOrderReportNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -63,14 +64,14 @@ class OrderReportController extends Controller
         });
 
         // Notify owner
-        $owner = \App\Models\User::where('role', 'owner')->first();
+        $owner = User::where('role', 'owner')->first();
         if ($owner) {
             $owner->notify(new NewOrderReportNotification($report));
         }
 
         // Notify outlet
         if ($order->outlet_id) {
-            $outletUsers = \App\Models\User::where('role', 'outlet')
+            $outletUsers = User::where('role', 'outlet')
                 ->where('outlet_id', $order->outlet_id)
                 ->get();
 

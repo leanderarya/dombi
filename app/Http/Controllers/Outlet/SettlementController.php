@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentAccount;
 use App\Models\Settlement;
@@ -43,7 +44,7 @@ class SettlementController extends Controller
 
         // Margin: sum outlet_margin_snapshot * quantity from completed orders in the period
         $orderIds = $settlements->flatMap(function ($s) use ($outlet) {
-            return \App\Models\Order::where('outlet_id', $outlet->id)
+            return Order::where('outlet_id', $outlet->id)
                 ->where('status', 'completed')
                 ->whereDate('completed_at', '>=', $s->period_start->toDateString())
                 ->whereDate('completed_at', '<=', $s->period_end->toDateString())

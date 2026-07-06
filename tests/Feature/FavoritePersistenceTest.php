@@ -203,12 +203,12 @@ class FavoritePersistenceTest extends TestCase
     {
         $user = User::forceCreate([
             'name' => 'Google User',
-            'email' => 'google-' . uniqid() . '@test.com',
+            'email' => 'google-'.uniqid().'@test.com',
             'password' => bcrypt(Str::random(64)),
             'role' => 'customer',
             'is_active' => true,
             'provider' => 'google',
-            'provider_id' => 'google-' . uniqid(),
+            'provider_id' => 'google-'.uniqid(),
         ]);
 
         // No Customer before
@@ -230,7 +230,7 @@ class FavoritePersistenceTest extends TestCase
     {
         $user = User::forceCreate([
             'name' => 'Idempotent User',
-            'email' => 'idem-' . uniqid() . '@test.com',
+            'email' => 'idem-'.uniqid().'@test.com',
             'password' => bcrypt(Str::random(64)),
             'role' => 'customer',
             'is_active' => true,
@@ -248,7 +248,7 @@ class FavoritePersistenceTest extends TestCase
         // User has no Customer yet (simulates pre-fix state)
         $user = User::forceCreate([
             'name' => 'New Customer',
-            'email' => 'newcust-' . uniqid() . '@test.com',
+            'email' => 'newcust-'.uniqid().'@test.com',
             'password' => bcrypt('password'),
             'role' => 'customer',
             'is_active' => true,
@@ -368,7 +368,7 @@ class FavoritePersistenceTest extends TestCase
     {
         $user = User::forceCreate([
             'name' => 'Test User',
-            'email' => 'test-' . uniqid() . '@test.com',
+            'email' => 'test-'.uniqid().'@test.com',
             'password' => bcrypt('password'),
             'role' => 'customer',
             'is_active' => true,
@@ -376,7 +376,7 @@ class FavoritePersistenceTest extends TestCase
 
         $customer = Customer::forceCreate([
             'name' => $user->name,
-            'phone' => '628123456' . rand(10000, 99999),
+            'phone' => '628123456'.rand(10000, 99999),
             'email' => $user->email,
             'user_id' => $user->id,
             'is_registered' => true,
@@ -388,13 +388,13 @@ class FavoritePersistenceTest extends TestCase
     private function createVariant(): ProductVariant
     {
         $family = ProductFamily::create([
-            'name' => 'Family ' . uniqid(),
+            'name' => 'Family '.uniqid(),
             'is_active' => true,
         ]);
 
         $product = Product::create([
-            'name' => 'Test Product ' . uniqid(),
-            'slug' => 'test-' . uniqid(),
+            'name' => 'Test Product '.uniqid(),
+            'slug' => 'test-'.uniqid(),
             'unit' => 'pcs',
             'price' => 25000,
             'is_active' => true,
@@ -403,7 +403,7 @@ class FavoritePersistenceTest extends TestCase
         return ProductVariant::create([
             'product_family_id' => $family->id,
             'product_id' => $product->id,
-            'name' => 'Variant ' . uniqid(),
+            'name' => 'Variant '.uniqid(),
             'selling_price' => 25000,
             'center_price' => 20000,
             'is_active' => true,

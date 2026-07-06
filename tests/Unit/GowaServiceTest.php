@@ -12,7 +12,7 @@ class GowaServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(['status' => 'sent'], 200)]);
 
-        $service = new GowaService();
+        $service = new GowaService;
         $result = $service->sendText('6281234567890', 'Test message');
 
         $this->assertTrue($result);
@@ -22,7 +22,7 @@ class GowaServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(['error' => 'forbidden'], 403)]);
 
-        $service = new GowaService();
+        $service = new GowaService;
         $result = $service->sendText('6281234567890', 'Test message');
 
         $this->assertFalse($result);
@@ -34,7 +34,7 @@ class GowaServiceTest extends TestCase
             throw new \Exception('Connection refused');
         }]);
 
-        $service = new GowaService();
+        $service = new GowaService;
         $result = $service->sendText('6281234567890', 'Test message');
 
         $this->assertFalse($result);
@@ -44,7 +44,7 @@ class GowaServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(['registered' => true], 200)]);
 
-        $service = new GowaService();
+        $service = new GowaService;
         $result = $service->isRegistered('6281234567890');
 
         $this->assertTrue($result);
@@ -54,7 +54,7 @@ class GowaServiceTest extends TestCase
     {
         Http::fake(['*' => Http::response(['error' => 'not found'], 404)]);
 
-        $service = new GowaService();
+        $service = new GowaService;
         $result = $service->isRegistered('6281234567890');
 
         $this->assertFalse($result);

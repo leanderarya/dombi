@@ -16,6 +16,7 @@ class GuestOrderMergerTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
     private Customer $registeredCustomer;
 
     protected function setUp(): void

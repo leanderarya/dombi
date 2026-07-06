@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Log;
 class DokuService
 {
     private string $baseUrl;
+
     private string $clientId;
+
     private string $secretKey;
 
     public function __construct()
@@ -120,12 +122,14 @@ class DokuService
 
         if (! $invoiceNumber) {
             Log::warning('DOKU webhook: missing invoice_number');
+
             return;
         }
 
         $transaction = PaymentTransaction::where('doku_order_id', $invoiceNumber)->first();
         if (! $transaction) {
             Log::warning('DOKU webhook: transaction not found', ['invoice_number' => $invoiceNumber]);
+
             return;
         }
 
@@ -139,6 +143,7 @@ class DokuService
             Log::info('DOKU webhook: order already in terminal state, skipping', [
                 'order_id' => $order->id,
             ]);
+
             return;
         }
 
@@ -180,11 +185,11 @@ class DokuService
         $digest = base64_encode(hash('sha256', $rawBody, true));
 
         // DOKU signature uses actual newline characters (\n in double quotes)
-        $assembled = "Client-Id:".$this->clientId."\n"
-            ."Request-Id:".$requestId."\n"
-            ."Request-Timestamp:".$timestamp."\n"
-            ."Request-Target:".$requestTarget."\n"
-            ."Digest:".$digest;
+        $assembled = 'Client-Id:'.$this->clientId."\n"
+            .'Request-Id:'.$requestId."\n"
+            .'Request-Timestamp:'.$timestamp."\n"
+            .'Request-Target:'.$requestTarget."\n"
+            .'Digest:'.$digest;
 
         $expected = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
         $provided = $payload['signature'] ?? '';
@@ -225,6 +230,7 @@ class DokuService
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
@@ -346,11 +352,11 @@ class DokuService
         $digest = base64_encode(hash('sha256', $body, true));
 
         // DOKU signature uses actual newline characters (\n in double quotes)
-        $assembled = "Client-Id:".$this->clientId."\n"
-            ."Request-Id:".$requestId."\n"
-            ."Request-Timestamp:".$timestamp."\n"
-            ."Request-Target:".$endpoint."\n"
-            ."Digest:".$digest;
+        $assembled = 'Client-Id:'.$this->clientId."\n"
+            .'Request-Id:'.$requestId."\n"
+            .'Request-Timestamp:'.$timestamp."\n"
+            .'Request-Target:'.$endpoint."\n"
+            .'Digest:'.$digest;
 
         $signature = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
 

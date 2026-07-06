@@ -15,7 +15,9 @@ class CourierDeliveryTest extends TestCase
     use RefreshDatabase;
 
     private User $courier;
+
     private Delivery $delivery;
+
     private Order $order;
 
     protected function setUp(): void

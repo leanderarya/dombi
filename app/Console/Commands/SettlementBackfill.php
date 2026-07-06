@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Services\SettlementGeneratorService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class SettlementBackfill extends Command
@@ -46,7 +47,7 @@ class SettlementBackfill extends Command
             if (! $completedAt) {
                 continue;
             }
-            $weekStart = $completedAt->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->toDateString();
+            $weekStart = $completedAt->copy()->startOfWeek(Carbon::MONDAY)->toDateString();
             $key = $order->outlet_id.'_'.$weekStart;
 
             if (! isset($periods[$key])) {
@@ -71,12 +72,14 @@ class SettlementBackfill extends Command
 
             if ($existing) {
                 $skipped++;
+
                 continue;
             }
 
             $outlet = Outlet::find($period['outlet_id']);
             if (! $outlet) {
                 $this->warn("Outlet #{$period['outlet_id']} not found, skipping.");
+
                 continue;
             }
 

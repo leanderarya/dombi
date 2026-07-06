@@ -1,10 +1,10 @@
 import { Store, MapPin } from 'lucide-react';
 import { useState } from 'react';
+import LocationSheet from '@/components/customer/location-sheet';
+import OutletSheet from '@/components/customer/outlet-sheet';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutlet } from '@/contexts/outlet-context';
 import { useCustomerLocation } from '@/lib/customer-location';
-import OutletSheet from '@/components/customer/outlet-sheet';
-import LocationSheet from '@/components/customer/location-sheet';
 
 export default function StoreLocationCard() {
     const { selectedOutlet, outlets, loading, error, retry } = useOutlet();
