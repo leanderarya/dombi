@@ -263,8 +263,12 @@ export default function ActiveOrderCard({ order }: Props) {
     return (
         <>
         <OrderCardShell orderId={order.id} recoveryToken={order.recovery_token} status={order.status} clickable={false}>
-            {/* Header: Order code + Status badge + Date */}
-            <div>
+            {/* Header: Logo + Order code + Status badge + Date */}
+            <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-light">
+                    <span className="text-sm font-bold text-primary">D</span>
+                </div>
+                <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                     <span className="text-sm font-bold text-text truncate">{order.order_code}</span>
                     <span className={`shrink-0 ${displayStatus.className}`}>{displayStatus.label}</span>
@@ -290,7 +294,8 @@ export default function ActiveOrderCard({ order }: Props) {
                         Selesaikan pembayaran untuk melanjutkan
                     </div>
                 )}
-            </div>
+                </div> {/* close flex-1 */}
+            </div> {/* close flex items-start */}
 
             {/* Product — image + name (matches history card) */}
             {firstItem && (
