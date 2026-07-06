@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
-use App\Models\PaymentTransaction;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\Product;
@@ -20,7 +19,7 @@ class PaymentScenarioTest extends TestCase
 
     public function test_map_status_success(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $this->assertEquals('paid', $doku->mapStatus('SUCCESS'));
         $this->assertEquals('paid', $doku->mapStatus('success'));
         $this->assertEquals('paid', $doku->mapStatus('Success'));
@@ -28,7 +27,7 @@ class PaymentScenarioTest extends TestCase
 
     public function test_map_status_pending(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $this->assertEquals('pending', $doku->mapStatus('PENDING'));
         $this->assertEquals('pending', $doku->mapStatus('pending'));
         $this->assertEquals('pending', $doku->mapStatus(null));
@@ -36,42 +35,42 @@ class PaymentScenarioTest extends TestCase
 
     public function test_map_status_failed(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $this->assertEquals('failed', $doku->mapStatus('FAILED'));
         $this->assertEquals('failed', $doku->mapStatus('failed'));
     }
 
     public function test_map_status_rejected(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $this->assertEquals('failed', $doku->mapStatus('REJECTED'));
         $this->assertEquals('failed', $doku->mapStatus('rejected'));
     }
 
     public function test_map_status_denied(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $this->assertEquals('failed', $doku->mapStatus('DENIED'));
         $this->assertEquals('failed', $doku->mapStatus('denied'));
     }
 
     public function test_map_status_cancelled(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $this->assertEquals('failed', $doku->mapStatus('CANCELLED'));
         $this->assertEquals('failed', $doku->mapStatus('cancelled'));
     }
 
     public function test_map_status_expired(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $this->assertEquals('expired', $doku->mapStatus('EXPIRED'));
         $this->assertEquals('expired', $doku->mapStatus('expired'));
     }
 
     public function test_map_status_unknown_defaults_to_pending(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $this->assertEquals('pending', $doku->mapStatus('UNKNOWN_STATUS'));
         $this->assertEquals('pending', $doku->mapStatus(''));
     }
@@ -99,7 +98,7 @@ class PaymentScenarioTest extends TestCase
         // mapStatus maps it to 'failed'
         // syncStatusFromDoku should expire the order
 
-        $doku = new DokuService();
+        $doku = new DokuService;
         $status = $doku->mapStatus('REJECTED');
 
         $this->assertEquals('failed', $status);
@@ -123,7 +122,7 @@ class PaymentScenarioTest extends TestCase
             'payment_status' => 'pending',
         ]);
 
-        $doku = new DokuService();
+        $doku = new DokuService;
         $status = $doku->mapStatus('SUCCESS');
 
         $this->assertEquals('paid', $status);
@@ -133,7 +132,7 @@ class PaymentScenarioTest extends TestCase
 
     public function test_payment_cancelled_maps_to_failed(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $status = $doku->mapStatus('CANCELLED');
 
         $this->assertEquals('failed', $status);
@@ -143,7 +142,7 @@ class PaymentScenarioTest extends TestCase
 
     public function test_payment_expired_maps_to_expired(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         $status = $doku->mapStatus('EXPIRED');
 
         $this->assertEquals('expired', $status);
@@ -349,42 +348,42 @@ class PaymentScenarioTest extends TestCase
      */
     public function test_doku_card_scenario_3ds_success(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         // 3DS Success returns 'SUCCESS' status
         $this->assertEquals('paid', $doku->mapStatus('SUCCESS'));
     }
 
     public function test_doku_card_scenario_3ds_rejected_by_doku(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         // 3DS Rejected by DOKU returns 'REJECTED' status
         $this->assertEquals('failed', $doku->mapStatus('REJECTED'));
     }
 
     public function test_doku_card_scenario_3ds_rejected_by_bank(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         // 3DS Rejected by Bank returns 'DENIED' status
         $this->assertEquals('failed', $doku->mapStatus('DENIED'));
     }
 
     public function test_doku_card_scenario_non_3ds_success(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         // Non 3DS Success returns 'SUCCESS' status
         $this->assertEquals('paid', $doku->mapStatus('SUCCESS'));
     }
 
     public function test_doku_card_scenario_non_3ds_rejected_by_doku(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         // Non 3DS Rejected by DOKU returns 'REJECTED' status
         $this->assertEquals('failed', $doku->mapStatus('REJECTED'));
     }
 
     public function test_doku_card_scenario_non_3ds_rejected_by_bank(): void
     {
-        $doku = new DokuService();
+        $doku = new DokuService;
         // Non 3DS Rejected by Bank returns 'DENIED' status
         $this->assertEquals('failed', $doku->mapStatus('DENIED'));
     }

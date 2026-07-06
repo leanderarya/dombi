@@ -1,4 +1,5 @@
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { QrCode } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PropsWithChildren } from 'react';
@@ -58,6 +59,15 @@ export default function OutletLayout({ children, title, subtitle, backHref, head
                 outletName={auth?.outlet?.name}
                 userName={auth?.user?.name}
             />
+
+            {/* Quick Scan FAB — always accessible */}
+            <Link
+                href="/outlet/scan"
+                className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0))] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg active:scale-95 transition-transform"
+                aria-label="Scan QR"
+            >
+                <QrCode className="h-6 w-6" />
+            </Link>
         </MobileRoleLayout>
     );
 }

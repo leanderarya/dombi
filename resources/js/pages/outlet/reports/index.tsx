@@ -1,12 +1,22 @@
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { CheckCircle, Download } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
+import { formatCurrency } from '@/lib/format';
+
+interface Preview {
+    total_orders: number;
+    total_revenue: number;
+    total_items: number;
+    date_from: string;
+    date_to: string;
+}
 
 interface Props {
     outlet: { id: number; name: string };
+    preview?: Preview;
 }
 
 const periods = [
@@ -16,10 +26,24 @@ const periods = [
     { key: 'custom', label: 'Pilih Tanggal' },
 ];
 
-export default function OutletReports({ outlet }: Props) {
+export default function OutletReports({ outlet, preview }: Props) {
     const [period, setPeriod] = useState('month');
     const [dateFrom, setDateFrom] = useState(() => new Date().toISOString().split('T')[0]);
     const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0]);
+
+    const handlePeriodChange = (newPeriod: string) => {
+        setPeriod(newPeriod);
+
+        if (newPeriod === 'custom') {
+return;
+}
+
+        router.get('/outlet/reports', { period: newPeriod }, { preserveState: true });
+    };
+
+    const handleCustomApply = () => {
+        router.get('/outlet/reports', { period: 'custom', date_from: dateFrom, date_to: dateTo }, { preserveState: true });
+    };
 
     const buildExportUrl = () => {
         if (period === 'custom') {
@@ -34,7 +58,7 @@ export default function OutletReports({ outlet }: Props) {
             <Head title="Laporan Penjualan" />
 
             <OutletPageShell>
-                <FilterChips options={periods} active={period} onChange={setPeriod} size="sm" variant="ring" />
+                <FilterChips options={periods} active={period} onChange={handlePeriodChange} size="sm" variant="ring" />
 
                 {period === 'custom' && (
                     <div className="flex items-center gap-2">
@@ -51,6 +75,13 @@ export default function OutletReports({ outlet }: Props) {
                             onChange={(e) => setDateTo(e.target.value)}
                             className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
                         />
+                        <button
+                            type="button"
+                            onClick={handleCustomApply}
+                            className="min-h-11 shrink-0 rounded-lg bg-primary px-4 text-sm font-bold text-white active:opacity-80"
+                        >
+                            Terapkan
+                        </button>
                     </div>
                 )}
 
@@ -61,6 +92,36 @@ export default function OutletReports({ outlet }: Props) {
                     <Download className="h-4 w-4" />
                     Download CSV
                 </a>
+
+                {/* Preview Summary */}
+                {preview && preview.total_orders > 0 && (
+                    <div className="rounded-xl border border-border bg-white p-4">
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-3">Ringkasan Laporan</div>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="text-center">
+                                <div className="text-lg font-bold tabular-nums text-text">{preview.total_orders}</div>
+                                <div className="text-[10px] text-text-subtle">Pesanan</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-lg font-bold tabular-nums text-text">{preview.total_items}</div>
+                                <div className="text-[10px] text-text-subtle">Item</div>
+                            </div>
+                            <div className="text-center">
+                                <div className="text-lg font-bold tabular-nums text-text">{formatCurrency(preview.total_revenue)}</div>
+                                <div className="text-[10px] text-text-subtle">Revenue</div>
+                            </div>
+                        </div>
+                        <div className="mt-2 text-center text-[11px] text-text-subtle">
+                            Periode: {preview.date_from} — {preview.date_to}
+                        </div>
+                    </div>
+                )}
+
+                {preview && preview.total_orders === 0 && (
+                    <div className="rounded-xl border border-border bg-white p-4 text-center">
+                        <p className="text-sm text-text-muted">Tidak ada data penjualan pada periode ini.</p>
+                    </div>
+                )}
 
                 <div className="rounded-xl border border-border bg-white p-4">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-2">Konten Laporan</div>

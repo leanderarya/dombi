@@ -40,18 +40,15 @@ class OrderController extends Controller
         $orders = Order::query()
             ->where('outlet_id', $outlet->id)
             ->whereIn('status', $statuses)
-            // Only show paid orders (or COD) to outlet — hide unpaid non-COD orders
+            // Only show paid orders to outlet — hide unpaid orders
             ->when($tab === 'aktif', fn ($q) => $q
-                ->where(function ($q) {
-                    $q->where('payment_status', 'paid')
-                        ->orWhere('payment_method', 'cod');
-                })
+                ->where('payment_status', 'paid')
             )
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($tab === 'aktif', fn ($q) => $q
                 ->where(function ($q) {
                     $q->whereNull('confirmation_expires_at')
-                      ->orWhere('confirmation_expires_at', '>', now());
+                        ->orWhere('confirmation_expires_at', '>', now());
                 })
                 ->oldest(),
                 fn ($q) => $q->latest()
@@ -65,13 +62,10 @@ class OrderController extends Controller
             5,
             fn () => Order::where('outlet_id', $outlet->id)
                 ->where('status', 'pending_confirmation')
-                ->where(function ($q) {
-                    $q->where('payment_status', 'paid')
-                        ->orWhere('payment_method', 'cod');
-                })
+                ->where('payment_status', 'paid')
                 ->where(function ($q) {
                     $q->whereNull('confirmation_expires_at')
-                      ->orWhere('confirmation_expires_at', '>', now());
+                        ->orWhere('confirmation_expires_at', '>', now());
                 })
                 ->count()
         );
@@ -143,10 +137,7 @@ class OrderController extends Controller
             5,
             fn () => Order::where('outlet_id', $outlet->id)
                 ->where('status', 'pending_confirmation')
-                ->where(function ($q) {
-                    $q->where('payment_status', 'paid')
-                        ->orWhere('payment_method', 'cod');
-                })
+                ->where('payment_status', 'paid')
                 ->count()
         );
 

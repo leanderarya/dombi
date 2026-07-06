@@ -5,6 +5,7 @@ namespace Tests\Feature\Customer;
 use App\Models\Customer;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -92,7 +93,7 @@ class CheckoutControllerTest extends TestCase
         $customer = Customer::factory()->create(['user_id' => $user->id]);
         $outlet = Outlet::factory()->create(['status' => 'active']);
 
-        $family = \App\Models\ProductFamily::create(['name' => 'Susu Kambing Original', 'is_active' => true]);
+        $family = ProductFamily::create(['name' => 'Susu Kambing Original', 'is_active' => true]);
         $variant = ProductVariant::factory()->create([
             'product_family_id' => $family->id,
             'name' => '250ml',

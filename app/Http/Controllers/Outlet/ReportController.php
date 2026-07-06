@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -17,8 +18,29 @@ class ReportController extends Controller
         $outlet = $user->outlet;
         abort_unless($outlet, 403);
 
+        $period = $request->string('period', 'month')->toString();
+        [$from, $to] = $this->resolvePeriod($period, $request);
+
+        $orders = Order::where('outlet_id', $outlet->id)
+            ->where('status', 'completed')
+            ->whereBetween('completed_at', [$from, $to]);
+
+        $totalOrders = (clone $orders)->count();
+
+        $orderIds = (clone $orders)->pluck('id');
+        $itemStats = OrderItem::whereIn('order_id', $orderIds)
+            ->selectRaw('COALESCE(SUM(subtotal), 0) as total_revenue, COALESCE(SUM(quantity), 0) as total_items')
+            ->first();
+
         return Inertia::render('outlet/reports/index', [
             'outlet' => $outlet->only(['id', 'name']),
+            'preview' => [
+                'total_orders' => $totalOrders,
+                'total_revenue' => (float) ($itemStats->total_revenue ?? 0),
+                'total_items' => (int) ($itemStats->total_items ?? 0),
+                'date_from' => $from->format('Y-m-d'),
+                'date_to' => $to->format('Y-m-d'),
+            ],
         ]);
     }
 

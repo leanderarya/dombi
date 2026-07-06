@@ -170,7 +170,7 @@ class OrderService
             'subtotal' => $subtotal,
             'delivery_fee' => $deliveryFee,
             'delivery_distance_km' => $deliveryDistance,
-            'payment_method' => $payload['payment_method'] ?? 'cod',
+            'payment_method' => $payload['payment_method'],
             'payment_fee' => $paymentFee,
             'total' => $subtotal + $deliveryFee + $paymentFee,
             'customer_name' => $address?->recipient_name ?? ($payload['customer_name'] ?? $customer->name),
@@ -201,12 +201,6 @@ class OrderService
             'changed_by_type' => 'customer',
             'created_at' => now(),
         ]);
-
-        // Only notify outlet immediately for COD orders.
-        // Non-COD orders notify outlet after payment is confirmed (in DokuService::markOrderPaid).
-        if (($payload['payment_method'] ?? 'cod') === 'cod') {
-            $this->notificationService->notifyOrderCreated($order);
-        }
 
         return $order->load(['outlet', 'items.product']);
     }

@@ -298,13 +298,12 @@ return;
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <StatusBadge status={hasPaymentIssue ? 'payment_failed' : (order.status === 'pending_confirmation' && order.payment_method !== 'cod' && order.payment_status !== 'paid') ? 'pending_payment' : order.status} />
+                    <StatusBadge status={hasPaymentIssue ? 'payment_failed' : (order.status === 'pending_confirmation' && order.payment_status !== 'paid') ? 'pending_payment' : order.status} />
                 </div>
 
                 {/* What's Next Guidance */}
                 {(() => {
                     const isPendingUnpaid = order.status === 'pending_confirmation'
-                        && order.payment_method !== 'cod'
                         && order.payment_status !== 'paid';
                     const isPaymentFailed = order.payment_status === 'failed' || order.payment_status === 'expired';
                     const guidanceKey = isPendingUnpaid
@@ -445,7 +444,7 @@ return null;
                         </div>
                         <div className="flex items-center justify-between text-xs text-text-muted">
                             <span>Pembayaran</span>
-                            <span className="font-medium text-text">{order.payment_method === 'cod' ? 'Bayar di Tempat' : order.payment_method}</span>
+                            <span className="font-medium text-text">{order.payment_method}</span>
                         </div>
                         {Number(order.delivery_fee) > 0 && (
                             <div className="flex items-center justify-between text-xs text-text-muted">

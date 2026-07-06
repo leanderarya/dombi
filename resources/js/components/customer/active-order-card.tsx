@@ -194,6 +194,8 @@ export default function ActiveOrderCard({ order }: Props) {
     const isPaymentPending = order.payment_status === 'pending';
     const isPaymentNotStarted = !order.payment_status && isPending;
     const hasPaymentIssue = isPaymentFailed || isPaymentExpired;
+    // Payment failed but order still active — customer can retry
+    const canRetryPayment = hasPaymentIssue && isPending;
     // Unpaid non-COD order waiting for payment (not yet paid)
     const isWaitingForPayment = isPending && (isPaymentPending || isPaymentNotStarted) && order.payment_status !== 'paid';
 
@@ -216,17 +218,22 @@ export default function ActiveOrderCard({ order }: Props) {
     const dateStr = order.created_at ? formatDate(order.created_at) : '';
 
     // Override status config for payment issues and pending payment
-    const displayStatus = hasPaymentIssue
+    const displayStatus = canRetryPayment
         ? {
             label: isPaymentFailed ? 'Pembayaran Gagal' : 'Pembayaran Kadaluarsa',
             className: `${BADGE_BASE} bg-red-50 text-red-700`,
         }
-        : isWaitingForPayment
+        : hasPaymentIssue
             ? {
-                label: 'Menunggu Pembayaran',
-                className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
+                label: isPaymentFailed ? 'Pembayaran Gagal' : 'Pembayaran Kadaluarsa',
+                className: `${BADGE_BASE} bg-red-50 text-red-700`,
             }
-            : statusCfg;
+            : isWaitingForPayment
+                ? {
+                    label: 'Menunggu Pembayaran',
+                    className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
+                }
+                : statusCfg;
 
     return (
         <>
@@ -238,16 +245,16 @@ export default function ActiveOrderCard({ order }: Props) {
                     <span className={displayStatus.className}>{displayStatus.label}</span>
                 </div>
                 <div className="text-[11px] text-text-muted">{dateStr}</div>
-                {/* Countdown — only when pending and no payment issue and NOT waiting for payment */}
-                {isPending && !isExpired && !hasPaymentIssue && !isWaitingForPayment && countdown && (
-                    <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-amber-600">
+                {/* Countdown — show for all pending orders with expiry (including failed payment) */}
+                {isPending && !isExpired && countdown && (
+                    <div className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${canRetryPayment ? 'text-red-500' : 'text-amber-600'}`}>
                         <Clock className="h-3 w-3 shrink-0" />
                         <span className="font-mono">{formatTimeRemaining(order.confirmation_expires_at!)}</span>
-                        <span className="text-text-subtle">menit lagi</span>
+                        <span className="text-text-subtle">{canRetryPayment ? 'waktu tersisa untuk bayar ulang' : 'menit lagi'}</span>
                     </div>
                 )}
                 {/* Payment issue message */}
-                {hasPaymentIssue && (
+                {canRetryPayment && (
                     <div className="mt-0.5 text-[11px] text-red-600">
                         {isPaymentFailed ? 'Silakan coba bayar lagi' : 'Batas waktu pembayaran habis'}
                     </div>
@@ -309,8 +316,31 @@ export default function ActiveOrderCard({ order }: Props) {
                     {itemCount} item · {formatCurrency(order.total)}
                 </div>
                 <div className="flex items-center gap-2">
-                    {/* Payment failed/expired — show retry button */}
-                    {hasPaymentIssue && (
+                    {/* Payment failed but order still active — retry payment */}
+                    {canRetryPayment && (
+                        <>
+                            <button
+                                type="button"
+                                disabled={cancelLoading}
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    clearError();
+                                    cancel(order.id);
+                                }}
+                                className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
+                            >
+                                {cancelLoading ? 'Membatalkan...' : 'Batalkan'}
+                            </button>
+                            <Link
+                                href={`/customer/orders/confirm/${order.order_code}`}
+                                className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
+                            >
+                                Bayar Ulang
+                            </Link>
+                        </>
+                    )}
+                    {/* Payment issue but order is terminal (expired status) — restore cart */}
+                    {hasPaymentIssue && !canRetryPayment && (
                         <Link
                             href={`/customer/orders/${order.id}/restore-cart`}
                             className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"

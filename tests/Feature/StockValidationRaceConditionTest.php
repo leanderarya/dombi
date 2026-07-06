@@ -9,7 +9,6 @@ use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class StockValidationRaceConditionTest extends TestCase

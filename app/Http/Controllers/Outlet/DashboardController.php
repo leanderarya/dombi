@@ -29,17 +29,27 @@ class DashboardController extends Controller
 
         $reconciliation = $reconciliationService->getOutletReconciliation($outlet->id);
 
+        // Payment gate — applied to all order queries so dashboard counts match the visible order list.
+        // Outlet sees only paid orders.
+        $visibleOrders = fn ($q) => $q
+            ->where('outlet_id', $outlet->id)
+            ->where('payment_status', 'paid');
+
         $stats = [
-            'pendingOrders' => Order::where('outlet_id', $outlet->id)
+            'pendingOrders' => (clone $visibleOrders(Order::query()))
                 ->where('status', 'pending_confirmation')
                 ->where(function ($q) {
                     $q->whereNull('confirmation_expires_at')
-                      ->orWhere('confirmation_expires_at', '>', now());
+                        ->orWhere('confirmation_expires_at', '>', now());
                 })
                 ->count(),
-            'preparingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'preparing')->count(),
-            'readyForCustomerPickup' => Order::where('outlet_id', $outlet->id)->where('status', Order::STATUS_READY_FOR_PICKUP)->where('fulfillment_type', Order::FULFILLMENT_PICKUP)->count(),
-            'todayOrders' => Order::where('outlet_id', $outlet->id)->whereDate('created_at', today())->count(),
+            'preparingOrders' => (clone $visibleOrders(Order::query()))->where('status', 'preparing')->count(),
+            'readyForCustomerPickup' => (clone $visibleOrders(Order::query()))->where('status', Order::STATUS_READY_FOR_PICKUP)->where('fulfillment_type', Order::FULFILLMENT_PICKUP)->count(),
+            'todayOrders' => (clone $visibleOrders(Order::query()))->whereDate('created_at', today())->count(),
+            'expiredToday' => Order::where('outlet_id', $outlet->id)
+                ->where('status', 'expired')
+                ->whereDate('expired_at', today())
+                ->count(),
             'lowStocks' => OutletInventory::where('outlet_id', $outlet->id)
                 ->whereRaw('(current_stock - reserved_stock) <= minimum_stock')
                 ->count(),
@@ -61,7 +71,7 @@ class DashboardController extends Controller
         ];
 
         $deliveryStats = [
-            'needsDispatch' => Order::where('outlet_id', $outlet->id)->where('status', Order::STATUS_READY_FOR_PICKUP)->whereIn('fulfillment_type', Order::DELIVERY_FULFILLMENT_TYPES)->whereDoesntHave('delivery')->count(),
+            'needsDispatch' => (clone $visibleOrders(Order::query()))->where('status', Order::STATUS_READY_FOR_PICKUP)->whereIn('fulfillment_type', Order::DELIVERY_FULFILLMENT_TYPES)->whereDoesntHave('delivery')->count(),
             'waitingPickup' => (clone $outletDeliveries)->where('status', 'waiting_pickup')->count(),
             'inTransit' => (clone $outletDeliveries)->whereIn('status', ['picked_up', 'delivering'])->count(),
             'failed' => (clone $outletDeliveries)->where('status', 'failed')->count(),
@@ -109,7 +119,7 @@ class DashboardController extends Controller
                 ->limit(3)
                 ->get()
                 ->map(fn ($item) => ['reason' => $item->failed_reason, 'count' => $item->count]),
-            'recentOrders' => Order::where('outlet_id', $outlet->id)
+            'recentOrders' => (clone $visibleOrders(Order::query()))
                 ->whereIn('status', ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup'])
                 ->latest()
                 ->limit(5)

@@ -30,7 +30,20 @@ class OrderController extends Controller
         if ($customer) {
             $activeOrders = $customer->orders()
                 ->whereIn('status', Order::ACTIVE_STATUSES)
-                ->whereNotIn('payment_status', ['expired', 'failed'])
+                // Exclude orders that have been fully expired (status = expired),
+                // but INCLUDE orders with failed/expired PAYMENT that are still
+                // pending_confirmation — customer can retry payment within the window.
+                ->where(function ($q) {
+                    $q->whereNull('payment_status')
+                        ->orWhere('payment_status', 'pending')
+                        ->orWhere('payment_status', 'paid')
+                        // Failed/expired payment but order still pending_confirmation
+                        // and within confirmation window — customer can retry
+                        ->orWhere(function ($q2) {
+                            $q2->whereIn('payment_status', ['failed', 'expired'])
+                                ->where('status', Order::STATUS_PENDING_CONFIRMATION);
+                        });
+                })
                 ->where(function ($q) {
                     $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
                         ->orWhereNull('confirmation_expires_at')
@@ -210,11 +223,6 @@ class OrderController extends Controller
                     'error' => $e->getMessage(),
                 ]);
             }
-        }
-
-        // Only for non-COD orders
-        if ($order->payment_method === 'cod') {
-            return back()->with('error', 'COD tidak memerlukan pembayaran online.');
         }
 
         try {

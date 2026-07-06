@@ -32,8 +32,7 @@ class DokuService
     {
         $requestId = 'DMB-'.$order->id.'-'.time();
         $invoiceNumber = $order->order_code;
-        // Use subtotal (line items sum), not total — DOKU requires amount to match line_items
-        $amount = (int) $order->subtotal;
+        $amount = (int) $order->total;
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
 
         $body = [
@@ -42,7 +41,7 @@ class DokuService
                 'amount' => $amount,
                 'currency' => 'IDR',
                 'callback_url' => route('doku.redirect', ['invoice_number' => $order->order_code]),
-                'callback_url_result' => route('doku.notify'),
+                'callback_url_result' => config('doku.callback_url') ?: route('doku.notify'),
                 'auto_redirect' => true,
                 'payment_due_date' => config('doku.payment_timeout', 30),
                 'line_items' => $this->buildLineItems($order),
@@ -96,7 +95,7 @@ class DokuService
             'order_id' => $order->id,
             'doku_order_id' => $invoiceNumber,
             'payment_method' => $order->payment_method ?? 'qris',
-            'amount' => (int) $order->subtotal,
+            'amount' => (int) $order->total,
             'status' => 'pending',
             'session_id' => $sessionId,
             'token_id' => $tokenId,
@@ -114,6 +113,7 @@ class DokuService
 
     /**
      * Handle DOKU webhook notification.
+     * DOKU sends this to callback_url_result when payment status changes.
      */
     public function handleWebhook(array $payload): void
     {
@@ -126,15 +126,20 @@ class DokuService
             return;
         }
 
+        $status = $this->mapStatus($paymentStatus);
+
+        // Find order via transaction OR directly by invoice number
         $transaction = PaymentTransaction::where('doku_order_id', $invoiceNumber)->first();
-        if (! $transaction) {
-            Log::warning('DOKU webhook: transaction not found', ['invoice_number' => $invoiceNumber]);
+        $order = $transaction?->order
+            ?? Order::where('order_code', $invoiceNumber)->first()
+            ?? Order::where('doku_order_id', $invoiceNumber)->first();
 
-            return;
-        }
-
-        $order = $transaction->order;
         if (! $order) {
+            Log::warning('DOKU webhook: order not found', [
+                'invoice_number' => $invoiceNumber,
+                'mapped_status' => $status,
+            ]);
+
             return;
         }
 
@@ -147,12 +152,18 @@ class DokuService
             return;
         }
 
-        $status = $this->mapStatus($paymentStatus);
-
-        $transaction->update([
-            'status' => $status,
-            'raw_response' => $payload,
-        ]);
+        // Update transaction if found
+        if ($transaction) {
+            $transaction->update([
+                'status' => $status,
+                'raw_response' => $payload,
+            ]);
+        } else {
+            Log::warning('DOKU webhook: no PaymentTransaction record, processing order directly', [
+                'order_id' => $order->id,
+                'invoice_number' => $invoiceNumber,
+            ]);
+        }
 
         $this->processPaymentStatusChange($order, $status);
 
@@ -168,14 +179,13 @@ class DokuService
      * Verify DOKU webhook signature.
      * DOKU Non-SNAP signature: HMAC-SHA256 of assembled header/body fields.
      */
-    public function verifySignature(array $payload, string $requestId, string $rawBody): bool
+    public function verifySignature(array $payload, string $requestId, string $rawBody, ?string $timestampHeader = null, ?string $signatureHeader = null): bool
     {
-        $timestamp = $payload['timestamp'] ?? '';
+        $timestamp = $timestampHeader ?? $payload['timestamp'] ?? '';
         $requestTarget = '/payment/doku/notify';
 
         $digest = base64_encode(hash('sha256', $rawBody, true));
 
-        // DOKU signature uses actual newline characters (\n in double quotes)
         $assembled = 'Client-Id:'.$this->clientId."\n"
             .'Request-Id:'.$requestId."\n"
             .'Request-Timestamp:'.$timestamp."\n"
@@ -183,17 +193,20 @@ class DokuService
             .'Digest:'.$digest;
 
         $expected = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
-        $provided = $payload['signature'] ?? '';
+        $provided = $signatureHeader ?? $payload['signature'] ?? '';
 
         return hash_equals($expected, $provided);
     }
 
     /**
      * Check transaction status from DOKU API.
+     * Returns the DOKU response array or null if unavailable.
      */
     public function checkStatus(Order $order): ?array
     {
         if (empty($order->doku_order_id)) {
+            Log::info('DOKU checkStatus: no doku_order_id', ['order_id' => $order->id]);
+
             return null;
         }
 
@@ -210,9 +223,21 @@ class DokuService
                 return $response->json();
             }
 
-            Log::info('DOKU status check: session may have expired', [
+            // 404 = DOKU session not found — could be API issue, not necessarily expired.
+            // Don't assume expired. Return null so syncStatusFromDoku preserves existing payment_status.
+            if ($response->status() === 404) {
+                Log::warning('DOKU status check: session not found (404)', [
+                    'order_id' => $order->id,
+                    'doku_order_id' => $order->doku_order_id,
+                ]);
+
+                return null;
+            }
+
+            Log::warning('DOKU status check failed', [
                 'order_id' => $order->id,
                 'status_code' => $response->status(),
+                'body' => $response->body(),
             ]);
 
             return null;
@@ -308,7 +333,7 @@ class DokuService
             app(NotificationService::class)->notifyOrderConfirmed($order);
         }
 
-        // Notify outlet about new paid order (non-COD orders are skipped in OrderService)
+        // Notify outlet about new paid order
         app(NotificationService::class)->notifyOrderCreated($order);
 
         Cache::forget("outlet:{$order->outlet_id}:pending_orders");
@@ -319,31 +344,58 @@ class DokuService
     /**
      * Process payment status change — shared by webhook and status sync.
      * Handles: paid, failed, expired transitions.
+     * Public so DokuPaymentController can use it as fallback when syncStatusFromDoku fails.
      */
-    private function processPaymentStatusChange(Order $order, string $status): void
+    public function processPaymentStatusChange(Order $order, string $status): void
     {
         if ($status === 'paid' && $order->payment_status !== 'paid') {
             $this->markOrderPaid($order);
         } elseif (in_array($status, ['failed', 'expired'], true) && $order->payment_status === 'pending') {
-            $order->update(['payment_status' => $status]);
-
-            if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
-                app(OrderStatusService::class)->expireOrder($order, reason: "Payment {$status}");
-            }
+            // Mark payment as failed/expired — but keep order as pending_confirmation
+            // so customer can retry payment via the confirm page.
+            // Reset confirmation_expires_at so customer gets a fresh retry window
+            // instead of being left with the remnant of the original 15-min outlet timeout.
+            $retryWindowMinutes = config('order.payment_retry_window_minutes', 15);
+            $order->update([
+                'payment_status' => $status,
+                'confirmation_expires_at' => now()->addMinutes($retryWindowMinutes),
+            ]);
         }
     }
 
     /**
-     * Build line items from order items.
+     * Build line items from order items plus fees so sum matches order total.
      */
     private function buildLineItems(Order $order): array
     {
-        return $order->items->map(fn ($item) => [
+        $items = $order->items->map(fn ($item) => [
             'id' => (string) ($item->product_id ?: $item->id),
             'name' => $item->product_name,
             'quantity' => $item->quantity,
             'price' => (int) $item->price,
         ])->toArray();
+
+        // Add delivery fee as a line item so DOKU total matches order total
+        if ((int) $order->delivery_fee > 0) {
+            $items[] = [
+                'id' => 'delivery_fee',
+                'name' => 'Ongkos Kirim',
+                'quantity' => 1,
+                'price' => (int) $order->delivery_fee,
+            ];
+        }
+
+        // Add payment fee as a line item (PPN/biaya layanan)
+        if ((int) $order->payment_fee > 0) {
+            $items[] = [
+                'id' => 'payment_fee',
+                'name' => 'Biaya Layanan',
+                'quantity' => 1,
+                'price' => (int) $order->payment_fee,
+            ];
+        }
+
+        return $items;
     }
 
     /**

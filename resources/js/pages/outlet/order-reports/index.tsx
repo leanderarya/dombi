@@ -24,6 +24,13 @@ const typeLabels: Record<string, string> = {
     other: 'Lainnya',
 };
 
+const statusLabels: Record<string, string> = {
+    pending: 'Menunggu',
+    investigating: 'Ditinjau',
+    resolved: 'Selesai',
+    rejected: 'Ditolak',
+};
+
 export default function OutletOrderReportsIndex({ reports, filters }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
 
@@ -59,7 +66,9 @@ export default function OutletOrderReportsIndex({ reports, filters }: any) {
                                     <div className="text-sm font-semibold text-text">{report.order?.order_code ?? `Order #${report.order_id}`}</div>
                                     <div className="mt-0.5 text-xs text-text-muted">{report.customer?.name}</div>
                                 </div>
-                                <StatusBadge status={report.status === 'pending' ? 'pending_confirmation' : report.status === 'investigating' ? 'preparing' : report.status} />
+                                <StatusBadge variant={report.status === 'pending' ? 'warning' : report.status === 'investigating' ? 'warning' : report.status === 'resolved' ? 'success' : report.status === 'rejected' ? 'danger' : 'neutral'}>
+                                {statusLabels[report.status] ?? report.status}
+                            </StatusBadge>
                             </div>
                             <div className="mt-2 flex items-center justify-between text-xs text-text-muted">
                                 <span>{typeLabels[report.type] ?? report.type}</span>

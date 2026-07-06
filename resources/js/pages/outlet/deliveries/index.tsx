@@ -4,10 +4,10 @@ import { useState } from 'react';
 
 import AssignCourierSheet from '@/components/operations/assign-courier-sheet';
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
-import FilterSheet from '@/components/operations/filter-sheet';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
@@ -15,16 +15,15 @@ import { formatCurrency, formatDeliveryAge, formatDistance } from '@/lib/format'
 import { usePolling } from '@/lib/use-polling';
 
 const statusOptions = [
-    { value: 'waiting_pickup', label: 'Menunggu Pickup' },
-    { value: 'picked_up', label: 'Picked Up' },
-    { value: 'delivering', label: 'Dalam Perjalanan' },
-    { value: 'completed', label: 'Selesai' },
-    { value: 'failed', label: 'Gagal' },
+    { key: 'waiting_pickup', label: 'Menunggu Pickup' },
+    { key: 'picked_up', label: 'Picked Up' },
+    { key: 'delivering', label: 'Dalam Perjalanan' },
+    { key: 'completed', label: 'Selesai' },
+    { key: 'failed', label: 'Gagal' },
 ];
 
 export default function OutletDeliveriesIndex({ outlet, unassignedOrders, deliveries, stats, filters }: any) {
     usePolling(20000);
-    const [filterOpen, setFilterOpen] = useState(false);
     const [assignOpen, setAssignOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [couriers, setCouriers] = useState<any[]>([]);
@@ -41,12 +40,12 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
         }
     };
 
-    const handleFilterApply = (f: Record<string, string>) => {
-        router.get('/outlet/deliveries', { status: f.status || undefined }, { preserveState: true, replace: true });
-    };
-
     return (
-        <OutletLayout title="Pengiriman" subtitle={outlet.name}>
+        <OutletLayout title="Pengiriman" subtitle={outlet.name}
+            headerBelow={
+                <FilterChips options={statusOptions} active={filters.status ?? ''} onChange={(key) => router.get('/outlet/deliveries', { status: key || undefined }, { preserveState: true, replace: true })} />
+            }
+        >
             <Head title="Pengiriman" />
             <OutletPageShell>
             {/* Stats */}
@@ -144,16 +143,6 @@ export default function OutletDeliveriesIndex({ outlet, unassignedOrders, delive
                     assignUrl={`/outlet/orders/${selectedOrder.id}/assign-courier`}
                 />
             )}
-
-            {/* Filter Sheet */}
-            <FilterSheet
-                open={filterOpen}
-                onClose={() => setFilterOpen(false)}
-                sections={[
-                    { key: 'status', label: 'Status', options: statusOptions, value: filters.status ?? '' },
-                ]}
-                onApply={handleFilterApply}
-            />
         </OutletLayout>
     );
 }

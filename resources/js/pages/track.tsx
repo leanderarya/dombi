@@ -56,10 +56,15 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
         description: 'Menunggu outlet mengkonfirmasi pesanan Anda',
         nextStep: 'Biasanya dikonfirmasi dalam beberapa menit',
     },
-    // Payment not yet completed — shown when payment_status is pending/null for non-COD
+    // Payment not yet completed — shown when payment_status is pending/null
     pending_confirmation_unpaid: {
         description: 'Menunggu Pembayaran',
         nextStep: 'Selesaikan pembayaran untuk melanjutkan pesanan',
+    },
+    // Payment failed but order still active — customer can retry
+    pending_confirmation_payment_failed: {
+        description: 'Pembayaran Gagal',
+        nextStep: 'Pembayaran sebelumnya gagal. Anda masih bisa coba bayar ulang sebelum waktu habis.',
     },
     confirmed: {
         description: 'Pesanan sudah dikonfirmasi oleh outlet',
@@ -202,17 +207,19 @@ return;
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <StatusBadge status={order.status === 'pending_confirmation' && order.payment_method !== 'cod' && order.payment_status !== 'paid' && order.payment_status !== 'failed' && order.payment_status !== 'expired' ? 'pending_payment' : order.status} />
+                    <StatusBadge status={order.status === 'pending_confirmation' && order.payment_status !== 'paid' ? (order.payment_status === 'failed' || order.payment_status === 'expired' ? 'payment_failed' : 'pending_payment') : order.status} />
                 </div>
 
                 {/* What's Next Guidance */}
                 {(() => {
                     // Determine the effective guidance key:
-                    // For pending_confirmation with unpaid non-COD, show payment guidance
+                    // For pending_confirmation with unpaid, show payment guidance
                     const isPendingUnpaid = order.status === 'pending_confirmation'
-                        && order.payment_method !== 'cod'
                         && order.payment_status !== 'paid';
-                    const guidanceKey = isPendingUnpaid ? 'pending_confirmation_unpaid' : order.status;
+                    const isPaymentFailed = order.payment_status === 'failed' || order.payment_status === 'expired';
+                    const guidanceKey = isPendingUnpaid
+                        ? (isPaymentFailed ? 'pending_confirmation_payment_failed' : 'pending_confirmation_unpaid')
+                        : order.status;
                     const guidance = STATUS_GUIDANCE[guidanceKey];
 
                     if (!guidance) {
@@ -363,7 +370,7 @@ return null;
                         </div>
                         <div className="flex justify-between">
                             <span className="text-text-muted">Pembayaran</span>
-                            <span className="font-medium text-text">{order.payment_method === 'cod' ? 'Bayar di Tempat' : order.payment_method}</span>
+                            <span className="font-medium text-text">{order.payment_method}</span>
                         </div>
                         {order.ordered_at && (
                             <div className="flex justify-between">
@@ -513,21 +520,20 @@ return null;
                     </div>
                 )}
 
-                {/* Pay Now Button — unpaid non-COD pending orders */}
+                {/* Pay Now / Retry Button — unpaid pending orders (including failed payment) */}
                 {order.status === 'pending_confirmation'
-                    && order.payment_method !== 'cod'
-                    && order.payment_status !== 'paid'
-                    && order.payment_status !== 'failed'
-                    && order.payment_status !== 'expired' && (
+                    && order.payment_status !== 'paid' && (
                     <div className="mt-4">
                         <Link
                             href={`/customer/orders/confirm/${order.order_code}`}
                             className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
                         >
-                            Bayar Sekarang
+                            {order.payment_status === 'failed' || order.payment_status === 'expired' ? 'Bayar Ulang' : 'Bayar Sekarang'}
                         </Link>
                         <p className="mt-2 text-center text-[11px] text-text-subtle">
-                            Selesaikan pembayaran untuk melanjutkan pesanan
+                            {order.payment_status === 'failed' || order.payment_status === 'expired'
+                                ? 'Pembayaran sebelumnya gagal. Coba bayar ulang.'
+                                : 'Selesaikan pembayaran untuk melanjutkan pesanan'}
                         </p>
                     </div>
                 )}

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Customer extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'name',
         'phone',

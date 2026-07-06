@@ -80,6 +80,8 @@ Customer klik "Bayar" di checkout/payment.tsx
 Customer di DOKU payment page → bayar → success
   → DOKU kirim webhook POST /payment/doku/notify
     → notify() verify HMAC signature
+      → Signature verification: check headers (Request-Timestamp, Signature) first, then payload body
+      → Format: SHA256(clientId:requestId:requestTimestamp:body:secretKey)
     → handleWebhook()
       → find PaymentTransaction by doku_order_id
       → mapStatus('SUCCESS') → 'paid'
@@ -94,7 +96,8 @@ Customer di DOKU payment page → bayar → success
           → Cache::forget()
   → DOKU redirect browser ke /payment/doku/redirect
     → redirect()
-      → syncStatusFromDoku() → already paid, skip
+      → syncStatusFromDoku() with retry (3 attempts, 1.5s delay between retries)
+      → If all attempts fail: fallback to status from query param (`?status=SUCCESS`)
       → redirect ke /customer/orders/confirm/{orderCode}
   → Confirm page tampil "Pembayaran Berhasil" + "Lihat Pesanan"
 ```
@@ -113,7 +116,8 @@ Customer di DOKU → 3DS rejected / bank rejected
         → Customer bisa retry
   → DOKU redirect browser ke /payment/doku/redirect
     → redirect()
-      → syncStatusFromDoku() → payment_status = failed
+      → syncStatusFromDoku() with retry (3 attempts, 1.5s delay)
+      → If all attempts fail: fallback to status from query param (`?status=REJECTED`)
       → redirect ke /customer/orders/confirm/{orderCode}
   → Confirm page tampil "Pembayaran Gagal" + "Bayar Sekarang"
 ```
@@ -180,9 +184,10 @@ Customer klik "Bayar Sekarang" untuk order yang sudah expired
 Webhook tidak sampai (DOKU server down, network issue, CSRF error)
   → Customer redirect balik ke /payment/doku/redirect
     → redirect()
-      → syncStatusFromDoku() poll DOKU API
-      → Jika DOKU API juga gagal (404 session expired):
-        → Return current payment_status (stuck di pending)
+      → syncStatusFromDoku() with retry 3 attempts, 1.5s delay between retries
+      → Jika semua attempts gagal (404 session expired / network error):
+        → Fallback: gunakan status dari query param (`?status=SUCCESS`)
+        → Jika tidak ada query param: return current payment_status (stuck di pending)
   → Confirm page polling /payment-status setiap 5 detik
     → paymentStatus()
       → syncStatusFromDoku()
@@ -328,7 +333,7 @@ orders dengan payment_status = pending tapi sudah lewat confirmation_expires_at
 
 | Method | Path | Handler | Auth | CSRF |
 |--------|------|---------|------|------|
-| POST | `/payment/doku/notify` | `DokuPaymentController::notify` | HMAC signature | exempt |
+| GET/POST | `/payment/doku/notify` | `DokuPaymentController::notify` | HMAC signature | exempt |
 | GET/POST | `/payment/doku/redirect` | `DokuPaymentController::redirect` | none | exempt |
 
 ---
@@ -383,12 +388,14 @@ orders dengan payment_status = pending tapi sudah lewat confirmation_expires_at
 
 | File | Responsibility |
 |------|---------------|
-| `app/Services/DokuService.php` | Core DOKU integration: createPayment, handleWebhook, syncStatusFromDoku, markOrderPaid, processPaymentStatusChange |
+| `app/Services/DokuService.php` | Core DOKU integration: createPayment, handleWebhook, syncStatusFromDoku, markOrderPaid, processPaymentStatusChange, verifySignature, mapStatus |
 | `app/Http/Controllers/Customer/CheckoutController.php` | Checkout flow: submit() creates order + payment |
 | `app/Http/Controllers/Customer/OrderController.php` | pay(), paymentStatus(), confirm(), restoreCart() |
-| `app/Http/Controllers/DokuPaymentController.php` | notify() webhook, redirect() callback |
+| `app/Http/Controllers/DokuPaymentController.php` | notify() webhook (GET+POST), redirect() callback with retry |
 | `app/Services/OrderStatusService.php` | expireOrder() with stock release |
 | `app/Services/InventoryService.php` | reserveStock(), releaseReservedStock() |
+| `app/Console/Commands/DokuMarkPaid.php` | Sandbox-only: manually mark order as paid |
+| `config/doku.php` | DOKU config including callback_url from env |
 | `bootstrap/app.php` | CSRF exceptions for DOKU webhook |
 | `routes/web.php` | All payment routes |
 
@@ -415,4 +422,49 @@ orders dengan payment_status = pending tapi sudah lewat confirmation_expires_at
 | 15 | Cart clear sebelum DOKU API | ✅ Fixed | Move after success |
 | 16 | Unknown status silent `pending` | ✅ Fixed | Log warning |
 | 17 | Database stuck pending | ✅ Fixed | Manual cleanup |
-| **18** | **Payment failed langsung expire order** | **❌ BUG** | **JANGAN expire saat failed. Biarkan pending_confirmation supaya customer bisa retry** |
+| 18 | Payment failed langsung expire order | ✅ Fixed | `processPaymentStatusChange()`: failed/expired keeps `pending_confirmation`, allows retry |
+| 19 | Notify route hanya POST | ✅ Fixed | `Route::match(['get', 'post'])` — DOKU sandbox sends GET |
+| 20 | Signature verification body only | ✅ Fixed | Check headers (Request-Timestamp, Signature) first, then body fallback |
+| 21 | `callback_url_result` hardcoded | ✅ Fixed | Use `config('doku.callback_url')` with fallback to `route()` |
+| 22 | Redirect sync fails immediately | ✅ Fixed | Retry 3 attempts with 1.5s delay, fallback to query param status |
+
+---
+
+## 9. Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DOKU_CLIENT_ID` | ✅ | — | DOKU client ID |
+| `DOKU_API_KEY` | ✅ | — | DOKU API secret key |
+| `DOKU_IS_SANDBOX` | ❌ | `true` | Set `false` for production |
+| `DOKU_CALLBACK_URL` | ❌ | `APP_URL/payment/doku/notify` | Override webhook URL (use ngrok for sandbox) |
+| `APP_URL` | ✅ | — | Must match production domain for webhook to work |
+
+**Production checklist:**
+- `APP_URL` = production domain (HTTPS required)
+- `DOKU_IS_SANDBOX=false`
+- `DOKU_CLIENT_ID` = production client ID
+- `DOKU_API_KEY` = production API key
+- Remove `DOKU_CALLBACK_URL` from `.env` (falls back to `APP_URL/payment/doku/notify`)
+
+---
+
+## 10. Sandbox Limitations
+
+DOKU sandbox has significant limitations for testing:
+
+| Feature | Sandbox Support | Workaround |
+|---------|----------------|------------|
+| Webhook POST | ❌ Does not send | Use redirect sync + fallback |
+| Status check API | ❌ Returns 404 | Use `doku:mark-paid` command |
+| Payment flow | ✅ Works | — |
+| Email confirmation | ✅ Works | — |
+
+**Sandbox testing workflow:**
+1. Create order via checkout
+2. Complete payment on DOKU sandbox
+3. Redirect handler attempts sync (will fail with 404)
+4. Uses fallback status from query param
+5. If still pending: `php artisan doku:mark-paid {order_code}`
+
+**Production:** Webhook works normally, no workarounds needed.

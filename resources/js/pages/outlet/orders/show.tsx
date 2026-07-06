@@ -153,7 +153,13 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
 
                 <div className="space-y-1.5 text-sm">
                     <div className="font-semibold text-text">{order.customer_name}</div>
-                    <div className="text-text-muted">{order.customer_phone}</div>
+                    {order.customer_phone && (
+                        <a href={`tel:${order.customer_phone}`} className="inline-flex items-center gap-1.5 text-text-muted active:text-primary">
+                            <span>{order.customer_phone}</span>
+                            <span className="text-[10px] font-bold text-primary">📞 Hubungi</span>
+                        </a>
+                    )}
+                    {!order.customer_phone && <div className="text-text-muted">-</div>}
                     <div className="text-text-muted">{order.customer_address}</div>
                     {order.customer_address_detail && (
                         <div className="text-text-subtle">Detail: {order.customer_address_detail}</div>

@@ -8,7 +8,6 @@ use App\Models\ProductVariant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-
 class CartController extends Controller
 {
     /**
@@ -183,5 +182,4 @@ class CartController extends Controller
             'cart_count' => collect($items)->sum('quantity'),
         ]);
     }
-
 }

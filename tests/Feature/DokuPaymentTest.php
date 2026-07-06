@@ -23,6 +23,7 @@ class DokuPaymentTest extends TestCase
         // Mock NotificationService so markOrderPaid side-effects don't fire
         $this->mock(NotificationService::class, function ($mock) {
             $mock->shouldReceive('notifyOrderConfirmed')->andReturnNull();
+            $mock->shouldReceive('notifyOrderCreated')->andReturnNull();
         });
 
         config([

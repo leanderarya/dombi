@@ -3,6 +3,7 @@ import { Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import OfflineSaleDialog from '@/components/outlet/offline-sale-dialog';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import BottomSheet from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
@@ -11,13 +12,14 @@ import { formatCurrency, formatDate } from '@/lib/format';
 
 export default function OfflineSalesIndex({ sales, variants }: any) {
     const [showCreate, setShowCreate] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<number | null>(null);
 
-    const handleDelete = (saleId: number) => {
-        if (!confirm('Hapus penjualan ini? Stok akan dikembalikan.')) {
-return;
-}
-
-        router.delete(`/outlet/offline-sales/${saleId}`);
+    const handleDelete = () => {
+        if (deleteTarget !== null) {
+            router.delete(`/outlet/offline-sales/${deleteTarget}`, {
+                onFinish: () => setDeleteTarget(null),
+            });
+        }
     };
 
     return (
@@ -46,7 +48,7 @@ return;
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-bold tabular-nums text-text">{formatCurrency(sale.total_amount)}</span>
                                     <button
-                                        onClick={() => handleDelete(sale.id)}
+                                        onClick={() => setDeleteTarget(sale.id)}
                                         className="flex h-8 w-8 items-center justify-center rounded-lg text-text-subtle active:bg-red-50 active:text-red-600"
                                     >
                                         <Trash2 className="h-4 w-4" />
@@ -71,6 +73,27 @@ return;
                 onClose={() => setShowCreate(false)}
                 variants={variants}
             />
+
+            {/* Delete Confirmation Sheet */}
+            <BottomSheet open={deleteTarget !== null} onClose={() => setDeleteTarget(null)} title="Hapus Penjualan?">
+                <p className="text-sm text-text-muted">Penjualan ini akan dihapus dan stok akan dikembalikan.</p>
+                <div className="mt-4 flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setDeleteTarget(null)}
+                        className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        onClick={handleDelete}
+                        className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80"
+                    >
+                        Hapus
+                    </button>
+                </div>
+            </BottomSheet>
         </OutletLayout>
     );
 }

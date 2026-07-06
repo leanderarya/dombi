@@ -374,7 +374,7 @@ class CheckoutController extends Controller
             ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService)
             : null;
 
-        // Guest users cannot use COD — must pay online to prevent fake orders
+        // Must pay online to prevent fake orders
         // Payment via DOKU. Fee = Biaya Layanan (customer-borne, sopan)
         $paymentOptions = [
             ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007, 'description' => 'Scan QR untuk membayar'],

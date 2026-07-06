@@ -32,9 +32,11 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
     const { loading } = useInertiaLoading();
 
     const todayOrders = stats.pendingOrders + stats.preparingOrders + stats.readyForCustomerPickup;
-    const pendingTasks = stats.pendingOrders + deliveryStats.failed + deliveryStats.needsDispatch + lowStockItems.length;
-    const hasActions = pendingTasks > 0;
-    const hasActivity = todayOrders > 0 || pendingTasks > 0 || deliveryStats.completedToday > 0 || deliveryStats.inTransit > 0 || lowStockItems.length > 0;
+    const urgentTasks = deliveryStats.failed;
+    const warningTasks = stats.pendingOrders + deliveryStats.needsDispatch + lowStockItems.length;
+    const pendingTasks = urgentTasks + warningTasks;
+    const hasActions = pendingTasks > 0 || (stats.expiredToday ?? 0) > 0;
+    const hasActivity = todayOrders > 0 || pendingTasks > 0 || deliveryStats.completedToday > 0 || deliveryStats.inTransit > 0 || lowStockItems.length > 0 || (stats.expiredToday ?? 0) > 0;
 
     return (
         <OutletLayout title={outlet.name} subtitle={getGreeting()}>
@@ -57,10 +59,13 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                         <div className="h-6 w-px bg-emerald-200" />
                         <div>
                             <div className="flex items-center justify-center gap-1">
-                                {pendingTasks > 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
+                                {urgentTasks > 0 && <span className="h-1.5 w-1.5 rounded-full bg-red-400" />}
+                                {urgentTasks === 0 && warningTasks > 0 && <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />}
                                 <div className={`text-lg font-bold tabular-nums ${pendingTasks > 0 ? 'text-text' : 'text-text-muted'}`}>{pendingTasks}</div>
                             </div>
-                            <div className="text-[10px] text-text-subtle">Tugas</div>
+                            <div className="text-[10px] text-text-subtle">
+                                {urgentTasks > 0 ? `${urgentTasks} Mendesak` : 'Tugas'}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -90,6 +95,12 @@ export default function OutletDashboard({ outlet, stats, deliveryStats, lowStock
                             <Link href="/outlet/inventory" className="inline-flex items-center gap-1.5 rounded-lg bg-white/70 px-2.5 py-1.5 text-[11px] font-semibold text-text active:opacity-80">
                                 <span className="h-1.5 w-1.5 rounded-full bg-orange-400" />
                                 {lowStockItems.length} Stok Rendah
+                            </Link>
+                        )}
+                        {(stats.expiredToday ?? 0) > 0 && (
+                            <Link href="/outlet/orders?tab=riwayat&status=expired" className="inline-flex items-center gap-1.5 rounded-lg bg-red-50/80 px-2.5 py-1.5 text-[11px] font-semibold text-red-700 active:opacity-80">
+                                <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                {stats.expiredToday} Kadaluarsa
                             </Link>
                         )}
                     </div>

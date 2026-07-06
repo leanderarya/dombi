@@ -1,16 +1,18 @@
 import { Head, useForm } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, ClipboardCheck, Package, Plus } from 'lucide-react';
+import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, ClipboardCheck, Package, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
+import Dialog from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
 export default function OutletInventory({ outlet, inventories, families }: any) {
     const [showRestock, setShowRestock] = useState(false);
+    const [search, setSearch] = useState('');
     const familyGroups = new Map<number, { family: any; items: any[] }>();
     const noFamilyItems: any[] = [];
 
@@ -52,6 +54,42 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
         familyHealth.set(familyId, worst);
     }
 
+    // Filter by search
+    const matchesSearch = (item: any): boolean => {
+        if (!search) {
+return true;
+}
+
+        const q = search.toLowerCase();
+        const name = (item.variant?.name ?? item.product?.name ?? '').toLowerCase();
+        const family = (item.variant?.family?.name ?? '').toLowerCase();
+
+        return name.includes(q) || family.includes(q);
+    };
+
+    const filterGroup = (group: { family: any; items: any[] }): { family: any; items: any[] } => ({
+        ...group,
+        items: group.items.filter(matchesSearch),
+    });
+
+    const filteredCriticalFamilies = [...familyGroups.entries()]
+        .filter(([id]) => familyHealth.get(id) === 'danger')
+        .map(([id, group]) => [id, filterGroup(group)] as const)
+        .filter(([, group]) => group.items.length > 0);
+
+    const filteredLowStockFamilies = [...familyGroups.entries()]
+        .filter(([id]) => familyHealth.get(id) === 'warning')
+        .map(([id, group]) => [id, filterGroup(group)] as const)
+        .filter(([, group]) => group.items.length > 0);
+
+    const filteredHealthyFamilies = [...familyGroups.entries()]
+        .filter(([id]) => familyHealth.get(id) === 'success')
+        .map(([id, group]) => [id, filterGroup(group)] as const)
+        .filter(([, group]) => group.items.length > 0);
+
+    const filteredNoFamilyItems = noFamilyItems.filter(matchesSearch);
+    const hasSearchResults = filteredCriticalFamilies.length + filteredLowStockFamilies.length + filteredHealthyFamilies.length + filteredNoFamilyItems.length > 0;
+
     const criticalFamilies = [...familyGroups.entries()].filter(([id]) => familyHealth.get(id) === 'danger');
     const lowStockFamilies = [...familyGroups.entries()].filter(([id]) => familyHealth.get(id) === 'warning');
     const healthyFamilies = [...familyGroups.entries()].filter(([id]) => familyHealth.get(id) === 'success');
@@ -78,16 +116,28 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
                 />
             </div>
 
+            {/* Search */}
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
+                <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Cari produk..."
+                    className="w-full rounded-xl border border-border py-2.5 pl-9 pr-4 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/20"
+                />
+            </div>
+
             {/* Critical */}
-            {criticalFamilies.length > 0 && (
+            {filteredCriticalFamilies.length > 0 && (
                 <div>
                     <div className="mb-3 flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
                         <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Kritis</h2>
-                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">{criticalFamilies.length}</span>
+                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">{filteredCriticalFamilies.length}</span>
                     </div>
                     <div className="space-y-2">
-                        {criticalFamilies.map(([familyId, group]) => (
+                        {filteredCriticalFamilies.map(([familyId, group]) => (
                             <FamilyGroup key={familyId} group={group} />
                         ))}
                     </div>
@@ -95,15 +145,15 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
             )}
 
             {/* Low Stock */}
-            {lowStockFamilies.length > 0 && (
+            {filteredLowStockFamilies.length > 0 && (
                 <div>
                     <div className="mb-3 flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                         <h2 className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Rendah</h2>
-                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">{lowStockFamilies.length}</span>
+                        <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">{filteredLowStockFamilies.length}</span>
                     </div>
                     <div className="space-y-2">
-                        {lowStockFamilies.map(([familyId, group]) => (
+                        {filteredLowStockFamilies.map(([familyId, group]) => (
                             <FamilyGroup key={familyId} group={group} />
                         ))}
                     </div>
@@ -111,7 +161,7 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
             )}
 
             {/* Healthy — collapsed */}
-            {healthyFamilies.length > 0 && (
+            {filteredHealthyFamilies.length > 0 && (
                 <div>
                     <button
                         type="button"
@@ -121,13 +171,13 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
                         <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-text-muted" />
                             <span className="text-sm font-medium text-text">Stok Sehat</span>
-                            <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">{healthyFamilies.length}</span>
+                            <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">{filteredHealthyFamilies.length}</span>
                         </div>
                         {showHealthy ? <ChevronUp className="h-4 w-4 text-text-subtle" /> : <ChevronDown className="h-4 w-4 text-text-subtle" />}
                     </button>
                     {showHealthy && (
                         <div className="mt-2 space-y-2">
-                            {healthyFamilies.map(([familyId, group]) => (
+                            {filteredHealthyFamilies.map(([familyId, group]) => (
                                 <FamilyGroup key={familyId} group={group} />
                             ))}
                         </div>
@@ -136,19 +186,28 @@ export default function OutletInventory({ outlet, inventories, families }: any) 
             )}
 
             {/* No-family items */}
-            {noFamilyItems.length > 0 && (
+            {filteredNoFamilyItems.length > 0 && (
                 <div>
                     <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-text-subtle">Lainnya</h2>
                     <div className="space-y-2">
-                        {noFamilyItems.map((item: any) => (
+                        {filteredNoFamilyItems.map((item: any) => (
                             <InventoryRow key={item.id} item={item} />
                         ))}
                     </div>
                 </div>
             )}
 
+            {/* No results */}
+            {search && !hasSearchResults && (
+                <EmptyState
+                    icon={<Search className="h-8 w-8 text-text-subtle" />}
+                    title="Tidak ditemukan"
+                    description={`Tidak ada produk yang cocok dengan "${search}".`}
+                />
+            )}
+
             {/* Empty State */}
-            {inventories.length === 0 && (
+            {!search && inventories.length === 0 && (
                 <EmptyState
                     icon={<Package className="h-8 w-8 text-text-subtle" />}
                     title="Belum ada inventaris"
@@ -256,13 +315,24 @@ function OpnameSheet({ open, onClose, item, displayName }: { open: boolean; onCl
         actual_count: '',
         notes: '',
     });
+    const [showConfirm, setShowConfirm] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!data.actual_count) {
+return;
+}
+
+        setShowConfirm(true);
+    };
+
+    const confirmSubmit = () => {
         post('/outlet/inventory/opname', {
             preserveScroll: true,
             onSuccess: () => {
                 reset();
+                setShowConfirm(false);
                 onClose();
             },
         });
@@ -311,6 +381,31 @@ function OpnameSheet({ open, onClose, item, displayName }: { open: boolean; onCl
                     {processing ? 'Menyimpan...' : 'Simpan Opname'}
                 </button>
             </form>
+
+            {/* Confirmation Dialog */}
+            <Dialog open={showConfirm} onClose={() => setShowConfirm(false)} title="Konfirmasi Opname">
+                <p className="text-sm text-text-muted">
+                    Simpan stok aktual <span className="font-semibold text-text">{data.actual_count}</span> untuk <span className="font-semibold text-text">{displayName}</span>?
+                </p>
+                {data.notes && <p className="mt-1 text-xs text-text-subtle">Catatan: {data.notes}</p>}
+                <div className="mt-4 flex gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setShowConfirm(false)}
+                        className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="button"
+                        onClick={confirmSubmit}
+                        disabled={processing}
+                        className="flex h-12 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                    >
+                        {processing ? 'Menyimpan...' : 'Ya, Simpan'}
+                    </button>
+                </div>
+            </Dialog>
         </BottomSheet>
     );
 }

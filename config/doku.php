@@ -15,4 +15,5 @@ return [
 
     // Allowed payment methods (null = all methods)
     'payment_methods' => env('DOKU_PAYMENT_METHODS', 'QRIS'),
+    'callback_url' => env('DOKU_CALLBACK_URL'),
 ];

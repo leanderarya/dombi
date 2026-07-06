@@ -55,7 +55,12 @@ class GuestOrderRecoveryService
             ->whereIn('status', Order::ACTIVE_STATUSES)
             ->where(function ($q) {
                 $q->whereNull('payment_status')
-                    ->orWhereNotIn('payment_status', ['expired', 'failed']);
+                    ->orWhere('payment_status', 'pending')
+                    ->orWhere('payment_status', 'paid')
+                    ->orWhere(function ($q2) {
+                        $q2->whereIn('payment_status', ['failed', 'expired'])
+                            ->where('status', Order::STATUS_PENDING_CONFIRMATION);
+                    });
             })
             ->where(function ($q) {
                 $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)

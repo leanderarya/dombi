@@ -9,7 +9,11 @@ type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 export default function ConfirmPage({ order, isLoggedIn }: any) {
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
         const s = order.payment_status;
-        if (s === 'paid' || s === 'failed' || s === 'expired') return s;
+
+        if (s === 'paid' || s === 'failed' || s === 'expired') {
+return s;
+}
+
         return 'pending';
     });
     const [countdown, setCountdown] = useState<number | null>(null);
@@ -72,7 +76,7 @@ clearInterval(pollInterval.current);
         };
     }, [paymentStatus]);
 
-    // Countdown timer
+    // Countdown timer — only for display, never override actual payment status
     useEffect(() => {
         if (!order.confirmation_expires_at) {
 return;
@@ -83,10 +87,6 @@ return;
         const tick = () => {
             const remaining = Math.max(0, Math.floor((target - Date.now()) / 1000));
             setCountdown(remaining);
-
-            if (remaining <= 0) {
-                setPaymentStatus('expired');
-            }
         };
 
         tick();

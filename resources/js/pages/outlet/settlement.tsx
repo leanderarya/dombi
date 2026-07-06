@@ -160,7 +160,6 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
                         </div>
                     )}
 
-                    {/* Info rekening — inline, compact */}
                     {paymentAccounts.length > 0 && (
                         <div className="mt-3 space-y-1.5">
                             {paymentAccounts.map((account) => (
@@ -197,6 +196,21 @@ export default function OutletSettlement({ summary, reconciliation, payments, ti
                     title="Belum ada penjualan"
                     description="Belum ada penjualan pada periode ini."
                 />
+            )}
+
+            {/* Persistent Rekening Info */}
+            {paymentAccounts.length > 0 && isSettled && (
+                <SectionCard label="Rekening Setoran">
+                    <div className="mt-2 space-y-1.5">
+                        {paymentAccounts.map((account) => (
+                            <div key={account.id} className="flex items-center gap-2 rounded-lg bg-surface-muted px-3 py-2">
+                                <span className="text-[11px] font-bold text-text">{account.bank_name}</span>
+                                <span className="text-[11px] text-text-muted">{account.account_number}</span>
+                                <span className="text-[10px] text-text-subtle">a.n. {account.account_holder}</span>
+                            </div>
+                        ))}
+                    </div>
+                </SectionCard>
             )}
 
             {/* ── 2. Settlement Mingguan ── */}

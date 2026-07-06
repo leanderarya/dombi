@@ -18,8 +18,19 @@ class DokuPaymentController extends Controller
         $payload = json_decode($rawBody, true) ?? [];
         $requestId = $request->header('Request-Id', '');
 
+        Log::debug('DOKU webhook received', [
+            'method' => $request->method(),
+            'request_id' => $requestId,
+        ]);
+
         // Verify webhook signature
-        if (! $doku->verifySignature($payload, $requestId, $rawBody)) {
+        if (! $doku->verifySignature(
+            $payload,
+            $requestId,
+            $rawBody,
+            $request->header('Request-Timestamp'),
+            $request->header('Signature')
+        )) {
             Log::warning('DOKU webhook: invalid signature', ['request_id' => $requestId]);
 
             return response()->json(['message' => 'Invalid signature'], 401);
@@ -53,36 +64,64 @@ class DokuPaymentController extends Controller
     public function redirect(Request $request, DokuService $doku): RedirectResponse
     {
         $invoiceNumber = $request->query('invoice_number') ?? $request->query('order_id');
-        $status = $request->query('status');
+        $dokuStatus = $request->query('status');
+
+        Log::info('Doku redirect hit', [
+            'invoice_number' => $invoiceNumber,
+            'doku_status' => $dokuStatus,
+        ]);
 
         if ($invoiceNumber) {
             $order = Order::where('order_code', $invoiceNumber)->first()
                 ?? Order::where('doku_order_id', $invoiceNumber)->first();
 
             if ($order) {
-                // Sync payment status from DOKU API immediately
-                // This ensures the confirm page shows correct status without waiting for webhook
-                try {
-                    $doku->syncStatusFromDoku($order);
-                    $order->refresh();
-
-                    // If payment failed/expired and order is still pending, expire it immediately
-                    if (in_array($order->payment_status, ['failed', 'expired'], true)
-                        && $order->status === Order::STATUS_PENDING_CONFIRMATION
-                    ) {
-                        app(OrderStatusService::class)->expireOrder($order, reason: "Payment {$order->payment_status}");
+                // Doku may not have finished processing yet — retry status check with delay
+                $synced = false;
+                for ($attempt = 1; $attempt <= 3; $attempt++) {
+                    try {
+                        $doku->syncStatusFromDoku($order);
+                        $order->refresh();
+                        if ($order->payment_status !== 'pending') {
+                            $synced = true;
+                            break;
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning("Doku redirect: sync attempt {$attempt} failed", [
+                            'order_id' => $order->id,
+                            'error' => $e->getMessage(),
+                        ]);
                     }
-                } catch (\Exception $e) {
-                    Log::warning('Doku redirect: status sync failed', [
+                    if ($attempt < 3) {
+                        usleep(1_500_000); // 1.5s delay between retries
+                    }
+                }
+
+                if (! $synced) {
+                    Log::warning('Doku redirect: all sync attempts failed', [
                         'order_id' => $order->id,
-                        'error' => $e->getMessage(),
+                        'doku_status_param' => $dokuStatus,
                     ]);
+
+                    // Fallback: use redirect status query param if available
+                    if ($dokuStatus && $order->payment_status !== 'paid') {
+                        $mappedStatus = $doku->mapStatus($dokuStatus);
+                        Log::info('Doku redirect: using fallback status from query param', [
+                            'order_id' => $order->id,
+                            'doku_status' => $dokuStatus,
+                            'mapped_status' => $mappedStatus,
+                        ]);
+                        $doku->processPaymentStatusChange($order, $mappedStatus);
+                        $order->refresh();
+                    }
                 }
 
                 return redirect()->route('customer.orders.confirm', [
                     'orderCode' => $order->order_code,
                 ]);
             }
+
+            Log::warning('Doku redirect: order not found', ['invoice_number' => $invoiceNumber]);
         }
 
         return redirect()->route('customer.home');
