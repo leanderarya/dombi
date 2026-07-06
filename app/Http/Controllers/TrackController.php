@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Customer;
 use App\Models\Notification;
 use App\Models\Order;
+use App\Services\GuestOrderMerger;
 use App\Services\OrderStatusService;
+use App\Support\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +28,23 @@ class TrackController extends Controller
                 'order' => null,
                 'found' => false,
             ]);
+        }
+
+        // Auto-merge: if user is authenticated and order belongs to an unlinked guest Customer
+        // with matching phone, reassign the order to the user's registered Customer.
+        $user = $request->user();
+        if ($user && $order->customer && ! $order->customer->user_id) {
+            $userCustomer = $user->customer;
+            $orderPhone = PhoneNormalizer::normalize($order->customer->phone ?? '');
+            $userPhone = PhoneNormalizer::normalize($userCustomer?->phone ?? '');
+
+            if ($userPhone && $orderPhone && $userPhone === $orderPhone && $userCustomer) {
+                // Reassign order to the user's registered Customer
+                $order->update(['customer_id' => $userCustomer->id]);
+
+                // Merge any remaining guest orders with the same phone
+                app(GuestOrderMerger::class)->merge($user);
+            }
         }
 
         // Scope notifications to this specific order only
@@ -96,7 +116,7 @@ class TrackController extends Controller
             'cancellationReasons' => \App\Services\OrderStatusService::cancellationReasons(),
             'notifications' => $notifications,
             'found' => true,
-            'canCancel' => auth()->check(),
+            'canCancel' => auth()->check() && $order->customer && $order->customer->user_id === auth()->id(),
             'canCreateAccount' => $request->session()->get('canCreateAccount', false),
             'accountPhone' => $request->session()->get('accountPhone'),
             'accountName' => $request->session()->get('accountName'),
@@ -171,12 +191,24 @@ class TrackController extends Controller
 
     public function cancel(string $token, Request $request, OrderStatusService $orderStatusService): JsonResponse|RedirectResponse
     {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['success' => false, 'error' => 'Silakan masuk terlebih dahulu.'], 401);
+        }
+
         $order = Order::query()
             ->where('recovery_token', strtoupper($token))
             ->first();
 
         if (! $order) {
             return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
+        }
+
+        // Ownership check: pastikan caller adalah pemilik pesanan
+        $customer = $order->customer;
+        if (! $customer || $customer->user_id !== $user->id) {
+            return response()->json(['success' => false, 'error' => 'Anda tidak memiliki akses ke pesanan ini.'], 403);
         }
 
         $allowedStatuses = [
