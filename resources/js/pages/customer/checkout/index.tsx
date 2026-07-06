@@ -1,7 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
-import { Clock, ShoppingCart, Store, Truck } from 'lucide-react';
+import { ShoppingCart, Store, Truck } from 'lucide-react';
 import { useCallback, useState } from 'react';
-import type { ReactNode } from 'react';
 import CheckoutItemCard from '@/components/customer/checkout-item-card';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import StepButton from '@/components/customer/step-button';
@@ -148,105 +147,44 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
             )}
 
             <section className="mt-4">
-                <h2 className="text-[13px] font-semibold text-text-subtle">Metode Pengiriman</h2>
-                <div className="mt-3 space-y-3">
-                    <FulfillmentCard
-                        active={fulfillmentType === 'pickup'}
-                        title="Ambil di Outlet"
-                        icon={<Store className="h-5 w-5 text-text-muted" />}
-                        description="Ambil langsung di outlet terdekat."
-                        estimate="Siap dalam 15-30 menit"
-                        onClick={() => setFulfillmentType('pickup')}
-                        detail={nearestOutlet ? {
-                            outletName: nearestOutlet.name,
-                            distanceKm: nearestOutlet.distance_km,
-                            stockAvailable: nearestOutlet.stock_available,
-                        } : undefined}
-                    />
-                    <FulfillmentCard
-                        active={fulfillmentType === 'delivery_dombi'}
-                        title="Kurir Dombi"
-                        icon={<Truck className="h-5 w-5 text-text-muted" />}
-                        description="Diantar oleh kurir Dombi."
-                        estimate="Diantar dalam 30-60 menit"
-                        onClick={() => {
-                            if (!isLoggedIn) {
-                                setDeliverySheetOpen(true);
-
-                                return;
-                            }
-
-                            setFulfillmentType('delivery_dombi');
-                        }}
-                        detail={deliveryPreview?.is_serviceable ? {
-                            deliveryFee: deliveryPreview.delivery_fee,
-                        } : undefined}
-                    />
-                    <DeliveryLoginSheet open={deliverySheetOpen} onClose={() => setDeliverySheetOpen(false)} />
+                <div className="rounded-xl border border-border bg-white p-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            {fulfillmentType === 'pickup' ? (
+                                <Store className="h-5 w-5 text-emerald-600" />
+                            ) : (
+                                <Truck className="h-5 w-5 text-emerald-600" />
+                            )}
+                            <div>
+                                <div className="text-sm font-semibold text-text">
+                                    {fulfillmentType === 'pickup' ? 'Ambil di Outlet' : 'Kurir Dombi'}
+                                </div>
+                                {fulfillmentType === 'pickup' && nearestOutlet && (
+                                    <div className="text-[11px] text-text-muted">
+                                        {nearestOutlet.name} · {nearestOutlet.distance_km?.toFixed(1)} km
+                                    </div>
+                                )}
+                                {fulfillmentType === 'delivery_dombi' && deliveryPreview?.delivery_fee !== undefined && (
+                                    <div className="text-[11px] text-text-muted">
+                                        Ongkir: Rp {deliveryPreview.delivery_fee.toLocaleString('id-ID')}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setFulfillmentType(fulfillmentType === 'pickup' ? 'delivery_dombi' : 'pickup')}
+                            className="text-[11px] font-semibold text-primary active:opacity-80"
+                        >
+                            Ubah
+                        </button>
+                    </div>
                 </div>
+                <DeliveryLoginSheet open={deliverySheetOpen} onClose={() => setDeliverySheetOpen(false)} />
             </section>
             {/* Spacer for sticky footer */}
             <div className="h-24" />
         </CustomerMobileLayout>
     );
 }
-
-type FulfillmentDetail = {
-    outletName?: string;
-    distanceKm?: number;
-    stockAvailable?: boolean;
-    deliveryFee?: number;
-};
-
-function FulfillmentCard({ active, title, icon, description, estimate, onClick, detail }: { active: boolean; title: string; icon: ReactNode; description: string; estimate?: string; onClick: () => void; detail?: FulfillmentDetail }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            className={`min-h-[88px] w-full rounded-xl p-4 text-left transition-all active:opacity-80 ${
-                active
-                    ? 'bg-emerald-50 ring-2 ring-emerald-500'
-                    : 'bg-white border border-border'
-            }`}
-        >
-            <div className="flex items-start gap-3">
-                <div className="mt-0.5 shrink-0">{icon}</div>
-                <div className="min-w-0 flex-1">
-                    <div className="text-sm font-semibold text-text">{title}</div>
-                    <div className="mt-1 text-xs leading-relaxed text-text-muted">{description}</div>
-                    {estimate && (
-                        <div className="mt-1.5 flex items-center gap-1 text-xs font-medium text-emerald-700">
-                            <Clock className="h-3 w-3" />
-                            {estimate}
-                        </div>
-                    )}
-                    {detail?.outletName && (
-                        <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
-                            <span className="font-semibold text-text">{detail.outletName}</span>
-                            {detail.distanceKm !== undefined && (
-                                <>
-                                    <span className="text-text-subtle">·</span>
-                                    <span className="text-text-muted">{detail.distanceKm.toFixed(1)} km</span>
-                                </>
-                            )}
-                            {detail.stockAvailable && (
-                                <>
-                                    <span className="text-text-subtle">·</span>
-                                    <span className="font-semibold text-emerald-700">Stok tersedia</span>
-                                </>
-                            )}
-                        </div>
-                    )}
-                    {detail?.deliveryFee !== undefined && (
-                        <div className="mt-2 text-xs">
-                            <span className="text-text-muted">Ongkir: </span>
-                            <span className="font-bold text-text">Rp {detail.deliveryFee.toLocaleString('id-ID')}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </button>
-    );
-}
-
 
