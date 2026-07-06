@@ -424,6 +424,7 @@ class CheckoutController extends Controller
 
         $validated = $request->validate([
             'payment_method' => ['required', Rule::in(self::PAYMENT_METHODS)],
+            'use_credit' => ['boolean'],
         ]);
 
         // Idempotency: prevent duplicate order from double-tap/refresh
@@ -472,6 +473,7 @@ class CheckoutController extends Controller
                 'delivery_distance_km' => $deliveryQuote['distance_km'] ?? 0,
                 'recommended_outlet_id' => $deliveryQuote['outlet']['id'] ?? null,
                 'payment_fee' => $paymentFee,
+                'use_credit' => $validated['use_credit'] ?? false,
                 'notes' => $location['delivery_notes'] ?? null,
             ]);
 
@@ -508,6 +510,21 @@ class CheckoutController extends Controller
             return back()->withErrors($e->validator->errors())->withInput();
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.'])->withInput();
+        }
+
+        // If fully paid by credit, skip DOKU and go straight to confirmation
+        if ($order->payment_status === 'paid') {
+            $request->session()->forget([
+                'checkout.cart',
+                'checkout.fulfillment',
+                'checkout.customer',
+                'checkout.location',
+            ]);
+
+            return redirect()->route('customer.orders.confirmation', [
+                'order' => $order->id,
+                'token' => $order->recovery_token,
+            ]);
         }
 
         // Create DOKU payment immediately — customer pays before outlet confirms.

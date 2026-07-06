@@ -6,9 +6,8 @@ use App\Exceptions\RegisteredPhoneException;
 use App\Exceptions\StockAdjustedException;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
-use App\Models\Outlet;
 use App\Models\Order;
-use App\Models\OrderItem;
+use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -104,21 +103,44 @@ class OrderService
             $paymentFee = (float) ($payload['payment_fee'] ?? 0);
 
             // Try each outlet until reservation succeeds
+            $order = null;
             foreach ($candidates as $outlet) {
                 try {
-                    return $this->createOrderWithReservation(
+                    $order = $this->createOrderWithReservation(
                         $customer, $outlet, $items, $payload, $fulfillmentType, $address,
                         $subtotal, $deliveryFee, $deliveryDistance, $paymentFee,
                     );
+                    break;
                 } catch (ValidationException $e) {
                     // Stock was taken between snapshot and reservation — try next outlet
                     continue;
                 }
             }
 
-            throw ValidationException::withMessages([
-                'items' => 'Stok produk tidak tersedia di outlet terdekat maupun outlet lain.',
-            ]);
+            if (! $order) {
+                throw ValidationException::withMessages([
+                    'items' => 'Stok produk tidak tersedia di outlet terdekat maupun outlet lain.',
+                ]);
+            }
+
+            // Apply credit if requested
+            if ($payload['use_credit'] ?? false) {
+                $creditService = app(CustomerCreditService::class);
+                $creditApplied = $creditService->applyToOrder($order, $customer);
+
+                if ($creditApplied >= (float) $order->total) {
+                    $order->update([
+                        'payment_method' => 'credit',
+                        'payment_status' => 'paid',
+                        'paid_at' => now(),
+                        'status' => Order::STATUS_CONFIRMED,
+                        'confirmed_at' => now(),
+                    ]);
+                    $this->notificationService->notifyOrderCreated($order);
+                }
+            }
+
+            return $order;
         });
     }
 
