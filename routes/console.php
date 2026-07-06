@@ -61,6 +61,14 @@ Schedule::command('backup:monitor')
     ->withoutOverlapping()
     ->onOneServer();
 
+// ─── RETURN AUTO-CONFIRM ──────────────────────────────────────────
+
+Schedule::command('deliveries:auto-confirm-return')
+    ->hourly()
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/auto-confirm-return.log'));
+
 // ─── SCHEDULER HEARTBEAT ────────────────────────────────────────────
 
 Schedule::call(function () {
