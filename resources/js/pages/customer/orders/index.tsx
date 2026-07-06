@@ -11,6 +11,7 @@ import { SkeletonList } from '@/components/ui/skeleton';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { PENDING_PHONE_KEY } from '@/lib/constants';
 import { useOrderRecovery } from '@/lib/order-recovery';
+import { usePolling } from '@/lib/use-polling';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -72,6 +73,7 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
     const { phone, maskedPhone, saveRecovery, clearRecovery } =
         useOrderRecovery();
     const [filter, setFilter] = useState('all');
+    usePolling(20000);
     const [recoverySheetOpen, setRecoverySheetOpen] = useState(false);
     const [recoveryLoading, setRecoveryLoading] = useState(false);
     const [recoveredActive, setRecoveredActive] = useState<any[] | null>(null);
