@@ -28,6 +28,7 @@ export default function SizeSelectorSheet({ open, onClose, familyName, flavorNam
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
+    const [maxQuantity, setMaxQuantity] = useState<number>(999);
 
     const cart = useCart();
 
@@ -40,13 +41,14 @@ export default function SizeSelectorSheet({ open, onClose, familyName, flavorNam
         if (open && sortedVariants.length > 0) {
             setSelectedId(sortedVariants[0].id);
             setQuantity(1);
+            setMaxQuantity(999);
         }
     }, [open, sortedVariants]);
 
     const selectedVariant = sortedVariants.find((v) => v.id === selectedId) ?? sortedVariants[0];
     const isOutOfStock = selectedVariant?.stock_status === 'out_of_stock';
-    const maxQuantity = selectedVariant?.available_stock ?? 999;
-    const isAtMaxQuantity = selectedVariant?.available_stock !== undefined && quantity >= selectedVariant.available_stock;
+    const effectiveMax = Math.min(maxQuantity, selectedVariant?.available_stock ?? 999);
+    const isAtMaxQuantity = quantity >= effectiveMax;
 
     const handleAdd = async () => {
         if (!selectedVariant || adding || isOutOfStock) {
@@ -58,7 +60,7 @@ return;
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            await fetch('/customer/cart/add', {
+            const response = await fetch('/customer/cart/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -71,6 +73,10 @@ return;
                 }),
                 credentials: 'same-origin',
             });
+            const data = await response.json();
+            if (data.item?.max_quantity) {
+                setMaxQuantity(data.item.max_quantity);
+            }
         } catch {
             // Frontend cart already updated
         }
@@ -136,7 +142,7 @@ return;
                             </button>
                             <span className="w-10 text-center text-sm font-bold text-text">{quantity}</span>
                             <button
-                                onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}
+                                onClick={() => setQuantity(Math.min(effectiveMax, quantity + 1))}
                                 disabled={isAtMaxQuantity}
                                 className="flex h-11 w-11 items-center justify-center text-text-muted active:bg-surface-muted rounded-r-xl disabled:opacity-30"
                             >
@@ -145,6 +151,9 @@ return;
                                 </svg>
                             </button>
                         </div>
+                        {effectiveMax < 999 && (
+                            <span className="text-xs text-text-muted">Maks: {effectiveMax}</span>
+                        )}
 
                         <button
                             onClick={handleAdd}

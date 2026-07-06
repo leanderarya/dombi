@@ -86,6 +86,7 @@ function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: 
     const [overriddenSize, setOverriddenSize] = useState<string | null>(null);
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
+    const [maxQuantity, setMaxQuantity] = useState<number>(999);
 
     if (familyIdRef.current !== family.id) {
         familyIdRef.current = family.id;
@@ -138,7 +139,7 @@ return;
 
         try {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-            await fetch('/customer/cart/add', {
+            const response = await fetch('/customer/cart/add', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -151,6 +152,10 @@ return;
                 }),
                 credentials: 'same-origin',
             });
+            const data = await response.json();
+            if (data.item?.max_quantity) {
+                setMaxQuantity(data.item.max_quantity);
+            }
         } catch {
             // Frontend cart already updated
         }
@@ -359,8 +364,8 @@ return;
                                     </button>
                                     <span className="w-12 text-center text-sm font-bold text-text">{quantity}</span>
                                     <button
-                                        onClick={() => setQuantity(Math.min(selectedVariant.available_stock ?? 999, quantity + 1))}
-                                        disabled={selectedVariant.available_stock !== undefined && quantity >= selectedVariant.available_stock}
+                                        onClick={() => setQuantity(Math.min(maxQuantity, selectedVariant.available_stock ?? 999, quantity + 1))}
+                                        disabled={quantity >= Math.min(maxQuantity, selectedVariant.available_stock ?? 999)}
                                         className="flex h-11 w-11 items-center justify-center text-text-muted active:opacity-80 rounded-r-xl disabled:opacity-30"
                                     >
                                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -368,6 +373,9 @@ return;
                                         </svg>
                                     </button>
                                 </div>
+                                {maxQuantity < 999 && (
+                                    <span className="text-xs text-text-muted">Maks: {maxQuantity}</span>
+                                )}
                                 <span className="text-sm text-text-muted">
                                     Total <span className="font-bold text-text">{formatCurrency(selectedVariant.selling_price * quantity)}</span>
                                 </span>
