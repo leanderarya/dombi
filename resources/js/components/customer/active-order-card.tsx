@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { AlertCircle, Clock, RotateCcw, Shield, Store, Truck } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import Dialog from '@/components/ui/dialog';
@@ -100,7 +100,7 @@ function useCancelOrder() {
     const [error, setError] = useState<string | null>(null);
     const [requiresLogin, setRequiresLogin] = useState(false);
 
-    const cancel = useCallback(async (orderId: number) => {
+    const cancel = useCallback(async (orderId: number, reason: string, note?: string) => {
         setLoading(true);
         setError(null);
         setRequiresLogin(false);
@@ -120,6 +120,7 @@ function useCancelOrder() {
                     'X-CSRF-TOKEN': csrf,
                 },
                 credentials: 'same-origin',
+                body: JSON.stringify({ reason, note: note ?? '' }),
             });
 
             if (res.status === 401) {
@@ -199,6 +200,17 @@ export default function ActiveOrderCard({ order }: Props) {
     // Unpaid non-COD order waiting for payment (not yet paid)
     const isWaitingForPayment = isPending && (isPaymentPending || isPaymentNotStarted) && order.payment_status !== 'paid';
 
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+    const [cancelNote, setCancelNote] = useState('');
+
+    const cancellationReasons = [
+        'Berubah pikiran',
+        'Salah pesan',
+        'Tidak jadi',
+        'Lainnya',
+    ];
+
     const {
         cancel,
         loading: cancelLoading,
@@ -206,6 +218,19 @@ export default function ActiveOrderCard({ order }: Props) {
         requiresLogin,
         clearError,
     } = useCancelOrder();
+
+    const handleCancelClick = () => {
+        clearError();
+        setCancelReason('');
+        setCancelNote('');
+        setCancelDialogOpen(true);
+    };
+
+    const handleCancelConfirm = () => {
+        if (!cancelReason) return;
+        cancel(order.id, cancelReason, cancelReason === 'Lainnya' ? cancelNote : undefined);
+        setCancelDialogOpen(false);
+    };
 
     const statusCfg = getOrderStatusConfig(order.status);
 
@@ -324,8 +349,7 @@ export default function ActiveOrderCard({ order }: Props) {
                                 disabled={cancelLoading}
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    clearError();
-                                    cancel(order.id);
+                                    handleCancelClick();
                                 }}
                                 className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
                             >
@@ -357,8 +381,7 @@ export default function ActiveOrderCard({ order }: Props) {
                                 disabled={cancelLoading}
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    clearError();
-                                    cancel(order.id);
+                                    handleCancelClick();
                                 }}
                                 className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
                             >
@@ -380,8 +403,7 @@ export default function ActiveOrderCard({ order }: Props) {
                                 disabled={cancelLoading}
                                 onClick={(e) => {
                                     e.preventDefault();
-                                    clearError();
-                                    cancel(order.id);
+                                    handleCancelClick();
                                 }}
                                 className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
                             >
@@ -391,7 +413,7 @@ export default function ActiveOrderCard({ order }: Props) {
                                 href={href}
                                 className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
                             >
-                                Lanjutkan
+                                Detail Pesanan
                             </Link>
                         </>
                     )}
@@ -407,6 +429,49 @@ export default function ActiveOrderCard({ order }: Props) {
                 </div>
             </div>
         </OrderCardShell>
+
+        {/* Cancel Reason Dialog */}
+        <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} title="Batalkan Pesanan">
+            <p className="text-sm text-text-muted">Pilih alasan pembatalan.</p>
+
+            <div className="mt-4 space-y-2">
+                {cancellationReasons.map((reason: string) => (
+                    <button
+                        key={reason}
+                        type="button"
+                        onClick={() => setCancelReason(reason)}
+                        className={`flex h-11 w-full items-center rounded-xl border px-4 text-left text-sm font-medium transition-all ${
+                            cancelReason === reason
+                                ? 'border-primary bg-primary-light text-primary'
+                                : 'border-border text-text active:opacity-80'
+                        }`}
+                    >
+                        {reason}
+                    </button>
+                ))}
+            </div>
+
+            {cancelReason === 'Lainnya' && (
+                <div className="mt-3">
+                    <textarea
+                        value={cancelNote}
+                        onChange={(e) => setCancelNote(e.target.value)}
+                        placeholder="Jelaskan alasan pembatalan..."
+                        rows={2}
+                        className="w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
+                    />
+                </div>
+            )}
+
+            <button
+                type="button"
+                onClick={handleCancelConfirm}
+                disabled={!cancelReason || cancelLoading}
+                className="mt-4 flex min-h-11 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+            >
+                {cancelLoading ? 'Membatalkan...' : 'Batalkan Pesanan'}
+            </button>
+        </Dialog>
 
         {/* Login prompt for guests trying to cancel */}
         <Dialog open={requiresLogin} onClose={clearError} title="Login Diperlukan">
