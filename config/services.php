@@ -41,4 +41,9 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/oauth/google/callback'),
     ],
 
+    'gowa' => [
+        'base_url' => env('GOWA_BASE_URL', 'http://localhost:3000'),
+        'api_key' => env('GOWA_API_KEY'),
+    ],
+
 ];
