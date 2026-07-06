@@ -212,12 +212,18 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                                 <Truck className="h-4 w-4 text-emerald-600" />
                                 <span className="text-sm font-semibold text-text">Kurir Dombi</span>
                             </div>
-                            {deliveryPreview?.delivery_fee !== undefined && (
+                            {deliveryPreview?.delivery_fee !== undefined ? (
+                                <>
+                                    <div className="mt-1.5 text-[11px] text-text-muted">
+                                        Ongkir: <span className="font-bold text-text">Rp {deliveryPreview.delivery_fee.toLocaleString('id-ID')}</span>
+                                    </div>
+                                    <div className="mt-1 text-[11px] text-emerald-700 font-medium">Diantar dalam 30-60 menit</div>
+                                </>
+                            ) : (
                                 <div className="mt-1.5 text-[11px] text-text-muted">
-                                    Ongkir: <span className="font-bold text-text">Rp {deliveryPreview.delivery_fee.toLocaleString('id-ID')}</span>
+                                    Masukkan alamat di langkah berikut untuk cek ongkir
                                 </div>
                             )}
-                            <div className="mt-1 text-[11px] text-emerald-700 font-medium">Diantar dalam 30-60 menit</div>
                         </div>
                     </div>
                 </div>
