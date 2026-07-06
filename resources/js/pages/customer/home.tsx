@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useCustomerLocation, syncCustomerLocationDraft } from '@/lib/customer-location';
+import { usePolling } from '@/lib/use-polling';
 
 const HERO_SLIDES = [
     {
@@ -33,6 +34,7 @@ const HERO_SLIDES = [
 ];
 
 export default function Home({ customerName, activeOrders }: any) {
+    usePolling(20000);
     const { auth } = usePage<any>().props;
     const isLoggedIn = !!auth?.user;
     const [slideIndex, setSlideIndex] = useState(0);

@@ -10,6 +10,7 @@ import StatusBadge from '@/components/ui/status-badge';
 import { useCountdown } from '@/hooks/use-countdown';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { useOrderRecovery } from '@/lib/order-recovery';
+import { usePolling } from '@/lib/use-polling';
 
 const REPORT_TYPES = [
     { value: 'not_received', label: 'Barang tidak diterima' },
@@ -80,6 +81,7 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
 };
 
 export default function OrderShow({ order, cancellationReasons = [], isConfirmation = false, activeReport = null, hasRecentReport = false, canReport = false }: any) {
+    usePolling(15000);
     const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
     const isPickup = order.fulfillment_type === 'pickup';
     const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
