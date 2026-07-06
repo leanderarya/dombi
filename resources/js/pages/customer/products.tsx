@@ -102,13 +102,12 @@ function ProductsInner() {
                     </div>
                 </div>
 
-                {/* ── Outlet card (floats into green) ── */}
-                <div className="relative z-20 -mt-4 mx-4">
-                    <StoreLocationCard />
-                </div>
-
                 {/* ── White section ── */}
                 <div className="rounded-t-[1.5rem] bg-white">
+                    {/* Outlet card (floats into green) */}
+                    <div className="-mt-6 mx-4">
+                        <StoreLocationCard />
+                    </div>
                     <div className="px-4 pt-4 pb-24 space-y-4">
 
                         <SearchBar search={search} onSearchChange={setSearch}>
