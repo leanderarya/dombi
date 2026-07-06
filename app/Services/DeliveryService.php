@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Support\OperationalLog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use App\Exceptions\DeliveryException;
 use Illuminate\Validation\ValidationException;
 
 class DeliveryService
@@ -296,6 +297,16 @@ class DeliveryService
 
             // Write resolution audit log before resolution handler (delivery may be deleted for retry)
             $retryCount = DeliveryResolutionLog::where('order_id', $order->id)->count();
+
+            if ($resolution === 'retry_delivery') {
+                $maxRetries = config('delivery.max_retry_attempts', 3);
+                if ($retryCount >= $maxRetries) {
+                    throw new DeliveryException(
+                        "Batas maksimum percobaan pengiriman ({$maxRetries}) telah tercapai. Silakan batalkan pesanan."
+                    );
+                }
+            }
+
             $inventoryEffect = match ($resolution) {
                 'retry_delivery' => 'Reserved stock preserved — delivery will be retried',
                 'returned_to_outlet' => 'Reserved stock preserved — goods returned to outlet',
