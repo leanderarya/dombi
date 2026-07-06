@@ -120,7 +120,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
     Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
         // Phone verification (Google OAuth users without phone)
         Route::get('/verify-phone', [SocialAuthController::class, 'showVerifyPhone'])->name('verify-phone.show');
-        Route::post('/send-phone-otp', [SocialAuthController::class, 'sendPhoneOtp'])->name('send-phone-otp');
+
         Route::post('/verify-phone', [SocialAuthController::class, 'verifyPhone'])->name('verify-phone');
 
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
