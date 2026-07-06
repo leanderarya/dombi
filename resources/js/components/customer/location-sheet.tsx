@@ -122,15 +122,9 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
 
                     saveLocation(nextLocation);
                     await syncCustomerLocationDraft(nextLocation);
-                    onLocationSaved?.(nextLocation);
                     setDraft(toDraft(nextLocation));
-
-                    // If logged in, offer to save; if guest, just close
-                    if (isLoggedIn) {
-                        setMode('save');
-                    } else {
-                        onClose();
-                    }
+                    // Always go to manual mode so user verifies pin on map
+                    setMode('manual');
                 } catch {
                     const nextLocation: LocationDraft = {
                         address_line: '',
