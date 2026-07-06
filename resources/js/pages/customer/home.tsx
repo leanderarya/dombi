@@ -288,26 +288,26 @@ export default function Home({ customerName, activeOrders }: any) {
                         type="button"
                         onClick={handlePickup}
                         disabled={pickupLoading}
-                        className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-primary/30 bg-primary-light/50 p-4 transition-all active:opacity-80 active:scale-[0.98] disabled:opacity-50"
+                        className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-2xl bg-primary-light/30 p-4 transition-all active:opacity-80 active:scale-[0.98] disabled:opacity-50"
                     >
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-light">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
                             <Store className="h-5 w-5 text-primary" />
                         </div>
                         <div className="text-center">
-                            <div className="text-sm font-bold text-primary">Pick Up</div>
+                            <div className="text-sm font-bold text-text">Pick Up</div>
                             <div className="mt-0.5 text-[11px] text-text-muted">Ambil di outlet</div>
                         </div>
                     </button>
                     <button
                         type="button"
                         onClick={handleDelivery}
-                        className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-amber-200 bg-amber-50/50 p-4 transition-all active:opacity-80 active:scale-[0.98]"
+                        className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-2xl bg-amber-50/40 p-4 transition-all active:opacity-80 active:scale-[0.98]"
                     >
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-amber-100">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
                             <Truck className="h-5 w-5 text-amber-600" />
                         </div>
                         <div className="text-center">
-                            <div className="text-sm font-bold text-amber-700">Delivery</div>
+                            <div className="text-sm font-bold text-text">Delivery</div>
                             <div className="mt-0.5 text-[11px] text-text-muted">Diantar ke rumah</div>
                         </div>
                     </button>
@@ -319,7 +319,7 @@ export default function Home({ customerName, activeOrders }: any) {
                 <section className="mt-6">
                     <Link
                         href={`/customer/orders/${activeOrder.id}`}
-                        className="group flex items-center gap-3 rounded-2xl border-2 border-primary/30 bg-white p-4 shadow-sm active:opacity-80"
+                        className="group flex items-center gap-3 rounded-2xl bg-primary-light/20 p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all active:opacity-80"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-light">
                             <Package className="h-5 w-5 text-primary" />
