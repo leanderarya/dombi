@@ -269,6 +269,24 @@ class CheckoutController extends Controller
             ->with(['addresses' => fn ($query) => $query->latest()->limit(1)])
             ->first();
 
+        // Block guest from using phone that belongs to registered account
+        if ($existingCustomer && $existingCustomer->user_id !== null && ! $request->user()) {
+            return back()->withErrors([
+                'phone_number' => 'Nomor ini sudah terdaftar. Silakan masuk dengan akun yang terdaftar.',
+            ])->withInput();
+        }
+
+        // Block authenticated user from using phone that belongs to different registered account
+        if ($existingCustomer
+            && $existingCustomer->user_id !== null
+            && $request->user()
+            && $existingCustomer->user_id !== $request->user()->id
+        ) {
+            return back()->withErrors([
+                'phone_number' => 'Nomor ini milik akun lain. Gunakan nomor kamu sendiri.',
+            ])->withInput();
+        }
+
         $request->session()->put('checkout.customer', [
             'customer_name' => $validated['customer_name'],
             'phone_number' => $phone,
@@ -464,17 +482,18 @@ class CheckoutController extends Controller
             return back()->withErrors(['error' => 'Terjadi kesalahan saat membuat pesanan. Silakan coba lagi.'])->withInput();
         }
 
-        $request->session()->forget([
-            'checkout.cart',
-            'checkout.fulfillment',
-            'checkout.customer',
-            'checkout.location',
-        ]);
-
         // Create DOKU payment immediately — customer pays before outlet confirms.
         // If outlet rejects after payment, refund handled via DOKU.
         try {
             $paymentUrl = app(DokuService::class)->createPayment($order);
+
+            // Clear cart session ONLY after payment URL is successfully created
+            $request->session()->forget([
+                'checkout.cart',
+                'checkout.fulfillment',
+                'checkout.customer',
+                'checkout.location',
+            ]);
 
             // Inertia/XHR requests can't follow cross-origin redirects (CORS).
             // Return JSON and let the frontend do a full-page navigation.
@@ -523,10 +542,14 @@ class CheckoutController extends Controller
             ->with(['addresses' => fn ($query) => $query->latest()->limit(1)])
             ->first();
 
+        // Don't expose registered user's name to guest
+        $isGuest = ! $request->user();
+        $isRegistered = $customer && $customer->user_id !== null;
+
         return response()->json([
             'found' => (bool) $customer,
             'customer' => $customer ? [
-                'name' => $customer->name,
+                'name' => ($isGuest && $isRegistered) ? null : $customer->name,
                 'phone_number' => $phone,
             ] : null,
         ]);
