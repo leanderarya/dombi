@@ -115,7 +115,9 @@ class Order extends Model
                 $order->recovery_token = static::generateRecoveryToken();
             }
             if (empty($order->confirmation_expires_at) && $order->status === self::STATUS_PENDING_CONFIRMATION) {
-                $order->confirmation_expires_at = now()->addMinutes(config('order.confirmation_timeout_minutes', 15));
+                $outlet = $order->outlet_id ? \App\Models\Outlet::find($order->outlet_id) : null;
+                $timeout = $outlet?->confirmation_timeout_minutes ?? config('order.confirmation_timeout_minutes', 15);
+                $order->confirmation_expires_at = now()->addMinutes($timeout);
             }
         });
     }

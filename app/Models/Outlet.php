@@ -18,7 +18,7 @@ class Outlet extends Model
         'postal_code', 'address', 'latitude', 'longitude', 'phone',
         'pic_name', 'pic_phone', 'pic_position',
         'operational_notes', 'delivery_radius_km', 'prep_estimate_minutes',
-        'status',
+        'status', 'confirmation_timeout_minutes',
     ];
 
     protected function casts(): array
