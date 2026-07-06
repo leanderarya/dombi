@@ -6,7 +6,10 @@ use Exception;
 
 class StockAdjustedException extends Exception
 {
-    public array $adjustments;
+    /**
+     * @var array<int, array{variant_id: int, original_qty: int, adjusted_qty: int, available_stock: int}>
+     */
+    public readonly array $adjustments;
 
     public function __construct(array $adjustments)
     {
