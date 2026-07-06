@@ -7,12 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\DeliveryPricingService;
 use App\Services\DokuService;
 use App\Services\OrderService;
-use App\Services\OrderStatusService;
 use App\Services\RecommendOutletService;
 use App\Support\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
@@ -510,22 +510,23 @@ class CheckoutController extends Controller
                 'doku_errors' => $e->getErrors(),
             ]);
 
-            // Compensate: expire order to release reserved stock
-            app(OrderStatusService::class)->expireOrder($order, reason: 'Payment gateway unavailable');
+            // Don't expire the order — let customer retry payment from confirm page.
+            // The order stays pending_confirmation with payment_status = null.
+            // ExpirePendingOrders will clean it up if customer never returns.
 
-            return redirect()->route('customer.checkout.index')
-                ->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
+            return redirect()->route('customer.orders.confirm', [
+                'orderCode' => $order->order_code,
+            ])->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
         } catch (\Exception $e) {
             Log::error('Failed to create DOKU payment', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
             ]);
 
-            // Compensate: expire order to release reserved stock
-            app(OrderStatusService::class)->expireOrder($order, reason: 'Payment gateway error');
-
-            return redirect()->route('customer.checkout.index')
-                ->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
+            // Don't expire the order — let customer retry payment from confirm page.
+            return redirect()->route('customer.orders.confirm', [
+                'orderCode' => $order->order_code,
+            ])->with('error', 'Gagal membuat pembayaran. Silakan coba lagi.');
         }
     }
 
@@ -576,6 +577,82 @@ class CheckoutController extends Controller
         $request->session()->put('checkout.location', $validated);
 
         return response()->json(['saved' => true, 'location' => $validated]);
+    }
+
+    public function validateStock(Request $request): JsonResponse
+    {
+        $cart = $request->session()->get('cart', []);
+
+        if (empty($cart)) {
+            return response()->json([
+                'valid' => true,
+                'items' => [],
+                'warnings' => [],
+            ]);
+        }
+
+        $variantIds = collect($cart)->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $variants = ProductVariant::whereIn('id', $variantIds)
+            ->where('is_active', true)
+            ->with('family')
+            ->get()
+            ->keyBy('id');
+
+        $items = [];
+        $warnings = [];
+        $valid = true;
+
+        foreach ($cart as $cartItem) {
+            $variantId = (int) $cartItem['product_variant_id'];
+            $requestedQty = (int) $cartItem['quantity'];
+            $variant = $variants->get($variantId);
+
+            if (! $variant) {
+                continue;
+            }
+
+            $inventory = OutletInventory::where('product_variant_id', $variantId)
+                ->where('is_active', true)
+                ->first();
+
+            $availableStock = $inventory
+                ? max(0, (int) $inventory->current_stock - (int) $inventory->reserved_stock)
+                : 0;
+
+            $adjusted = false;
+            $adjustedQty = $requestedQty;
+            $removed = false;
+
+            if ($availableStock <= 0) {
+                $adjusted = true;
+                $adjustedQty = 0;
+                $removed = true;
+                $valid = false;
+                $warnings[] = "{$variant->family->name} {$variant->name}: stok habis, item dihapus dari pesanan";
+            } elseif ($availableStock < $requestedQty) {
+                $adjusted = true;
+                $adjustedQty = $availableStock;
+                $valid = false;
+                $warnings[] = "{$variant->family->name} {$variant->name}: jumlah dikurangi dari {$requestedQty} ke {$availableStock} (stok tersisa {$availableStock})";
+            }
+
+            $items[] = [
+                'product_variant_id' => $variantId,
+                'name' => $variant->family->name ?? $variant->name,
+                'variant_name' => $variant->name,
+                'requested_qty' => $requestedQty,
+                'available_stock' => $availableStock,
+                'adjusted' => $adjusted,
+                'adjusted_qty' => $adjustedQty,
+                'removed' => $removed,
+            ];
+        }
+
+        return response()->json([
+            'valid' => $valid,
+            'items' => $items,
+            'warnings' => $warnings,
+        ]);
     }
 
     public function pickupOutlets(Request $request, RecommendOutletService $recommendOutletService): JsonResponse

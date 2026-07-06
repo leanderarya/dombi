@@ -111,6 +111,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::get('/checkout/login-prompt', fn () => Inertia::render('customer/checkout/login-prompt'))->name('checkout.login-prompt');
         Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
         Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->middleware('throttle:payment-submit')->name('checkout.process-payment');
+        Route::get('/checkout/validate-stock', [CustomerCheckoutController::class, 'validateStock'])->name('checkout.validate-stock');
         Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
         Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
         Route::get('/orders/{order}/confirmation/{token}', [CustomerOrderController::class, 'confirmation'])->name('orders.confirmation');
@@ -165,8 +166,8 @@ Route::get('/customer/orders/{order}/payment-status', [CustomerOrderController::
 Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware(['auth', 'throttle:track-cancel'])->name('track.cancel');
 
 // DOKU payment — no auth, signature-verified (called by DOKU servers)
-Route::post('/payment/doku/notify', [DokuPaymentController::class, 'notify'])->name('doku.notify');
-Route::get('/payment/doku/redirect', [DokuPaymentController::class, 'redirect'])->name('doku.redirect');
+Route::match(['get', 'post'], '/payment/doku/notify', [DokuPaymentController::class, 'notify'])->name('doku.notify');
+Route::match(['get', 'post'], '/payment/doku/redirect', [DokuPaymentController::class, 'redirect'])->name('doku.redirect');
 
 Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): void {
     // System endpoints
