@@ -116,7 +116,7 @@ Customer          System            DOKU           Outlet         Courier
 
 | Step | Order Fields Changed | Side Effects |
 |------|---------------------|--------------|
-| Create | status=pending_confirmation, ordered_at, confirmation_expires_at=now+timeout | Stock reserved, OrderStatusHistory, notifyOutlet |
+| Create | status=pending_confirmation, ordered_at, confirmation_expires_at=now+outlet.timeout | Stock reserved, OrderStatusHistory. Outlet TIDAK di-notify sampai payment success. |
 | Payment success | payment_status=paid, paid_at, status→confirmed, confirmed_at | Stock preserved, notifyCustomer, notifyOutlet |
 | Outlet preparing | status=preparing, confirmed_by | — |
 | Outlet ready | status=ready_for_pickup | — |
@@ -160,7 +160,7 @@ Customer              System              DOKU
 ```
 DOKU webhook: FAILED/REJECTED/DENIED/CANCELLED
   → payment_status = failed
-  → confirmation_expires_at = now + 15m (reset)
+  → confirmation_expires_at = now + outlet.confirmation_timeout_minutes (default 15m, reset)
   → order tetap pending_confirmation
   → customer bisa retry payment
 ```
@@ -170,7 +170,7 @@ DOKU webhook: FAILED/REJECTED/DENIED/CANCELLED
 ```
 DOKU webhook: EXPIRED
   → payment_status = expired
-  → confirmation_expires_at = now + 15m (reset)
+  → confirmation_expires_at = now + outlet.confirmation_timeout_minutes (default 15m, reset)
   → order tetap pending_confirmation
   → customer bisa retry payment
 ```
@@ -210,6 +210,62 @@ Customer tap "Bayar Ulang"
 | Retry → success | paid | → confirmed | — | — |
 | Retry → fail again | failed | pending_confirmation | reset again | Retry again |
 | All retries exhausted + timeout | failed | → expired (ExpireJob) | — | Notify customer |
+
+---
+
+## 3b. Customer Cancel Flow
+
+```
+Customer              System              Outlet
+    │                    │                   │
+    │ tap "Batalkan"     │                   │
+    ├───────────────────►│                   │
+    │                    │                   │
+    │ pilih alasan       │                   │
+    │ (wajib)            │                   │
+    │                    │                   │
+    │ validasi:          │                   │
+    │ - status allowed?  │                   │
+    │   (pending_conf,   │                   │
+    │    confirmed,      │                   │
+    │    preparing)      │                   │
+    │ - NOT allowed:     │                   │
+    │   ready_for_pickup │                   │
+    │   picked_up        │                   │
+    │   delivering       │                   │
+    │                    │                   │
+    │ status → cancelled_by_customer         │
+    │ cancelled_at, cancelled_reason         │
+    │ stock: released                         │
+    │                    │                   │
+    │ if payment_status=paid:                │
+    │   refund ke Customer Credit            │
+    │   credit_balance += order.total        │
+    │                    │ notify ──────────►│
+    │                    │ "Dibatalkan"      │
+```
+
+### Cancel Allowed From
+
+| Status | Bisa cancel? | Reason |
+|--------|-------------|--------|
+| pending_confirmation | ✅ | Belum diproses |
+| confirmed | ✅ | Sudah diterima outlet, belum mulai proses |
+| preparing | ✅ | Sedang diproses, cancel = stock released + refund |
+| ready_for_pickup | ❌ | Sudah siap, tidak bisa cancel sendiri |
+| picked_up | ❌ | Sudah di kurir |
+| delivering | ❌ | Sedang diantar |
+| completed | ❌ | Sudah selesai |
+| rejected_by_outlet | ❌ | Sudah ditolak |
+| expired | ❌ | Sudah expired |
+| cancelled_by_outlet | ❌ | Sudah dibatalkan outlet |
+| failed_delivery | ❌ | Sudah gagal |
+
+**Customer cancel alasan (wajib):**
+- Berubah pikiran
+- Salah pesan
+- Tidak jadi
+- Lainnya (opsional text)
 
 ---
 
@@ -280,11 +336,11 @@ from delivering
 
 ### 5c. Resolution (by owner/outlet)
 
-| Resolution | Order Status | Stock Effect | Payment Effect |
-|------------|-------------|--------------|----------------|
-| retry_delivery | → ready_for_pickup | Preserved | — |
-| returned_to_outlet | → preparing | Preserved | — |
-| cancelled_and_released | → cancelled_by_outlet | Released | Refund ke credit |
+| Resolution | Order Status | Stock Effect | Payment Effect | Who can do? |
+|------------|-------------|--------------|----------------|-------------|
+| retry_delivery | → ready_for_pickup | Preserved | — | Owner, Outlet |
+| returned_to_outlet | → preparing | Preserved | — | Owner, Outlet |
+| cancelled_and_released | → cancelled_by_outlet | Released | Refund ke credit | Owner, Outlet |
 
 ### 5d. Return to Outlet Flow
 
@@ -329,7 +385,7 @@ Setelah 3x reject:
 
 | # | Edge Case | Current Status | Action Needed |
 |---|-----------|---------------|---------------|
-| 1 | Outlet timeout | ⚠️ Fixed 15m | Configurable per outlet, default 15m |
+| 1 | Outlet timeout | ⚠️ Fixed 15m | `outlets.confirmation_timeout_minutes`, default 15m. ExpireJob + Order creation pakai field ini. |
 | 2 | Outlet reject setelah paid | ❌ No refund | Customer Credit system |
 | 3 | Outlet cancel setelah preparing | ❌ No cancel reason | Tambah alasan + confirmation dialog |
 | 4 | Delivery retry loop | ❌ No limit | Max 3 attempts |
@@ -345,7 +401,7 @@ Setelah 3x reject:
 | 1 | Courier reject loop | ❌ No limit | Max 3 assign attempts |
 | 2 | Return auto-confirm | ❌ No timeout | Auto-confirm 24h |
 | 3 | Customer report window | ✅ Handled (7-day window) | — |
-| 4 | Deactivated product | ⚠️ Partial | Show warning to outlet |
+| 4 | Deactivated product | ⚠️ Partial | Tampilkan warning badge "Produk Tidak Aktif" di order detail outlet, tapi tetap proses (stok sudah reserved). Hanya warning, bukan block. |
 | 5 | Settlement mismatch | ✅ Manual verification | — |
 | 6 | Multiple orders same time | ✅ OK | — |
 | 7 | Delivery fail → retry → fail lagi | ❌ No limit | Max 2-3 retry |
@@ -364,6 +420,9 @@ customer_credits table:
 
 customers table:
   + credit_balance (decimal, default 0)
+
+orders table:
+  + credit_applied (decimal, default 0) ← track berapa kredit yang dipakai
 ```
 
 ### Trigger Credit (Refund)
@@ -380,39 +439,54 @@ customers table:
 
 ```
 Checkout page:
-  → tampilkan "Pakai Saldo Kredit (Rp X)"
-  → checkbox/toggle
+  → tampilkan "Pakai Saldo Kredit (Rp X)" (jika credit_balance > 0)
+  → checkbox/toggle — SELALU FULL USE, TIDAK PARTIAL
 
-Jika credit >= total:
-  → total = 0, tidak perlu DOKU
+Jika credit_balance >= order.total:
+  → credit_applied = order.total
+  → payment_method = 'credit'
+  → payment_status = 'paid'
+  → order.total tetap (tidak dikurangi — settlement butuh angka asli)
+  → customer->credit_balance -= order.total
   → order langsung confirmed (paid via credit)
 
-Jika credit < total:
-  → kurangi total: total -= credit
-  → bayar sisa via DOKU
-  → credit = 0
+Jika credit_balance < order.total:
+  → credit_applied = credit_balance
+  → sisa = order.total - credit_applied
+  → bayar sisa via DOKU (sisa amount)
+  → customer->credit_balance = 0
+  → saat DOKU success: payment_status = 'paid'
 
 Jika tidak pakai credit:
-  → credit tetap, bayar full via DOKU
+  → credit_applied = 0
+  → bayar full via DOKU
 ```
 
 ### Credit Transaction Flow
 
 ```
 REFUND:
-  1. order rejected/cancelled (paid)
+  1. order rejected/cancelled (payment_status=paid)
   2. CustomerCredit::create(amount=order.total, type='refund')
   3. customer->credit_balance += order.total
-  4. notify customer "Saldo kredit ditambahkan"
+  4. notify customer "Saldo kredit ditambahkan Rp X"
 
-USE:
+USE (credit >= total):
   1. checkout: customer pilih "Pakai Saldo"
-  2. credit_used = min(credit_balance, order.total)
-  3. order.total -= credit_used
-  4. CustomerCredit::create(amount=-credit_used, type='used')
-  5. customer->credit_balance -= credit_used
-  6. if order.total > 0 → DOKU payment
-  7. if order.total == 0 → status=paid langsung
+  2. credit_applied = order.total
+  3. CustomerCredit::create(amount=-credit_applied, type='used')
+  4. customer->credit_balance -= credit_applied
+  5. order: payment_method='credit', payment_status='paid'
+  6. status = confirmed langsung
+
+USE (credit < total):
+  1. checkout: customer pilih "Pakai Saldo"
+  2. credit_applied = credit_balance
+  3. sisa = order.total - credit_applied
+  4. CustomerCredit::create(amount=-credit_applied, type='used')
+  5. customer->credit_balance = 0
+  6. DOKU createPayment(amount=sisa)
+  7. saat DOKU success: payment_status='paid'
 ```
 
 ---
@@ -421,7 +495,7 @@ USE:
 
 | Step | Notification | Recipients |
 |------|-------------|------------|
-| Order created (non-COD) | — (deferred until paid) | — |
+| Payment success | order.created (first notification to outlet) | Outlet |
 | Payment success | order.confirmed | Customer |
 | Outlet confirms | order.confirmed | Customer |
 | Outlet rejects | order.rejected | Customer, Owner |
