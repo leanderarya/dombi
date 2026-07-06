@@ -144,18 +144,22 @@ export function getExchangeStatus(status: string): StatusConfig {
 export function getCustomerStockStatus(status: string, availableStock?: number): StatusConfig & { displayLabel: string } {
     const config = CUSTOMER_STOCK_STATUSES[status] ?? { label: status, variant: 'neutral' };
     let displayLabel = config.label;
+
     if (status === 'low' && availableStock !== undefined) {
         displayLabel = `Stok Terbatas (${availableStock})`;
     }
+
     return { ...config, displayLabel };
 }
 
 export function getOwnerStockStatus(status: string, availableStock?: number): StatusConfig & { displayLabel: string } {
     const config = OWNER_STOCK_STATUSES[status] ?? { label: status, variant: 'neutral' };
     let displayLabel = config.label;
+
     if (status === 'low' && availableStock !== undefined) {
         displayLabel = `Stok Rendah (${availableStock})`;
     }
+
     return { ...config, displayLabel };
 }
 
@@ -181,3 +185,4 @@ export function getOrderStatusTone(status: string): string {
 }
 
 export type { StatusConfig, StatusVariant };
+export type { StockStatus } from './stock';

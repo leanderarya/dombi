@@ -3,6 +3,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import DistributionStatusBadge from '@/components/ui/distribution-status-badge';
 import RestockStatusBadge from '@/components/ui/restock-status-badge';
 import StockLevelBadge from '@/components/ui/stock-level-badge';
+import { calculateStockStatus } from '@/lib/stock';
 import { formatDate } from '@/lib/format';
 
 type TimelineEvent = {
@@ -214,7 +215,7 @@ function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
                                     <div className="truncate text-sm font-bold text-text">{item.product?.name ?? item.variant?.name ?? '-'}</div>
                                     <div className="mt-0.5 text-xs text-text-muted">Diminta {item.requested_quantity}</div>
                                 </div>
-                                {inventory ? <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} /> : <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-text-muted">Stok Kosong</span>}
+                                {inventory ? <StockLevelBadge {...calculateStockStatus(inventory.current_stock, inventory.reserved_stock, inventory.minimum_stock)} showQuantity /> : <span className="rounded-md bg-slate-100 px-2 py-1 text-[11px] font-bold text-text-muted">Stok Kosong</span>}
                             </div>
                             <label className="mt-3 block text-[11px] font-semibold uppercase tracking-wide text-text-subtle">Jumlah disetujui</label>
                             <input
@@ -285,7 +286,7 @@ function ItemsSummary({ restock, inventories }: any) {
                                     <div className="truncate text-sm font-bold text-text">{item.product?.name ?? item.variant?.name ?? '-'}</div>
                                     <div className="mt-1 text-xs text-text-muted">Diminta {item.requested_quantity} · Disetujui {item.approved_quantity ?? 0}</div>
                                 </div>
-                                {inventory && <StockLevelBadge currentStock={inventory.current_stock} reservedStock={inventory.reserved_stock} minimumStock={inventory.minimum_stock} />}
+                                {inventory && <StockLevelBadge {...calculateStockStatus(inventory.current_stock, inventory.reserved_stock, inventory.minimum_stock)} showQuantity />}
                             </div>
                         </div>
                     );

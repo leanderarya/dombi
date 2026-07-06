@@ -3,6 +3,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import SectionCard from '@/components/ui/section-card';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import StockLevelBadge from '@/components/ui/stock-level-badge';
+import { calculateStockStatus } from '@/lib/stock';
 import OutletLayout from '@/layouts/outlet-layout';
 
 export default function CreateRestock({ families, inventories }: any) {
@@ -102,9 +103,8 @@ export default function CreateRestock({ families, inventories }: any) {
                                         <span className="font-semibold">{inventory.minimum_stock}</span>
                                     </div>
                                     <StockLevelBadge
-                                        currentStock={inventory.current_stock}
-                                        reservedStock={inventory.reserved_stock}
-                                        minimumStock={inventory.minimum_stock}
+                                        {...calculateStockStatus(inventory.current_stock, inventory.reserved_stock, inventory.minimum_stock)}
+                                        showQuantity
                                     />
                                 </div>
                             )}

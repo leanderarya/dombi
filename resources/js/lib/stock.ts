@@ -29,3 +29,21 @@ export function getStockStatusLabel(status: StockStatus, availableStock?: number
             return '';
     }
 }
+
+export function calculateStockStatus(
+    currentStock: number,
+    reservedStock: number,
+    minimumStock: number,
+): { status: StockStatus; availableStock: number } {
+    const availableStock = currentStock - reservedStock;
+
+    if (availableStock <= 0) {
+        return { status: 'out_of_stock', availableStock: 0 };
+    }
+
+    if (availableStock <= minimumStock) {
+        return { status: 'low', availableStock };
+    }
+
+    return { status: 'available', availableStock };
+}

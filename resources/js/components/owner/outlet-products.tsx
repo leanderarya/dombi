@@ -2,6 +2,7 @@ import { MoreHorizontal, Package, Plus, Search, ToggleLeft, ToggleRight, Trash2 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { formatCurrency } from '@/lib/format';
+import { getOwnerStockStatus } from '@/lib/status-labels';
 import RestockModal from './restock-modal';
 import TambahProdukModal from './tambah-produk-modal';
 
@@ -208,15 +209,21 @@ function StatusBadge({ active }: { active: boolean }) {
 }
 
 function StockBadge({ status, stock }: { status: string; stock: number }) {
-    if (status === 'out_of_stock') {
-        return <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700">Habis</span>;
-    }
-
-    if (status === 'low') {
-        return <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">Menipis ({stock})</span>;
-    }
-
-    return <span className="tabular-nums text-slate-700">{stock} pcs</span>;
+    const { displayLabel } = getOwnerStockStatus(status, stock);
+    
+    const styles: Record<string, string> = {
+        success: 'bg-emerald-50 text-emerald-700',
+        warning: 'bg-amber-50 text-amber-700',
+        danger: 'bg-red-50 text-red-700',
+    };
+    
+    const { variant } = getOwnerStockStatus(status, stock);
+    
+    return (
+        <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${styles[variant]}`}>
+            {displayLabel}
+        </span>
+    );
 }
 
 function ActionMenu({ variantId, isActive, onRestock, onToggle, onRemove }: {

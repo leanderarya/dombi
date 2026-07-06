@@ -5,6 +5,7 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import SectionCard from '@/components/ui/section-card';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import StockLevelBadge from '@/components/ui/stock-level-badge';
+import { calculateStockStatus } from '@/lib/stock';
 
 export default function OwnerRestockCreate({ outlets, selectedOutletId, selectedProductId, returnTo }: any) {
     const backHref = returnTo || '/owner/restocks';
@@ -146,9 +147,8 @@ export default function OwnerRestockCreate({ outlets, selectedOutletId, selected
                                                 <span className="font-semibold">{inventory.minimum_stock}</span>
                                             </div>
                                             <StockLevelBadge
-                                                currentStock={inventory.current_stock}
-                                                reservedStock={inventory.reserved_stock}
-                                                minimumStock={inventory.minimum_stock}
+                                                {...calculateStockStatus(inventory.current_stock, inventory.reserved_stock, inventory.minimum_stock)}
+                                                showQuantity
                                             />
                                         </div>
                                     )}
