@@ -12,6 +12,7 @@ class UpdateOrderStatusRequest extends FormRequest
         'confirmed',
         'preparing',
         'ready_for_pickup',
+        'cancelled_by_outlet',
     ];
 
     public function authorize(): bool
@@ -26,6 +27,7 @@ class UpdateOrderStatusRequest extends FormRequest
     {
         return [
             'status' => ['required', 'string', Rule::in(self::OUTLET_ALLOWED_STATUSES)],
+            'reason' => ['required_if:status,cancelled_by_outlet', 'nullable', 'string', 'max:500'],
         ];
     }
 
@@ -43,6 +45,12 @@ class UpdateOrderStatusRequest extends FormRequest
                             'status',
                             "Status order tidak bisa diubah dari {$order->status} ke {$status}."
                         );
+                    }
+                }
+
+                if ($status === 'cancelled_by_outlet' && $this->input('reason')) {
+                    if (! in_array($this->input('reason'), OrderStatusService::outletCancellationReasons(), true)) {
+                        $this->validator->errors()->add('reason', 'Alasan pembatalan tidak valid.');
                     }
                 }
             },

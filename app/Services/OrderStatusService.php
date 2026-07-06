@@ -41,6 +41,14 @@ class OrderStatusService
         'Lainnya',
     ];
 
+    private const OUTLET_CANCELLATION_REASONS = [
+        'Stok Habis',
+        'Produk Rusak',
+        'Outlet Tutup',
+        'Gangguan Operasional',
+        'Lainnya',
+    ];
+
     public function __construct(
         private readonly InventoryService $inventoryService,
         private readonly NotificationService $notificationService,
@@ -48,9 +56,9 @@ class OrderStatusService
         private readonly SettlementGeneratorService $settlementGeneratorService,
     ) {}
 
-    public function updateStatus(Order $order, string $status, ?User $actor = null): Order
+    public function updateStatus(Order $order, string $status, ?User $actor = null, ?string $reason = null): Order
     {
-        return DB::transaction(function () use ($order, $status, $actor): Order {
+        return DB::transaction(function () use ($order, $status, $actor, $reason): Order {
             $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
             $fromStatus = $order->status;
 
@@ -86,8 +94,14 @@ class OrderStatusService
             }
 
             if ($status === 'cancelled_by_outlet') {
+                if (! $reason || ! in_array($reason, self::OUTLET_CANCELLATION_REASONS, true)) {
+                    throw ValidationException::withMessages([
+                        'reason' => 'Alasan pembatalan wajib dipilih.',
+                    ]);
+                }
                 $updateData['cancelled_at'] = now();
                 $updateData['cancelled_by'] = $actor?->id;
+                $updateData['cancellation_reason'] = $reason;
             }
 
             if ($status === Order::STATUS_COMPLETED) {
@@ -96,14 +110,22 @@ class OrderStatusService
 
             $order->update($updateData);
 
-            $order->statusHistories()->create([
+            $historyData = [
                 'from_status' => $fromStatus,
                 'to_status' => $status,
-                'notes' => $this->statusNote($status, $order),
+                'notes' => $status === 'cancelled_by_outlet'
+                    ? "Order dibatalkan outlet. Alasan: {$reason}"
+                    : $this->statusNote($status, $order),
                 'changed_by' => $actor?->id,
                 'changed_by_type' => $actor?->role ?? 'system',
                 'created_at' => now(),
-            ]);
+            ];
+
+            if ($status === 'cancelled_by_outlet' && $reason) {
+                $historyData['reason'] = $reason;
+            }
+
+            $order->statusHistories()->create($historyData);
 
             // Fire notifications based on status
             $this->fireStatusNotifications($order, $fromStatus, $status);
@@ -339,6 +361,11 @@ class OrderStatusService
     public static function cancellationReasons(): array
     {
         return self::CANCELLATION_REASONS;
+    }
+
+    public static function outletCancellationReasons(): array
+    {
+        return self::OUTLET_CANCELLATION_REASONS;
     }
 
     private function statusNote(string $status, ?Order $order = null): string

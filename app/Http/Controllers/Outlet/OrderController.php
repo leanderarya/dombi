@@ -88,12 +88,13 @@ class OrderController extends Controller
             'order' => $order->load(['items.product', 'statusHistories.actor', 'delivery.courier']),
             'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'rejectionReasons' => OrderStatusService::rejectionReasons(),
+            'cancellationReasons' => OrderStatusService::outletCancellationReasons(),
         ]);
     }
 
     public function updateStatus(UpdateOrderStatusRequest $request, Order $order, OrderStatusService $orderStatusService): RedirectResponse
     {
-        $orderStatusService->updateStatus($order, $request->validated('status'), $request->user());
+        $orderStatusService->updateStatus($order, $request->validated('status'), $request->user(), $request->validated('reason'));
 
         return redirect()->route('outlet.orders.show', $order)->with('success', 'Status order berhasil diperbarui.');
     }

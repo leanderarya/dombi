@@ -29,13 +29,15 @@ const STATUS_CONFIRM_LABELS: Record<string, { title: string; message: string; co
     },
 };
 
-export default function OutletOrderShow({ order, couriers, rejectionReasons = [] }: any) {
+export default function OutletOrderShow({ order, couriers, rejectionReasons = [], cancellationReasons = [] }: any) {
     const { errors } = usePage<any>().props;
     const assignForm = useForm({ courier_id: couriers[0]?.id ?? '' });
     const rejectForm = useForm({ reason: '', note: '' });
     const statusForm = useForm({ status: '' });
+    const cancelForm = useForm({ status: 'cancelled_by_outlet', reason: '', note: '' });
     const completeForm = useForm({});
     const [showRejectSheet, setShowRejectSheet] = useState(false);
+    const [showCancelSheet, setShowCancelSheet] = useState(false);
     const [showAssignSheet, setShowAssignSheet] = useState(false);
     const [confirmAction, setConfirmAction] = useState<string | null>(null);
 
@@ -49,6 +51,12 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
     const handleReject = () => {
         rejectForm.post(`/outlet/orders/${order.id}/reject`, {
             onSuccess: () => setShowRejectSheet(false),
+        });
+    };
+
+    const handleCancel = () => {
+        cancelForm.post(`/outlet/orders/${order.id}/status`, {
+            onSuccess: () => setShowCancelSheet(false),
         });
     };
 
@@ -94,6 +102,14 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
             label: 'Siap Diambil',
             variant: 'primary' as const,
             onClick: () => setConfirmAction('ready_for_pickup'),
+        });
+    }
+
+    if (isConfirmed || isPreparing) {
+        actions.push({
+            label: 'Batalkan',
+            variant: 'secondary' as const,
+            onClick: () => setShowCancelSheet(true),
         });
     }
 
@@ -383,6 +399,50 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                     className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                 >
                     {rejectForm.processing ? 'Menolak...' : 'Tolak Pesanan'}
+                </button>
+            </BottomSheet>
+
+            {/* Cancel Reason Sheet */}
+            <BottomSheet open={showCancelSheet} onClose={() => setShowCancelSheet(false)} title="Batalkan Pesanan">
+                <p className="text-sm text-text-muted">Pilih alasan pembatalan.</p>
+
+                <div className="mt-4 space-y-2">
+                    {cancellationReasons.map((reason: string) => (
+                        <button
+                            key={reason}
+                            type="button"
+                            onClick={() => cancelForm.setData('reason', reason)}
+                            className={`flex h-11 w-full items-center rounded-lg border px-4 text-left text-sm font-medium transition-all ${
+                                cancelForm.data.reason === reason
+                                    ? 'border-primary bg-primary-light text-primary'
+                                    : 'border-border text-text active:bg-surface-muted'
+                            }`}
+                        >
+                            {reason}
+                        </button>
+                    ))}
+                </div>
+
+                {cancelForm.data.reason === 'Lainnya' && (
+                    <div className="mt-3">
+                        <textarea
+                            value={cancelForm.data.note ?? ''}
+                            onChange={(e) => cancelForm.setData('note', e.target.value)}
+                            placeholder="Jelaskan alasan pembatalan..."
+                            className="min-h-20 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        />
+                    </div>
+                )}
+
+                {cancelForm.errors.reason && <p className="mt-2 text-xs text-red-600">{cancelForm.errors.reason}</p>}
+
+                <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={!cancelForm.data.reason || cancelForm.processing}
+                    className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                >
+                    {cancelForm.processing ? 'Membatalkan...' : 'Batalkan Pesanan'}
                 </button>
             </BottomSheet>
         </OutletLayout>
