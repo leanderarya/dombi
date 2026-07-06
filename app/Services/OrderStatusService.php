@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\User;
+use App\Services\CustomerCreditService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -72,6 +73,10 @@ class OrderStatusService
 
             if (in_array($status, ['cancelled_by_outlet', 'cancelled_by_customer', 'rejected_by_outlet'], true)) {
                 $this->inventoryService->releaseReservedStock($order);
+
+                if ($status === 'cancelled_by_outlet' && $order->payment_status === 'paid') {
+                    app(CustomerCreditService::class)->refund($order);
+                }
             }
 
             $updateData = ['status' => $status];
@@ -146,6 +151,10 @@ class OrderStatusService
 
             $this->inventoryService->releaseReservedStock($order);
 
+            if ($order->payment_status === 'paid') {
+                app(CustomerCreditService::class)->refund($order);
+            }
+
             $order->update([
                 'status' => Order::REJECTED,
                 'rejected_at' => now(),
@@ -200,6 +209,10 @@ class OrderStatusService
             }
 
             $this->inventoryService->releaseReservedStock($order);
+
+            if ($order->payment_status === 'paid') {
+                app(CustomerCreditService::class)->refund($order);
+            }
 
             $fromStatus = $order->status;
 
