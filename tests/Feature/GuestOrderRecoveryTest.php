@@ -117,6 +117,8 @@ class GuestOrderRecoveryTest extends TestCase
     public function test_recovery_with_phone_only_requires_verification(): void
     {
         $customer = $this->createCustomerWithOrders();
+        $user = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $customer->update(['user_id' => $user->id]);
 
         $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567890',
@@ -124,13 +126,11 @@ class GuestOrderRecoveryTest extends TestCase
             ->assertJson([
                 'found' => true,
                 'requires_verification' => true,
+                'customer_name' => null, // Don't expose registered user's name
+                'active_orders' => [],
+                'recent_orders' => [],
             ])
-            ->assertJsonStructure([
-                'found',
-                'requires_verification',
-                'message',
-            ])
-            ->assertJsonMissing(['customer_name', 'customer_id', 'active_orders', 'recent_orders']);
+            ->assertJsonMissing(['customer_id']);
     }
 
     public function test_recovery_with_phone_only_returns_empty_for_unknown_phone(): void
@@ -433,6 +433,8 @@ class GuestOrderRecoveryTest extends TestCase
     public function test_phone_only_recovery_does_not_expose_order_data(): void
     {
         $customer = $this->createCustomerWithOrders();
+        $user = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $customer->update(['user_id' => $user->id]);
 
         $response = $this->postJson('/customer/orders/recovery', [
             'phone' => '081234567890',
@@ -441,10 +443,55 @@ class GuestOrderRecoveryTest extends TestCase
         $data = $response->json();
         $this->assertTrue($data['found']);
         $this->assertTrue($data['requires_verification']);
-        $this->assertArrayNotHasKey('active_orders', $data);
-        $this->assertArrayNotHasKey('recent_orders', $data);
+        $this->assertEmpty($data['active_orders']);
+        $this->assertEmpty($data['recent_orders']);
         $this->assertArrayNotHasKey('recovery_token', $data);
         $this->assertArrayNotHasKey('customer_id', $data);
+    }
+
+    public function test_logged_in_same_account_returns_orders(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+        $user = User::factory()->create([
+            'role' => 'customer',
+            'is_active' => true,
+        ]);
+        $customer->update(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)
+            ->postJson('/customer/orders/recovery', [
+                'phone' => '081234567890',
+            ])->assertOk();
+
+        $data = $response->json();
+        $this->assertTrue($data['found']);
+        $this->assertArrayNotHasKey('requires_verification', $data);
+        $this->assertGreaterThan(0, count($data['active_orders']));
+        $this->assertSame($customer->id, $data['customer_id']);
+    }
+
+    public function test_logged_in_different_account_returns_requires_verification(): void
+    {
+        $customer = $this->createCustomerWithOrders();
+        $owner = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $customer->update(['user_id' => $owner->id]);
+
+        $otherUser = User::factory()->create([
+            'role' => 'customer',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($otherUser)
+            ->postJson('/customer/orders/recovery', [
+                'phone' => '081234567890',
+            ])->assertOk();
+
+        $data = $response->json();
+        $this->assertTrue($data['found']);
+        $this->assertTrue($data['requires_verification']);
+        $this->assertTrue($data['is_different_account']);
+        $this->assertEmpty($data['active_orders']);
+        $this->assertEmpty($data['recent_orders']);
     }
 
     private function createCustomerWithOrders(): Customer

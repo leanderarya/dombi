@@ -41,12 +41,14 @@ class SocialAuthController extends Controller
      */
     public function callback(Request $request): RedirectResponse
     {
+        $fallbackUrl = $request->session()->get('redirect_after_login', route('customer.home'));
+
         try {
             $googleUser = Socialite::driver('google')->stateless()->user();
         } catch (\Exception $e) {
             logger()->warning('Google OAuth callback failed', ['error' => $e->getMessage()]);
 
-            return redirect()->route('customer.home')
+            return redirect($fallbackUrl)
                 ->with('error', 'Login Google gagal. Coba lagi.');
         }
 
@@ -69,7 +71,7 @@ class SocialAuthController extends Controller
                 // If they have a password (registered via AccountPromotion), reject
                 // to prevent account takeover. They should login with password.
                 if (! $user->hasGoogleAccount() && $user->password !== null) {
-                    return redirect()->route('customer.home')
+                    return redirect($fallbackUrl)
                         ->with('error', 'Akun dengan email ini sudah ada. Silakan login dengan password.');
                 }
 

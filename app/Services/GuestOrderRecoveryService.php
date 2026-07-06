@@ -34,10 +34,29 @@ class GuestOrderRecoveryService
             return $this->notFoundResponse();
         }
 
+        // If customer is linked to a user account
+        if ($customer->user_id) {
+            // If not logged in or different user, require login
+            if (! auth()->check() || auth()->id() !== $customer->user_id) {
+                return [
+                    'found' => true,
+                    'requires_verification' => true,
+                    'is_different_account' => auth()->check(),
+                    'customer_name' => null, // Don't expose registered user's name
+                    'active_orders' => [],
+                    'recent_orders' => [],
+                ];
+            }
+            // Logged-in user is the owner — fall through to return orders
+        }
+
         $activeOrders = Order::query()
             ->where('customer_id', $customer->id)
             ->whereIn('status', Order::ACTIVE_STATUSES)
-            ->whereNotIn('payment_status', ['expired', 'failed'])
+            ->where(function ($q) {
+                $q->whereNull('payment_status')
+                    ->orWhereNotIn('payment_status', ['expired', 'failed']);
+            })
             ->where(function ($q) {
                 $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
                     ->orWhereNull('confirmation_expires_at')

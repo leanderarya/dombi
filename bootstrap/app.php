@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\RegisteredPhoneException;
 use App\Http\Middleware\AllowCustomerOrRecoveredGuest;
 use App\Http\Middleware\AllowGuestOrCustomer;
 use App\Http\Middleware\CustomerInertiaRoot;
@@ -43,6 +44,18 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->renderable(function (RegisteredPhoneException $e, $request) {
+            if ($request->expectsJson() || $request->header('X-Inertia')) {
+                return back()->withErrors([
+                    'phone_number' => $e->getMessage(),
+                ])->withInput();
+            }
+
+            return back()->withErrors([
+                'phone_number' => $e->getMessage(),
+            ])->withInput();
+        });
+
         $exceptions->reportable(function (Throwable $e) {
             if (app()->bound('sentry')) {
                 app('sentry')->captureException($e);

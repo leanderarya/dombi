@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle2, ChevronLeft, Clock, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, UserCheck } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, ChevronLeft, Clock, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, UserCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
@@ -31,6 +31,10 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
     pending_confirmation: {
         description: 'Menunggu outlet mengkonfirmasi pesanan Anda',
         nextStep: 'Biasanya dikonfirmasi dalam beberapa menit',
+    },
+    pending_confirmation_unpaid: {
+        description: 'Menunggu Pembayaran',
+        nextStep: 'Selesaikan pembayaran untuk melanjutkan pesanan',
     },
     confirmed: {
         description: 'Pesanan sudah dikonfirmasi oleh outlet',
@@ -75,16 +79,28 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
     const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
     const isPickup = order.fulfillment_type === 'pickup';
     const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
+    const isPaymentFailed = order.payment_status === 'failed';
+    const isPaymentExpired = order.payment_status === 'expired';
+    const hasPaymentIssue = isPaymentFailed || isPaymentExpired;
     const { addOrder } = useOrderRecovery();
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [cancelLast4Hp, setCancelLast4Hp] = useState('');
     const [reportSheetOpen, setReportSheetOpen] = useState(false);
     const [reportError, setReportError] = useState<string | null>(null);
+    const [payLoading, setPayLoading] = useState(false);
 
     const cancelForm = useForm({ reason: '', note: '' });
     const reportForm = useForm({ type: '', notes: '' });
     const countdown = useCountdown(order.confirmation_expires_at);
+
+    // Replace history entry so browser Back skips the payment gateway
+    useEffect(() => {
+        if (isConfirmation) {
+            const backUrl = '/customer/orders';
+            window.history.replaceState(null, '', backUrl);
+        }
+    }, [isConfirmation]);
 
     useEffect(() => {
         if (order.customer_phone && order.order_code) {
@@ -106,6 +122,37 @@ return;
             navigator.share({ text }).catch(() => {});
         } else {
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+        }
+    }
+
+    async function handlePay() {
+        setPayLoading(true);
+
+        try {
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+            const res = await fetch(`/customer/orders/${order.id}/pay`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+            });
+
+            if (res.redirected) {
+                window.location.replace(res.url);
+
+                return;
+            }
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => null);
+                alert(data?.message ?? 'Gagal membuat pembayaran. Coba lagi.');
+            }
+        } catch {
+            alert('Terjadi kesalahan. Coba lagi.');
+        } finally {
+            setPayLoading(false);
         }
     }
 
@@ -194,7 +241,16 @@ return;
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <button
                         type="button"
-                        onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = '/customer/orders'}
+                        onClick={() => {
+                            if (isConfirmation) {
+                                // After payment, go to orders list (skip DOKU in history)
+                                window.location.href = '/customer/orders';
+                            } else if (window.history.length > 1) {
+                                window.history.back();
+                            } else {
+                                window.location.href = '/customer/orders';
+                            }
+                        }}
                         className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
                         aria-label="Kembali"
                     >
@@ -213,16 +269,52 @@ return;
             {/* Content */}
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
 
+                {/* Payment Issue Banner */}
+                {hasPaymentIssue && (
+                    <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-start gap-3">
+                            <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+                            <div>
+                                <div className="text-sm font-semibold text-red-800">
+                                    {isPaymentFailed ? 'Pembayaran Gagal' : 'Pembayaran Kadaluarsa'}
+                                </div>
+                                <div className="mt-1 text-xs text-red-600">
+                                    {isPaymentFailed
+                                        ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar lagi.'
+                                        : 'Batas waktu pembayaran telah habis. Silakan buat pesanan baru.'}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handlePay}
+                                    disabled={payLoading}
+                                    className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                                >
+                                    {payLoading ? 'Memproses...' : 'Bayar Sekarang'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <StatusBadge status={order.status} />
+                    <StatusBadge status={hasPaymentIssue ? 'payment_failed' : (order.status === 'pending_confirmation' && order.payment_method !== 'cod' && order.payment_status !== 'paid' && order.payment_status !== 'failed' && order.payment_status !== 'expired') ? 'pending_payment' : order.status} />
                 </div>
 
                 {/* What's Next Guidance */}
-                {STATUS_GUIDANCE[order.status] && (() => {
-                    const guidance = STATUS_GUIDANCE[order.status];
+                {(() => {
+                    const isPendingUnpaid = order.status === 'pending_confirmation'
+                        && order.payment_method !== 'cod'
+                        && order.payment_status !== 'paid';
+                    const guidanceKey = isPendingUnpaid ? 'pending_confirmation_unpaid' : order.status;
+                    const guidance = STATUS_GUIDANCE[guidanceKey];
+
+                    if (!guidance) {
+return null;
+}
+
                     const isPickupReady = order.status === 'ready_for_pickup' && order.outlet?.latitude && order.outlet?.longitude;
-                    const showCountdown = order.status === 'pending_confirmation' && !countdown.expired && countdown.totalSeconds > 0;
+                    const showCountdown = order.status === 'pending_confirmation' && !isPendingUnpaid && !countdown.expired && countdown.totalSeconds > 0;
 
                     return (
                         <div className="mt-3 rounded-xl border border-border bg-white p-4">

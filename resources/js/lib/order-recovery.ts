@@ -160,6 +160,7 @@ export async function recoverOrders(
 ): Promise<{
     found: boolean;
     requires_verification?: boolean;
+    is_different_account?: boolean;
     message?: string;
     customer_name?: string;
     active_orders?: any[];

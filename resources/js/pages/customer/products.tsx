@@ -69,19 +69,32 @@ function ProductsInner() {
     const [sheetFamilyName, setSheetFamilyName] = useState('');
     const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>('pickup');
     const abortRef = useRef<AbortController | null>(null);
-    const cacheRef = useRef<Map<number, Family[]>>(new Map());
+    const cacheRef = useRef<Map<number, { data: Family[]; timestamp: number }>>(new Map());
+    const CACHE_TTL_MS = 30_000; // 30 seconds — stock may change when navigating back
 
     useFlashToast();
     const { totalItems } = useCart();
     const scrollRef = useRef<HTMLDivElement>(null);
     const sectionRefs = useRef<Map<number, HTMLDivElement>>(new Map());
 
+    // Invalidate stale cache entries on mount (when user navigates back)
+    useEffect(() => {
+        const now = Date.now();
+
+        for (const [key, entry] of cacheRef.current) {
+            if (now - entry.timestamp > CACHE_TTL_MS) {
+                cacheRef.current.delete(key);
+            }
+        }
+    });
+
     // Fetch products when selected outlet changes
     const fetchProducts = useCallback((outletId: number | null) => {
         const cacheKey = outletId ?? 0;
+        const cached = cacheRef.current.get(cacheKey);
 
-        if (cacheRef.current.has(cacheKey)) {
-            setFamilies(cacheRef.current.get(cacheKey)!);
+        if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+            setFamilies(cached.data);
             setProductsError(null);
             setProductsLoading(false);
 
@@ -115,7 +128,7 @@ throw new Error('Failed to load products');
             .then((data) => {
                 if (!controller.signal.aborted) {
                     const fetched = data.families ?? [];
-                    cacheRef.current.set(cacheKey, fetched);
+                    cacheRef.current.set(cacheKey, { data: fetched, timestamp: Date.now() });
                     setFamilies(fetched);
                     setProductsError(null);
                     setProductsLoading(false);

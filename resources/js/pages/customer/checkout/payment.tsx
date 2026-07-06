@@ -72,8 +72,8 @@ export default function CheckoutPayment({ draft, summary }: any) {
             if (data.payment_url) {
                 cart.clear();
                 markUsedForOrder();
-                // Full-page navigation to DOKU payment page (no CORS issue)
-                window.location.href = data.payment_url;
+                // replace() removes DOKU from browser history — back button goes to orders, not DOKU
+                window.location.replace(data.payment_url);
             } else {
                 setSubmitError('Tidak ada URL pembayaran. Silakan coba lagi.');
                 setProcessing(false);

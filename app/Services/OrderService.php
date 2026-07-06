@@ -2,11 +2,12 @@
 
 namespace App\Services;
 
+use App\Exceptions\RegisteredPhoneException;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
-use App\Models\Order;
 use App\Models\Outlet;
-use App\Models\OutletInventory;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -130,7 +131,11 @@ class OrderService
             'created_at' => now(),
         ]);
 
-        $this->notificationService->notifyOrderCreated($order);
+        // Only notify outlet immediately for COD orders.
+        // Non-COD orders notify outlet after payment is confirmed (in DokuService::markOrderPaid).
+        if (($payload['payment_method'] ?? 'cod') === 'cod') {
+            $this->notificationService->notifyOrderCreated($order);
+        }
 
         return $order->load(['outlet', 'items.product']);
     }
@@ -294,6 +299,11 @@ class OrderService
             ->first();
 
         if ($customer) {
+            // Block if phone belongs to registered account
+            if ($customer->user_id !== null) {
+                throw new RegisteredPhoneException($phone);
+            }
+
             $customer->update(['last_order_at' => now()]);
 
             return $customer;

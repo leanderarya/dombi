@@ -56,6 +56,11 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
         description: 'Menunggu outlet mengkonfirmasi pesanan Anda',
         nextStep: 'Biasanya dikonfirmasi dalam beberapa menit',
     },
+    // Payment not yet completed — shown when payment_status is pending/null for non-COD
+    pending_confirmation_unpaid: {
+        description: 'Menunggu Pembayaran',
+        nextStep: 'Selesaikan pembayaran untuk melanjutkan pesanan',
+    },
     confirmed: {
         description: 'Pesanan sudah dikonfirmasi oleh outlet',
         nextStep: 'Outlet sedang menyiapkan pesanan Anda',
@@ -197,14 +202,25 @@ return;
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <StatusBadge status={order.status} />
+                    <StatusBadge status={order.status === 'pending_confirmation' && order.payment_method !== 'cod' && order.payment_status !== 'paid' && order.payment_status !== 'failed' && order.payment_status !== 'expired' ? 'pending_payment' : order.status} />
                 </div>
 
                 {/* What's Next Guidance */}
-                {STATUS_GUIDANCE[order.status] && (() => {
-                    const guidance = STATUS_GUIDANCE[order.status];
+                {(() => {
+                    // Determine the effective guidance key:
+                    // For pending_confirmation with unpaid non-COD, show payment guidance
+                    const isPendingUnpaid = order.status === 'pending_confirmation'
+                        && order.payment_method !== 'cod'
+                        && order.payment_status !== 'paid';
+                    const guidanceKey = isPendingUnpaid ? 'pending_confirmation_unpaid' : order.status;
+                    const guidance = STATUS_GUIDANCE[guidanceKey];
+
+                    if (!guidance) {
+return null;
+}
+
                     const isPickupReady = order.status === 'ready_for_pickup' && order.outlet?.latitude && order.outlet?.longitude;
-                    const showCountdown = order.status === 'pending_confirmation' && !countdown.expired && countdown.totalSeconds > 0;
+                    const showCountdown = order.status === 'pending_confirmation' && !isPendingUnpaid && !countdown.expired && countdown.totalSeconds > 0;
 
                     return (
                         <div className="mt-3 rounded-xl border border-border bg-white p-4">
@@ -494,6 +510,25 @@ return;
                             <RotateCcw className="h-4 w-4" />
                             Pesan Ulang
                         </Link>
+                    </div>
+                )}
+
+                {/* Pay Now Button — unpaid non-COD pending orders */}
+                {order.status === 'pending_confirmation'
+                    && order.payment_method !== 'cod'
+                    && order.payment_status !== 'paid'
+                    && order.payment_status !== 'failed'
+                    && order.payment_status !== 'expired' && (
+                    <div className="mt-4">
+                        <Link
+                            href={`/customer/orders/confirm/${order.order_code}`}
+                            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                        >
+                            Bayar Sekarang
+                        </Link>
+                        <p className="mt-2 text-center text-[11px] text-text-subtle">
+                            Selesaikan pembayaran untuk melanjutkan pesanan
+                        </p>
                     </div>
                 )}
 

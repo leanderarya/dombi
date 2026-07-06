@@ -40,8 +40,22 @@ class OrderController extends Controller
         $orders = Order::query()
             ->where('outlet_id', $outlet->id)
             ->whereIn('status', $statuses)
+            // Only show paid orders (or COD) to outlet — hide unpaid non-COD orders
+            ->when($tab === 'aktif', fn ($q) => $q
+                ->where(function ($q) {
+                    $q->where('payment_status', 'paid')
+                        ->orWhere('payment_method', 'cod');
+                })
+            )
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($tab === 'aktif', fn ($q) => $q->oldest(), fn ($q) => $q->latest())
+            ->when($tab === 'aktif', fn ($q) => $q
+                ->where(function ($q) {
+                    $q->whereNull('confirmation_expires_at')
+                      ->orWhere('confirmation_expires_at', '>', now());
+                })
+                ->oldest(),
+                fn ($q) => $q->latest()
+            )
             ->with('items')
             ->paginate(20)
             ->withQueryString();
@@ -51,6 +65,14 @@ class OrderController extends Controller
             5,
             fn () => Order::where('outlet_id', $outlet->id)
                 ->where('status', 'pending_confirmation')
+                ->where(function ($q) {
+                    $q->where('payment_status', 'paid')
+                        ->orWhere('payment_method', 'cod');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('confirmation_expires_at')
+                      ->orWhere('confirmation_expires_at', '>', now());
+                })
                 ->count()
         );
 
@@ -121,6 +143,10 @@ class OrderController extends Controller
             5,
             fn () => Order::where('outlet_id', $outlet->id)
                 ->where('status', 'pending_confirmation')
+                ->where(function ($q) {
+                    $q->where('payment_status', 'paid')
+                        ->orWhere('payment_method', 'cod');
+                })
                 ->count()
         );
 

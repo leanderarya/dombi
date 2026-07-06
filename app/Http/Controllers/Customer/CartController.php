@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\OutletInventory;
 use App\Models\ProductVariant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,51 @@ class CartController extends Controller
 
         $variantId = (int) $validated['product_variant_id'];
         $quantity = (int) $validated['quantity'];
+
+        // Resolve outlet from session or request
+        $outletId = $request->integer('outlet_id')
+            ?: session('checkout.fulfillment.selected_outlet_id');
+
+        // Validate stock availability if outlet is known
+        if ($outletId) {
+            $inventory = OutletInventory::query()
+                ->where('outlet_id', $outletId)
+                ->where('product_variant_id', $variantId)
+                ->where('is_active', true)
+                ->first();
+
+            if ($inventory) {
+                $availableStock = max(0, $inventory->current_stock - $inventory->reserved_stock);
+                $existingQty = $this->getExistingCartQuantity($request, $variantId);
+                $requestedTotal = $existingQty + $quantity;
+
+                if ($availableStock <= 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Stok produk ini sudah habis.',
+                        'error_code' => 'out_of_stock',
+                        'available_stock' => 0,
+                    ], 422);
+                }
+
+                if ($requestedTotal > $availableStock) {
+                    $maxAddable = max(0, $availableStock - $existingQty);
+
+                    if ($maxAddable <= 0) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Stok tidak cukup. Maksimal {$availableStock} item di keranjang.",
+                            'error_code' => 'insufficient_stock',
+                            'available_stock' => $availableStock,
+                            'max_addable' => 0,
+                        ], 422);
+                    }
+
+                    // Auto-clamp to available stock
+                    $quantity = $maxAddable;
+                }
+            }
+        }
 
         $cart = collect($request->session()->get('checkout.cart', []));
 
@@ -48,7 +94,7 @@ class CartController extends Controller
             ->with('family')
             ->find($variantId);
 
-        return response()->json([
+        $response = [
             'success' => true,
             'item' => [
                 'product_variant_id' => $variantId,
@@ -57,7 +103,14 @@ class CartController extends Controller
                 'variant_name' => $variant?->name ?? '',
             ],
             'cart_count' => collect($items)->sum('quantity'),
-        ]);
+        ];
+
+        // Warn if quantity was clamped
+        if ($quantity < (int) $validated['quantity']) {
+            $response['warning'] = "Jumlah disesuaikan ke {$quantity} (stok terbatas).";
+        }
+
+        return response()->json($response);
     }
 
     /**
@@ -98,6 +151,35 @@ class CartController extends Controller
             return $this->removeItem($request);
         }
 
+        // Clamp to available stock if outlet is known
+        $outletId = $request->integer('outlet_id')
+            ?: session('checkout.fulfillment.selected_outlet_id');
+
+        if ($outletId) {
+            $inventory = OutletInventory::query()
+                ->where('outlet_id', $outletId)
+                ->where('product_variant_id', $variantId)
+                ->where('is_active', true)
+                ->first();
+
+            if ($inventory) {
+                $availableStock = max(0, $inventory->current_stock - $inventory->reserved_stock);
+
+                if ($availableStock <= 0) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Stok produk ini sudah habis.',
+                        'error_code' => 'out_of_stock',
+                        'available_stock' => 0,
+                    ], 422);
+                }
+
+                if ($quantity > $availableStock) {
+                    $quantity = $availableStock;
+                }
+            }
+        }
+
         $cart = collect($request->session()->get('checkout.cart', []));
         $items = $cart->toArray();
         $found = false;
@@ -120,5 +202,13 @@ class CartController extends Controller
             'success' => true,
             'cart_count' => collect($items)->sum('quantity'),
         ]);
+    }
+
+    private function getExistingCartQuantity(Request $request, int $variantId): int
+    {
+        $cart = collect($request->session()->get('checkout.cart', []));
+        $existing = $cart->first(fn ($item) => ((int) ($item['product_variant_id'] ?? 0)) === $variantId);
+
+        return $existing ? (int) $existing['quantity'] : 0;
     }
 }

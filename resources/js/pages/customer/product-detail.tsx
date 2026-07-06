@@ -34,6 +34,7 @@ interface OtherFamily {
 interface Props {
     family: Family;
     otherFamilies?: OtherFamily[];
+    outletId?: number | null;
 }
 
 function findSmallestSize(variants: Variant[]): string | null {
@@ -54,11 +55,11 @@ function findSoleFlavor(variants: Variant[]): string | null {
     return flavors.length === 1 ? flavors[0] : null;
 }
 
-export default function ProductDetail({ family, otherFamilies = [] }: Props) {
-    return <ProductDetailInner key={family.id} family={family} otherFamilies={otherFamilies} />;
+export default function ProductDetail({ family, otherFamilies = [], outletId }: Props) {
+    return <ProductDetailInner key={family.id} family={family} otherFamilies={otherFamilies} outletId={outletId} />;
 }
 
-function ProductDetailInner({ family, otherFamilies = [] }: Props) {
+function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: Family; otherFamilies?: OtherFamily[]; outletId?: number | null }) {
     const cart = useCart();
     const [added, setAdded] = useState(false);
     const [toast, setToast] = useState(false);
@@ -343,6 +344,9 @@ return;
                     {selectedVariant && (
                         <section className="mt-6">
                             <h3 className="text-sm font-semibold text-text">Jumlah</h3>
+                            {selectedVariant.stock_status === 'low' && selectedVariant.available_stock !== undefined && (
+                                <p className="mt-1 text-[11px] text-amber-600">Stok tersisa {selectedVariant.available_stock}</p>
+                            )}
                             <div className="mt-3 flex items-center gap-4">
                                 <div className="flex items-center rounded-xl border border-border bg-white">
                                     <button
@@ -355,8 +359,9 @@ return;
                                     </button>
                                     <span className="w-12 text-center text-sm font-bold text-text">{quantity}</span>
                                     <button
-                                        onClick={() => setQuantity(quantity + 1)}
-                                        className="flex h-11 w-11 items-center justify-center text-text-muted active:opacity-80 rounded-r-xl"
+                                        onClick={() => setQuantity(Math.min(selectedVariant.available_stock ?? 999, quantity + 1))}
+                                        disabled={selectedVariant.available_stock !== undefined && quantity >= selectedVariant.available_stock}
+                                        className="flex h-11 w-11 items-center justify-center text-text-muted active:opacity-80 rounded-r-xl disabled:opacity-30"
                                     >
                                         <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                             <path strokeLinecap="round" d="M12 5v14M5 12h14" />
@@ -377,11 +382,14 @@ return;
                             <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-none pb-2 -mx-4 px-4">
                                 {otherFamilies.map((other) => {
                                     const minPrice = Math.min(...(other.variants?.map((v) => v.selling_price) ?? [0]));
+                                    const otherHref = outletId
+                                        ? `/customer/products/${other.id}?outlet_id=${outletId}`
+                                        : `/customer/products/${other.id}`;
 
                                     return (
                                         <Link
                                             key={other.id}
-                                            href={`/customer/products/${other.id}`}
+                                            href={otherHref}
                                             className="flex w-36 shrink-0 flex-col rounded-xl border border-border bg-white overflow-hidden active:opacity-80"
                                         >
                                             <div className="flex h-20 items-center justify-center bg-gradient-to-br from-emerald-50 to-zinc-50">

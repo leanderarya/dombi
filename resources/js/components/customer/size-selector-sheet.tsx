@@ -45,6 +45,8 @@ export default function SizeSelectorSheet({ open, onClose, familyName, flavorNam
 
     const selectedVariant = sortedVariants.find((v) => v.id === selectedId) ?? sortedVariants[0];
     const isOutOfStock = selectedVariant?.stock_status === 'out_of_stock';
+    const maxQuantity = selectedVariant?.available_stock ?? 999;
+    const isAtMaxQuantity = selectedVariant?.available_stock !== undefined && quantity >= selectedVariant.available_stock;
 
     const handleAdd = async () => {
         if (!selectedVariant || adding || isOutOfStock) {
@@ -134,8 +136,9 @@ return;
                             </button>
                             <span className="w-10 text-center text-sm font-bold text-text">{quantity}</span>
                             <button
-                                onClick={() => setQuantity(quantity + 1)}
-                                className="flex h-11 w-11 items-center justify-center text-text-muted active:bg-surface-muted rounded-r-xl"
+                                onClick={() => setQuantity(Math.min(maxQuantity, quantity + 1))}
+                                disabled={isAtMaxQuantity}
+                                className="flex h-11 w-11 items-center justify-center text-text-muted active:bg-surface-muted rounded-r-xl disabled:opacity-30"
                             >
                                 <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                                     <path strokeLinecap="round" d="M12 5v14M5 12h14" />

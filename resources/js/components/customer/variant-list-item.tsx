@@ -3,6 +3,7 @@ import { Heart } from 'lucide-react';
 import { memo, useState } from 'react';
 import ProductImage from '@/components/customer/product-image';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useOutlet } from '@/contexts/outlet-context';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
@@ -34,10 +35,15 @@ const VariantListItem = memo(function VariantListItem({ variant, familyId, famil
     const [toast, setToast] = useState(false);
     const cart = useCart();
     const { isFavorite, toggle } = useFavorites();
+    const { selectedOutlet } = useOutlet();
 
     const isFav = isFavorite(variant.id);
     const isOutOfStock = variant.stock_status === 'out_of_stock';
     const showMulaiDari = variantCount > 1;
+
+    const productHref = selectedOutlet
+        ? `/customer/products/${familyId}?outlet_id=${selectedOutlet.id}`
+        : `/customer/products/${familyId}`;
 
     const handleQuickAdd = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -88,7 +94,7 @@ const VariantListItem = memo(function VariantListItem({ variant, familyId, famil
 
     return (
         <Link
-            href={`/customer/products/${familyId}`}
+            href={productHref}
             className={`flex items-center gap-3.5 p-3 active:bg-surface-muted transition-colors ${isOutOfStock ? 'opacity-50' : ''}`}
         >
             {/* Image */}

@@ -14,6 +14,7 @@ interface StatusConfig {
 
 const ORDER_STATUSES: Record<string, StatusConfig> = {
     pending_confirmation: { label: 'Menunggu Konfirmasi', variant: 'warning' },
+    pending_payment: { label: 'Menunggu Pembayaran', variant: 'warning' },
     confirmed: { label: 'Diterima', variant: 'info' },
     preparing: { label: 'Disiapkan', variant: 'info' },
     ready_for_pickup: { label: 'Siap Diambil', variant: 'info' },
@@ -25,6 +26,7 @@ const ORDER_STATUSES: Record<string, StatusConfig> = {
     cancelled_by_outlet: { label: 'Dibatalkan Outlet', variant: 'neutral' },
     failed_delivery: { label: 'Pengiriman Gagal', variant: 'danger' },
     expired: { label: 'Kadaluarsa', variant: 'neutral' },
+    payment_failed: { label: 'Pembayaran Gagal', variant: 'danger' },
 };
 
 // ─── DELIVERY STATUSES ─────────────────────────────────────────

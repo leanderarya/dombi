@@ -16,6 +16,10 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
         label: 'Menunggu Konfirmasi',
         className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
     },
+    pending_payment: {
+        label: 'Menunggu Pembayaran',
+        className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
+    },
     confirmed: {
         label: 'Dikonfirmasi',
         className: `${BADGE_BASE} bg-emerald-50 text-emerald-700`,

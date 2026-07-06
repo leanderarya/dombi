@@ -30,7 +30,13 @@ class DashboardController extends Controller
         $reconciliation = $reconciliationService->getOutletReconciliation($outlet->id);
 
         $stats = [
-            'pendingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'pending_confirmation')->count(),
+            'pendingOrders' => Order::where('outlet_id', $outlet->id)
+                ->where('status', 'pending_confirmation')
+                ->where(function ($q) {
+                    $q->whereNull('confirmation_expires_at')
+                      ->orWhere('confirmation_expires_at', '>', now());
+                })
+                ->count(),
             'preparingOrders' => Order::where('outlet_id', $outlet->id)->where('status', 'preparing')->count(),
             'readyForCustomerPickup' => Order::where('outlet_id', $outlet->id)->where('status', Order::STATUS_READY_FOR_PICKUP)->where('fulfillment_type', Order::FULFILLMENT_PICKUP)->count(),
             'todayOrders' => Order::where('outlet_id', $outlet->id)->whereDate('created_at', today())->count(),

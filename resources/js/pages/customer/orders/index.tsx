@@ -1,6 +1,6 @@
 import { Head } from '@inertiajs/react';
 import { Search } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ActiveOrderCard from '@/components/customer/active-order-card';
 import EmptyOrderState from '@/components/customer/empty-order-state';
 import OrderFilterChips from '@/components/customer/order-filter-chips';
@@ -9,6 +9,7 @@ import RecoverySheet from '@/components/customer/recovery-sheet';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonList } from '@/components/ui/skeleton';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { PENDING_PHONE_KEY } from '@/lib/constants';
 import { useOrderRecovery } from '@/lib/order-recovery';
 
 /* ------------------------------------------------------------------ */
@@ -77,6 +78,15 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
     const [recoveredHistory, setRecoveredHistory] = useState<any[] | null>(
         null,
     );
+
+    // Check for pending recovery phone on mount (after OAuth redirect)
+    useEffect(() => {
+        const stored = localStorage.getItem(PENDING_PHONE_KEY);
+
+        if (stored) {
+            setRecoverySheetOpen(true);
+        }
+    }, []);
 
     const hasServerOrders =
         (activeOrders && activeOrders.length > 0) ||
