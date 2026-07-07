@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useEffect } from 'react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
@@ -13,7 +14,7 @@ const FILTER_TABS = [
     { key: 'completed', label: 'Selesai' },
 ];
 
-export default function OwnerRestocksIndex({ restocks, filters }: any) {
+export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) {
     const currentStatus = filters.status ?? 'requested';
 
     const counts = {
@@ -41,7 +42,7 @@ export default function OwnerRestocksIndex({ restocks, filters }: any) {
 
     return (
         <OwnerPageShell title="Restocks" subtitle="Kelola permintaan restock dari outlet">
-            {/* Filter controls */}
+            {/* Status Tabs */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 {FILTER_TABS.map((tab) => (
                     <button key={tab.key} type="button" onClick={() => handleTabChange(tab.key)}
@@ -55,6 +56,24 @@ export default function OwnerRestocksIndex({ restocks, filters }: any) {
                     </button>
                 ))}
             </div>
+
+            {/* Filter controls */}
+            <OwnerFilterCard
+                searchPlaceholder="Cari kode..."
+                searchValue={filters.search ?? ''}
+                onSearch={(val) => {
+                    router.get('/owner/restocks', { ...filters, search: val || undefined, status: currentStatus }, { preserveState: true, replace: true });
+                }}
+                outletOptions={outlets?.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletValue={filters.outlet_id ?? ''}
+                onOutletChange={(val) => {
+                    router.get('/owner/restocks', { ...filters, outlet_id: val || undefined, status: currentStatus }, { preserveState: true, replace: true });
+                }}
+                dateValue={filters.date ?? ''}
+                onDateChange={(val) => {
+                    router.get('/owner/restocks', { ...filters, date: val || undefined, status: currentStatus }, { preserveState: true, replace: true });
+                }}
+            />
 
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-4 gap-2">

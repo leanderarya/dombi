@@ -33,6 +33,7 @@ class OrderController extends Controller
                 }
             })
             ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
+            ->when($request->filled('courier_id'), fn ($query) => $query->whereHas('delivery', fn ($deliveryQuery) => $deliveryQuery->where('courier_id', $request->integer('courier_id'))))
             ->when($request->filled('date'), fn ($query) => $query->whereDate('created_at', $request->date('date')))
             ->when($request->filled('search'), fn ($query) => $query->where('order_code', 'like', '%'.$request->string('search')->toString().'%'))
             ->latest()
@@ -55,7 +56,7 @@ class OrderController extends Controller
         return Inertia::render('owner/orders/index', [
             'orders' => $orders,
             'outlets' => $outlets,
-            'filters' => $request->only(['status', 'outlet_id', 'date', 'search']),
+            'filters' => $request->only(['status', 'outlet_id', 'courier_id', 'date', 'search']),
             'stats' => $stats,
             'couriers' => $couriers,
         ]);

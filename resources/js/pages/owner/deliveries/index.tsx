@@ -1,9 +1,9 @@
 import { router } from '@inertiajs/react';
 import { MapPin } from 'lucide-react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
 import Pagination from '@/components/ui/pagination';
-import { Select } from '@/components/ui/select';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/format';
 
@@ -21,6 +21,7 @@ export default function OwnerDeliveriesIndex({
     couriers,
     filters,
     stats,
+    outlets,
 }: any) {
     if (!deliveries || !filters) {
         return (
@@ -43,7 +44,7 @@ export default function OwnerDeliveriesIndex({
             title="Pengiriman"
             subtitle="Kelola pengiriman dari semua outlet"
         >
-            {/* Filter controls */}
+            {/* Status Pills */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 {statusOptions.filter((o) => o.value !== '').map((opt) => {
                     const isActive = (filters.status ?? '') === opt.value;
@@ -64,16 +65,22 @@ export default function OwnerDeliveriesIndex({
                         </button>
                     );
                 })}
-                <span className="flex-1" />
-                <Select
-                    value={filters.courier_id ?? ''}
-                    onChange={(e) => setFilter('courier_id', e.target.value)}
-                    options={[
-                        { value: '', label: 'Semua kurir' },
-                        ...couriers.map((c: any) => ({ value: String(c.id), label: c.name })),
-                    ]}
-                />
             </div>
+
+            {/* Filter controls */}
+            <OwnerFilterCard
+                searchPlaceholder="Cari kode..."
+                searchValue={filters.search ?? ''}
+                onSearch={(val) => setFilter('search', val)}
+                outletOptions={outlets?.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletValue={filters.outlet_id ?? ''}
+                onOutletChange={(val) => setFilter('outlet_id', val)}
+                courierOptions={couriers.map((c: any) => ({ value: String(c.id), label: c.name }))}
+                courierValue={filters.courier_id ?? ''}
+                onCourierChange={(val) => setFilter('courier_id', val)}
+                dateValue={filters.date ?? ''}
+                onDateChange={(val) => setFilter('date', val)}
+            />
 
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-4 gap-2">

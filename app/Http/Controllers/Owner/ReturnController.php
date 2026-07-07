@@ -38,6 +38,18 @@ class ReturnController extends Controller
             $query->where('outlet_id', $request->outlet_id);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('id', $search)
+                    ->orWhereHas('outlet', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date('date'));
+        }
+
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
@@ -55,7 +67,7 @@ class ReturnController extends Controller
         return Inertia::render('owner/returns/index', [
             'tab' => 'pengembalian',
             'returns' => $returns,
-            'filters' => $request->only(['status', 'outlet_id', 'date_from', 'date_to', 'reason']),
+            'filters' => $request->only(['status', 'outlet_id', 'search', 'date', 'date_from', 'date_to', 'reason']),
             'dashboard' => app(ReturnService::class)->getOwnerDashboard(),
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
             'reasons' => ReturnRequest::REASONS,
@@ -75,6 +87,18 @@ class ReturnController extends Controller
             $query->where('outlet_id', $request->outlet_id);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('id', $search)
+                    ->orWhereHas('outlet', fn ($q) => $q->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date('date'));
+        }
+
         if ($request->filled('date_from')) {
             $query->whereDate('created_at', '>=', $request->date_from);
         }
@@ -88,7 +112,7 @@ class ReturnController extends Controller
         return Inertia::render('owner/returns/index', [
             'tab' => 'penukaran',
             'exchanges' => $exchanges,
-            'filters' => $request->only(['status', 'outlet_id', 'date_from', 'date_to']),
+            'filters' => $request->only(['status', 'outlet_id', 'search', 'date', 'date_from', 'date_to']),
             'exchangeDashboard' => app(ExchangeService::class)->getOwnerDashboard(),
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
         ]);

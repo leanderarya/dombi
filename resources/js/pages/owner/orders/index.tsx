@@ -1,11 +1,9 @@
 import { router } from '@inertiajs/react';
-import { Search } from 'lucide-react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { Input } from '@/components/ui/input';
 import Pagination from '@/components/ui/pagination';
-import { Select } from '@/components/ui/select';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
@@ -51,7 +49,7 @@ export default function OwnerOrdersIndex({
             title="Pesanan"
             subtitle="Kelola semua pesanan dari semua outlet"
         >
-            {/* Filter controls */}
+            {/* Status Pills */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 {statusFilters.map((sf) => {
                     const isActive = currentStatus === sf.key;
@@ -72,15 +70,22 @@ export default function OwnerOrdersIndex({
                         </button>
                     );
                 })}
-                <span className="flex-1" />
-                <Input icon={Search} defaultValue={filters.search ?? ''} onBlur={(e) => setFilter('search', e.target.value)}
-                    placeholder="Cari kode..." aria-label="Cari pesanan" className="h-8 w-40" />
-                <Select value={filters.outlet_id ?? ''} onChange={(e) => setFilter('outlet_id', e.target.value)}
-                    aria-label="Filter outlet"
-                    options={[{ value: '', label: 'Semua outlet' }, ...outlets.map((o: any) => ({ value: String(o.id), label: o.name }))]} />
-                <Input type="date" value={filters.date ?? ''} onChange={(e) => setFilter('date', e.target.value)}
-                    aria-label="Filter tanggal" className="h-8" />
             </div>
+
+            {/* Filter controls */}
+            <OwnerFilterCard
+                searchPlaceholder="Cari kode..."
+                searchValue={filters.search ?? ''}
+                onSearch={(val) => setFilter('search', val)}
+                outletOptions={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletValue={filters.outlet_id ?? ''}
+                onOutletChange={(val) => setFilter('outlet_id', val)}
+                courierOptions={couriers?.map((c: any) => ({ value: String(c.id), label: c.name }))}
+                courierValue={filters.courier_id ?? ''}
+                onCourierChange={(val) => setFilter('courier_id', val)}
+                dateValue={filters.date ?? ''}
+                onDateChange={(val) => setFilter('date', val)}
+            />
 
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-4 gap-2">

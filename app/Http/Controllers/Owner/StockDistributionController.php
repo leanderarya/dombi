@@ -21,11 +21,18 @@ class StockDistributionController extends Controller
                 ->with(['outlet', 'restockRequest'])
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
                 ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
+                ->when($request->filled('search'), fn ($query) => $query->where(function ($searchQuery) use ($request): void {
+                    $search = $request->string('search')->toString();
+                    $searchQuery
+                        ->whereHas('outlet', fn ($outletQuery) => $outletQuery->where('name', 'like', "%{$search}%"))
+                        ->orWhere('id', $search);
+                }))
+                ->when($request->filled('date'), fn ($query) => $query->whereDate('created_at', $request->date('date')))
                 ->latest()
                 ->paginate(20)
                 ->withQueryString(),
             'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
-            'filters' => $request->only(['status', 'outlet_id']),
+            'filters' => $request->only(['status', 'outlet_id', 'search', 'date']),
         ]);
     }
 

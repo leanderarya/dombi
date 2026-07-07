@@ -1,9 +1,9 @@
 import { router } from '@inertiajs/react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/ui/pagination';
-import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import { getExchangeStatus } from '@/lib/status-labels';
 
 export default function OwnerExchangesIndex({ exchanges, filters, dashboard, outlets, reasons }: any) {
@@ -34,7 +34,7 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
 
     return (
         <OwnerPageShell title="Permintaan Tukar Produk" subtitle="Kelola penukaran barang dari outlet">
-            {/* Filter controls */}
+            {/* Status Pills */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 {statusFilters.map((status) => {
                     const isActive = filters.status === status;
@@ -48,20 +48,22 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                         </button>
                     );
                 })}
-                <span className="flex-1" />
-                <Select
-                    value={filters.outlet_id ?? ''}
-                    onChange={(e) => setFilter('outlet_id', e.target.value)}
-                    options={outlets.map((outlet: any) => ({ value: String(outlet.id), label: outlet.name }))}
-                    placeholder="Semua Outlet"
-                />
-                <Select
-                    value={filters.reason ?? ''}
-                    onChange={(e) => setFilter('reason', e.target.value)}
-                    options={Object.entries(reasons).map(([value, label]) => ({ value, label: String(label) }))}
-                    placeholder="Semua Alasan"
-                />
             </div>
+
+            {/* Filter controls */}
+            <OwnerFilterCard
+                searchPlaceholder="Cari kode..."
+                searchValue={filters.search ?? ''}
+                onSearch={(val) => setFilter('search', val)}
+                outletOptions={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletValue={filters.outlet_id ?? ''}
+                onOutletChange={(val) => setFilter('outlet_id', val)}
+                reasonOptions={Object.entries(reasons).map(([v, l]) => ({ value: v, label: String(l) }))}
+                reasonValue={filters.reason ?? ''}
+                onReasonChange={(val) => setFilter('reason', val)}
+                dateValue={filters.date ?? ''}
+                onDateChange={(val) => setFilter('date', val)}
+            />
 
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-3 gap-2">

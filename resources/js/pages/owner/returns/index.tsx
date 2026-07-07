@@ -1,11 +1,10 @@
 import { router } from '@inertiajs/react';
-import { RotateCcw, ArrowLeftRight } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/ui/pagination';
-import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import { getExchangeStatus, getReturnStatus } from '@/lib/status-labels';
 
 const TABS = [
@@ -112,7 +111,7 @@ function PengembalianTab({ returns, filters, dashboard, outlets, reasons }: any)
 
     return (
         <>
-            {/* Filter controls */}
+            {/* Status Pills */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 {RETURN_STATUS_FILTERS.filter((f) => f.key !== 'all').map((f) => {
                     const isActive = (filters.status ?? '') === f.key;
@@ -126,20 +125,22 @@ function PengembalianTab({ returns, filters, dashboard, outlets, reasons }: any)
                         </button>
                     );
                 })}
-                <span className="flex-1" />
-                <Select
-                    value={filters.outlet_id ?? ''}
-                    onChange={(e) => navigate({ outlet_id: e.target.value || undefined })}
-                    options={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
-                    placeholder="Semua Outlet"
-                />
-                <Select
-                    value={filters.reason ?? ''}
-                    onChange={(e) => navigate({ reason: e.target.value || undefined })}
-                    options={Object.entries(reasons).map(([v, l]) => ({ value: v, label: String(l) }))}
-                    placeholder="Semua Alasan"
-                />
             </div>
+
+            {/* Filter controls */}
+            <OwnerFilterCard
+                searchPlaceholder="Cari kode..."
+                searchValue={filters.search ?? ''}
+                onSearch={(val) => navigate({ search: val || undefined })}
+                outletOptions={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletValue={filters.outlet_id ?? ''}
+                onOutletChange={(val) => navigate({ outlet_id: val || undefined })}
+                reasonOptions={Object.entries(reasons).map(([v, l]) => ({ value: v, label: String(l) }))}
+                reasonValue={filters.reason ?? ''}
+                onReasonChange={(val) => navigate({ reason: val || undefined })}
+                dateValue={filters.date ?? ''}
+                onDateChange={(val) => navigate({ date: val || undefined })}
+            />
 
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-3 gap-2">
@@ -235,7 +236,7 @@ function PenukaranTab({ exchanges, filters, dashboard, outlets }: any) {
 
     return (
         <>
-            {/* Filter controls */}
+            {/* Status Pills */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
                 {EXCHANGE_STATUS_FILTERS.filter((f) => f.key !== 'all').map((f) => {
                     const isActive = (filters.status ?? '') === f.key;
@@ -249,14 +250,19 @@ function PenukaranTab({ exchanges, filters, dashboard, outlets }: any) {
                         </button>
                     );
                 })}
-                <span className="flex-1" />
-                <Select
-                    value={filters.outlet_id ?? ''}
-                    onChange={(e) => navigate({ outlet_id: e.target.value || undefined })}
-                    options={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
-                    placeholder="Semua Outlet"
-                />
             </div>
+
+            {/* Filter controls */}
+            <OwnerFilterCard
+                searchPlaceholder="Cari kode..."
+                searchValue={filters.search ?? ''}
+                onSearch={(val) => navigate({ search: val || undefined })}
+                outletOptions={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletValue={filters.outlet_id ?? ''}
+                onOutletChange={(val) => navigate({ outlet_id: val || undefined })}
+                dateValue={filters.date ?? ''}
+                onDateChange={(val) => navigate({ date: val || undefined })}
+            />
 
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-3 gap-2">

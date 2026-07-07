@@ -1,10 +1,9 @@
-import { Link, router } from '@inertiajs/react';
-import { AlertTriangle, ArrowUpDown, ChevronDown, ChevronUp, Lock, Package, Search, XCircle } from 'lucide-react';
+import { router } from '@inertiajs/react';
+import { ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
@@ -40,7 +39,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
     const [search, setSearch] = useState('');
     const [outletFilter, setOutletFilter] = useState<string>('all');
-    const [stockFilter, setStockFilter] = useState<'all' | 'critical' | 'low' | 'healthy'>('all');
+    const [stockFilter] = useState<'all' | 'critical' | 'low' | 'healthy'>('all');
     const [sortField, setSortField] = useState<'outlet' | 'product' | 'stock' | 'available'>('outlet');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [currentPage, setCurrentPage] = useState(1);
@@ -129,11 +128,6 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
         <OwnerPageShell
             title="Inventaris"
             subtitle="Pantau stok semua outlet dan pusat"
-            headerRight={
-                <Link href="/owner/inventories/create" className={cn(buttonVariants({ variant: 'primary', size: 'md' }))}>
-                    + Tambah Stok
-                </Link>
-            }
         >
             {/* Segmented Control */}
             <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
@@ -157,39 +151,20 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
             {activeTab === 'outlet' && (
                 <>
                     {/* Filter controls */}
-                    <div className="mb-4 flex flex-wrap items-center gap-2">
-                        {[
-                            { key: 'all' as const, label: 'Semua' },
-                            { key: 'critical' as const, label: 'Kritis', color: 'text-red-600 bg-red-50 ring-red-200' },
-                            { key: 'low' as const, label: 'Rendah', color: 'text-amber-600 bg-amber-50 ring-amber-200' },
-                            { key: 'healthy' as const, label: 'Sehat', color: 'text-emerald-600 bg-emerald-50 ring-emerald-200' },
-                        ].map((tab) => (
-                            <button key={tab.key} type="button" onClick={() => {
- setStockFilter(tab.key); setCurrentPage(1); 
+                    <OwnerFilterCard
+                        searchPlaceholder="Cari outlet atau produk..."
+                        searchValue={search}
+                        onSearch={(val) => {
+ setSearch(val); setCurrentPage(1); 
 }}
-                                className={cn(
-                                    'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-all',
-                                    stockFilter === tab.key
-                                        ? tab.color ?? 'bg-primary/10 text-primary ring-primary/20'
-                                        : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
-                                )}>
-                                {tab.label}
-                            </button>
-                        ))}
-                        <span className="flex-1" />
-                        <Input icon={Search} type="text" placeholder="Cari outlet atau produk..." value={search}
-                            onChange={(e) => {
- setSearch(e.target.value); setCurrentPage(1); 
+                        outletOptions={outlets.map((outlet: string) => ({ value: outlet, label: outlet }))}
+                        outletValue={outletFilter}
+                        onOutletChange={(val) => {
+ setOutletFilter(val); setCurrentPage(1); 
 }}
-                            aria-label="Cari inventaris" className="h-8 w-40" />
-                        <Select value={outletFilter} onChange={(e) => {
- setOutletFilter(e.target.value); setCurrentPage(1); 
-}}
-                            options={[
-                                { value: 'all', label: 'Semua Outlet' },
-                                ...outlets.map((outlet: string) => ({ value: outlet, label: outlet })),
-                            ]} aria-label="Filter outlet" />
-                    </div>
+                        tambahHref="/owner/inventories/create"
+                        tambahLabel="Tambah Stok"
+                    />
 
                     {/* KPI Strip */}
                     <div className="mb-4 grid grid-cols-4 gap-2">
@@ -353,25 +328,11 @@ return false;
     return (
         <>
             {/* Filter controls */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-                {[
-                    { key: 'all' as const, label: 'Semua' },
-                    { key: 'zero' as const, label: 'Habis', color: 'text-red-600 bg-red-50 ring-red-200' },
-                    { key: 'low' as const, label: 'Rendah', color: 'text-amber-600 bg-amber-50 ring-amber-200' },
-                ].map((tab) => (
-                    <button key={tab.key} onClick={() => setStockFilter(tab.key)}
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-all ${
-                            stockFilter === tab.key
-                                ? tab.color ?? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
-                        }`}>
-                        {tab.label}
-                    </button>
-                ))}
-                <span className="flex-1" />
-                <Input icon={Search} type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Cari produk atau SKU..." className="h-8 w-48" />
-            </div>
+            <OwnerFilterCard
+                searchPlaceholder="Cari produk atau SKU..."
+                searchValue={search}
+                onSearch={(val) => setSearch(val)}
+            />
 
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-4 gap-2">

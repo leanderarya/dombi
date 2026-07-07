@@ -7,6 +7,7 @@ use App\Http\Requests\AssignCourierRequest;
 use App\Http\Requests\Owner\ResolveDeliveryRequest;
 use App\Models\Delivery;
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Models\User;
 use App\Services\DeliveryService;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +23,9 @@ class DeliveryController extends Controller
             ->with(['order.outlet', 'courier'])
             ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
             ->when($request->filled('courier_id'), fn ($query) => $query->where('courier_id', $request->integer('courier_id')))
+            ->when($request->filled('outlet_id'), fn ($query) => $query->whereHas('order', fn ($orderQuery) => $orderQuery->where('outlet_id', $request->integer('outlet_id'))))
             ->when($request->filled('search'), fn ($query) => $query->whereHas('order', fn ($orderQuery) => $orderQuery->where('order_code', 'like', '%'.$request->string('search')->toString().'%')))
+            ->when($request->filled('date'), fn ($query) => $query->whereDate('created_at', $request->date('date')))
             ->latest()
             ->paginate(20)
             ->withQueryString();
@@ -38,7 +41,8 @@ class DeliveryController extends Controller
         return Inertia::render('owner/deliveries/index', [
             'deliveries' => $deliveries,
             'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
-            'filters' => $request->only(['status', 'courier_id', 'search']),
+            'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
+            'filters' => $request->only(['status', 'courier_id', 'outlet_id', 'search', 'date']),
             'stats' => $stats,
         ]);
     }
