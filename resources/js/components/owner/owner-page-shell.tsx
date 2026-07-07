@@ -24,7 +24,7 @@ export default function OwnerPageShell({ title, subtitle, backHref, headerRight,
             <div className="border-b border-border pb-3 mb-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     {backHref && (
-                        <Link href={backHref} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-slate-600 hover:bg-surface-muted">
+                        <Link href={backHref} className="flex h-7 w-7 p-1.5 items-center justify-center rounded-lg border border-border text-slate-600 hover:bg-surface-muted">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     )}
