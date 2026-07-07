@@ -182,7 +182,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
  setSearch(e.target.value); setCurrentPage(1); 
 }}
                             aria-label="Cari inventaris" className="h-8 w-40" />
-                        <Select value={outletFilter} onChange={(e) => {
+                        <Select size="sm" value={outletFilter} onChange={(e) => {
  setOutletFilter(e.target.value); setCurrentPage(1); 
 }}
                             options={[

@@ -11,10 +11,11 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
     error?: string;
     options: SelectOption[];
     placeholder?: string;
+    size?: 'sm' | 'md';
 }
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
-    ({ className, label, error, options, placeholder, id: propId, ...props }, ref) => {
+    ({ className, label, error, options, placeholder, size = 'md', id: propId, ...props }, ref) => {
         const generatedId = useId();
         const id = propId || generatedId;
         const errorId = `${id}-error`;
@@ -30,9 +31,10 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     ref={ref}
                     id={id}
                     className={cn(
-                        'w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors',
+                        'w-full rounded-[--radius-control] border border-border bg-surface text-text transition-colors',
                         'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
                         error && 'border-danger focus:border-danger focus:ring-danger',
+                        size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3 py-2 text-sm',
                         className
                     )}
                     aria-invalid={error ? 'true' : undefined}

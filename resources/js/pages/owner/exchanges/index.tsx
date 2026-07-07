@@ -50,12 +50,14 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                 })}
                 <span className="flex-1" />
                 <Select
+                    size="sm"
                     value={filters.outlet_id ?? ''}
                     onChange={(e) => setFilter('outlet_id', e.target.value)}
                     options={outlets.map((outlet: any) => ({ value: String(outlet.id), label: outlet.name }))}
                     placeholder="Semua Outlet"
                 />
                 <Select
+                    size="sm"
                     value={filters.reason ?? ''}
                     onChange={(e) => setFilter('reason', e.target.value)}
                     options={Object.entries(reasons).map(([value, label]) => ({ value, label: String(label) }))}
