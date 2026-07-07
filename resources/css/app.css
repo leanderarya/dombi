@@ -191,6 +191,23 @@ select:focus {
     outline: none;
 }
 
+/* Override global input/select sizing for compact filter cards */
+.owner-filter-card select {
+    font-size: 12px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    padding-left: 10px !important;
+    padding-right: 28px !important;
+}
+
+.owner-filter-card input {
+    font-size: 12px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
 /* ─── Owner Desktop Experience ─────────────────────────── */
 
 /* Card hover — subtle lift */
