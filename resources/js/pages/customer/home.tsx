@@ -36,8 +36,6 @@ export default function Home({ customerName, activeOrders }: any) {
     return (
         <CustomerMobileLayout customerName={customerName} hideTopBar>
             <Head title="Home" />
-            <div className="pt-2" />
-
             <HeroCarousel hero={hero} />
             <GreetingCard isLoggedIn={isLoggedIn} customerName={customerName} auth={auth} />
 
