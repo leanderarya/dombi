@@ -18,6 +18,7 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
         if (state.loading) return;
 
         setState({ loading: true, error: null, foundOutletName: null });
+        localStorage.setItem('dombi_fulfillment_type', 'pickup');
 
         // Use cached nearest outlet if available
         if (nearestOutlet?.name) {

@@ -28,6 +28,7 @@ export default function Home({ customerName, activeOrders }: any) {
     const showPhoneBanner = isLoggedIn && !auth?.user?.customer?.phone && !phoneBannerDismissed;
 
     const handleDelivery = () => {
+        localStorage.setItem('dombi_fulfillment_type', 'delivery');
         if (!isLoggedIn) setDeliverySheetOpen(true);
         else router.get('/customer/products');
     };
