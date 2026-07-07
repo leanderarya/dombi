@@ -30,8 +30,8 @@ interface OwnerFilterCardProps {
     onDateChange?: (value: string) => void;
 }
 
-const filterInputClass =
-    'w-full rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs text-text outline-none transition-colors placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20';
+const filterClass =
+    'h-8 rounded-md border border-border bg-surface px-2.5 text-xs text-text outline-none placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20';
 
 export default function OwnerFilterCard({
     searchPlaceholder,
@@ -53,102 +53,78 @@ export default function OwnerFilterCard({
 }: OwnerFilterCardProps) {
     return (
         <div className="mb-4 rounded-lg border border-border bg-white p-3">
-            <div className="grid grid-cols-[1fr_150px_150px_150px_140px_auto] items-center gap-2">
-                {/* Col 1: Search */}
-                <div>
-                    {searchPlaceholder && (
-                        <input
-                            type="text"
-                            value={searchValue ?? ''}
-                            onChange={(e) => onSearch?.(e.target.value)}
-                            placeholder={searchPlaceholder}
-                            className={filterInputClass}
-                        />
-                    )}
-                </div>
+            <div className="flex flex-wrap items-center gap-2">
+                {searchPlaceholder && (
+                    <input
+                        type="text"
+                        value={searchValue ?? ''}
+                        onChange={(e) => onSearch?.(e.target.value)}
+                        placeholder={searchPlaceholder}
+                        className={`${filterClass} w-[140px]`}
+                    />
+                )}
 
-                {/* Col 2: Outlet */}
-                <div>
-                    {outletOptions ? (
-                        <select
-                            value={outletValue ?? ''}
-                            onChange={(e) => onOutletChange?.(e.target.value)}
-                            className={filterInputClass}
-                            aria-label="Filter outlet"
-                        >
-                            <option value="">Semua Outlet</option>
-                            {outletOptions.map((o) => (
-                                <option key={o.value} value={o.value}>
-                                    {o.label}
-                                </option>
-                            ))}
-                        </select>
-                    ) : null}
-                </div>
+                {outletOptions && (
+                    <select
+                        value={outletValue ?? ''}
+                        onChange={(e) => onOutletChange?.(e.target.value)}
+                        className={`${filterClass} w-[150px]`}
+                        aria-label="Filter outlet"
+                    >
+                        <option value="">Semua Outlet</option>
+                        {outletOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                    </select>
+                )}
 
-                {/* Col 3: Alasan */}
-                <div>
-                    {reasonOptions ? (
-                        <select
-                            value={reasonValue ?? ''}
-                            onChange={(e) => onReasonChange?.(e.target.value)}
-                            className={filterInputClass}
-                            aria-label="Filter alasan"
-                        >
-                            <option value="">Semua Alasan</option>
-                            {reasonOptions.map((o) => (
-                                <option key={o.value} value={o.value}>
-                                    {o.label}
-                                </option>
-                            ))}
-                        </select>
-                    ) : null}
-                </div>
+                {reasonOptions && (
+                    <select
+                        value={reasonValue ?? ''}
+                        onChange={(e) => onReasonChange?.(e.target.value)}
+                        className={`${filterClass} w-[150px]`}
+                        aria-label="Filter alasan"
+                    >
+                        <option value="">Semua Alasan</option>
+                        {reasonOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                    </select>
+                )}
 
-                {/* Col 4: Kurir */}
-                <div>
-                    {courierOptions ? (
-                        <select
-                            value={courierValue ?? ''}
-                            onChange={(e) => onCourierChange?.(e.target.value)}
-                            className={filterInputClass}
-                            aria-label="Filter kurir"
-                        >
-                            <option value="">Semua Kurir</option>
-                            {courierOptions.map((o) => (
-                                <option key={o.value} value={o.value}>
-                                    {o.label}
-                                </option>
-                            ))}
-                        </select>
-                    ) : null}
-                </div>
+                {courierOptions && (
+                    <select
+                        value={courierValue ?? ''}
+                        onChange={(e) => onCourierChange?.(e.target.value)}
+                        className={`${filterClass} w-[150px]`}
+                        aria-label="Filter kurir"
+                    >
+                        <option value="">Semua Kurir</option>
+                        {courierOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                    </select>
+                )}
 
-                {/* Col 5: Date */}
-                <div>
-                    {dateValue !== undefined ? (
-                        <input
-                            type="date"
-                            value={dateValue}
-                            onChange={(e) => onDateChange?.(e.target.value)}
-                            className={filterInputClass}
-                            aria-label="Filter tanggal"
-                        />
-                    ) : null}
-                </div>
+                {dateValue !== undefined && (
+                    <input
+                        type="date"
+                        value={dateValue}
+                        onChange={(e) => onDateChange?.(e.target.value)}
+                        className={`${filterClass} w-[140px]`}
+                        aria-label="Filter tanggal"
+                    />
+                )}
 
-                {/* Col 6: Tambah */}
-                <div>
-                    {tambahHref && (
-                        <Link
-                            href={tambahHref}
-                            className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-primary-hover"
-                        >
-                            <Plus className="h-3.5 w-3.5" />
-                            {tambahLabel}
-                        </Link>
-                    )}
-                </div>
+                {tambahHref && (
+                    <Link
+                        href={tambahHref}
+                        className="inline-flex h-8 items-center gap-1 rounded-md bg-primary px-3 text-xs font-semibold text-white transition-colors hover:bg-primary-hover"
+                    >
+                        <Plus className="h-3.5 w-3.5" />
+                        {tambahLabel}
+                    </Link>
+                )}
             </div>
         </div>
     );
