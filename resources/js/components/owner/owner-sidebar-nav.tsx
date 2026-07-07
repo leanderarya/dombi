@@ -74,11 +74,11 @@ return item.isActive(currentUrl);
                 const hasActive = group.items.some((item) => isItemActive(item, url));
 
                 return (
-                    <div key={group.label} className={groupIndex > 0 ? 'mt-1' : ''}>
+                    <div key={group.label} className={groupIndex > 0 ? 'mt-0.5' : ''}>
                         {group.items.length === 1 ? (
                             <Link
                                 href={group.items[0].href}
-                                className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-all duration-150 ${
+                                className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
                                     isItemActive(group.items[0], url)
                                         ? 'bg-white font-semibold text-emerald-700 shadow-sm'
                                         : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
@@ -92,7 +92,7 @@ return item.isActive(currentUrl);
                                 <button
                                     onClick={() => toggleGroup(group.label)}
                                     aria-expanded={isExpanded}
-                                    className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-all duration-150 ${
+                                    className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[11px] transition-all duration-150 ${
                                         hasActive
                                             ? 'font-semibold text-slate-900'
                                             : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
@@ -112,7 +112,7 @@ return item.isActive(currentUrl);
                                                 <Link
                                                     key={item.href}
                                                     href={item.href}
-                                                    className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-[13px] transition-all duration-150 ${
+                                                    className={`flex items-center justify-between rounded-lg px-2.5 py-1 text-xs transition-all duration-150 ${
                                                         active
                                                             ? 'bg-white font-semibold text-emerald-700 shadow-sm'
                                                             : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
