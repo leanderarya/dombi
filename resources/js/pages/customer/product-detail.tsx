@@ -82,7 +82,7 @@ function useAddToCart() {
         timers.current.push(setTimeout(() => setToast(null), 2500));
     }, [cart, adding, added]);
 
-    return { addToCart, adding, added, toast };
+    return { addToCart, adding, added, toast, totalItems };
 }
 
 /* ─── Main ─────────────────────────────────────────────────── */
@@ -92,7 +92,7 @@ export default function ProductDetail({ family, otherFamilies = [], outletId }: 
 }
 
 function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: Family; otherFamilies?: OtherFamily[]; outletId?: number | null }) {
-    const { addToCart, adding, added, toast } = useAddToCart();
+    const { addToCart, adding, added, toast, totalItems } = useAddToCart();
 
     const flavors = useMemo(() => [...new Set(family.variants.map((v) => v.flavor).filter(Boolean))] as string[], [family.variants]);
     const sortedSizes = useMemo(() => ([...new Set(family.variants.map((v) => v.size).filter(Boolean))] as string[]).sort((a, b) => sizeToMl(a) - sizeToMl(b)), [family.variants]);
