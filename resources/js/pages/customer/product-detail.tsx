@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
@@ -50,6 +51,7 @@ function findSoleFlavor(variants: Variant[]): string | null {
 
 function useAddToCart() {
     const cart = useCart();
+    const { totalItems } = cart;
     const [adding, setAdding] = useState(false);
     const [added, setAdded] = useState(false);
     const [toast, setToast] = useState<{ name: string; qty: number } | null>(null);
@@ -210,6 +212,7 @@ function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: 
                     {otherFamilies.length > 0 && <OtherProducts families={otherFamilies} outletId={outletId} />}
                 </main>
 
+                {totalItems > 0 && <FloatingCartBar />}
                 {selectedVariant && (
                     <StickyCTA
                         isOutOfStock={isOutOfStock}
