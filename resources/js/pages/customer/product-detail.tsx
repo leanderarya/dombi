@@ -143,6 +143,7 @@ function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: 
                             </ForeGreenHeader>
                         </div>
                     </div>
+                    {totalItems > 0 && <CartSummaryBar />}
                 </div>
 
                 {toast && <AddToCartToast name={toast.name} />}
@@ -209,7 +210,6 @@ function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: 
                     )}
 
                     {otherFamilies.length > 0 && <OtherProducts families={otherFamilies} outletId={outletId} />}
-                    {totalItems > 0 && <CartSummaryBar />}
                 </main>
                 {selectedVariant && (
                     <StickyCTA
@@ -333,7 +333,7 @@ function CartSummaryBar() {
     };
 
     return (
-        <button type="button" onClick={handleCheckout} className="mt-4 flex w-full items-center gap-3 rounded-xl bg-text px-4 py-2.5 shadow-lg active:bg-text/90">
+        <button type="button" onClick={handleCheckout} className="mx-4 mb-4 flex items-center gap-3 rounded-xl bg-white/15 px-4 py-2.5 backdrop-blur-sm active:bg-white/25">
             <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
                 <svg className="h-4.5 w-4.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
                 <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-0.5 text-[11px] font-bold text-white">{totalItems > 9 ? '9+' : totalItems}</span>
