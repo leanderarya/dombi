@@ -66,7 +66,6 @@ export default function OwnerDeliveriesIndex({
                 })}
                 <span className="flex-1" />
                 <Select
-                    size="sm"
                     value={filters.courier_id ?? ''}
                     onChange={(e) => setFilter('courier_id', e.target.value)}
                     options={[

@@ -75,7 +75,7 @@ export default function OwnerOrdersIndex({
                 <span className="flex-1" />
                 <Input icon={Search} defaultValue={filters.search ?? ''} onBlur={(e) => setFilter('search', e.target.value)}
                     placeholder="Cari kode..." aria-label="Cari pesanan" className="h-8 w-40" />
-                <Select size="sm" value={filters.outlet_id ?? ''} onChange={(e) => setFilter('outlet_id', e.target.value)}
+                <Select value={filters.outlet_id ?? ''} onChange={(e) => setFilter('outlet_id', e.target.value)}
                     aria-label="Filter outlet"
                     options={[{ value: '', label: 'Semua outlet' }, ...outlets.map((o: any) => ({ value: String(o.id), label: o.name }))]} />
                 <Input type="date" value={filters.date ?? ''} onChange={(e) => setFilter('date', e.target.value)}

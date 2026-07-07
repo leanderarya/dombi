@@ -128,14 +128,12 @@ function PengembalianTab({ returns, filters, dashboard, outlets, reasons }: any)
                 })}
                 <span className="flex-1" />
                 <Select
-                    size="sm"
                     value={filters.outlet_id ?? ''}
                     onChange={(e) => navigate({ outlet_id: e.target.value || undefined })}
                     options={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
                     placeholder="Semua Outlet"
                 />
                 <Select
-                    size="sm"
                     value={filters.reason ?? ''}
                     onChange={(e) => navigate({ reason: e.target.value || undefined })}
                     options={Object.entries(reasons).map(([v, l]) => ({ value: v, label: String(l) }))}
@@ -253,7 +251,6 @@ function PenukaranTab({ exchanges, filters, dashboard, outlets }: any) {
                 })}
                 <span className="flex-1" />
                 <Select
-                    size="sm"
                     value={filters.outlet_id ?? ''}
                     onChange={(e) => navigate({ outlet_id: e.target.value || undefined })}
                     options={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
