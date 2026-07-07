@@ -199,7 +199,7 @@ export default function Dashboard({
                 {hero.outstandingAmount > 0 && (
                     <Link
                         href={hero.ctaHref}
-                        className="group relative block overflow-hidden rounded-lg bg-linear-to-br from-primary to-primary-hover px-4 py-3 text-white transition-all duration-200 hover:shadow-lg hover:shadow-primary/20"
+                        className="group relative block overflow-hidden rounded-lg bg-linear-to-br from-primary to-primary-hover px-4 py-3 text-white transition-all duration-200"
                     >
                         <div className="relative">
                             <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider opacity-70">

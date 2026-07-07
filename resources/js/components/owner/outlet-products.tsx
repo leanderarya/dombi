@@ -115,7 +115,7 @@ return true;
 
             {/* Empty State */}
             {products.length === 0 && (
-                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 py-10 text-center">
+                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 py-10 text-center">
                     <Package className="mb-3 h-10 w-10 text-slate-300" />
                     <div className="text-sm font-semibold text-slate-700">Belum ada produk outlet</div>
                     <div className="mt-1 text-xs text-slate-500">Tambahkan produk pertama untuk outlet ini.</div>
@@ -285,7 +285,7 @@ setOpen(false);
             </button>
             {open && createPortal(
                 <div
-                    className="fixed z-[100] min-w-[180px] rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+                    className="fixed z-[100] min-w-[180px] rounded-lg border border-slate-200 bg-white py-1"
                     style={{ top: pos.top, right: pos.right }}
                 >
                     <button

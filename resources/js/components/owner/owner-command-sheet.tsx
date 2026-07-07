@@ -34,7 +34,7 @@ export default function OwnerCommandSheet({ open, onClose }: Props) {
                             key={item.href}
                             href={item.href!}
                             onClick={onClose}
-                            className="flex items-center gap-3 rounded-xl px-3 py-3 text-text active:opacity-80"
+                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-text active:opacity-80"
                         >
                             <Icon className="h-5 w-5 text-text-muted" />
                             <span className="text-sm font-medium">{item.label}</span>
@@ -49,7 +49,7 @@ export default function OwnerCommandSheet({ open, onClose }: Props) {
                     onClick={() => {
  onClose(); router.post('/logout'); 
 }}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-red-600 active:opacity-80"
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-red-600 active:opacity-80"
                 >
                     <LogOut className="h-5 w-5" />
                     <span className="text-sm font-medium">Keluar</span>

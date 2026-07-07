@@ -22,7 +22,7 @@ export default function OwnerPageSkeleton() {
             {/* Content cards */}
             <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="rounded-xl border border-border bg-white p-4 space-y-3">
+                    <div key={i} className="rounded-lg border border-border bg-white p-4 space-y-3">
                         <div className="flex items-center justify-between">
                             <Skeleton className="h-4 w-28" />
                             <Skeleton className="h-5 w-16 rounded-full" />

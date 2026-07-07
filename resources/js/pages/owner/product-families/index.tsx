@@ -119,7 +119,7 @@ return true;
 
             {/* Create/Edit Form */}
             {showForm && (
-                <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-border bg-white p-4">
+                <form onSubmit={handleSubmit} className="mb-4 rounded-lg border border-border bg-white p-4">
                     <h3 className="mb-3 text-sm font-semibold text-text">
                         {editingId ? 'Edit Product Family' : 'Tambah Product Family'}
                     </h3>
@@ -177,7 +177,7 @@ return true;
             ) : (
                 <div className="space-y-2">
                     {filteredFamilies.map((family) => (
-                        <div key={family.id} className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm">
+                        <div key={family.id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
                             {/* Row 1: name + badge + count + actions */}
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">

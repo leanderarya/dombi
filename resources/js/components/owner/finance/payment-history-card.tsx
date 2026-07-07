@@ -39,7 +39,7 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
     const isRejected = payment.status === 'rejected';
 
     return (
-        <div className={`rounded-2xl border p-5 transition-all duration-200 hover:shadow-md ${
+        <div className={`rounded-lg border p-5 transition-all duration-200 ${
             isPending
                 ? 'border-amber-300 bg-amber-50/30'
                 : 'border-border bg-white'
@@ -104,7 +104,7 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
                         type="button"
                         onClick={() => onVerify(payment.id)}
                         disabled={processing}
-                        className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-primary py-2.5 text-sm font-bold text-white shadow-sm shadow-primary/20 transition-all hover:bg-primary-hover hover:shadow-md disabled:opacity-50"
+                        className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary py-2.5 text-sm font-bold text-white transition-all hover:bg-primary-hover disabled:opacity-50"
                     >
                         <Check className="h-4 w-4" />
                         Verifikasi
@@ -113,7 +113,7 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
                         type="button"
                         onClick={() => onReject(payment.id)}
                         disabled={processing}
-                        className="flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 hover:shadow-sm disabled:opacity-50"
+                        className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 disabled:opacity-50"
                     >
                         <X className="h-4 w-4" />
                         Tolak

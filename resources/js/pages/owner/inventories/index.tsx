@@ -132,13 +132,13 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
             }
         >
             {/* Segmented Control */}
-            <div className="mb-5 inline-flex rounded-xl bg-surface-muted p-1">
+            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
                 {TABS.map((t) => (
                     <button
                         key={t.key}
                         onClick={() => handleTabChange(t.key)}
                         className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
-                            activeTab === t.key ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'
+                            activeTab === t.key ? 'bg-white text-text' : 'text-text-muted hover:text-text'
                         }`}
                     >
                         {t.label}
@@ -219,7 +219,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                                     className={cn(
                                         'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-all',
                                         sortField === col.key
-                                            ? 'bg-primary/10 text-primary shadow-sm'
+                                            ? 'bg-primary/10 text-primary'
                                             : 'bg-surface text-text-muted hover:bg-surface-muted'
                                     )}>
                                     {col.label}
@@ -317,7 +317,7 @@ function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any })
     const [saving, setSaving] = useState(false);
 
     if (!variants || !stats) {
-        return <div className="h-20 animate-pulse rounded-xl border border-border bg-white" />;
+        return <div className="h-20 animate-pulse rounded-lg border border-border bg-white" />;
     }
 
     const filtered = variants.filter((v) => {
@@ -417,7 +417,7 @@ function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any })
             {/* Edit Modal */}
             {editModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setEditModal(null)}>
-                    <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+                    <div className="w-full max-w-sm rounded-lg bg-white p-6" onClick={(e) => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-text">Edit Stok Pusat</h3>
                         <p className="mt-1 text-sm text-text-muted">{editModal.name}</p>
 

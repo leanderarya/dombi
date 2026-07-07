@@ -44,7 +44,7 @@ export default function FinanceIndex(props: any) {
     return (
         <OwnerPageShell title="Keuangan" subtitle="Pantau kewajiban seluruh outlet">
             {/* Segmented Control — primary tab navigation */}
-            <div className="mb-5 inline-flex rounded-xl bg-surface-muted p-1">
+            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
                 {TABS.map((tab) => (
                     <button
                         key={tab.key}
@@ -52,7 +52,7 @@ export default function FinanceIndex(props: any) {
                         onClick={() => handleTabChange(tab.key)}
                         className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                             activeTab === tab.key
-                                ? 'bg-white text-text shadow-sm'
+                                ? 'bg-white text-text'
                                 : 'text-text-muted hover:text-text'
                         }`}
                     >
@@ -144,15 +144,15 @@ function TagihanTab({ kpis, outlets }: any) {
 
                 {/* Mobile KPI Strip */}
                 <div className="mb-4 grid grid-cols-3 gap-2 lg:hidden">
-                    <div className="rounded-xl border border-border bg-white p-3 text-center">
+                    <div className="rounded-lg border border-border bg-white p-3 text-center">
                         <div className="text-[11px] font-medium text-text-muted">Belum Dibayar</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-text">{formatCurrency(kpis.total_unpaid)}</div>
                     </div>
-                    <div className="rounded-xl border border-border bg-white p-3 text-center">
+                    <div className="rounded-lg border border-border bg-white p-3 text-center">
                         <div className="text-[11px] font-medium text-text-muted">Outlet</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-text">{kpis.outlets_unpaid}</div>
                     </div>
-                    <div className="rounded-xl border border-border bg-white p-3 text-center">
+                    <div className="rounded-lg border border-border bg-white p-3 text-center">
                         <div className="text-[11px] font-medium text-text-muted">Jatuh Tempo</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-text">{formatCurrency(kpis.due_this_week)}</div>
                     </div>
@@ -161,7 +161,7 @@ function TagihanTab({ kpis, outlets }: any) {
                 {/* Outlet List */}
                 <section className="mt-4">
                     {filtered.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-border bg-white py-16 text-center">
+                        <div className="rounded-lg border border-dashed border-border bg-white py-16 text-center">
                             {search ? (
                                 <>
                                     <Store className="mx-auto h-10 w-10 text-text-subtle" />
@@ -210,7 +210,7 @@ function TagihanTab({ kpis, outlets }: any) {
             {/* Right: KPI Cards (desktop sidebar) */}
             <aside className="hidden lg:block">
                 <div className="sticky top-20 space-y-3">
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                    <div className="rounded-lg border border-border bg-white p-5">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <DollarSign className="h-4 w-4 text-red-500" />
                             Total Belum Dibayar
@@ -230,7 +230,7 @@ function TagihanTab({ kpis, outlets }: any) {
                             )}
                         </div>
                     </div>
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                    <div className="rounded-lg border border-border bg-white p-5">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <Store className="h-4 w-4 text-amber-500" />
                             Outlet Belum Bayar
@@ -241,7 +241,7 @@ function TagihanTab({ kpis, outlets }: any) {
                             Outlet dengan sisa tagihan
                         </div>
                     </div>
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                    <div className="rounded-lg border border-border bg-white p-5">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <Clock className="h-4 w-4 text-orange-500" />
                             Jatuh Tempo Minggu Ini
@@ -360,7 +360,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                                 type="button"
                                 onClick={handleBatchVerify}
                                 disabled={batchVerifying}
-                                className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-50"
+                                className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-bold text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
                             >
                                 {batchVerifying ? (
                                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -375,7 +375,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
 
                 {/* Reject reason input */}
                 {rejectingId && (
-                    <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4">
+                    <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-4">
                         <div className="text-sm font-semibold text-red-800">Alasan Penolakan</div>
                         <textarea
                             value={rejectReason}
@@ -409,7 +409,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                 {/* Payment Cards */}
                 <section className="mt-4">
                     {payments.data.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-border bg-surface py-16 text-center">
+                        <div className="rounded-lg border border-dashed border-border bg-surface py-16 text-center">
                             <DollarSign className="mx-auto h-10 w-10 text-text-subtle" />
                             <p className="mt-3 text-sm font-medium text-text-muted">Belum ada pembayaran</p>
                             <p className="mt-1 text-xs text-text-subtle">Pembayaran outlet akan muncul di sini.</p>
@@ -458,7 +458,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                                     onClick={() => router.get(`/owner/finance?page=${page}&tab=pembayaran&status=${statusFilter}`)}
                                     className={`h-9 w-9 rounded-full text-sm font-medium transition-colors ${
                                         page === payments.current_page
-                                            ? 'bg-primary text-white shadow-sm'
+                                            ? 'bg-primary text-white'
                                             : 'bg-surface-muted text-text-muted hover:bg-surface-muted'
                                     }`}
                                 >
@@ -485,7 +485,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
             {/* Right: KPI Cards (desktop sidebar) */}
             <aside className="hidden lg:block">
                 <div className="sticky top-20 space-y-3">
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                    <div className="rounded-lg border border-border bg-white p-5">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <Clock className="h-4 w-4 text-amber-500" />
                             Pending Verifikasi
@@ -496,7 +496,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                             Pembayaran menunggu persetujuan
                         </div>
                     </div>
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                    <div className="rounded-lg border border-border bg-white p-5">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <CheckCircle className="h-4 w-4 text-emerald-500" />
                             Pembayaran Hari Ini
@@ -507,7 +507,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                             Diverifikasi hari ini
                         </div>
                     </div>
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                    <div className="rounded-lg border border-border bg-white p-5">
                         <div className="flex items-center gap-2 text-xs text-text-muted">
                             <DollarSign className="h-4 w-4 text-blue-500" />
                             Total Bulan Ini
@@ -523,7 +523,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
 
             {/* Mobile/Tablet: KPI Strip */}
             <section className="mb-5 grid grid-cols-1 gap-4 md:grid-cols-3 lg:hidden">
-                <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                <div className="rounded-lg border border-border bg-white p-5">
                     <div className="flex items-center gap-2 text-xs text-text-muted">
                         <Clock className="h-4 w-4 text-amber-500" />
                         Pending Verifikasi
@@ -534,7 +534,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                         Pembayaran menunggu persetujuan
                     </div>
                 </div>
-                <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                <div className="rounded-lg border border-border bg-white p-5">
                     <div className="flex items-center gap-2 text-xs text-text-muted">
                         <CheckCircle className="h-4 w-4 text-emerald-500" />
                         Pembayaran Hari Ini
@@ -545,7 +545,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                         Diverifikasi hari ini
                     </div>
                 </div>
-                <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                <div className="rounded-lg border border-border bg-white p-5">
                     <div className="flex items-center gap-2 text-xs text-text-muted">
                         <DollarSign className="h-4 w-4 text-blue-500" />
                         Total Bulan Ini
@@ -648,7 +648,7 @@ function RekeningTab({ accounts }: { accounts: PaymentAccount[] }) {
 
                 {/* Mobile form */}
                 {showForm && (
-                    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-border bg-white p-4 lg:hidden">
+                    <form onSubmit={handleSubmit} className="mb-4 rounded-lg border border-border bg-white p-4 lg:hidden">
                         <h3 className="mb-3 text-sm font-semibold text-text">
                             {editingId ? 'Edit Rekening' : 'Tambah Rekening'}
                         </h3>
@@ -658,12 +658,12 @@ function RekeningTab({ accounts }: { accounts: PaymentAccount[] }) {
 
                 <div className="space-y-2">
                     {accounts.length === 0 ? (
-                        <div className="rounded-xl border border-border bg-white p-8 text-center">
+                        <div className="rounded-lg border border-border bg-white p-8 text-center">
                             <p className="text-sm text-text-muted">Belum ada rekening</p>
                         </div>
                     ) : (
                         accounts.map((account) => (
-                            <div key={account.id} className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm hover:border-border/60">
+                            <div key={account.id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200 hover:border-border/60">
                                 <div className="flex items-start justify-between">
                                     <div>
                                         <div className="text-sm font-semibold text-text">{account.bank_name}</div>
@@ -701,7 +701,7 @@ function RekeningTab({ accounts }: { accounts: PaymentAccount[] }) {
             {/* Right: add/edit form (desktop only, sticky) */}
             <div className="hidden lg:block">
                 <div className="sticky top-4">
-                    <form onSubmit={handleSubmit} className="rounded-xl border border-border bg-white p-4 transition-shadow hover:shadow-sm">
+                    <form onSubmit={handleSubmit} className="rounded-lg border border-border bg-white p-4 transition-shadow">
                         <h3 className="mb-3 text-sm font-semibold text-text">
                             {editingId ? 'Edit Rekening' : 'Tambah Rekening'}
                         </h3>

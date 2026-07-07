@@ -80,7 +80,7 @@ return item.isActive(currentUrl);
                                 href={group.items[0].href}
                                 className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
                                     isItemActive(group.items[0], url)
-                                        ? 'bg-white font-semibold text-emerald-700 shadow-sm'
+                                        ? 'bg-white font-semibold text-emerald-700'
                                         : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
                                 }`}
                             >
@@ -114,7 +114,7 @@ return item.isActive(currentUrl);
                                                     href={item.href}
                                                     className={`flex items-center justify-between rounded-lg px-2.5 py-1 text-xs transition-all duration-150 ${
                                                         active
-                                                            ? 'bg-white font-semibold text-emerald-700 shadow-sm'
+                                                            ? 'bg-white font-semibold text-emerald-700'
                                                             : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
                                                     }`}
                                                 >

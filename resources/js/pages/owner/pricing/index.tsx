@@ -63,13 +63,13 @@ export default function PricingIndex(props: Props) {
 
     return (
         <OwnerPageShell title="Harga" subtitle="Kelola harga jual produk">
-            <div className="mb-5 inline-flex rounded-xl bg-surface-muted p-1">
+            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
                 {TABS.map((tab) => (
                     <button
                         key={tab.key}
                         onClick={() => handleTabChange(tab.key)}
                         className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
-                            activeTab === tab.key ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'
+                            activeTab === tab.key ? 'bg-white text-text' : 'text-text-muted hover:text-text'
                         }`}
                     >
                         {tab.label}

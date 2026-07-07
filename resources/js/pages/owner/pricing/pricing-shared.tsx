@@ -68,7 +68,7 @@ export function PaginationBar({ page, totalPages, total, onPageChange }: { page:
 
 export function EmptyState({ icon, message }: { icon?: React.ReactNode; message: string }) {
     return (
-        <div className="rounded-xl border border-dashed border-border bg-white p-10 text-center">
+        <div className="rounded-lg border border-dashed border-border bg-white p-10 text-center">
             {icon && <div className="mx-auto mb-2 text-text-subtle">{icon}</div>}
             <p className="text-sm text-text-muted">{message}</p>
         </div>
@@ -83,7 +83,7 @@ export function LoadingSkeleton() {
     return (
         <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 animate-pulse rounded-xl border border-border bg-white" />
+                <div key={i} className="h-20 animate-pulse rounded-lg border border-border bg-white" />
             ))}
         </div>
     );
@@ -97,7 +97,7 @@ export function BulkPanel({ amount, onChange, onApply, onCancel, saving, count }
     amount: string; onChange: (v: string) => void; onApply: () => void; onCancel: () => void; saving: boolean; count: number;
 }) {
     return (
-        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
             <div className="text-xs font-bold uppercase tracking-wider text-amber-600">Atur Semua Harga</div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
                 <div className="flex flex-wrap gap-1">
@@ -132,7 +132,7 @@ export function CopyPanel({ outlets, source, onChange, onApply, onCancel, saving
     outlets: OtherOutlet[]; source: string; onChange: (v: string) => void; onApply: () => void; onCancel: () => void; saving: boolean;
 }) {
     return (
-        <div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
             <div className="text-xs font-bold uppercase tracking-wider text-blue-600">Salin Harga Dari Outlet Lain</div>
             <div className="mt-2 flex items-center gap-2">
                 <Select

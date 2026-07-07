@@ -77,7 +77,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         <div className="mt-3 flex gap-2">
                             <button
                                 onClick={() => setShowApprove(true)}
-                                className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white transition-all hover:shadow-sm active:opacity-90"
+                                className="flex h-8 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white transition-all active:opacity-90"
                             >
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                 Setujui
@@ -95,7 +95,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     {(exchange.status === 'approved' || exchange.status === 'preparing') && (
                         <button
                             onClick={() => router.post(`/owner/exchanges/${exchange.id}/mark-shipped`)}
-                            className="mt-3 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white transition-all hover:shadow-sm active:opacity-90"
+                            className="mt-3 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white transition-all active:opacity-90"
                         >
                             <Truck className="h-3.5 w-3.5" />
                             Tandai Dikirim
@@ -105,7 +105,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                     {exchange.status === 'received' && (
                         <button
                             onClick={() => setShowComplete(true)}
-                            className="mt-3 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition-all hover:shadow-sm active:opacity-90"
+                            className="mt-3 flex h-8 w-full items-center justify-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition-all active:opacity-90"
                         >
                             <CheckCircle2 className="h-3.5 w-3.5" />
                             Selesaikan Tukar Produk
@@ -186,12 +186,12 @@ export default function OwnerExchangesShow({ exchange }: any) {
 
             {showApprove && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
-                    <div className="w-full max-w-lg rounded-2xl bg-white p-6">
+                    <div className="w-full max-w-lg rounded-lg bg-white p-6">
                         <h3 className="text-lg font-bold text-text">Setujui Tukar Produk</h3>
-                        <textarea value={approveForm.data.notes} onChange={(e) => approveForm.setData('notes', e.target.value)} placeholder="Catatan (opsional)" className="mt-4 w-full rounded-xl border border-border p-3 text-sm" rows={3} />
+                        <textarea value={approveForm.data.notes} onChange={(e) => approveForm.setData('notes', e.target.value)} placeholder="Catatan (opsional)" className="mt-4 w-full rounded-lg border border-border p-3 text-sm" rows={3} />
                         <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowApprove(false)} className="flex-1 rounded-xl border border-border py-3 text-sm font-medium">Batal</button>
-                            <button onClick={handleApprove} disabled={approveForm.processing} className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-white">{approveForm.processing ? 'Memproses...' : 'Setujui'}</button>
+                            <button onClick={() => setShowApprove(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">Batal</button>
+                            <button onClick={handleApprove} disabled={approveForm.processing} className="flex-1 rounded-lg bg-primary py-3 text-sm font-bold text-white">{approveForm.processing ? 'Memproses...' : 'Setujui'}</button>
                         </div>
                     </div>
                 </div>,
@@ -200,13 +200,13 @@ export default function OwnerExchangesShow({ exchange }: any) {
 
             {showReject && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
-                    <div className="w-full max-w-lg rounded-2xl bg-white p-6">
+                    <div className="w-full max-w-lg rounded-lg bg-white p-6">
                         <h3 className="text-lg font-bold text-text">Tolak Tukar Produk</h3>
-                        <textarea value={rejectForm.data.reason} onChange={(e) => rejectForm.setData('reason', e.target.value)} placeholder="Alasan penolakan" className="mt-4 w-full rounded-xl border border-border p-3 text-sm" rows={3} />
+                        <textarea value={rejectForm.data.reason} onChange={(e) => rejectForm.setData('reason', e.target.value)} placeholder="Alasan penolakan" className="mt-4 w-full rounded-lg border border-border p-3 text-sm" rows={3} />
                         {rejectForm.errors.reason && <div className="mt-1 text-xs text-red-600">{rejectForm.errors.reason}</div>}
                         <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowReject(false)} className="flex-1 rounded-xl border border-border py-3 text-sm font-medium">Batal</button>
-                            <button onClick={handleReject} disabled={rejectForm.processing} className="flex-1 rounded-xl bg-red-600 py-3 text-sm font-bold text-white">{rejectForm.processing ? 'Memproses...' : 'Tolak'}</button>
+                            <button onClick={() => setShowReject(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">Batal</button>
+                            <button onClick={handleReject} disabled={rejectForm.processing} className="flex-1 rounded-lg bg-red-600 py-3 text-sm font-bold text-white">{rejectForm.processing ? 'Memproses...' : 'Tolak'}</button>
                         </div>
                     </div>
                 </div>,
@@ -215,16 +215,16 @@ export default function OwnerExchangesShow({ exchange }: any) {
 
             {showComplete && createPortal(
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
-                    <div className="w-full max-w-lg rounded-2xl bg-white p-6">
+                    <div className="w-full max-w-lg rounded-lg bg-white p-6">
                         <h3 className="text-lg font-bold text-text">Selesaikan Tukar Produk</h3>
                         <p className="mt-2 text-sm text-text-muted">
                             Tandai exchange ini selesai setelah outlet mengonfirmasi produk pengganti diterima.
                         </p>
                         <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowComplete(false)} className="flex-1 rounded-xl border border-border py-3 text-sm font-medium">Batal</button>
+                            <button onClick={() => setShowComplete(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">Batal</button>
                             <button
                                 onClick={() => router.post(`/owner/exchanges/${exchange.id}/complete`, {}, { onSuccess: () => setShowComplete(false) })}
-                                className="flex-1 rounded-xl bg-primary py-3 text-sm font-bold text-white"
+                                className="flex-1 rounded-lg bg-primary py-3 text-sm font-bold text-white"
                             >
                                 Selesai
                             </button>

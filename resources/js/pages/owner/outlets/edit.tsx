@@ -42,7 +42,7 @@ export default function EditOutlet({ outlet, existingOutlets }: any) {
                 <aside className="hidden xl:block">
                     <div className="sticky top-4 space-y-4">
                         {/* Current Info */}
-                        <div className="rounded-xl border border-border bg-white p-4">
+                        <div className="rounded-lg border border-border bg-white p-4">
                             <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Info Saat Ini</h3>
                             <div className="mt-3 space-y-2.5">
                                 <InfoRow label="Nama" value={outlet.name ?? '-'} />

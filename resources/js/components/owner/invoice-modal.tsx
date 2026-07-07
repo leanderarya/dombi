@@ -51,7 +51,7 @@ return null;
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-            <div className="relative w-full max-w-md animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-safe lg:animate-none lg:rounded-xl lg:pb-0 lg:shadow-xl">
+            <div className="relative w-full max-w-md animate-[slideUp_200ms_ease-out] rounded-t-lg bg-white pb-safe lg:animate-none lg:rounded-lg lg:pb-0">
                 <div className="flex justify-center pt-3 pb-2 lg:hidden">
                     <div className="h-1 w-12 rounded-full bg-slate-300" />
                 </div>
@@ -93,7 +93,7 @@ return null;
                         <button
                             type="button"
                             onClick={handleCopy}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
                         >
                             {copied ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
                             {copied ? 'Tersalin' : 'Copy Pesan'}
@@ -101,7 +101,7 @@ return null;
                         <button
                             type="button"
                             onClick={handleWhatsApp}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700"
                         >
                             <ExternalLink className="h-4 w-4" />
                             Buka WhatsApp

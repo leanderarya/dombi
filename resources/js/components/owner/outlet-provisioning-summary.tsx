@@ -43,18 +43,18 @@ return null;
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-0 lg:items-center lg:px-4" role="dialog" aria-modal="true">
-            <div className="w-full max-w-md rounded-t-xl border border-slate-200 bg-white p-4 lg:rounded-xl">
+            <div className="w-full max-w-md rounded-t-lg border border-slate-200 bg-white p-4 lg:rounded-lg">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Branch Provisioned</p>
                 <h2 className="mt-1 text-2xl font-semibold text-slate-900">Outlet siap operasional</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-500">Akun outlet berhasil dibuat. Temporary password hanya ditampilkan sekali di ringkasan ini.</p>
 
-                <div className="mt-4 rounded-xl border border-slate-200 bg-[#F8FAFC] p-3">
+                <div className="mt-4 rounded-lg border border-slate-200 bg-[#F8FAFC] p-3">
                     <Info label="Outlet" value={provisioning.outlet_name} />
                     <Info label="Status" value={provisioning.status} />
                     <Info label="Location" value={provisioning.location || '-'} />
                 </div>
 
-                <div className="mt-3 rounded-xl border border-slate-300 bg-slate-950 p-3 font-mono text-xs text-slate-100">
+                <div className="mt-3 rounded-lg border border-slate-300 bg-slate-950 p-3 font-mono text-xs text-slate-100">
                     <div className="text-slate-400">Username</div>
                     <div className="mt-1 break-all tabular-nums">{provisioning.email}</div>
                     <div className="mt-3 text-slate-400">Temporary Password</div>

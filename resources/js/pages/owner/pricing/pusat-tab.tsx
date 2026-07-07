@@ -92,7 +92,7 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
 
                 <div className="space-y-2">
                     {paginated.map((v) => (
-                        <div key={v.variant_id} className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm">
+                        <div key={v.variant_id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
                             <div className="flex items-start justify-between">
                                 <div>
                                     <div className="text-lg font-bold text-text">{v.name}</div>

@@ -54,7 +54,7 @@ function OutletGrid({ outlets }: { outlets?: OutletData[] }) {
                     <Link
                         key={o.id}
                         href={`/owner/pricing?tab=outlet&outlet_id=${o.id}`}
-                        className="flex items-center gap-4 rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm hover:border-primary/20 active:opacity-80"
+                        className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-all duration-200 hover:border-primary/20 active:opacity-80"
                     >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-light">
                             <Store className="h-5 w-5 text-primary" />
@@ -301,7 +301,7 @@ function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
 
             <div className="space-y-2">
                 {paginated.map((row) => (
-                    <div key={row.variant_id} className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm">
+                    <div key={row.variant_id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
                         <div className="flex items-start justify-between">
                             <div>
                                 <div className="text-lg font-bold text-text">{row.name}</div>

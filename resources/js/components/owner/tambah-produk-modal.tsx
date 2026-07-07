@@ -118,7 +118,7 @@ return null;
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-            <div className="relative flex h-[80vh] w-full max-w-lg flex-col rounded-t-2xl bg-white lg:h-auto lg:max-h-[70vh] lg:rounded-xl lg:shadow-xl">
+            <div className="relative flex h-[80vh] w-full max-w-lg flex-col rounded-t-lg bg-white lg:h-auto lg:max-h-[70vh] lg:rounded-lg">
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3">
                     <h2 className="text-base font-bold text-slate-900">Tambah Produk Outlet</h2>
@@ -195,14 +195,14 @@ return null;
                     </div>
                     {error && <p className="mb-2 text-xs font-medium text-red-600">{error}</p>}
                     <div className="flex gap-3">
-                        <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                        <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
                             Batal
                         </button>
                         <button
                             type="button"
                             onClick={handleSubmit}
                             disabled={saving || selected.size === 0}
-                            className="flex-[2] rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                            className="flex-[2] rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                         >
                             {saving ? 'Menambahkan...' : `Tambahkan ${selected.size} Produk`}
                         </button>

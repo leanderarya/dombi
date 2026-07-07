@@ -62,7 +62,7 @@ export function RiwayatTab({ logs, actionFilter }: { logs?: PaginatedLogs; actio
                     <EmptyState message="Belum ada riwayat perubahan harga." />
                 ) : (
                     logs.data.map((log) => (
-                        <div key={log.id} className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm">
+                        <div key={log.id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
                             <div className="flex items-start justify-between">
                                 <div>
                                     <div className="text-sm font-bold text-text">{log.product}</div>

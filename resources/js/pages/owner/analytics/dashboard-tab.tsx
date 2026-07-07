@@ -72,7 +72,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
             </div>
 
             {insight && !insightDismissed && (
-                <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary-light p-3">
+                <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary-light p-3">
                     <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
                     <p className="flex-1 text-xs font-medium text-primary">{insight}</p>
                     <button onClick={() => setInsightDismissed(true)} className="shrink-0 text-primary/60 hover:text-primary">
@@ -91,7 +91,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
 
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 <div className="space-y-4">
-                    <div className="rounded-xl border border-border bg-white p-4 transition-shadow hover:shadow-sm">
+                    <div className="rounded-lg border border-border bg-white p-4 transition-shadow">
                         <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-text-muted">Perbandingan Outlet</div>
                         {outletRevenue.length === 0 ? (
                             <p className="py-4 text-center text-sm text-text-muted">Belum ada data</p>
@@ -114,7 +114,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                         )}
                     </div>
 
-                    <div className="rounded-xl border border-border bg-white p-4 transition-shadow hover:shadow-sm">
+                    <div className="rounded-lg border border-border bg-white p-4 transition-shadow">
                         <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-text-muted">Produk Terlaris</div>
                         {topProducts.length === 0 ? (
                             <p className="py-4 text-center text-sm text-text-muted">Belum ada data</p>
@@ -159,7 +159,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
 
 function KpiCard({ label, value, trend, periodLabel }: { label: string; value: string; trend?: TrendData; periodLabel: string }) {
     return (
-        <div className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm hover:border-border/60">
+        <div className="rounded-lg border border-border bg-white p-4 transition-all duration-200 hover:border-border/60">
             <div className="text-[11px] font-medium text-text-muted">{label}</div>
             <div className="mt-1 text-lg font-bold tabular-nums text-text">{value}</div>
             {trend && (

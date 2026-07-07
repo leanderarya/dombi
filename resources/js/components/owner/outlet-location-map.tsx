@@ -86,7 +86,7 @@ return null;
     }, [marker, existingOutlets]);
 
     return (
-        <div className="overflow-hidden rounded-xl border border-slate-300 bg-slate-100">
+        <div className="overflow-hidden rounded-lg border border-slate-300 bg-slate-100">
             {!readOnly && <MapSearchBox onSelect={(lat, lng) => onChange({ lat, lng })} />}
             <div className="h-[200px] w-full lg:h-[400px]">
                 <MapContainer
@@ -233,7 +233,7 @@ abortRef.current.abort();
             </div>
 
             {open && suggestions.length > 0 && (
-                <div className="absolute inset-x-0 top-full z-[1000] max-h-48 overflow-y-auto border-b border-slate-200 bg-white shadow-lg">
+                <div className="absolute inset-x-0 top-full z-[1000] max-h-48 overflow-y-auto border-b border-slate-200 bg-white">
                     {suggestions.map((s) => (
                         <button
                             key={s.id}

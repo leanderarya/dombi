@@ -84,7 +84,7 @@ formData.append('proof_image', proofFile);
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true">
             <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-            <div className="relative w-full max-w-md animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-safe lg:animate-none lg:rounded-xl lg:pb-0 lg:shadow-xl">
+            <div className="relative w-full max-w-md animate-[slideUp_200ms_ease-out] rounded-t-lg bg-white pb-safe lg:animate-none lg:rounded-lg lg:pb-0">
                 <div className="flex justify-center pt-3 pb-2 lg:hidden">
                     <div className="h-1 w-12 rounded-full bg-slate-300" />
                 </div>
@@ -175,10 +175,10 @@ formData.append('proof_image', proofFile);
                     {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
 
                     <div className="mt-5 flex gap-3">
-                        <button type="button" onClick={onClose} className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                        <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
                             Batal
                         </button>
-                        <button type="submit" disabled={saving || !amount} className="flex-[2] rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
+                        <button type="submit" disabled={saving || !amount} className="flex-[2] rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
                             {saving ? 'Menyimpan...' : 'Simpan Pembayaran'}
                         </button>
                     </div>

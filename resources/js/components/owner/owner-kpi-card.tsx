@@ -49,7 +49,7 @@ interface OwnerKpiCardSkeletonProps {
 
 export function OwnerKpiCardSkeleton({ className }: OwnerKpiCardSkeletonProps) {
     return (
-        <div className={cn('rounded-xl border border-border bg-surface p-4 lg:p-5', className)}>
+        <div className={cn('rounded-lg border border-border bg-surface p-4 lg:p-5', className)}>
             <div className="flex items-center gap-3">
                 <div className="h-8 w-8 animate-pulse rounded-lg bg-surface-muted" />
                 <div className="h-4 w-24 animate-pulse rounded bg-surface-muted" />

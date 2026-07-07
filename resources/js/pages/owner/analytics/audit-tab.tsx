@@ -83,7 +83,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                     {movements.data.map((m: any) => (
                         <div
                             key={m.id}
-                            className="flex items-center gap-3 rounded-xl border border-border bg-white px-3 py-2.5 transition-all duration-200 hover:shadow-sm"
+                            className="flex items-center gap-3 rounded-lg border border-border bg-white px-3 py-2.5 transition-all duration-200"
                         >
                             <div className={`shrink-0 text-xs font-bold tabular-nums ${m.quantity >= 0 ? 'text-emerald-700' : 'text-red-600'}`}>
                                 {m.quantity >= 0 ? '+' : ''}
@@ -109,7 +109,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                 {/* Right: stats sidebar (desktop only) */}
                 <div className="hidden lg:block">
                     <div className="sticky top-4 space-y-3">
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
                                 <ClipboardList className="h-4 w-4 text-text-subtle" />
                                 Total Movement
@@ -117,7 +117,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                             <div className="mt-2 text-3xl font-bold text-text">{movements.data.length}</div>
                             <div className="mt-1 text-[11px] font-medium text-text-muted">Semua movement</div>
                         </div>
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
                                 <ArrowDownRight className="h-4 w-4 text-emerald-500" />
                                 Stok Masuk
@@ -128,7 +128,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                                 Restock & penyesuaian
                             </div>
                         </div>
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
                                 <ArrowUpRight className="h-4 w-4 text-red-500" />
                                 Stok Keluar
@@ -142,7 +142,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
 
                         {/* Active filters */}
                         {activeFilterCount > 0 && (
-                            <div className="rounded-xl border border-border bg-white p-4 transition-shadow hover:shadow-sm">
+                            <div className="rounded-lg border border-border bg-white p-4 transition-shadow">
                                 <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-text-muted">Filter Aktif</div>
                                 <div className="space-y-1.5">
                                     {filters.outlet_id && (

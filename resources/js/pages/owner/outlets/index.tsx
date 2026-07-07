@@ -87,7 +87,7 @@ export default function OutletsIndex({ outlets }: any) {
 
                     <div className="space-y-3">
                         {filtered.length === 0 && (
-                            <div className="rounded-xl border border-border bg-white p-10 text-center">
+                            <div className="rounded-lg border border-border bg-white p-10 text-center">
                                 <p className="text-sm text-text-muted">Belum ada outlet</p>
                                 <Link href="/owner/outlets/create" className="mt-2 inline-block text-sm font-semibold text-primary">
                                     + Tambah Outlet
@@ -101,7 +101,7 @@ export default function OutletsIndex({ outlets }: any) {
                             return (
                                 <div
                                     key={outlet.id}
-                                    className="cursor-pointer rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-md"
+                                    className="cursor-pointer rounded-lg border border-border bg-white p-4 transition-all duration-200"
                                     onClick={() => router.visit(`/owner/outlets/${outlet.id}`)}
                                 >
                                     {/* Row 1: name + badge + orders */}
@@ -171,7 +171,7 @@ export default function OutletsIndex({ outlets }: any) {
                 <aside className="hidden lg:block">
                     <div className="sticky top-4 space-y-3">
                         {/* Total Outlet */}
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
                                 <Store className="h-4 w-4 text-text-subtle" />
                                 Total Outlet
@@ -183,7 +183,7 @@ export default function OutletsIndex({ outlets }: any) {
                         </div>
 
                         {/* Aktif */}
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
                                 <TrendingUp className="h-4 w-4 text-emerald-500" />
                                 Aktif
@@ -197,7 +197,7 @@ export default function OutletsIndex({ outlets }: any) {
                         </div>
 
                         {/* Stok Rendah */}
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
                                 <AlertTriangle className="h-4 w-4 text-amber-500" />
                                 Stok Rendah
@@ -212,7 +212,7 @@ export default function OutletsIndex({ outlets }: any) {
                         </div>
 
                         {/* Sibuk */}
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                        <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
                                 <Clock className="h-4 w-4 text-blue-500" />
                                 Sibuk

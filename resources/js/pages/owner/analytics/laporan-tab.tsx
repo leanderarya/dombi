@@ -105,7 +105,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                 />
                 <button
                     onClick={handleExport}
-                    className="flex h-10 items-center gap-1 rounded-xl border border-border bg-white px-2.5 text-[11px] font-semibold text-text-muted transition-all duration-150 active:bg-surface-muted active:opacity-80"
+                    className="flex h-10 items-center gap-1 rounded-lg border border-border bg-white px-2.5 text-[11px] font-semibold text-text-muted transition-all duration-150 active:bg-surface-muted active:opacity-80"
                 >
                     <Download className="h-4 w-4" /> CSV
                 </button>
@@ -140,7 +140,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
 
                 <div className="space-y-4">
                     <div className="lg:sticky lg:top-4 lg:space-y-4">
-                        <div className="rounded-xl border border-border bg-white transition-shadow hover:shadow-sm">
+                        <div className="rounded-lg border border-border bg-white transition-shadow">
                             <button onClick={() => setExportOpen(!exportOpen)} className="flex w-full items-center justify-between p-4">
                                 <div className="text-sm font-semibold text-text">Download Laporan</div>
                                 <ChevronDown className={`h-4 w-4 text-text-muted transition-transform ${exportOpen ? 'rotate-180' : ''}`} />
@@ -174,7 +174,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                         </div>
 
                         <div className="space-y-2">
-                            <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="rounded-lg border border-border bg-white p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
                                     <ClipboardList className="h-4 w-4 text-text-subtle" />
                                     Total Pesanan
@@ -182,7 +182,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                 <div className="mt-2 text-3xl font-bold text-text">{summary.totalOrders}</div>
                                 <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-text-subtle">Pesanan</div>
                             </div>
-                            <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="rounded-lg border border-border bg-white p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
                                     <DollarSign className="h-4 w-4 text-emerald-500" />
                                     Pendapatan
@@ -190,7 +190,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                 <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(summary.totalRevenue)}</div>
                                 <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">Total pendapatan</div>
                             </div>
-                            <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                            <div className="rounded-lg border border-border bg-white p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
                                     <CheckCircle className="h-4 w-4 text-emerald-500" />
                                     Selesai
@@ -200,14 +200,14 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                             </div>
                         </div>
 
-                        <div className="rounded-xl border border-border bg-white transition-shadow hover:shadow-sm">
+                        <div className="rounded-lg border border-border bg-white transition-shadow">
                             <button onClick={() => setSecondaryOpen(!secondaryOpen)} className="flex w-full items-center justify-between p-3">
                                 <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Detail Lainnya</div>
                                 <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${secondaryOpen ? 'rotate-180' : ''}`} />
                             </button>
                             {secondaryOpen && (
                                 <div className="space-y-2 border-t border-border px-3 pb-3 pt-2">
-                                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                    <div className="rounded-lg border border-border bg-white p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
                                             <XCircle className="h-4 w-4 text-red-500" />
                                             Dibatalkan
@@ -215,7 +215,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.cancelledOrders}</div>
                                         <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">Dibatalkan</div>
                                     </div>
-                                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                    <div className="rounded-lg border border-border bg-white p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
                                             <Truck className="h-4 w-4 text-emerald-500" />
                                             Pengiriman Berhasil
@@ -223,7 +223,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.completedDeliveries}</div>
                                         <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">Pengiriman selesai</div>
                                     </div>
-                                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
+                                    <div className="rounded-lg border border-border bg-white p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
                                             <XCircle className="h-4 w-4 text-red-500" />
                                             Pengiriman Gagal
@@ -266,7 +266,7 @@ function BreakdownCard({ title, data }: { title: string; data: Record<string, nu
     const entries = Object.entries(data);
 
     return (
-        <div className="rounded-lg border border-border bg-white transition-shadow hover:shadow-sm">
+        <div className="rounded-lg border border-border bg-white transition-shadow">
             <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between p-3">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">{title}</div>
                 <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />

@@ -220,7 +220,7 @@ return;
         >
             {/* Family Edit Form */}
             {showFamilyEdit && (
-                <form onSubmit={handleUpdateFamily} className="mb-4 rounded-xl border border-border bg-white p-4">
+                <form onSubmit={handleUpdateFamily} className="mb-4 rounded-lg border border-border bg-white p-4">
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-sm font-semibold text-text">Edit Product Family</h3>
                         <button type="button" onClick={() => setShowFamilyEdit(false)} className="text-text-subtle hover:text-text-muted">
@@ -270,7 +270,7 @@ return;
 
             {/* Family Info */}
             {family.description && !showFamilyEdit && (
-                <div className="mb-4 rounded-xl border border-border bg-white p-4">
+                <div className="mb-4 rounded-lg border border-border bg-white p-4">
                     <p className="text-sm text-slate-600">{family.description}</p>
                 </div>
             )}
@@ -306,7 +306,7 @@ return;
             {(showVariantForm || editingVariant) && (
                 <form
                     onSubmit={editingVariant ? handleUpdateVariant : handleCreateVariant}
-                    className="mb-4 rounded-xl border border-border bg-white p-4"
+                    className="mb-4 rounded-lg border border-border bg-white p-4"
                 >
                     <h2 className="mb-3 text-sm font-semibold text-text">
                         {editingVariant ? 'Edit Variant' : 'Tambah Variant'}
@@ -447,7 +447,7 @@ return;
                     {filteredVariants.map((variant) => (
                         <div
                             key={variant.id}
-                            className={`rounded-xl border bg-white p-4 transition-all duration-200 hover:shadow-sm ${
+                            className={`rounded-lg border bg-white p-4 transition-all duration-200 ${
                                 variant.is_active ? 'border-border' : 'border-border/50 opacity-60'
                             }`}
                         >
@@ -504,7 +504,7 @@ return;
 
             {/* Search Empty State */}
             {search && filteredVariants.length === 0 && family.variants.length > 0 && (
-                <div className="rounded-xl border border-border bg-white p-8 text-center">
+                <div className="rounded-lg border border-border bg-white p-8 text-center">
                     <p className="text-sm text-text-muted">Tidak ditemukan variant "{search}"</p>
                 </div>
             )}

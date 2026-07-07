@@ -63,7 +63,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
             backHref="/owner/finance"
         >
             {/* Summary Card */}
-            <section className="mb-5 rounded-xl border border-border bg-white p-5">
+            <section className="mb-5 rounded-lg border border-border bg-white p-5">
                 <div className="flex items-center justify-between">
                     <h2 className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Status</h2>
                     <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusClass}`}>{statusLabel}</span>
@@ -104,7 +104,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
 
             {/* Sticky Action Bar — only when there is outstanding */}
             {summary.outstanding > 0 && (
-                <div className="sticky top-0 z-20 mb-4 flex gap-3 rounded-xl border border-border bg-white p-3 shadow-sm">
+                <div className="sticky top-0 z-20 mb-4 flex gap-3 rounded-lg border border-border bg-white p-3">
                     <button
                         type="button"
                         onClick={() => setInvoiceOpen(true)}
@@ -128,7 +128,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
             <section>
                 <h2 className="mb-3 text-base font-semibold text-text">Daftar Tagihan</h2>
                 {settlements.length === 0 && (
-                    <div className="rounded-xl border border-border bg-white p-10 text-center">
+                    <div className="rounded-lg border border-border bg-white p-10 text-center">
                         <p className="text-sm text-text-muted">Tidak ada tagihan.</p>
                     </div>
                 )}
@@ -138,7 +138,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                         const overdueLabel = getOverdueLabel(s.due_date);
 
                         return (
-                            <div key={s.id} className="rounded-xl border border-border bg-white p-5 transition-all duration-200 hover:shadow-md">
+                            <div key={s.id} className="rounded-lg border border-border bg-white p-5 transition-all duration-200">
                                 {/* Top row: period + status + amount due */}
                                 <div className="flex items-start justify-between">
                                     <div>

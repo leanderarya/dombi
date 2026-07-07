@@ -35,7 +35,7 @@ export default function OwnerDistributionShow({ distribution }: any) {
                     {distribution.status === 'preparing' && (
                         <button
                             onClick={() => router.post(`/owner/distributions/${distribution.id}/mark-shipped`)}
-                            className="mt-3 flex h-8 w-full items-center justify-center rounded-lg bg-primary px-3 text-xs font-bold text-white transition-all duration-200 hover:shadow-sm"
+                            className="mt-3 flex h-8 w-full items-center justify-center rounded-lg bg-primary px-3 text-xs font-bold text-white transition-all duration-200"
                         >
                             Tandai Dikirim
                         </button>
