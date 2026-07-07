@@ -1,4 +1,4 @@
-import { ChevronDown, MapPin, Check } from 'lucide-react';
+import { ChevronDown, MapPin, Check, Navigation, Store } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import { useCustomerLocation } from '@/lib/customer-location';
@@ -143,38 +143,22 @@ export default function PickupOutletSelector({ items, initialRecommendations, se
 
             {/* Recommended outlet card */}
             {selectedOutlet && (
-                <div className="mt-4 rounded-xl border border-border bg-white">
-                    {/* Header */}
-                    <div className="flex items-center justify-between px-3.5 py-2.5">
-                        <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider">Ambil di Outlet</span>
-                        {summary && (
-                            <button
-                                type="button"
-                                onClick={() => setSheetOpen(true)}
-                                className="text-[11px] font-semibold text-primary active:opacity-80"
-                            >
-                                Ubah Lokasi
-                            </button>
-                        )}
-                    </div>
-
-                    {/* Selected outlet */}
-                    <div className="border-t border-border px-3.5 py-3">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-sm font-semibold text-text truncate">{selectedOutlet.name}</span>
-                                    <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
-                                </div>
-                                <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted line-clamp-1">{selectedOutlet.address}</div>
-                            </div>
-                            <div className="shrink-0 text-right">
-                                {selectedOutlet.distance_km !== null && selectedOutlet.distance_km !== undefined && (
-                                    <div className="text-xs font-semibold tabular-nums text-text">{selectedOutlet.distance_km.toFixed(1)} km</div>
-                                )}
-                                <div className={`mt-0.5 text-[10px] font-semibold ${selectedOutlet.stock_available ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                    {selectedOutlet.stock_available ? 'Stok tersedia' : 'Stok terbatas'}
-                                </div>
+                <div className="mt-4 rounded-xl border border-border bg-white overflow-hidden">
+                    {/* Selected outlet — clickable */}
+                    <div className="flex items-center gap-3 p-4">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
+                            <Store className="h-4 w-4 text-emerald-600" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold text-text truncate">{selectedOutlet.name}</div>
+                            <div className="mt-0.5 text-[11px] text-text-muted line-clamp-1">{selectedOutlet.address}</div>
+                        </div>
+                        <div className="shrink-0 text-right">
+                            {selectedOutlet.distance_km !== null && selectedOutlet.distance_km !== undefined && (
+                                <div className="text-xs font-semibold tabular-nums text-text">{selectedOutlet.distance_km.toFixed(1)} km</div>
+                            )}
+                            <div className={`mt-0.5 text-[10px] font-semibold ${selectedOutlet.stock_available ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                {selectedOutlet.stock_available ? 'Stok tersedia' : 'Stok terbatas'}
                             </div>
                         </div>
                     </div>
@@ -185,7 +169,7 @@ export default function PickupOutletSelector({ items, initialRecommendations, se
                             <button
                                 type="button"
                                 onClick={() => setExpanded(!expanded)}
-                                className="flex w-full items-center justify-between border-t border-border px-3.5 py-2 text-[11px] font-semibold text-text-muted active:bg-surface-muted"
+                                className="flex w-full items-center justify-between border-t border-border px-4 py-2.5 text-[11px] font-semibold text-text-muted active:bg-surface-muted"
                             >
                                 <span>{otherOutlets.length} outlet lainnya</span>
                                 <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
@@ -201,19 +185,24 @@ export default function PickupOutletSelector({ items, initialRecommendations, se
                                                 onSelect(outlet.id);
                                                 setExpanded(false);
                                             }}
-                                            className="flex w-full items-center justify-between px-3.5 py-2.5 text-left active:bg-surface-muted border-b border-border last:border-b-0"
+                                            className={`flex w-full items-center justify-between px-4 py-3 text-left active:bg-surface-muted border-b border-border last:border-b-0 ${
+                                                outlet.id === selectedOutletId ? 'bg-emerald-50' : ''
+                                            }`}
                                         >
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-xs font-medium text-text truncate">{outlet.name}</div>
                                                 <div className="text-[10px] text-text-muted truncate">{outlet.address}</div>
                                             </div>
-                                            <div className="shrink-0 ml-3 text-right">
-                                                {outlet.distance_km !== null && outlet.distance_km !== undefined && (
-                                                    <div className="text-[11px] font-medium tabular-nums text-text-muted">{outlet.distance_km.toFixed(1)} km</div>
-                                                )}
-                                                <div className={`text-[10px] font-semibold ${outlet.stock_available ? 'text-emerald-600' : 'text-amber-600'}`}>
-                                                    {outlet.stock_available ? 'Tersedia' : 'Terbatas'}
+                                            <div className="shrink-0 ml-3 flex items-center gap-2">
+                                                <div className="text-right">
+                                                    {outlet.distance_km !== null && outlet.distance_km !== undefined && (
+                                                        <div className="text-[11px] font-medium tabular-nums text-text-muted">{outlet.distance_km.toFixed(1)} km</div>
+                                                    )}
+                                                    <div className={`text-[10px] font-semibold ${outlet.stock_available ? 'text-emerald-600' : 'text-amber-600'}`}>
+                                                        {outlet.stock_available ? 'Tersedia' : 'Terbatas'}
+                                                    </div>
                                                 </div>
+                                                {outlet.id === selectedOutletId && <Check className="h-3.5 w-3.5 shrink-0 text-primary" />}
                                             </div>
                                         </button>
                                     ))}

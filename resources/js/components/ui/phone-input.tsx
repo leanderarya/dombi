@@ -48,7 +48,7 @@ export default function PhoneInput({
                     disabled ? 'bg-surface text-text-muted' : ''
                 }`}
             >
-                <span className="flex h-full select-none items-center border-r border-border bg-surface-muted px-3 text-sm font-medium text-text-muted">
+                <span className="flex self-stretch select-none items-center border-r border-border bg-surface-muted px-3 text-sm font-medium text-text-muted">
                     +62
                 </span>
                 <input

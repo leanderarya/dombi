@@ -164,11 +164,7 @@ return;
                             {isOutOfStock ? (
                                 'Habis'
                             ) : (
-                                <>
-                                    <span>{adding ? 'Menambahkan...' : 'Tambah'}</span>
-                                    <span className="text-white/80">&middot;</span>
-                                    <span>{formatCurrency(selectedVariant.price * quantity)}</span>
-                                </>
+                                adding ? 'Menambahkan...' : 'Tambah'
                             )}
                         </button>
                     </div>

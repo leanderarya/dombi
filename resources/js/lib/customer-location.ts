@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 export type CustomerLocation = {
+    address_id?: number;
     address_line?: string;
     address_detail?: string;
     province?: string;
@@ -115,6 +116,11 @@ class CustomerLocationStore {
 }
 
 const store = new CustomerLocationStore();
+
+/** Non-reactive escape hatch — call for one-shot persistence without subscribing. */
+export function saveCustomerLocationSnapshot(loc: CustomerLocation): void {
+    store.save(loc);
+}
 
 export function useCustomerLocation() {
     const location = useSyncExternalStore(
