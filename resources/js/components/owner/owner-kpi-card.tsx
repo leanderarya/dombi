@@ -22,9 +22,7 @@ interface Props {
 export default function OwnerKpiCard({ label, value, icon, trend, color, className }: Props) {
     return (
         <div className={cn(
-            'group rounded-xl border border-border bg-surface p-4 lg:p-5 transition-all duration-200',
-            'lg:shadow-sm hover:border-border-strong hover:shadow-md hover:-translate-y-0.5',
-            'active:translate-y-0 active:shadow-none',
+            'group rounded-md p-2.5 transition-colors duration-150 hover:bg-surface-muted',
             className
         )}>
             <div className="flex items-center gap-2">
@@ -33,9 +31,9 @@ export default function OwnerKpiCard({ label, value, icon, trend, color, classNa
                         {icon}
                     </div>
                 )}
-                <div className="text-xs font-medium text-text-muted">{label}</div>
+                <div className="text-[10px] font-medium text-text-muted">{label}</div>
             </div>
-            <div className={`mt-3 text-2xl font-bold tabular-nums tracking-tight ${color ? colorClasses[color] : 'text-text'}`}>
+            <div className={`mt-1 text-base font-bold tabular-nums tracking-tight ${color ? colorClasses[color] : 'text-text'}`}>
                 {value}
             </div>
             {trend && (

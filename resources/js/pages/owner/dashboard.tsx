@@ -1,9 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Wallet, ClipboardList, AlertTriangle, Package, RotateCcw, ArrowLeftRight, CreditCard, ChevronRight, TrendingDown, CheckCircle2 } from 'lucide-react';
 import OwnerDashboardSkeleton from '@/components/owner/owner-dashboard-skeleton';
-import OwnerKpiCard from '@/components/owner/owner-kpi-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { ExpandableSection } from '@/components/ui/expandable-section';
 import { formatCurrency } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
 
@@ -74,212 +72,154 @@ export default function Dashboard({
                 title="Dasbor"
                 subtitle="Ringkasan operasional hari ini"
             >
-                {/* 2-column desktop layout */}
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-
-                    {/* LEFT COLUMN — Actions + Hero */}
-                    <div className="space-y-4">
-                        {/* Butuh Tindakan — Primary Section */}
-                        <ExpandableSection
-                            title="Butuh Tindakan"
-                            icon={<ClipboardList className="h-4 w-4" />}
-                            count={totalPendingActions}
-                            countColor="blue"
-                            defaultExpanded={totalPendingActions > 0}
-                            className="bg-primary/2"
-                        >
-                            <div className="space-y-2">
-                                {actionRequired.restocks > 0 && (
-                                    <Link
-                                        href="/owner/restocks?status=requested"
-                                        className="group flex items-center justify-between rounded-lg border border-border p-3 transition-all duration-200 hover:bg-surface-muted hover:border-border-strong"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-muted text-text-muted transition-transform duration-200 group-hover:scale-105">
-                                                <Package className="h-4 w-4" />
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-text">Restock</div>
-                                                <div className="text-xs text-text-muted">{actionRequired.restocks} menunggu persetujuan</div>
-                                            </div>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-text-subtle transition-transform duration-200 group-hover:translate-x-0.5" />
-                                    </Link>
-                                )}
-                                {actionRequired.returns > 0 && (
-                                    <Link
-                                        href="/owner/returns?status=submitted"
-                                        className="group flex items-center justify-between rounded-lg border border-border p-3 transition-all duration-200 hover:bg-surface-muted hover:border-border-strong"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-muted text-text-muted transition-transform duration-200 group-hover:scale-105">
-                                                <RotateCcw className="h-4 w-4" />
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-text">Return</div>
-                                                <div className="text-xs text-text-muted">{actionRequired.returns} menunggu persetujuan</div>
-                                            </div>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-text-subtle transition-transform duration-200 group-hover:translate-x-0.5" />
-                                    </Link>
-                                )}
-                                {actionRequired.exchanges > 0 && (
-                                    <Link
-                                        href="/owner/exchanges?status=submitted"
-                                        className="group flex items-center justify-between rounded-lg border border-border p-3 transition-all duration-200 hover:bg-surface-muted hover:border-border-strong"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-muted text-text-muted transition-transform duration-200 group-hover:scale-105">
-                                                <ArrowLeftRight className="h-4 w-4" />
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-text">Tukar Produk</div>
-                                                <div className="text-xs text-text-muted">{actionRequired.exchanges} menunggu persetujuan</div>
-                                            </div>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-text-subtle transition-transform duration-200 group-hover:translate-x-0.5" />
-                                    </Link>
-                                )}
-                                {actionRequired.pendingSettlementVerifications > 0 && (
-                                    <Link
-                                        href="/owner/settlement-payments"
-                                        className="group flex items-center justify-between rounded-lg border border-border p-3 transition-all duration-200 hover:bg-surface-muted hover:border-border-strong"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-surface-muted text-text-muted transition-transform duration-200 group-hover:scale-105">
-                                                <CreditCard className="h-4 w-4" />
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-text">Pembayaran</div>
-                                                <div className="text-xs text-text-muted">{actionRequired.pendingSettlementVerifications} menunggu verifikasi</div>
-                                            </div>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-text-subtle transition-transform duration-200 group-hover:translate-x-0.5" />
-                                    </Link>
-                                )}
-                                {totalPendingActions === 0 && (
-                                    <div className="flex flex-col items-center justify-center py-8">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                                            <CheckCircle2 className="h-6 w-6" />
-                                        </div>
-                                        <div className="mt-3 text-sm font-medium text-text">Semua sudah ditangani</div>
-                                        <div className="mt-1 text-xs text-text-muted">Tidak ada tindakan yang diperlukan hari ini</div>
-                                    </div>
-                                )}
-                            </div>
-                        </ExpandableSection>
-
-                        {/* Hero Bar — only when there is outstanding debt */}
-                        {hero.outstandingAmount > 0 && (
-                            <Link
-                                href={hero.ctaHref}
-                                className="group relative block overflow-hidden rounded-xl bg-linear-to-br from-primary to-primary-hover px-5 py-4 text-white transition-all duration-200 hover:shadow-lg hover:shadow-primary/20 lg:px-6 lg:py-5"
-                            >
-                                <div className="relative">
-                                    <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider opacity-70">
-                                        <TrendingDown className="h-3.5 w-3.5" />
-                                        Tagihan Tertunggak
-                                    </div>
-                                    <div className="mt-2 text-2xl font-bold tabular-nums tracking-tight lg:text-3xl">
-                                        {formatCurrency(hero.outstandingAmount)}
-                                    </div>
-                                    <div className="mt-1 text-sm opacity-80">
-                                        {hero.subtitle}
-                                    </div>
-                                    <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold transition-transform duration-200 group-hover:translate-x-1">
-                                        {hero.ctaLabel}
-                                        <span aria-hidden="true">&rarr;</span>
-                                    </div>
-                                </div>
-                                {/* Subtle hover shimmer */}
-                                <div className="pointer-events-none absolute inset-0 bg-white/0 transition-colors duration-300 group-hover:bg-white/4" />
-                            </Link>
-                        )}
-                    </div>
-
-                    {/* RIGHT COLUMN — KPI Cards + Stok Kritis */}
-                    <div className="space-y-4">
-                        {/* KPI Cards — 2x2 grid for desktop density */}
-                        <div className="grid grid-cols-2 gap-2">
-                            <Link href="/owner/finance" className="block">
-                                <OwnerKpiCard
-                                    icon={<Wallet className="h-4 w-4" />}
-                                    label="Tagihan"
-                                    value={formatCurrency(kpis.outstandingAmount)}
-                                    trend={`${settlementAlerts.length} outlet`}
-                                    className="p-3"
-                                />
-                            </Link>
-                            <Link href="#actions" className="block">
-                                <OwnerKpiCard
-                                    icon={<ClipboardList className="h-4 w-4" />}
-                                    label="Tindakan"
-                                    value={totalPendingActions}
-                                    trend={`${actionRequired.restocks} restock`}
-                                    className="p-3"
-                                />
-                            </Link>
-                            <Link href="/owner/inventories?filter=critical" className="block col-span-2">
-                                <OwnerKpiCard
-                                    icon={<AlertTriangle className="h-4 w-4" />}
-                                    label="Stok Kritis"
-                                    value={kpis.criticalStock}
-                                    color={kpis.criticalStock > 0 ? 'danger' : 'success'}
-                                    trend={kpis.criticalStock > 0 ? 'SKU perlu restock segera' : 'Semua stok aman'}
-                                    className="p-3"
-                                />
-                            </Link>
-                        </div>
-
-                        {/* Stok Kritis */}
-                        <ExpandableSection
-                            title="Stok Kritis"
-                            icon={<AlertTriangle className="h-4 w-4" />}
-                            count={inventoryRisks.length}
-                            countColor="red"
-                            defaultExpanded={inventoryRisks.length > 0}
-                        >
-                            <div className="space-y-2">
-                                {inventoryRisks.map((risk) => (
-                                    <div
-                                        key={risk.variant.id}
-                                        className="group flex items-center justify-between rounded-lg border border-border p-3 transition-all duration-200 hover:bg-surface-muted hover:border-border-strong"
-                                    >
-                                        <Link
-                                            href={risk.detailHref}
-                                            className="flex min-w-0 flex-1 items-center gap-3"
-                                        >
-                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-500 transition-transform duration-200 group-hover:scale-105">
-                                                <AlertTriangle className="h-4 w-4" />
-                                            </div>
-                                            <div className="min-w-0">
-                                                <div className="truncate text-sm font-medium text-text">{risk.variant.full_name}</div>
-                                                <div className="text-xs text-text-muted">
-                                                    Stok: <span className="font-semibold text-red-600">{risk.centerStock}</span> · Min: {risk.threshold} · Kurang: {risk.shortage}
-                                                </div>
-                                            </div>
-                                        </Link>
-                                        <Link
-                                            href="/owner/restocks/create"
-                                            className="ml-2 shrink-0 rounded-md border border-border bg-surface px-2.5 py-1.5 text-xs font-semibold text-text transition-all duration-200 hover:bg-primary hover:text-white hover:border-primary"
-                                        >
-                                            Restock
-                                        </Link>
-                                    </div>
-                                ))}
-                                {inventoryRisks.length === 0 && (
-                                    <div className="flex flex-col items-center justify-center py-8">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
-                                            <CheckCircle2 className="h-6 w-6" />
-                                        </div>
-                                        <div className="mt-3 text-sm font-medium text-text">Stok pusat aman</div>
-                                        <div className="mt-1 text-xs text-text-muted">Semua SKU di atas threshold</div>
-                                    </div>
-                                )}
-                            </div>
-                        </ExpandableSection>
+                {/* KPI horizontal strip */}
+                <div className="mb-4 grid grid-cols-4 gap-2">
+                    <Link href="/owner/finance" className="block rounded-lg bg-[#f7f7f7] p-2.5 transition-colors hover:bg-surface-muted">
+                        <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Tagihan</div>
+                        <div className="mt-1 text-base font-bold tabular-nums text-text">{formatCurrency(kpis.outstandingAmount)}</div>
+                        <div className="text-[10px] font-medium text-blue-600">{settlementAlerts.length} outlet</div>
+                    </Link>
+                    <Link href="#actions" className="block rounded-lg bg-[#f7f7f7] p-2.5 transition-colors hover:bg-surface-muted">
+                        <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Tindakan</div>
+                        <div className="mt-1 text-base font-bold tabular-nums text-text">{totalPendingActions}</div>
+                        <div className="text-[10px] font-medium text-amber-600">{actionRequired.restocks} restock</div>
+                    </Link>
+                    <Link href="/owner/inventories?filter=critical" className="block rounded-lg bg-[#f7f7f7] p-2.5 transition-colors hover:bg-surface-muted">
+                        <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Stok Kritis</div>
+                        <div className={`mt-1 text-base font-bold tabular-nums ${kpis.criticalStock > 0 ? 'text-red-600' : 'text-text'}`}>{kpis.criticalStock}</div>
+                        <div className={`text-[10px] font-medium ${kpis.criticalStock > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{kpis.criticalStock > 0 ? 'SKU perlu restock' : 'Semua aman'}</div>
+                    </Link>
+                    <div className="rounded-lg bg-[#f7f7f7] p-2.5">
+                        <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Pendapatan</div>
+                        <div className="mt-1 text-base font-bold tabular-nums text-text">—</div>
+                        <div className="text-[10px] font-medium text-emerald-600">hari ini</div>
                     </div>
                 </div>
+
+                {/* 2-column grid for Actions + Stok Kritis */}
+                <div className="mb-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    {/* Butuh Tindakan */}
+                    <div>
+                        <div className="mb-2 flex items-center gap-2">
+                            <span className="text-xs font-bold uppercase tracking-wide text-text-muted">Butuh Tindakan</span>
+                            {totalPendingActions > 0 && (
+                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-text-muted">{totalPendingActions}</span>
+                            )}
+                        </div>
+                        <div className="space-y-1.5">
+                            {actionRequired.restocks > 0 && (
+                                <Link href="/owner/restocks?status=requested" className="group flex items-center justify-between rounded-md bg-[#fafafa] px-3 py-2 transition-colors hover:bg-surface-muted">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-100 text-amber-600"><Package className="h-3.5 w-3.5" /></div>
+                                        <div>
+                                            <div className="text-xs font-medium text-text">Restock</div>
+                                            <div className="text-[10px] text-text-muted">{actionRequired.restocks} menunggu</div>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
+                                </Link>
+                            )}
+                            {actionRequired.returns > 0 && (
+                                <Link href="/owner/returns?status=submitted" className="group flex items-center justify-between rounded-md bg-[#fafafa] px-3 py-2 transition-colors hover:bg-surface-muted">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-100 text-amber-600"><RotateCcw className="h-3.5 w-3.5" /></div>
+                                        <div>
+                                            <div className="text-xs font-medium text-text">Return</div>
+                                            <div className="text-[10px] text-text-muted">{actionRequired.returns} menunggu</div>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
+                                </Link>
+                            )}
+                            {actionRequired.exchanges > 0 && (
+                                <Link href="/owner/exchanges?status=submitted" className="group flex items-center justify-between rounded-md bg-[#fafafa] px-3 py-2 transition-colors hover:bg-surface-muted">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-100 text-amber-600"><ArrowLeftRight className="h-3.5 w-3.5" /></div>
+                                        <div>
+                                            <div className="text-xs font-medium text-text">Tukar Produk</div>
+                                            <div className="text-[10px] text-text-muted">{actionRequired.exchanges} menunggu</div>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
+                                </Link>
+                            )}
+                            {actionRequired.pendingSettlementVerifications > 0 && (
+                                <Link href="/owner/settlement-payments" className="group flex items-center justify-between rounded-md bg-[#fafafa] px-3 py-2 transition-colors hover:bg-surface-muted">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-100 text-blue-600"><CreditCard className="h-3.5 w-3.5" /></div>
+                                        <div>
+                                            <div className="text-xs font-medium text-text">Pembayaran</div>
+                                            <div className="text-[10px] text-text-muted">{actionRequired.pendingSettlementVerifications} menunggu verifikasi</div>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
+                                </Link>
+                            )}
+                            {totalPendingActions === 0 && (
+                                <div className="flex flex-col items-center justify-center py-6">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><CheckCircle2 className="h-5 w-5" /></div>
+                                    <div className="mt-2 text-xs font-medium text-text">Semua sudah ditangani</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Stok Kritis */}
+                    <div>
+                        <div className="mb-2 flex items-center gap-2">
+                            <span className="text-xs font-bold uppercase tracking-wide text-text-muted">Stok Kritis</span>
+                            {inventoryRisks.length > 0 && (
+                                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">{inventoryRisks.length}</span>
+                            )}
+                        </div>
+                        <div className="space-y-1.5">
+                            {inventoryRisks.map((risk) => (
+                                <div key={risk.variant.id} className="group flex items-center justify-between rounded-md bg-red-50 px-3 py-2">
+                                    <Link href={risk.detailHref} className="flex min-w-0 flex-1 items-center gap-2.5">
+                                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-red-100 text-red-500"><AlertTriangle className="h-3.5 w-3.5" /></div>
+                                        <div className="min-w-0">
+                                            <div className="truncate text-xs font-medium text-text">{risk.variant.full_name}</div>
+                                            <div className="text-[10px] text-text-muted">Stok: <span className="font-semibold text-red-600">{risk.centerStock}</span> · Min {risk.threshold} · Kurang {risk.shortage}</div>
+                                        </div>
+                                    </Link>
+                                    <Link href="/owner/restocks/create" className="ml-2 shrink-0 rounded-md border border-border bg-surface px-2 py-0.5 text-[10px] font-semibold text-text transition-colors hover:bg-primary hover:text-white">Restock</Link>
+                                </div>
+                            ))}
+                            {inventoryRisks.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-6">
+                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><CheckCircle2 className="h-5 w-5" /></div>
+                                    <div className="mt-2 text-xs font-medium text-text">Stok pusat aman</div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Hero Bar — only when there is outstanding debt */}
+                {hero.outstandingAmount > 0 && (
+                    <Link
+                        href={hero.ctaHref}
+                        className="group relative block overflow-hidden rounded-lg bg-linear-to-br from-primary to-primary-hover px-4 py-3 text-white transition-all duration-200 hover:shadow-lg hover:shadow-primary/20"
+                    >
+                        <div className="relative">
+                            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider opacity-70">
+                                <TrendingDown className="h-3.5 w-3.5" />
+                                Tagihan Tertunggak
+                            </div>
+                            <div className="mt-1 text-xl font-bold tabular-nums tracking-tight">
+                                {formatCurrency(hero.outstandingAmount)}
+                            </div>
+                            <div className="mt-1 text-sm opacity-80">
+                                {hero.subtitle}
+                            </div>
+                            <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold transition-transform duration-200 group-hover:translate-x-1">
+                                {hero.ctaLabel}
+                                <span aria-hidden="true">&rarr;</span>
+                            </div>
+                        </div>
+                        <div className="pointer-events-none absolute inset-0 bg-white/0 transition-colors duration-300 group-hover:bg-white/4" />
+                    </Link>
+                )}
             </OwnerPageShell>
         </>
     );
