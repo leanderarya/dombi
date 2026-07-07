@@ -22,7 +22,7 @@ export default function Pagination({ links }: Props) {
                     return (
                         <span
                             key={i}
-                            className="inline-flex items-center rounded-md px-3 py-1.5 text-xs text-slate-400"
+                            className="inline-flex items-center rounded-md px-2 py-1 text-[11px] text-slate-400"
                             dangerouslySetInnerHTML={{ __html: link.label }}
                         />
                     );
@@ -32,7 +32,7 @@ export default function Pagination({ links }: Props) {
                     <Link
                         key={i}
                         href={link.url}
-                        className={`inline-flex items-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                        className={`inline-flex items-center rounded-md px-2 py-1 text-[11px] font-medium transition-colors ${
                             link.active
                                 ? 'bg-emerald-600 text-white'
                                 : 'bg-white text-slate-600 border border-zinc-200 hover:bg-zinc-50'

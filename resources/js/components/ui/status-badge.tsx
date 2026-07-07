@@ -27,8 +27,8 @@ const variantStyles: Record<BadgeVariant, string> = {
 };
 
 const sizeStyles = {
-    sm: 'px-2 py-0.5 text-[11px]',
-    md: 'px-2.5 py-0.5 text-[11px]',
+    sm: 'px-1.5 py-0.5 text-[10px]',
+    md: 'px-2 py-0.5 text-[10px]',
 };
 
 function resolveStatus(status: string): { variant: BadgeVariant; label: string } {
@@ -51,7 +51,7 @@ export default function StatusBadge(props: Props) {
     }
 
     return (
-        <span className={`inline-flex items-center rounded-full font-bold ${variantStyles[variant]} ${sizeStyles[size]}`}>
+        <span className={`inline-flex items-center rounded-lg font-bold ${variantStyles[variant]} ${sizeStyles[size]}`}>
             {label}
         </span>
     );
