@@ -1,11 +1,20 @@
 import { router } from '@inertiajs/react';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
-import { useOutlet } from '@/contexts/outlet-context';
+
+function getSelectedOutletId(): number | null {
+    try {
+        const raw = localStorage.getItem('dombi_selected_outlet');
+        if (!raw) return null;
+        const id = JSON.parse(raw);
+        return typeof id === 'number' ? id : null;
+    } catch {
+        return null;
+    }
+}
 
 export default function FloatingCartBar() {
     const { items, totalItems, totalPrice } = useCart();
-    const { selectedOutlet } = useOutlet();
 
     if (totalItems === 0) return null;
 
@@ -16,7 +25,8 @@ export default function FloatingCartBar() {
                 quantity: i.quantity,
             })),
         };
-        if (selectedOutlet?.id) payload.selected_outlet_id = selectedOutlet.id;
+        const outletId = getSelectedOutletId();
+        if (outletId) payload.selected_outlet_id = outletId;
         router.post('/customer/checkout', payload);
     };
 
