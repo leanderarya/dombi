@@ -118,7 +118,7 @@ export default function OwnerLayout({ children }: PropsWithChildren) {
 
             {/* Main content */}
             <main id="main-content" className="pl-56">
-                <div className="mx-auto max-w-300 px-6 py-8">
+                <div className="mx-auto max-w-7xl px-6 py-6">
                     {loading ? <OwnerPageSkeleton /> : children}
                 </div>
             </main>

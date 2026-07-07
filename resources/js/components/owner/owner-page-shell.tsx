@@ -21,7 +21,7 @@ export default function OwnerPageShell({ title, subtitle, backHref, headerRight,
         <OwnerLayout>
             <Head title={title} />
             {/* Page header */}
-            <div className="border-b border-border pb-4 mb-6 flex items-center justify-between gap-4">
+            <div className="border-b border-border pb-3 mb-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     {backHref && (
                         <Link href={backHref} className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-slate-600 hover:bg-surface-muted">
@@ -29,7 +29,7 @@ export default function OwnerPageShell({ title, subtitle, backHref, headerRight,
                         </Link>
                     )}
                     <div>
-                        <h1 className="text-xl font-semibold tracking-tight text-text lg:text-2xl">{title}</h1>
+                        <h1 className="text-lg font-semibold tracking-tight text-text lg:text-xl">{title}</h1>
                         {subtitle && <p className="mt-0.5 text-sm text-text-muted">{subtitle}</p>}
                     </div>
                 </div>
