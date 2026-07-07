@@ -47,7 +47,7 @@ export function ExpandableSection({
                             {icon}
                         </div>
                     )}
-                    <span className="text-xs font-semibold text-text">{title}</span>
+                    <span className="text-sm font-semibold text-text">{title}</span>
                     {count > 0 && (
                         <span className={cn('rounded-full px-2 py-0.5 text-xs font-semibold', countColorStyles[countColor])}>
                             {count}

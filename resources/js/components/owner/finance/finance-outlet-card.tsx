@@ -39,7 +39,7 @@ export default function FinanceOutletCard({
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-semibold text-text">{outletName}</span>
                     {isOverdue && overdueDays > 0 && (
-                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700">
+                        <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">
                             {overdueDays} Hari
                         </span>
                     )}
@@ -50,7 +50,7 @@ export default function FinanceOutletCard({
                     {totalPaid > 0 && <span className="text-emerald-600">Dibayar: {formatCurrency(totalPaid)}</span>}
                 </div>
                 {nearestDueDate && needsAction && (
-                    <p className="mt-1 text-[11px] text-text-subtle">
+                    <p className="mt-1 text-xs text-text-subtle">
                         Jatuh tempo: {new Date(nearestDueDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                 )}
@@ -59,7 +59,7 @@ export default function FinanceOutletCard({
             {/* CTA */}
             <div className="flex items-center gap-2">
                 {needsAction && totalOutstanding > 0 && (
-                    <span className="hidden rounded-lg bg-primary px-3 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-primary-hover sm:inline-flex items-center gap-1">
+                    <span className="hidden rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-primary-hover sm:inline-flex items-center gap-1">
                         Lihat Detail
                         <ArrowUpRight className="h-3 w-3" />
                     </span>

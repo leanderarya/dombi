@@ -51,23 +51,23 @@ export default function OwnerExchangesShow({ exchange }: any) {
             <div className="grid gap-3 lg:grid-cols-2">
                 {/* Status + Actions */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Status</div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Status</span>
                         <div className="flex items-center gap-1.5">
                             <StatusIcon className="h-3.5 w-3.5 text-text-muted" />
                             <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
                         </div>
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Nilai Tukar</span>
                         <span className="font-bold text-primary">{formatCurrency(exchange.exchange_value)}</span>
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Item</span>
                         <span className="text-text">{exchange.items?.length ?? 0} item</span>
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Tanggal</span>
                         <span className="text-text">{formatDate(exchange.created_at)}</span>
                     </div>
@@ -123,16 +123,16 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 {/* Linked Return */}
                 {exchange.return_request && (
                     <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Return Terkait</div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Return Terkait</div>
+                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">Return</span>
                             <span className="text-text">#{exchange.return_request.id}</span>
                         </div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">Item</span>
                             <span className="text-text">{exchange.return_request.items?.length ?? 0} item</span>
                         </div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">Status</span>
                             <StatusBadge variant={getReturnStatus(exchange.return_request.status).variant} size="sm">
                                 {getReturnStatus(exchange.return_request.status).label}
@@ -143,14 +143,14 @@ export default function OwnerExchangesShow({ exchange }: any) {
 
                 {/* Exchange Items */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Item Pengganti</div>
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item Pengganti</div>
                     {exchange.items?.map((item: any) => (
-                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">{item.variant?.full_name ?? item.variant?.name} x{item.quantity}</span>
                             <span className="font-bold text-text">{formatCurrency(item.subtotal)}</span>
                         </div>
                     ))}
-                    <div className="mt-2 flex justify-between border-t border-border pt-2 text-xs">
+                    <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm">
                         <span className="text-text-muted">Nilai Tukar</span>
                         <span className="font-bold text-primary">{formatCurrency(exchange.exchange_value)}</span>
                     </div>
@@ -159,23 +159,23 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 {/* Notes */}
                 {exchange.notes && (
                     <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Catatan</div>
-                        <p className="text-xs text-text-muted">{exchange.notes}</p>
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Catatan</div>
+                        <p className="text-sm text-text-muted">{exchange.notes}</p>
                     </div>
                 )}
 
                 {/* Status History */}
                 {exchange.status_histories?.length > 0 && (
                     <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                        <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Riwayat Status</div>
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Riwayat Status</div>
                         <div className="space-y-2">
                             {exchange.status_histories.map((h: any, i: number) => (
                                 <div key={i} className="flex items-start gap-2">
                                     <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
                                     <div>
-                                        <div className="text-xs font-medium text-text">{getExchangeStatus(h.to_status).label}</div>
-                                        <div className="text-[11px] text-text-muted">{h.actor?.name} &middot; {formatDate(h.created_at)}</div>
-                                        {h.notes && <div className="mt-0.5 text-[11px] text-text-muted">{h.notes}</div>}
+                                        <div className="text-sm font-medium text-text">{getExchangeStatus(h.to_status).label}</div>
+                                        <div className="text-xs text-text-muted">{h.actor?.name} &middot; {formatDate(h.created_at)}</div>
+                                        {h.notes && <div className="mt-0.5 text-xs text-text-muted">{h.notes}</div>}
                                     </div>
                                 </div>
                             ))}

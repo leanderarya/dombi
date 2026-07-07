@@ -177,7 +177,7 @@ export default function OutletsIndex({ outlets }: any) {
                                 Total Outlet
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{totalOutlets}</div>
-                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-text-subtle">
+                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-text-subtle">
                                 Semua outlet
                             </div>
                         </div>
@@ -190,7 +190,7 @@ export default function OutletsIndex({ outlets }: any) {
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{activeOutlets}</div>
                             {activeOutlets > 0 && (
-                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
                                     Outlet aktif
                                 </div>
                             )}
@@ -204,7 +204,7 @@ export default function OutletsIndex({ outlets }: any) {
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{lowStockOutlets}</div>
                             {lowStockOutlets > 0 && (
-                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-500">
                                     <ArrowDownRight className="h-3 w-3" />
                                     Perlu restock segera
                                 </div>
@@ -219,7 +219,7 @@ export default function OutletsIndex({ outlets }: any) {
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{busyOutlets}</div>
                             {busyOutlets > 0 && (
-                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-blue-500">
+                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-blue-500">
                                     3+ pesanan aktif
                                 </div>
                             )}

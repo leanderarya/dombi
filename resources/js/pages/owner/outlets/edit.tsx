@@ -72,7 +72,7 @@ export default function EditOutlet({ outlet, existingOutlets }: any) {
 function InfoRow({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
     return (
         <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-text-subtle">{label}</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-subtle">{label}</span>
             <span className={`text-xs font-medium ${highlight ? 'text-emerald-600' : 'text-text'}`}>{value}</span>
         </div>
     );

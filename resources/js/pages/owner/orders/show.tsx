@@ -23,9 +23,9 @@ export default function OwnerOrderShow({ order, couriers }: any) {
             <div className="grid gap-3 lg:grid-cols-2">
                 {/* Items */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Item</div>
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item</div>
                     {order.items.map((item: any) => (
-                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">{item.product_name} x{item.quantity}</span>
                             <span className="font-semibold tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
                         </div>
@@ -35,7 +35,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
 
                 {/* Timeline */}
                 <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Linimasa</div>
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Linimasa</div>
                     {lastHistory && (
                         <div className="flex items-center gap-2">
                             <StatusBadge variant={getOrderStatus(lastHistory.to_status).variant} size="md">
@@ -63,7 +63,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                     {olderHistories.map((h: any) => (
                                         <div key={h.id} className="border-l-2 border-primary/20 pl-3 text-sm">
                                             <div className="font-medium">{h.to_status.replaceAll('_', ' ')}</div>
-                                            <div className="text-xs text-text-subtle">{new Date(h.created_at).toLocaleString('id-ID')}</div>
+                                            <div className="text-sm text-text-subtle">{new Date(h.created_at).toLocaleString('id-ID')}</div>
                                         </div>
                                     ))}
                                 </div>
@@ -74,29 +74,29 @@ export default function OwnerOrderShow({ order, couriers }: any) {
 
                 {/* Customer */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">
                         {isDifferentRecipient(order) ? 'Pemesan' : 'Customer'}
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Nama</span>
                         <span className="text-text">{order.customer_name}</span>
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Telepon</span>
                         <span className="text-text">{order.customer_phone}</span>
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Alamat</span>
                         <span className="text-right text-text">{order.customer_address}</span>
                     </div>
                     {order.customer_address_detail && (
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">Detail</span>
                             <span className="text-text">{order.customer_address_detail}</span>
                         </div>
                     )}
                     {order.customer_landmark && (
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">Patokan</span>
                             <span className="text-text">{order.customer_landmark}</span>
                         </div>
@@ -104,12 +104,12 @@ export default function OwnerOrderShow({ order, couriers }: any) {
 
                     {isDifferentRecipient(order) && (
                         <>
-                            <div className="mb-3 mt-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Penerima</div>
-                            <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                            <div className="mb-3 mt-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Penerima</div>
+                            <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                                 <span className="text-text-muted">Nama</span>
                                 <span className="text-text">{order.recipient_name}</span>
                             </div>
-                            <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                            <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                                 <span className="text-text-muted">Telepon</span>
                                 <span className="text-text">{order.recipient_phone ?? '-'}</span>
                             </div>
@@ -134,7 +134,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     <form onSubmit={(e) => {
                         e.preventDefault(); form.post(`/owner/orders/${order.id}/assign-courier`);
                     }} className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Assign Kurir</div>
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Assign Kurir</div>
                         <Select
                             value={String(form.data.courier_id)}
                             onChange={(e) => form.setData('courier_id', e.target.value)}
@@ -150,8 +150,8 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                 {/* Courier */}
                 {order.delivery && (
                     <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Kurir</div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Kurir</div>
+                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">Nama</span>
                             <span className="text-text">{order.delivery.courier?.name ?? '-'}</span>
                         </div>

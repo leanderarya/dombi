@@ -24,7 +24,7 @@ const labels: Record<string, string> = {
 
 export default function DeliveryStatusBadge({ status }: { status: string }) {
     return (
-        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ${styles[status] ?? styles.waiting_assignment}`}>
+        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${styles[status] ?? styles.waiting_assignment}`}>
             {labels[status] ?? status.replaceAll('_', ' ')}
         </span>
     );

@@ -48,6 +48,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
     const outlets = useMemo((): string[] => {
         const unique = [...new Set(items.map((item: any) => item.outlet_name as string))] as string[];
+
         return unique.sort();
     }, [items]);
 
@@ -70,6 +71,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
         if (stockFilter !== 'all') {
             result = result.filter((item: any) => {
                 const available = item.current_stock - item.reserved_stock;
+
                 switch (stockFilter) {
                     case 'critical': return available <= 0;
                     case 'low': return available > 0 && available <= item.minimum_stock;
@@ -81,6 +83,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
         result.sort((a: any, b: any) => {
             let cmp = 0;
+
             switch (sortField) {
                 case 'outlet':
                     cmp = a.outlet_name.localeCompare(b.outlet_name);
@@ -95,6 +98,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                     cmp = (a.current_stock - a.reserved_stock) - (b.current_stock - b.reserved_stock);
                     break;
             }
+
             return sortDir === 'asc' ? cmp : -cmp;
         });
 
@@ -160,9 +164,11 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                             { key: 'low' as const, label: 'Rendah', color: 'text-amber-600 bg-amber-50 ring-amber-200' },
                             { key: 'healthy' as const, label: 'Sehat', color: 'text-emerald-600 bg-emerald-50 ring-emerald-200' },
                         ].map((tab) => (
-                            <button key={tab.key} type="button" onClick={() => { setStockFilter(tab.key); setCurrentPage(1); }}
+                            <button key={tab.key} type="button" onClick={() => {
+ setStockFilter(tab.key); setCurrentPage(1); 
+}}
                                 className={cn(
-                                    'shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 transition-all',
+                                    'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-all',
                                     stockFilter === tab.key
                                         ? tab.color ?? 'bg-primary/10 text-primary ring-primary/20'
                                         : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
@@ -172,9 +178,13 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                         ))}
                         <span className="flex-1" />
                         <Input icon={Search} type="text" placeholder="Cari outlet atau produk..." value={search}
-                            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                            onChange={(e) => {
+ setSearch(e.target.value); setCurrentPage(1); 
+}}
                             aria-label="Cari inventaris" className="h-8 w-40" />
-                        <Select value={outletFilter} onChange={(e) => { setOutletFilter(e.target.value); setCurrentPage(1); }}
+                        <Select value={outletFilter} onChange={(e) => {
+ setOutletFilter(e.target.value); setCurrentPage(1); 
+}}
                             options={[
                                 { value: 'all', label: 'Semua Outlet' },
                                 ...outlets.map((outlet: string) => ({ value: outlet, label: outlet })),
@@ -184,24 +194,24 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                     {/* KPI Strip */}
                     <div className="mb-4 grid grid-cols-4 gap-2">
                         <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                            <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total SKU</div>
+                            <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total SKU</div>
                             <div className="mt-1 text-base font-bold tabular-nums">{stats.totalSku}</div>
-                            <div className="text-[10px] font-medium text-text-subtle">Semua outlet</div>
+                            <div className="text-xs font-medium text-text-subtle">Semua outlet</div>
                         </div>
                         <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                            <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Stok Rendah</div>
+                            <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Stok Rendah</div>
                             <div className="mt-1 text-base font-bold tabular-nums">{stats.lowStock}</div>
-                            {stats.lowStock > 0 && <div className="text-[10px] font-medium text-amber-500">Perlu restock</div>}
+                            {stats.lowStock > 0 && <div className="text-xs font-medium text-amber-500">Perlu restock</div>}
                         </div>
                         <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                            <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Reserved</div>
+                            <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Reserved</div>
                             <div className="mt-1 text-base font-bold tabular-nums">{stats.totalReserved}</div>
-                            <div className="text-[10px] font-medium text-blue-500">Dalam pesanan</div>
+                            <div className="text-xs font-medium text-blue-500">Dalam pesanan</div>
                         </div>
                         <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                            <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Kritis</div>
+                            <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Kritis</div>
                             <div className="mt-1 text-base font-bold tabular-nums">{stats.critical}</div>
-                            {stats.critical > 0 && <div className="text-[10px] font-medium text-red-500">Segera tindak!</div>}
+                            {stats.critical > 0 && <div className="text-xs font-medium text-red-500">Segera tindak!</div>}
                         </div>
                     </div>
 
@@ -217,7 +227,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                             ].map((col) => (
                                 <button key={col.key} type="button" onClick={() => toggleSort(col.key)}
                                     className={cn(
-                                        'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-all',
+                                        'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all',
                                         sortField === col.key
                                             ? 'bg-primary/10 text-primary'
                                             : 'bg-surface text-text-muted hover:bg-surface-muted'
@@ -239,7 +249,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                         </div>
                     ) : (
                         <div className="overflow-hidden rounded-lg border border-border">
-                            <div className="grid grid-cols-[1fr_80px_80px_80px_90px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                            <div className="grid grid-cols-[1fr_80px_80px_80px_90px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
                                 <span>Produk / Outlet</span><span className="text-right">Stok</span><span className="text-right">Threshold</span><span>Status</span><span />
                             </div>
                             {paginatedItems.map((row: any) => {
@@ -251,11 +261,11 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
                                 return (
                                     <div key={row.id}
-                                        className="grid grid-cols-[1fr_80px_80px_80px_90px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-xs transition-colors last:border-t-0 hover:bg-surface-muted">
+                                        className="grid grid-cols-[1fr_80px_80px_80px_90px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
                                         <span className="truncate">
                                             {familyName && <span className="text-text-subtle">{familyName} </span>}
                                             <span className="font-bold text-text">{variantName}</span>
-                                            <span className="ml-1 text-[10px] text-text-muted">{row.outlet_name}</span>
+                                            <span className="ml-1 text-xs text-text-muted">{row.outlet_name}</span>
                                         </span>
                                         <span className="text-right font-semibold tabular-nums text-text">{row.current_stock}</span>
                                         <span className="text-right tabular-nums text-text-muted">{row.minimum_stock}</span>
@@ -267,12 +277,12 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                                         <div className="flex items-center gap-1 justify-end">
                                             {(isCritical || isLow) && (
                                                 <button type="button" onClick={() => router.visit(`/owner/restocks/create?outlet_id=${row.outlet_id}&product_id=${row.product_id ?? row.variant_id}&return_to=/owner/inventories`)}
-                                                    className="rounded-md bg-primary px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-primary-hover">
+                                                    className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-white hover:bg-primary-hover">
                                                     Restock
                                                 </button>
                                             )}
                                             <button type="button" onClick={() => router.visit(`/owner/inventories/${row.id}/edit`)}
-                                                className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary-light">
+                                                className="rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary-light">
                                                 Edit
                                             </button>
                                         </div>
@@ -323,12 +333,20 @@ function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any })
     const filtered = variants.filter((v) => {
         if (search) {
             const q = search.toLowerCase();
+
             if (!v.name.toLowerCase().includes(q) && !(v.sku ?? '').toLowerCase().includes(q)) {
                 return false;
             }
         }
-        if (stockFilter === 'zero' && v.center_stock > 0) return false;
-        if (stockFilter === 'low' && (v.center_stock <= 0 || v.center_stock > 10)) return false;
+
+        if (stockFilter === 'zero' && v.center_stock > 0) {
+return false;
+}
+
+        if (stockFilter === 'low' && (v.center_stock <= 0 || v.center_stock > 10)) {
+return false;
+}
+
         return true;
     });
 
@@ -342,7 +360,7 @@ function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any })
                     { key: 'low' as const, label: 'Rendah', color: 'text-amber-600 bg-amber-50 ring-amber-200' },
                 ].map((tab) => (
                     <button key={tab.key} onClick={() => setStockFilter(tab.key)}
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 transition-all ${
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-all ${
                             stockFilter === tab.key
                                 ? tab.color ?? 'bg-primary/10 text-primary ring-primary/20'
                                 : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
@@ -358,22 +376,22 @@ function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any })
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-4 gap-2">
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total Variant</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total Variant</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{stats.total_variants}</div>
                 </div>
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total Stok</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total Stok</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{stats.total_stock} pcs</div>
                 </div>
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Stok Habis</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Stok Habis</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{stats.zero_stock}</div>
-                    {stats.zero_stock > 0 && <div className="text-[10px] font-medium text-red-500">Perlu tindakan</div>}
+                    {stats.zero_stock > 0 && <div className="text-xs font-medium text-red-500">Perlu tindakan</div>}
                 </div>
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Stok Rendah</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Stok Rendah</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{stats.low_stock}</div>
-                    {stats.low_stock > 0 && <div className="text-[10px] font-medium text-amber-500">Perlu tindakan</div>}
+                    {stats.low_stock > 0 && <div className="text-xs font-medium text-amber-500">Perlu tindakan</div>}
                 </div>
             </div>
 
@@ -384,27 +402,30 @@ function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any })
                 </div>
             ) : (
                 <div className="overflow-hidden rounded-lg border border-border">
-                    <div className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                    <div className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
                         <span>Produk / SKU</span><span className="text-right">Stok</span><span className="text-right">HPP</span><span />
                     </div>
                     {filtered.map((v) => {
                         const isZero = v.center_stock <= 0;
                         const isLow = v.center_stock > 0 && v.center_stock <= 10;
+
                         return (
                             <div key={v.id}
-                                className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-xs transition-colors last:border-t-0 hover:bg-surface-muted">
+                                className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
                                 <span className="truncate">
                                     {v.family_name && <span className="text-text-subtle">{v.family_name} </span>}
                                     <span className="font-bold text-text">{v.name}</span>
-                                    {v.sku && <span className="ml-1 text-[10px] text-text-muted">{v.sku}</span>}
+                                    {v.sku && <span className="ml-1 text-xs text-text-muted">{v.sku}</span>}
                                 </span>
                                 <span className={`text-right font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}>
                                     {v.center_stock} pcs
                                 </span>
                                 <span className="text-right text-text-muted">{formatCurrency(v.center_price)}</span>
                                 <div className="flex items-center gap-1 justify-end">
-                                    <button type="button" onClick={() => { setEditModal(v); setNewStock(String(v.center_stock)); setReason(''); }}
-                                        className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary-light">
+                                    <button type="button" onClick={() => {
+ setEditModal(v); setNewStock(String(v.center_stock)); setReason(''); 
+}}
+                                        className="rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary-light">
                                         Edit
                                     </button>
                                 </div>

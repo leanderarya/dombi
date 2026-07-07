@@ -92,7 +92,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 <div className="space-y-4">
                     <div className="rounded-lg border border-border bg-white p-4 transition-shadow">
-                        <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-text-muted">Perbandingan Outlet</div>
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Perbandingan Outlet</div>
                         {outletRevenue.length === 0 ? (
                             <p className="py-4 text-center text-sm text-text-muted">Belum ada data</p>
                         ) : (
@@ -105,7 +105,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                                     >
                                         <div>
                                             <div className="text-sm font-medium text-text">{item.outlet.name}</div>
-                                            <div className="text-[11px] text-text-muted">{item.orders} orders</div>
+                                            <div className="text-xs text-text-muted">{item.orders} orders</div>
                                         </div>
                                         <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(item.revenue)}</div>
                                     </Link>
@@ -115,7 +115,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                     </div>
 
                     <div className="rounded-lg border border-border bg-white p-4 transition-shadow">
-                        <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-text-muted">Produk Terlaris</div>
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Produk Terlaris</div>
                         {topProducts.length === 0 ? (
                             <p className="py-4 text-center text-sm text-text-muted">Belum ada data</p>
                         ) : (
@@ -127,12 +127,12 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                                         className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-surface-muted"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-[11px] font-bold text-text-muted">
+                                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
                                                 {index + 1}
                                             </span>
                                             <div>
                                                 <div className="text-sm font-medium text-text">{product.product_name}</div>
-                                                <div className="text-[11px] text-text-muted">{product.total_qty} unit</div>
+                                                <div className="text-xs text-text-muted">{product.total_qty} unit</div>
                                             </div>
                                         </div>
                                         <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(product.total_revenue)}</div>
@@ -160,7 +160,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
 function KpiCard({ label, value, trend, periodLabel }: { label: string; value: string; trend?: TrendData; periodLabel: string }) {
     return (
         <div className="rounded-lg border border-border bg-white p-4 transition-all duration-200 hover:border-border/60">
-            <div className="text-[11px] font-medium text-text-muted">{label}</div>
+            <div className="text-xs font-medium text-text-muted">{label}</div>
             <div className="mt-1 text-lg font-bold tabular-nums text-text">{value}</div>
             {trend && (
                 <div className="mt-1.5 flex items-center gap-1">
@@ -169,10 +169,10 @@ function KpiCard({ label, value, trend, periodLabel }: { label: string; value: s
                     ) : (
                         <TrendingDown className="h-3 w-3 text-red-500" />
                     )}
-                    <span className={`text-[10px] font-semibold ${trend.positive ? 'text-emerald-600' : 'text-red-500'}`}>
+                    <span className={`text-xs font-semibold ${trend.positive ? 'text-emerald-600' : 'text-red-500'}`}>
                         {trend.positive ? '+' : ''}{trend.value}%
                     </span>
-                    <span className="text-[10px] text-text-muted">vs {periodLabel}</span>
+                    <span className="text-xs text-text-muted">vs {periodLabel}</span>
                 </div>
             )}
         </div>

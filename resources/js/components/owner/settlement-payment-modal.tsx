@@ -109,7 +109,7 @@ formData.append('proof_image', proofFile);
 
                     <div className="mt-4 space-y-3">
                         <label className="block">
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nominal Diterima</span>
+                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nominal Diterima</span>
                             <div className="relative mt-1">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">Rp</span>
                                 <input
@@ -126,7 +126,7 @@ formData.append('proof_image', proofFile);
                         </label>
 
                         <label className="block">
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Metode Pembayaran</span>
+                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Metode Pembayaran</span>
                             <select
                                 value={paymentMethod}
                                 onChange={(e) => setPaymentMethod(e.target.value)}
@@ -139,7 +139,7 @@ formData.append('proof_image', proofFile);
                         </label>
 
                         <label className="block">
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Nomor Referensi</span>
+                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nomor Referensi</span>
                             <input
                                 type="text"
                                 value={referenceNumber}
@@ -150,7 +150,7 @@ formData.append('proof_image', proofFile);
                         </label>
 
                         <label className="block">
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Upload Bukti</span>
+                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Upload Bukti</span>
                             <input
                                 ref={fileRef}
                                 type="file"
@@ -161,7 +161,7 @@ formData.append('proof_image', proofFile);
                         </label>
 
                         <label className="block">
-                            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Catatan (opsional)</span>
+                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Catatan (opsional)</span>
                             <textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}

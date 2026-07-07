@@ -145,15 +145,15 @@ function TagihanTab({ kpis, outlets }: any) {
                 {/* Mobile KPI Strip */}
                 <div className="mb-4 grid grid-cols-3 gap-2 lg:hidden">
                     <div className="rounded-lg border border-border bg-white p-3 text-center">
-                        <div className="text-[11px] font-medium text-text-muted">Belum Dibayar</div>
+                        <div className="text-xs font-medium text-text-muted">Belum Dibayar</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-text">{formatCurrency(kpis.total_unpaid)}</div>
                     </div>
                     <div className="rounded-lg border border-border bg-white p-3 text-center">
-                        <div className="text-[11px] font-medium text-text-muted">Outlet</div>
+                        <div className="text-xs font-medium text-text-muted">Outlet</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-text">{kpis.outlets_unpaid}</div>
                     </div>
                     <div className="rounded-lg border border-border bg-white p-3 text-center">
-                        <div className="text-[11px] font-medium text-text-muted">Jatuh Tempo</div>
+                        <div className="text-xs font-medium text-text-muted">Jatuh Tempo</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-text">{formatCurrency(kpis.due_this_week)}</div>
                     </div>
                 </div>
@@ -216,7 +216,7 @@ function TagihanTab({ kpis, outlets }: any) {
                             Total Belum Dibayar
                         </div>
                         <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis.total_unpaid)}</div>
-                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">
                             {kpis.outlets_unpaid > 0 ? (
                                 <>
                                     <AlertCircle className="h-3 w-3" />
@@ -236,7 +236,7 @@ function TagihanTab({ kpis, outlets }: any) {
                             Outlet Belum Bayar
                         </div>
                         <div className="mt-2 text-3xl font-bold text-text">{kpis.outlets_unpaid}</div>
-                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-500">
                             <AlertCircle className="h-3 w-3" />
                             Outlet dengan sisa tagihan
                         </div>
@@ -247,7 +247,7 @@ function TagihanTab({ kpis, outlets }: any) {
                             Jatuh Tempo Minggu Ini
                         </div>
                         <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(kpis.due_this_week)}</div>
-                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-orange-500">
+                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-orange-500">
                             {kpis.due_this_week > 0 ? (
                                 <>
                                     <AlertCircle className="h-3 w-3" />
@@ -491,7 +491,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                             Pending Verifikasi
                         </div>
                         <div className="mt-2 text-3xl font-bold text-text">{paymentKpis?.pending_count ?? 0}</div>
-                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-500">
                             <Clock className="h-3 w-3" />
                             Pembayaran menunggu persetujuan
                         </div>
@@ -502,7 +502,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                             Pembayaran Hari Ini
                         </div>
                         <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(paymentKpis?.verified_today ?? 0)}</div>
-                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
                             <CheckCircle className="h-3 w-3" />
                             Diverifikasi hari ini
                         </div>
@@ -513,7 +513,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                             Total Bulan Ini
                         </div>
                         <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(paymentKpis?.verified_month ?? 0)}</div>
-                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-blue-500">
+                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-blue-500">
                             <DollarSign className="h-3 w-3" />
                             Total pembayaran bulan ini
                         </div>
@@ -529,7 +529,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                         Pending Verifikasi
                     </div>
                     <div className="mt-2 text-3xl font-bold text-text">{paymentKpis?.pending_count ?? 0}</div>
-                    <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-500">
+                    <div className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-500">
                         <Clock className="h-3 w-3" />
                         Pembayaran menunggu persetujuan
                     </div>
@@ -540,7 +540,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                         Pembayaran Hari Ini
                     </div>
                     <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(paymentKpis?.verified_today ?? 0)}</div>
-                    <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+                    <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
                         <CheckCircle className="h-3 w-3" />
                         Diverifikasi hari ini
                     </div>
@@ -551,7 +551,7 @@ function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
                         Total Bulan Ini
                     </div>
                     <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(paymentKpis?.verified_month ?? 0)}</div>
-                    <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-blue-500">
+                    <div className="mt-1 flex items-center gap-1 text-xs font-medium text-blue-500">
                         <DollarSign className="h-3 w-3" />
                         Total pembayaran bulan ini
                     </div>

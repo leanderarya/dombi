@@ -65,30 +65,30 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
             {/* Summary Card */}
             <section className="mb-5 rounded-lg border border-border bg-white p-5">
                 <div className="flex items-center justify-between">
-                    <h2 className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Status</h2>
-                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusClass}`}>{statusLabel}</span>
+                    <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Status</h2>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div>
-                        <div className="text-[11px] font-semibold uppercase text-text-subtle">Omset Produk</div>
+                        <div className="text-xs font-semibold uppercase text-text-subtle">Omset Produk</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-text">{formatCurrency(summary.total_sales)}</div>
                     </div>
                     <div>
-                        <div className="text-[11px] font-semibold uppercase text-text-subtle">Ongkos Kirim</div>
+                        <div className="text-xs font-semibold uppercase text-text-subtle">Ongkos Kirim</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-blue-600">{formatCurrency(summary.total_delivery_fee)}</div>
                     </div>
                     <div>
-                        <div className="text-[11px] font-semibold uppercase text-text-subtle">Sisa Tagihan</div>
+                        <div className="text-xs font-semibold uppercase text-text-subtle">Sisa Tagihan</div>
                         <div className="mt-1 text-lg font-bold tabular-nums text-red-600">{formatCurrency(summary.outstanding)}</div>
                     </div>
                     {summary.overpaid > 0 ? (
                         <div>
-                            <div className="text-[11px] font-semibold uppercase text-text-subtle">Kelebihan Bayar</div>
+                            <div className="text-xs font-semibold uppercase text-text-subtle">Kelebihan Bayar</div>
                             <div className="mt-1 text-lg font-bold tabular-nums text-blue-600">{formatCurrency(summary.overpaid)}</div>
                         </div>
                     ) : (
                         <div>
-                            <div className="text-[11px] font-semibold uppercase text-text-subtle">Keterlambatan</div>
+                            <div className="text-xs font-semibold uppercase text-text-subtle">Keterlambatan</div>
                             <div className="mt-1 text-lg font-bold tabular-nums text-text">
                                 {summary.days_overdue > 0 ? `${summary.days_overdue} Hari` : '-'}
                             </div>
@@ -148,7 +148,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                                                 {badge.label}
                                             </StatusBadge>
                                             {overdueLabel && (
-                                                <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-700">{overdueLabel}</span>
+                                                <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">{overdueLabel}</span>
                                             )}
                                         </div>
                                     </div>
@@ -175,7 +175,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                                 </div>
                                 {s.overpaid_amount > 0 && (
                                     <div className="mt-2">
-                                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700">
+                                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
                                             Kelebihan {formatCurrency(s.overpaid_amount)}
                                         </span>
                                     </div>

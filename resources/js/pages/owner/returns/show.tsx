@@ -55,22 +55,22 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             <div className="grid gap-3 lg:grid-cols-2">
                 {/* Info */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Informasi Return</div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Informasi Return</div>
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Alasan</span>
                         <span className="text-text">{ret.reason_label ?? ret.reason}</span>
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Diajukan</span>
                         <span className="text-text">{formatDate(ret.created_at)}</span>
                     </div>
                     {ret.notes && (
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">Catatan</span>
                             <span className="text-text">{ret.notes}</span>
                         </div>
                     )}
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Total Nilai</span>
                         <span className="font-bold text-primary">{formatCurrency(ret.total_value)}</span>
                     </div>
@@ -78,19 +78,19 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                 {/* Status + Actions */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Status</div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Status</span>
                         <div className="flex items-center gap-1.5">
                             <StatusIcon className="h-3.5 w-3.5 text-text-muted" />
                             <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
                         </div>
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Total</span>
                         <span className="font-bold text-primary">{formatCurrency(ret.total_value)}</span>
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                         <span className="text-text-muted">Item</span>
                         <span className="text-text">{ret.items?.length ?? 0} item</span>
                     </div>
@@ -145,9 +145,9 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                 {/* Items */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Item Return</div>
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item Return</div>
                     {ret.items?.map((item: any) => (
-                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
+                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
                             <span className="text-text-muted">{item.variant?.full_name ?? item.variant?.name} x{item.quantity}</span>
                             <span className="font-bold text-text">{formatCurrency(item.subtotal)}</span>
                         </div>
@@ -157,19 +157,19 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 {/* Status History */}
                 {ret.status_histories?.length > 0 && (
                     <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Riwayat Status</div>
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Riwayat Status</div>
                         <div className="space-y-2">
                             {ret.status_histories.map((h: any, i: number) => (
                                 <div key={i} className="flex items-start gap-2">
                                     <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-primary" />
                                     <div>
-                                        <div className="text-xs font-medium text-text">
+                                        <div className="text-sm font-medium text-text">
                                             {getReturnStatus(h.to_status).label}
                                         </div>
-                                        <div className="text-[11px] text-text-muted">
+                                        <div className="text-xs text-text-muted">
                                             {h.actor?.name} &middot; {formatDate(h.created_at)}
                                         </div>
-                                        {h.notes && <div className="mt-0.5 text-[11px] text-text-muted">{h.notes}</div>}
+                                        {h.notes && <div className="mt-0.5 text-xs text-text-muted">{h.notes}</div>}
                                     </div>
                                 </div>
                             ))}

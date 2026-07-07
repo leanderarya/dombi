@@ -62,9 +62,10 @@ export default function OwnerOrdersIndex({
                         cancelled: 'text-text-muted bg-surface-muted ring-border',
                         failed: 'text-red-600 bg-red-50 ring-red-200',
                     };
+
                     return (
                         <button key={sf.key} type="button" onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 transition-all ${
+                            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-all ${
                                 isActive ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
                             }`}>
                             {sf.label}
@@ -84,21 +85,21 @@ export default function OwnerOrdersIndex({
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-4 gap-2">
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{stats?.total_today ?? 0}</div>
-                    {(stats?.total_today ?? 0) > 0 && <div className="text-[10px] font-medium text-blue-600">Hari ini</div>}
+                    {(stats?.total_today ?? 0) > 0 && <div className="text-xs font-medium text-blue-600">Hari ini</div>}
                 </div>
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Tindakan</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Tindakan</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{stats?.pending ?? 0}</div>
-                    {(stats?.pending ?? 0) > 0 && <div className="text-[10px] font-medium text-amber-600">Perlu assign kurir</div>}
+                    {(stats?.pending ?? 0) > 0 && <div className="text-xs font-medium text-amber-600">Perlu assign kurir</div>}
                 </div>
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Selesai</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Selesai</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{stats?.completed_today ?? 0}</div>
                 </div>
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Revenue</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Revenue</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{formatCurrency(stats?.revenue_today ?? 0)}</div>
                 </div>
             </div>
@@ -111,15 +112,16 @@ export default function OwnerOrdersIndex({
             ) : (
                 <div className="overflow-hidden rounded-lg border border-border">
                     {/* Header */}
-                    <div className="grid grid-cols-[90px_1fr_100px_80px_70px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                    <div className="grid grid-cols-[90px_1fr_100px_80px_70px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
                         <span>Kode</span><span>Customer / Outlet</span><span>Status</span><span className="text-right">Total</span><span />
                     </div>
                     {/* Rows */}
                     {orders.data.map((order: any) => {
                         const s = getOrderStatus(order.status);
+
                         return (
                             <div key={order.id}
-                                className="grid grid-cols-[90px_1fr_100px_80px_70px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-xs transition-colors last:border-t-0 hover:bg-surface-muted">
+                                className="grid grid-cols-[90px_1fr_100px_80px_70px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
                                 <span className="font-bold tabular-nums text-text">{order.order_code}</span>
                                 <span className="truncate text-text-muted">{order.customer_name ?? '—'} · {order.outlet?.name ?? '—'}</span>
                                 <span><StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge></span>
@@ -127,12 +129,12 @@ export default function OwnerOrdersIndex({
                                 <div className="flex items-center gap-1 justify-end">
                                     {order.status === 'ready_for_pickup' && !order.delivery && (
                                         <button type="button" onClick={() => setAssignOrder(order)}
-                                            className="rounded-md bg-primary px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-primary-hover">
+                                            className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-white hover:bg-primary-hover">
                                             Assign
                                         </button>
                                     )}
                                     <button type="button" onClick={() => router.visit(`/owner/orders/${order.id}`)}
-                                        className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary-light">
+                                        className="rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary-light">
                                         Detail →
                                     </button>
                                 </div>

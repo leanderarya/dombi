@@ -207,7 +207,7 @@ return true;
                                         {family.variants.slice(0, 4).map((v) => (
                                             <span
                                                 key={v.id}
-                                                className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                                                     v.is_active ? 'bg-primary-light text-primary' : 'bg-surface-muted text-text-muted'
                                                 }`}
                                             >
@@ -215,7 +215,7 @@ return true;
                                             </span>
                                         ))}
                                         {family.variants_count > 4 && (
-                                            <span className="inline-flex rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-medium text-text-muted">
+                                            <span className="inline-flex rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-text-muted">
                                                 +{family.variants_count - 4}
                                             </span>
                                         )}

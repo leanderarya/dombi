@@ -138,7 +138,7 @@ return null;
                     )}
                 </MapContainer>
             </div>
-            <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-3 py-2 text-[11px]">
+            <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-3 py-2 text-xs">
                 <span className="font-semibold text-slate-500">
                     {readOnly ? 'Outlet coordinates' : nearest ? `Outlet terdekat: ${nearest.outlet.name} (${nearest.distance.toFixed(1)} km)` : 'Tap map atau drag marker'}
                 </span>
@@ -242,7 +242,7 @@ abortRef.current.abort();
                             className="flex w-full flex-col px-3 py-2 text-left hover:bg-emerald-50 active:bg-emerald-100"
                         >
                             <span className="text-sm font-medium text-slate-900">{s.title}</span>
-                            <span className="text-[11px] text-slate-500">{s.subtitle}</span>
+                            <span className="text-xs text-slate-500">{s.subtitle}</span>
                         </button>
                     ))}
                 </div>

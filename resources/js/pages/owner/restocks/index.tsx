@@ -46,7 +46,7 @@ export default function OwnerRestocksIndex({ restocks, filters }: any) {
                 {FILTER_TABS.map((tab) => (
                     <button key={tab.key} type="button" onClick={() => handleTabChange(tab.key)}
                         className={cn(
-                            'shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 transition-all',
+                            'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-all',
                             currentStatus === tab.key
                                 ? 'bg-primary/10 text-primary ring-primary/20'
                                 : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
@@ -59,20 +59,20 @@ export default function OwnerRestocksIndex({ restocks, filters }: any) {
             {/* KPI Strip */}
             <div className="mb-4 grid grid-cols-4 gap-2">
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Menunggu</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Menunggu</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{counts.requested}</div>
-                    {counts.requested > 0 && <div className="text-[10px] font-medium text-amber-600">Perlu ditinjau</div>}
+                    {counts.requested > 0 && <div className="text-xs font-medium text-amber-600">Perlu ditinjau</div>}
                 </div>
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Disiapkan</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Disiapkan</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{counts.preparing}</div>
                 </div>
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Dikirim</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Dikirim</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{counts.shipped}</div>
                 </div>
                 <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Selesai</div>
+                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Selesai</div>
                     <div className="mt-1 text-base font-bold tabular-nums">{counts.completed}</div>
                 </div>
             </div>
@@ -85,13 +85,13 @@ export default function OwnerRestocksIndex({ restocks, filters }: any) {
             ) : (
                 <div className="overflow-hidden rounded-lg border border-border">
                     {/* Header */}
-                    <div className="grid grid-cols-[80px_1fr_100px_60px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                    <div className="grid grid-cols-[80px_1fr_100px_60px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
                         <span>Kode</span><span>Outlet</span><span>Status</span><span className="text-center">Items</span><span>Tanggal</span><span />
                     </div>
                     {/* Rows */}
                     {restocks.data.map((r: any) => (
                         <div key={r.id}
-                            className="grid grid-cols-[80px_1fr_100px_60px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-xs transition-colors last:border-t-0 hover:bg-surface-muted">
+                            className="grid grid-cols-[80px_1fr_100px_60px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
                             <span className="font-bold tabular-nums text-text">#{r.id}</span>
                             <span className="truncate text-text-muted">{r.outlet?.name ?? '-'}</span>
                             <span><StatusBadge status={r.status} size="sm" /></span>
@@ -100,12 +100,12 @@ export default function OwnerRestocksIndex({ restocks, filters }: any) {
                             <div className="flex items-center gap-1 justify-end">
                                 {r.status === 'requested' && (
                                     <button type="button" onClick={(e) => handleApprove(e, r.id)}
-                                        className="rounded-md bg-primary px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-primary-hover">
+                                        className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-white hover:bg-primary-hover">
                                         Approve
                                     </button>
                                 )}
                                 <button type="button" onClick={() => router.visit(`/owner/restocks/${r.id}`)}
-                                    className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary-light">
+                                    className="rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary-light">
                                     Detail →
                                 </button>
                             </div>

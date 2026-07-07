@@ -125,7 +125,7 @@ return null;
 
                     {/* Incident Summary */}
                     <div className="mt-3 rounded-lg border border-red-100 bg-red-50/50 p-3">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-red-600">Insiden</div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-red-600">Insiden</div>
                         <div className="mt-1.5 space-y-1 text-xs">
                             <div className="flex justify-between"><span className="text-slate-500">Alasan</span><span className="font-medium text-slate-900">{delivery.failed_reason ?? '-'}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500">Kurir</span><span className="text-slate-700">{delivery.courier?.name ?? '-'}</span></div>
@@ -155,7 +155,7 @@ return null;
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="text-sm font-semibold text-slate-900">{opt.label}</div>
-                                                <div className="mt-0.5 text-[11px] text-slate-500">{opt.description}</div>
+                                                <div className="mt-0.5 text-xs text-slate-500">{opt.description}</div>
                                             </div>
                                         </div>
                                         <input type="radio" name="resolution" value={opt.value} checked={isSelected} onChange={() => {
@@ -188,7 +188,7 @@ return null;
 
                         {/* Destructive Confirmation */}
                         {isDestructive && confirmDestructive && (
-                            <div className="mt-2 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-2 text-[11px] font-medium text-red-800">
+                            <div className="mt-2 flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-2 text-xs font-medium text-red-800">
                                 <TriangleAlert className="h-4 w-4 shrink-0" /> Tindakan ini akan melepas reserved stock dan membatalkan order secara permanen.
                             </div>
                         )}

@@ -111,16 +111,16 @@ return;
                 <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 space-y-2">
                     <div className="grid grid-cols-2 gap-2">
                         <label className="block">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">Mulai</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500">Mulai</span>
                             <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm" />
                         </label>
                         <label className="block">
-                            <span className="text-[11px] font-semibold uppercase text-slate-500">Selesai</span>
+                            <span className="text-xs font-semibold uppercase text-slate-500">Selesai</span>
                             <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm" />
                         </label>
                     </div>
                     <label className="block">
-                        <span className="text-[11px] font-semibold uppercase text-slate-500">Alasan</span>
+                        <span className="text-xs font-semibold uppercase text-slate-500">Alasan</span>
                         <input type="text" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Libur Lebaran, Renovasi, dll." className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm" />
                     </label>
                     {error && <p className="text-xs font-medium text-red-600">{error}</p>}

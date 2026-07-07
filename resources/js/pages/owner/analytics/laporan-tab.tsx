@@ -93,19 +93,19 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
             <div className="flex gap-2">
                 <input
                     type="date"
-                    className="flex-1 rounded-lg border border-border bg-white px-2.5 py-2 text-[11px]"
+                    className="flex-1 rounded-lg border border-border bg-white px-2.5 py-2 text-xs"
                     value={filters.date_from ?? ''}
                     onChange={(e) => handleFilter('date_from', e.target.value)}
                 />
                 <input
                     type="date"
-                    className="flex-1 rounded-lg border border-border bg-white px-2.5 py-2 text-[11px]"
+                    className="flex-1 rounded-lg border border-border bg-white px-2.5 py-2 text-xs"
                     value={filters.date_to ?? ''}
                     onChange={(e) => handleFilter('date_to', e.target.value)}
                 />
                 <button
                     onClick={handleExport}
-                    className="flex h-10 items-center gap-1 rounded-lg border border-border bg-white px-2.5 text-[11px] font-semibold text-text-muted transition-all duration-150 active:bg-surface-muted active:opacity-80"
+                    className="flex h-10 items-center gap-1 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text-muted transition-all duration-150 active:bg-surface-muted active:opacity-80"
                 >
                     <Download className="h-4 w-4" /> CSV
                 </button>
@@ -149,7 +149,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                 <div className="space-y-3 border-t border-border px-4 pb-4 pt-3">
                                     <div>
                                         <div className="text-xs font-medium text-text mb-1">Laporan Orders</div>
-                                        <p className="mb-2 text-[11px] text-text-muted">Download data order completed</p>
+                                        <p className="mb-2 text-xs text-text-muted">Download data order completed</p>
                                         <button
                                             onClick={() => handleExportReport('orders')}
                                             disabled={exporting === 'orders'}
@@ -160,7 +160,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                     </div>
                                     <div>
                                         <div className="text-xs font-medium text-text mb-1">Laporan Settlements</div>
-                                        <p className="mb-2 text-[11px] text-text-muted">Download data settlement outlet</p>
+                                        <p className="mb-2 text-xs text-text-muted">Download data settlement outlet</p>
                                         <button
                                             onClick={() => handleExportReport('settlements')}
                                             disabled={exporting === 'settlements'}
@@ -180,7 +180,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                     Total Pesanan
                                 </div>
                                 <div className="mt-2 text-3xl font-bold text-text">{summary.totalOrders}</div>
-                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-text-subtle">Pesanan</div>
+                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-text-subtle">Pesanan</div>
                             </div>
                             <div className="rounded-lg border border-border bg-white p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -188,7 +188,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                     Pendapatan
                                 </div>
                                 <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(summary.totalRevenue)}</div>
-                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">Total pendapatan</div>
+                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">Total pendapatan</div>
                             </div>
                             <div className="rounded-lg border border-border bg-white p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -196,13 +196,13 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                     Selesai
                                 </div>
                                 <div className="mt-2 text-3xl font-bold text-text">{summary.completedOrders}</div>
-                                <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">Pesanan selesai</div>
+                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">Pesanan selesai</div>
                             </div>
                         </div>
 
                         <div className="rounded-lg border border-border bg-white transition-shadow">
                             <button onClick={() => setSecondaryOpen(!secondaryOpen)} className="flex w-full items-center justify-between p-3">
-                                <div className="text-[11px] font-bold uppercase tracking-wider text-text-muted">Detail Lainnya</div>
+                                <div className="text-xs font-bold uppercase tracking-wider text-text-muted">Detail Lainnya</div>
                                 <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${secondaryOpen ? 'rotate-180' : ''}`} />
                             </button>
                             {secondaryOpen && (
@@ -213,7 +213,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                             Dibatalkan
                                         </div>
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.cancelledOrders}</div>
-                                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">Dibatalkan</div>
+                                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">Dibatalkan</div>
                                     </div>
                                     <div className="rounded-lg border border-border bg-white p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -221,7 +221,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                             Pengiriman Berhasil
                                         </div>
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.completedDeliveries}</div>
-                                        <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">Pengiriman selesai</div>
+                                        <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">Pengiriman selesai</div>
                                     </div>
                                     <div className="rounded-lg border border-border bg-white p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -230,7 +230,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                         </div>
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.failedDeliveries}</div>
                                         {summary.failedDeliveries > 0 && (
-                                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">
                                                 Perlu ditinjau
                                             </div>
                                         )}
@@ -268,7 +268,7 @@ function BreakdownCard({ title, data }: { title: string; data: Record<string, nu
     return (
         <div className="rounded-lg border border-border bg-white transition-shadow">
             <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between p-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">{title}</div>
+                <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">{title}</div>
                 <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
             </button>
             {open && (

@@ -70,7 +70,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                         <FilterIcon />
                     </HeaderIconButton>
                     {activeFilterCount > 0 && (
-                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[11px] font-bold text-white">
+                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-xs font-bold text-white">
                             {activeFilterCount}
                         </span>
                     )}
@@ -91,16 +91,16 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="truncate text-xs font-semibold text-text">{m.product?.name ?? '-'}</div>
-                                <div className="mt-0.5 text-[11px] text-text-subtle">
+                                <div className="mt-0.5 text-xs text-text-subtle">
                                     {m.outlet?.name} &middot;{' '}
                                     <span className={typeColors[m.type] ?? 'text-text-muted'}>{typeLabels[m.type] ?? m.type}</span>
                                 </div>
                             </div>
                             <div className="shrink-0 text-right">
-                                <div className="text-[11px] tabular-nums text-text-muted">
+                                <div className="text-xs tabular-nums text-text-muted">
                                     {m.before_stock}&rarr;{m.after_stock}
                                 </div>
-                                <div className="text-[11px] tabular-nums text-text-subtle">{formatDate(m.created_at)}</div>
+                                <div className="text-xs tabular-nums text-text-subtle">{formatDate(m.created_at)}</div>
                             </div>
                         </div>
                     ))}
@@ -115,7 +115,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                                 Total Movement
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{movements.data.length}</div>
-                            <div className="mt-1 text-[11px] font-medium text-text-muted">Semua movement</div>
+                            <div className="mt-1 text-xs font-medium text-text-muted">Semua movement</div>
                         </div>
                         <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -123,7 +123,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                                 Stok Masuk
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{movements.data.filter((m: any) => m.quantity > 0).length}</div>
-                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
                                 <ArrowDownRight className="h-3 w-3" />
                                 Restock & penyesuaian
                             </div>
@@ -134,7 +134,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                                 Stok Keluar
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{movements.data.filter((m: any) => m.quantity < 0).length}</div>
-                            <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-red-500">
+                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">
                                 <ArrowUpRight className="h-3 w-3" />
                                 Pesanan & pembatalan
                             </div>
@@ -143,7 +143,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                         {/* Active filters */}
                         {activeFilterCount > 0 && (
                             <div className="rounded-lg border border-border bg-white p-4 transition-shadow">
-                                <div className="mb-3 text-[11px] font-bold uppercase tracking-wider text-text-muted">Filter Aktif</div>
+                                <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Filter Aktif</div>
                                 <div className="space-y-1.5">
                                     {filters.outlet_id && (
                                         <div className="text-xs text-text">

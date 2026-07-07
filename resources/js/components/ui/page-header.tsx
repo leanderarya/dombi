@@ -43,7 +43,7 @@ export default function PageHeader({ title, subtitle, backHref, right, below, tr
                 {title ? (
                     <div className="text-center">
                         <div className="text-sm font-semibold text-text">{title}</div>
-                        {subtitle && <div className="text-[11px] text-text-muted">{subtitle}</div>}
+                        {subtitle && <div className="text-xs text-text-muted">{subtitle}</div>}
                     </div>
                 ) : (
                     <div />

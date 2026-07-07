@@ -44,7 +44,7 @@ return null;
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-0 lg:items-center lg:px-4" role="dialog" aria-modal="true">
             <div className="w-full max-w-md rounded-t-lg border border-slate-200 bg-white p-4 lg:rounded-lg">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Branch Provisioned</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-emerald-600">Branch Provisioned</p>
                 <h2 className="mt-1 text-2xl font-semibold text-slate-900">Outlet siap operasional</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-500">Akun outlet berhasil dibuat. Temporary password hanya ditampilkan sekali di ringkasan ini.</p>
 
@@ -85,7 +85,7 @@ return null;
 function Info({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-center justify-between gap-3 border-b border-slate-200 py-2 last:border-b-0">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</span>
             <span className="min-w-0 truncate text-right text-sm font-semibold text-slate-900">{value}</span>
         </div>
     );

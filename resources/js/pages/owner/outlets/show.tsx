@@ -96,7 +96,7 @@ export default function OutletShow({
             <div className="grid gap-3 lg:grid-cols-2">
                 {/* Informasi Outlet */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Informasi Outlet</div>
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Informasi Outlet</div>
                     <div className="flex items-start justify-between gap-3">
                         <div>
                             <h1 className="text-lg font-semibold text-text">{outlet.name ?? '-'}</h1>
@@ -108,13 +108,13 @@ export default function OutletShow({
 
                     {outlet.pic_name && (
                         <div className="mt-3 rounded-lg border border-border bg-surface-muted p-2">
-                            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-text-subtle">
+                            <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-subtle">
                                 <User className="h-3 w-3" />
                                 Penanggung Jawab
                             </div>
                             <div className="mt-1 text-xs font-medium text-text">{outlet.pic_name}</div>
-                            {outlet.pic_position && <div className="text-[11px] text-text-muted">{outlet.pic_position}</div>}
-                            {outlet.pic_phone && <div className="text-[11px] text-text-muted">{outlet.pic_phone}</div>}
+                            {outlet.pic_position && <div className="text-xs text-text-muted">{outlet.pic_position}</div>}
+                            {outlet.pic_phone && <div className="text-xs text-text-muted">{outlet.pic_phone}</div>}
                         </div>
                     )}
 
@@ -127,7 +127,7 @@ export default function OutletShow({
 
                 {/* Status + Quick Actions */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Status & Aksi</div>
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status & Aksi</div>
                     <div className="flex items-center gap-2">
                         <OutletStatusBadge status={outlet.status ?? 'active'} />
                         {Number(outlet.low_stock_count) > 0 && <StatusBadge variant="warning" size="sm">Stok Rendah</StatusBadge>}
@@ -166,7 +166,7 @@ export default function OutletShow({
 
                 {/* Lokasi */}
                 <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                    <div className="mb-3 text-[11px] font-bold uppercase tracking-wide text-text-subtle">Lokasi</div>
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Lokasi</div>
                     <p className="text-xs text-text-muted">
                         {outlet.kelurahan ?? '-'} &middot; {outlet.kecamatan ?? '-'}
                         {outlet.city ? ` · ${outlet.city}` : ''}
@@ -190,7 +190,7 @@ export default function OutletShow({
 
                 {/* Jam Operasional */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-text-subtle">
+                    <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
                         <Clock className="h-3.5 w-3.5" />
                         Jam Operasional
                     </div>
@@ -202,7 +202,7 @@ export default function OutletShow({
 
                 {/* Hari Libur */}
                 <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-text-subtle">
+                    <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
                         <Calendar className="h-3.5 w-3.5" />
                         Hari Libur
                     </div>
@@ -215,7 +215,7 @@ export default function OutletShow({
                 {/* Area Layanan */}
                 {outlet.delivery_radius_km && (
                     <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-text-subtle">
+                        <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
                             <MapPin className="h-3.5 w-3.5" />
                             Area Layanan
                         </div>
@@ -223,7 +223,7 @@ export default function OutletShow({
                             <span className="text-text-muted">Radius</span>
                             <span className="text-text">{outlet.delivery_radius_km} km</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-text-muted">
+                        <p className="mt-1 text-xs text-text-muted">
                             Customer di luar radius ini tidak dapat memesan delivery.
                         </p>
                     </div>
@@ -231,46 +231,46 @@ export default function OutletShow({
 
                 {/* Produk Outlet */}
                 <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                    <div className="mb-3 flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-text-subtle">
+                    <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-text-subtle">
                         <div className="flex items-center gap-2">
                             <Package className="h-3.5 w-3.5" />
                             Produk Outlet
                         </div>
                     </div>
-                    <p className="mb-2 text-[11px] text-text-muted">Kelola produk, stok, dan restock outlet ini.</p>
+                    <p className="mb-2 text-xs text-text-muted">Kelola produk, stok, dan restock outlet ini.</p>
                     <OutletProducts outletId={outlet.id} />
                 </div>
 
                 {/* Settlement Outlet */}
                 {settlementSummary && Number(settlementSummary.outstanding) > 0 && (
                     <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                        <div className="mb-3 flex items-center justify-between text-[11px] font-bold uppercase tracking-wide text-text-subtle">
+                        <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-text-subtle">
                             <div className="flex items-center gap-2">
                                 <DollarSign className="h-3.5 w-3.5" />
                                 Settlement Outlet
                             </div>
-                            <Link href={`/owner/finance/settlements/${outlet.id}`} className="text-[11px] font-semibold text-primary hover:text-primary">
+                            <Link href={`/owner/finance/settlements/${outlet.id}`} className="text-xs font-semibold text-primary hover:text-primary">
                                 Lihat Semua
                             </Link>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                             <div className="rounded-lg border border-border bg-surface-muted p-2">
-                                <div className="text-[10px] font-bold uppercase tracking-wide text-text-subtle">Outstanding</div>
+                                <div className="text-xs font-bold uppercase tracking-wide text-text-subtle">Outstanding</div>
                                 <div className="mt-0.5 text-xs font-bold tabular-nums text-red-600">{formatCurrency(settlementSummary.outstanding)}</div>
                             </div>
                             <div className="rounded-lg border border-border bg-surface-muted p-2">
-                                <div className="text-[10px] font-bold uppercase tracking-wide text-text-subtle">Terlambat</div>
+                                <div className="text-xs font-bold uppercase tracking-wide text-text-subtle">Terlambat</div>
                                 <div className="mt-0.5 text-xs font-bold tabular-nums text-amber-600">{settlementSummary.overdue_count}</div>
                             </div>
                             <div className="rounded-lg border border-border bg-surface-muted p-2">
-                                <div className="text-[10px] font-bold uppercase tracking-wide text-text-subtle">Dibayar</div>
+                                <div className="text-xs font-bold uppercase tracking-wide text-text-subtle">Dibayar</div>
                                 <div className="mt-0.5 text-xs font-bold tabular-nums text-emerald-600">{formatCurrency(settlementSummary.paid_this_month)}</div>
                             </div>
                         </div>
 
                         {settlementSummary.recent_settlements?.length > 0 && (
                             <div className="mt-2">
-                                <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-text-subtle">Settlement Terakhir</div>
+                                <div className="mb-1 text-xs font-bold uppercase tracking-wide text-text-subtle">Settlement Terakhir</div>
                                 {settlementSummary.recent_settlements.map((s: any) => {
                                     const variantMap: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
                                         pending: 'neutral',
@@ -301,7 +301,7 @@ export default function OutletShow({
                 {/* Riwayat Perubahan */}
                 {auditLogs && auditLogs.length > 0 && (
                     <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                        <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wide text-text-subtle">
+                        <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
                             <History className="h-3.5 w-3.5" />
                             Riwayat Perubahan
                         </div>
@@ -335,7 +335,7 @@ function Metric({
             <div className="text-sm font-semibold tabular-nums">
                 {value ?? 0}
             </div>
-            <div className="text-[10px] font-semibold tracking-wide uppercase opacity-70">
+            <div className="text-xs font-semibold tracking-wide uppercase opacity-70">
                 {label}
             </div>
         </div>
@@ -359,7 +359,7 @@ function SidebarMetric({
             warn ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface-muted',
         )}>
             <div className={cn('text-sm font-bold tabular-nums', color)}>{value}</div>
-            <div className="text-[10px] font-semibold uppercase tracking-wider text-text-subtle">{label}</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-text-subtle">{label}</div>
         </div>
     );
 }

@@ -103,10 +103,10 @@ export function BulkPanel({ amount, onChange, onApply, onCancel, saving, count }
                 <div className="flex flex-wrap gap-1">
                     {[1000, 2000, 5000, 10000].map((amt) => (
                         <div key={amt} className="flex gap-0.5">
-                            <Button type="button" size="sm" variant={amount === String(amt) ? 'primary' : 'secondary'} onClick={() => onChange(String(amt))} className="px-2 py-1 text-[11px]">
+                            <Button type="button" size="sm" variant={amount === String(amt) ? 'primary' : 'secondary'} onClick={() => onChange(String(amt))} className="px-2 py-1 text-xs">
                                 +{amt.toLocaleString('id-ID')}
                             </Button>
-                            <Button type="button" size="sm" variant={amount === String(-amt) ? 'primary' : 'secondary'} onClick={() => onChange(String(-amt))} className="px-2 py-1 text-[11px]">
+                            <Button type="button" size="sm" variant={amount === String(-amt) ? 'primary' : 'secondary'} onClick={() => onChange(String(-amt))} className="px-2 py-1 text-xs">
                                 -{amt.toLocaleString('id-ID')}
                             </Button>
                         </div>
@@ -118,7 +118,7 @@ export function BulkPanel({ amount, onChange, onApply, onCancel, saving, count }
                 </div>
                 <Button type="button" size="sm" onClick={onApply} disabled={saving || !amount}>Terapkan</Button>
                 <Button type="button" size="sm" variant="ghost" onClick={onCancel} className="text-amber-700">Batal</Button>
-                <span className="text-[11px] text-amber-600">{count} produk</span>
+                <span className="text-xs text-amber-600">{count} produk</span>
             </div>
         </div>
     );

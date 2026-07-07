@@ -75,24 +75,24 @@ export default function Dashboard({
                 {/* KPI horizontal strip */}
                 <div className="mb-4 grid grid-cols-4 gap-2">
                     <Link href="/owner/finance" className="block rounded-lg bg-[#f7f7f7] p-2.5 transition-colors hover:bg-surface-muted">
-                        <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Tagihan</div>
+                        <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Tagihan</div>
                         <div className="mt-1 text-base font-bold tabular-nums text-text">{formatCurrency(kpis.outstandingAmount)}</div>
-                        <div className="text-[10px] font-medium text-blue-600">{settlementAlerts.length} outlet</div>
+                        <div className="text-xs font-medium text-blue-600">{settlementAlerts.length} outlet</div>
                     </Link>
                     <Link href="#actions" className="block rounded-lg bg-[#f7f7f7] p-2.5 transition-colors hover:bg-surface-muted">
-                        <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Tindakan</div>
+                        <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Tindakan</div>
                         <div className="mt-1 text-base font-bold tabular-nums text-text">{totalPendingActions}</div>
-                        <div className="text-[10px] font-medium text-amber-600">{actionRequired.restocks} restock</div>
+                        <div className="text-xs font-medium text-amber-600">{actionRequired.restocks} restock</div>
                     </Link>
                     <Link href="/owner/inventories?filter=critical" className="block rounded-lg bg-[#f7f7f7] p-2.5 transition-colors hover:bg-surface-muted">
-                        <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Stok Kritis</div>
+                        <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Stok Kritis</div>
                         <div className={`mt-1 text-base font-bold tabular-nums ${kpis.criticalStock > 0 ? 'text-red-600' : 'text-text'}`}>{kpis.criticalStock}</div>
-                        <div className={`text-[10px] font-medium ${kpis.criticalStock > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{kpis.criticalStock > 0 ? 'SKU perlu restock' : 'Semua aman'}</div>
+                        <div className={`text-xs font-medium ${kpis.criticalStock > 0 ? 'text-red-600' : 'text-emerald-600'}`}>{kpis.criticalStock > 0 ? 'SKU perlu restock' : 'Semua aman'}</div>
                     </Link>
                     <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                        <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Pendapatan</div>
+                        <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Pendapatan</div>
                         <div className="mt-1 text-base font-bold tabular-nums text-text">—</div>
-                        <div className="text-[10px] font-medium text-emerald-600">hari ini</div>
+                        <div className="text-xs font-medium text-emerald-600">hari ini</div>
                     </div>
                 </div>
 
@@ -103,7 +103,7 @@ export default function Dashboard({
                         <div className="mb-2 flex items-center gap-2">
                             <span className="text-xs font-bold uppercase tracking-wide text-text-muted">Butuh Tindakan</span>
                             {totalPendingActions > 0 && (
-                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-text-muted">{totalPendingActions}</span>
+                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-bold text-text-muted">{totalPendingActions}</span>
                             )}
                         </div>
                         <div className="space-y-1.5">
@@ -112,8 +112,8 @@ export default function Dashboard({
                                     <div className="flex items-center gap-2.5">
                                         <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-100 text-amber-600"><Package className="h-3.5 w-3.5" /></div>
                                         <div>
-                                            <div className="text-xs font-medium text-text">Restock</div>
-                                            <div className="text-[10px] text-text-muted">{actionRequired.restocks} menunggu</div>
+                                            <div className="text-sm font-medium text-text">Restock</div>
+                                            <div className="text-xs text-text-muted">{actionRequired.restocks} menunggu</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
@@ -124,8 +124,8 @@ export default function Dashboard({
                                     <div className="flex items-center gap-2.5">
                                         <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-100 text-amber-600"><RotateCcw className="h-3.5 w-3.5" /></div>
                                         <div>
-                                            <div className="text-xs font-medium text-text">Return</div>
-                                            <div className="text-[10px] text-text-muted">{actionRequired.returns} menunggu</div>
+                                            <div className="text-sm font-medium text-text">Return</div>
+                                            <div className="text-xs text-text-muted">{actionRequired.returns} menunggu</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
@@ -136,8 +136,8 @@ export default function Dashboard({
                                     <div className="flex items-center gap-2.5">
                                         <div className="flex h-6 w-6 items-center justify-center rounded bg-amber-100 text-amber-600"><ArrowLeftRight className="h-3.5 w-3.5" /></div>
                                         <div>
-                                            <div className="text-xs font-medium text-text">Tukar Produk</div>
-                                            <div className="text-[10px] text-text-muted">{actionRequired.exchanges} menunggu</div>
+                                            <div className="text-sm font-medium text-text">Tukar Produk</div>
+                                            <div className="text-xs text-text-muted">{actionRequired.exchanges} menunggu</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
@@ -148,8 +148,8 @@ export default function Dashboard({
                                     <div className="flex items-center gap-2.5">
                                         <div className="flex h-6 w-6 items-center justify-center rounded bg-blue-100 text-blue-600"><CreditCard className="h-3.5 w-3.5" /></div>
                                         <div>
-                                            <div className="text-xs font-medium text-text">Pembayaran</div>
-                                            <div className="text-[10px] text-text-muted">{actionRequired.pendingSettlementVerifications} menunggu verifikasi</div>
+                                            <div className="text-sm font-medium text-text">Pembayaran</div>
+                                            <div className="text-xs text-text-muted">{actionRequired.pendingSettlementVerifications} menunggu verifikasi</div>
                                         </div>
                                     </div>
                                     <ChevronRight className="h-3.5 w-3.5 text-text-subtle" />
@@ -158,7 +158,7 @@ export default function Dashboard({
                             {totalPendingActions === 0 && (
                                 <div className="flex flex-col items-center justify-center py-6">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><CheckCircle2 className="h-5 w-5" /></div>
-                                    <div className="mt-2 text-xs font-medium text-text">Semua sudah ditangani</div>
+                                    <div className="mt-2 text-sm font-medium text-text">Semua sudah ditangani</div>
                                 </div>
                             )}
                         </div>
@@ -169,7 +169,7 @@ export default function Dashboard({
                         <div className="mb-2 flex items-center gap-2">
                             <span className="text-xs font-bold uppercase tracking-wide text-text-muted">Stok Kritis</span>
                             {inventoryRisks.length > 0 && (
-                                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700">{inventoryRisks.length}</span>
+                                <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-700">{inventoryRisks.length}</span>
                             )}
                         </div>
                         <div className="space-y-1.5">
@@ -179,16 +179,16 @@ export default function Dashboard({
                                         <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-red-100 text-red-500"><AlertTriangle className="h-3.5 w-3.5" /></div>
                                         <div className="min-w-0">
                                             <div className="truncate text-xs font-medium text-text">{risk.variant.full_name}</div>
-                                            <div className="text-[10px] text-text-muted">Stok: <span className="font-semibold text-red-600">{risk.centerStock}</span> · Min {risk.threshold} · Kurang {risk.shortage}</div>
+                                            <div className="text-xs text-text-muted">Stok: <span className="font-semibold text-red-600">{risk.centerStock}</span> · Min {risk.threshold} · Kurang {risk.shortage}</div>
                                         </div>
                                     </Link>
-                                    <Link href="/owner/restocks/create" className="ml-2 shrink-0 rounded-md border border-border bg-surface px-2 py-0.5 text-[10px] font-semibold text-text transition-colors hover:bg-primary hover:text-white">Restock</Link>
+                                    <Link href="/owner/restocks/create" className="ml-2 shrink-0 rounded-md border border-border bg-surface px-2 py-0.5 text-xs font-semibold text-text transition-colors hover:bg-primary hover:text-white">Restock</Link>
                                 </div>
                             ))}
                             {inventoryRisks.length === 0 && (
                                 <div className="flex flex-col items-center justify-center py-6">
                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"><CheckCircle2 className="h-5 w-5" /></div>
-                                    <div className="mt-2 text-xs font-medium text-text">Stok pusat aman</div>
+                                    <div className="mt-2 text-sm font-medium text-text">Stok pusat aman</div>
                                 </div>
                             )}
                         </div>
@@ -202,7 +202,7 @@ export default function Dashboard({
                         className="group relative block overflow-hidden rounded-lg bg-linear-to-br from-primary to-primary-hover px-4 py-3 text-white transition-all duration-200"
                     >
                         <div className="relative">
-                            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider opacity-70">
+                            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider opacity-70">
                                 <TrendingDown className="h-3.5 w-3.5" />
                                 Tagihan Tertunggak
                             </div>

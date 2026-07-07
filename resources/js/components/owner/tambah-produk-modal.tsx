@@ -172,7 +172,7 @@ return null;
                                     />
                                     <div className="min-w-0 flex-1">
                                         <div className="text-sm font-medium text-slate-900">{p.name}</div>
-                                        <div className="text-[11px] text-slate-500">{p.family_name} · {formatCurrency(p.selling_price)}</div>
+                                        <div className="text-xs text-slate-500">{p.family_name} · {formatCurrency(p.selling_price)}</div>
                                     </div>
                                 </label>
                             ))}

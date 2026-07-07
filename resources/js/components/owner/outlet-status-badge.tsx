@@ -20,7 +20,7 @@ const labels: Record<string, string> = {
 
 export default function OutletStatusBadge({ status }: { status: string }) {
     return (
-        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-bold ${styles[status] ?? styles.active}`}>
+        <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${styles[status] ?? styles.active}`}>
             {labels[status] ?? status}
         </span>
     );

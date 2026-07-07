@@ -29,7 +29,9 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
                     </div>
                     <button
                         type="button"
-                        onClick={() => { setShowForm(true); setEditingId(null); }}
+                        onClick={() => {
+ setShowForm(true); setEditingId(null); 
+}}
                         className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white active:opacity-80"
                     >
                         <Plus className="h-4 w-4" />
@@ -39,7 +41,7 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
 
                 {/* Tier List */}
                 <div className="rounded-lg border border-border bg-white">
-                    <div className="grid grid-cols-12 gap-4 border-b border-border px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-text-subtle">
+                    <div className="grid grid-cols-12 gap-4 border-b border-border px-4 py-3 text-xs font-bold uppercase tracking-wider text-text-subtle">
                         <div className="col-span-1" />
                         <div className="col-span-3">Jarak</div>
                         <div className="col-span-3">Tarif</div>
@@ -59,8 +61,12 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
                                 key={tier.id}
                                 tier={tier}
                                 isEditing={editingId === tier.id}
-                                onEdit={() => { setEditingId(tier.id); setShowForm(true); }}
-                                onCancel={() => { setEditingId(null); setShowForm(false); }}
+                                onEdit={() => {
+ setEditingId(tier.id); setShowForm(true); 
+}}
+                                onCancel={() => {
+ setEditingId(null); setShowForm(false); 
+}}
                             />
                         ))
                     )}
@@ -96,7 +102,10 @@ function TierRow({ tier, isEditing, onEdit, onCancel }: { tier: DeliveryTier; is
     };
 
     const handleDelete = () => {
-        if (!confirm('Hapus tier ini?')) return;
+        if (!confirm('Hapus tier ini?')) {
+return;
+}
+
         router.delete(`/owner/delivery-tiers/${tier.id}`);
     };
 
@@ -172,7 +181,7 @@ function TierRow({ tier, isEditing, onEdit, onCancel }: { tier: DeliveryTier; is
                 {Object.keys(form.errors).length > 0 && (
                     <div className="col-span-12 mt-1">
                         {Object.values(form.errors).map((err, i) => (
-                            <p key={i} className="text-[11px] text-red-600">{err}</p>
+                            <p key={i} className="text-xs text-red-600">{err}</p>
                         ))}
                     </div>
                 )}
@@ -195,7 +204,7 @@ function TierRow({ tier, isEditing, onEdit, onCancel }: { tier: DeliveryTier; is
                 <button
                     type="button"
                     onClick={handleToggle}
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ${
                         tier.is_active
                             ? 'bg-emerald-50 text-emerald-700'
                             : 'bg-zinc-100 text-zinc-500'

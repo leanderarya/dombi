@@ -31,7 +31,7 @@ export default function OwnerKpiCard({ label, value, icon, trend, color, classNa
                         {icon}
                     </div>
                 )}
-                <div className="text-[10px] font-medium text-text-muted">{label}</div>
+                <div className="text-xs font-medium text-text-muted">{label}</div>
             </div>
             <div className={`mt-1 text-base font-bold tabular-nums tracking-tight ${color ? colorClasses[color] : 'text-text'}`}>
                 {value}

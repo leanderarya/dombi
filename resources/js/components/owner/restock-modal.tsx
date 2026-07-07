@@ -83,17 +83,17 @@ return;
                     <h2 className="text-base font-bold text-slate-900">Restock Produk</h2>
 
                     <div className="mt-4">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Produk</div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Produk</div>
                         <div className="mt-1 text-sm font-semibold text-slate-900">{productName}</div>
                     </div>
 
                     <div className="mt-3">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Stok Saat Ini</div>
+                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Stok Saat Ini</div>
                         <div className="mt-1 text-sm font-semibold text-slate-700">{currentStock} pcs</div>
                     </div>
 
                     <div className="mt-3">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tambah Stok</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Tambah Stok</label>
                         <div className="mt-1 flex gap-2">
                             {[10, 25, 50, 100].map((n) => (
                                 <button
@@ -121,7 +121,7 @@ return;
                     </div>
 
                     <div className="mt-3">
-                        <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Catatan</label>
+                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Catatan</label>
                         <textarea
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}

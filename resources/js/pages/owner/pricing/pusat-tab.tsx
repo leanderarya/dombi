@@ -97,7 +97,7 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                                 <div>
                                     <div className="text-lg font-bold text-text">{v.name}</div>
                                     {v.outlet_override_count > 0 && (
-                                        <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-bold text-blue-600">
+                                        <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-xs font-bold text-blue-600">
                                             {v.outlet_override_count} outlet override
                                         </span>
                                     )}

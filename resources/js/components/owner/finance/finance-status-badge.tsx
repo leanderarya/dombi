@@ -40,7 +40,7 @@ export default function FinanceStatusBadge({ status, className = '' }: Props) {
     const config = CONFIG[status] ?? CONFIG.no_activity;
 
     return (
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${config.badgeClass} ${className}`}>
+        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${config.badgeClass} ${className}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${config.dotClass}`} />
             {config.label}
         </span>

@@ -349,7 +349,7 @@ return;
 
                         {/* Auto-generated (editable) */}
                         <div className="rounded-lg bg-surface-muted p-3">
-                            <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-text-subtle">Otomatis (bisa diubah)</div>
+                            <div className="mb-2 text-xs font-bold uppercase tracking-wider text-text-subtle">Otomatis (bisa diubah)</div>
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <label className="mb-1 block text-xs font-medium text-text-muted">Nama Variant</label>
@@ -459,7 +459,7 @@ return;
                                         {variant.is_active ? 'Aktif' : 'Nonaktif'}
                                     </StatusBadge>
                                     {variant.sku && (
-                                        <span className="text-[11px] text-text-subtle">{variant.sku}</span>
+                                        <span className="text-xs text-text-subtle">{variant.sku}</span>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-0.5">
