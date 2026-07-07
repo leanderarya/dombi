@@ -247,7 +247,7 @@ select:focus {
 /* ── Safe Area Utilities ──────────────────────────────────── */
 /* The `, 0` fallback in env() handles browsers without support */
 @utility pt-safe {
-    padding-top: env(safe-area-inset-top, 0);
+    padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem));
 }
 @utility pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0);
