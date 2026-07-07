@@ -46,9 +46,8 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
     const [currentPage, setCurrentPage] = useState(1);
     const ITEMS_PER_PAGE = 20;
 
-    const outlets = useMemo(() => {
-        const unique = [...new Set(items.map((item: any) => item.outlet_name))];
-
+    const outlets = useMemo((): string[] => {
+        const unique = [...new Set(items.map((item: any) => item.outlet_name as string))] as string[];
         return unique.sort();
     }, [items]);
 
@@ -71,7 +70,6 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
         if (stockFilter !== 'all') {
             result = result.filter((item: any) => {
                 const available = item.current_stock - item.reserved_stock;
-
                 switch (stockFilter) {
                     case 'critical': return available <= 0;
                     case 'low': return available > 0 && available <= item.minimum_stock;
@@ -83,7 +81,6 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
         result.sort((a: any, b: any) => {
             let cmp = 0;
-
             switch (sortField) {
                 case 'outlet':
                     cmp = a.outlet_name.localeCompare(b.outlet_name);
@@ -98,7 +95,6 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                     cmp = (a.current_stock - a.reserved_stock) - (b.current_stock - b.reserved_stock);
                     break;
             }
-
             return sortDir === 'asc' ? cmp : -cmp;
         });
 
@@ -155,64 +151,63 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
             )}
 
             {activeTab === 'outlet' && (
-            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
-                {/* Left: Filters + List */}
-                <div>
-                    {/* Stock level filter tabs */}
-                    <div className="mb-4 flex flex-wrap gap-2">
+                <>
+                    {/* Filter controls */}
+                    <div className="mb-4 flex flex-wrap items-center gap-2">
                         {[
                             { key: 'all' as const, label: 'Semua' },
                             { key: 'critical' as const, label: 'Kritis', color: 'text-red-600 bg-red-50 ring-red-200' },
                             { key: 'low' as const, label: 'Rendah', color: 'text-amber-600 bg-amber-50 ring-amber-200' },
                             { key: 'healthy' as const, label: 'Sehat', color: 'text-emerald-600 bg-emerald-50 ring-emerald-200' },
                         ].map((tab) => (
-                            <button
-                                key={tab.key}
-                                type="button"
-                                onClick={() => {
- setStockFilter(tab.key); setCurrentPage(1); 
-}}
+                            <button key={tab.key} type="button" onClick={() => { setStockFilter(tab.key); setCurrentPage(1); }}
                                 className={cn(
-                                    'rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all',
+                                    'shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 transition-all',
                                     stockFilter === tab.key
                                         ? tab.color ?? 'bg-primary/10 text-primary ring-primary/20'
                                         : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
-                                )}
-                            >
+                                )}>
                                 {tab.label}
                             </button>
                         ))}
-                    </div>
-
-                    {/* Search + Outlet filter */}
-                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-                        <Input
-                            icon={Search}
-                            type="text"
-                            placeholder="Cari outlet atau produk..."
-                            value={search}
-                            onChange={(e) => {
- setSearch(e.target.value); setCurrentPage(1); 
-}}
-                            aria-label="Cari inventaris"
-                            className="flex-1"
-                        />
-                        <Select
-                            value={outletFilter}
-                            onChange={(e) => {
- setOutletFilter(e.target.value); setCurrentPage(1); 
-}}
+                        <span className="flex-1" />
+                        <Input icon={Search} type="text" placeholder="Cari outlet atau produk..." value={search}
+                            onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                            aria-label="Cari inventaris" className="h-8 w-40" />
+                        <Select value={outletFilter} onChange={(e) => { setOutletFilter(e.target.value); setCurrentPage(1); }}
                             options={[
                                 { value: 'all', label: 'Semua Outlet' },
                                 ...outlets.map((outlet: string) => ({ value: outlet, label: outlet })),
-                            ]}
-                            aria-label="Filter outlet"
-                        />
+                            ]} aria-label="Filter outlet" />
+                    </div>
+
+                    {/* KPI Strip */}
+                    <div className="mb-4 grid grid-cols-4 gap-2">
+                        <div className="rounded-lg bg-[#f7f7f7] p-2.5">
+                            <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total SKU</div>
+                            <div className="mt-1 text-base font-bold tabular-nums">{stats.totalSku}</div>
+                            <div className="text-[10px] font-medium text-text-subtle">Semua outlet</div>
+                        </div>
+                        <div className="rounded-lg bg-[#f7f7f7] p-2.5">
+                            <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Stok Rendah</div>
+                            <div className="mt-1 text-base font-bold tabular-nums">{stats.lowStock}</div>
+                            {stats.lowStock > 0 && <div className="text-[10px] font-medium text-amber-500">Perlu restock</div>}
+                        </div>
+                        <div className="rounded-lg bg-[#f7f7f7] p-2.5">
+                            <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Reserved</div>
+                            <div className="mt-1 text-base font-bold tabular-nums">{stats.totalReserved}</div>
+                            <div className="text-[10px] font-medium text-blue-500">Dalam pesanan</div>
+                        </div>
+                        <div className="rounded-lg bg-[#f7f7f7] p-2.5">
+                            <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Kritis</div>
+                            <div className="mt-1 text-base font-bold tabular-nums">{stats.critical}</div>
+                            {stats.critical > 0 && <div className="text-[10px] font-medium text-red-500">Segera tindak!</div>}
+                        </div>
                     </div>
 
                     {/* Sort Bar */}
                     {paginatedItems.length > 0 && (
-                        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                        <div className="mb-2 flex flex-wrap items-center gap-1.5">
                             <span className="mr-1 text-xs text-text-subtle">Urutkan:</span>
                             {[
                                 { key: 'outlet' as const, label: 'Outlet' },
@@ -220,17 +215,13 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                                 { key: 'stock' as const, label: 'Stok' },
                                 { key: 'available' as const, label: 'Tersedia' },
                             ].map((col) => (
-                                <button
-                                    key={col.key}
-                                    type="button"
-                                    onClick={() => toggleSort(col.key)}
+                                <button key={col.key} type="button" onClick={() => toggleSort(col.key)}
                                     className={cn(
-                                        'inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all',
+                                        'inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-all',
                                         sortField === col.key
                                             ? 'bg-primary/10 text-primary shadow-sm'
                                             : 'bg-surface text-text-muted hover:bg-surface-muted'
-                                    )}
-                                >
+                                    )}>
                                     {col.label}
                                     {sortField === col.key && (sortDir === 'asc' ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />)}
                                     {sortField !== col.key && <ArrowUpDown className="h-3 w-3 opacity-40" />}
@@ -239,42 +230,18 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                         </div>
                     )}
 
-                    {/* Card List */}
+                    {/* Table */}
                     {paginatedItems.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-white py-16 text-center">
-                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-muted">
-                                <Package className="h-7 w-7 text-text-subtle" />
-                            </div>
-                            <p className="mt-4 text-sm font-semibold text-text">
-                                {search || outletFilter !== 'all' || stockFilter !== 'all'
-                                    ? 'Tidak ada item yang cocok'
-                                    : 'Belum ada inventaris'}
-                            </p>
-                            <p className="mt-1 text-xs text-text-muted">
-                                {search || outletFilter !== 'all' || stockFilter !== 'all'
-                                    ? 'Coba ubah filter atau kata kunci pencarian'
-                                    : 'Mulai dengan menambahkan stok ke outlet'}
-                            </p>
-                            {!search && outletFilter === 'all' && stockFilter === 'all' && (
-                                <Link href="/owner/inventories/create" className={cn(buttonVariants({ variant: 'primary', size: 'sm' }), 'mt-4')}>
-                                    + Tambah Stok
-                                </Link>
-                            )}
-                            {(search || outletFilter !== 'all' || stockFilter !== 'all') && (
-                                <Button
-                                    variant="secondary"
-                                    size="sm"
-                                    className="mt-4"
-                                    onClick={() => {
- setSearch(''); setOutletFilter('all'); setStockFilter('all'); setCurrentPage(1); 
-}}
-                                >
-                                    Reset Filter
-                                </Button>
-                            )}
+                        <div className="rounded-lg border border-border bg-white py-10 text-center text-xs text-text-muted">
+                            {search || outletFilter !== 'all' || stockFilter !== 'all'
+                                ? 'Tidak ada item yang cocok'
+                                : 'Belum ada inventaris'}
                         </div>
                     ) : (
-                        <div className="space-y-2">
+                        <div className="overflow-hidden rounded-lg border border-border">
+                            <div className="grid grid-cols-[1fr_80px_80px_80px_90px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                                <span>Produk / Outlet</span><span className="text-right">Stok</span><span className="text-right">Threshold</span><span>Status</span><span />
+                            </div>
                             {paginatedItems.map((row: any) => {
                                 const familyName = row.variant?.family?.name;
                                 const variantName = row.variant?.name ?? row.product?.name ?? '-';
@@ -283,51 +250,31 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                                 const isLow = available <= row.minimum_stock;
 
                                 return (
-                                    <div
-                                        key={row.id}
-                                        className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm"
-                                    >
-                                        {/* Row 1: product + badge + actions */}
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm font-bold text-text">
-                                                    {familyName && <span className="mr-1 text-xs text-text-subtle">{familyName}</span>}
-                                                    {variantName}
-                                                </span>
-                                                <StatusBadge variant={isCritical ? 'danger' : isLow ? 'warning' : 'success'} size="sm">
-                                                    {isCritical ? 'Kritis' : isLow ? 'Rendah' : 'Sehat'}
-                                                </StatusBadge>
-                                            </div>
-                                            <div className="flex items-center gap-1.5">
-                                                {(isCritical || isLow) && (
-                                                    <button
-                                                        onClick={() => router.visit(`/owner/restocks/create?outlet_id=${row.outlet_id}&product_id=${row.product_id ?? row.variant_id}&return_to=/owner/inventories`)}
-                                                        className="rounded-lg bg-primary px-2.5 py-1 text-xs font-semibold text-white active:opacity-90"
-                                                    >
-                                                        Restock
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => router.visit(`/owner/inventories/${row.id}/edit`)}
-                                                    className="rounded-lg px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary-light"
-                                                >
-                                                    Edit
+                                    <div key={row.id}
+                                        className="grid grid-cols-[1fr_80px_80px_80px_90px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-xs transition-colors last:border-t-0 hover:bg-surface-muted">
+                                        <span className="truncate">
+                                            {familyName && <span className="text-text-subtle">{familyName} </span>}
+                                            <span className="font-bold text-text">{variantName}</span>
+                                            <span className="ml-1 text-[10px] text-text-muted">{row.outlet_name}</span>
+                                        </span>
+                                        <span className="text-right font-semibold tabular-nums text-text">{row.current_stock}</span>
+                                        <span className="text-right tabular-nums text-text-muted">{row.minimum_stock}</span>
+                                        <span>
+                                            <StatusBadge variant={isCritical ? 'danger' : isLow ? 'warning' : 'success'} size="sm">
+                                                {isCritical ? 'Kritis' : isLow ? 'Rendah' : 'Sehat'}
+                                            </StatusBadge>
+                                        </span>
+                                        <div className="flex items-center gap-1 justify-end">
+                                            {(isCritical || isLow) && (
+                                                <button type="button" onClick={() => router.visit(`/owner/restocks/create?outlet_id=${row.outlet_id}&product_id=${row.product_id ?? row.variant_id}&return_to=/owner/inventories`)}
+                                                    className="rounded-md bg-primary px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-primary-hover">
+                                                    Restock
                                                 </button>
-                                            </div>
-                                        </div>
-
-                                        {/* Row 2: outlet + stats */}
-                                        <div className="mt-1.5 flex items-center justify-between">
-                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-muted">
-                                                <span>{row.outlet_name}</span>
-                                                <span className="text-text-subtle">&middot;</span>
-                                                <span>Stok: <span className="tabular-nums">{row.current_stock}</span></span>
-                                                <span className="text-text-subtle">&middot;</span>
-                                                <span>Reserved: <span className="tabular-nums">{row.reserved_stock}</span></span>
-                                            </div>
-                                            <span className={cn('text-xs font-bold tabular-nums', isCritical ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600')}>
-                                                {available} tersedia
-                                            </span>
+                                            )}
+                                            <button type="button" onClick={() => router.visit(`/owner/inventories/${row.id}/edit`)}
+                                                className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary-light">
+                                                Edit
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -337,96 +284,21 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                        <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-white px-4 py-3">
-                            <span className="text-sm text-text-muted">
-                                Menampilkan {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)} dari {filteredItems.length} item
+                        <div className="mt-3 flex items-center justify-between rounded-lg border border-border bg-white px-3 py-2 text-xs">
+                            <span className="text-text-muted">
+                                {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)} dari {filteredItems.length}
                             </span>
-                            <div className="flex gap-2">
+                            <div className="flex gap-1.5">
                                 <Button variant="secondary" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
-                                    Sebelumnya
+                                    ←
                                 </Button>
                                 <Button variant="secondary" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
-                                    Berikutnya
+                                    →
                                 </Button>
                             </div>
                         </div>
                     )}
-                </div>
-
-                {/* Right: KPI Cards (desktop sidebar) */}
-                <div className="hidden lg:block">
-                    <div className="sticky top-4 space-y-3">
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
-                            <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <Package className="h-4 w-4 text-text-subtle" />
-                                Total SKU
-                            </div>
-                            <div className="mt-2 text-3xl font-bold text-text">{stats.totalSku}</div>
-                            <div className="mt-1 text-[11px] font-medium text-text-subtle">Semua outlet</div>
-                        </div>
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
-                            <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                                Stok Rendah
-                            </div>
-                            <div className="mt-2 text-3xl font-bold text-text">{stats.lowStock}</div>
-                            <div className="mt-1 text-[11px] font-medium text-amber-500">{stats.lowStock > 0 ? 'Perlu restock' : 'Semua aman'}</div>
-                        </div>
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
-                            <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <Lock className="h-4 w-4 text-blue-500" />
-                                Reserved
-                            </div>
-                            <div className="mt-2 text-3xl font-bold text-text">{stats.totalReserved}</div>
-                            <div className="mt-1 text-[11px] font-medium text-blue-500">Dalam pesanan</div>
-                        </div>
-                        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
-                            <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <XCircle className="h-4 w-4 text-red-500" />
-                                Kritis
-                            </div>
-                            <div className="mt-2 text-3xl font-bold text-text">{stats.critical}</div>
-                            <div className="mt-1 text-[11px] font-medium text-red-500">{stats.critical > 0 ? 'Segera tindak!' : 'Tidak ada'}</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Mobile: KPI Summary */}
-                <div className="mb-4 grid grid-cols-2 gap-3 lg:hidden">
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs text-text-muted">
-                            <Package className="h-4 w-4 text-text-subtle" />
-                            Total SKU
-                        </div>
-                        <div className="mt-2 text-3xl font-bold text-text">{stats.totalSku}</div>
-                        <div className="mt-1 text-[11px] font-medium text-text-subtle">Semua outlet</div>
-                    </div>
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs text-text-muted">
-                            <AlertTriangle className="h-4 w-4 text-amber-500" />
-                            Stok Rendah
-                        </div>
-                        <div className="mt-2 text-3xl font-bold text-text">{stats.lowStock}</div>
-                        <div className="mt-1 text-[11px] font-medium text-amber-500">{stats.lowStock > 0 ? 'Perlu restock' : 'Semua aman'}</div>
-                    </div>
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs text-text-muted">
-                            <Lock className="h-4 w-4 text-blue-500" />
-                            Reserved
-                        </div>
-                        <div className="mt-2 text-3xl font-bold text-text">{stats.totalReserved}</div>
-                        <div className="mt-1 text-[11px] font-medium text-blue-500">Dalam pesanan</div>
-                    </div>
-                    <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
-                        <div className="flex items-center gap-2 text-xs text-text-muted">
-                            <XCircle className="h-4 w-4 text-red-500" />
-                            Kritis
-                        </div>
-                        <div className="mt-2 text-3xl font-bold text-text">{stats.critical}</div>
-                        <div className="mt-1 text-[11px] font-medium text-red-500">{stats.critical > 0 ? 'Segera tindak!' : 'Tidak ada'}</div>
-                    </div>
-                </div>
-            </div>
+                </>
             )}
         </OwnerPageShell>
     );
@@ -451,107 +323,96 @@ function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any })
     const filtered = variants.filter((v) => {
         if (search) {
             const q = search.toLowerCase();
-
             if (!v.name.toLowerCase().includes(q) && !(v.sku ?? '').toLowerCase().includes(q)) {
-return false;
-}
+                return false;
+            }
         }
-
-        if (stockFilter === 'zero' && v.center_stock > 0) {
-return false;
-}
-
-        if (stockFilter === 'low' && (v.center_stock <= 0 || v.center_stock > 10)) {
-return false;
-}
-
+        if (stockFilter === 'zero' && v.center_stock > 0) return false;
+        if (stockFilter === 'low' && (v.center_stock <= 0 || v.center_stock > 10)) return false;
         return true;
     });
 
     return (
-        <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
-            <div>
-                {/* Filters */}
-                <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <div className="flex flex-1 items-center gap-2 [&>input]:pl-2">
-                        <Search className="h-4 w-4 shrink-0 text-text-subtle" />
-                        <Input
-                            type="text"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Cari produk atau SKU..."
-                        />
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                        {[
-                            { key: 'all' as const, label: 'Semua' },
-                            { key: 'zero' as const, label: 'Habis', color: 'text-red-600 bg-red-50 ring-red-200' },
-                            { key: 'low' as const, label: 'Rendah', color: 'text-amber-600 bg-amber-50 ring-amber-200' },
-                        ].map((tab) => (
-                            <button
-                                key={tab.key}
-                                onClick={() => setStockFilter(tab.key)}
-                                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                    stockFilter === tab.key
-                                        ? tab.color ?? 'bg-primary/10 text-primary ring-primary/20'
-                                        : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
-                                }`}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+        <>
+            {/* Filter controls */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+                {[
+                    { key: 'all' as const, label: 'Semua' },
+                    { key: 'zero' as const, label: 'Habis', color: 'text-red-600 bg-red-50 ring-red-200' },
+                    { key: 'low' as const, label: 'Rendah', color: 'text-amber-600 bg-amber-50 ring-amber-200' },
+                ].map((tab) => (
+                    <button key={tab.key} onClick={() => setStockFilter(tab.key)}
+                        className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 transition-all ${
+                            stockFilter === tab.key
+                                ? tab.color ?? 'bg-primary/10 text-primary ring-primary/20'
+                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                        }`}>
+                        {tab.label}
+                    </button>
+                ))}
+                <span className="flex-1" />
+                <Input icon={Search} type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Cari produk atau SKU..." className="h-8 w-48" />
+            </div>
 
-                {/* List */}
-                <div className="space-y-2">
-                    {filtered.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-border bg-white py-12 text-center">
-                            <Package className="mx-auto h-8 w-8 text-text-subtle" />
-                            <p className="mt-2 text-sm text-text-muted">Tidak ada produk ditemukan</p>
-                        </div>
-                    ) : (
-                        filtered.map((v) => (
-                            <div key={v.id} className="rounded-xl border border-border bg-white p-4 transition-all duration-200 hover:shadow-sm">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm font-bold text-text">{v.name}</span>
-                                        {v.sku && <span className="text-[11px] text-text-subtle">{v.sku}</span>}
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className={`text-sm font-bold tabular-nums ${v.center_stock <= 0 ? 'text-red-600' : v.center_stock <= 10 ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                            {v.center_stock} pcs
-                                        </span>
-                                        <button
-                                            onClick={() => {
- setEditModal(v); setNewStock(String(v.center_stock)); setReason(''); 
-}}
-                                            className="rounded-lg px-2 py-1 text-xs font-semibold text-primary hover:bg-primary-light"
-                                        >
-                                            Edit
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="mt-1.5 flex items-center gap-x-3 text-xs text-text-muted">
-                                    <span>{v.family_name ?? '-'}</span>
-                                    <span className="text-text-subtle">&middot;</span>
-                                    <span>HPP: {formatCurrency(v.center_price)}</span>
-                                </div>
-                            </div>
-                        ))
-                    )}
+            {/* KPI Strip */}
+            <div className="mb-4 grid grid-cols-4 gap-2">
+                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
+                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total Variant</div>
+                    <div className="mt-1 text-base font-bold tabular-nums">{stats.total_variants}</div>
+                </div>
+                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
+                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Total Stok</div>
+                    <div className="mt-1 text-base font-bold tabular-nums">{stats.total_stock} pcs</div>
+                </div>
+                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
+                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Stok Habis</div>
+                    <div className="mt-1 text-base font-bold tabular-nums">{stats.zero_stock}</div>
+                    {stats.zero_stock > 0 && <div className="text-[10px] font-medium text-red-500">Perlu tindakan</div>}
+                </div>
+                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
+                    <div className="text-[10px] font-medium uppercase tracking-wide text-text-muted">Stok Rendah</div>
+                    <div className="mt-1 text-base font-bold tabular-nums">{stats.low_stock}</div>
+                    {stats.low_stock > 0 && <div className="text-[10px] font-medium text-amber-500">Perlu tindakan</div>}
                 </div>
             </div>
 
-            {/* KPI Sidebar */}
-            <aside className="hidden lg:block">
-                <div className="sticky top-4 space-y-3">
-                    <KpiCard icon={<Package className="h-4 w-4 text-text-subtle" />} label="Total Variant" value={stats.total_variants} />
-                    <KpiCard icon={<Package className="h-4 w-4 text-emerald-500" />} label="Total Stok Pusat" value={`${stats.total_stock} pcs`} />
-                    <KpiCard icon={<AlertTriangle className="h-4 w-4 text-red-500" />} label="Stok Habis" value={stats.zero_stock} highlight={stats.zero_stock > 0} />
-                    <KpiCard icon={<AlertTriangle className="h-4 w-4 text-amber-500" />} label="Stok Rendah" value={stats.low_stock} highlight={stats.low_stock > 0} />
+            {/* Table */}
+            {filtered.length === 0 ? (
+                <div className="rounded-lg border border-border bg-white py-10 text-center text-xs text-text-muted">
+                    Tidak ada produk ditemukan
                 </div>
-            </aside>
+            ) : (
+                <div className="overflow-hidden rounded-lg border border-border">
+                    <div className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+                        <span>Produk / SKU</span><span className="text-right">Stok</span><span className="text-right">HPP</span><span />
+                    </div>
+                    {filtered.map((v) => {
+                        const isZero = v.center_stock <= 0;
+                        const isLow = v.center_stock > 0 && v.center_stock <= 10;
+                        return (
+                            <div key={v.id}
+                                className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-xs transition-colors last:border-t-0 hover:bg-surface-muted">
+                                <span className="truncate">
+                                    {v.family_name && <span className="text-text-subtle">{v.family_name} </span>}
+                                    <span className="font-bold text-text">{v.name}</span>
+                                    {v.sku && <span className="ml-1 text-[10px] text-text-muted">{v.sku}</span>}
+                                </span>
+                                <span className={`text-right font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                    {v.center_stock} pcs
+                                </span>
+                                <span className="text-right text-text-muted">{formatCurrency(v.center_price)}</span>
+                                <div className="flex items-center gap-1 justify-end">
+                                    <button type="button" onClick={() => { setEditModal(v); setNewStock(String(v.center_stock)); setReason(''); }}
+                                        className="rounded-md px-2 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary-light">
+                                        Edit
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Edit Modal */}
             {editModal && (
@@ -626,16 +487,6 @@ return false;
                     </div>
                 </div>
             )}
-        </div>
-    );
-}
-
-function KpiCard({ icon, label, value, highlight }: { icon: React.ReactNode; label: string; value: string | number; highlight?: boolean }) {
-    return (
-        <div className="rounded-xl border border-border bg-white p-5 shadow-sm">
-            <div className="flex items-center gap-2 text-xs text-text-muted">{icon}{label}</div>
-            <div className="mt-2 text-3xl font-bold tabular-nums text-text">{value}</div>
-            {highlight && <div className="mt-1 text-[11px] font-medium text-red-500">Perlu tindakan</div>}
-        </div>
+        </>
     );
 }
