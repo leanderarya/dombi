@@ -100,6 +100,7 @@ class CheckoutController extends Controller
             'items.*.product_id' => ['required_without:items.*.product_variant_id', 'nullable', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
             'fulfillment_type' => ['nullable', Rule::in(self::CHECKOUT_VISIBLE_FULFILLMENT_TYPES)],
+            'selected_outlet_id' => ['nullable', 'integer', Rule::exists('outlets', 'id')],
         ]);
 
         // Normalize items to use product_variant_id
@@ -127,7 +128,9 @@ class CheckoutController extends Controller
         }
 
         // Full submission with fulfillment, store and go to step 2
-        $request->session()->put('checkout.fulfillment', $validated);
+        // Merge with existing session to preserve selected_outlet_id across steps
+        $existing = $request->session()->get('checkout.fulfillment', []);
+        $request->session()->put('checkout.fulfillment', array_merge($existing, $validated));
 
         // Skip customer step for logged-in users with Customer profile (pickup)
         $user = $request->user();
@@ -159,10 +162,17 @@ class CheckoutController extends Controller
         $variants = $this->loadCartVariants($variantIds);
 
         $fulfillment = $request->session()->get('checkout.fulfillment.fulfillment_type');
+        $selectedOutletId = $request->session()->get('checkout.fulfillment.selected_outlet_id');
         $location = $request->session()->get('checkout.location');
-        $previewOutlet = $fulfillment === 'pickup'
-            ? $orderService->previewAvailableOutlet($cart->all(), $fulfillment, $location)
-            : null;
+
+        // Resolve outlet: prioritize user-selected > nearest recommendation
+        $selectedOutlet = $selectedOutletId ? Outlet::query()->find($selectedOutletId, ['id', 'name', 'latitude', 'longitude', 'address', 'kelurahan', 'kecamatan']) : null;
+
+        $previewOutlet = $selectedOutlet ?? (
+            $fulfillment === 'pickup'
+                ? $orderService->previewAvailableOutlet($cart->all(), $fulfillment, $location)
+                : null
+        );
         $pickupRecommendations = $fulfillment === 'pickup'
             ? $recommendOutletService->recommend(
                 isset($location['latitude']) ? (float) $location['latitude'] : null,

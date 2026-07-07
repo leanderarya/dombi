@@ -1,21 +1,23 @@
 import { router } from '@inertiajs/react';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
+import { useOutlet } from '@/contexts/outlet-context';
 
 export default function FloatingCartBar() {
     const { items, totalItems, totalPrice } = useCart();
+    const { selectedOutlet } = useOutlet();
 
-    if (totalItems === 0) {
-        return null;
-    }
+    if (totalItems === 0) return null;
 
     const handleCheckout = () => {
-        router.post('/customer/checkout', {
+        const payload: Record<string, unknown> = {
             items: items.map((i) => ({
                 product_variant_id: i.product_variant_id,
                 quantity: i.quantity,
             })),
-        });
+        };
+        if (selectedOutlet?.id) payload.selected_outlet_id = selectedOutlet.id;
+        router.post('/customer/checkout', payload);
     };
 
     return (

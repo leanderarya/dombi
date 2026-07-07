@@ -141,7 +141,7 @@ function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: 
                             <ForeGreenHeader title={family.name} backHref="/customer/products">
                                 {family.brand && <p className="mt-1 text-center text-[11px] text-white/60">{family.brand}</p>}
                             </ForeGreenHeader>
-                            {totalItems > 0 && <CartButton />}
+                            {totalItems > 0 && <CartButton outletId={outletId ?? null} />}
                         </div>
                     </div>
                 </div>
@@ -323,13 +323,15 @@ function OtherProducts({ families, outletId }: { families: OtherFamily[]; outlet
     );
 }
 
-function CartButton() {
+function CartButton({ outletId }: { outletId: number | null }) {
     const { totalItems, items } = useCart();
 
     const handleCheckout = () => {
-        router.post('/customer/checkout', {
+        const payload: Record<string, unknown> = {
             items: items.map((i) => ({ product_variant_id: i.product_variant_id, quantity: i.quantity })),
-        });
+        };
+        if (outletId) payload.selected_outlet_id = outletId;
+        router.post('/customer/checkout', payload);
     };
 
     return (
