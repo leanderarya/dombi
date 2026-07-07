@@ -24,10 +24,20 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
     const cart = useCart();
     const [deliverySheetOpen, setDeliverySheetOpen] = useState(false);
     const [items, setItems] = useState<DraftItem[]>(draft?.items ?? []);
-    const [fulfillmentType, setFulfillmentType] = useState<string>(
-        draft?.fulfillment?.fulfillment_type ?? ''
-    );
+    const [fulfillmentType, setFulfillmentType] = useState<string>(() => {
+        // Prioritize localStorage (survives navigation), fallback to server draft
+        if (typeof window !== 'undefined') {
+            const stored = localStorage.getItem('dombi_fulfillment_type');
+            if (stored === 'delivery' || stored === 'pickup') return stored;
+        }
+        return draft?.fulfillment?.fulfillment_type ?? '';
+    });
     const [processing, setProcessing] = useState(false);
+
+    const saveFulfillment = (type: string) => {
+        setFulfillmentType(type);
+        localStorage.setItem('dombi_fulfillment_type', type);
+    };
 
     const subtotal = items.reduce((sum, item) => sum + Number(item.subtotal), 0);
     const itemCount = items.reduce((sum, item) => sum + Number(item.quantity), 0);
@@ -158,7 +168,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                     />
                     <button
                         type="button"
-                        onClick={() => setFulfillmentType('pickup')}
+                        onClick={() => saveFulfillment('pickup')}
                         className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
                             fulfillmentType === 'pickup' ? 'text-text' : 'text-text-muted'
                         }`}
@@ -173,7 +183,7 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                                 setDeliverySheetOpen(true);
                                 return;
                             }
-                            setFulfillmentType('delivery_dombi');
+                            saveFulfillment('delivery_dombi');
                         }}
                         className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
                             fulfillmentType === 'delivery_dombi' ? 'text-text' : 'text-text-muted'
