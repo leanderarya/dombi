@@ -84,6 +84,7 @@ class CheckoutController extends Controller
             'draft' => [
                 'items' => $items,
                 'fulfillment' => $request->session()->get('checkout.fulfillment'),
+                'selected_outlet_id' => $request->session()->get('checkout.selected_outlet_id'),
             ],
             'summary' => $this->buildItemSummary($items),
             'nearestOutlet' => $nearestOutlet,
@@ -119,8 +120,12 @@ class CheckoutController extends Controller
             return $item;
         })->toArray();
 
-        // Always store cart items in session
+        // Always store cart items + selected outlet in session
         $request->session()->put('checkout.cart', $items);
+
+        if (! empty($validated['selected_outlet_id'])) {
+            $request->session()->put('checkout.selected_outlet_id', (int) $validated['selected_outlet_id']);
+        }
 
         // If no fulfillment_type provided, just store items and go to checkout step 1
         if (empty($validated['fulfillment_type'])) {
@@ -128,9 +133,11 @@ class CheckoutController extends Controller
         }
 
         // Full submission with fulfillment, store and go to step 2
-        // Merge with existing session to preserve selected_outlet_id across steps
-        $existing = $request->session()->get('checkout.fulfillment', []);
-        $request->session()->put('checkout.fulfillment', array_merge($existing, $validated));
+        // Carry over selected_outlet_id from the separate session key
+        if ($selectedId = $request->session()->get('checkout.selected_outlet_id')) {
+            $validated['selected_outlet_id'] = $selectedId;
+        }
+        $request->session()->put('checkout.fulfillment', $validated);
 
         // Skip customer step for logged-in users with Customer profile (pickup)
         $user = $request->user();
@@ -162,7 +169,8 @@ class CheckoutController extends Controller
         $variants = $this->loadCartVariants($variantIds);
 
         $fulfillment = $request->session()->get('checkout.fulfillment.fulfillment_type');
-        $selectedOutletId = $request->session()->get('checkout.fulfillment.selected_outlet_id');
+        $selectedOutletId = $request->session()->get('checkout.selected_outlet_id')
+            ?? $request->session()->get('checkout.fulfillment.selected_outlet_id');
         $location = $request->session()->get('checkout.location');
 
         // Resolve outlet: prioritize user-selected > nearest recommendation
