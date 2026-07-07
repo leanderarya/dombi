@@ -31,7 +31,7 @@ export default function FloatingCartBar() {
     };
 
     return (
-        <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0))] z-30 px-4">
+        <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0))] z-30 px-4">
             <button
                 type="button"
                 onClick={handleCheckout}

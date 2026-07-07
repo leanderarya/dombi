@@ -138,7 +138,7 @@ function ProductsInner() {
 
                 {/* ── White section ── */}
                 <div className="relative z-10 -mt-8 rounded-t-[1.5rem] bg-white">
-                    <div className="px-4 pt-6 pb-[calc(9rem+env(safe-area-inset-bottom,0))]">
+                    <div className="px-4 pt-6 pb-[calc(10rem+env(safe-area-inset-bottom,0))]">
                         <div className="mb-3">
                             <StoreLocationCard />
                         </div>
