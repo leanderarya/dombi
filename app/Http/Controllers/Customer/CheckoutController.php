@@ -61,7 +61,22 @@ class CheckoutController extends Controller
         $nearestOutlet = null;
         $deliveryPreview = null;
 
-        if ($latitude !== null && $longitude !== null) {
+        // Check if user already selected an outlet (from products page)
+        $selectedOutletId = $request->session()->get('checkout.selected_outlet_id');
+        $selectedOutlet = $selectedOutletId
+            ? Outlet::query()->find($selectedOutletId, ['id', 'name', 'latitude', 'longitude', 'address', 'kelurahan', 'kecamatan'])
+            : null;
+
+        if ($selectedOutlet && $latitude !== null && $longitude !== null && $selectedOutlet->latitude !== null && $selectedOutlet->longitude !== null) {
+            $quote = $deliveryPricingService->quote($latitude, $longitude, (float) $selectedOutlet->latitude, (float) $selectedOutlet->longitude);
+            $nearestOutlet = [
+                'id' => $selectedOutlet->id,
+                'name' => $selectedOutlet->name,
+                'distance_km' => $quote['distance_km'],
+                'stock_available' => true,
+            ];
+            $deliveryPreview = $quote;
+        } elseif ($latitude !== null && $longitude !== null) {
             $recommended = $recommendOutletService->recommendForDelivery($latitude, $longitude, $draftItems->all());
 
             if ($recommended) {
