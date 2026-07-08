@@ -1,11 +1,11 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ChevronRight, MapPinned, MessageCircle, Milk, Package, Store, Truck } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
-import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { useHeroSlides } from '@/hooks/use-hero-slides';
 import { useNearestOutlet } from '@/hooks/use-nearest-outlet';
 import { usePickupFlow } from '@/hooks/use-pickup-flow';
+import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { usePolling } from '@/lib/use-polling';
 
 /* ─── Main ─────────────────────────────────────────────────── */
@@ -27,10 +27,24 @@ export default function Home({ customerName, activeOrders }: any) {
     const activeOrder = activeOrders?.[0] ?? null;
     const showPhoneBanner = isLoggedIn && !auth?.user?.customer?.phone && !phoneBannerDismissed;
 
+    // Block swipe-back on iOS PWA — push dummy entry so back returns to home
+    useEffect(() => {
+        window.history.pushState(null, '', window.location.href);
+        const onPopState = () => {
+            window.history.pushState(null, '', window.location.href);
+        };
+        window.addEventListener('popstate', onPopState);
+        return () => window.removeEventListener('popstate', onPopState);
+    }, []);
+
     const handleDelivery = () => {
         localStorage.setItem('dombi_fulfillment_type', 'delivery');
-        if (!isLoggedIn) setDeliverySheetOpen(true);
-        else router.get('/customer/products');
+
+        if (!isLoggedIn) {
+setDeliverySheetOpen(true);
+} else {
+router.get('/customer/products');
+}
     };
 
     return (
