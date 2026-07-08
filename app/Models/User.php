@@ -14,7 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
-#[Fillable(['name', 'email', 'password', 'phone', 'provider', 'provider_id', 'avatar', 'role', 'outlet_id', 'is_active'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'provider', 'provider_id', 'avatar', 'role', 'outlet_id', 'is_active', 'latitude', 'longitude', 'location_updated_at', 'vehicle_type', 'vehicle_plate', 'photo'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -34,9 +34,10 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'is_online' => 'boolean',
             'must_change_password' => 'boolean',
-            'shift_started_at' => 'datetime',
-            'shift_ended_at' => 'datetime',
             'last_activity_at' => 'datetime',
+            'location_updated_at' => 'datetime',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
         ];
     }
 
@@ -102,28 +103,6 @@ class User extends Authenticatable
         return $this->isCustomer() && $this->customer === null;
     }
 
-    public function isOnShift(): bool
-    {
-        return $this->shift_started_at !== null && $this->shift_ended_at === null;
-    }
-
-    public function startShift(): void
-    {
-        $this->forceFill([
-            'is_online' => true,
-            'shift_started_at' => now(),
-            'shift_ended_at' => null,
-        ])->save();
-    }
-
-    public function endShift(): void
-    {
-        $this->forceFill([
-            'is_online' => false,
-            'shift_ended_at' => now(),
-        ])->save();
-    }
-
     public function goOnline(): void
     {
         $this->forceFill(['is_online' => true])->save();
@@ -148,5 +127,38 @@ class User extends Authenticatable
     {
         return $this->hasMany(Delivery::class, 'courier_id')
             ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering']);
+    }
+
+    public function courierProfile(): HasOne
+    {
+        return $this->hasOne(CourierProfile::class);
+    }
+
+    public function courierInvitations(): HasMany
+    {
+        return $this->hasMany(CourierInvitation::class, 'invited_by');
+    }
+
+    public function hasActiveLocation(): bool
+    {
+        return $this->latitude !== null
+            && $this->longitude !== null
+            && $this->location_updated_at !== null
+            && $this->location_updated_at->diffInMinutes(now()) <= 5;
+    }
+
+    public function activeDeliveryCount(): int
+    {
+        return $this->courierDeliveries()
+            ->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering'])
+            ->count();
+    }
+
+    public function canAcceptDelivery(): bool
+    {
+        return $this->is_online
+            && $this->is_active
+            && $this->hasActiveLocation()
+            && $this->activeDeliveryCount() < 3;
     }
 }
