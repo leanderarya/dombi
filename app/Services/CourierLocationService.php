@@ -18,18 +18,19 @@ class CourierLocationService
 
     public function getNearestCouriers(float $outletLat, float $outletLng, int $limit = 10): Collection
     {
-        return User::query()
+        $distanceFormula = '(6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude))))';
+
+        $subQuery = User::query()
             ->where('role', 'courier')
             ->where('is_online', true)
             ->where('is_active', true)
             ->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->where('location_updated_at', '>=', now()->subMinutes(5))
-            ->selectRaw("
-                *,
-                (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance
-            ", [$outletLat, $outletLng, $outletLat])
-            ->having('distance', '<=', 50)
+            ->selectRaw("*, {$distanceFormula} AS distance", [$outletLat, $outletLng, $outletLat]);
+
+        return User::fromSub($subQuery, 'couriers_with_distance')
+            ->where('distance', '<=', 50)
             ->orderBy('distance')
             ->limit($limit)
             ->get();
