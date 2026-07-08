@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useEffect } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
@@ -72,22 +73,13 @@ export default function OwnerDistributionsIndex({ distributions, filters, outlet
             />
 
             {/* KPI Strip */}
-            <div className="mb-4 grid grid-cols-3 gap-2">
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Disiapkan</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{preparingCount}</div>
-                    {preparingCount > 0 && <div className="text-xs font-medium text-amber-600">Siap dikirim</div>}
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Dalam Perjalanan</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{shippedCount}</div>
-                    {shippedCount > 0 && <div className="text-xs font-medium text-blue-600">Sedang dikirim</div>}
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Selesai</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{completedCount}</div>
-                </div>
-            </div>
+            <OwnerKpiStrip
+                items={[
+                    { label: 'Disiapkan', value: preparingCount, sublabel: preparingCount > 0 ? 'Siap dikirim' : undefined, sublabelColor: 'text-amber-600' },
+                    { label: 'Dalam Perjalanan', value: shippedCount, sublabel: shippedCount > 0 ? 'Sedang dikirim' : undefined, sublabelColor: 'text-blue-600' },
+                    { label: 'Selesai', value: completedCount },
+                ]}
+            />
 
             {/* Table */}
             {distributions.data.length === 0 ? (

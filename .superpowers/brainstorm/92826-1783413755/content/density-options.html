@@ -1,0 +1,202 @@
+<h2>Pendekatan A — Data-Dense (Stripe/Linear style)</h2>
+<p class="subtitle">Tight tables, subtle separators, numbers-first, minimal chrome</p>
+
+<div class="mockup">
+  <div class="mockup-header">Dashboard — Data-Dense</div>
+  <div class="mockup-body" style="padding:16px 20px;font-family:system-ui,sans-serif;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <div style="font-size:24px;font-weight:700;color:#111;">Dasbor</div>
+        <div style="font-size:12px;color:#888;">Ringkasan operasional hari ini</div>
+      </div>
+    </div>
+
+    <!-- KPI Strip — ultra tight, no cards -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;margin-bottom:14px;border:1px solid #e5e5e5;border-radius:6px;overflow:hidden;">
+      <div style="padding:10px 14px;border-right:1px solid #e5e5e5;background:#fafafa;">
+        <div style="font-size:10px;text-transform:uppercase;color:#999;letter-spacing:0.5px;">Tagihan</div>
+        <div style="font-size:18px;font-weight:700;color:#111;margin-top:2px;">Rp 12.5M</div>
+        <div style="font-size:11px;color:#0891b2;">3 outlet</div>
+      </div>
+      <div style="padding:10px 14px;border-right:1px solid #e5e5e5;">
+        <div style="font-size:10px;text-transform:uppercase;color:#999;letter-spacing:0.5px;">Tindakan</div>
+        <div style="font-size:18px;font-weight:700;color:#111;margin-top:2px;">7</div>
+        <div style="font-size:11px;color:#d97706;">4 restock</div>
+      </div>
+      <div style="padding:10px 14px;border-right:1px solid #e5e5e5;">
+        <div style="font-size:10px;text-transform:uppercase;color:#999;letter-spacing:0.5px;">Stok Kritis</div>
+        <div style="font-size:18px;font-weight:700;color:#dc2626;margin-top:2px;">2</div>
+        <div style="font-size:11px;color:#dc2626;">SKU perlu restock</div>
+      </div>
+      <div style="padding:10px 14px;">
+        <div style="font-size:10px;text-transform:uppercase;color:#999;letter-spacing:0.5px;">Pendapatan</div>
+        <div style="font-size:18px;font-weight:700;color:#111;margin-top:2px;">Rp 2.1M</div>
+        <div style="font-size:11px;color:#16a34a;">hari ini</div>
+      </div>
+    </div>
+
+    <!-- Butuh Tindakan — tight rows, no cards -->
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#111;text-transform:uppercase;">Butuh Tindakan</div>
+        <div style="background:#e5e5e5;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;color:#666;">7</div>
+      </div>
+      <div style="border:1px solid #e5e5e5;border-radius:6px;overflow:hidden;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:13px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:6px;height:6px;border-radius:2px;background:#d97706;"></span>
+            <span style="font-weight:500;">Restock</span>
+            <span style="color:#999;font-size:11px;">4 menunggu persetujuan</span>
+          </div>
+          <span style="color:#ccc;">›</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid #f0f0f0;font-size:13px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:6px;height:6px;border-radius:2px;background:#d97706;"></span>
+            <span style="font-weight:500;">Return</span>
+            <span style="color:#999;font-size:11px;">2 menunggu persetujuan</span>
+          </div>
+          <span style="color:#ccc;">›</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;font-size:13px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="width:6px;height:6px;border-radius:2px;background:#2563eb;"></span>
+            <span style="font-weight:500;">Verifikasi Pembayaran</span>
+            <span style="color:#999;font-size:11px;">1 menunggu</span>
+          </div>
+          <span style="color:#ccc;">›</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stok Kritis — same tight style -->
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <div style="font-size:12px;font-weight:700;color:#111;text-transform:uppercase;">Stok Kritis</div>
+        <div style="background:#fee2e2;padding:1px 7px;border-radius:9px;font-size:11px;font-weight:600;color:#dc2626;">2</div>
+      </div>
+      <div style="font-size:12px;color:#666;">
+        <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f5f5f5;">
+          <span>Susu Murni 1L</span>
+          <span style="color:#dc2626;font-weight:600;">Stok: 12 · Kurang: 8</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:4px 0;">
+          <span>Yogurt Plain 250ml</span>
+          <span style="color:#dc2626;font-weight:600;">Stok: 5 · Kurang: 15</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr style="margin:40px 0">
+
+<h2>Pendekatan B — Card-Light (Notion style)</h2>
+<p class="subtitle">Soft cards with less padding, clean spacing, minimal borders</p>
+
+<div class="mockup">
+  <div class="mockup-header">Dashboard — Card-Light</div>
+  <div class="mockup-body" style="padding:16px 20px;font-family:system-ui,sans-serif;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div>
+        <div style="font-size:22px;font-weight:600;color:#1a1a1a;">Dasbor</div>
+        <div style="font-size:13px;color:#999;margin-top:2px;">Ringkasan operasional hari ini</div>
+      </div>
+    </div>
+
+    <!-- KPI Cards — 2x2, compact -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+      <div style="background:#f9f9f9;border-radius:8px;padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:14px;">💰</span>
+          <span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:0.3px;">Tagihan</span>
+        </div>
+        <div style="font-size:22px;font-weight:700;color:#1a1a1a;">Rp 12.5M</div>
+        <div style="font-size:11px;color:#0891b2;margin-top:2px;">3 outlet tertunggak</div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:8px;padding:12px 14px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:14px;">📋</span>
+          <span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:0.3px;">Tindakan</span>
+        </div>
+        <div style="font-size:22px;font-weight:700;color:#1a1a1a;">7</div>
+        <div style="font-size:11px;color:#d97706;margin-top:2px;">4 restock menunggu</div>
+      </div>
+      <div style="background:#fff;border-radius:8px;border:1px solid #fee2e2;padding:12px 14px;grid-column:1/-1;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-size:14px;">⚠️</span>
+          <span style="font-size:11px;color:#999;text-transform:uppercase;letter-spacing:0.3px;">Stok Kritis</span>
+        </div>
+        <div style="font-size:22px;font-weight:700;color:#dc2626;">2</div>
+        <div style="font-size:11px;color:#dc2626;margin-top:2px;">Susu Murni 1L · Yogurt Plain 250ml</div>
+      </div>
+      <div style="background:#f9f9f9;border-radius:8px;padding:12px 14px;grid-column:1/-1;display:none;">
+        <!-- hidden -- 4th KPI when needed -->
+      </div>
+    </div>
+
+    <!-- Butuh Tindakan — soft list -->
+    <div style="margin-bottom:18px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="font-size:13px;font-weight:600;color:#1a1a1a;">Butuh Tindakan</div>
+        <div style="background:#e5e5e5;border-radius:8px;padding:1px 8px;font-size:11px;font-weight:600;color:#666;">7</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#fafafa;border-radius:6px;padding:10px 12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:6px;background:#fef3c7;display:flex;align-items:center;justify-content:center;">📦</div>
+            <div>
+              <div style="font-size:12px;font-weight:500;">Restock</div>
+              <div style="font-size:11px;color:#999;">4 menunggu persetujuan</div>
+            </div>
+          </div>
+          <span style="color:#ccc;">→</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#fafafa;border-radius:6px;padding:10px 12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:6px;background:#fef3c7;display:flex;align-items:center;justify-content:center;">🔄</div>
+            <div>
+              <div style="font-size:12px;font-weight:500;">Return</div>
+              <div style="font-size:11px;color:#999;">2 menunggu persetujuan</div>
+            </div>
+          </div>
+          <span style="color:#ccc;">→</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;background:#fafafa;border-radius:6px;padding:10px 12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:28px;height:28px;border-radius:6px;background:#dbeafe;display:flex;align-items:center;justify-content:center;">💳</div>
+            <div>
+              <div style="font-size:12px;font-weight:500;">Pembayaran</div>
+              <div style="font-size:11px;color:#999;">1 menunggu verifikasi</div>
+            </div>
+          </div>
+          <span style="color:#ccc;">→</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Perbedaan Kunci</h3>
+  <div class="pros-cons">
+    <div class="pros">
+      <h4>A — Data-Dense</h4>
+      <ul>
+        <li>KPI strip horizontal — 4 metrik 1 baris</li>
+        <li>Table-row layout — ga pake cards</li>
+        <li>No shadows, only borders for separation</li>
+        <li>Maksimum data per viewport</li>
+      </ul>
+    </div>
+    <div class="pros">
+      <h4>B — Card-Light</h4>
+      <ul>
+        <li>KPI 2x2 grid — compact cards</li>
+        <li>List items pakai soft bg cards</li>
+        <li>Light borders, subtle shadows</li>
+        <li>Lebih breathing room dari A</li>
+      </ul>
+    </div>
+  </div>
+</div>

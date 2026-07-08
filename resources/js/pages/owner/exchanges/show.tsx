@@ -1,8 +1,9 @@
 import { useForm, router } from '@inertiajs/react';
 import { ArrowLeftRight, CheckCircle2, Clock, Package, Truck, XCircle } from 'lucide-react';
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerModalShell from '@/components/owner/owner-modal-shell';
+import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getExchangeStatus, getReturnStatus } from '@/lib/status-labels';
@@ -52,25 +53,10 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 {/* Status + Actions */}
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Status</span>
-                        <div className="flex items-center gap-1.5">
-                            <StatusIcon className="h-3.5 w-3.5 text-text-muted" />
-                            <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
-                        </div>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Nilai Tukar</span>
-                        <span className="font-bold text-primary">{formatCurrency(exchange.exchange_value)}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Item</span>
-                        <span className="text-text">{exchange.items?.length ?? 0} item</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Tanggal</span>
-                        <span className="text-text">{formatDate(exchange.created_at)}</span>
-                    </div>
+                    <OwnerDetailRow label="Status" value={<div className="flex items-center gap-1.5"><StatusIcon className="h-3.5 w-3.5 text-text-muted" /><StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge></div>} />
+                    <OwnerDetailRow label="Nilai Tukar" value={formatCurrency(exchange.exchange_value)} bold />
+                    <OwnerDetailRow label="Item" value={`${exchange.items?.length ?? 0} item`} />
+                    <OwnerDetailRow label="Tanggal" value={formatDate(exchange.created_at)} />
 
                     {/* Actions */}
                     {exchange.status === 'submitted' && (
@@ -124,20 +110,9 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 {exchange.return_request && (
                     <div className="rounded-lg border border-border p-4">
                         <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Return Terkait</div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">Return</span>
-                            <span className="text-text">#{exchange.return_request.id}</span>
-                        </div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">Item</span>
-                            <span className="text-text">{exchange.return_request.items?.length ?? 0} item</span>
-                        </div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">Status</span>
-                            <StatusBadge variant={getReturnStatus(exchange.return_request.status).variant} size="sm">
-                                {getReturnStatus(exchange.return_request.status).label}
-                            </StatusBadge>
-                        </div>
+                        <OwnerDetailRow label="Return" value={`#${exchange.return_request.id}`} />
+                        <OwnerDetailRow label="Item" value={`${exchange.return_request.items?.length ?? 0} item`} />
+                        <OwnerDetailRow label="Status" value={<StatusBadge variant={getReturnStatus(exchange.return_request.status).variant} size="sm">{getReturnStatus(exchange.return_request.status).label}</StatusBadge>} />
                     </div>
                 )}
 
@@ -145,10 +120,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item Pengganti</div>
                     {exchange.items?.map((item: any) => (
-                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">{item.variant?.full_name ?? item.variant?.name} x{item.quantity}</span>
-                            <span className="font-bold text-text">{formatCurrency(item.subtotal)}</span>
-                        </div>
+                        <OwnerDetailRow key={item.id} label={`${item.variant?.full_name ?? item.variant?.name} x${item.quantity}`} value={formatCurrency(item.subtotal)} bold />
                     ))}
                     <div className="mt-2 flex justify-between border-t border-border pt-2 text-sm">
                         <span className="text-text-muted">Nilai Tukar</span>
@@ -184,55 +156,49 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 )}
             </div>
 
-            {showApprove && createPortal(
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
-                    <div className="w-full max-w-lg rounded-lg bg-white p-6">
-                        <h3 className="text-lg font-bold text-text">Setujui Tukar Produk</h3>
-                        <textarea value={approveForm.data.notes} onChange={(e) => approveForm.setData('notes', e.target.value)} placeholder="Catatan (opsional)" className="mt-4 w-full rounded-lg border border-border p-3 text-sm" rows={3} />
-                        <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowApprove(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">Batal</button>
-                            <button onClick={handleApprove} disabled={approveForm.processing} className="flex-1 rounded-lg bg-primary py-3 text-sm font-bold text-white">{approveForm.processing ? 'Memproses...' : 'Setujui'}</button>
-                        </div>
-                    </div>
-                </div>,
-                document.body,
-            )}
+            <OwnerModalShell
+                open={showApprove}
+                onClose={() => setShowApprove(false)}
+                title="Setujui Tukar Produk"
+            >
+                <textarea value={approveForm.data.notes} onChange={(e) => approveForm.setData('notes', e.target.value)} placeholder="Catatan (opsional)" className="w-full rounded-lg border border-border p-3 text-sm" rows={3} />
+                <div className="mt-4 flex gap-3">
+                    <button onClick={() => setShowApprove(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">Batal</button>
+                    <button onClick={handleApprove} disabled={approveForm.processing} className="flex-1 rounded-lg bg-primary py-3 text-sm font-bold text-white">{approveForm.processing ? 'Memproses...' : 'Setujui'}</button>
+                </div>
+            </OwnerModalShell>
 
-            {showReject && createPortal(
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
-                    <div className="w-full max-w-lg rounded-lg bg-white p-6">
-                        <h3 className="text-lg font-bold text-text">Tolak Tukar Produk</h3>
-                        <textarea value={rejectForm.data.reason} onChange={(e) => rejectForm.setData('reason', e.target.value)} placeholder="Alasan penolakan" className="mt-4 w-full rounded-lg border border-border p-3 text-sm" rows={3} />
-                        {rejectForm.errors.reason && <div className="mt-1 text-xs text-red-600">{rejectForm.errors.reason}</div>}
-                        <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowReject(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">Batal</button>
-                            <button onClick={handleReject} disabled={rejectForm.processing} className="flex-1 rounded-lg bg-red-600 py-3 text-sm font-bold text-white">{rejectForm.processing ? 'Memproses...' : 'Tolak'}</button>
-                        </div>
-                    </div>
-                </div>,
-                document.body,
-            )}
+            <OwnerModalShell
+                open={showReject}
+                onClose={() => setShowReject(false)}
+                title="Tolak Tukar Produk"
+            >
+                <textarea value={rejectForm.data.reason} onChange={(e) => rejectForm.setData('reason', e.target.value)} placeholder="Alasan penolakan" className="w-full rounded-lg border border-border p-3 text-sm" rows={3} />
+                {rejectForm.errors.reason && <div className="mt-1 text-xs text-red-600">{rejectForm.errors.reason}</div>}
+                <div className="mt-4 flex gap-3">
+                    <button onClick={() => setShowReject(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">Batal</button>
+                    <button onClick={handleReject} disabled={rejectForm.processing} className="flex-1 rounded-lg bg-red-600 py-3 text-sm font-bold text-white">{rejectForm.processing ? 'Memproses...' : 'Tolak'}</button>
+                </div>
+            </OwnerModalShell>
 
-            {showComplete && createPortal(
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
-                    <div className="w-full max-w-lg rounded-lg bg-white p-6">
-                        <h3 className="text-lg font-bold text-text">Selesaikan Tukar Produk</h3>
-                        <p className="mt-2 text-sm text-text-muted">
-                            Tandai exchange ini selesai setelah outlet mengonfirmasi produk pengganti diterima.
-                        </p>
-                        <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowComplete(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">Batal</button>
-                            <button
-                                onClick={() => router.post(`/owner/exchanges/${exchange.id}/complete`, {}, { onSuccess: () => setShowComplete(false) })}
-                                className="flex-1 rounded-lg bg-primary py-3 text-sm font-bold text-white"
-                            >
-                                Selesai
-                            </button>
-                        </div>
-                    </div>
-                </div>,
-                document.body,
-            )}
+            <OwnerModalShell
+                open={showComplete}
+                onClose={() => setShowComplete(false)}
+                title="Selesaikan Tukar Produk"
+            >
+                <p className="text-sm text-text-muted">
+                    Tandai exchange ini selesai setelah outlet mengonfirmasi produk pengganti diterima.
+                </p>
+                <div className="mt-4 flex gap-3">
+                    <button onClick={() => setShowComplete(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">Batal</button>
+                    <button
+                        onClick={() => router.post(`/owner/exchanges/${exchange.id}/complete`, {}, { onSuccess: () => setShowComplete(false) })}
+                        className="flex-1 rounded-lg bg-primary py-3 text-sm font-bold text-white"
+                    >
+                        Selesai
+                    </button>
+                </div>
+            </OwnerModalShell>
         </OwnerPageShell>
     );
 }

@@ -3,8 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 const STORAGE_KEY = 'dombi_fulfillment_type';
 
 function loadFulfillmentType(): 'pickup' | 'delivery' {
-    if (typeof window === 'undefined') return 'pickup';
+    if (typeof window === 'undefined') {
+return 'pickup';
+}
+
     const stored = localStorage.getItem(STORAGE_KEY);
+
     return stored === 'delivery' ? 'delivery' : 'pickup';
 }
 
@@ -30,11 +34,17 @@ export function useFulfillmentOverlay() {
         const s = document.createElement('style');
         s.textContent = `@keyframes overlaySlideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}`;
         document.head.appendChild(s);
-        return () => { s.remove(); };
+
+        return () => {
+ s.remove(); 
+};
     }, []);
 
     const switchTo = (target: 'pickup' | 'delivery') => {
-        if (target === fulfillmentType) return;
+        if (target === fulfillmentType) {
+return;
+}
+
         clearTimeout(timerRef.current);
 
         setOverlayTarget(target);

@@ -19,8 +19,16 @@ class AddressController extends Controller
 
     public function index(): Response
     {
+        $user = auth()->user();
+        $customer = $user->getCustomerOrCreate();
+
+        $addresses = $customer->addresses()
+            ->orderByDesc('is_default')
+            ->orderByDesc('updated_at')
+            ->get();
+
         return Inertia::render('customer/addresses/index', [
-            'addresses' => collect(),
+            'addresses' => $addresses,
         ]);
     }
 
@@ -48,6 +56,11 @@ class AddressController extends Controller
 
     public function store(StoreCustomerAddressRequest $request): RedirectResponse
     {
+        $user = auth()->user();
+        $customer = $user->getCustomerOrCreate();
+
+        $this->addressService->create($customer, $request->validated());
+
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat berhasil ditambahkan.');
     }
 

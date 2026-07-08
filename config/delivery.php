@@ -26,7 +26,6 @@ return [
         'Sedang Mengantar Pesanan Lain',
         'Kendaraan Bermasalah',
         'Di Luar Area Operasional',
-        'Shift Akan Berakhir',
         'Kendala Pribadi',
         'Lainnya',
     ],

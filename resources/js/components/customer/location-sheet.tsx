@@ -63,14 +63,18 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
 
     // Fetch saved addresses from server
     const fetchAddresses = useCallback(async () => {
-        if (!isLoggedIn) return;
+        if (!isLoggedIn) {
+return;
+}
 
         setLoadingAddresses(true);
+
         try {
             const res = await fetch('/customer/addresses/api', {
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin',
             });
+
             if (res.ok) {
                 const data = await res.json();
                 setSavedAddresses(data.addresses ?? []);
@@ -96,6 +100,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
     async function handleUseCurrentLocation() {
         if (!navigator.geolocation) {
             setError('Geolocation tidak didukung browser ini.');
+
             return;
         }
 
@@ -105,6 +110,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 setGpsAccuracy(position.coords.accuracy);
+
                 try {
                     const result = await reverseGeocode(position.coords.latitude, position.coords.longitude);
                     const nextLocation: CustomerLocation = {
@@ -146,6 +152,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
             },
             (geoError) => {
                 setLoadingCurrent(false);
+
                 switch (geoError.code) {
                     case geoError.PERMISSION_DENIED:
                         setError('Izin lokasi ditolak. Silakan pilih lokasi manual di peta.');
@@ -166,6 +173,7 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
 
     function handleSelectSavedAddress(addr: SavedAddress) {
         const nextLocation: CustomerLocation = {
+            address_id: addr.id,
             address_line: addr.address_line,
             address_detail: addr.address_detail,
             province: addr.province,
@@ -187,7 +195,9 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
     }
 
     async function confirmManualLocation() {
-        if (!draft || draft.latitude === null || draft.longitude === null) return;
+        if (!draft || draft.latitude === null || draft.longitude === null) {
+return;
+}
 
         const finalized = toCustomerLocation(draft);
         saveLocation(finalized);
@@ -202,7 +212,10 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
     }
 
     async function handleSaveAddress() {
-        if (!draft || draft.latitude === null || draft.longitude === null) return;
+        if (!draft || draft.latitude === null || draft.longitude === null) {
+return;
+}
+
         setSaving(true);
 
         try {
@@ -234,7 +247,9 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
         }
     }
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
@@ -386,7 +401,9 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
                     {/* MODE: SAVE AS ADDRESS */}
                     {mode === 'save' && (
                         <div className="mt-2 space-y-4">
-                            <button type="button" onClick={() => { onClose(); }} className="flex items-center gap-1.5 text-xs font-semibold text-text-muted active:text-text">
+                            <button type="button" onClick={() => {
+ onClose(); 
+}} className="flex items-center gap-1.5 text-xs font-semibold text-text-muted active:text-text">
                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                                 </svg>
@@ -509,7 +526,10 @@ function AccuracyBadge({ accuracy }: { accuracy: number }) {
 }
 
 function toDraft(location: CustomerLocation | null): LocationDraft | null {
-    if (!location) return null;
+    if (!location) {
+return null;
+}
+
     return {
         address_line: location.address_line ?? '',
         address_detail: location.address_detail ?? '',

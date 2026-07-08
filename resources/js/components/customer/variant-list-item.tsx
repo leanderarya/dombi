@@ -41,9 +41,25 @@ const VariantListItem = memo(function VariantListItem({ variant, familyId, famil
     const isOutOfStock = variant.stock_status === 'out_of_stock';
     const showMulaiDari = variantCount > 1;
 
-    const productHref = selectedOutlet
-        ? `/customer/products/${familyId}?outlet_id=${selectedOutlet.id}`
-        : `/customer/products/${familyId}`;
+    const productHref = (() => {
+        const params = new URLSearchParams();
+
+        if (selectedOutlet) {
+params.set('outlet_id', String(selectedOutlet.id));
+}
+
+        if (variant.flavor) {
+params.set('flavor', variant.flavor);
+}
+
+        if (variant.size) {
+params.set('size', variant.size);
+}
+
+        const qs = params.toString();
+
+        return qs ? `/customer/products/${familyId}?${qs}` : `/customer/products/${familyId}`;
+    })();
 
     const handleQuickAdd = async (e: React.MouseEvent) => {
         e.preventDefault();

@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
@@ -66,23 +67,13 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
             />
 
             {/* KPI Strip */}
-            <div className="mb-4 grid grid-cols-3 gap-2">
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Tertunda</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{dashboard.pending_exchanges}</div>
-                    {dashboard.pending_exchanges > 0 && <div className="text-xs font-medium text-amber-600">Perlu ditinjau</div>}
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Nilai Tukar</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{formatCurrency(dashboard.exchange_value)}</div>
-                </div>
-                {dashboard.total_exchanges !== undefined && (
-                    <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                        <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total</div>
-                        <div className="mt-1 text-base font-bold tabular-nums">{dashboard.total_exchanges}</div>
-                    </div>
-                )}
-            </div>
+            <OwnerKpiStrip
+                items={[
+                    { label: 'Tertunda', value: dashboard.pending_exchanges, sublabel: dashboard.pending_exchanges > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
+                    { label: 'Nilai Tukar', value: formatCurrency(dashboard.exchange_value) },
+                    ...(dashboard.total_exchanges !== undefined ? [{ label: 'Total', value: dashboard.total_exchanges }] : []),
+                ]}
+            />
 
             {/* Table */}
             {exchanges.data.length === 0 ? (

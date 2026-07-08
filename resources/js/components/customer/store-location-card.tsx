@@ -1,5 +1,5 @@
-import { Store, MapPin } from 'lucide-react';
 import { usePage } from '@inertiajs/react';
+import { Store, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import OutletSheet from '@/components/customer/outlet-sheet';
@@ -61,6 +61,10 @@ export default function StoreLocationCard() {
         ? `${selectedOutlet.distance_km.toFixed(1)} km`
         : null;
 
+    const outletLocation = [selectedOutlet.kecamatan, selectedOutlet.kelurahan].filter(Boolean).join(', ')
+        || selectedOutlet.address
+        || null;
+
     return (
         <>
             <button
@@ -78,24 +82,10 @@ export default function StoreLocationCard() {
                             <>{distanceText}{selectedOutlet.id === outlets[0]?.id && <> · <span className="font-semibold text-primary">Terdekat</span></>}</>
                         ) : locationSummary ? (
                             <span>{locationSummary}</span>
+                        ) : outletLocation ? (
+                            <span className="truncate">{outletLocation}</span>
                         ) : (
-                            <span
-                                role="button"
-                                tabIndex={0}
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setLocationSheetOpen(true);
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter' || e.key === ' ') {
-                                        e.stopPropagation();
-                                        setLocationSheetOpen(true);
-                                    }
-                                }}
-                                className="font-semibold text-primary"
-                            >
-                                Atur lokasi
-                            </span>
+                            <span className="text-text-subtle">Pilih outlet terdekat</span>
                         )}
                     </div>
                 </div>

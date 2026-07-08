@@ -37,6 +37,7 @@ export function useProducts(outletId: number | null, outletLoading: boolean) {
             setFamilies(cached.data);
             setError(null);
             setLoading(false);
+
             return;
         }
 
@@ -52,7 +53,13 @@ export function useProducts(outletId: number | null, outletLoading: boolean) {
             credentials: 'same-origin',
             signal: ac.signal,
         })
-            .then((r) => { if (!r.ok) throw new Error(); return r.json(); })
+            .then((r) => {
+ if (!r.ok) {
+throw new Error();
+}
+
+ return r.json(); 
+})
             .then((d) => {
                 if (!ac.signal.aborted) {
                     const list: Family[] = d.families ?? [];
@@ -73,18 +80,25 @@ export function useProducts(outletId: number | null, outletLoading: boolean) {
     // Invalidate stale cache entries on each render
     useEffect(() => {
         const now = Date.now();
+
         for (const [k, v] of cacheRef.current) {
-            if (now - v.ts > CACHE_TTL_MS) cacheRef.current.delete(k);
+            if (now - v.ts > CACHE_TTL_MS) {
+cacheRef.current.delete(k);
+}
         }
     });
 
     // Fetch when outlet ready
     useEffect(() => {
-        if (!outletLoading && outletId != null) fetch(outletId);
+        if (!outletLoading && outletId != null) {
+fetch(outletId);
+}
     }, [outletId, outletLoading, fetch]);
 
     const retry = useCallback(() => {
-        if (outletId != null) fetch(outletId);
+        if (outletId != null) {
+fetch(outletId);
+}
     }, [outletId, fetch]);
 
     return { families, loading: outletLoading || loading, error, retry };

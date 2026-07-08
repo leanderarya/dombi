@@ -84,5 +84,15 @@ class OutletSeeder extends Seeder
             'is_active' => true,
             'must_change_password' => false,
         ]);
+
+        // ── Test Customer ─────────────────────────────────────────
+        User::updateOrCreate(['email' => 'customer@example.com'], [
+            'name' => 'Customer Dombi',
+            'password' => $password,
+            'role' => 'customer',
+            'phone' => '089000000001',
+            'is_active' => true,
+            'must_change_password' => false,
+        ]);
     }
 }

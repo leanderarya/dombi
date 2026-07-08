@@ -2,18 +2,15 @@ import { Link, router, useForm } from '@inertiajs/react';
 import {
     Bike,
     Car,
-    CheckCircle,
     Clock,
-    Edit3,
-    MapPin,
     Package,
     Phone,
     Truck,
     User,
 } from 'lucide-react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import StatusBadge from '@/components/ui/status-badge';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 

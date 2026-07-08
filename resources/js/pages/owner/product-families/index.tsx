@@ -1,6 +1,7 @@
-import { Head, router, useForm } from '@inertiajs/react';
-import { Package, Search, Plus, Pencil, Trash2 } from 'lucide-react';
+import { router, useForm } from '@inertiajs/react';
+import { Package, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
@@ -87,35 +88,20 @@ return true;
         <OwnerPageShell
             title="Product Families"
             subtitle="Kelola kelompok produk dan variant"
-            headerRight={
-                <button
-                    onClick={() => {
-                        reset();
-                        setEditingId(null);
-                        setShowForm(!showForm);
-                    }}
-                    className="flex h-9 items-center rounded-lg bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90"
-                >
-                    <Plus className="mr-1 h-4 w-4" />
-                    {showForm ? 'Batal' : 'Tambah'}
-                </button>
-            }
         >
-            <Head title="Product Families" />
-
-            {/* Search */}
-            <div className="mb-4">
-                <div className="flex items-center gap-2.5 rounded-lg border border-border bg-white px-3.5">
-                    <Search className="h-4 w-4 shrink-0 text-text-subtle" />
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Cari product family..."
-                        className="w-full bg-transparent py-2.5 text-sm focus:outline-none"
-                    />
-                </div>
-            </div>
+            {/* Search + Tambah */}
+            <OwnerFilterCard
+                searchPlaceholder="Cari product family..."
+                searchValue={search}
+                onSearch={setSearch}
+                tambahLabel="Tambah"
+                tambahOnClick={() => {
+                    reset();
+                    setEditingId(null);
+                    setShowForm(!showForm);
+                }}
+                tambahActive={showForm}
+            />
 
             {/* Create/Edit Form */}
             {showForm && (

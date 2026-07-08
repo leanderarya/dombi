@@ -91,7 +91,7 @@ class DeliverySafetyTest extends TestCase
 
         $this->actingAs($ctx['courier'])
             ->post(route('courier.deliveries.reject', $delivery), [
-                'rejection_reason' => 'Shift Akan Berakhir',
+                'rejection_reason' => 'Kendala Pribadi',
             ]);
 
         $this->assertDatabaseHas('delivery_status_histories', [
@@ -240,37 +240,6 @@ class DeliverySafetyTest extends TestCase
 
         $this->assertContains('returning_to_outlet', $statuses);
         $this->assertContains('returned_to_outlet', $statuses);
-    }
-
-    // ─── SHIFT SAFETY ───────────────────────────────────────────────
-
-    public function test_cannot_end_shift_with_active_deliveries(): void
-    {
-        $ctx = $this->makeContext();
-        $ctx['courier']->startShift();
-
-        $order = $this->makeOrder($ctx);
-        app(DeliveryService::class)->assignCourier($order, $ctx['courier'], $ctx['owner']);
-
-        $this->actingAs($ctx['courier'])
-            ->post(route('courier.shift.end'))
-            ->assertRedirect();
-
-        $ctx['courier']->refresh();
-        $this->assertTrue($ctx['courier']->isOnShift());
-    }
-
-    public function test_can_end_shift_without_active_deliveries(): void
-    {
-        $ctx = $this->makeContext();
-        $ctx['courier']->startShift();
-
-        $this->actingAs($ctx['courier'])
-            ->post(route('courier.shift.end'))
-            ->assertRedirect();
-
-        $ctx['courier']->refresh();
-        $this->assertFalse($ctx['courier']->isOnShift());
     }
 
     // ─── IDEMPOTENCY ────────────────────────────────────────────────

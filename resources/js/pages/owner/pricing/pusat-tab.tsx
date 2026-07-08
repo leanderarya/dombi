@@ -1,11 +1,12 @@
-import { DollarSign, Package, Search, TrendingDown, TrendingUp } from 'lucide-react';
+import { DollarSign, Package, TrendingDown, TrendingUp } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiCard from '@/components/owner/owner-kpi-card';
 import { Button } from '@/components/ui/button';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
 import { GlobalPriceModal } from './pricing-modals';
-import { EmptyState, LoadingSkeleton, PaginationBar, SortBar, Toolbar } from './pricing-shared';
+import { EmptyState, LoadingSkeleton, PaginationBar, SortBar } from './pricing-shared';
 import type { MarginFilter, PusatKpis, PusatVariant, SortDir, SortKey } from './types';
 
 export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?: PusatKpis }) {
@@ -77,14 +78,20 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
     return (
         <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
             <div>
-                <Toolbar
-                    search={search}
-                    onSearchChange={(v) => {
+                <OwnerFilterCard
+                    searchPlaceholder="Cari produk..."
+                    searchValue={search}
+                    onSearch={(v) => {
  setSearch(v); setPage(1); 
 }}
-                    marginFilter={marginFilter}
-                    onMarginFilterChange={(v) => {
- setMarginFilter(v); setPage(1); 
+                    marginOptions={[
+                        { value: 'high', label: 'Margin Tinggi (>20rb)' },
+                        { value: 'low', label: 'Margin Rendah (<5rb)' },
+                        { value: 'negative', label: 'Margin Negatif' },
+                    ]}
+                    marginValue={marginFilter === 'all' ? '' : marginFilter}
+                    onMarginChange={(v) => {
+ setMarginFilter((v || 'all') as MarginFilter); setPage(1); 
 }}
                 />
 

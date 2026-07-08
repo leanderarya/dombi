@@ -1,6 +1,7 @@
 import { MapPin } from 'lucide-react';
 import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
 import OrderStatusBadge from '@/components/ui/order-status-badge';
@@ -22,14 +23,8 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                 {/* Status */}
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-sm font-bold uppercase tracking-wide text-text-subtle">Status</div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Pesanan</span>
-                        <OrderStatusBadge status={order.status} />
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Pengiriman</span>
-                        <DeliveryStatusBadge status={delivery.status} />
-                    </div>
+                    <OwnerDetailRow label="Pesanan" value={<OrderStatusBadge status={order.status} />} />
+                    <OwnerDetailRow label="Pengiriman" value={<DeliveryStatusBadge status={delivery.status} />} />
                     {isActive && (
                         <div className="mt-3 flex h-8 items-center justify-center gap-2 rounded-lg bg-indigo-50 text-sm font-semibold text-indigo-700">
                             <MapPin className="h-3.5 w-3.5" />
@@ -41,26 +36,11 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                 {/* Delivery Info */}
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-sm font-bold uppercase tracking-wide text-text-subtle">Info Pengiriman</div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Outlet</span>
-                        <span className="text-text">{order.outlet?.name ?? '-'}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Pelanggan</span>
-                        <span className="text-text">{order.customer_name}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Alamat</span>
-                        <span className="text-right text-text">{order.customer_address}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Pengambilan</span>
-                        <span className="text-text">{formatDate(delivery.pickup_time)}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Terkirim</span>
-                        <span className="text-text">{formatDate(delivery.delivered_time)}</span>
-                    </div>
+                    <OwnerDetailRow label="Outlet" value={order.outlet?.name ?? '-'} />
+                    <OwnerDetailRow label="Pelanggan" value={order.customer_name} />
+                    <OwnerDetailRow label="Alamat" value={order.customer_address} align="right" />
+                    <OwnerDetailRow label="Pengambilan" value={formatDate(delivery.pickup_time)} />
+                    <OwnerDetailRow label="Terkirim" value={formatDate(delivery.delivered_time)} />
                     {delivery.failed_reason && (
                         <div className="mt-2 rounded-md bg-red-50 p-2 text-sm text-red-700">
                             <strong>Alasan gagal:</strong> {delivery.failed_reason}
@@ -83,10 +63,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                 {delivery.courier && (
                     <div className="rounded-lg border border-border p-4">
                         <div className="mb-3 text-sm font-bold uppercase tracking-wide text-text-subtle">Kurir</div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">Nama</span>
-                            <span className="text-text">{delivery.courier.name}</span>
-                        </div>
+                        <OwnerDetailRow label="Nama" value={delivery.courier.name} />
                     </div>
                 )}
 
@@ -94,10 +71,7 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                 <div className="rounded-lg border border-border p-4 lg:col-span-2">
                     <div className="mb-3 text-sm font-bold uppercase tracking-wide text-text-subtle">Item Pesanan</div>
                     {order.items.map((item: any) => (
-                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">{item.product_name} x{item.quantity}</span>
-                            <span className="font-semibold tabular-nums text-text">Rp {Number(item.subtotal).toLocaleString('id-ID')}</span>
-                        </div>
+                        <OwnerDetailRow label={`${item.product_name} x${item.quantity}`} value={`Rp ${Number(item.subtotal).toLocaleString('id-ID')}`} bold />
                     ))}
                 </div>
 

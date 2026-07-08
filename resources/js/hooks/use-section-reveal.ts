@@ -1,4 +1,5 @@
-import { type RefObject, useEffect, useRef } from 'react';
+import {  useEffect, useRef } from 'react';
+import type {RefObject} from 'react';
 
 /**
  * IntersectionObserver that adds 'visible' class to observed elements (once).
@@ -8,7 +9,9 @@ export function useSectionReveal(deps: unknown[]) {
     const mapRef = useRef<Map<number, HTMLDivElement>>(new Map());
 
     const setRef = (id: number, el: HTMLDivElement | null) => {
-        if (el) mapRef.current.set(id, el);
+        if (el) {
+mapRef.current.set(id, el);
+}
     };
 
     useEffect(() => {
@@ -25,6 +28,7 @@ export function useSectionReveal(deps: unknown[]) {
         );
 
         mapRef.current.forEach((el) => observer.observe(el));
+
         return () => observer.disconnect();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, deps);

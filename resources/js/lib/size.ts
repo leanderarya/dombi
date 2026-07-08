@@ -10,13 +10,13 @@ return 0;
     const s = size.trim().toLowerCase();
 
     if (s.endsWith('ml')) {
-        const num = parseFloat(s);
+        const num = parseFloat(s.replace(',', '.'));
 
         return isNaN(num) ? 0 : num;
     }
 
     if (s.endsWith('l')) {
-        const num = parseFloat(s);
+        const num = parseFloat(s.replace(',', '.'));
 
         return isNaN(num) ? 0 : num * 1000;
     }

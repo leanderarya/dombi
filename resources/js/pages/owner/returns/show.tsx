@@ -2,6 +2,8 @@ import { useForm, router } from '@inertiajs/react';
 import { CheckCircle2, Clock, Package, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerModalShell from '@/components/owner/owner-modal-shell';
+import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getReturnStatus } from '@/lib/status-labels';
@@ -56,44 +58,20 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 {/* Info */}
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Informasi Return</div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Alasan</span>
-                        <span className="text-text">{ret.reason_label ?? ret.reason}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Diajukan</span>
-                        <span className="text-text">{formatDate(ret.created_at)}</span>
-                    </div>
+                    <OwnerDetailRow label="Alasan" value={ret.reason_label ?? ret.reason} />
+                    <OwnerDetailRow label="Diajukan" value={formatDate(ret.created_at)} />
                     {ret.notes && (
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">Catatan</span>
-                            <span className="text-text">{ret.notes}</span>
-                        </div>
+                        <OwnerDetailRow label="Catatan" value={ret.notes} />
                     )}
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Total Nilai</span>
-                        <span className="font-bold text-primary">{formatCurrency(ret.total_value)}</span>
-                    </div>
+                    <OwnerDetailRow label="Total Nilai" value={formatCurrency(ret.total_value)} bold />
                 </div>
 
                 {/* Status + Actions */}
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Status</span>
-                        <div className="flex items-center gap-1.5">
-                            <StatusIcon className="h-3.5 w-3.5 text-text-muted" />
-                            <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
-                        </div>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Total</span>
-                        <span className="font-bold text-primary">{formatCurrency(ret.total_value)}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Item</span>
-                        <span className="text-text">{ret.items?.length ?? 0} item</span>
-                    </div>
+                    <OwnerDetailRow label="Status" value={<div className="flex items-center gap-1.5"><StatusIcon className="h-3.5 w-3.5 text-text-muted" /><StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge></div>} />
+                    <OwnerDetailRow label="Total" value={formatCurrency(ret.total_value)} bold />
+                    <OwnerDetailRow label="Item" value={`${ret.items?.length ?? 0} item`} />
 
                     {/* Actions */}
                     {ret.status === 'submitted' && (
@@ -147,10 +125,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item Return</div>
                     {ret.items?.map((item: any) => (
-                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">{item.variant?.full_name ?? item.variant?.name} x{item.quantity}</span>
-                            <span className="font-bold text-text">{formatCurrency(item.subtotal)}</span>
-                        </div>
+                        <OwnerDetailRow key={item.id} label={`${item.variant?.full_name ?? item.variant?.name} x${item.quantity}`} value={formatCurrency(item.subtotal)} bold />
                     ))}
                 </div>
 
@@ -179,53 +154,51 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             </div>
 
             {/* Approve Modal */}
-            {showApprove && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
-                    <div className="w-full max-w-lg rounded-lg bg-white p-6">
-                        <h3 className="text-lg font-bold text-text">Setujui Return</h3>
-                        <textarea
-                            value={approveForm.data.notes}
-                            onChange={(e) => approveForm.setData('notes', e.target.value)}
-                            placeholder="Catatan (opsional)"
-                            className="mt-4 w-full rounded-lg border border-border p-3 text-sm"
-                            rows={3}
-                        />
-                        <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowApprove(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">
-                                Batal
-                            </button>
-                            <button onClick={handleApprove} disabled={approveForm.processing} className="flex-1 rounded-lg bg-primary py-3 text-sm font-bold text-white">
-                                {approveForm.processing ? 'Memproses...' : 'Setujui'}
-                            </button>
-                        </div>
-                    </div>
+            <OwnerModalShell
+                open={showApprove}
+                onClose={() => setShowApprove(false)}
+                title="Setujui Return"
+            >
+                <textarea
+                    value={approveForm.data.notes}
+                    onChange={(e) => approveForm.setData('notes', e.target.value)}
+                    placeholder="Catatan (opsional)"
+                    className="w-full rounded-lg border border-border p-3 text-sm"
+                    rows={3}
+                />
+                <div className="mt-4 flex gap-3">
+                    <button onClick={() => setShowApprove(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">
+                        Batal
+                    </button>
+                    <button onClick={handleApprove} disabled={approveForm.processing} className="flex-1 rounded-lg bg-primary py-3 text-sm font-bold text-white">
+                        {approveForm.processing ? 'Memproses...' : 'Setujui'}
+                    </button>
                 </div>
-            )}
+            </OwnerModalShell>
 
             {/* Reject Modal */}
-            {showReject && (
-                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 lg:items-center">
-                    <div className="w-full max-w-lg rounded-lg bg-white p-6">
-                        <h3 className="text-lg font-bold text-text">Tolak Return</h3>
-                        <textarea
-                            value={rejectForm.data.reason}
-                            onChange={(e) => rejectForm.setData('reason', e.target.value)}
-                            placeholder="Alasan penolakan"
-                            className="mt-4 w-full rounded-lg border border-border p-3 text-sm"
-                            rows={3}
-                        />
-                        {rejectForm.errors.reason && <div className="mt-1 text-xs text-red-600">{rejectForm.errors.reason}</div>}
-                        <div className="mt-4 flex gap-3">
-                            <button onClick={() => setShowReject(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">
-                                Batal
-                            </button>
-                            <button onClick={handleReject} disabled={rejectForm.processing} className="flex-1 rounded-lg bg-red-600 py-3 text-sm font-bold text-white">
-                                {rejectForm.processing ? 'Memproses...' : 'Tolak'}
-                            </button>
-                        </div>
-                    </div>
+            <OwnerModalShell
+                open={showReject}
+                onClose={() => setShowReject(false)}
+                title="Tolak Return"
+            >
+                <textarea
+                    value={rejectForm.data.reason}
+                    onChange={(e) => rejectForm.setData('reason', e.target.value)}
+                    placeholder="Alasan penolakan"
+                    className="w-full rounded-lg border border-border p-3 text-sm"
+                    rows={3}
+                />
+                {rejectForm.errors.reason && <div className="mt-1 text-xs text-red-600">{rejectForm.errors.reason}</div>}
+                <div className="mt-4 flex gap-3">
+                    <button onClick={() => setShowReject(false)} className="flex-1 rounded-lg border border-border py-3 text-sm font-medium">
+                        Batal
+                    </button>
+                    <button onClick={handleReject} disabled={rejectForm.processing} className="flex-1 rounded-lg bg-red-600 py-3 text-sm font-bold text-white">
+                        {rejectForm.processing ? 'Memproses...' : 'Tolak'}
+                    </button>
                 </div>
-            )}
+            </OwnerModalShell>
         </OwnerPageShell>
     );
 }

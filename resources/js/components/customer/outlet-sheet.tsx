@@ -10,10 +10,10 @@ interface Props {
 }
 
 export default function OutletSheet({ open, onClose }: Props) {
-    const { selectedOutlet, setOutlet, outlets, loading, error, retry } = useOutlet();
+    const { selectedOutlet, selectManual, outlets, loading, error, retry } = useOutlet();
 
     const handleSelect = (outlet: OutletOption) => {
-        setOutlet(outlet);
+        selectManual(outlet);
         onClose();
     };
 

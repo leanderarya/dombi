@@ -148,32 +148,3 @@ export function CopyPanel({ outlets, source, onChange, onApply, onCancel, saving
         </div>
     );
 }
-
-/* ------------------------------------------------------------------ */
-/*  Margin filter + search toolbar                                     */
-/* ------------------------------------------------------------------ */
-
-export function Toolbar({ search, onSearchChange, marginFilter, onMarginFilterChange, children }: {
-    search: string; onSearchChange: (v: string) => void;
-    marginFilter: MarginFilter; onMarginFilterChange: (v: MarginFilter) => void;
-    children?: React.ReactNode;
-}) {
-    return (
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-1 items-center gap-2 min-w-40 [&>input]:pl-2">
-                <Input type="text" value={search} onChange={(e) => onSearchChange(e.target.value)} placeholder="Cari produk..." />
-            </div>
-            <Select
-                value={marginFilter}
-                onChange={(e) => onMarginFilterChange(e.target.value as MarginFilter)}
-                options={[
-                    { value: 'all', label: 'Semua Margin' },
-                    { value: 'high', label: 'Margin Tinggi (>20rb)' },
-                    { value: 'low', label: 'Margin Rendah (<5rb)' },
-                    { value: 'negative', label: 'Margin Negatif' },
-                ]}
-            />
-            {children}
-        </div>
-    );
-}

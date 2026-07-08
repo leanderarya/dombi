@@ -40,7 +40,9 @@ export function useHeroSlides(intervalMs = 5000) {
     const [index, setIndex] = useState(0);
 
     useEffect(() => {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+return;
+}
 
         const timer = setInterval(() => {
             setIndex((prev) => (prev + 1) % HERO_SLIDES.length);

@@ -1,7 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { MapPin, Plus, Search } from 'lucide-react';
+import { ChevronLeft, MapPin, Plus, Search, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import CustomerBottomNav from '@/components/customer/bottom-nav';
 import OfflineBanner from '@/components/shared/offline-banner';
 
 export default function AddressesIndex({ addresses }: any) {
@@ -25,20 +24,26 @@ return addresses;
         router.post(`/customer/addresses/${id}/set-default`);
     }
 
+    function handleDelete(id: number) {
+        if (!confirm('Hapus alamat ini?')) {
+return;
+}
+
+        router.delete(`/customer/addresses/${id}`);
+    }
+
     return (
         <div className="min-h-dvh bg-background text-text">
             <OfflineBanner />
 
             {/* Sticky Header */}
-            <header className="sticky top-0 z-30 border-b border-border bg-white pt-safe">
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-safe">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link href="/customer/profile" className="flex h-10 w-10 items-center justify-center rounded-lg text-text active:bg-zinc-100">
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                        </svg>
+                    <Link href="/customer/profile" className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80">
+                        <ChevronLeft className="h-5 w-5" />
                     </Link>
                     <h1 className="text-sm font-semibold text-text">Alamat Saya</h1>
-                    <Link href="/customer/addresses/create" className="flex h-10 w-10 items-center justify-center rounded-lg text-text active:bg-zinc-100">
+                    <Link href="/customer/addresses/create" className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80">
                         <Plus className="h-5 w-5" />
                     </Link>
                 </div>
@@ -78,6 +83,7 @@ return addresses;
                                 key={address.id}
                                 address={address}
                                 onSetDefault={() => handleSetDefault(address.id)}
+                                onDelete={() => handleDelete(address.id)}
                             />
                         ))}
                     </div>
@@ -85,7 +91,7 @@ return addresses;
             </main>
 
             {/* Sticky Add Button */}
-            <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0))] z-30 px-4">
+            <div className="fixed inset-x-0 bottom-[calc(1rem+env(safe-area-inset-bottom,0))] z-30 px-4">
                 <Link
                     href="/customer/addresses/create"
                     className="mx-auto flex max-w-lg min-h-12 items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white shadow-lg active:bg-primary-hover"
@@ -94,13 +100,11 @@ return addresses;
                     + Tambah Alamat Baru
                 </Link>
             </div>
-
-            <CustomerBottomNav />
         </div>
     );
 }
 
-function AddressCard({ address, onSetDefault }: { address: any; onSetDefault: () => void }) {
+function AddressCard({ address, onSetDefault, onDelete }: { address: any; onSetDefault: () => void; onDelete: () => void }) {
     const isDefault = address.is_default;
     const locationSummary = [address.village || address.kelurahan, address.district || address.kecamatan].filter(Boolean).join(', ');
 
@@ -139,6 +143,10 @@ function AddressCard({ address, onSetDefault }: { address: any; onSetDefault: ()
                     <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                     Edit
                 </Link>
+                <button onClick={onDelete} className="ml-auto flex items-center gap-1 text-xs font-medium text-red-500 active:text-red-700">
+                    <Trash2 className="h-3 w-3" />
+                    Hapus
+                </button>
             </div>
         </div>
     );

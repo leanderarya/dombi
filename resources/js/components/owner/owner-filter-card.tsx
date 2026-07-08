@@ -13,6 +13,8 @@ interface OwnerFilterCardProps {
 
     tambahHref?: string;
     tambahLabel?: string;
+    tambahOnClick?: () => void;
+    tambahActive?: boolean;
 
     outletOptions?: FilterOption[];
     outletValue?: string;
@@ -26,8 +28,15 @@ interface OwnerFilterCardProps {
     courierValue?: string;
     onCourierChange?: (value: string) => void;
 
+    marginOptions?: FilterOption[];
+    marginValue?: string;
+    onMarginChange?: (value: string) => void;
+    marginLabel?: string;
+
     dateValue?: string;
     onDateChange?: (value: string) => void;
+
+    children?: React.ReactNode;
 }
 
 const inputClass =
@@ -42,6 +51,8 @@ export default function OwnerFilterCard({
     onSearch,
     tambahHref,
     tambahLabel = 'Tambah',
+    tambahOnClick,
+    tambahActive,
     outletOptions,
     outletValue,
     onOutletChange,
@@ -51,8 +62,13 @@ export default function OwnerFilterCard({
     courierOptions,
     courierValue,
     onCourierChange,
+    marginOptions,
+    marginValue,
+    onMarginChange,
+    marginLabel = 'Semua Margin',
     dateValue,
     onDateChange,
+    children,
 }: OwnerFilterCardProps) {
     return (
         <div className="owner-filter-card mb-4 rounded-lg border border-border bg-white p-3">
@@ -119,6 +135,22 @@ export default function OwnerFilterCard({
                     />
                 )}
 
+                {marginOptions && (
+                    <select
+                        value={marginValue ?? ''}
+                        onChange={(e) => onMarginChange?.(e.target.value)}
+                        className={`${selectBase} w-[160px]`}
+                        aria-label="Filter margin"
+                    >
+                        <option value="">{marginLabel}</option>
+                        {marginOptions.map((o) => (
+                            <option key={o.value} value={o.value}>{o.label}</option>
+                        ))}
+                    </select>
+                )}
+
+                {children}
+
                 {tambahHref && (
                     <Link
                         href={tambahHref}
@@ -127,6 +159,20 @@ export default function OwnerFilterCard({
                         <Plus className="h-3.5 w-3.5" />
                         {tambahLabel}
                     </Link>
+                )}
+                {tambahOnClick && (
+                    <button
+                        type="button"
+                        onClick={tambahOnClick}
+                        className={`inline-flex h-8 items-center gap-1 rounded-md px-3 text-xs font-semibold transition-colors ${
+                            tambahActive
+                                ? 'border border-border bg-white text-text active:bg-surface-muted'
+                                : 'bg-primary text-white hover:bg-primary-hover'
+                        }`}
+                    >
+                        <Plus className="h-3.5 w-3.5" />
+                        {tambahActive ? 'Batal' : tambahLabel}
+                    </button>
                 )}
             </div>
         </div>

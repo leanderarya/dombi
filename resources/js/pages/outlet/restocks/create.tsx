@@ -3,8 +3,8 @@ import { Plus, Trash2 } from 'lucide-react';
 import SectionCard from '@/components/ui/section-card';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import StockLevelBadge from '@/components/ui/stock-level-badge';
-import { calculateStockStatus } from '@/lib/stock';
 import OutletLayout from '@/layouts/outlet-layout';
+import { calculateStockStatus } from '@/lib/stock';
 
 export default function CreateRestock({ families, inventories }: any) {
     const allVariants = families?.flatMap((f: any) =>

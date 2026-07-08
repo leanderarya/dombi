@@ -5,6 +5,8 @@ import FilterSheet from '@/components/owner/filter-sheet';
 import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
 import EmptyState from '@/components/ui/empty-state';
 import { formatCurrency } from '@/lib/format';
+import BreakdownCard from './breakdown-card';
+import ExportPanel from './export-panel';
 
 interface ReportSummary {
     totalOrders: number;
@@ -134,44 +136,18 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
 
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 <div className="space-y-3">
-                    <BreakdownCard title="Pesanan per Status" data={ordersByStatus} />
-                    <BreakdownCard title="Pengiriman per Status" data={deliveriesByStatus} />
+                    <BreakdownCard title="Pesanan per Status" data={ordersByStatus} statusLabels={statusLabels} />
+                    <BreakdownCard title="Pengiriman per Status" data={deliveriesByStatus} statusLabels={statusLabels} />
                 </div>
 
                 <div className="space-y-4">
                     <div className="lg:sticky lg:top-4 lg:space-y-4">
-                        <div className="rounded-lg border border-border bg-white transition-shadow">
-                            <button onClick={() => setExportOpen(!exportOpen)} className="flex w-full items-center justify-between p-4">
-                                <div className="text-sm font-semibold text-text">Download Laporan</div>
-                                <ChevronDown className={`h-4 w-4 text-text-muted transition-transform ${exportOpen ? 'rotate-180' : ''}`} />
-                            </button>
-                            {exportOpen && (
-                                <div className="space-y-3 border-t border-border px-4 pb-4 pt-3">
-                                    <div>
-                                        <div className="text-xs font-medium text-text mb-1">Laporan Orders</div>
-                                        <p className="mb-2 text-xs text-text-muted">Download data order completed</p>
-                                        <button
-                                            onClick={() => handleExportReport('orders')}
-                                            disabled={exporting === 'orders'}
-                                            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white transition-all duration-150 hover:bg-primary/90 active:bg-primary/90 disabled:opacity-50"
-                                        >
-                                            {exporting === 'orders' ? 'Mengexport...' : 'Download CSV'}
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <div className="text-xs font-medium text-text mb-1">Laporan Settlements</div>
-                                        <p className="mb-2 text-xs text-text-muted">Download data settlement outlet</p>
-                                        <button
-                                            onClick={() => handleExportReport('settlements')}
-                                            disabled={exporting === 'settlements'}
-                                            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white transition-all duration-150 hover:bg-primary/90 active:bg-primary/90 disabled:opacity-50"
-                                        >
-                                            {exporting === 'settlements' ? 'Mengexport...' : 'Download CSV'}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                        <ExportPanel
+                            open={exportOpen}
+                            onToggle={() => setExportOpen(!exportOpen)}
+                            exporting={exporting}
+                            onExport={handleExportReport}
+                        />
 
                         <div className="space-y-2">
                             <div className="rounded-lg border border-border bg-white p-5">
@@ -257,36 +233,6 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                     router.get('/owner/analytics', { tab: 'laporan', ...filters, outlet_id: f.outlet_id || undefined }, { preserveState: true, replace: true })
                 }
             />
-        </div>
-    );
-}
-
-function BreakdownCard({ title, data }: { title: string; data: Record<string, number> }) {
-    const [open, setOpen] = useState(false);
-    const entries = Object.entries(data);
-
-    return (
-        <div className="rounded-lg border border-border bg-white transition-shadow">
-            <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between p-3">
-                <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">{title}</div>
-                <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
-            </button>
-            {open && (
-                <div className="border-t border-border px-3 pb-3 pt-2">
-                    {entries.length === 0 ? (
-                        <p className="text-xs text-text-subtle">Tidak ada data</p>
-                    ) : (
-                        <div className="space-y-1.5">
-                            {entries.map(([status, count]) => (
-                                <div key={status} className="flex items-center justify-between text-xs">
-                                    <span className="text-text-muted">{statusLabels[status] ?? status}</span>
-                                    <span className="font-bold tabular-nums text-text">{count}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
         </div>
     );
 }

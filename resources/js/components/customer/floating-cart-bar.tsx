@@ -5,18 +5,25 @@ import { useCart } from '@/lib/use-cart';
 function getSelectedOutletId(): number | null {
     try {
         const raw = localStorage.getItem('dombi_selected_outlet');
-        if (!raw) return null;
+
+        if (!raw) {
+return null;
+}
+
         const id = JSON.parse(raw);
+
         return typeof id === 'number' ? id : null;
     } catch {
         return null;
     }
 }
 
-export default function FloatingCartBar() {
+export default function FloatingCartBar({ bottomNavVisible = true }: { bottomNavVisible?: boolean }) {
     const { items, totalItems, totalPrice } = useCart();
 
-    if (totalItems === 0) return null;
+    if (totalItems === 0) {
+return null;
+}
 
     const handleCheckout = () => {
         const payload: Record<string, unknown> = {
@@ -26,12 +33,23 @@ export default function FloatingCartBar() {
             })),
         };
         const outletId = getSelectedOutletId();
-        if (outletId) payload.selected_outlet_id = outletId;
+
+        if (outletId) {
+payload.selected_outlet_id = outletId;
+}
+
         router.post('/customer/checkout', payload);
     };
 
+    const bottom = bottomNavVisible
+        ? 'calc(4.5rem + env(safe-area-inset-bottom, 0px))'
+        : 'calc(1rem + env(safe-area-inset-bottom, 0px))';
+
     return (
-        <div className="fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom,0))] z-30 px-4">
+        <div
+            className="fixed inset-x-0 z-30 px-4 transition-[bottom] duration-300 ease-in-out"
+            style={{ bottom }}
+        >
             <button
                 type="button"
                 onClick={handleCheckout}

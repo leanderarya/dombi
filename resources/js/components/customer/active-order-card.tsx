@@ -227,7 +227,10 @@ export default function ActiveOrderCard({ order }: Props) {
     };
 
     const handleCancelConfirm = () => {
-        if (!cancelReason) return;
+        if (!cancelReason) {
+return;
+}
+
         cancel(order.id, cancelReason, cancelReason === 'Lainnya' ? cancelNote : undefined);
         setCancelDialogOpen(false);
     };

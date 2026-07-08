@@ -39,26 +39,6 @@ class CourierDashboardTest extends TestCase
         $this->assertFalse($this->courier->is_online);
     }
 
-    public function test_start_shift(): void
-    {
-        $response = $this->actingAs($this->courier)->post('/courier/shift/start');
-        $response->assertRedirect();
-        $this->courier->refresh();
-        $this->assertNotNull($this->courier->shift_started_at);
-        $this->assertTrue($this->courier->is_online);
-    }
-
-    public function test_end_shift(): void
-    {
-        $this->courier->startShift();
-
-        $response = $this->actingAs($this->courier)->post('/courier/shift/end');
-        $response->assertRedirect();
-        $this->courier->refresh();
-        $this->assertNotNull($this->courier->shift_ended_at);
-        $this->assertFalse($this->courier->is_online);
-    }
-
     public function test_non_courier_is_redirected_from_dashboard(): void
     {
         $user = User::factory()->create(['role' => 'customer']);

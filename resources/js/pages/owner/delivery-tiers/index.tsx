@@ -1,7 +1,7 @@
-import { Head, router, useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { Edit2, GripVertical, Plus, Trash2, Truck } from 'lucide-react';
 import { useState } from 'react';
-import OwnerLayout from '@/layouts/owner-layout';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { formatCurrency } from '@/lib/format';
 
 interface DeliveryTier {
@@ -18,71 +18,65 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
     const [showForm, setShowForm] = useState(false);
 
     return (
-        <OwnerLayout>
-            <Head title="Tier Ongkir" />
-
-            <div className="mx-auto max-w-3xl">
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-xl font-bold text-text">Pengaturan Ongkir</h1>
-                        <p className="mt-1 text-sm text-text-muted">Kelola tarif pengiriman berdasarkan jarak</p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => {
+        <OwnerPageShell
+            title="Pengaturan Ongkir"
+            subtitle="Kelola tarif pengiriman berdasarkan jarak"
+            headerRight={
+                <button
+                    type="button"
+                    onClick={() => {
  setShowForm(true); setEditingId(null); 
 }}
-                        className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white active:opacity-80"
-                    >
-                        <Plus className="h-4 w-4" />
-                        Tambah Tier
-                    </button>
+                    className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white active:opacity-80"
+                >
+                    <Plus className="h-4 w-4" />
+                    Tambah Tier
+                </button>
+            }
+        >
+            {/* Tier List */}
+            <div className="rounded-lg border border-border bg-white">
+                <div className="grid grid-cols-12 gap-4 border-b border-border px-4 py-3 text-xs font-bold uppercase tracking-wider text-text-subtle">
+                    <div className="col-span-1" />
+                    <div className="col-span-3">Jarak</div>
+                    <div className="col-span-3">Tarif</div>
+                    <div className="col-span-2">Status</div>
+                    <div className="col-span-3 text-right">Aksi</div>
                 </div>
 
-                {/* Tier List */}
-                <div className="rounded-lg border border-border bg-white">
-                    <div className="grid grid-cols-12 gap-4 border-b border-border px-4 py-3 text-xs font-bold uppercase tracking-wider text-text-subtle">
-                        <div className="col-span-1" />
-                        <div className="col-span-3">Jarak</div>
-                        <div className="col-span-3">Tarif</div>
-                        <div className="col-span-2">Status</div>
-                        <div className="col-span-3 text-right">Aksi</div>
+                {tiers.length === 0 ? (
+                    <div className="px-4 py-10 text-center">
+                        <Truck className="mx-auto h-8 w-8 text-text-subtle" />
+                        <p className="mt-2 text-sm text-text-muted">Belum ada tier ongkir</p>
+                        <p className="mt-1 text-xs text-text-subtle">Tambah tier untuk mengatur tarif pengiriman</p>
                     </div>
-
-                    {tiers.length === 0 ? (
-                        <div className="px-4 py-10 text-center">
-                            <Truck className="mx-auto h-8 w-8 text-text-subtle" />
-                            <p className="mt-2 text-sm text-text-muted">Belum ada tier ongkir</p>
-                            <p className="mt-1 text-xs text-text-subtle">Tambah tier untuk mengatur tarif pengiriman</p>
-                        </div>
-                    ) : (
-                        tiers.map((tier) => (
-                            <TierRow
-                                key={tier.id}
-                                tier={tier}
-                                isEditing={editingId === tier.id}
-                                onEdit={() => {
+                ) : (
+                    tiers.map((tier) => (
+                        <TierRow
+                            key={tier.id}
+                            tier={tier}
+                            isEditing={editingId === tier.id}
+                            onEdit={() => {
  setEditingId(tier.id); setShowForm(true); 
 }}
-                                onCancel={() => {
+                            onCancel={() => {
  setEditingId(null); setShowForm(false); 
 }}
-                            />
-                        ))
-                    )}
-                </div>
-
-                {/* Info box */}
-                <div className="mt-4 rounded-lg border border-border bg-white p-4">
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Cara Kerja</h3>
-                    <ul className="mt-2 space-y-1.5 text-xs text-text-muted">
-                        <li>Tier diurutkan berdasarkan jarak (sort_order). Sistem mencocokkan dari tier pertama.</li>
-                        <li>Jika jarak pelanggan melebihi tier terakhir, pesanan dianggap di luar jangkauan.</li>
-                        <li>Nonaktifkan tier untuk menonaktifkan sementara tanpa menghapus.</li>
-                    </ul>
-                </div>
+                        />
+                    ))
+                )}
             </div>
-        </OwnerLayout>
+
+            {/* Info box */}
+            <div className="mt-4 rounded-lg border border-border bg-white p-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Cara Kerja</h3>
+                <ul className="mt-2 space-y-1.5 text-xs text-text-muted">
+                    <li>Tier diurutkan berdasarkan jarak (sort_order). Sistem mencocokkan dari tier pertama.</li>
+                    <li>Jika jarak pelanggan melebihi tier terakhir, pesanan dianggap di luar jangkauan.</li>
+                    <li>Nonaktifkan tier untuk menonaktifkan sementara tanpa menghapus.</li>
+                </ul>
+            </div>
+        </OwnerPageShell>
     );
 }
 

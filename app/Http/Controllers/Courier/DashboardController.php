@@ -77,8 +77,6 @@ class DashboardController extends Controller
                 'id' => $courier->id,
                 'name' => $courier->name,
                 'is_online' => $courier->is_online,
-                'is_on_shift' => $courier->isOnShift(),
-                'shift_started_at' => $courier->shift_started_at?->toISOString(),
             ],
             'stats' => [
                 'waitingPickup' => $waitingPickup->count(),

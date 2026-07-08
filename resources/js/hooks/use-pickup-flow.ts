@@ -18,7 +18,9 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
     useEffect(() => () => clearTimeout(timerRef.current), []);
 
     const start = useCallback(async () => {
-        if (state.loading) return;
+        if (state.loading) {
+return;
+}
 
         setState({ loading: true, error: null, foundOutletName: null });
         localStorage.setItem('dombi_fulfillment_type', 'pickup');
@@ -27,6 +29,7 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
         if (nearestOutlet?.name) {
             setState({ loading: true, error: null, foundOutletName: nearestOutlet.name });
             timerRef.current = setTimeout(() => router.get('/customer/products'), 2000);
+
             return;
         }
 
@@ -45,12 +48,16 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
             outletName = data.recommended?.name ?? null;
 
             // Save recommended outlet to store so products page uses same outlet
-            if (data.recommended?.id) autoSave(data.recommended.id);
+            if (data.recommended?.id) {
+autoSave(data.recommended.id);
+}
         } catch {
             // silent
         }
 
-        if (!outletName) outletName = 'Outlet Dombi';
+        if (!outletName) {
+outletName = 'Outlet Dombi';
+}
 
         setState({ loading: true, error: null, foundOutletName: outletName });
         timerRef.current = setTimeout(() => router.get('/customer/products'), 2000);

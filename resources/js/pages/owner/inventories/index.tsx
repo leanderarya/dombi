@@ -2,12 +2,14 @@ import { router } from '@inertiajs/react';
 import { ArrowUpDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import CentralStockTab from './central-stock-tab';
 
 const TABS = [
     { key: 'pusat', label: 'Stok Pusat' },
@@ -167,28 +169,12 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                     />
 
                     {/* KPI Strip */}
-                    <div className="mb-4 grid grid-cols-4 gap-2">
-                        <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                            <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total SKU</div>
-                            <div className="mt-1 text-base font-bold tabular-nums">{stats.totalSku}</div>
-                            <div className="text-xs font-medium text-text-subtle">Semua outlet</div>
-                        </div>
-                        <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                            <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Stok Rendah</div>
-                            <div className="mt-1 text-base font-bold tabular-nums">{stats.lowStock}</div>
-                            {stats.lowStock > 0 && <div className="text-xs font-medium text-amber-500">Perlu restock</div>}
-                        </div>
-                        <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                            <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Reserved</div>
-                            <div className="mt-1 text-base font-bold tabular-nums">{stats.totalReserved}</div>
-                            <div className="text-xs font-medium text-blue-500">Dalam pesanan</div>
-                        </div>
-                        <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                            <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Kritis</div>
-                            <div className="mt-1 text-base font-bold tabular-nums">{stats.critical}</div>
-                            {stats.critical > 0 && <div className="text-xs font-medium text-red-500">Segera tindak!</div>}
-                        </div>
-                    </div>
+                    <OwnerKpiStrip items={[
+                        { label: 'Total SKU', value: stats.totalSku, sublabel: 'Semua outlet', sublabelColor: 'text-text-subtle' },
+                        { label: 'Stok Rendah', value: stats.lowStock, sublabel: stats.lowStock > 0 ? 'Perlu restock' : undefined, sublabelColor: 'text-amber-500' },
+                        { label: 'Reserved', value: stats.totalReserved, sublabel: 'Dalam pesanan', sublabelColor: 'text-blue-500' },
+                        { label: 'Kritis', value: stats.critical, sublabel: stats.critical > 0 ? 'Segera tindak!' : undefined, sublabelColor: 'text-red-500' },
+                    ]} />
 
                     {/* Sort Bar */}
                     {paginatedItems.length > 0 && (
@@ -286,189 +272,5 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                 </>
             )}
         </OwnerPageShell>
-    );
-}
-
-/* ================================================================== */
-/*  Stok Pusat Tab                                                     */
-/* ================================================================== */
-
-function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any }) {
-    const [search, setSearch] = useState('');
-    const [stockFilter, setStockFilter] = useState<'all' | 'zero' | 'low'>('all');
-    const [editModal, setEditModal] = useState<any>(null);
-    const [newStock, setNewStock] = useState('');
-    const [reason, setReason] = useState('');
-    const [saving, setSaving] = useState(false);
-
-    if (!variants || !stats) {
-        return <div className="h-20 animate-pulse rounded-lg border border-border bg-white" />;
-    }
-
-    const filtered = variants.filter((v) => {
-        if (search) {
-            const q = search.toLowerCase();
-
-            if (!v.name.toLowerCase().includes(q) && !(v.sku ?? '').toLowerCase().includes(q)) {
-                return false;
-            }
-        }
-
-        if (stockFilter === 'zero' && v.center_stock > 0) {
-return false;
-}
-
-        if (stockFilter === 'low' && (v.center_stock <= 0 || v.center_stock > 10)) {
-return false;
-}
-
-        return true;
-    });
-
-    return (
-        <>
-            {/* Filter controls */}
-            <OwnerFilterCard
-                searchPlaceholder="Cari produk atau SKU..."
-                searchValue={search}
-                onSearch={(val) => setSearch(val)}
-            />
-
-            {/* KPI Strip */}
-            <div className="mb-4 grid grid-cols-4 gap-2">
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total Variant</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats.total_variants}</div>
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total Stok</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats.total_stock} pcs</div>
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Stok Habis</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats.zero_stock}</div>
-                    {stats.zero_stock > 0 && <div className="text-xs font-medium text-red-500">Perlu tindakan</div>}
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Stok Rendah</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats.low_stock}</div>
-                    {stats.low_stock > 0 && <div className="text-xs font-medium text-amber-500">Perlu tindakan</div>}
-                </div>
-            </div>
-
-            {/* Table */}
-            {filtered.length === 0 ? (
-                <div className="rounded-lg border border-border bg-white py-10 text-center text-xs text-text-muted">
-                    Tidak ada produk ditemukan
-                </div>
-            ) : (
-                <div className="overflow-hidden rounded-lg border border-border">
-                    <div className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                        <span>Produk / SKU</span><span className="text-right">Stok</span><span className="text-right">HPP</span><span />
-                    </div>
-                    {filtered.map((v) => {
-                        const isZero = v.center_stock <= 0;
-                        const isLow = v.center_stock > 0 && v.center_stock <= 10;
-
-                        return (
-                            <div key={v.id}
-                                className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
-                                <span className="truncate">
-                                    {v.family_name && <span className="text-text-subtle">{v.family_name} </span>}
-                                    <span className="font-bold text-text">{v.name}</span>
-                                    {v.sku && <span className="ml-1 text-xs text-text-muted">{v.sku}</span>}
-                                </span>
-                                <span className={`text-right font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                    {v.center_stock} pcs
-                                </span>
-                                <span className="text-right text-text-muted">{formatCurrency(v.center_price)}</span>
-                                <div className="flex items-center gap-1 justify-end">
-                                    <button type="button" onClick={() => {
- setEditModal(v); setNewStock(String(v.center_stock)); setReason(''); 
-}}
-                                        className="rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary-light">
-                                        Edit
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-
-            {/* Edit Modal */}
-            {editModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setEditModal(null)}>
-                    <div className="w-full max-w-sm rounded-lg bg-white p-6" onClick={(e) => e.stopPropagation()}>
-                        <h3 className="text-lg font-bold text-text">Edit Stok Pusat</h3>
-                        <p className="mt-1 text-sm text-text-muted">{editModal.name}</p>
-
-                        <div className="mt-4 space-y-3">
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-text-muted">Stok Saat Ini</label>
-                                <div className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-text-muted">
-                                    {editModal.center_stock} pcs
-                                </div>
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-text-muted">Stok Baru</label>
-                                <input
-                                    type="number"
-                                    value={newStock}
-                                    onChange={(e) => setNewStock(e.target.value)}
-                                    min="0"
-                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
-                                    autoFocus
-                                />
-                            </div>
-                            <div>
-                                <label className="mb-1 block text-xs font-medium text-text-muted">Alasan</label>
-                                <select
-                                    value={reason}
-                                    onChange={(e) => setReason(e.target.value)}
-                                    className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                                >
-                                    <option value="">Pilih alasan...</option>
-                                    <option value="Stok opname">Stok Opname</option>
-                                    <option value="Produk rusak">Produk Rusak</option>
-                                    <option value="Produk expired">Produk Expired</option>
-                                    <option value="Penerimaan supplier">Penerimaan Supplier</option>
-                                    <option value="Koreksi manual">Koreksi Manual</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 flex gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setEditModal(null)}
-                                className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface-muted"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setSaving(true);
-                                    router.patch(`/owner/inventories/central-stock/${editModal.id}`, {
-                                        center_stock: parseInt(newStock),
-                                        reason: reason || undefined,
-                                    }, {
-                                        onFinish: () => {
-                                            setSaving(false);
-                                            setEditModal(null);
-                                        },
-                                    });
-                                }}
-                                disabled={saving || parseInt(newStock) === editModal.center_stock}
-                                className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
-                            >
-                                {saving ? 'Menyimpan...' : 'Simpan'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </>
     );
 }

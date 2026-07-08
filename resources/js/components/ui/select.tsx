@@ -30,7 +30,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     ref={ref}
                     id={id}
                     className={cn(
-                        'w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors',
+                        'w-full appearance-none rounded-[--radius-control] border border-border bg-surface px-3 py-2 pr-8 text-sm text-text transition-colors',
+                        'bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23717171%27 stroke-width=%272.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E")] bg-[length:10px] bg-[right_8px_center] bg-no-repeat',
                         'focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
                         error && 'border-danger focus:border-danger focus:ring-danger',
                         className

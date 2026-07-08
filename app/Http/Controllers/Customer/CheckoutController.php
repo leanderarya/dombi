@@ -210,6 +210,55 @@ class CheckoutController extends Controller
         $user = $request->user();
         $customer = $user?->customer;
 
+        // Saved addresses for address picker
+        $savedAddresses = $customer ? $customer->addresses()
+            ->orderByDesc('is_default')
+            ->orderByDesc('updated_at')
+            ->get(['id', 'label', 'recipient_name', 'phone', 'address_line', 'address_detail', 'village', 'district', 'city', 'province', 'postal_code', 'latitude', 'longitude', 'landmark', 'delivery_notes', 'is_default'])
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'label' => $a->label,
+                'recipient_name' => $a->recipient_name,
+                'phone' => $a->phone,
+                'address_line' => $a->address_line,
+                'address_detail' => $a->address_detail,
+                'village' => $a->village,
+                'district' => $a->district,
+                'city' => $a->city,
+                'province' => $a->province,
+                'postal_code' => $a->postal_code,
+                'latitude' => $a->latitude,
+                'longitude' => $a->longitude,
+                'landmark' => $a->landmark,
+                'delivery_notes' => $a->delivery_notes,
+                'is_default' => $a->is_default,
+            ])
+            ->all() : [];
+
+        // Suggest nearest address if GPS is available (no distance cap — frontend decides UX)
+        $suggestedAddressId = null;
+        if ($savedAddresses && isset($location['latitude'], $location['longitude'])) {
+            $userLat = (float) $location['latitude'];
+            $userLon = (float) $location['longitude'];
+            $best = null;
+            $bestDist = PHP_FLOAT_MAX;
+
+            foreach ($savedAddresses as $addr) {
+                if (! $addr['latitude'] || ! $addr['longitude']) continue;
+                $dist = $this->haversineDistance($userLat, $userLon, (float) $addr['latitude'], (float) $addr['longitude']);
+                if ($dist < $bestDist) {
+                    $bestDist = $dist;
+                    $best = $addr['id'];
+                }
+            }
+
+            $suggestedAddressId = $best;
+        } elseif ($savedAddresses) {
+            // No GPS — suggest default
+            $default = collect($savedAddresses)->first(fn ($a) => $a['is_default']);
+            $suggestedAddressId = $default['id'] ?? null;
+        }
+
         return Inertia::render('customer/checkout/customer', [
             'draft' => [
                 'fulfillment' => $request->session()->get('checkout.fulfillment'),
@@ -244,6 +293,8 @@ class CheckoutController extends Controller
             'pickupRecommendations' => $pickupRecommendations,
             'deliveryQuote' => $deliveryQuote,
             'deliveryTiers' => config('delivery.tiers', []),
+            'savedAddresses' => $savedAddresses,
+            'suggestedAddressId' => $suggestedAddressId,
         ]);
     }
 
@@ -272,6 +323,7 @@ class CheckoutController extends Controller
             'recipient_name' => ['nullable', 'string', 'min:3', 'max:255'],
             'recipient_phone' => ['nullable', 'string', 'max:20'],
             'save_recipient' => ['nullable', 'boolean'],
+            'address_id' => ['nullable', 'integer', Rule::exists('customer_addresses', 'id')],
             'latitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-180,180'],
             'address_line' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'string', 'max:1000'],
@@ -369,6 +421,7 @@ class CheckoutController extends Controller
             ];
 
             $request->session()->put('checkout.location', [
+                'address_id' => $validated['address_id'] ?? ($existingLocation['address_id'] ?? null),
                 'address_line' => $locationPayload['address_line'],
                 'address_detail' => $locationPayload['address_detail'],
                 'province' => $locationPayload['province'],
@@ -928,5 +981,16 @@ class CheckoutController extends Controller
                 'kecamatan' => $outlet->kecamatan,
             ],
         ];
+    }
+
+    private function haversineDistance(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $earthRadius = 6_371_000; // meters
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+
+        return $earthRadius * 2 * atan2(sqrt($a), sqrt(1 - $a));
     }
 }

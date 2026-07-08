@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { syncCustomerLocationDraft, useCustomerLocation } from '@/lib/customer-location';
+import { useOutletStore } from '@/lib/outlet-store';
 
 export interface NearestOutlet {
+    id: number | null;
     name: string;
     distance_km: number | null;
 }
@@ -9,9 +11,12 @@ export interface NearestOutlet {
 export function useNearestOutlet() {
     const [outlet, setOutlet] = useState<NearestOutlet | null>(null);
     const { saveLocation } = useCustomerLocation();
+    const { autoSave } = useOutletStore();
 
     useEffect(() => {
-        if (!navigator.geolocation) return;
+        if (!navigator.geolocation) {
+return;
+}
 
         navigator.geolocation.getCurrentPosition(
             async (pos) => {
@@ -26,7 +31,11 @@ export function useNearestOutlet() {
                     const data = await res.json();
 
                     if (data.recommended) {
-                        setOutlet({ name: data.recommended.name, distance_km: data.recommended.distance_km });
+                        setOutlet({ id: data.recommended.id ?? null, name: data.recommended.name, distance_km: data.recommended.distance_km });
+
+                        if (data.recommended.id) {
+autoSave(data.recommended.id);
+}
                     }
                 } catch {
                     // silent
@@ -35,7 +44,7 @@ export function useNearestOutlet() {
             () => { /* permission denied */ },
             { enableHighAccuracy: false, timeout: 5000 },
         );
-    }, [saveLocation]);
+    }, [saveLocation, autoSave]);
 
     return outlet;
 }

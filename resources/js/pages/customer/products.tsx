@@ -1,3 +1,6 @@
+import { Head } from '@inertiajs/react';
+import { Search, Store, ThumbsUp, Truck } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
@@ -11,14 +14,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useFulfillmentOverlay } from '@/hooks/use-fulfillment-overlay';
-import { type Family, useProducts } from '@/hooks/use-products';
+import {  useProducts } from '@/hooks/use-products';
+import type {Family} from '@/hooks/use-products';
 import { useSectionReveal } from '@/hooks/use-section-reveal';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
 import FavoritesProvider from '@/providers/favorites-provider';
-import { Head } from '@inertiajs/react';
-import { Search, Store, ThumbsUp, Truck } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
 
 /* ─── Derived types ────────────────────────────────────────── */
 
@@ -75,8 +76,11 @@ function ProductsInner() {
                 icon: <ThumbsUp className="h-3.5 w-3.5" />,
             },
         ];
-        for (const f of families)
-            opts.push({ key: String(f.id), label: f.name });
+
+        for (const f of families) {
+opts.push({ key: String(f.id), label: f.name });
+}
+
         return opts;
     }, [families]);
 
@@ -354,7 +358,9 @@ function FulfillmentOverlay({
     state: string;
     target: 'pickup' | 'delivery';
 }) {
-    if (state === 'hidden') return null;
+    if (state === 'hidden') {
+return null;
+}
 
     return (
         <div
@@ -399,21 +405,31 @@ function buildSections(
     const sections: FamilySection[] = [];
 
     for (const family of families) {
-        if (activeFilter !== 'all' && String(family.id) !== activeFilter)
-            continue;
+        if (activeFilter !== 'all' && String(family.id) !== activeFilter) {
+continue;
+}
 
         const active = family.variants.filter((v) => v.is_active);
-        if (active.length === 0) continue;
+
+        if (active.length === 0) {
+continue;
+}
 
         const flavorMap = new Map<string, Family['variants']>();
+
         for (const v of active) {
             const key = v.flavor ?? '__none__';
             const arr = flavorMap.get(key);
-            if (arr) arr.push(v);
-            else flavorMap.set(key, [v]);
+
+            if (arr) {
+arr.push(v);
+} else {
+flavorMap.set(key, [v]);
+}
         }
 
         const flavorGroups: FlavorGroup[] = [];
+
         for (const [key, variants] of flavorMap) {
             const flavor = key === '__none__' ? null : key;
             const sorted = [...variants].sort((a, b) => a.price - b.price);

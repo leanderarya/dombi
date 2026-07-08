@@ -22,7 +22,7 @@ interface Props {
 export default function OwnerKpiCard({ label, value, icon, trend, color, className }: Props) {
     return (
         <div className={cn(
-            'group rounded-md p-2.5 transition-colors duration-150 hover:bg-surface-muted',
+            'group rounded-lg p-2.5 transition-colors duration-150 hover:bg-surface-muted',
             className
         )}>
             <div className="flex items-center gap-2">
@@ -49,12 +49,12 @@ interface OwnerKpiCardSkeletonProps {
 
 export function OwnerKpiCardSkeleton({ className }: OwnerKpiCardSkeletonProps) {
     return (
-        <div className={cn('rounded-lg border border-border bg-surface p-4 lg:p-5', className)}>
+        <div className={cn('rounded-lg p-2.5', className)}>
             <div className="flex items-center gap-3">
-                <div className="h-8 w-8 animate-pulse rounded-lg bg-surface-muted" />
-                <div className="h-4 w-24 animate-pulse rounded bg-surface-muted" />
+                <div className="h-6 w-6 animate-pulse rounded bg-surface-muted" />
+                <div className="h-3 w-20 animate-pulse rounded bg-surface-muted" />
             </div>
-            <div className="mt-3 h-8 w-32 animate-pulse rounded bg-surface-muted" />
+            <div className="mt-1 h-5 w-28 animate-pulse rounded bg-surface-muted" />
         </div>
     );
 }

@@ -74,11 +74,15 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
     const reportForm = useForm({ type: '', notes: '' });
 
     useEffect(() => {
-        if (isConfirmation) window.history.replaceState(null, '', '/customer/orders');
+        if (isConfirmation) {
+window.history.replaceState(null, '', '/customer/orders');
+}
     }, [isConfirmation]);
 
     useEffect(() => {
-        if (order.customer_phone && order.order_code) addOrder(order.customer_phone, order.order_code);
+        if (order.customer_phone && order.order_code) {
+addOrder(order.customer_phone, order.order_code);
+}
     }, [order.customer_phone, order.order_code, addOrder]);
 
     const handleCancelSubmit = () => cancel(cancelForm.data.reason, cancelForm.data.note, cancelLast4Hp);
@@ -89,7 +93,7 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
             <Head title={`Pesanan ${order.order_code}`} />
             <OfflineBanner />
 
-            <OrderHeader order={order} isConfirmation={isConfirmation} />
+            <OrderHeader order={order} isConfirmation={isConfirmation} onShare={trackingUrl ? handleShare : undefined} />
 
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
                 {hasPaymentIssue && <PaymentIssueBanner isFailed={order.payment_status === 'failed'} onPay={pay} loading={payLoading} />}
@@ -99,23 +103,24 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
 
                 {isPickup && order.status === 'ready_for_pickup' && <OrderQRCard orderCode={order.order_code} />}
                 {order.status === 'completed' && <CompletedHero orderId={order.id} />}
-                {!isTerminal && trackingUrl && <ShareTrackingButton onShare={handleShare} />}
 
                 <div className="mt-4">
                     <OrderTimeline currentStatus={order.status} histories={order.status_histories} fulfillmentType={order.fulfillment_type} defaultCollapsed />
                 </div>
 
-                <OrderItemsSummary order={order} isPickup={isPickup} />
-                {order.outlet && <OutletCard outlet={order.outlet} />}
-                {!isPickup && order.customer_address && <DeliveryAddressCard address={order.customer_address} detail={order.customer_address_detail} lat={order.latitude} lng={order.longitude} />}
-                {order.delivery?.courier && <CourierCard courier={order.delivery.courier} />}
-                {order.delivery?.failed_reason && <FailedDeliveryBanner reason={order.delivery.failed_reason} />}
+                <OrderInfoCard order={order} isPickup={isPickup} />
 
                 <StatusBanner order={order} />
 
-                {isCancellable && <CancelButton onClick={() => setCancelDialogOpen(true)} />}
-                {!isCancellable && !isTerminal && <NonCancellableNotice phone={order.outlet?.phone} />}
-                {isTerminal && order.status !== 'completed' && <ReorderLink orderId={order.id} />}
+                <div className="mt-4">
+                    {isCancellable ? (
+                        <CancelButton onClick={() => setCancelDialogOpen(true)} />
+                    ) : !isTerminal ? (
+                        <NonCancellableNotice phone={order.outlet?.phone} />
+                    ) : order.status !== 'completed' ? (
+                        <ReorderLink orderId={order.id} />
+                    ) : null}
+                </div>
 
                 {hasRecentReport && activeReport && <ReportStatusCard report={activeReport} />}
                 {canReport && <ReportButton onClick={() => setReportSheetOpen(true)} />}
@@ -125,7 +130,9 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
 
             <CancelDialog
                 open={cancelDialogOpen}
-                onClose={() => { setCancelDialogOpen(false); setCancelLast4Hp(''); setCancelError(null); }}
+                onClose={() => {
+ setCancelDialogOpen(false); setCancelLast4Hp(''); setCancelError(null); 
+}}
                 reasons={cancellationReasons}
                 form={cancelForm}
                 last4Hp={cancelLast4Hp}
@@ -138,7 +145,9 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
 
             <ReportSheet
                 open={reportSheetOpen}
-                onClose={() => { setReportSheetOpen(false); setReportError(null); reportForm.reset(); }}
+                onClose={() => {
+ setReportSheetOpen(false); setReportError(null); reportForm.reset(); 
+}}
                 form={reportForm}
                 error={reportError}
                 onSubmit={handleReportSubmit}
@@ -149,16 +158,20 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
 
 /* ─── Sub-components ───────────────────────────────────────── */
 
-function OrderHeader({ order, isConfirmation }: { order: any; isConfirmation: boolean }) {
+function OrderHeader({ order, isConfirmation, onShare }: { order: any; isConfirmation: boolean; onShare?: () => void }) {
     return (
         <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-safe">
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                 <button
                     type="button"
                     onClick={() => {
-                        if (isConfirmation) window.location.href = '/customer/orders';
-                        else if (window.history.length > 1) window.history.back();
-                        else window.location.href = '/customer/orders';
+                        if (isConfirmation) {
+window.location.href = '/customer/orders';
+} else if (window.history.length > 1) {
+window.history.back();
+} else {
+window.location.href = '/customer/orders';
+}
                     }}
                     className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
                     aria-label="Kembali"
@@ -169,7 +182,18 @@ function OrderHeader({ order, isConfirmation }: { order: any; isConfirmation: bo
                     <div className="text-sm font-semibold text-text">{order.order_code}</div>
                     {order.ordered_at && <div className="text-[11px] text-text-muted">{formatDate(order.ordered_at)}</div>}
                 </div>
-                <div className="h-11 w-11" />
+                {onShare ? (
+                    <button
+                        type="button"
+                        onClick={onShare}
+                        className="flex h-11 w-11 items-center justify-center rounded-lg text-emerald-600 active:bg-emerald-50"
+                        aria-label="Bagikan lacak pesanan"
+                    >
+                        <Share2 className="h-5 w-5" />
+                    </button>
+                ) : (
+                    <div className="h-11 w-11" />
+                )}
             </div>
         </header>
     );
@@ -209,39 +233,43 @@ function StatusGuidanceCard({ order, isPickup, countdown }: { order: any; isPick
     const isPaymentFailed = order.payment_status === 'failed' || order.payment_status === 'expired';
     const guidanceKey = order.status === 'ready_for_pickup' && !isPickup ? 'ready_for_pickup_delivery' : isPendingUnpaid ? (isPaymentFailed ? 'pending_confirmation_payment_failed' : 'pending_confirmation_unpaid') : order.status;
     const guidance = STATUS_GUIDANCE[guidanceKey];
-    if (!guidance) return null;
+
+    if (!guidance) {
+return null;
+}
 
     const isPickupReady = order.status === 'ready_for_pickup' && order.outlet?.latitude && order.outlet?.longitude;
     const showCountdown = order.status === 'pending_confirmation' && !isPendingUnpaid && !countdown.expired && countdown.totalSeconds > 0;
 
     return (
-        <div className="mt-3 rounded-xl border border-border bg-white p-4">
-            <div className="text-sm font-semibold text-text">{guidance.description}</div>
-            {showCountdown && (
-                <div className="mt-2 flex items-center gap-2">
-                    <div className="flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5">
-                        <Clock className="h-3.5 w-3.5 text-amber-600" />
-                        <span className="text-sm font-bold tabular-nums text-amber-700">{String(countdown.minutes).padStart(2, '0')}:{String(countdown.seconds).padStart(2, '0')}</span>
+        <div className="mt-3 rounded-xl border border-border bg-white p-3">
+            <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                    <div className="text-xs font-semibold text-text">{guidance.description}</div>
+                    {showCountdown && (
+                        <div className="mt-1 flex items-center gap-1.5">
+                            <Clock className="h-3 w-3 text-amber-600" />
+                            <span className="text-xs font-bold tabular-nums text-amber-700">{String(countdown.minutes).padStart(2, '0')}:{String(countdown.seconds).padStart(2, '0')}</span>
+                        </div>
+                    )}
+                    {guidance.nextStep && <div className="mt-0.5 text-[11px] text-text-muted">{guidance.nextStep}</div>}
+                </div>
+                {guidance.cta && (
+                    <div className="shrink-0">
+                        {isPickupReady && guidance.cta.action === 'navigate' ? (
+                            <a href={`${MAPS_LINK}${order.outlet.latitude},${order.outlet.longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80">
+                                <MapPin className="h-3.5 w-3.5" />{guidance.cta.label}
+                            </a>
+                        ) : guidance.cta.action === 'wa_outlet' && order.outlet?.phone ? (
+                            <a href={`${WA_LINK}${order.outlet.phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80">
+                                <Phone className="h-3.5 w-3.5" />{guidance.cta.label}
+                            </a>
+                        ) : guidance.cta.href ? (
+                            <Link href={guidance.cta.href} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80">{guidance.cta.label}</Link>
+                        ) : null}
                     </div>
-                    <span className="text-xs text-text-subtle">sisa waktu konfirmasi</span>
-                </div>
-            )}
-            {guidance.nextStep && <div className="mt-1 text-xs text-text-muted">{guidance.nextStep}</div>}
-            {guidance.cta && (
-                <div className="mt-3">
-                    {isPickupReady && guidance.cta.action === 'navigate' ? (
-                        <a href={`${MAPS_LINK}${order.outlet.latitude},${order.outlet.longitude}`} target="_blank" rel="noopener noreferrer" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80">
-                            <MapPin className="h-4 w-4" />{guidance.cta.label}
-                        </a>
-                    ) : guidance.cta.action === 'wa_outlet' && order.outlet?.phone ? (
-                        <a href={`${WA_LINK}${order.outlet.phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80">
-                            <Phone className="h-4 w-4" />{guidance.cta.label}
-                        </a>
-                    ) : guidance.cta.href ? (
-                        <Link href={guidance.cta.href} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80">{guidance.cta.label}</Link>
-                    ) : null}
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
@@ -259,126 +287,115 @@ function CompletedHero({ orderId }: { orderId: number }) {
     );
 }
 
-function ShareTrackingButton({ onShare }: { onShare: () => void }) {
-    return (
-        <div className="mt-4">
-            <button type="button" onClick={onShare} className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80">
-                <Share2 className="h-4 w-4" />Kirim Lacak Pesanan ke WhatsApp
-            </button>
-        </div>
-    );
-}
 
-function OrderItemsSummary({ order, isPickup }: { order: any; isPickup: boolean }) {
+function OrderInfoCard({ order, isPickup }: { order: any; isPickup: boolean }) {
     return (
-        <div className="mt-4 rounded-xl border border-border bg-white p-4">
-            <div className="flex items-center gap-2 mb-3">
-                <Package className="h-4 w-4 text-text-subtle" />
-                <span className="text-[13px] text-text-subtle">Pesanan</span>
-            </div>
-            <div className="space-y-2">
-                {order.items.map((item: any, i: number) => (
-                    <div key={i} className="flex items-center justify-between text-sm">
-                        <div className="min-w-0">
-                            <span className="text-text">{item.product_name}</span>
-                            <span className="ml-1 text-xs text-text-subtle">x{item.quantity}</span>
+        <div className="mt-4 rounded-xl border border-border bg-white divide-y divide-border/50">
+            {/* Items */}
+            <div className="p-3">
+                <div className="flex items-center gap-2 mb-2">
+                    <Package className="h-3.5 w-3.5 text-text-subtle" />
+                    <span className="text-[11px] text-text-subtle">Pesanan</span>
+                </div>
+                <div className="space-y-1">
+                    {order.items.map((item: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between text-xs">
+                            <div className="min-w-0">
+                                <span className="text-text">{item.product_name}</span>
+                                <span className="ml-1 text-[10px] text-text-subtle">x{item.quantity}</span>
+                            </div>
+                            <span className="shrink-0 font-medium tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
                         </div>
-                        <span className="shrink-0 font-medium tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
+                    ))}
+                </div>
+                <div className="mt-2 border-t border-border/50 pt-2 space-y-1">
+                    <SummaryRow label="Metode" value={isPickup ? 'Ambil di Outlet' : 'Kirim ke Alamat'} />
+                    <SummaryRow label="Pembayaran" value={order.payment_method} />
+                    {Number(order.delivery_fee) > 0 && <SummaryRow label="Ongkir" value={formatCurrency(order.delivery_fee)} />}
+                    {Number(order.credit_applied) > 0 && <SummaryRow label="Saldo Kredit" value={`-Rp ${formatCurrency(order.credit_applied)}`} accent />}
+                    <div className="flex items-center justify-between text-xs font-semibold text-text pt-1 border-t border-border/50">
+                        <span>Total</span>
+                        <span className="tabular-nums">{formatCurrency(order.total)}</span>
                     </div>
-                ))}
-            </div>
-            <div className="mt-3 border-t border-border pt-3 space-y-1.5">
-                <SummaryRow label="Metode" value={isPickup ? 'Ambil di Outlet' : 'Kirim ke Alamat'} />
-                <SummaryRow label="Pembayaran" value={order.payment_method} />
-                {Number(order.delivery_fee) > 0 && <SummaryRow label="Ongkir" value={formatCurrency(order.delivery_fee)} />}
-                {Number(order.credit_applied) > 0 && <SummaryRow label="Saldo Kredit" value={`-Rp ${formatCurrency(order.credit_applied)}`} accent />}
-                <div className="flex items-center justify-between text-sm font-semibold text-text pt-1 border-t border-border">
-                    <span>Total</span>
-                    <span className="tabular-nums">{formatCurrency(order.total)}</span>
                 </div>
             </div>
+
+            {/* Outlet */}
+            {order.outlet && (
+                <div className="p-3">
+                    <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                                <Store className="h-3.5 w-3.5 text-text-subtle" />
+                                <span className="text-xs font-semibold text-text truncate">{order.outlet.name}</span>
+                            </div>
+                            {order.outlet.address && <div className="mt-0.5 text-[11px] text-text-muted line-clamp-1">{order.outlet.address}</div>}
+                        </div>
+                        <div className="flex shrink-0 gap-1.5">
+                            {order.outlet.latitude && order.outlet.longitude && (
+                                <a href={`${MAPS_LINK}${order.outlet.latitude},${order.outlet.longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1 rounded-lg bg-primary px-2.5 text-[11px] font-bold text-white active:opacity-80">
+                                    <Navigation className="h-3 w-3" />Navigasi
+                                </a>
+                            )}
+                            {order.outlet.phone && (
+                                <a href={`${WA_LINK}${order.outlet.phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 text-[11px] font-semibold text-text active:opacity-80">
+                                    <Phone className="h-3 w-3" />WA
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delivery address */}
+            {!isPickup && order.customer_address && (
+                <div className="p-3">
+                    <div className="flex items-start gap-1.5">
+                        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-text-subtle" />
+                        <div className="min-w-0 flex-1">
+                            <div className="line-clamp-2 text-xs text-text">{order.customer_address}</div>
+                            {order.customer_address_detail && <div className="text-[10px] text-text-muted mt-0.5">{order.customer_address_detail}</div>}
+                            {order.latitude && order.longitude && (
+                                <a href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-primary active:opacity-80">
+                                    <MapPin className="h-3 w-3" />Buka di Maps
+                                </a>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Courier */}
+            {order.delivery?.courier && (
+                <div className="p-3">
+                    <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-muted"><UserCheck className="h-3.5 w-3.5 text-text-muted" /></div>
+                        <div>
+                            <div className="text-[10px] text-text-subtle">Kurir</div>
+                            <div className="text-xs font-semibold text-text">{order.delivery.courier.name}</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Failed delivery */}
+            {order.delivery?.failed_reason && (
+                <div className="p-3 bg-amber-50">
+                    <div className="flex items-center gap-1.5">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                        <span className="text-xs font-semibold text-amber-700">Pengiriman Gagal: {order.delivery.failed_reason}</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
 
 function SummaryRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
     return (
-        <div className="flex items-center justify-between text-xs text-text-muted">
+        <div className="flex items-center justify-between text-[10px] text-text-muted">
             <span>{label}</span>
             <span className={`font-medium ${accent ? 'text-emerald-600' : 'text-text'}`}>{value}</span>
-        </div>
-    );
-}
-
-function OutletCard({ outlet }: { outlet: any }) {
-    return (
-        <div className="mt-4 rounded-xl border border-border bg-white p-4">
-            <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                        <Store className="h-4 w-4 text-text-subtle" />
-                        <span className="text-sm font-semibold text-text">{outlet.name}</span>
-                    </div>
-                    {outlet.address && <div className="mt-1 text-xs text-text-muted">{outlet.address}</div>}
-                </div>
-            </div>
-            <div className="mt-3 flex gap-2">
-                {outlet.latitude && outlet.longitude && (
-                    <a href={`${MAPS_LINK}${outlet.latitude},${outlet.longitude}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80">
-                        <Navigation className="h-4 w-4" />Navigasi
-                    </a>
-                )}
-                {outlet.phone && (
-                    <a href={`${WA_LINK}${outlet.phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80">
-                        <Phone className="h-4 w-4" />WhatsApp
-                    </a>
-                )}
-            </div>
-        </div>
-    );
-}
-
-function DeliveryAddressCard({ address, detail, lat, lng }: { address: string; detail?: string; lat?: number; lng?: number }) {
-    return (
-        <div className="mt-4 rounded-xl border border-border bg-white p-4">
-            <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle" />
-                <div className="min-w-0 flex-1">
-                    <div className="line-clamp-2 text-sm font-medium text-text">{address}</div>
-                    {detail && <div className="mt-1 text-xs text-text-muted">Detail: {detail}</div>}
-                </div>
-            </div>
-            {lat && lng && (
-                <a href={`https://www.google.com/maps?q=${lat},${lng}`} target="_blank" rel="noopener noreferrer" className="mt-3 flex min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-xs font-semibold text-text active:opacity-80">
-                    <MapPin className="h-3.5 w-3.5" />Buka di Maps
-                </a>
-            )}
-        </div>
-    );
-}
-
-function CourierCard({ courier }: { courier: any }) {
-    return (
-        <div className="mt-4 rounded-xl border border-border bg-white p-4">
-            <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-muted"><UserCheck className="h-5 w-5 text-text-muted" /></div>
-                <div>
-                    <div className="text-[11px] text-text-subtle">Kurir</div>
-                    <div className="text-sm font-semibold text-text">{courier.name}</div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function FailedDeliveryBanner({ reason }: { reason: string }) {
-    return (
-        <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
-            <div className="flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <div className="text-[13px] text-amber-700">Pengiriman Gagal</div>
-            </div>
-            <div className="mt-2 text-sm text-amber-800">{reason}</div>
         </div>
     );
 }
@@ -391,12 +408,15 @@ function StatusBanner({ order }: { order: any }) {
     if (status === 'rejected_by_outlet' && reason) {
         return <ReasonBanner icon={<XCircle className="h-4 w-4 text-red-500" />} title="Pesanan Ditolak Outlet" reason={reason} note={note} />;
     }
+
     if (status === 'cancelled_by_customer' && reason) {
         return <ReasonBanner icon={<XCircle className="h-4 w-4 text-red-500" />} title="Pesanan Dibatalkan" reason={reason} note={note} />;
     }
+
     if (status === 'cancelled_by_outlet' && reason) {
         return <ReasonBanner icon={<XCircle className="h-4 w-4 text-red-500" />} title="Dibatalkan Outlet" reason={reason} note={note} />;
     }
+
     if (status === 'expired') {
         return (
             <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
@@ -408,6 +428,7 @@ function StatusBanner({ order }: { order: any }) {
             </div>
         );
     }
+
     return null;
 }
 
@@ -423,20 +444,20 @@ function ReasonBanner({ icon, title, reason, note }: { icon: React.ReactNode; ti
 
 function CancelButton({ onClick }: { onClick: () => void }) {
     return (
-        <div className="mt-4">
-            <button type="button" onClick={onClick} className="flex h-11 w-full items-center justify-center rounded-lg border border-red-200 text-sm font-semibold text-red-600 active:opacity-80">Batalkan Pesanan</button>
-            <p className="mt-2 text-center text-[11px] text-text-subtle">Batalkan hanya jika pesanan belum diproses</p>
-        </div>
+        <>
+            <button type="button" onClick={onClick} className="flex h-10 w-full items-center justify-center rounded-lg border border-red-200 text-xs font-semibold text-red-600 active:opacity-80">Batalkan Pesanan</button>
+            <p className="mt-1.5 text-center text-[10px] text-text-subtle">Hanya jika pesanan belum diproses</p>
+        </>
     );
 }
 
 function NonCancellableNotice({ phone }: { phone?: string }) {
     return (
-        <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
-            <div className="text-sm text-text-muted">Pesanan sedang diproses dan tidak dapat dibatalkan.</div>
+        <div className="flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2">
+            <span className="text-[11px] text-text-muted">Pesanan diproses, tidak dapat dibatalkan</span>
             {phone && (
-                <a href={`${WA_LINK}${phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80">
-                    <Phone className="h-3.5 w-3.5" />WhatsApp Outlet
+                <a href={`${WA_LINK}${phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-[11px] font-semibold text-primary active:opacity-80">
+                    <Phone className="h-3 w-3" />WA Outlet
                 </a>
             )}
         </div>
@@ -445,11 +466,9 @@ function NonCancellableNotice({ phone }: { phone?: string }) {
 
 function ReorderLink({ orderId }: { orderId: number }) {
     return (
-        <div className="mt-6">
-            <Link href={`/customer/orders/${orderId}/restore-cart`} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80">
-                <RotateCcw className="h-4 w-4" />Pesan Lagi
-            </Link>
-        </div>
+        <Link href={`/customer/orders/${orderId}/restore-cart`} className="flex h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary text-xs font-bold text-white active:opacity-80">
+            <RotateCcw className="h-3.5 w-3.5" />Pesan Lagi
+        </Link>
     );
 }
 

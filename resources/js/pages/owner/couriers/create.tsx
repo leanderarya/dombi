@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { Bike, Car, Truck } from 'lucide-react';
+import { Bike, Car } from 'lucide-react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';

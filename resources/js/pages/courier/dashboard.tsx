@@ -27,8 +27,6 @@ interface CourierData {
     id: number;
     name: string;
     is_online: boolean;
-    is_on_shift: boolean;
-    shift_started_at: string | null;
 }
 
 interface Props {
@@ -66,22 +64,6 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
         });
     };
 
-    const handleShiftStart = () => {
-        setLoadingAction('shift-start');
-        router.post('/courier/shift/start', {}, {
-            preserveScroll: true,
-            onFinish: () => setLoadingAction(null),
-        });
-    };
-
-    const handleShiftEnd = () => {
-        setLoadingAction('shift-end');
-        router.post('/courier/shift/end', {}, {
-            preserveScroll: true,
-            onFinish: () => setLoadingAction(null),
-        });
-    };
-
     return (
         <CourierLayout>
             <Head title="Tugas Saya" />
@@ -91,47 +73,21 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
                         <div className={`h-3.5 w-3.5 rounded-full ${courier.is_online ? 'bg-emerald-500' : 'bg-text-subtle'}`} />
-                        <div>
-                            <div className="text-base font-bold text-text">
-                                {courier.is_online ? 'Online' : 'Offline'}
-                            </div>
-                            {courier.is_on_shift && courier.shift_started_at && (
-                                <div className="text-xs text-text-muted">
-                                    Shift sejak {new Date(courier.shift_started_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}
-                                </div>
-                            )}
+                        <div className="text-base font-bold text-text">
+                            {courier.is_online ? 'Online' : 'Offline'}
                         </div>
                     </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={handleAvailabilityToggle}
-                            disabled={loadingAction !== null}
-                            className={`min-h-11 rounded-lg px-5 py-3 text-sm font-bold transition-colors disabled:opacity-50 ${
-                                courier.is_online
-                                    ? 'border border-border bg-white text-text active:bg-surface-muted'
-                                    : 'bg-primary text-white active:opacity-80'
-                            }`}
-                        >
-                            {loadingAction === 'availability' ? '...' : courier.is_online ? 'Offline' : 'Online'}
-                        </button>
-                        {!courier.is_on_shift ? (
-                            <button
-                                onClick={handleShiftStart}
-                                disabled={loadingAction !== null}
-                                className="min-h-11 rounded-lg bg-primary px-5 py-3 text-sm font-bold text-white transition-colors active:opacity-80 disabled:opacity-50"
-                            >
-                                {loadingAction === 'shift-start' ? '...' : 'Mulai Shift'}
-                            </button>
-                        ) : (
-                            <button
-                                onClick={handleShiftEnd}
-                                disabled={loadingAction !== null}
-                                className="min-h-11 rounded-lg border border-red-200 bg-white px-5 py-3 text-sm font-bold text-red-600 transition-colors active:bg-red-50 disabled:opacity-50"
-                            >
-                                {loadingAction === 'shift-end' ? '...' : 'Akhiri Shift'}
-                            </button>
-                        )}
-                    </div>
+                    <button
+                        onClick={handleAvailabilityToggle}
+                        disabled={loadingAction !== null}
+                        className={`min-h-11 rounded-lg px-5 py-3 text-sm font-bold transition-colors disabled:opacity-50 ${
+                            courier.is_online
+                                ? 'border border-border bg-white text-text active:bg-surface-muted'
+                                : 'bg-primary text-white active:opacity-80'
+                        }`}
+                    >
+                        {loadingAction === 'availability' ? '...' : courier.is_online ? 'Offline' : 'Online'}
+                    </button>
                 </div>
             </SectionCard>
 

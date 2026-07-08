@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useEffect } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
@@ -76,25 +77,12 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
             />
 
             {/* KPI Strip */}
-            <div className="mb-4 grid grid-cols-4 gap-2">
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Menunggu</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{counts.requested}</div>
-                    {counts.requested > 0 && <div className="text-xs font-medium text-amber-600">Perlu ditinjau</div>}
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Disiapkan</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{counts.preparing}</div>
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Dikirim</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{counts.shipped}</div>
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Selesai</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{counts.completed}</div>
-                </div>
-            </div>
+            <OwnerKpiStrip items={[
+                { label: 'Menunggu', value: counts.requested, sublabel: counts.requested > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
+                { label: 'Disiapkan', value: counts.preparing },
+                { label: 'Dikirim', value: counts.shipped },
+                { label: 'Selesai', value: counts.completed },
+            ]} />
 
             {/* Table */}
             {restocks.data.length === 0 ? (

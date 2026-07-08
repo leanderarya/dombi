@@ -68,65 +68,65 @@ return item.isActive(currentUrl);
     };
 
     return (
-        <nav className="flex-1 overflow-y-auto px-2 pb-4">
-            {navGroups.map((group, groupIndex) => {
-                const isExpanded = expandedGroups.has(group.label);
-                const hasActive = group.items.some((item) => isItemActive(item, url));
+                        <nav className="flex-1 overflow-y-auto px-2 pb-4">
+                            {navGroups.map((group, groupIndex) => {
+                                const isExpanded = expandedGroups.has(group.label);
+                                const hasActive = group.items.some((item) => isItemActive(item, url));
 
-                return (
-                    <div key={group.label} className={groupIndex > 0 ? 'mt-0.5' : ''}>
-                        {group.items.length === 1 ? (
-                            <Link
-                                href={group.items[0].href}
-                                className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-xs transition-all duration-150 ${
-                                    isItemActive(group.items[0], url)
-                                        ? 'bg-white font-semibold text-emerald-700'
-                                        : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
-                                }`}
-                            >
-                                <span className="h-4 w-4 shrink-0 opacity-70">{group.icon}</span>
-                                {group.label}
-                            </Link>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={() => toggleGroup(group.label)}
-                                    aria-expanded={isExpanded}
-                                    className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[11px] transition-all duration-150 ${
-                                        hasActive
-                                            ? 'font-semibold text-slate-900'
-                                            : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
-                                    }`}
-                                >
-                                    <span className="h-4 w-4 shrink-0 opacity-70">{group.icon}</span>
-                                    <span className="flex-1 text-left">{group.label}</span>
-                                    <ChevronIcon expanded={isExpanded} />
-                                </button>
-                                {isExpanded && (
-                                    <div className="ml-4 mt-0.5 space-y-px">
-                                        {group.items.map((item) => {
-                                            const active = isItemActive(item, url);
-                                            const badgeCount = item.badgeKey ? (pendingCounts[item.badgeKey] ?? 0) : 0;
-
-                                            return (
-                                                <Link
-                                                    key={item.href}
-                                                    href={item.href}
-                                                    className={`flex items-center justify-between rounded-lg px-2.5 py-1 text-xs transition-all duration-150 ${
-                                                        active
-                                                            ? 'bg-white font-semibold text-emerald-700'
+                                return (
+                                    <div key={group.label} className={groupIndex > 0 ? 'mt-0.5' : ''}>
+                                        {group.items.length === 1 ? (
+                                            <Link
+                                                href={group.items[0].href}
+                                                className={`flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm transition-all duration-150 ${
+                                                    isItemActive(group.items[0], url)
+                                                        ? 'bg-white font-semibold text-emerald-700'
+                                                        : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
+                                                }`}
+                                            >
+                                                <span className="h-4 w-4 shrink-0 opacity-70">{group.icon}</span>
+                                                {group.label}
+                                            </Link>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => toggleGroup(group.label)}
+                                                    aria-expanded={isExpanded}
+                                                    className={`flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] transition-all duration-150 ${
+                                                        hasActive
+                                                            ? 'font-semibold text-slate-900'
                                                             : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
                                                     }`}
                                                 >
-                                                    <span>{item.label}</span>
-                                                    {badgeCount > 0 && (
-                                                        <span className="min-w-4.5 rounded-full bg-amber-400 px-1.5 py-px text-center text-[10px] font-bold text-white">
-                                                            {badgeCount}
-                                                        </span>
-                                                    )}
-                                                </Link>
-                                            );
-                                        })}
+                                                    <span className="h-4 w-4 shrink-0 opacity-70">{group.icon}</span>
+                                                    <span className="flex-1 text-left">{group.label}</span>
+                                                    <ChevronIcon expanded={isExpanded} />
+                                                </button>
+                                                {isExpanded && (
+                                                    <div className="ml-4 mt-0.5 space-y-px">
+                                                        {group.items.map((item) => {
+                                                            const active = isItemActive(item, url);
+                                                            const badgeCount = item.badgeKey ? (pendingCounts[item.badgeKey] ?? 0) : 0;
+
+                                                            return (
+                                                                <Link
+                                                                    key={item.href}
+                                                                    href={item.href}
+                                                                    className={`flex items-center justify-between rounded-lg px-2.5 py-1 text-sm transition-all duration-150 ${
+                                                                        active
+                                                                            ? 'bg-white font-semibold text-emerald-700'
+                                                                            : 'font-medium text-slate-500 hover:bg-white/60 hover:text-slate-700'
+                                                                    }`}
+                                                                >
+                                                                    <span>{item.label}</span>
+                                                                    {badgeCount > 0 && (
+                                                                        <span className="min-w-4.5 rounded-full bg-amber-400 px-1.5 py-px text-center text-[11px] font-bold text-white">
+                                                                            {badgeCount}
+                                                                        </span>
+                                                                    )}
+                                                                </Link>
+                                                            );
+                                                        })}
                                     </div>
                                 )}
                             </>

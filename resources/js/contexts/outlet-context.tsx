@@ -16,7 +16,7 @@ export type OutletOption = {
 
 type OutletContextValue = {
     selectedOutlet: OutletOption | null;
-    setOutlet: (outlet: OutletOption) => void;
+    selectManual: (outlet: OutletOption) => void;
     outlets: OutletOption[];
     loading: boolean;
     error: string | null;
@@ -36,7 +36,7 @@ export function useOutlet(): OutletContextValue {
 }
 
 export default function OutletProvider({ children }: { children: ReactNode }) {
-    const { outletId, save } = useOutletStore();
+    const { outletId, autoSelected, save, autoSave } = useOutletStore();
     const { location } = useCustomerLocation();
     const [outlets, setOutlets] = useState<OutletOption[]>([]);
     const [loading, setLoading] = useState(true);
@@ -70,8 +70,8 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         })
             .then(async (res) => {
                 if (!res.ok) {
-throw new Error('Failed to load outlets');
-}
+                    throw new Error('Failed to load outlets');
+                }
 
                 return res.json();
             })
@@ -91,13 +91,22 @@ throw new Error('Failed to load outlets');
         return () => controller.abort();
     }, [location?.latitude, location?.longitude, fetchKey]);
 
-    // Auto-select logic: localStorage → nearest → null
+    // Auto-select logic: manual pick → auto nearest → fallback
     const selectedOutlet = useMemo(() => {
         if (outlets.length === 0) {
 return null;
 }
 
-        // 1. Try localStorage saved ID
+        // User manually picked an outlet — keep it (even if GPS changes)
+        if (!autoSelected && outletId !== null) {
+            const saved = outlets.find((o) => o.id === outletId);
+
+            if (saved) {
+return saved;
+}
+        }
+
+        // Auto-select nearest (first in sorted list) or fallback to saved
         if (outletId !== null) {
             const saved = outlets.find((o) => o.id === outletId);
 
@@ -106,21 +115,31 @@ return saved;
 }
         }
 
-        // 2. Auto-select first (nearest by distance or first alphabetically)
+        // Fallback to nearest
         return outlets[0];
-    }, [outlets, outletId]);
+    }, [outlets, outletId, autoSelected]);
 
-    // Persist default selection when none saved
+    // Persist selection — only override when saved outlet no longer exists
     useEffect(() => {
-        if (outlets.length > 0 && outletId === null) {
-            save(outlets[0].id);
-        } else if (outlets.length > 0 && outletId !== null && !outlets.some((o) => o.id === outletId)) {
-            // Saved outlet no longer exists — reset to nearest
-            save(outlets[0].id);
-        }
-    }, [outlets, outletId, save]);
+        if (outlets.length === 0) {
+return;
+}
 
-    const setOutlet = useCallback((outlet: OutletOption) => {
+        // Manual pick — keep it, don't override
+        if (!autoSelected && outletId !== null && outlets.some((o) => o.id === outletId)) {
+            return;
+        }
+
+        // Auto mode — keep saved if it still exists in list
+        if (autoSelected && outletId !== null && outlets.some((o) => o.id === outletId)) {
+            return;
+        }
+
+        // No saved outlet or saved outlet no longer exists — auto-pick nearest
+        autoSave(outlets[0].id);
+    }, [outlets, outletId, autoSelected, autoSave]);
+
+    const selectManual = useCallback((outlet: OutletOption) => {
         save(outlet.id);
     }, [save]);
 
@@ -130,12 +149,12 @@ return saved;
 
     const value = useMemo<OutletContextValue>(() => ({
         selectedOutlet,
-        setOutlet,
+        selectManual,
         outlets,
         loading,
         error,
         retry,
-    }), [selectedOutlet, setOutlet, outlets, loading, error, retry]);
+    }), [selectedOutlet, selectManual, outlets, loading, error, retry]);
 
     return (
         <OutletContext.Provider value={value}>

@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
@@ -88,26 +89,12 @@ export default function OwnerOrdersIndex({
             />
 
             {/* KPI Strip */}
-            <div className="mb-4 grid grid-cols-4 gap-2">
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats?.total_today ?? 0}</div>
-                    {(stats?.total_today ?? 0) > 0 && <div className="text-xs font-medium text-blue-600">Hari ini</div>}
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Tindakan</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats?.pending ?? 0}</div>
-                    {(stats?.pending ?? 0) > 0 && <div className="text-xs font-medium text-amber-600">Perlu assign kurir</div>}
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Selesai</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats?.completed_today ?? 0}</div>
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Revenue</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{formatCurrency(stats?.revenue_today ?? 0)}</div>
-                </div>
-            </div>
+            <OwnerKpiStrip items={[
+                { label: 'Total', value: stats?.total_today ?? 0, sublabel: (stats?.total_today ?? 0) > 0 ? 'Hari ini' : undefined, sublabelColor: 'text-blue-600' },
+                { label: 'Tindakan', value: stats?.pending ?? 0, sublabel: (stats?.pending ?? 0) > 0 ? 'Perlu assign kurir' : undefined, sublabelColor: 'text-amber-600' },
+                { label: 'Selesai', value: stats?.completed_today ?? 0 },
+                { label: 'Revenue', value: formatCurrency(stats?.revenue_today ?? 0) },
+            ]} />
 
             {/* Table */}
             {orders.data.length === 0 ? (

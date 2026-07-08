@@ -39,7 +39,7 @@ export default function CustomerMobileLayout({ children, activeOrder, topAddress
                     {children}
                 </main>
 
-                {footerSlot ?? (activeOrder ? <ActiveOrderBar order={activeOrder} /> : showCartBar ? <FloatingCartBar /> : null)}
+                {footerSlot ?? (activeOrder ? <ActiveOrderBar order={activeOrder} /> : showCartBar ? <FloatingCartBar bottomNavVisible={visible} /> : null)}
                 {!hideBottomNav && <CustomerBottomNav visible={visible} />}
             </div>
         </FavoritesProvider>

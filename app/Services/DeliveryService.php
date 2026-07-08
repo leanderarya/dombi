@@ -437,7 +437,6 @@ class DeliveryService
                     'name' => $courier->name,
                     'active_deliveries' => $this->getCourierActiveDeliveryCount($courier),
                     'is_online' => $courier->is_online,
-                    'is_on_shift' => $courier->isOnShift(),
                 ];
             });
     }

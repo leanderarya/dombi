@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, MapPin, Truck } from 'lucide-react';
 import { useState } from 'react';
 import OrderStatusChip from '@/components/owner/order-status-chip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
@@ -25,10 +26,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item</div>
                     {order.items.map((item: any) => (
-                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">{item.product_name} x{item.quantity}</span>
-                            <span className="font-semibold tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
-                        </div>
+                        <OwnerDetailRow label={`${item.product_name} x${item.quantity}`} value={formatCurrency(item.subtotal)} bold />
                     ))}
                     <div className="mt-2 rounded-lg bg-surface-muted p-3 text-right text-lg font-bold tabular-nums">{formatCurrency(order.total)}</div>
                 </div>
@@ -77,42 +75,21 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">
                         {isDifferentRecipient(order) ? 'Pemesan' : 'Customer'}
                     </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Nama</span>
-                        <span className="text-text">{order.customer_name}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Telepon</span>
-                        <span className="text-text">{order.customer_phone}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Alamat</span>
-                        <span className="text-right text-text">{order.customer_address}</span>
-                    </div>
+                    <OwnerDetailRow label="Nama" value={order.customer_name} />
+                    <OwnerDetailRow label="Telepon" value={order.customer_phone} />
+                    <OwnerDetailRow label="Alamat" value={order.customer_address} align="right" />
                     {order.customer_address_detail && (
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">Detail</span>
-                            <span className="text-text">{order.customer_address_detail}</span>
-                        </div>
+                        <OwnerDetailRow label="Detail" value={order.customer_address_detail} />
                     )}
                     {order.customer_landmark && (
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">Patokan</span>
-                            <span className="text-text">{order.customer_landmark}</span>
-                        </div>
+                        <OwnerDetailRow label="Patokan" value={order.customer_landmark} />
                     )}
 
                     {isDifferentRecipient(order) && (
                         <>
                             <div className="mb-3 mt-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Penerima</div>
-                            <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                                <span className="text-text-muted">Nama</span>
-                                <span className="text-text">{order.recipient_name}</span>
-                            </div>
-                            <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                                <span className="text-text-muted">Telepon</span>
-                                <span className="text-text">{order.recipient_phone ?? '-'}</span>
-                            </div>
+                            <OwnerDetailRow label="Nama" value={order.recipient_name} />
+                            <OwnerDetailRow label="Telepon" value={order.recipient_phone ?? '-'} />
                         </>
                     )}
 
@@ -151,10 +128,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                 {order.delivery && (
                     <div className="rounded-lg border border-border p-4">
                         <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Kurir</div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">Nama</span>
-                            <span className="text-text">{order.delivery.courier?.name ?? '-'}</span>
-                        </div>
+                        <OwnerDetailRow label="Nama" value={order.delivery.courier?.name ?? '-'} />
                     </div>
                 )}
 

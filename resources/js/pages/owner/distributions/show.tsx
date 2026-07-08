@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import DistributionStatusBadge from '@/components/ui/distribution-status-badge';
 
 export default function OwnerDistributionShow({ distribution }: any) {
@@ -10,28 +11,16 @@ export default function OwnerDistributionShow({ distribution }: any) {
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item</div>
                     {distribution.items.map((item: any) => (
-                        <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                            <span className="text-text-muted">{item.product?.name ?? item.variant?.name ?? '-'}</span>
-                            <span className="font-semibold text-text">{item.quantity}</span>
-                        </div>
+                        <OwnerDetailRow key={item.id} label={item.product?.name ?? item.variant?.name ?? '-'} value={`${item.quantity}`} bold />
                     ))}
                 </div>
 
                 {/* Status */}
                 <div className="rounded-lg border border-border p-4">
                     <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Status</span>
-                        <DistributionStatusBadge status={distribution.status} />
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Dikirim</span>
-                        <span className="text-text">{distribution.sent_at ? new Date(distribution.sent_at).toLocaleString('id-ID') : '-'}</span>
-                    </div>
-                    <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">Diterima</span>
-                        <span className="text-text">{distribution.received_at ? new Date(distribution.received_at).toLocaleString('id-ID') : '-'}</span>
-                    </div>
+                    <OwnerDetailRow label="Status" value={<DistributionStatusBadge status={distribution.status} />} />
+                    <OwnerDetailRow label="Dikirim" value={distribution.sent_at ? new Date(distribution.sent_at).toLocaleString('id-ID') : '-'} />
+                    <OwnerDetailRow label="Diterima" value={distribution.received_at ? new Date(distribution.received_at).toLocaleString('id-ID') : '-'} />
                     {distribution.status === 'preparing' && (
                         <button
                             onClick={() => router.post(`/owner/distributions/${distribution.id}/mark-shipped`)}

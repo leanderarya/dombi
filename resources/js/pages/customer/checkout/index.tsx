@@ -28,8 +28,12 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
         // Prioritize localStorage (survives navigation), fallback to server draft
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem('dombi_fulfillment_type');
-            if (stored === 'delivery' || stored === 'pickup') return stored;
+
+            if (stored === 'delivery' || stored === 'pickup') {
+return stored;
+}
         }
+
         return draft?.fulfillment?.fulfillment_type ?? '';
     });
     const [processing, setProcessing] = useState(false);
@@ -181,8 +185,10 @@ export default function CheckoutIndex({ draft, summary, nearestOutlet, deliveryP
                         onClick={() => {
                             if (!isLoggedIn) {
                                 setDeliverySheetOpen(true);
+
                                 return;
                             }
+
                             saveFulfillment('delivery_dombi');
                         }}
                         className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${

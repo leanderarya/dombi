@@ -19,10 +19,10 @@ class DeliveryPricingTest extends TestCase
         $service = app(DeliveryPricingService::class);
 
         $quote = $service->quote(
-            customerLatitude: -7.0523456,
-            customerLongitude: 110.4345678,
-            outletLatitude: -7.0610000,
-            outletLongitude: 110.4310000,
+            customerLat: -7.0523456,
+            customerLng: 110.4345678,
+            outletLat: -7.0610000,
+            outletLng: 110.4310000,
         );
 
         $this->assertTrue($quote['is_serviceable']);
@@ -35,10 +35,10 @@ class DeliveryPricingTest extends TestCase
         $service = app(DeliveryPricingService::class);
 
         $quote = $service->quote(
-            customerLatitude: -7.0523456,
-            customerLongitude: 110.4345678,
-            outletLatitude: -6.9000000,
-            outletLongitude: 110.7000000,
+            customerLat: -7.0523456,
+            customerLng: 110.4345678,
+            outletLat: -6.9000000,
+            outletLng: 110.7000000,
         );
 
         $this->assertFalse($quote['is_serviceable']);

@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { MapPin } from 'lucide-react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
 import Pagination from '@/components/ui/pagination';
@@ -83,27 +84,12 @@ export default function OwnerDeliveriesIndex({
             />
 
             {/* KPI Strip */}
-            <div className="mb-4 grid grid-cols-4 gap-2">
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Total</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats.total_today}</div>
-                    {(stats.total_today ?? 0) > 0 && <div className="text-xs font-medium text-blue-600">Hari ini</div>}
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Aktif</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats.active}</div>
-                    {(stats.active ?? 0) > 0 && <div className="text-xs font-medium text-blue-600">Sedang berjalan</div>}
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Selesai</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats.completed_today}</div>
-                </div>
-                <div className="rounded-lg bg-[#f7f7f7] p-2.5">
-                    <div className="text-xs font-medium uppercase tracking-wide text-text-muted">Gagal</div>
-                    <div className="mt-1 text-base font-bold tabular-nums">{stats.failed_today}</div>
-                    {(stats.failed_today ?? 0) > 0 && <div className="text-xs font-medium text-red-600">Perlu ditinjau</div>}
-                </div>
-            </div>
+            <OwnerKpiStrip items={[
+                { label: 'Total', value: stats.total_today, sublabel: (stats.total_today ?? 0) > 0 ? 'Hari ini' : undefined, sublabelColor: 'text-blue-600' },
+                { label: 'Aktif', value: stats.active, sublabel: (stats.active ?? 0) > 0 ? 'Sedang berjalan' : undefined, sublabelColor: 'text-blue-600' },
+                { label: 'Selesai', value: stats.completed_today },
+                { label: 'Gagal', value: stats.failed_today, sublabel: (stats.failed_today ?? 0) > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-red-600' },
+            ]} />
 
             {/* Table */}
             {deliveries.data.length === 0 ? (

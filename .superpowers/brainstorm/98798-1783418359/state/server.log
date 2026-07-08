@@ -1,0 +1,4 @@
+{"type":"server-started","port":62045,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:62045","screen_dir":"/Users/aryaajisadda/Herd/dombi/.superpowers/brainstorm/98798-1783418359/content","state_dir":"/Users/aryaajisadda/Herd/dombi/.superpowers/brainstorm/98798-1783418359/state"}
+{"type":"screen-added","file":"/Users/aryaajisadda/Herd/dombi/.superpowers/brainstorm/98798-1783418359/content/page-design.html"}
+{"type":"screen-added","file":"/Users/aryaajisadda/Herd/dombi/.superpowers/brainstorm/98798-1783418359/content/shared-components.html"}
+{"type":"server-stopped","reason":"idle timeout"}

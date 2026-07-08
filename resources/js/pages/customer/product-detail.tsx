@@ -1,10 +1,10 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
+import { getCsrfToken } from '@/lib/csrf';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
-import { getCsrfToken } from '@/lib/csrf';
 
 /* ─── Types ────────────────────────────────────────────────── */
 
@@ -38,11 +38,13 @@ interface OtherFamily {
 
 function findSmallestSize(variants: Variant[]): string | null {
     const sizes = variants.map((v) => v.size).filter(Boolean) as string[];
+
     return sizes.length === 0 ? null : sizes.reduce((a, b) => sizeToMl(a) < sizeToMl(b) ? a : b);
 }
 
 function findSoleFlavor(variants: Variant[]): string | null {
     const flavors = [...new Set(variants.map((v) => v.flavor).filter(Boolean))] as string[];
+
     return flavors.length === 1 ? flavors[0] : null;
 }
 
@@ -59,7 +61,10 @@ function useAddToCart() {
     useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
     const addToCart = useCallback(async (variant: Variant, qty: number, familyName: string) => {
-        if (adding || added) return;
+        if (adding || added) {
+return;
+}
+
         setAdding(true);
         cart.addItem(variant.id, qty, variant.selling_price);
 
@@ -99,13 +104,15 @@ function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: 
     const defaultSize = useMemo(() => findSmallestSize(family.variants), [family.variants]);
     const startingPrice = useMemo(() => Math.min(...family.variants.filter((v) => v.is_active).map((v) => v.selling_price)), [family.variants]);
 
-    const [overriddenFlavor, setOverriddenFlavor] = useState<string | null>(null);
-    const [overriddenSize, setOverriddenSize] = useState<string | null>(null);
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const [overriddenFlavor, setOverriddenFlavor] = useState<string | null>(urlParams?.get('flavor') ?? null);
+    const [overriddenSize, setOverriddenSize] = useState<string | null>(urlParams?.get('size') ?? null);
     const [quantity, setQuantity] = useState(1);
     const [maxQuantity, setMaxQuantity] = useState(999);
 
     // Reset on family change (key-based, render-phase safe)
     const familyIdRef = useRef(family.id);
+
     if (familyIdRef.current !== family.id) {
         familyIdRef.current = family.id;
         setOverriddenFlavor(null);
@@ -126,7 +133,10 @@ function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: 
     const effectiveMax = Math.min(maxQuantity, selectedVariant?.available_stock ?? 999);
 
     const handleAdd = () => {
-        if (!selectedVariant || isOutOfStock) return;
+        if (!selectedVariant || isOutOfStock) {
+return;
+}
+
         addToCart(selectedVariant, quantity, family.name);
         setQuantity(1);
     };
@@ -182,6 +192,7 @@ function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: 
                         <VariantSelector title="Pilih Ukuran" subtitle="Wajib, Pilih 1" options={sortedSizes.map((s) => {
                             const v = family.variants.find((v) => v.size === s && (flavors.length === 0 || v.flavor === effectiveFlavor));
                             const basePrice = selectedVariant?.selling_price ?? family.variants[0]?.selling_price ?? 0;
+
                             return {
                                 key: s, label: s, selected: effectiveSize === s,
                                 hasVariant: family.variants.some((v) => v.size === s && (flavors.length === 0 || v.flavor === effectiveFlavor)),
@@ -194,7 +205,9 @@ function ProductDetailInner({ family, otherFamilies = [], outletId }: { family: 
                     {flavors.length === 0 && sortedSizes.length === 0 && family.variants.length > 0 && (
                         <VariantSelector title="Varian" options={family.variants.map((v) => ({
                             key: v.id, label: v.name, selected: selectedVariant?.id === v.id,
-                            hasVariant: true, onSelect: () => { setOverriddenFlavor(null); setOverriddenSize(null); },
+                            hasVariant: true, onSelect: () => {
+ setOverriddenFlavor(null); setOverriddenSize(null); 
+},
                             right: <span className="text-sm tabular-nums text-text-muted">{formatCurrency(v.selling_price)}</span>,
                         }))} />
                     )}
@@ -330,7 +343,11 @@ function CartButton({ outletId }: { outletId: number | null }) {
         const payload: Record<string, unknown> = {
             items: items.map((i) => ({ product_variant_id: i.product_variant_id, quantity: i.quantity })),
         };
-        if (outletId) payload.selected_outlet_id = outletId;
+
+        if (outletId) {
+payload.selected_outlet_id = outletId;
+}
+
         router.post('/customer/checkout', payload);
     };
 
@@ -374,17 +391,29 @@ function StickyCTA({ isOutOfStock, adding, added, price, onAdd }: { isOutOfStock
 }
 
 function RadioDot({ checked, disabled }: { checked: boolean; disabled?: boolean }) {
-    if (checked) return <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600"><div className="h-2.5 w-2.5 rounded-full bg-emerald-600" /></div>;
+    if (checked) {
+return <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600"><div className="h-2.5 w-2.5 rounded-full bg-emerald-600" /></div>;
+}
+
     return <div className="h-5 w-5 shrink-0 rounded-full border-2 border-border" />;
 }
 
 function PriceDiff({ diff, selected }: { diff: number; selected: boolean }) {
-    if (diff === 0) return null;
+    if (diff === 0) {
+return null;
+}
+
     return <span className={`text-xs tabular-nums ${selected ? 'font-semibold text-emerald-700' : 'text-text-subtle'}`}>{diff > 0 ? '+' : ''}{formatCurrency(diff)}</span>;
 }
 
 function StockBadge({ status }: { status: string }) {
-    if (status === 'out_of_stock') return <span className="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">Habis</span>;
-    if (status === 'low') return <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">Stok Terbatas</span>;
+    if (status === 'out_of_stock') {
+return <span className="rounded-md bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700">Habis</span>;
+}
+
+    if (status === 'low') {
+return <span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-700">Stok Terbatas</span>;
+}
+
     return <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">Tersedia</span>;
 }
