@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\PasswordChangeController;
 use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Courier\CourierAvailabilityController;
 use App\Http\Controllers\Courier\DeliveryController as CourierDeliveryController;
+use App\Http\Controllers\Courier\LocationController;
 use App\Http\Controllers\Customer\AccountPromotionController;
 use App\Http\Controllers\Customer\AddressController as CustomerAddressController;
 use App\Http\Controllers\Customer\CartController;
@@ -358,6 +359,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('/shift/end', [CourierAvailabilityController::class, 'endShift'])->name('shift.end');
         Route::get('/availability/status', [CourierAvailabilityController::class, 'status'])->name('availability.status');
         Route::get('/profile', App\Http\Controllers\Courier\ProfileController::class)->name('profile');
+        Route::post('/location', [LocationController::class, 'update'])->name('location.update');
     });
 
     // Dev routes
