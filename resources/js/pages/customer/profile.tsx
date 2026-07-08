@@ -15,11 +15,11 @@ export default function Profile({ defaultAddress }: any) {
         .slice(0, 2) ?? 'U';
 
     return (
-        <CustomerMobileLayout hideTopBar>
+        <CustomerMobileLayout hideTopBar hideCartBar>
             <Head title="Pengaturan" />
 
-            {/* PWA safe area spacer + consistent top padding */}
-            <div className="pt-8" />
+            {/* PWA safe area spacer */}
+            <div className="pt-safe" />
 
             {/* User Info */}
             <div className="flex items-center gap-3">
