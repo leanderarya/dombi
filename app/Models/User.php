@@ -34,6 +34,8 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'is_online' => 'boolean',
             'must_change_password' => 'boolean',
+            'shift_started_at' => 'datetime',
+            'shift_ended_at' => 'datetime',
             'last_activity_at' => 'datetime',
             'location_updated_at' => 'datetime',
             'latitude' => 'decimal:7',
@@ -101,6 +103,28 @@ class User extends Authenticatable
     public function needsPhoneVerification(): bool
     {
         return $this->isCustomer() && $this->customer === null;
+    }
+
+    public function isOnShift(): bool
+    {
+        return $this->shift_started_at !== null && $this->shift_ended_at === null;
+    }
+
+    public function startShift(): void
+    {
+        $this->forceFill([
+            'is_online' => true,
+            'shift_started_at' => now(),
+            'shift_ended_at' => null,
+        ])->save();
+    }
+
+    public function endShift(): void
+    {
+        $this->forceFill([
+            'is_online' => false,
+            'shift_ended_at' => now(),
+        ])->save();
     }
 
     public function goOnline(): void
