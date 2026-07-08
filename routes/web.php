@@ -37,6 +37,7 @@ use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
 use App\Http\Controllers\Outlet\ScanController as OutletScanController;
 use App\Http\Controllers\Outlet\SettlementController;
 use App\Http\Controllers\Owner\AnalyticsController as OwnerAnalyticsController;
+use App\Http\Controllers\Owner\DeliveryTierController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
 use App\Http\Controllers\Owner\ExchangeController as OwnerExchangeController;
@@ -252,6 +253,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
         Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
+        Route::resource('delivery-tiers', DeliveryTierController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::patch('delivery-tiers/{tier}/toggle', [DeliveryTierController::class, 'toggle'])->name('delivery-tiers.toggle');
+        Route::resource('couriers', \App\Http\Controllers\Owner\CourierController::class)->only(['index', 'create', 'store', 'show', 'update']);
         Route::get('reports/export-csv', [ReportController::class, 'exportCsv'])->middleware('throttle:export')->name('reports.export-csv');
         Route::get('reports/orders/export', [ReportController::class, 'exportOrders'])->name('reports.orders.export');
         Route::get('reports/settlements/export', [ReportController::class, 'exportSettlements'])->name('reports.settlements.export');
