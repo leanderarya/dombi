@@ -36,6 +36,7 @@ use App\Http\Controllers\Outlet\ReportController as OutletReportController;
 use App\Http\Controllers\Outlet\RestockController as OutletRestockController;
 use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
 use App\Http\Controllers\Outlet\ScanController as OutletScanController;
+use App\Http\Controllers\Outlet\CourierController as OutletCourierController;
 use App\Http\Controllers\Outlet\SettlementController;
 use App\Http\Controllers\Owner\AnalyticsController as OwnerAnalyticsController;
 use App\Http\Controllers\Owner\DeliveryTierController;
@@ -308,6 +309,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('/orders/{order}/reject', [OutletOrderController::class, 'reject'])->name('orders.reject');
         Route::post('/orders/{order}/assign-courier', [OutletOrderController::class, 'assignCourier'])->name('orders.assign-courier');
         Route::post('/orders/{order}/complete-pickup', [OutletOrderController::class, 'completePickup'])->name('orders.complete-pickup');
+        Route::get('/api/outlets/{outlet}/nearest-couriers', [OutletCourierController::class, 'nearestCouriers'])->name('outlets.nearest-couriers');
         Route::get('/order-reports', [App\Http\Controllers\Outlet\OrderReportController::class, 'index'])->name('order-reports.index');
         Route::get('/order-reports/{report}', [App\Http\Controllers\Outlet\OrderReportController::class, 'show'])->name('order-reports.show');
         Route::put('/order-reports/{report}', [App\Http\Controllers\Outlet\OrderReportController::class, 'update'])->name('order-reports.update');
