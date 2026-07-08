@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 
 const navItems = [
     { href: '/customer/home', label: 'Beranda', icon: HomeIcon },
@@ -28,18 +28,33 @@ export default function CustomerBottomNav({ visible = true }: Props) {
                     const Icon = item.icon;
 
                     return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex flex-col items-center justify-center gap-0.5 text-xs ${
-                                active ? 'text-primary font-bold' : 'text-zinc-400 font-medium'
-                            }`}
-                        >
-                            <div className="p-1.5">
-                                <Icon active={active} />
-                            </div>
-                            <span>{item.label}</span>
-                        </Link>
+                        item.href === '/customer/home' ? (
+                            <button
+                                key={item.href}
+                                onClick={() => router.visit(item.href, { replace: true })}
+                                className={`flex flex-col items-center justify-center gap-0.5 text-xs ${
+                                    active ? 'text-primary font-bold' : 'text-zinc-400 font-medium'
+                                }`}
+                            >
+                                <div className="p-1.5">
+                                    <Icon active={active} />
+                                </div>
+                                <span>{item.label}</span>
+                            </button>
+                        ) : (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                className={`flex flex-col items-center justify-center gap-0.5 text-xs ${
+                                    active ? 'text-primary font-bold' : 'text-zinc-400 font-medium'
+                                }`}
+                            >
+                                <div className="p-1.5">
+                                    <Icon active={active} />
+                                </div>
+                                <span>{item.label}</span>
+                            </Link>
+                        )
                     );
                 })}
             </div>
