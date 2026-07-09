@@ -2,6 +2,7 @@ import { useForm } from '@inertiajs/react';
 import { Bike, Car } from 'lucide-react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 const vehicleTypes = [
@@ -28,42 +29,30 @@ export default function CreateCourier() {
             <div className="mx-auto max-w-lg">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Name */}
-                    <div>
-                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                            Nama Lengkap <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="text"
-                            value={form.data.name}
-                            onChange={(e) => form.setData('name', e.target.value)}
-                            placeholder="Nama kurir"
-                            className="h-9 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary"
-                            required
-                        />
-                        {form.errors.name && (
-                            <p className="mt-1 text-xs text-red-500">{form.errors.name}</p>
-                        )}
-                    </div>
+                    <Input
+                        label="Nama Lengkap *"
+                        type="text"
+                        value={form.data.name}
+                        onChange={(e) => form.setData('name', e.target.value)}
+                        placeholder="Nama kurir"
+                        error={form.errors.name}
+                        required
+                    />
 
                     {/* Phone */}
                     <div>
-                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                            Nomor WhatsApp <span className="text-red-500">*</span>
-                        </label>
-                        <input
+                        <Input
+                            label="Nomor WhatsApp *"
                             type="tel"
                             value={form.data.phone}
                             onChange={(e) => form.setData('phone', e.target.value)}
                             placeholder="08xxxxxxxxxx"
-                            className="h-9 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary"
+                            error={form.errors.phone}
                             required
                         />
                         <p className="mt-1 text-xs text-text-muted">
-                            Undangan akan dikirim via WhatsApp
+                            Tautan undangan akan ditampilkan setelah kurir dibuat
                         </p>
-                        {form.errors.phone && (
-                            <p className="mt-1 text-xs text-red-500">{form.errors.phone}</p>
-                        )}
                     </div>
 
                     {/* Vehicle Type */}
@@ -106,21 +95,14 @@ export default function CreateCourier() {
 
                     {/* Vehicle Plate */}
                     {form.data.vehicle_type && form.data.vehicle_type !== 'bicycle' && (
-                        <div>
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                                Plat Nomor
-                            </label>
-                            <input
-                                type="text"
-                                value={form.data.vehicle_plate}
-                                onChange={(e) => form.setData('vehicle_plate', e.target.value)}
-                                placeholder="AB 1234 CD"
-                                className="h-9 w-full rounded-lg border border-border bg-white px-3 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary"
-                            />
-                            {form.errors.vehicle_plate && (
-                                <p className="mt-1 text-xs text-red-500">{form.errors.vehicle_plate}</p>
-                            )}
-                        </div>
+                        <Input
+                            label="Plat Nomor"
+                            type="text"
+                            value={form.data.vehicle_plate}
+                            onChange={(e) => form.setData('vehicle_plate', e.target.value)}
+                            placeholder="AB 1234 CD"
+                            error={form.errors.vehicle_plate}
+                        />
                     )}
 
                     {/* Submit */}
