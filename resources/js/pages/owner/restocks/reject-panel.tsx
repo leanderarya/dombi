@@ -3,8 +3,8 @@ import { Textarea } from '@/components/ui/textarea';
 
 export default function RejectPanel({ restock, form }: any) {
     return (
-        <div className="rounded-lg border border-border p-4">
-            <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Tolak Permintaan</div>
+        <section className="rounded-lg border border-border p-4" aria-label="Tolak Permintaan">
+            <div className="mb-3 text-xs font-semibold text-text-subtle">Tolak Permintaan</div>
             <p className="text-xs text-text-muted">Gunakan hanya jika request tidak bisa dipenuhi.</p>
             <form
                 onSubmit={(event) => {
@@ -24,6 +24,6 @@ export default function RejectPanel({ restock, form }: any) {
                     {form.processing ? 'Memproses...' : 'Tolak'}
                 </Button>
             </form>
-        </div>
+        </section>
     );
 }

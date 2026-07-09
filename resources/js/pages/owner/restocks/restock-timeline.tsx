@@ -77,9 +77,9 @@ export function buildTimeline(restock: any): TimelineEvent[] {
 
 export default function RestockTimeline({ events }: { events: TimelineEvent[] }) {
     return (
-        <div className="space-y-0">
+        <div className="space-y-0" role="list" aria-label="Linimasa Restock">
             {events.map((event, index) => (
-                <div key={`${event.label}-${index}`} className="flex gap-3">
+                <div key={`${event.label}-${index}`} className="flex gap-3" role="listitem">
                     <div className="flex flex-col items-center">
                         <div className={`h-2.5 w-2.5 rounded-full border-2 ${event.active ? 'border-emerald-600 bg-emerald-600' : 'border-border bg-white'}`} />
                         {index < events.length - 1 && <div className="h-full min-h-8 w-px bg-border" />}

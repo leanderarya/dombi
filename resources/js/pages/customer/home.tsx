@@ -34,6 +34,7 @@ export default function Home({ customerName, activeOrders }: any) {
             window.history.pushState(null, '', window.location.href);
         };
         window.addEventListener('popstate', onPopState);
+
         return () => window.removeEventListener('popstate', onPopState);
     }, []);
 

@@ -174,6 +174,12 @@ Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middle
 Route::match(['get', 'post'], '/payment/doku/notify', [DokuPaymentController::class, 'notify'])->name('doku.notify');
 Route::match(['get', 'post'], '/payment/doku/redirect', [DokuPaymentController::class, 'redirect'])->name('doku.redirect');
 
+// Courier invitation — no auth required
+Route::middleware('internal.inertia')->group(function (): void {
+    Route::get('/courier/invite/{token}', [App\Http\Controllers\CourierInvitationController::class, 'show'])->name('courier.invite.show');
+    Route::post('/courier/invite/{token}', [App\Http\Controllers\CourierInvitationController::class, 'accept'])->name('courier.invite.accept');
+});
+
 Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): void {
     // System endpoints
     Route::get('/api/health', [SystemController::class, 'health'])->name('health');
@@ -257,7 +263,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
         Route::resource('delivery-tiers', DeliveryTierController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::patch('delivery-tiers/{tier}/toggle', [DeliveryTierController::class, 'toggle'])->name('delivery-tiers.toggle');
-        Route::resource('couriers', \App\Http\Controllers\Owner\CourierController::class)->only(['index', 'create', 'store', 'show', 'update']);
+        Route::resource('couriers', \App\Http\Controllers\Owner\CourierController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
         Route::get('reports/export-csv', [ReportController::class, 'exportCsv'])->middleware('throttle:export')->name('reports.export-csv');
         Route::get('reports/orders/export', [ReportController::class, 'exportOrders'])->name('reports.orders.export');
         Route::get('reports/settlements/export', [ReportController::class, 'exportSettlements'])->name('reports.settlements.export');

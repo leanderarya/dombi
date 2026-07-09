@@ -24,14 +24,27 @@ function getOverdueLabel(dueDate: string): string | null {
     due.setHours(0, 0, 0, 0);
     now.setHours(0, 0, 0, 0);
     const diff = Math.floor((now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
-    if (diff <= 0) return null;
+
+    if (diff <= 0) {
+return null;
+}
+
     return `${diff} Hari`;
 }
 
 function getSettlementBadgeVariant(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
-    if (status === 'paid') return 'success';
-    if (status === 'partial') return 'warning';
-    if (status === 'overdue' || status === 'due_today') return 'danger';
+    if (status === 'paid') {
+return 'success';
+}
+
+    if (status === 'partial') {
+return 'warning';
+}
+
+    if (status === 'overdue' || status === 'due_today') {
+return 'danger';
+}
+
     return 'neutral';
 }
 
@@ -77,30 +90,30 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
             subtitle="Ringkasan tagihan outlet"
             backHref="/owner/finance"
         >
-            <div className="grid gap-4 lg:grid-cols-3">
+            <div className="grid gap-4 lg:grid-cols-3" aria-label="Detail tagihan outlet">
                 <div className="lg:col-span-2 space-y-4">
                     {summary.outstanding > 0 && (
-                        <div className="sticky top-0 z-20 flex gap-3 rounded-lg border border-border bg-white p-3">
+                        <div className="sticky top-0 z-20 flex gap-3 rounded-lg border border-border bg-white p-3" aria-label="Aksi tagihan">
                             <Button
                                 variant="outline"
                                 className="flex-1"
                                 onClick={() => setInvoiceOpen(true)}
                             >
-                                <Send className="h-4 w-4" />
+                                <Send className="h-4 w-4" aria-hidden="true" />
                                 Kirim Tagihan
                             </Button>
                             <Button
                                 className="flex-1"
                                 onClick={() => setPaymentOpen(true)}
                             >
-                                <DollarSign className="h-4 w-4" />
+                                <DollarSign className="h-4 w-4" aria-hidden="true" />
                                 Catat Pembayaran
                             </Button>
                         </div>
                     )}
 
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Ringkasan</div>
+                    <div className="rounded-lg border border-border p-4" aria-label="Ringkasan keuangan">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Ringkasan</div>
                         <OwnerDetailRow label="Omset Produk" value={formatCurrency(summary.total_sales)} bold />
                         <OwnerDetailRow label="Ongkos Kirim" value={<span className="text-blue-600">{formatCurrency(summary.total_delivery_fee)}</span>} />
                         <OwnerDetailRow label="Sisa Tagihan" value={<span className="font-semibold text-red-600">{formatCurrency(summary.outstanding)}</span>} bold />
@@ -116,8 +129,8 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                         )}
                     </div>
 
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Daftar Tagihan</div>
+                    <div className="rounded-lg border border-border p-4" aria-label="Daftar Tagihan">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Daftar Tagihan</div>
                         {settlements.length === 0 ? (
                             <p className="py-6 text-center text-sm text-text-muted">Tidak ada tagihan.</p>
                         ) : (
@@ -175,8 +188,8 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                 </div>
 
                 <div className="space-y-4">
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
+                    <div className="rounded-lg border border-border p-4" aria-label="Status tagihan">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Status</div>
                         <div className="flex items-center gap-2">
                             <StatusBadge variant={statusVariant} size="md">{statusLabel}</StatusBadge>
                         </div>

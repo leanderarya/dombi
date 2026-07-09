@@ -105,8 +105,10 @@ export default function ProductFamiliesIndex({ families }: Props) {
             title="Product Families"
             subtitle="Kelola kelompok produk dan variant"
             headerRight={
-                <Button onClick={() => { reset(); setEditingId(null); setShowForm(true); }}>
-                    <Plus className="h-4 w-4 mr-1" />
+                <Button onClick={() => {
+ reset(); setEditingId(null); setShowForm(true); 
+}}>
+                    <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
                     Tambah
                 </Button>
             }
@@ -124,7 +126,7 @@ export default function ProductFamiliesIndex({ families }: Props) {
                     description={search ? 'Coba kata kunci lain' : 'Tambah product family pertama Anda'}
                 />
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-2" aria-label="Daftar Product Family">
                     {filteredFamilies.map((family) => (
                         <div key={family.id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
                             <div className="flex items-center justify-between">
@@ -136,10 +138,10 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                     <span className="text-xs text-text-muted">{family.variants_count} variant</span>
                                 </div>
                                 <div className="flex items-center gap-1">
-                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(family)}>
+                                    <Button variant="ghost" size="icon" aria-label={`Edit ${family.name}`} onClick={() => handleEdit(family)}>
                                         <Pencil className="h-3.5 w-3.5" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" onClick={() => setDeleteId(family.id)}>
+                                    <Button variant="ghost" size="icon" aria-label={`Hapus ${family.name}`} onClick={() => setDeleteId(family.id)}>
                                         <Trash2 className="h-3.5 w-3.5 text-red-500" />
                                     </Button>
                                 </div>

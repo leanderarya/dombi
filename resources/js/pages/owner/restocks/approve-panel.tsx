@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import StockLevelBadge from '@/components/ui/stock-level-badge';
+import { Textarea } from '@/components/ui/textarea';
 import { calculateStockStatus } from '@/lib/stock';
 
 export default function ApprovePanel({ restock, inventories, form, onQuantityChange }: any) {
     return (
-        <div className="rounded-lg border border-border p-4">
-            <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Setujui & Siapkan</div>
+        <section className="rounded-lg border border-border p-4" aria-label="Setujui & Siapkan">
+            <div className="mb-3 text-xs font-semibold text-text-subtle">Setujui & Siapkan</div>
             <p className="text-xs text-text-muted">Set approved quantity. Distribution akan dibuat status preparing.</p>
 
             <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs leading-5 text-amber-800">
@@ -36,7 +36,7 @@ export default function ApprovePanel({ restock, inventories, form, onQuantityCha
                                     <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-text-muted">Stok Kosong</span>
                                 )}
                             </div>
-                            <label className="mt-2 block text-xs font-semibold uppercase tracking-wide text-text-subtle">Jumlah disetujui</label>
+                            <label className="mt-2 block text-xs font-medium text-text-subtle">Jumlah disetujui</label>
                             <input
                                 type="number"
                                 min="0"
@@ -59,6 +59,6 @@ export default function ApprovePanel({ restock, inventories, form, onQuantityCha
                     {form.processing ? 'Memproses...' : 'Setujui & Buat Distribusi'}
                 </Button>
             </form>
-        </div>
+        </section>
     );
 }

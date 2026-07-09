@@ -1,7 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
 import { Package } from 'lucide-react';
-import CentralStockTab from './central-stock-tab';
+import { useState, useMemo } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -10,9 +9,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
-import { Textarea } from '@/components/ui/textarea';
 import StatusBadge from '@/components/ui/status-badge';
+import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import CentralStockTab from './central-stock-tab';
 
 const TABS = [
     { key: 'pusat', label: 'Stok Pusat' },
@@ -38,7 +38,11 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
     const handleEdit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editItem) return;
+
+        if (!editItem) {
+return;
+}
+
         editForm.put(`/owner/inventories/${editItem.id}`, {
             onSuccess: () => {
                 setEditItem(null);
@@ -70,6 +74,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
 
     const outlets = useMemo((): string[] => {
         const unique = [...new Set(items.map((item: any) => item.outlet_name as string))] as string[];
+
         return unique.sort();
     }, [items]);
 
@@ -102,11 +107,13 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
             title="Inventaris"
             subtitle="Pantau stok semua outlet dan pusat"
         >
-            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
+            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1" role="tablist" aria-label="Tab Inventaris">
                 {TABS.map((t) => (
                     <button
                         key={t.key}
                         type="button"
+                        role="tab"
+                        aria-selected={activeTab === t.key}
                         onClick={() => handleTabChange(t.key)}
                         className={cn(
                             'relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200',
@@ -138,30 +145,34 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                         defaultExpanded={false}
                         searchPlaceholder="Cari outlet atau produk..."
                         searchValue={search}
-                        onSearch={(val) => { setSearch(val); }}
+                        onSearch={(val) => {
+ setSearch(val); 
+}}
                         outletOptions={outlets.map((outlet: string) => ({ value: outlet, label: outlet }))}
                         outletValue={outletFilter}
-                        onOutletChange={(val) => { setOutletFilter(val); }}
+                        onOutletChange={(val) => {
+ setOutletFilter(val); 
+}}
                         tambahHref="/owner/inventories/create"
                         tambahLabel="Tambah Stok"
                     />
 
                     {filteredItems.length === 0 ? (
                         <EmptyState
-                            icon={<Package className="h-8 w-8" />}
+                            icon={<Package className="h-8 w-8" aria-hidden="true" />}
                             title="Tidak ada inventaris"
                             description={search || outletFilter !== 'all' ? 'Tidak ada item yang cocok dengan filter' : 'Belum ada inventaris tercatat'}
                         />
                     ) : (
-                        <div className="overflow-x-auto rounded-lg border border-border">
-                            <table className="w-full min-w-[600px]">
+                        <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                            <table className="w-full min-w-[600px]" aria-label="Daftar Inventaris Outlet">
                                 <thead>
                                     <tr className="bg-surface-muted">
-                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Produk / Outlet</th>
-                                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Stok</th>
-                                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Threshold</th>
-                                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Produk / Outlet</th>
+                                        <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Stok</th>
+                                        <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Threshold</th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
+                                        <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>

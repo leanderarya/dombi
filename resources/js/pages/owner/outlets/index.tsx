@@ -31,12 +31,15 @@ function getOutletStatus(outlet: any): { label: string; variant: 'success' | 'wa
     if (outlet.status !== 'active') {
         return { label: 'Nonaktif', variant: 'neutral' };
     }
+
     if (Number(outlet.low_stock_count) > 0) {
         return { label: 'Stok Rendah', variant: 'warning' };
     }
+
     if (Number(outlet.active_orders_count) >= 3) {
         return { label: 'Sibuk', variant: 'info' as any };
     }
+
     return { label: 'Aktif', variant: 'success' };
 }
 
@@ -59,6 +62,7 @@ export default function OutletsIndex({ outlets }: any) {
     const busyOutlets = outlets.data.filter((o: any) => Number(o.active_orders_count) >= 3).length;
 
     let filtered = outlets.data.filter((o: any) => matchesFilter(o, filter));
+
     if (search) {
         const q = search.toLowerCase();
         filtered = filtered.filter(
@@ -115,15 +119,15 @@ export default function OutletsIndex({ outlets }: any) {
                     action={{ label: '+ Tambah Outlet', href: '/owner/outlets/create' }}
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Daftar Outlet">
                     <table className="w-full min-w-[600px]">
                         <thead>
                             <tr className="bg-surface-muted">
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Outlet</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Lokasi</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Pesanan</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Lokasi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Pesanan</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

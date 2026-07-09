@@ -54,7 +54,7 @@ export default function OwnerDistributionsIndex({ distributions, filters, outlet
                 { label: 'Selesai', value: completedCount },
             ]} />
 
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <section className="mb-4 flex flex-wrap items-center gap-2" aria-label="Filter Status">
                 {statusFilters.map((sf) => {
                     const isActive = currentStatus === sf.key;
                     const colorMap: Record<string, string> = {
@@ -73,7 +73,7 @@ export default function OwnerDistributionsIndex({ distributions, filters, outlet
                         </button>
                     );
                 })}
-            </div>
+            </section>
 
             <OwnerFilterCard
                 collapsible
@@ -90,21 +90,21 @@ export default function OwnerDistributionsIndex({ distributions, filters, outlet
 
             {distributions.data.length === 0 ? (
                 <EmptyState
-                    icon={<Package className="h-8 w-8" />}
+                    icon={<Package className="h-8 w-8" aria-hidden="true" />}
                     title="Tidak ada distribusi"
                     description="Distribusi akan muncul di sini setelah stok dikirim ke outlet"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
-                    <table className="w-full min-w-[600px]">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                    <table className="w-full min-w-[600px]" aria-label="Daftar Distribusi">
                         <thead>
                             <tr className="bg-surface-muted">
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kode</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Outlet</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Items</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Tanggal</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Items</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Tanggal</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -121,7 +121,7 @@ export default function OwnerDistributionsIndex({ distributions, filters, outlet
                                         <div className="flex items-center justify-end gap-2">
                                             {d.status === 'preparing' && (
                                                 <Button size="sm" onClick={(e: any) => handleMarkShipped(e, d.id)}>
-                                                    <Truck className="h-3.5 w-3.5" />
+                                                    <Truck className="h-3.5 w-3.5" aria-hidden="true" />
                                                     Kirim
                                                 </Button>
                                             )}

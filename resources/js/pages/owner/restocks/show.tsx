@@ -4,8 +4,8 @@ import { useState } from 'react';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
-import DistributionStatusBadge from '@/components/ui/distribution-status-badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import DistributionStatusBadge from '@/components/ui/distribution-status-badge';
 import RestockStatusBadge from '@/components/ui/restock-status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import StockLevelBadge from '@/components/ui/stock-level-badge';
@@ -84,17 +84,17 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
         <OwnerPageShell title={`Restock #${restock.id}`} subtitle={restock.outlet.name} backHref="/owner/restocks">
             <div className="grid gap-4 lg:grid-cols-3">
                 <div className="lg:col-span-2 space-y-4">
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Informasi Restock</div>
+                    <section className="rounded-lg border border-border p-4" aria-label="Informasi Restock">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Informasi Restock</div>
                         <OwnerDetailRow label="Outlet" value={restock.outlet.name} />
                         <OwnerDetailRow label="Diminta oleh" value={restock.requester?.name ?? '-'} />
                         <OwnerDetailRow label="Tanggal permintaan" value={formatDate(restock.created_at)} />
                         <OwnerDetailRow label="Total diminta" value={`${totalRequested} unit`} bold />
                         <OwnerDetailRow label="Total disetujui" value={totalApproved ? `${totalApproved} unit` : '-'} bold />
-                    </div>
+                    </section>
 
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item Permintaan</div>
+                    <section className="rounded-lg border border-border p-4" aria-label="Item Permintaan">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Item Permintaan</div>
                         {restock.items.map((item: any) => (
                             <OwnerDetailRow
                                 key={item.id}
@@ -103,11 +103,11 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 bold
                             />
                         ))}
-                    </div>
+                    </section>
 
                     {distribution && (
-                        <div className="rounded-lg border border-border p-4">
-                            <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status Distribusi</div>
+                        <section className="rounded-lg border border-border p-4" aria-label="Status Distribusi">
+                            <div className="mb-3 text-xs font-semibold text-text-subtle">Status Distribusi</div>
                             <div className="flex items-center gap-2 mb-3">
                                 <DistributionStatusBadge status={distribution.status} />
                             </div>
@@ -118,7 +118,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                             <OwnerDetailRow label="Tanggal terima" value={formatDate(distribution.received_at)} />
 
                             <div className="mt-3 rounded-lg border border-border bg-slate-50 p-3">
-                                <div className="mb-2 text-xs font-bold uppercase tracking-wide text-text-subtle">Ringkasan pengiriman</div>
+                                <div className="mb-2 text-xs font-semibold text-text-subtle">Ringkasan pengiriman</div>
                                 {distribution.items.map((item: any) => (
                                     <OwnerDetailRow key={item.id} label={item.product?.name ?? item.variant?.name ?? '-'} value={`${item.quantity}`} bold />
                                 ))}
@@ -141,20 +141,20 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     Distribusi Selesai
                                 </div>
                             )}
-                        </div>
+                        </section>
                     )}
 
                     {!distribution && (
-                        <div className="rounded-lg border border-dashed border-border p-4">
+                        <section className="rounded-lg border border-dashed border-border p-4" aria-label="Status Distribusi">
                             <div className="text-sm font-bold text-text">Status Distribusi</div>
                             <p className="mt-1 text-xs text-text-muted">Belum ada distribution. Approve request untuk membuat shipment.</p>
-                        </div>
+                        </section>
                     )}
                 </div>
 
                 <div className="space-y-4">
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
+                    <section className="rounded-lg border border-border p-4" aria-label="Status Restock">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Status</div>
                         <div className="mb-3 flex items-center gap-2">
                             <RestockStatusBadge status={restock.status} />
                         </div>
@@ -165,11 +165,11 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                         {restock.status === 'requested' && (
                             <div className="mt-4 flex gap-2">
                                 <Button size="sm" className="flex-1" onClick={() => setShowApprove(true)}>
-                                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+                                    <CheckCircle2 className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
                                     Setujui
                                 </Button>
                                 <Button size="sm" variant="destructive" className="flex-1" onClick={() => setShowReject(true)}>
-                                    <XCircle className="mr-1 h-3.5 w-3.5" />
+                                    <XCircle className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
                                     Tolak
                                 </Button>
                             </div>
@@ -177,32 +177,32 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
 
                         {restock.status === 'rejected' && (
                             <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-center">
-                                <XCircle className="mx-auto h-5 w-5 text-red-500" />
+                                <XCircle className="mx-auto h-5 w-5 text-red-500" aria-hidden="true" />
                                 <div className="mt-1 text-xs font-semibold text-red-800">Permintaan Ditolak</div>
                             </div>
                         )}
 
                         {restock.status === 'completed' && (
                             <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
-                                <CheckCircle2 className="mx-auto h-5 w-5 text-emerald-500" />
+                                <CheckCircle2 className="mx-auto h-5 w-5 text-emerald-500" aria-hidden="true" />
                                 <div className="mt-1 text-xs font-semibold text-emerald-800">Restock Selesai</div>
                             </div>
                         )}
-                    </div>
+                    </section>
 
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Linimasa</div>
+                    <section className="rounded-lg border border-border p-4" aria-label="Linimasa">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Linimasa</div>
                         <RestockTimeline events={timeline} />
-                    </div>
+                    </section>
 
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Catatan</div>
+                    <section className="rounded-lg border border-border p-4" aria-label="Catatan">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Catatan</div>
                         <OwnerDetailRow label="Catatan outlet" value={restock.notes} />
                         <OwnerDetailRow label="Catatan owner" value={restock.owner_notes} />
                         {restock.rejected_reason && <OwnerDetailRow label="Alasan penolakan" value={restock.rejected_reason} danger />}
                         <OwnerDetailRow label="Catatan penerimaan" value={distribution?.received_notes} />
                         <OwnerDetailRow label="Catatan kerusakan" value={distribution?.damage_notes} />
-                    </div>
+                    </section>
                 </div>
             </div>
 
@@ -229,7 +229,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                             <span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-bold text-text-muted">Stok Kosong</span>
                                         )}
                                     </div>
-                                    <label className="mt-2 block text-xs font-semibold uppercase tracking-wide text-text-subtle">Jumlah disetujui</label>
+                                    <label className="mt-2 block text-xs font-medium text-text-subtle">Jumlah disetujui</label>
                                     <input
                                         type="number"
                                         min="0"

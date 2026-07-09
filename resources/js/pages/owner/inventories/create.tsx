@@ -10,9 +10,11 @@ export default function CreateInventory({ outlets, families }: any) {
 
     return (
         <OwnerPageShell title="Tambah Stok" subtitle="Catat inventaris baru ke outlet" backHref="/owner/inventories">
-            <div className="mx-auto max-w-lg">
+            <section className="mx-auto max-w-lg" aria-label="Form Tambah Inventaris">
                 <form
-                    onSubmit={(e) => { e.preventDefault(); form.post('/owner/inventories'); }}
+                    onSubmit={(e) => {
+ e.preventDefault(); form.post('/owner/inventories'); 
+}}
                     className="space-y-4"
                 >
                     <Select
@@ -69,7 +71,7 @@ export default function CreateInventory({ outlets, families }: any) {
                         </a>
                     </div>
                 </form>
-            </div>
+            </section>
         </OwnerPageShell>
     );
 }

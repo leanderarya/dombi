@@ -1,3 +1,6 @@
+import { useForm } from "@inertiajs/react"
+import { Button } from "@/components/ui/button"
+import CustomSelect from "@/components/ui/custom-select"
 import {
   Sheet,
   SheetContent,
@@ -5,9 +8,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet"
-import { Button } from "@/components/ui/button"
-import CustomSelect from "@/components/ui/custom-select"
-import { useForm } from "@inertiajs/react"
 
 interface Props {
   order: any
@@ -18,6 +18,10 @@ interface Props {
 
 export default function AssignCourierSheet({ order, couriers, open, onClose }: Props) {
   const form = useForm({ courier_id: couriers[0]?.id ?? "" })
+
+  if (!order) {
+return null
+}
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

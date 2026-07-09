@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import EmptyState from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
@@ -69,7 +69,10 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
     };
 
     const handleEditSubmit = () => {
-        if (!editingTier) return;
+        if (!editingTier) {
+return;
+}
+
         editForm.put(`/owner/delivery-tiers/${editingTier.id}`, {
             onSuccess: () => setEditingTier(null),
         });
@@ -92,23 +95,25 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
             title="Pengaturan Ongkir"
             subtitle="Kelola tarif pengiriman berdasarkan jarak"
             headerRight={
-                <Button onClick={() => { setAddDialogOpen(true); addForm.reset(); }}>
-                    <Plus className="h-4 w-4 mr-1" />
+                <Button onClick={() => {
+ setAddDialogOpen(true); addForm.reset(); 
+}}>
+                    <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
                     Tambah Tier
                 </Button>
             }
         >
             {tiers.length === 0 ? (
                 <EmptyState
-                    icon={<Truck className="h-8 w-8" />}
+                    icon={<Truck className="h-8 w-8" aria-hidden="true" />}
                     title="Belum ada tier ongkir"
                     description="Tambah tier untuk mengatur tarif pengiriman berdasarkan jarak"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Daftar tier pengiriman">
                     <table className="w-full min-w-[500px] text-sm">
                         <thead>
-                            <tr className="bg-surface-muted text-xs font-semibold uppercase tracking-wide text-text-muted">
+                            <tr className="bg-surface-muted text-xs font-medium text-text-muted">
                                 <th className="w-10 px-4 py-3"></th>
                                 <th className="px-4 py-3 text-left">Jarak</th>
                                 <th className="px-4 py-3 text-left">Tarif</th>
@@ -123,7 +128,7 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
                                     className={`border-t border-border transition-colors hover:bg-surface-muted ${!tier.is_active ? 'opacity-50' : ''}`}
                                 >
                                     <td className="px-4 py-3">
-                                        <GripVertical className="h-4 w-4 text-text-subtle" />
+                                        <GripVertical className="h-4 w-4 text-text-subtle" aria-hidden="true" />
                                     </td>
                                     <td className="px-4 py-3 font-medium text-text">
                                         {tier.min_km} – {tier.max_km} km
@@ -144,11 +149,11 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
                                     </td>
                                     <td className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-1">
-                                            <Button size="sm" variant="ghost" onClick={() => setEditingTier(tier)}>
-                                                <Edit2 className="h-3.5 w-3.5" />
+                                            <Button size="sm" variant="ghost" onClick={() => setEditingTier(tier)} aria-label={`Edit tier ${tier.min_km}–${tier.max_km} km`}>
+                                                <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />
                                             </Button>
-                                            <Button size="sm" variant="ghost" onClick={() => setDeleteId(tier.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                                                <Trash2 className="h-3.5 w-3.5" />
+                                            <Button size="sm" variant="ghost" onClick={() => setDeleteId(tier.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50" aria-label={`Hapus tier ${tier.min_km}–${tier.max_km} km`}>
+                                                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                                             </Button>
                                         </div>
                                     </td>
@@ -159,8 +164,8 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
                 </div>
             )}
 
-            <div className="mt-4 rounded-lg border border-border bg-white p-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Cara Kerja</h3>
+            <div className="mt-4 rounded-lg border border-border bg-white p-4" aria-label="Cara kerja tier">
+                <h3 className="text-xs font-medium text-text-subtle">Cara Kerja</h3>
                 <ul className="mt-2 space-y-1.5 text-xs text-text-muted">
                     <li>Tier diurutkan berdasarkan jarak (sort_order). Sistem mencocokkan dari tier pertama.</li>
                     <li>Jika jarak pelanggan melebihi tier terakhir, pesanan dianggap di luar jangkauan.</li>
@@ -231,7 +236,11 @@ export default function DeliveryTiersIndex({ tiers }: { tiers: DeliveryTier[] })
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={editingTier !== null} onOpenChange={(open) => { if (!open) setEditingTier(null); }}>
+            <Dialog open={editingTier !== null} onOpenChange={(open) => {
+ if (!open) {
+setEditingTier(null);
+} 
+}}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Edit Tier</DialogTitle>

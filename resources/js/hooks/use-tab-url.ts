@@ -11,9 +11,13 @@ export function useTabUrl<T extends string>(
     param = 'tab',
 ): [T, (key: T) => void] {
     const getInitial = (): T => {
-        if (typeof window === 'undefined') return defaultTab;
+        if (typeof window === 'undefined') {
+return defaultTab;
+}
+
         const url = new URL(window.location.href);
         const val = url.searchParams.get(param) as T;
+
         return tabs.some((t) => t.key === val) ? val : defaultTab;
     };
 

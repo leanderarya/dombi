@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import StockLevelBadge from '@/components/ui/stock-level-badge';
+import { Textarea } from '@/components/ui/textarea';
 import { calculateStockStatus } from '@/lib/stock';
 
 export default function OwnerRestockCreate({ outlets, selectedOutletId, selectedProductId, returnTo }: any) {
@@ -25,6 +25,7 @@ export default function OwnerRestockCreate({ outlets, selectedOutletId, selected
         if (!outletId) {
             setFamilies([]);
             setInventories([]);
+
             return;
         }
 
@@ -82,8 +83,8 @@ export default function OwnerRestockCreate({ outlets, selectedOutletId, selected
     return (
         <OwnerPageShell title="Buat Restock" subtitle="Buat permintaan restock untuk outlet" backHref={backHref}>
             <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Pilih Outlet</div>
+                <section className="rounded-lg border border-border p-4" aria-label="Pilih Outlet">
+                    <div className="mb-3 text-xs font-semibold text-text-subtle">Pilih Outlet</div>
                     <select
                         value={outletId}
                         onChange={(e) => setOutletId(e.target.value)}
@@ -94,7 +95,7 @@ export default function OwnerRestockCreate({ outlets, selectedOutletId, selected
                             <option key={outlet.id} value={outlet.id}>{outlet.name}</option>
                         ))}
                     </select>
-                </div>
+                </section>
 
                 {outletId && (
                     <>
@@ -105,15 +106,16 @@ export default function OwnerRestockCreate({ outlets, selectedOutletId, selected
                                 return (
                                     <div key={index} className="rounded-lg border border-border p-4">
                                         <div className="flex items-start justify-between">
-                                            <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Item {index + 1}</div>
+                                            <div className="text-xs font-medium text-text-subtle">Item {index + 1}</div>
                                             {form.data.items.length > 1 && (
                                                 <Button
                                                     type="button"
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => removeItem(index)}
+                                                    aria-label={`Hapus item ${index + 1}`}
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <Trash2 className="h-4 w-4" aria-hidden="true" />
                                                 </Button>
                                             )}
                                         </div>
@@ -173,19 +175,19 @@ export default function OwnerRestockCreate({ outlets, selectedOutletId, selected
                             onClick={addItem}
                             className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border text-sm font-medium text-text-muted active:bg-surface-muted"
                         >
-                            <Plus className="h-4 w-4" />
+                            <Plus className="h-4 w-4" aria-hidden="true" />
                             Tambah Item
                         </button>
 
-                        <div className="rounded-lg border border-border p-4">
-                            <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Catatan</div>
+                        <section className="rounded-lg border border-border p-4" aria-label="Catatan">
+                            <div className="mb-3 text-xs font-semibold text-text-subtle">Catatan</div>
                             <Textarea
                                 value={form.data.notes}
                                 onChange={(e) => form.setData('notes', e.target.value)}
                                 placeholder="Catatan restock (opsional)..."
                                 rows={3}
                             />
-                        </div>
+                        </section>
 
                         {form.errors.items && <div className="text-xs text-red-600">{form.errors.items}</div>}
 

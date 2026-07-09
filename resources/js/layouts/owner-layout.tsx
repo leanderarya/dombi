@@ -36,6 +36,7 @@ const navGroups: NavGroup[] = [
         items: [
             { href: '/owner/orders', label: 'Pesanan' },
             { href: '/owner/deliveries', label: 'Pengiriman' },
+            { href: '/owner/couriers', label: 'Kurir' },
             { href: '/owner/returns', label: 'Return & Tukar', badgeKey: 'pendingReturns' },
             { href: '/owner/delivery-tiers', label: 'Tier Ongkir' },
         ],

@@ -38,6 +38,7 @@ export default function AnalyticsIndex(props: Props) {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get('tab');
+
         if (tab && TABS.some((t) => t.key === tab)) {
             setActiveTab(tab as TabKey);
         }
@@ -58,11 +59,13 @@ export default function AnalyticsIndex(props: Props) {
 
     return (
         <OwnerPageShell title="Analitik" subtitle="Analitik performa bisnis">
-            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
+            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1" role="tablist" aria-label="Tab navigasi analitik">
                 {TABS.map((tab) => (
                     <button
                         key={tab.key}
                         type="button"
+                        role="tab"
+                        aria-selected={activeTab === tab.key}
                         onClick={() => handleTabChange(tab.key)}
                         className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                             activeTab === tab.key

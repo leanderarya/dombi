@@ -48,14 +48,15 @@ class CourierController extends Controller
 
     public function store(StoreCourierRequest $request): RedirectResponse
     {
-        $courier = $this->courierService->createCourier(
+        $result = $this->courierService->createCourier(
             $request->validated(),
             $request->user(),
         );
 
         return redirect()
             ->route('owner.couriers.index')
-            ->with('success', 'Kurir berhasil ditambahkan. Undangan WhatsApp telah dikirim.');
+            ->with('inviteUrl', $result['inviteUrl'])
+            ->with('success', 'Kurir berhasil ditambahkan. Bagikan tautan undangan ke kurir.');
     }
 
     public function show(User $courier): Response
@@ -68,14 +69,24 @@ class CourierController extends Controller
         ]);
 
         $recentDeliveries = Delivery::where('courier_id', $courier->id)
-            ->with('order:id,order_code,total_amount')
+            ->with('order:id,order_code,total')
             ->latest()
             ->limit(10)
             ->get();
 
+        $invitation = \App\Models\CourierInvitation::where('courier_user_id', $courier->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+
+        $inviteUrl = $invitation && $invitation->expires_at->isFuture()
+            ? app(\App\Services\CourierInvitationService::class)->invitationUrl($invitation)
+            : null;
+
         return Inertia::render('owner/couriers/show', [
             'courier' => $courier,
             'recentDeliveries' => $recentDeliveries,
+            'inviteUrl' => $inviteUrl,
         ]);
     }
 
@@ -94,5 +105,22 @@ class CourierController extends Controller
         return redirect()
             ->route('owner.couriers.show', $courier)
             ->with('success', 'Data kurir berhasil diperbarui.');
+    }
+
+    public function destroy(User $courier): RedirectResponse
+    {
+        $activeDeliveries = Delivery::where('courier_id', $courier->id)
+            ->whereIn('status', ['waiting_assignment', 'waiting_pickup', 'picked_up', 'delivering'])
+            ->count();
+
+        if ($activeDeliveries > 0) {
+            return back()->with('error', 'Kurir masih memiliki ' . $activeDeliveries . ' pengiriman aktif. Selesaikan dulu sebelum menghapus.');
+        }
+
+        $courier->delete();
+
+        return redirect()
+            ->route('owner.couriers.index')
+            ->with('success', 'Kurir berhasil dihapus.');
     }
 }

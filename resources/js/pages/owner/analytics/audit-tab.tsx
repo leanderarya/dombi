@@ -59,7 +59,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
     if (movements.data.length === 0) {
         return (
             <EmptyState
-                icon={<ClipboardList className="h-8 w-8 text-text-subtle" />}
+                icon={<ClipboardList className="h-8 w-8 text-text-subtle" aria-hidden="true" />}
                 title="Belum ada movement"
                 description="Perubahan stok akan tercatat di sini."
             />
@@ -71,7 +71,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
             <div className="flex justify-end">
                 <div className="relative">
                     <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                         Filter
                     </Button>
                     {activeFilterCount > 0 && (
@@ -83,7 +83,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
             </div>
 
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
-                <div className="space-y-1.5">
+                <div className="space-y-1.5" aria-label="Daftar movement stok">
                     {movements.data.map((m: any) => (
                         <div
                             key={m.id}
@@ -114,7 +114,7 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                     <div className="sticky top-4 space-y-3">
                         <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <ClipboardList className="h-4 w-4 text-text-subtle" />
+                                <ClipboardList className="h-4 w-4 text-text-subtle" aria-hidden="true" />
                                 Total Movement
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{movements.data.length}</div>
@@ -122,30 +122,30 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                         </div>
                         <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <ArrowDownRight className="h-4 w-4 text-emerald-500" />
+                                <ArrowDownRight className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                                 Stok Masuk
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{movements.data.filter((m: any) => m.quantity > 0).length}</div>
                             <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
-                                <ArrowDownRight className="h-3 w-3" />
+                                <ArrowDownRight className="h-3 w-3" aria-hidden="true" />
                                 Restock & penyesuaian
                             </div>
                         </div>
                         <div className="rounded-lg border border-border bg-white p-5">
                             <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <ArrowUpRight className="h-4 w-4 text-red-500" />
+                                <ArrowUpRight className="h-4 w-4 text-red-500" aria-hidden="true" />
                                 Stok Keluar
                             </div>
                             <div className="mt-2 text-3xl font-bold text-text">{movements.data.filter((m: any) => m.quantity < 0).length}</div>
                             <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">
-                                <ArrowUpRight className="h-3 w-3" />
+                                <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
                                 Pesanan & pembatalan
                             </div>
                         </div>
 
                         {activeFilterCount > 0 && (
-                            <div className="rounded-lg border border-border bg-white p-4">
-                                <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Filter Aktif</div>
+                            <div className="rounded-lg border border-border bg-white p-4" aria-label="Filter aktif">
+                                <div className="mb-3 text-xs font-medium text-text-muted">Filter Aktif</div>
                                 <div className="space-y-1.5">
                                     {filters.outlet_id && (
                                         <div className="text-xs text-text">

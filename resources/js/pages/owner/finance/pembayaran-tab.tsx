@@ -45,7 +45,10 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
     };
 
     const handleVerifyConfirm = () => {
-        if (!verifyTargetId) return;
+        if (!verifyTargetId) {
+return;
+}
+
         setProcessing(true);
         setVerifyDialogOpen(false);
         router.post(`/owner/finance/settlement-payments/${verifyTargetId}/verify`, {}, {
@@ -58,7 +61,10 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
 
     const handleReject = (paymentId: number) => {
         if (rejectingId === paymentId) {
-            if (!rejectReason.trim()) return;
+            if (!rejectReason.trim()) {
+return;
+}
+
             setProcessing(true);
             router.post(`/owner/finance/settlement-payments/${paymentId}/reject`, {
                 rejection_reason: rejectReason,
@@ -101,7 +107,7 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
                 { label: 'Bulan Ini', value: formatCurrency(paymentKpis?.verified_month ?? 0) },
             ]} />
 
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter dan aksi pembayaran">
                 {STATUS_FILTERS.map((sf) => {
                     const isActive = (statusFilter ?? '') === sf.key;
                     const colorMap: Record<string, string> = {
@@ -134,9 +140,9 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
                         className="ml-auto"
                     >
                         {batchVerifying ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                         ) : (
-                            <CheckCircle className="h-3.5 w-3.5" />
+                            <CheckCircle className="h-3.5 w-3.5" aria-hidden="true" />
                         )}
                         Verifikasi Semua ({pendingPayments.length})
                     </Button>
@@ -144,7 +150,7 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
             </div>
 
             {rejectingId && (
-                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4">
+                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4" aria-label="Form penolakan pembayaran">
                     <div className="text-sm font-semibold text-red-800">Alasan Penolakan</div>
                     <Textarea
                         value={rejectReason}
@@ -165,7 +171,9 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => { setRejectingId(null); setRejectReason(''); }}
+                            onClick={() => {
+ setRejectingId(null); setRejectReason(''); 
+}}
                         >
                             Batal
                         </Button>
@@ -175,18 +183,20 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
 
             {payments.data.length === 0 ? (
                 <EmptyState
-                    icon={<DollarSign className="h-8 w-8" />}
+                    icon={<DollarSign className="h-8 w-8" aria-hidden="true" />}
                     title="Belum ada pembayaran"
                     description="Pembayaran outlet akan muncul di sini."
                 />
             ) : (
-                <div className="space-y-3">
+                <div className="space-y-3" aria-label="Daftar pembayaran">
                     {pendingPayments.map((payment: any) => (
                         <PaymentHistoryCard
                             key={payment.id}
                             payment={payment}
                             onVerify={handleVerifyClick}
-                            onReject={(id) => { setRejectingId(id); setRejectReason(''); }}
+                            onReject={(id) => {
+ setRejectingId(id); setRejectReason(''); 
+}}
                             onShowProof={(url) => setProofUrl(url)}
                             processing={processing}
                         />
@@ -198,7 +208,9 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
                                 key={payment.id}
                                 payment={payment}
                                 onVerify={handleVerifyClick}
-                                onReject={(id) => { setRejectingId(id); setRejectReason(''); }}
+                                onReject={(id) => {
+ setRejectingId(id); setRejectReason(''); 
+}}
                                 onShowProof={(url) => setProofUrl(url)}
                                 processing={processing}
                             />

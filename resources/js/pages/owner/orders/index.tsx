@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import { Package } from 'lucide-react';
+import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
@@ -63,7 +63,7 @@ export default function OwnerOrdersIndex({
             ]} />
 
             {/* Status Pills */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div aria-label="Filter status pesanan" className="mb-4 flex flex-wrap items-center gap-2">
                 {statusFilters.map((sf) => {
                     const isActive = currentStatus === sf.key;
                     const colorMap: Record<string, string> = {
@@ -106,21 +106,21 @@ export default function OwnerOrdersIndex({
             {/* Table - Responsive with horizontal scroll */}
             {orders.data.length === 0 ? (
                 <EmptyState
-                    icon={<Package className="h-8 w-8" />}
+                    icon={<Package aria-hidden="true" className="h-8 w-8" />}
                     title="Tidak ada pesanan"
                     description="Pesanan akan muncul di sini setelah pelanggan melakukan pemesanan"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
-                    <table className="w-full min-w-[600px]">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                    <table aria-label="Daftar pesanan" className="w-full min-w-[600px]">
                         <thead>
                             <tr className="bg-surface-muted">
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kode</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Customer</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Outlet</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Total</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Customer</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Total</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

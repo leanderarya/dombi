@@ -26,7 +26,7 @@ export default function CreateCourier() {
 
     return (
         <OwnerPageShell title="Tambah Kurir" backHref="/owner/couriers">
-            <div className="mx-auto max-w-lg">
+            <div className="mx-auto max-w-lg" aria-label="Form Tambah Kurir">
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Name */}
                     <Input
@@ -57,7 +57,7 @@ export default function CreateCourier() {
 
                     {/* Vehicle Type */}
                     <div>
-                        <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                        <label className="mb-1 block text-xs font-medium text-text-subtle">
                             Tipe Kendaraan
                         </label>
                         <div className="flex gap-2">
@@ -82,7 +82,7 @@ export default function CreateCourier() {
                                                 : 'border-border bg-white text-text-muted hover:bg-surface-muted',
                                         )}
                                     >
-                                        <Icon className="h-4 w-4" />
+                                        <Icon className="h-4 w-4" aria-hidden="true" />
                                         {vt.label}
                                     </button>
                                 );

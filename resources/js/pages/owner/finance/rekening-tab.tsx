@@ -37,6 +37,7 @@ export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
         if (editingId) {
             put(`/owner/finance/payment-accounts/${editingId}`, {
                 onSuccess: () => {
@@ -72,7 +73,10 @@ export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }
     };
 
     const handleDeleteConfirm = () => {
-        if (!deleteTargetId) return;
+        if (!deleteTargetId) {
+return;
+}
+
         setDeleteDialogOpen(false);
         router.delete(`/owner/finance/payment-accounts/${deleteTargetId}`, {
             onFinish: () => setDeleteTargetId(null),
@@ -92,7 +96,7 @@ export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }
                 { label: 'Aktif', value: activeCount },
             ]} />
 
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between" aria-label="Header rekening pembayaran">
                 <h2 className="text-sm font-semibold text-text">Rekening Pembayaran</h2>
                 <Button size="sm" onClick={handleAddClick}>
                     Tambah Rekening
@@ -106,15 +110,15 @@ export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }
                     action={{ label: 'Tambah Rekening', onClick: handleAddClick }}
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Daftar rekening pembayaran">
                     <table className="w-full min-w-[600px]">
                         <thead>
                             <tr className="bg-surface-muted">
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Bank</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">No. Rekening</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Pemilik</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Bank</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">No. Rekening</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Pemilik</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

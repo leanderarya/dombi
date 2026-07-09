@@ -65,7 +65,7 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
                 { label: 'Selesai', value: completedCount },
             ]} />
 
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <section className="mb-4 flex flex-wrap items-center gap-2" aria-label="Filter Status">
                 {statusFilters.map((sf) => {
                     const isActive = currentStatus === sf.key;
 
@@ -78,7 +78,7 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
                         </button>
                     );
                 })}
-            </div>
+            </section>
 
             <OwnerFilterCard
                 collapsible
@@ -95,21 +95,21 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
 
             {restocks.data.length === 0 ? (
                 <EmptyState
-                    icon={<Package className="h-8 w-8" />}
+                    icon={<Package className="h-8 w-8" aria-hidden="true" />}
                     title="Tidak ada restock"
                     description="Permintaan restock akan muncul di sini setelah diajukan outlet"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
-                    <table className="w-full min-w-[600px]">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                    <table className="w-full min-w-[600px]" aria-label="Daftar Restock">
                         <thead>
                             <tr className="bg-surface-muted">
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kode</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Outlet</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Items</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Tanggal</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Items</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Tanggal</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>

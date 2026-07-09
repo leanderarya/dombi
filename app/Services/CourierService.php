@@ -14,7 +14,7 @@ class CourierService
         private readonly CourierInvitationService $invitationService,
     ) {}
 
-    public function createCourier(array $data, User $owner): User
+    public function createCourier(array $data, User $owner): array
     {
         return DB::transaction(function () use ($data, $owner) {
             $password = Str::random(16);
@@ -39,9 +39,12 @@ class CourierService
                 'invited_at' => now(),
             ]);
 
-            $this->invitationService->create($courier, $owner, $data['phone']);
+            $invitation = $this->invitationService->create($courier, $owner, $data['phone']);
 
-            return $courier;
+            return [
+                'courier' => $courier,
+                'inviteUrl' => $this->invitationService->invitationUrl($invitation),
+            ];
         });
     }
 

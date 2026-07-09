@@ -76,14 +76,14 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                         description={search ? 'Coba kata kunci lain' : 'Tambah kurir untuk mulai mengelola pengiriman'}
                     />
                 ) : (
-                    <div className="overflow-x-auto rounded-lg border border-border">
+                    <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Daftar Kurir">
                         <table className="w-full min-w-[500px]">
                             <thead>
                                 <tr className="bg-surface-muted">
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kurir</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kendaraan</th>
-                                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kurir</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kendaraan</th>
+                                    <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
+                                    <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -106,7 +106,7 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                                             </td>
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-1.5 text-xs text-text-muted">
-                                                    <VehicleIcon className="h-3.5 w-3.5" />
+                                                    <VehicleIcon className="h-3.5 w-3.5" aria-hidden="true" />
                                                     <span className="capitalize">{courier.vehicle_type ?? '-'}</span>
                                                 </div>
                                             </td>
@@ -163,7 +163,7 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                             required
                         />
                         <div>
-                            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                            <label className="mb-1 block text-xs font-medium text-text-subtle">
                                 Tipe Kendaraan
                             </label>
                             <div className="flex gap-2">
@@ -188,7 +188,7 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                                                     : 'border-border bg-white text-text-muted hover:bg-surface-muted',
                                             )}
                                         >
-                                            <Icon className="h-4 w-4" />
+                                            <Icon className="h-4 w-4" aria-hidden="true" />
                                             {vt.label}
                                         </button>
                                     );

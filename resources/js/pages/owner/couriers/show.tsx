@@ -88,8 +88,8 @@ export default function CourierShow({ courier, recentDeliveries, inviteUrl }: an
                 {/* Main Content - 2 columns */}
                 <div className="lg:col-span-2 space-y-4">
                     {/* Info Kurir */}
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">
+                    <div className="rounded-lg border border-border p-4" aria-label="Informasi Kurir">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">
                             Informasi Kurir
                         </div>
                         <div className="flex items-start gap-3">
@@ -100,12 +100,12 @@ export default function CourierShow({ courier, recentDeliveries, inviteUrl }: an
                                 <h2 className="text-lg font-semibold text-text">{courier.name}</h2>
                                 <div className="mt-1 space-y-1">
                                     <div className="flex items-center gap-2 text-xs text-text-muted">
-                                        <Phone className="h-3.5 w-3.5" />
+                                        <Phone className="h-3.5 w-3.5" aria-hidden="true" />
                                         <span>{courier.phone ?? '-'}</span>
                                     </div>
                                     {courier.vehicle_type && (
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
-                                            <VehicleIcon className="h-3.5 w-3.5" />
+                                            <VehicleIcon className="h-3.5 w-3.5" aria-hidden="true" />
                                             <span className="capitalize">{courier.vehicle_type}</span>
                                             {courier.vehicle_plate && (
                                                 <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[11px] font-semibold">
@@ -127,8 +127,8 @@ export default function CourierShow({ courier, recentDeliveries, inviteUrl }: an
 
                         {courier.courier_profile && (
                             <div className="mt-3 rounded-lg border border-border bg-surface-muted p-3">
-                                <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                                    <User className="h-3 w-3" />
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-text-subtle">
+                                    <User className="h-3 w-3" aria-hidden="true" />
                                     Profil Kurir
                                 </div>
                                 <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
@@ -165,7 +165,7 @@ export default function CourierShow({ courier, recentDeliveries, inviteUrl }: an
                                                 navigator.clipboard.writeText(inviteUrl);
                                             }}
                                         >
-                                            <Copy className="h-3 w-3" />
+                                            <Copy className="h-3 w-3" aria-hidden="true" />
                                             Salin
                                         </Button>
                                         <Button
@@ -180,7 +180,7 @@ export default function CourierShow({ courier, recentDeliveries, inviteUrl }: an
                                                 }
                                             }}
                                         >
-                                            <Share2 className="h-3 w-3" />
+                                            <Share2 className="h-3 w-3" aria-hidden="true" />
                                             Bagikan
                                         </Button>
                                     </div>
@@ -190,9 +190,9 @@ export default function CourierShow({ courier, recentDeliveries, inviteUrl }: an
                     </div>
 
                     {/* Pengiriman Terbaru */}
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
-                            <Clock className="h-3.5 w-3.5" />
+                    <div className="rounded-lg border border-border p-4" aria-label="Pengiriman Terbaru">
+                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
+                            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                             Pengiriman Terbaru
                         </div>
                         {recentDeliveries.length === 0 ? (
@@ -200,14 +200,14 @@ export default function CourierShow({ courier, recentDeliveries, inviteUrl }: an
                                 Belum ada pengiriman
                             </div>
                         ) : (
-                            <div className="overflow-x-auto rounded-lg border border-border">
+                            <div className="overflow-x-auto rounded-lg border border-border bg-surface">
                                 <table className="w-full min-w-[400px]">
                                     <thead>
                                         <tr className="bg-surface-muted">
-                                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kode</th>
-                                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                            <th className="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Tanggal</th>
-                                            <th className="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-text-muted">Kode</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-text-muted">Status</th>
+                                            <th className="px-4 py-2 text-left text-xs font-medium text-text-muted">Tanggal</th>
+                                            <th className="px-4 py-2 text-right text-xs font-medium text-text-muted">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -243,8 +243,8 @@ export default function CourierShow({ courier, recentDeliveries, inviteUrl }: an
                 {/* Sidebar - 1 column */}
                 <div className="space-y-4">
                     {/* Statistik */}
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">
+                    <div className="rounded-lg border border-border p-4" aria-label="Statistik">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">
                             Statistik
                         </div>
                         <div className="grid grid-cols-3 gap-3">
@@ -274,14 +274,14 @@ export default function CourierShow({ courier, recentDeliveries, inviteUrl }: an
                                 href={`/owner/deliveries?courier_id=${courier.id}`}
                                 className="flex h-9 w-full items-center gap-2 rounded-lg border border-border bg-white px-3 text-sm font-semibold text-text transition-colors hover:bg-surface-muted"
                             >
-                                <Truck className="h-4 w-4 text-text-subtle" />
+                                <Truck className="h-4 w-4 text-text-subtle" aria-hidden="true" />
                                 Lihat Pengiriman
                             </Link>
                             <Link
                                 href={`/owner/orders?courier_id=${courier.id}`}
                                 className="flex h-9 w-full items-center gap-2 rounded-lg border border-border bg-white px-3 text-sm font-semibold text-text transition-colors hover:bg-surface-muted"
                             >
-                                <Package className="h-4 w-4 text-text-subtle" />
+                                <Package className="h-4 w-4 text-text-subtle" aria-hidden="true" />
                                 Lihat Pesanan
                             </Link>
                         </div>

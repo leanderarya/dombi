@@ -43,7 +43,7 @@ export function RiwayatTab({ logs, actionFilter }: { logs?: PaginatedLogs; actio
 
     return (
         <div>
-            <div className="mb-4 flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
+            <div className="mb-4 flex flex-wrap gap-2 overflow-x-auto scrollbar-none" role="group" aria-label="Filter aksi harga">
                 {ACTION_FILTERS.map((f) => (
                     <Button
                         key={f.key}
@@ -57,7 +57,7 @@ export function RiwayatTab({ logs, actionFilter }: { logs?: PaginatedLogs; actio
                 ))}
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3" aria-label="Riwayat perubahan harga">
                 {logs.data.length === 0 ? (
                     <EmptyState title="Belum ada riwayat perubahan harga." />
                 ) : (

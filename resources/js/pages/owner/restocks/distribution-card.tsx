@@ -7,10 +7,10 @@ import { formatDate } from '@/lib/format';
 export default function DistributionCard({ distribution, restock, totalDistributed }: any) {
     if (!distribution) {
         return (
-            <div className="rounded-lg border border-dashed border-border p-4">
+            <section className="rounded-lg border border-dashed border-border p-4" aria-label="Status Distribusi">
                 <div className="text-sm font-bold text-text">Status Distribusi</div>
                 <p className="mt-1 text-xs text-text-muted">Belum ada distribution. Approve request untuk membuat shipment.</p>
-            </div>
+            </section>
         );
     }
 
@@ -22,10 +22,10 @@ export default function DistributionCard({ distribution, restock, totalDistribut
     const actionLabel = actionLabels[distribution.status] ?? 'Monitoring distribution.';
 
     return (
-        <div className="rounded-lg border border-border p-4">
+        <section className="rounded-lg border border-border p-4" aria-label="Detail Distribusi">
             <div className="flex items-start justify-between gap-3">
                 <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-text-subtle">Status Distribusi</p>
+                    <p className="text-xs font-semibold text-text-subtle">Status Distribusi</p>
                     <h2 className="mt-1 text-sm font-bold text-text">Pengiriman #{distribution.id}</h2>
                     <p className="mt-0.5 text-xs text-text-muted">{actionLabel}</p>
                 </div>
@@ -42,7 +42,7 @@ export default function DistributionCard({ distribution, restock, totalDistribut
             </div>
 
             <div className="mt-3 rounded-lg border border-border bg-slate-50 p-3">
-                <div className="mb-2 text-xs font-bold uppercase tracking-wide text-text-subtle">Ringkasan pengiriman</div>
+                <div className="mb-2 text-xs font-semibold text-text-subtle">Ringkasan pengiriman</div>
                 {distribution.items.map((item: any) => (
                     <OwnerDetailRow key={item.id} label={item.product?.name ?? item.variant?.name ?? '-'} value={`${item.quantity}`} bold />
                 ))}
@@ -69,6 +69,6 @@ export default function DistributionCard({ distribution, restock, totalDistribut
             <Link href={`/owner/distributions/${distribution.id}`} className="mt-2 block text-center text-xs font-bold text-primary">
                 Lihat detail distribution
             </Link>
-        </div>
+        </section>
     );
 }

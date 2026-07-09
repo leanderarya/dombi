@@ -78,19 +78,19 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
     );
 
     const kpiItems = [
-        { label: 'Total Produk', value: kpis.total_variants, icon: <Package className="h-5 w-5" /> },
-        { label: 'Rata-rata HPP', value: formatCurrency(kpis.avg_hpp), icon: <DollarSign className="h-5 w-5" /> },
-        { label: 'Rata-rata Margin', value: formatCurrency(kpis.avg_margin), icon: <TrendingUp className="h-5 w-5" /> },
+        { label: 'Total Produk', value: kpis.total_variants, icon: <Package className="h-5 w-5" aria-hidden="true" /> },
+        { label: 'Rata-rata HPP', value: formatCurrency(kpis.avg_hpp), icon: <DollarSign className="h-5 w-5" aria-hidden="true" /> },
+        { label: 'Rata-rata Margin', value: formatCurrency(kpis.avg_margin), icon: <TrendingUp className="h-5 w-5" aria-hidden="true" /> },
         {
             label: 'Margin Negatif',
             value: kpis.negative_margin_count,
-            icon: <TrendingDown className="h-5 w-5" />,
+            icon: <TrendingDown className="h-5 w-5" aria-hidden="true" />,
             valueClassName: kpis.negative_margin_count > 0 ? 'text-red-600' : undefined,
         },
     ];
 
     return (
-        <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
+        <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6" aria-label="Daftar harga pusat">
             <div>
                 <OwnerKpiStrip items={kpiItems} cols={4} />
 
@@ -99,19 +99,23 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                     defaultExpanded={false}
                     searchPlaceholder="Cari produk..."
                     searchValue={search}
-                    onSearch={(v) => { setSearch(v); setPage(1); }}
+                    onSearch={(v) => {
+ setSearch(v); setPage(1); 
+}}
                     marginOptions={[
                         { value: 'high', label: 'Margin Tinggi (>20rb)' },
                         { value: 'low', label: 'Margin Rendah (<5rb)' },
                         { value: 'negative', label: 'Margin Negatif' },
                     ]}
                     marginValue={marginFilter === 'all' ? '' : marginFilter}
-                    onMarginChange={(v) => { setMarginFilter((v || 'all') as MarginFilter); setPage(1); }}
+                    onMarginChange={(v) => {
+ setMarginFilter((v || 'all') as MarginFilter); setPage(1); 
+}}
                 />
 
                 <SortBar sortKey={sortKey} sortDir={sortDir} toggleSort={toggleSort} />
 
-                <div className="space-y-2">
+                <div className="space-y-2" aria-label="Daftar produk">
                     {paginated.map((v) => (
                         <div key={v.variant_id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
                             <div className="flex items-start justify-between">
@@ -127,7 +131,9 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => { setSelectedVariant(v); setModalOpen(true); }}
+                                    onClick={() => {
+ setSelectedVariant(v); setModalOpen(true); 
+}}
                                     className="shrink-0 text-primary"
                                 >
                                     Ubah
@@ -178,7 +184,9 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                 <GlobalPriceModal
                     open={modalOpen}
                     variant={selectedVariant}
-                    onClose={() => { setModalOpen(false); setSelectedVariant(null); }}
+                    onClose={() => {
+ setModalOpen(false); setSelectedVariant(null); 
+}}
                 />
             )}
         </div>

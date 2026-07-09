@@ -5,9 +5,9 @@ import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getReturnStatus } from '@/lib/status-labels';
 
@@ -83,8 +83,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 {/* Main Content - 2 columns */}
                 <div className="lg:col-span-2 space-y-4">
                     {/* Info */}
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Informasi Return</div>
+                    <div className="rounded-lg border border-border p-4" aria-label="Informasi Return">
                         <OwnerDetailRow label="Alasan" value={ret.reason_label ?? ret.reason} />
                         <OwnerDetailRow label="Diajukan" value={formatDate(ret.created_at)} />
                         {ret.notes && (
@@ -94,8 +93,8 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                     </div>
 
                     {/* Items */}
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item Return</div>
+                    <div className="rounded-lg border border-border p-4" aria-label="Item Return">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Item Return</div>
                         {ret.items?.map((item: any) => (
                             <OwnerDetailRow key={item.id} label={`${item.variant?.full_name ?? item.variant?.name} x${item.quantity}`} value={formatCurrency(item.subtotal)} bold />
                         ))}
@@ -105,10 +104,10 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 {/* Sidebar - 1 column */}
                 <div className="space-y-4">
                     {/* Status + Actions */}
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
+                    <div className="rounded-lg border border-border p-4" aria-label="Status Return">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Status</div>
                         <div className="flex items-center gap-2 mb-3">
-                            <StatusIcon className="h-4 w-4 text-text-muted" />
+                            <StatusIcon className="h-4 w-4 text-text-muted" aria-hidden="true" />
                             <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
                         </div>
                         <OwnerDetailRow label="Total" value={formatCurrency(ret.total_value)} bold />
@@ -117,12 +116,12 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         {/* Actions */}
                         {ret.status === 'submitted' && (
                             <div className="mt-4 flex gap-2">
-                                <Button size="sm" className="flex-1" onClick={() => setShowApprove(true)}>
-                                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                <Button size="sm" className="flex-1" aria-label="Setujui Return" onClick={() => setShowApprove(true)}>
+                                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                                     Setujui
                                 </Button>
-                                <Button size="sm" variant="destructive" className="flex-1" onClick={() => setShowReject(true)}>
-                                    <XCircle className="h-3.5 w-3.5 mr-1" />
+                                <Button size="sm" variant="destructive" className="flex-1" aria-label="Tolak Return" onClick={() => setShowReject(true)}>
+                                    <XCircle className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                                     Tolak
                                 </Button>
                             </div>
@@ -130,28 +129,28 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                         {ret.status === 'approved' && (
                             <Button size="sm" className="mt-4 w-full" onClick={handleMarkReceived}>
-                                <Package className="h-3.5 w-3.5 mr-1" />
+                                <Package className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                                 Barang Diterima di Pusat
                             </Button>
                         )}
 
                         {ret.status === 'received_at_center' && (
                             <Button size="sm" className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700" onClick={handleComplete}>
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                                 Selesai & Sesuaikan Settlement
                             </Button>
                         )}
 
                         {ret.status === 'completed' && (
                             <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
-                                <CheckCircle2 className="mx-auto h-5 w-5 text-emerald-500" />
+                                <CheckCircle2 className="mx-auto h-5 w-5 text-emerald-500" aria-hidden="true" />
                                 <div className="mt-1 text-xs font-semibold text-emerald-800">Return Selesai</div>
                             </div>
                         )}
 
                         {ret.status === 'rejected' && (
                             <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-center">
-                                <XCircle className="mx-auto h-5 w-5 text-red-500" />
+                                <XCircle className="mx-auto h-5 w-5 text-red-500" aria-hidden="true" />
                                 <div className="mt-1 text-xs font-semibold text-red-800">Return Ditolak</div>
                             </div>
                         )}
@@ -159,8 +158,8 @@ export default function OwnerReturnsShow({ return: ret }: any) {
 
                     {/* Status History / Timeline */}
                     {ret.status_histories?.length > 0 && (
-                        <div className="rounded-lg border border-border p-4">
-                            <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Riwayat Status</div>
+                        <div className="rounded-lg border border-border p-4" aria-label="Riwayat Status Return">
+                            <div className="mb-3 text-xs font-semibold text-text-subtle">Riwayat Status</div>
                             <div className="space-y-3">
                                 {ret.status_histories.map((h: any, i: number) => {
                                     const isLast = i === ret.status_histories.length - 1;

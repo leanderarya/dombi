@@ -63,7 +63,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
+            <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none" role="group" aria-label="Filter periode">
                 {periods.map((p) => (
                     <button
                         key={p.key}
@@ -81,10 +81,10 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
             </div>
 
             {insight && !insightDismissed && (
-                <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary-light p-3">
-                    <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
+                <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary-light p-3" role="alert">
+                    <TrendingUp className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
                     <p className="flex-1 text-xs font-medium text-primary">{insight}</p>
-                    <Button variant="ghost" size="icon" onClick={() => setInsightDismissed(true)} className="h-6 w-6 shrink-0 text-primary/60 hover:text-primary">
+                    <Button variant="ghost" size="icon" onClick={() => setInsightDismissed(true)} className="h-10 w-10 shrink-0 text-primary/60 hover:text-primary" aria-label="Tutup insight">
                         <X className="h-3.5 w-3.5" />
                     </Button>
                 </div>
@@ -121,8 +121,8 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
             />
 
             <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-lg border border-border bg-white p-4">
-                    <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Perbandingan Outlet</div>
+                <div className="rounded-lg border border-border bg-white p-4" aria-label="Perbandingan Outlet">
+                    <div className="mb-3 text-xs font-medium text-text-muted">Perbandingan Outlet</div>
                     {outletRevenue.length === 0 ? (
                         <EmptyState title="Belum ada data" />
                     ) : (
@@ -144,8 +144,8 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                     )}
                 </div>
 
-                <div className="rounded-lg border border-border bg-white p-4">
-                    <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Produk Terlaris</div>
+                <div className="rounded-lg border border-border bg-white p-4" aria-label="Produk Terlaris">
+                    <div className="mb-3 text-xs font-medium text-text-muted">Produk Terlaris</div>
                     {topProducts.length === 0 ? (
                         <EmptyState title="Belum ada data" />
                     ) : (
@@ -157,7 +157,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                                     className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-surface-muted"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
+                                        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
                                             {index + 1}
                                         </span>
                                         <div>

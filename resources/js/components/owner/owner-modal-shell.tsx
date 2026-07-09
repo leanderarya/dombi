@@ -1,3 +1,4 @@
+import type { ReactNode } from "react"
 import {
   Dialog,
   DialogContent,
@@ -5,13 +6,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import type { ReactNode } from "react"
 
 interface Props {
   open: boolean
   onClose: () => void
   title: string
   description?: string
+  subtitle?: string
   children: ReactNode
   maxWidth?: string
 }
@@ -21,15 +22,18 @@ export default function OwnerModalShell({
   onClose,
   title,
   description,
+  subtitle,
   children,
   maxWidth = "max-w-md",
 }: Props) {
+  const desc = description ?? subtitle
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className={maxWidth}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          {desc && <DialogDescription>{desc}</DialogDescription>}
         </DialogHeader>
         {children}
       </DialogContent>

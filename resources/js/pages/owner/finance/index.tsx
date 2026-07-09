@@ -18,6 +18,7 @@ export default function FinanceIndex(props: any) {
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get('tab');
+
         if (tab && TABS.some((t) => t.key === tab)) {
             setActiveTab(tab);
         }
@@ -38,11 +39,13 @@ export default function FinanceIndex(props: any) {
 
     return (
         <OwnerPageShell title="Keuangan" subtitle="Pantau kewajiban seluruh outlet">
-            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
+            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1" role="tablist" aria-label="Navigasi tab keuangan">
                 {TABS.map((tab) => (
                     <button
                         key={tab.key}
                         type="button"
+                        role="tab"
+                        aria-selected={activeTab === tab.key}
                         onClick={() => handleTabChange(tab.key)}
                         className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                             activeTab === tab.key
@@ -55,9 +58,11 @@ export default function FinanceIndex(props: any) {
                 ))}
             </div>
 
-            {activeTab === 'tagihan' && <TagihanTab {...props} />}
-            {activeTab === 'pembayaran' && <PembayaranTab {...props} />}
-            {activeTab === 'rekening' && <RekeningTab {...props} />}
+            <div role="tabpanel" aria-label={`Tab ${TABS.find((t) => t.key === activeTab)?.label}`}>
+                {activeTab === 'tagihan' && <TagihanTab {...props} />}
+                {activeTab === 'pembayaran' && <PembayaranTab {...props} />}
+                {activeTab === 'rekening' && <RekeningTab {...props} />}
+            </div>
         </OwnerPageShell>
     );
 }

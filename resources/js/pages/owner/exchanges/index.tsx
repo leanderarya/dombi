@@ -60,6 +60,7 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
     return (
         <OwnerPageShell title="Permintaan Tukar Produk" subtitle="Kelola penukaran barang dari outlet">
             {/* KPI Strip */}
+            <div aria-label="Ringkasan Tukar Produk">
             <OwnerKpiStrip
                 items={[
                     { label: 'Tertunda', value: dashboard.pending_exchanges, sublabel: dashboard.pending_exchanges > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
@@ -67,9 +68,10 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                     ...(dashboard.total_exchanges !== undefined ? [{ label: 'Total', value: dashboard.total_exchanges }] : []),
                 ]}
             />
+            </div>
 
             {/* Status Pills */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Filter Status Tukar Produk">
                 {statusFilters.map((sf) => {
                     const isActive = currentStatus === sf.key;
 
@@ -105,10 +107,10 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
             {exchanges.data.length === 0 ? (
                 <EmptyState icon="package" title="Tidak ada permintaan tukar produk" description="Belum ada pengajuan penukaran dari outlet" />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Tabel Tukar Produk">
                     <table className="w-full min-w-[600px] text-sm">
                         <thead>
-                            <tr className="bg-[#fafafa] text-xs font-semibold uppercase tracking-wide text-text-muted">
+                            <tr className="bg-[#fafafa] text-xs font-medium text-text-muted">
                                 <th className="px-3 py-2.5 text-left">Kode</th>
                                 <th className="px-3 py-2.5 text-left">Outlet / Info</th>
                                 <th className="px-3 py-2.5 text-left">Status</th>

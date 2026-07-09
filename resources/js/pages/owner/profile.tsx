@@ -10,7 +10,7 @@ export default function OwnerProfile() {
         <OwnerPageShell title="Profile" subtitle="Owner account">
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
                 {/* Left: user info */}
-                <div className="space-y-4">
+                <div className="space-y-4" aria-label="Informasi profil">
                     <div className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
                         <div className="flex items-center gap-3">
                             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-base font-bold text-white">
@@ -23,24 +23,24 @@ export default function OwnerProfile() {
                         </div>
 
                         <div className="mt-4 grid grid-cols-2 gap-2">
-                            <InfoBox label="Role" value="Owner" icon={<Shield className="h-3.5 w-3.5" />} />
-                            <InfoBox label="Status" value={user?.is_active ? 'Active' : 'Inactive'} icon={<User className="h-3.5 w-3.5" />} />
-                            <InfoBox label="Phone" value={user?.phone ?? '-'} icon={<Phone className="h-3.5 w-3.5" />} />
-                            <InfoBox label="Version" value={appVersion ?? '1.0.0'} icon={<Package className="h-3.5 w-3.5" />} />
+                            <InfoBox label="Role" value="Owner" icon={<Shield className="h-3.5 w-3.5" aria-hidden="true" />} />
+                            <InfoBox label="Status" value={user?.is_active ? 'Active' : 'Inactive'} icon={<User className="h-3.5 w-3.5" aria-hidden="true" />} />
+                            <InfoBox label="Phone" value={user?.phone ?? '-'} icon={<Phone className="h-3.5 w-3.5" aria-hidden="true" />} />
+                            <InfoBox label="Version" value={appVersion ?? '1.0.0'} icon={<Package className="h-3.5 w-3.5" aria-hidden="true" />} />
                         </div>
                     </div>
                 </div>
 
                 {/* Right: quick actions (desktop only, sticky) */}
-                <div className="hidden lg:block">
+                <div className="hidden lg:block" aria-label="Aksi cepat">
                     <div className="sticky top-4 space-y-3">
                         <div className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
-                            <div className="text-xs font-bold uppercase tracking-wider text-text-subtle mb-3">Quick Actions</div>
+                            <div className="text-xs font-medium text-text-subtle mb-3">Quick Actions</div>
                             <button
                                 onClick={() => router.post('/logout')}
                                 className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 hover:bg-red-100 active:opacity-80"
                             >
-                                <LogOut className="h-4 w-4" />
+                                <LogOut className="h-4 w-4" aria-hidden="true" />
                                 Logout
                             </button>
                         </div>
@@ -53,7 +53,7 @@ export default function OwnerProfile() {
                         onClick={() => router.post('/logout')}
                         className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 hover:bg-red-100 active:opacity-80"
                     >
-                        <LogOut className="h-4 w-4" />
+                        <LogOut className="h-4 w-4" aria-hidden="true" />
                         Logout
                     </button>
                 </div>
@@ -65,7 +65,7 @@ export default function OwnerProfile() {
 function InfoBox({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
     return (
         <div className="rounded-lg border border-border bg-surface-muted p-3 transition-all duration-200">
-            <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-text-subtle">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-text-subtle">
                 {icon}
                 {label}
             </div>

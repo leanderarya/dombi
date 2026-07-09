@@ -26,13 +26,17 @@ export default function TagihanTab({ kpis, outlets }: any) {
     const filtered = useMemo(() => {
         return outlets.filter((o: any) => {
             if (filter === 'action_needed') {
-                if (o.display_status !== 'overdue' && o.display_status !== 'unpaid') return false;
+                if (o.display_status !== 'overdue' && o.display_status !== 'unpaid') {
+return false;
+}
             } else if (filter && o.display_status !== filter) {
                 return false;
             }
+
             if (search) {
                 return o.outlet_name.toLowerCase().includes(search.toLowerCase());
             }
+
             return true;
         });
     }, [outlets, filter, search]);
@@ -45,7 +49,7 @@ export default function TagihanTab({ kpis, outlets }: any) {
                 { label: 'Jatuh Tempo', value: formatCurrency(kpis.due_this_week), valueClassName: kpis.due_this_week > 0 ? 'text-orange-600' : 'text-text' },
             ]} />
 
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter status tagihan">
                 {STATUS_FILTERS.map((sf) => {
                     const isActive = filter === sf.key;
                     const colorMap: Record<string, string> = {
@@ -83,7 +87,7 @@ export default function TagihanTab({ kpis, outlets }: any) {
 
             {filtered.length === 0 ? (
                 <EmptyState
-                    icon={search ? <Store className="h-8 w-8" /> : filter === 'paid' || filter === 'action_needed' ? <PartyPopper className="h-8 w-8" /> : <Store className="h-8 w-8" />}
+                    icon={search ? <Store className="h-8 w-8" aria-hidden="true" /> : filter === 'paid' || filter === 'action_needed' ? <PartyPopper className="h-8 w-8" aria-hidden="true" /> : <Store className="h-8 w-8" aria-hidden="true" />}
                     title={
                         search
                             ? 'Outlet tidak ditemukan'
@@ -104,7 +108,7 @@ export default function TagihanTab({ kpis, outlets }: any) {
                     }
                 />
             ) : (
-                <div className="space-y-2">
+                <div className="space-y-2" aria-label="Daftar outlet">
                     {filtered.map((o: any) => (
                         <FinanceOutletCard
                             key={o.outlet_id}

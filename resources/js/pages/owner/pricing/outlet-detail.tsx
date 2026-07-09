@@ -4,8 +4,8 @@ import { useCallback, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Select } from '@/components/ui/select';
 import EmptyState from '@/components/ui/empty-state';
+import { Select } from '@/components/ui/select';
 import { SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
@@ -181,8 +181,8 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
         <div>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3">
-                    <Link href="/owner/pricing?tab=outlet" className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted text-text-muted hover:text-text">
-                        <ArrowLeft className="h-4 w-4" />
+                    <Link href="/owner/pricing?tab=outlet" className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted text-text-muted hover:text-text" aria-label="Kembali ke daftar outlet">
+                        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                     </Link>
                     <span className="text-lg font-bold text-text">{outlet.name}</span>
                 </div>
@@ -200,20 +200,24 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                 defaultExpanded={false}
                 searchPlaceholder="Cari produk..."
                 searchValue={search}
-                onSearch={(v) => { setSearch(v); setPage(1); }}
+                onSearch={(v) => {
+ setSearch(v); setPage(1); 
+}}
                 marginOptions={[
                     { value: 'high', label: 'Margin Tinggi (>20rb)' },
                     { value: 'low', label: 'Margin Rendah (<5rb)' },
                     { value: 'negative', label: 'Margin Negatif' },
                 ]}
                 marginValue={marginFilter === 'all' ? '' : marginFilter}
-                onMarginChange={(v) => { setMarginFilter((v || 'all') as MarginFilter); setPage(1); }}
+                onMarginChange={(v) => {
+ setMarginFilter((v || 'all') as MarginFilter); setPage(1); 
+}}
             >
-                <Button type="button" variant="secondary" size="sm" icon={Plus} onClick={() => setBulkOpen(!bulkOpen)}>
+                <Button type="button" variant="secondary" size="sm" icon={Plus} onClick={() => setBulkOpen(!bulkOpen)} aria-label="Atur massal harga">
                     Atur Massal
                 </Button>
                 {otherOutlets && otherOutlets.length > 0 && (
-                    <Button type="button" variant="secondary" size="sm" icon={Copy} onClick={() => setCopyOpen(!copyOpen)}>
+                    <Button type="button" variant="secondary" size="sm" icon={Copy} onClick={() => setCopyOpen(!copyOpen)} aria-label="Salin harga dari outlet lain">
                         Salin Dari
                     </Button>
                 )}
@@ -224,7 +228,9 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                     amount={bulkAmount}
                     onChange={setBulkAmount}
                     onApply={handleBulkUpdate}
-                    onCancel={() => { setBulkOpen(false); setBulkAmount(''); }}
+                    onCancel={() => {
+ setBulkOpen(false); setBulkAmount(''); 
+}}
                     saving={saving}
                     count={sorted.length}
                 />
@@ -236,14 +242,16 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                     source={copySource}
                     onChange={setCopySource}
                     onApply={handleCopy}
-                    onCancel={() => { setCopyOpen(false); setCopySource(''); }}
+                    onCancel={() => {
+ setCopyOpen(false); setCopySource(''); 
+}}
                     saving={saving}
                 />
             )}
 
             <SortBar sortKey={sortKey} sortDir={sortDir} toggleSort={toggleSort} />
 
-            <div className="space-y-2">
+            <div className="space-y-2" aria-label="Daftar harga outlet">
                 {paginated.map((row) => (
                     <div key={row.variant_id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
                         <div className="flex items-start justify-between">
@@ -265,16 +273,18 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                                         variant="ghost"
                                         onClick={() => handleReset(row.variant_id, row.name)}
                                         className="shrink-0 text-text-muted hover:text-red-600"
-                                        title="Reset ke harga pusat"
+                                        aria-label={`Reset ${row.name} ke harga pusat`}
                                     >
-                                        <RotateCcw className="h-3.5 w-3.5" />
+                                        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                                     </Button>
                                 )}
                                 <Button
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => { setSelectedRow(row); setModalOpen(true); }}
+                                    onClick={() => {
+ setSelectedRow(row); setModalOpen(true); 
+}}
                                     className="shrink-0 text-primary"
                                 >
                                     Ubah
@@ -305,7 +315,9 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                 <OutletPriceModal
                     open={modalOpen}
                     row={selectedRow}
-                    onClose={() => { setModalOpen(false); setSelectedRow(null); }}
+                    onClose={() => {
+ setModalOpen(false); setSelectedRow(null); 
+}}
                     onSave={handleSave}
                     saving={saving}
                 />

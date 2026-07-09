@@ -60,9 +60,19 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
 
     function handleExport() {
         const params = new URLSearchParams();
-        if (filters.date_from) params.set('date_from', filters.date_from);
-        if (filters.date_to) params.set('date_to', filters.date_to);
-        if (filters.outlet_id) params.set('outlet_id', String(filters.outlet_id));
+
+        if (filters.date_from) {
+params.set('date_from', filters.date_from);
+}
+
+        if (filters.date_to) {
+params.set('date_to', filters.date_to);
+}
+
+        if (filters.outlet_id) {
+params.set('outlet_id', String(filters.outlet_id));
+}
+
         window.location.href = `/owner/reports/export-csv?${params.toString()}`;
     }
 
@@ -74,7 +84,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
     if (!summary) {
         return (
             <EmptyState
-                icon={<ClipboardList className="h-8 w-8 text-text-subtle" />}
+                icon={<ClipboardList className="h-8 w-8 text-text-subtle" aria-hidden="true" />}
                 title="Belum ada data"
                 description="Laporan akan muncul di sini."
             />
@@ -97,14 +107,14 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                     onChange={(e) => handleFilter('date_to', e.target.value)}
                 />
                 <Button variant="outline" size="sm" onClick={handleExport}>
-                    <Download className="h-4 w-4" /> CSV
+                    <Download className="h-4 w-4" aria-hidden="true" /> CSV
                 </Button>
-                <Button variant="outline" size="icon" onClick={() => setFilterOpen(true)}>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <Button variant="outline" size="icon" onClick={() => setFilterOpen(true)} aria-label="Filter">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
                 </Button>
             </div>
 
-            <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
+            <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none" role="group" aria-label="Filter periode">
                 {periods.map((p) => (
                     <button
                         key={p.key}
@@ -122,7 +132,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
             </div>
 
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
-                <div className="space-y-3">
+                <div className="space-y-3" aria-label="Breakdown laporan">
                     <BreakdownCard title="Pesanan per Status" data={ordersByStatus} statusLabels={statusLabels} />
                     <BreakdownCard title="Pengiriman per Status" data={deliveriesByStatus} statusLabels={statusLabels} />
                 </div>
@@ -136,10 +146,10 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                             onExport={handleExportReport}
                         />
 
-                        <div className="space-y-2">
+                        <div className="space-y-2" aria-label="Ringkasan laporan">
                             <div className="rounded-lg border border-border bg-white p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
-                                    <ClipboardList className="h-4 w-4 text-text-subtle" />
+                                    <ClipboardList className="h-4 w-4 text-text-subtle" aria-hidden="true" />
                                     Total Pesanan
                                 </div>
                                 <div className="mt-2 text-3xl font-bold text-text">{summary.totalOrders}</div>
@@ -147,7 +157,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                             </div>
                             <div className="rounded-lg border border-border bg-white p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
-                                    <DollarSign className="h-4 w-4 text-emerald-500" />
+                                    <DollarSign className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                                     Pendapatan
                                 </div>
                                 <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(summary.totalRevenue)}</div>
@@ -155,7 +165,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                             </div>
                             <div className="rounded-lg border border-border bg-white p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
-                                    <CheckCircle className="h-4 w-4 text-emerald-500" />
+                                    <CheckCircle className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                                     Selesai
                                 </div>
                                 <div className="mt-2 text-3xl font-bold text-text">{summary.completedOrders}</div>
@@ -165,14 +175,14 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
 
                         <div className="rounded-lg border border-border bg-white">
                             <button type="button" onClick={() => setSecondaryOpen(!secondaryOpen)} className="flex w-full items-center justify-between p-3">
-                                <div className="text-xs font-bold uppercase tracking-wider text-text-muted">Detail Lainnya</div>
-                                <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${secondaryOpen ? 'rotate-180' : ''}`} />
+                                <div className="text-xs font-medium text-text-muted">Detail Lainnya</div>
+                                <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${secondaryOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                             </button>
                             {secondaryOpen && (
-                                <div className="space-y-2 border-t border-border px-3 pb-3 pt-2">
+                                <div className="space-y-2 border-t border-border px-3 pb-3 pt-2" aria-label="Detail tambahan laporan">
                                     <div className="rounded-lg border border-border bg-white p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
-                                            <XCircle className="h-4 w-4 text-red-500" />
+                                            <XCircle className="h-4 w-4 text-red-500" aria-hidden="true" />
                                             Dibatalkan
                                         </div>
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.cancelledOrders}</div>
@@ -180,7 +190,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                     </div>
                                     <div className="rounded-lg border border-border bg-white p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
-                                            <Truck className="h-4 w-4 text-emerald-500" />
+                                            <Truck className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                                             Pengiriman Berhasil
                                         </div>
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.completedDeliveries}</div>
@@ -188,7 +198,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                     </div>
                                     <div className="rounded-lg border border-border bg-white p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
-                                            <XCircle className="h-4 w-4 text-red-500" />
+                                            <XCircle className="h-4 w-4 text-red-500" aria-hidden="true" />
                                             Pengiriman Gagal
                                         </div>
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.failedDeliveries}</div>

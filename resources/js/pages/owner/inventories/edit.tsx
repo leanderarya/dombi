@@ -12,16 +12,18 @@ export default function EditInventory({ inventory }: any) {
 
     return (
         <OwnerPageShell title="Edit Stok" backHref="/owner/inventories">
-            <div className="mb-4">
+            <section className="mb-4" aria-label="Detail Inventaris">
                 <div className="text-sm font-semibold text-text">{inventory.outlet?.name}</div>
                 <div className="mt-0.5 text-sm text-text-muted">
                     {familyName && <span className="text-text-subtle">{familyName} &middot; </span>}
                     {variantName}
                 </div>
-            </div>
-            <div className="mx-auto max-w-lg">
+            </section>
+            <section className="mx-auto max-w-lg" aria-label="Form Edit Inventaris">
                 <form
-                    onSubmit={(e) => { e.preventDefault(); form.put(`/owner/inventories/${inventory.id}`); }}
+                    onSubmit={(e) => {
+ e.preventDefault(); form.put(`/owner/inventories/${inventory.id}`); 
+}}
                     className="space-y-4"
                 >
                     <Input
@@ -58,7 +60,7 @@ export default function EditInventory({ inventory }: any) {
                         </a>
                     </div>
                 </form>
-            </div>
+            </section>
         </OwnerPageShell>
     );
 }

@@ -218,21 +218,21 @@ export default function ProductFamilyShow({ family }: Props) {
                         variant="outline"
                         onClick={() => setShowFamilyEdit(true)}
                     >
-                        <Pencil className="h-4 w-4" />
+                        <Pencil className="h-4 w-4" aria-hidden="true" />
                         Edit
                     </Button>
                     <Button
                         variant="danger"
                         onClick={() => setDeleteFamilyDialog(true)}
                     >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
                         Hapus
                     </Button>
                 </div>
             }
         >
             {family.description && (
-                <div className="mb-4 rounded-lg border border-border bg-white p-4">
+                <div className="mb-4 rounded-lg border border-border bg-white p-4" aria-label="Deskripsi Product Family">
                     <p className="text-sm text-slate-600">{family.description}</p>
                 </div>
             )}
@@ -264,7 +264,7 @@ export default function ProductFamilyShow({ family }: Props) {
             )}
 
             {filteredVariants.length > 0 && (
-                <div className="space-y-2">
+                <div className="space-y-2" aria-label="Daftar Variant">
                     {filteredVariants.map((variant) => (
                         <div
                             key={variant.id}
@@ -286,15 +286,16 @@ export default function ProductFamilyShow({ family }: Props) {
                                     <Button
                                         variant="ghost"
                                         size="icon"
+                                        aria-label={variant.is_active ? `Nonaktifkan ${variant.name}` : `Aktifkan ${variant.name}`}
                                         onClick={() => handleToggleVariant(variant)}
                                         title={variant.is_active ? 'Nonaktifkan' : 'Aktifkan'}
                                     >
                                         {variant.is_active ? <ToggleRight className="h-4 w-4 text-primary" /> : <ToggleLeft className="h-4 w-4" />}
                                     </Button>
-                                    <Button variant="ghost" size="icon" onClick={() => startEditVariant(variant)} title="Edit">
+                                    <Button variant="ghost" size="icon" aria-label={`Edit ${variant.name}`} onClick={() => startEditVariant(variant)} title="Edit">
                                         <Pencil className="h-3.5 w-3.5" />
                                     </Button>
-                                    <Button variant="ghost" size="icon" onClick={() => setDeleteId(variant.id)} title="Hapus">
+                                    <Button variant="ghost" size="icon" aria-label={`Hapus ${variant.name}`} onClick={() => setDeleteId(variant.id)} title="Hapus">
                                         <Trash2 className="h-3.5 w-3.5 text-red-500" />
                                     </Button>
                                 </div>
@@ -321,7 +322,7 @@ export default function ProductFamilyShow({ family }: Props) {
             )}
 
             {search && filteredVariants.length === 0 && family.variants.length > 0 && (
-                <div className="rounded-lg border border-border bg-white p-8 text-center">
+                <div className="rounded-lg border border-border bg-white p-8 text-center" aria-label="Hasil pencarian variant">
                     <p className="text-sm text-text-muted">Tidak ditemukan variant "{search}"</p>
                 </div>
             )}
@@ -363,7 +364,11 @@ export default function ProductFamilyShow({ family }: Props) {
                 </DialogContent>
             </Dialog>
 
-            <Dialog open={showVariantForm || editingVariant !== null} onOpenChange={(open) => { if (!open) cancelForm(); }}>
+            <Dialog open={showVariantForm || editingVariant !== null} onOpenChange={(open) => {
+ if (!open) {
+cancelForm();
+} 
+}}>
                 <DialogContent className="sm:max-w-lg">
                     <VariantForm
                         form={variantForm}

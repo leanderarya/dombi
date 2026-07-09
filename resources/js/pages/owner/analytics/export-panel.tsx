@@ -10,10 +10,10 @@ interface Props {
 
 export default function ExportPanel({ open, onToggle, exporting, onExport }: Props) {
     return (
-        <div className="rounded-lg border border-border bg-white">
+        <div className="rounded-lg border border-border bg-white" aria-label="Download laporan">
             <button type="button" onClick={onToggle} className="flex w-full items-center justify-between p-4">
                 <div className="text-sm font-semibold text-text">Download Laporan</div>
-                <ChevronDown className={`h-4 w-4 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} aria-hidden="true" />
             </button>
             {open && (
                 <div className="space-y-3 border-t border-border px-4 pb-4 pt-3">

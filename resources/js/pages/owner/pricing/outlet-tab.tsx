@@ -29,21 +29,21 @@ export function OutletTab({ outlets, selectedOutlet, outletPrices, otherOutlets 
 function OutletGrid({ outlets }: { outlets?: OutletData[] }) {
     if (!outlets || outlets.length === 0) {
         return (
-            <EmptyState icon={<Store className="h-10 w-10" />} title="Belum ada outlet aktif." />
+            <EmptyState icon={<Store className="h-10 w-10" aria-hidden="true" />} title="Belum ada outlet aktif." />
         );
     }
 
     const kpiItems = [
-        { label: 'Total Outlet', value: outlets.length, icon: <Store className="h-5 w-5" /> },
+        { label: 'Total Outlet', value: outlets.length, icon: <Store className="h-5 w-5" aria-hidden="true" /> },
         {
             label: 'Outlet dengan Override',
             value: outlets.filter((o) => !o.all_standard).length,
-            icon: <DollarSign className="h-5 w-5" />,
+            icon: <DollarSign className="h-5 w-5" aria-hidden="true" />,
         },
     ];
 
     return (
-        <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
+            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6" aria-label="Daftar outlet">
             <div>
                 <OwnerKpiStrip items={kpiItems} cols={2} />
 
@@ -55,7 +55,7 @@ function OutletGrid({ outlets }: { outlets?: OutletData[] }) {
                             className="flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-all duration-200 hover:border-primary/20 active:opacity-80"
                         >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary-light">
-                                <Store className="h-5 w-5 text-primary" />
+                                <Store className="h-5 w-5 text-primary" aria-hidden="true" />
                             </div>
                             <div className="min-w-0 flex-1">
                                 <div className="text-sm font-bold text-text">{o.name}</div>

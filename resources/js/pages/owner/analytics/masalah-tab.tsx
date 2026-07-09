@@ -44,7 +44,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
             <div className="space-y-4">
                 <FilterChips activeFilter={activeFilter} onChange={handleFilterChange} />
                 <EmptyState
-                    icon={<AlertTriangle className="h-8 w-8 text-text-subtle" />}
+                    icon={<AlertTriangle className="h-8 w-8 text-text-subtle" aria-hidden="true" />}
                     title="Belum ada laporan"
                     description="Laporan masalah dari customer akan muncul di sini."
                 />
@@ -56,7 +56,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
         <div className="space-y-4">
             <FilterChips activeFilter={activeFilter} onChange={handleFilterChange} />
 
-            <div className="space-y-2">
+            <div className="space-y-2" aria-label="Daftar laporan masalah">
                 {reports.data.map((report: any) => (
                     <Link
                         key={report.id}
@@ -92,7 +92,7 @@ function FilterChips({ activeFilter, onChange }: { activeFilter: string; onChang
     };
 
     return (
-        <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
+        <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none" role="group" aria-label="Filter status laporan">
             {reportStatusFilters.map((option) => (
                 <button
                     key={option.key}

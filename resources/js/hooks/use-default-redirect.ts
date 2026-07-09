@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 export function useDefaultRedirect(defaultStatus: string, basePath: string) {
     useEffect(() => {
         const url = new URL(window.location.href);
+
         if (!url.searchParams.has('status')) {
             url.searchParams.set('status', defaultStatus);
             router.get(url.pathname + url.search, {}, { preserveState: true, replace: true });

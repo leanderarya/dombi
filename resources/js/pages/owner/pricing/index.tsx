@@ -52,11 +52,13 @@ export default function PricingIndex(props: Props) {
 
     return (
         <OwnerPageShell title="Harga" subtitle="Kelola harga jual produk">
-            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
+            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1" role="tablist" aria-label="Tab navigasi harga">
                 {TABS.map((tab) => (
                     <Button
                         key={tab.key}
                         type="button"
+                        role="tab"
+                        aria-selected={activeTab === tab.key}
                         variant={activeTab === tab.key ? 'secondary' : 'ghost'}
                         size="sm"
                         onClick={() => handleTabChange(tab.key)}

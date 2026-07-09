@@ -1,7 +1,7 @@
 import { useForm } from '@inertiajs/react';
+import { MapPin, Truck, Phone, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { MapPin, Truck, Phone, User } from 'lucide-react';
 
 interface NearestCourier {
     id: number;
@@ -42,28 +42,38 @@ export default function AssignCourierSheet({ outletId, orderId, open, onClose }:
         } else {
             document.body.style.overflow = '';
         }
+
         return () => {
             document.body.style.overflow = '';
         };
     }, [open]);
 
     useEffect(() => {
-        if (!open) return;
+        if (!open) {
+return;
+}
+
         const handler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
+            if (e.key === 'Escape') {
+onClose();
+}
         };
         document.addEventListener('keydown', handler);
+
         return () => document.removeEventListener('keydown', handler);
     }, [open, onClose]);
 
     async function fetchNearestCouriers() {
         setLoading(true);
         setError(null);
+
         try {
             const response = await fetch(`/outlet/api/outlets/${outletId}/nearest-couriers`);
+
             if (!response.ok) {
                 throw new Error('Gagal memuat data kurir');
             }
+
             const data = await response.json();
             setCouriers(data);
         } catch (err) {
@@ -74,7 +84,9 @@ export default function AssignCourierSheet({ outletId, orderId, open, onClose }:
     }
 
     function handleSubmit() {
-        if (!selectedCourier) return;
+        if (!selectedCourier) {
+return;
+}
 
         form.transform(() => ({ courier_id: String(selectedCourier) }));
         form.post(`/outlet/orders/${orderId}/assign-courier`, {
@@ -87,11 +99,15 @@ export default function AssignCourierSheet({ outletId, orderId, open, onClose }:
         if (distance < 1) {
             return `${Math.round(distance * 1000)}m`;
         }
+
         return `${distance.toFixed(1)}km`;
     }
 
     function getVehicleIcon(type: string | null) {
-        if (!type) return <Truck className="h-4 w-4 text-slate-400" />;
+        if (!type) {
+return <Truck className="h-4 w-4 text-slate-400" />;
+}
+
         switch (type.toLowerCase()) {
             case 'motorcycle':
             case 'motor':
@@ -104,7 +120,9 @@ export default function AssignCourierSheet({ outletId, orderId, open, onClose }:
         }
     }
 
-    if (!open) return null;
+    if (!open) {
+return null;
+}
 
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">

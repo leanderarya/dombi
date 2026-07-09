@@ -30,14 +30,22 @@ class AuthenticatedSessionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
+        $request->validate([
+            'email' => ['required_without:phone', 'email', 'nullable'],
+            'phone' => ['required_without:email', 'string', 'nullable'],
             'password' => ['required', 'string'],
         ]);
 
+        // Try email first, then phone
+        if ($request->filled('email')) {
+            $credentials = ['email' => $request->input('email'), 'password' => $request->input('password')];
+        } else {
+            $credentials = ['phone' => $request->input('phone'), 'password' => $request->input('password')];
+        }
+
         if (! Auth::attempt([...$credentials, 'is_active' => true], $request->boolean('remember'))) {
             throw ValidationException::withMessages([
-                'email' => 'Email atau password tidak sesuai.',
+                'email' => 'Email/No. HP atau password tidak sesuai.',
             ]);
         }
 

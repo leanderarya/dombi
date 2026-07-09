@@ -53,6 +53,7 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
     return (
         <>
             {/* KPI Strip */}
+            <div aria-label="Ringkasan Pengembalian">
             <OwnerKpiStrip
                 items={[
                     { label: 'Return Tertunda', value: dashboard.pending_returns, sublabel: dashboard.pending_returns > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
@@ -60,9 +61,10 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
                     ...(dashboard.total_returns !== undefined ? [{ label: 'Total Return', value: dashboard.total_returns }] : []),
                 ]}
             />
+            </div>
 
             {/* Status Pills */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Filter Status Pengembalian">
                 {RETURN_STATUS_FILTERS.map((f) => {
                     const isActive = currentStatus === f.key;
 
@@ -98,10 +100,10 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
             {returns.data.length === 0 ? (
                 <EmptyState icon="package" title="Tidak ada permintaan return" description="Belum ada pengajuan return dari outlet" />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Tabel Pengembalian">
                     <table className="w-full min-w-[600px] text-sm">
                         <thead>
-                            <tr className="bg-[#fafafa] text-xs font-semibold uppercase tracking-wide text-text-muted">
+                            <tr className="bg-[#fafafa] text-xs font-medium text-text-muted">
                                 <th className="px-3 py-2.5 text-left">Kode</th>
                                 <th className="px-3 py-2.5 text-left">Outlet / Alasan</th>
                                 <th className="px-3 py-2.5 text-left">Status</th>

@@ -7,10 +7,10 @@ import type { MarginFilter, OtherOutlet, SortDir, SortKey } from './types';
 export function SortBar({ sortKey, sortDir, toggleSort }: { sortKey: SortKey; sortDir: SortDir; toggleSort: (key: SortKey) => void }) {
     const SortIcon = ({ column }: { column: SortKey }) => {
         if (sortKey !== column) {
-            return <ChevronDown className="h-3 w-3 text-text-subtle" />;
+            return <ChevronDown className="h-3 w-3 text-text-subtle" aria-hidden="true" />;
         }
 
-        return sortDir === 'asc' ? <ChevronUp className="h-3 w-3 text-primary" /> : <ChevronDown className="h-3 w-3 text-primary" />;
+        return sortDir === 'asc' ? <ChevronUp className="h-3 w-3 text-primary" aria-hidden="true" /> : <ChevronDown className="h-3 w-3 text-primary" aria-hidden="true" />;
     };
 
     return (
@@ -30,7 +30,7 @@ export function SortBar({ sortKey, sortDir, toggleSort }: { sortKey: SortKey; so
                     onClick={() => toggleSort(col.key)}
                 >
                     {col.label}
-                    <SortIcon column={col.key} />
+                    <SortIcon column={col.key} aria-hidden="true" />
                 </Button>
             ))}
         </div>
@@ -58,7 +58,7 @@ export function BulkPanel({ amount, onChange, onApply, onCancel, saving, count }
 }) {
     return (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-amber-600">Atur Semua Harga</div>
+            <div className="text-xs font-semibold text-amber-600">Atur Semua Harga</div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
                 <div className="flex flex-wrap gap-1">
                     {[1000, 2000, 5000, 10000].map((amt) => (
@@ -89,7 +89,7 @@ export function CopyPanel({ outlets, source, onChange, onApply, onCancel, saving
 }) {
     return (
         <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-blue-600">Salin Harga Dari Outlet Lain</div>
+            <div className="text-xs font-semibold text-blue-600">Salin Harga Dari Outlet Lain</div>
             <div className="mt-2 flex items-center gap-2">
                 <Select
                     value={source}

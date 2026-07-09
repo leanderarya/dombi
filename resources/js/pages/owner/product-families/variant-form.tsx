@@ -23,7 +23,7 @@ interface Props {
 
 export default function VariantForm({ form, editing, onSubmit, onCancel }: Props) {
     return (
-        <form onSubmit={onSubmit} className="mb-4 rounded-lg border border-border bg-white p-4">
+        <form onSubmit={onSubmit} className="mb-4 rounded-lg border border-border bg-white p-4" aria-label={editing ? 'Edit Variant' : 'Tambah Variant'}>
             <h2 className="mb-3 text-sm font-semibold text-text">
                 {editing ? 'Edit Variant' : 'Tambah Variant'}
             </h2>
@@ -53,8 +53,8 @@ export default function VariantForm({ form, editing, onSubmit, onCancel }: Props
                     />
                 </div>
 
-                <div className="rounded-lg bg-surface-muted p-3">
-                    <div className="mb-2 text-xs font-bold uppercase tracking-wider text-text-subtle">Otomatis (bisa diubah)</div>
+                <div className="rounded-lg bg-surface-muted p-3" aria-label="Field otomatis">
+                    <div className="mb-2 text-xs font-medium text-text-subtle">Otomatis (bisa diubah)</div>
                     <div className="grid grid-cols-2 gap-3">
                         <Input
                             label="Nama Variant"

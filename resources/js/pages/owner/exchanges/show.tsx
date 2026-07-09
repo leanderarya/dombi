@@ -5,9 +5,9 @@ import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getExchangeStatus, getReturnStatus } from '@/lib/status-labels';
 
@@ -78,8 +78,8 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 {/* Main Content - 2 columns */}
                 <div className="lg:col-span-2 space-y-4">
                     {/* Exchange Items */}
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Item Pengganti</div>
+                    <div className="rounded-lg border border-border p-4" aria-label="Item Pengganti">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Item Pengganti</div>
                         {exchange.items?.map((item: any) => (
                             <OwnerDetailRow key={item.id} label={`${item.variant?.full_name ?? item.variant?.name} x${item.quantity}`} value={formatCurrency(item.subtotal)} bold />
                         ))}
@@ -91,8 +91,8 @@ export default function OwnerExchangesShow({ exchange }: any) {
 
                     {/* Linked Return */}
                     {exchange.return_request && (
-                        <div className="rounded-lg border border-border p-4">
-                            <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Return Terkait</div>
+                        <div className="rounded-lg border border-border p-4" aria-label="Return Terkait">
+                            <div className="mb-3 text-xs font-semibold text-text-subtle">Return Terkait</div>
                             <OwnerDetailRow label="Return" value={`#${exchange.return_request.id}`} />
                             <OwnerDetailRow label="Item" value={`${exchange.return_request.items?.length ?? 0} item`} />
                             <OwnerDetailRow label="Status" value={<StatusBadge variant={getReturnStatus(exchange.return_request.status).variant} size="sm">{getReturnStatus(exchange.return_request.status).label}</StatusBadge>} />
@@ -101,8 +101,8 @@ export default function OwnerExchangesShow({ exchange }: any) {
 
                     {/* Notes */}
                     {exchange.notes && (
-                        <div className="rounded-lg border border-border p-4">
-                            <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Catatan</div>
+                        <div className="rounded-lg border border-border p-4" aria-label="Catatan Exchange">
+                            <div className="mb-3 text-xs font-semibold text-text-subtle">Catatan</div>
                             <p className="text-sm text-text-muted">{exchange.notes}</p>
                         </div>
                     )}
@@ -111,10 +111,10 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 {/* Sidebar - 1 column */}
                 <div className="space-y-4">
                     {/* Status + Actions */}
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
+                    <div className="rounded-lg border border-border p-4" aria-label="Status Exchange">
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">Status</div>
                         <div className="flex items-center gap-2 mb-3">
-                            <StatusIcon className="h-4 w-4 text-text-muted" />
+                            <StatusIcon className="h-4 w-4 text-text-muted" aria-hidden="true" />
                             <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
                         </div>
                         <OwnerDetailRow label="Nilai Tukar" value={formatCurrency(exchange.exchange_value)} bold />
@@ -124,12 +124,12 @@ export default function OwnerExchangesShow({ exchange }: any) {
                         {/* Actions */}
                         {exchange.status === 'submitted' && (
                             <div className="mt-4 flex gap-2">
-                                <Button size="sm" className="flex-1" onClick={() => setShowApprove(true)}>
-                                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                <Button size="sm" className="flex-1" aria-label="Setujui Exchange" onClick={() => setShowApprove(true)}>
+                                    <CheckCircle2 className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                                     Setujui
                                 </Button>
-                                <Button size="sm" variant="destructive" className="flex-1" onClick={() => setShowReject(true)}>
-                                    <XCircle className="h-3.5 w-3.5 mr-1" />
+                                <Button size="sm" variant="destructive" className="flex-1" aria-label="Tolak Exchange" onClick={() => setShowReject(true)}>
+                                    <XCircle className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                                     Tolak
                                 </Button>
                             </div>
@@ -137,28 +137,28 @@ export default function OwnerExchangesShow({ exchange }: any) {
 
                         {(exchange.status === 'approved' || exchange.status === 'preparing') && (
                             <Button size="sm" className="mt-4 w-full" onClick={() => router.post(`/owner/exchanges/${exchange.id}/mark-shipped`)}>
-                                <Truck className="h-3.5 w-3.5 mr-1" />
+                                <Truck className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                                 Tandai Dikirim
                             </Button>
                         )}
 
                         {exchange.status === 'received' && (
                             <Button size="sm" className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowComplete(true)}>
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
+                                <CheckCircle2 className="h-3.5 w-3.5 mr-1" aria-hidden="true" />
                                 Selesaikan Tukar Produk
                             </Button>
                         )}
 
                         {exchange.status === 'completed' && (
                             <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-center">
-                                <CheckCircle2 className="mx-auto h-5 w-5 text-emerald-500" />
+                                <CheckCircle2 className="mx-auto h-5 w-5 text-emerald-500" aria-hidden="true" />
                                 <div className="mt-1 text-xs font-semibold text-emerald-800">Tukar Produk Selesai</div>
                             </div>
                         )}
 
                         {exchange.status === 'rejected' && (
                             <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-center">
-                                <XCircle className="mx-auto h-5 w-5 text-red-500" />
+                                <XCircle className="mx-auto h-5 w-5 text-red-500" aria-hidden="true" />
                                 <div className="mt-1 text-xs font-semibold text-red-800">Tukar Produk Ditolak</div>
                             </div>
                         )}
@@ -166,8 +166,8 @@ export default function OwnerExchangesShow({ exchange }: any) {
 
                     {/* Status History / Timeline */}
                     {exchange.status_histories?.length > 0 && (
-                        <div className="rounded-lg border border-border p-4">
-                            <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Riwayat Status</div>
+                        <div className="rounded-lg border border-border p-4" aria-label="Riwayat Status Exchange">
+                            <div className="mb-3 text-xs font-semibold text-text-subtle">Riwayat Status</div>
                             <div className="space-y-3">
                                 {exchange.status_histories.map((h: any, i: number) => {
                                     const isLast = i === exchange.status_histories.length - 1;

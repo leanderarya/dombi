@@ -30,12 +30,18 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
     }
 
     const filtered = variants.filter((v) => {
+        if (!v) {
+return false;
+}
+
         if (search) {
             const q = search.toLowerCase();
+
             if (!v.name.toLowerCase().includes(q) && !(v.sku ?? '').toLowerCase().includes(q)) {
                 return false;
             }
         }
+
         return true;
     });
 
@@ -62,15 +68,15 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
                     description="Coba ubah kata kunci pencarian"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
-                    <table className="w-full min-w-[600px]">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                    <table className="w-full min-w-[600px]" aria-label="Stok Pusat">
                         <thead>
                             <tr className="bg-surface-muted">
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Produk / SKU</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Stok</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">HPP</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Produk / SKU</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Stok</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">HPP</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -117,7 +123,11 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
                 </div>
             )}
 
-            <Dialog open={!!editModal} onOpenChange={(isOpen) => { if (!isOpen) setEditModal(null); }}>
+            <Dialog open={!!editModal} onOpenChange={(isOpen) => {
+ if (!isOpen) {
+setEditModal(null);
+} 
+}}>
                 <DialogContent className="max-w-sm">
                     <DialogHeader>
                         <DialogTitle>Edit Stok Pusat</DialogTitle>
@@ -152,6 +162,10 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
                         </Button>
                         <Button
                             onClick={() => {
+                                if (!editModal) {
+return;
+}
+
                                 setSaving(true);
                                 router.patch(`/owner/inventories/central-stock/${editModal.id}`, {
                                     center_stock: parseInt(newStock),

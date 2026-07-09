@@ -56,7 +56,7 @@ export default function OwnerDeliveriesIndex({
             ]} />
 
             {/* Status Pills */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div aria-label="Filter status pengiriman" className="mb-4 flex flex-wrap items-center gap-2">
                 {statusOptions.map((opt) => {
                     const isActive = (filters.status ?? '') === opt.value;
                     const colorMap: Record<string, string> = {
@@ -99,21 +99,21 @@ export default function OwnerDeliveriesIndex({
             {/* Table */}
             {deliveries.data.length === 0 ? (
                 <EmptyState
-                    icon={<Package className="h-8 w-8" />}
+                    icon={<Package aria-hidden="true" className="h-8 w-8" />}
                     title="Tidak ada pengiriman"
                     description="Pengiriman akan muncul di sini setelah kurir di-assign ke pesanan"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border">
-                    <table className="w-full min-w-[600px]">
+                <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                    <table aria-label="Daftar pengiriman" className="w-full min-w-[600px]">
                         <thead>
                             <tr className="bg-surface-muted">
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kode</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Outlet</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kurir</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Tanggal</th>
-                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kurir</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Tanggal</th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -133,7 +133,7 @@ export default function OwnerDeliveriesIndex({
                                             <div className="flex items-center justify-end gap-2">
                                                 {isActive && (
                                                     <Button variant="outline" size="sm">
-                                                        <MapPin className="h-3.5 w-3.5" />
+                                                        <MapPin aria-hidden="true" className="h-3.5 w-3.5" />
                                                         Lacak
                                                     </Button>
                                                 )}

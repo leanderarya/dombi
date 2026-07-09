@@ -16,13 +16,15 @@ interface Props {
     icon?: ReactNode;
     trend?: string;
     color?: KpiColor;
+    highlight?: boolean;
     className?: string;
 }
 
-export default function OwnerKpiCard({ label, value, icon, trend, color, className }: Props) {
+export default function OwnerKpiCard({ label, value, icon, trend, color, highlight, className }: Props) {
     return (
         <div className={cn(
             'group rounded-lg p-2.5 transition-colors duration-150 hover:bg-surface-muted',
+            highlight && 'ring-1 ring-danger/20 bg-danger/5',
             className
         )}>
             <div className="flex items-center gap-2">
