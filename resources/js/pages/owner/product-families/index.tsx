@@ -104,55 +104,18 @@ export default function ProductFamiliesIndex({ families }: Props) {
         <OwnerPageShell
             title="Product Families"
             subtitle="Kelola kelompok produk dan variant"
+            headerRight={
+                <Button onClick={() => { reset(); setEditingId(null); setShowForm(true); }}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Tambah
+                </Button>
+            }
         >
             <OwnerFilterCard
                 searchPlaceholder="Cari product family..."
                 searchValue={search}
                 onSearch={setSearch}
-                tambahLabel="Tambah"
-                tambahOnClick={() => {
-                    reset();
-                    setEditingId(null);
-                    setShowForm(!showForm);
-                }}
-                tambahActive={showForm}
             />
-
-            {showForm && (
-                <form onSubmit={handleSubmit} className="mb-4 rounded-lg border border-border bg-white p-4">
-                    <h3 className="mb-3 text-sm font-semibold text-text">
-                        {editingId ? 'Edit Product Family' : 'Tambah Product Family'}
-                    </h3>
-                    <div className="space-y-3">
-                        <Input
-                            label="Nama"
-                            type="text"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            required
-                            error={errors.name}
-                            placeholder="Domilk Premium"
-                        />
-                        <Input
-                            label="Brand"
-                            type="text"
-                            value={data.brand}
-                            onChange={(e) => setData('brand', e.target.value)}
-                            placeholder="Domilk"
-                        />
-                        <Textarea
-                            label="Deskripsi"
-                            value={data.description}
-                            onChange={(e) => setData('description', e.target.value)}
-                            rows={2}
-                            placeholder="Deskripsi produk..."
-                        />
-                        <Button type="submit" loading={processing} className="w-full">
-                            {editingId ? 'Update' : 'Simpan'}
-                        </Button>
-                    </div>
-                </form>
-            )}
 
             {filteredFamilies.length === 0 ? (
                 <EmptyState
@@ -218,6 +181,48 @@ export default function ProductFamiliesIndex({ families }: Props) {
                     ))}
                 </div>
             )}
+
+            <Dialog open={showForm} onOpenChange={setShowForm}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editingId ? 'Edit Product Family' : 'Tambah Product Family'}</DialogTitle>
+                        <DialogDescription>{editingId ? 'Perbarui data product family.' : 'Tambah product family baru.'}</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit}>
+                        <div className="space-y-3">
+                            <Input
+                                label="Nama"
+                                type="text"
+                                value={data.name}
+                                onChange={(e) => setData('name', e.target.value)}
+                                required
+                                error={errors.name}
+                                placeholder="Domilk Premium"
+                            />
+                            <Input
+                                label="Brand"
+                                type="text"
+                                value={data.brand}
+                                onChange={(e) => setData('brand', e.target.value)}
+                                placeholder="Domilk"
+                            />
+                            <Textarea
+                                label="Deskripsi"
+                                value={data.description}
+                                onChange={(e) => setData('description', e.target.value)}
+                                rows={2}
+                                placeholder="Deskripsi produk..."
+                            />
+                        </div>
+                    </form>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowForm(false)}>Batal</Button>
+                        <Button onClick={handleSubmit} disabled={processing}>
+                            {editingId ? 'Update' : 'Simpan'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
                 <DialogContent>

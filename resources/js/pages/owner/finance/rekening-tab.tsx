@@ -79,10 +79,10 @@ export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }
         });
     };
 
-    const handleToggle = () => {
+    const handleAddClick = () => {
         reset();
         setEditingId(null);
-        setShowForm(!showForm);
+        setShowForm(true);
     };
 
     return (
@@ -94,27 +94,16 @@ export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }
 
             <div className="mb-4 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-text">Rekening Pembayaran</h2>
-                <Button size="sm" onClick={handleToggle}>
-                    {showForm ? 'Batal' : 'Tambah Rekening'}
+                <Button size="sm" onClick={handleAddClick}>
+                    Tambah Rekening
                 </Button>
             </div>
-
-            {showForm && (
-                <div className="mb-4 rounded-lg border border-border bg-white p-4">
-                    <h3 className="mb-3 text-sm font-semibold text-text">
-                        {editingId ? 'Edit Rekening' : 'Tambah Rekening'}
-                    </h3>
-                    <form onSubmit={handleSubmit}>
-                        <AccountForm data={data} setData={setData} errors={errors} processing={processing} editingId={editingId} />
-                    </form>
-                </div>
-            )}
 
             {accounts.length === 0 ? (
                 <EmptyState
                     title="Belum ada rekening"
                     description="Tambah rekening pembayaran untuk menerima pembayaran outlet."
-                    action={{ label: 'Tambah Rekening', onClick: handleToggle }}
+                    action={{ label: 'Tambah Rekening', onClick: handleAddClick }}
                 />
             ) : (
                 <div className="overflow-x-auto rounded-lg border border-border">
@@ -156,6 +145,24 @@ export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }
                 </div>
             )}
 
+            <Dialog open={showForm} onOpenChange={setShowForm}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>{editingId ? 'Edit Rekening' : 'Tambah Rekening'}</DialogTitle>
+                        <DialogDescription>{editingId ? 'Perbarui data rekening.' : 'Tambah rekening pembayaran baru.'}</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleSubmit}>
+                        <AccountForm data={data} setData={setData} errors={errors} editingId={editingId} />
+                    </form>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowForm(false)}>Batal</Button>
+                        <Button onClick={handleSubmit} disabled={processing}>
+                            {processing ? 'Menyimpan...' : editingId ? 'Perbarui' : 'Simpan'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -172,11 +179,10 @@ export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }
     );
 }
 
-function AccountForm({ data, setData, errors, processing, editingId }: {
+function AccountForm({ data, setData, errors, editingId }: {
     data: { bank_name: string; account_number: string; account_holder: string; is_active: boolean };
     setData: (key: string, value: any) => void;
     errors: Record<string, string>;
-    processing: boolean;
     editingId: number | null;
 }) {
     return (
@@ -224,9 +230,6 @@ function AccountForm({ data, setData, errors, processing, editingId }: {
                 />
                 <label htmlFor="is_active" className="text-sm text-text">Aktif</label>
             </div>
-            <Button type="submit" disabled={processing} className="w-full">
-                {processing ? 'Menyimpan...' : editingId ? 'Perbarui' : 'Simpan'}
-            </Button>
         </div>
     );
 }

@@ -1,5 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import { Package, Pencil, Plus, Trash2, ToggleLeft, ToggleRight, X } from 'lucide-react';
+import { Package, Pencil, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -216,7 +216,7 @@ export default function ProductFamilyShow({ family }: Props) {
                 <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
-                        onClick={() => setShowFamilyEdit(!showFamilyEdit)}
+                        onClick={() => setShowFamilyEdit(true)}
                     >
                         <Pencil className="h-4 w-4" />
                         Edit
@@ -231,43 +231,7 @@ export default function ProductFamilyShow({ family }: Props) {
                 </div>
             }
         >
-            {showFamilyEdit && (
-                <form onSubmit={handleUpdateFamily} className="mb-4 rounded-lg border border-border bg-white p-4">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-semibold text-text">Edit Product Family</h3>
-                        <Button type="button" variant="ghost" size="icon" onClick={() => setShowFamilyEdit(false)}>
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <div className="space-y-3">
-                        <Input
-                            label="Nama"
-                            type="text"
-                            value={familyForm.data.name}
-                            onChange={(e) => familyForm.setData('name', e.target.value)}
-                            required
-                            error={familyForm.errors.name}
-                        />
-                        <Input
-                            label="Brand"
-                            type="text"
-                            value={familyForm.data.brand}
-                            onChange={(e) => familyForm.setData('brand', e.target.value)}
-                        />
-                        <Textarea
-                            label="Deskripsi"
-                            value={familyForm.data.description}
-                            onChange={(e) => familyForm.setData('description', e.target.value)}
-                            rows={2}
-                        />
-                        <Button type="submit" loading={familyForm.processing} className="w-full">
-                            Update
-                        </Button>
-                    </div>
-                </form>
-            )}
-
-            {family.description && !showFamilyEdit && (
+            {family.description && (
                 <div className="mb-4 rounded-lg border border-border bg-white p-4">
                     <p className="text-sm text-slate-600">{family.description}</p>
                 </div>
@@ -283,19 +247,9 @@ export default function ProductFamilyShow({ family }: Props) {
                         cancelForm();
                     }
 
-                    setShowVariantForm(!showVariantForm);
+                    setShowVariantForm(true);
                 }}
-                tambahActive={showVariantForm}
             />
-
-            {(showVariantForm || editingVariant) && (
-                <VariantForm
-                    form={variantForm}
-                    editing={!!editingVariant}
-                    onSubmit={editingVariant ? handleUpdateVariant : handleCreateVariant}
-                    onCancel={cancelForm}
-                />
-            )}
 
             {family.variants.length === 0 && !showVariantForm && (
                 <EmptyState
@@ -371,6 +325,54 @@ export default function ProductFamilyShow({ family }: Props) {
                     <p className="text-sm text-text-muted">Tidak ditemukan variant "{search}"</p>
                 </div>
             )}
+
+            <Dialog open={showFamilyEdit} onOpenChange={setShowFamilyEdit}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Product Family</DialogTitle>
+                        <DialogDescription>Perbarui data product family.</DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleUpdateFamily}>
+                        <div className="space-y-3">
+                            <Input
+                                label="Nama"
+                                type="text"
+                                value={familyForm.data.name}
+                                onChange={(e) => familyForm.setData('name', e.target.value)}
+                                required
+                                error={familyForm.errors.name}
+                            />
+                            <Input
+                                label="Brand"
+                                type="text"
+                                value={familyForm.data.brand}
+                                onChange={(e) => familyForm.setData('brand', e.target.value)}
+                            />
+                            <Textarea
+                                label="Deskripsi"
+                                value={familyForm.data.description}
+                                onChange={(e) => familyForm.setData('description', e.target.value)}
+                                rows={2}
+                            />
+                        </div>
+                    </form>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowFamilyEdit(false)}>Batal</Button>
+                        <Button onClick={handleUpdateFamily} disabled={familyForm.processing}>Update</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={showVariantForm || editingVariant !== null} onOpenChange={(open) => { if (!open) cancelForm(); }}>
+                <DialogContent className="sm:max-w-lg">
+                    <VariantForm
+                        form={variantForm}
+                        editing={!!editingVariant}
+                        onSubmit={editingVariant ? handleUpdateVariant : handleCreateVariant}
+                        onCancel={cancelForm}
+                    />
+                </DialogContent>
+            </Dialog>
 
             <Dialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
                 <DialogContent>
