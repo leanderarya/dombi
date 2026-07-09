@@ -7,6 +7,7 @@ import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { isDifferentRecipient } from '@/lib/recipient';
@@ -16,6 +17,35 @@ export default function OwnerOrderShow({ order, couriers }: any) {
     const form = useForm({ courier_id: couriers[0]?.id ?? '' });
     const [resolveOpen, setResolveOpen] = useState(false);
     const [showFullTimeline, setShowFullTimeline] = useState(false);
+
+    if (!order) {
+        return (
+            <OwnerPageShell title="Memuat..." subtitle="Detail pesanan" backHref="/owner/orders">
+                <div className="grid gap-4 lg:grid-cols-3">
+                    <div className="lg:col-span-2 space-y-4">
+                        <div className="rounded-lg border border-border p-4 space-y-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                        </div>
+                        <div className="rounded-lg border border-border p-4 space-y-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-6 w-full" />
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="rounded-lg border border-border p-4 space-y-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-6 w-3/4" />
+                        </div>
+                    </div>
+                </div>
+            </OwnerPageShell>
+        );
+    }
 
     const lastHistory = order.status_histories?.[order.status_histories.length - 1];
     const olderHistories = order.status_histories?.slice(0, -1) ?? [];
