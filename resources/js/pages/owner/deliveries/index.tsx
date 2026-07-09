@@ -1,9 +1,11 @@
 import { router } from '@inertiajs/react';
-import { MapPin } from 'lucide-react';
+import { MapPin, Package } from 'lucide-react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { Button } from '@/components/ui/button';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
+import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/format';
@@ -45,11 +47,20 @@ export default function OwnerDeliveriesIndex({
             title="Pengiriman"
             subtitle="Kelola pengiriman dari semua outlet"
         >
+            {/* KPI Strip */}
+            <OwnerKpiStrip items={[
+                { label: 'Total', value: stats.total_today, sublabel: (stats.total_today ?? 0) > 0 ? 'Hari ini' : undefined, sublabelColor: 'text-blue-600' },
+                { label: 'Aktif', value: stats.active, sublabel: (stats.active ?? 0) > 0 ? 'Sedang berjalan' : undefined, sublabelColor: 'text-blue-600' },
+                { label: 'Selesai', value: stats.completed_today },
+                { label: 'Gagal', value: stats.failed_today, sublabel: (stats.failed_today ?? 0) > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-red-600' },
+            ]} />
+
             {/* Status Pills */}
             <div className="mb-4 flex flex-wrap items-center gap-2">
-                {statusOptions.filter((o) => o.value !== '').map((opt) => {
+                {statusOptions.map((opt) => {
                     const isActive = (filters.status ?? '') === opt.value;
                     const colorMap: Record<string, string> = {
+                        '': 'text-text bg-surface-muted ring-border',
                         waiting_pickup: 'text-amber-600 bg-amber-50 ring-amber-200',
                         picked_up: 'text-blue-600 bg-blue-50 ring-blue-200',
                         delivering: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
@@ -59,7 +70,7 @@ export default function OwnerDeliveriesIndex({
 
                     return (
                         <button key={opt.value} type="button" onClick={() => setFilter('status', opt.value)}
-                            className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-all ${
+                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 isActive ? colorMap[opt.value] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
                             }`}>
                             {opt.label}
@@ -70,6 +81,8 @@ export default function OwnerDeliveriesIndex({
 
             {/* Filter controls */}
             <OwnerFilterCard
+                collapsible
+                defaultExpanded={false}
                 searchPlaceholder="Cari kode..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => setFilter('search', val)}
@@ -83,51 +96,61 @@ export default function OwnerDeliveriesIndex({
                 onDateChange={(val) => setFilter('date', val)}
             />
 
-            {/* KPI Strip */}
-            <OwnerKpiStrip items={[
-                { label: 'Total', value: stats.total_today, sublabel: (stats.total_today ?? 0) > 0 ? 'Hari ini' : undefined, sublabelColor: 'text-blue-600' },
-                { label: 'Aktif', value: stats.active, sublabel: (stats.active ?? 0) > 0 ? 'Sedang berjalan' : undefined, sublabelColor: 'text-blue-600' },
-                { label: 'Selesai', value: stats.completed_today },
-                { label: 'Gagal', value: stats.failed_today, sublabel: (stats.failed_today ?? 0) > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-red-600' },
-            ]} />
-
             {/* Table */}
             {deliveries.data.length === 0 ? (
-                <div className="rounded-lg border border-border bg-white py-10 text-center text-xs text-text-muted">
-                    Tidak ada pengiriman
-                </div>
+                <EmptyState
+                    icon={<Package className="h-8 w-8" />}
+                    title="Tidak ada pengiriman"
+                    description="Pengiriman akan muncul di sini setelah kurir di-assign ke pesanan"
+                />
             ) : (
-                <div className="overflow-hidden rounded-lg border border-border">
-                    {/* Header */}
-                    <div className="grid grid-cols-[100px_1fr_120px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                        <span>Kode</span><span>Outlet / Kurir</span><span>Status</span><span>Tanggal</span><span />
-                    </div>
-                    {/* Rows */}
-                    {deliveries.data.map((d: any) => {
-                        const isActive = ['delivering', 'picked_up'].includes(d.status);
+                <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full min-w-[600px]">
+                        <thead>
+                            <tr className="bg-surface-muted">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kode</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Outlet</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kurir</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Tanggal</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {deliveries.data.map((d: any) => {
+                                const isActive = ['delivering', 'picked_up'].includes(d.status);
 
-                        return (
-                            <div key={d.id}
-                                className="grid grid-cols-[100px_1fr_120px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
-                                <span className="font-bold tabular-nums text-text">{d.order?.order_code ?? '-'}</span>
-                                <span className="truncate text-text-muted">{d.order?.outlet?.name ?? '-'} · {d.courier?.name ?? 'Belum ada kurir'}</span>
-                                <span><DeliveryStatusBadge status={d.status} /></span>
-                                <span className="text-text-muted">{formatDate(d.assigned_at)}</span>
-                                <div className="flex items-center gap-1 justify-end">
-                                    {isActive && (
-                                        <span className="inline-flex items-center gap-0.5 rounded-md bg-indigo-50 px-1.5 py-0.5 text-xs font-semibold text-indigo-700">
-                                            <MapPin className="h-3 w-3" />
-                                            Lacak
-                                        </span>
-                                    )}
-                                    <button type="button" onClick={() => router.visit(`/owner/deliveries/${d.id}`)}
-                                        className="rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary-light">
-                                        Detail →
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
+                                return (
+                                    <tr key={d.id} className="border-t border-border transition-colors hover:bg-surface-muted">
+                                        <td className="px-4 py-3 font-bold tabular-nums text-text">{d.order?.order_code ?? '-'}</td>
+                                        <td className="px-4 py-3 text-text-muted">{d.order?.outlet?.name ?? '-'}</td>
+                                        <td className="px-4 py-3 text-text-muted">{d.courier?.name ?? 'Belum ada kurir'}</td>
+                                        <td className="px-4 py-3">
+                                            <DeliveryStatusBadge status={d.status} />
+                                        </td>
+                                        <td className="px-4 py-3 text-text-muted">{formatDate(d.assigned_at)}</td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {isActive && (
+                                                    <Button variant="outline" size="sm">
+                                                        <MapPin className="h-3.5 w-3.5" />
+                                                        Lacak
+                                                    </Button>
+                                                )}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => router.visit(`/owner/deliveries/${d.id}`)}
+                                                >
+                                                    Detail
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             )}
 
