@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 interface FilterOption {
     value: string;
@@ -39,9 +40,6 @@ interface OwnerFilterCardProps {
     children?: React.ReactNode;
 }
 
-const inputClass =
-    'h-8 rounded-md border border-border bg-surface px-2.5 text-xs text-text outline-none placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20';
-
 const selectBase =
     'h-8 rounded-md border border-border bg-surface outline-none appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23717171%27 stroke-width=%272.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E")] bg-[length:10px] bg-[right_8px_center] bg-no-repeat pr-7 focus:border-primary focus:ring-1 focus:ring-primary/20';
 
@@ -74,12 +72,12 @@ export default function OwnerFilterCard({
         <div className="owner-filter-card mb-4 rounded-lg border border-border bg-white p-3">
             <div className="flex flex-wrap items-center gap-2">
                 {searchPlaceholder && (
-                    <input
+                    <Input
                         type="text"
+                        placeholder={searchPlaceholder}
                         value={searchValue ?? ''}
                         onChange={(e) => onSearch?.(e.target.value)}
-                        placeholder={searchPlaceholder}
-                        className={`${inputClass} w-[140px]`}
+                        className="w-[140px]"
                     />
                 )}
 
@@ -126,11 +124,11 @@ export default function OwnerFilterCard({
                 )}
 
                 {dateValue !== undefined && (
-                    <input
+                    <Input
                         type="date"
                         value={dateValue}
                         onChange={(e) => onDateChange?.(e.target.value)}
-                        className={`${inputClass} w-[140px]`}
+                        className="w-[140px]"
                         aria-label="Filter tanggal"
                     />
                 )}
