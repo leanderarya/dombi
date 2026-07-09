@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { useState, useMemo } from 'react';
 import { Package } from 'lucide-react';
 import CentralStockTab from './central-stock-tab';
@@ -6,8 +6,11 @@ import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
 import StatusBadge from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +23,29 @@ type TabKey = (typeof TABS)[number]['key'];
 
 export default function InventoriesIndex({ tab: initialTab, outletSections, stats, centralStock, centralStats }: any) {
     const [activeTab, setActiveTab] = useState<TabKey>((initialTab as TabKey) ?? 'pusat');
+    const [editItem, setEditItem] = useState<any>(null);
+
+    const editForm = useForm({ current_stock: 0, minimum_stock: 0, notes: '' });
+
+    const openEdit = (item: any) => {
+        setEditItem(item);
+        editForm.setData({
+            current_stock: item.current_stock,
+            minimum_stock: item.minimum_stock,
+            notes: '',
+        });
+    };
+
+    const handleEdit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editItem) return;
+        editForm.put(`/owner/inventories/${editItem.id}`, {
+            onSuccess: () => {
+                setEditItem(null);
+                editForm.reset();
+            },
+        });
+    };
 
     if (!outletSections && !centralStock) {
         return (
@@ -173,7 +199,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
-                                                            onClick={() => router.visit(`/owner/inventories/${row.id}/edit`)}
+                                                            onClick={() => openEdit(row)}
                                                         >
                                                             Edit
                                                         </Button>
@@ -188,6 +214,46 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                     )}
                 </>
             )}
+
+            <Dialog open={editItem !== null} onOpenChange={() => setEditItem(null)}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Edit Stok</DialogTitle>
+                        <DialogDescription>
+                            {editItem?.variant?.family?.name && <span>{editItem.variant.family.name} &middot; </span>}
+                            {editItem?.variant?.name ?? editItem?.product?.name ?? '-'} — {editItem?.outlet?.name}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleEdit} className="space-y-4">
+                        <Input
+                            label="Stok Saat Ini"
+                            type="number"
+                            min={0}
+                            value={editForm.data.current_stock}
+                            onChange={(e) => editForm.setData('current_stock', Number(e.target.value))}
+                            error={editForm.errors.current_stock}
+                        />
+                        <Input
+                            label="Stok Minimum"
+                            type="number"
+                            min={0}
+                            value={editForm.data.minimum_stock}
+                            onChange={(e) => editForm.setData('minimum_stock', Number(e.target.value))}
+                            error={editForm.errors.minimum_stock}
+                        />
+                        <Textarea
+                            label="Catatan"
+                            value={editForm.data.notes}
+                            onChange={(e) => editForm.setData('notes', e.target.value)}
+                            error={editForm.errors.notes}
+                        />
+                        <DialogFooter>
+                            <Button variant="outline" onClick={() => setEditItem(null)}>Batal</Button>
+                            <Button type="submit" loading={editForm.processing}>Update</Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
         </OwnerPageShell>
     );
 }
