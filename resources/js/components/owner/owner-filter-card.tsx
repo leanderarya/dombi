@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, Filter, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 
 interface FilterOption {
     value: string;
@@ -43,9 +44,6 @@ interface OwnerFilterCardProps {
 
     children?: React.ReactNode;
 }
-
-const selectBase =
-    'h-8 rounded-md border border-border bg-surface outline-none appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23717171%27 stroke-width=%272.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E")] bg-[length:10px] bg-[right_8px_center] bg-no-repeat pr-7 focus:border-primary focus:ring-1 focus:ring-primary/20';
 
 export default function OwnerFilterCard({
     collapsible = false,
@@ -118,45 +116,33 @@ export default function OwnerFilterCard({
                 )}
 
                 {outletOptions && (
-                    <select
+                    <Select
                         value={outletValue ?? ''}
                         onChange={(e) => onOutletChange?.(e.target.value)}
-                        className={`${selectBase} w-[150px]`}
+                        options={[{ value: '', label: 'Semua Outlet' }, ...outletOptions]}
+                        className="w-[150px]"
                         aria-label="Filter outlet"
-                    >
-                        <option value="">Semua Outlet</option>
-                        {outletOptions.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                    </select>
+                    />
                 )}
 
                 {reasonOptions && (
-                    <select
+                    <Select
                         value={reasonValue ?? ''}
                         onChange={(e) => onReasonChange?.(e.target.value)}
-                        className={`${selectBase} w-[150px]`}
+                        options={[{ value: '', label: 'Semua Alasan' }, ...reasonOptions]}
+                        className="w-[150px]"
                         aria-label="Filter alasan"
-                    >
-                        <option value="">Semua Alasan</option>
-                        {reasonOptions.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                    </select>
+                    />
                 )}
 
                 {courierOptions && (
-                    <select
+                    <Select
                         value={courierValue ?? ''}
                         onChange={(e) => onCourierChange?.(e.target.value)}
-                        className={`${selectBase} w-[150px]`}
+                        options={[{ value: '', label: 'Semua Kurir' }, ...courierOptions]}
+                        className="w-[150px]"
                         aria-label="Filter kurir"
-                    >
-                        <option value="">Semua Kurir</option>
-                        {courierOptions.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                    </select>
+                    />
                 )}
 
                 {dateValue !== undefined && (
@@ -170,17 +156,13 @@ export default function OwnerFilterCard({
                 )}
 
                 {marginOptions && (
-                    <select
+                    <Select
                         value={marginValue ?? ''}
                         onChange={(e) => onMarginChange?.(e.target.value)}
-                        className={`${selectBase} w-[160px]`}
+                        options={[{ value: '', label: marginLabel }, ...marginOptions]}
+                        className="w-[160px]"
                         aria-label="Filter margin"
-                    >
-                        <option value="">{marginLabel}</option>
-                        {marginOptions.map((o) => (
-                            <option key={o.value} value={o.value}>{o.label}</option>
-                        ))}
-                    </select>
+                    />
                 )}
 
                 {children}
