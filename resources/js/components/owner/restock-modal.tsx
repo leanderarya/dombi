@@ -1,6 +1,5 @@
-import { X } from 'lucide-react';
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
+import OwnerModalShell from '@/components/owner/owner-modal-shell';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
@@ -19,10 +18,6 @@ export default function RestockModal({ open, onClose, outletId, variantId, produ
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    if (!open) {
-return null;
-}
-
     const qty = parseInt(quantity) || 0;
     const newStock = currentStock + qty;
 
@@ -30,8 +25,8 @@ return null;
         e.preventDefault();
 
         if (qty <= 0) {
-return;
-}
+            return;
+        }
 
         setSaving(true);
         setError(null);
@@ -68,92 +63,76 @@ return;
         }
     };
 
-    return createPortal(
-        <div className="fixed inset-0 z-50 flex items-end justify-center lg:items-center" role="dialog" aria-modal="true">
-            <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-            <div className="relative w-full max-w-md animate-[slideUp_200ms_ease-out] rounded-t-lg bg-white pb-safe lg:animate-none lg:rounded-lg lg:pb-0">
-                <div className="flex justify-center pt-3 pb-2 lg:hidden">
-                    <div className="h-1 w-12 rounded-full bg-slate-300" />
+    return (
+        <OwnerModalShell open={open} onClose={onClose} title="Restock Produk" maxWidth="max-w-md">
+            <form onSubmit={handleSubmit}>
+                <div className="mt-4">
+                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Produk</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-900">{productName}</div>
                 </div>
-                <button type="button" onClick={onClose} aria-label="Tutup" className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-slate-400 hover:bg-slate-100">
-                    <X className="h-4 w-4" />
-                </button>
 
-                <form onSubmit={handleSubmit} className="px-6 pb-6 pt-2 lg:pt-6">
-                    <h2 className="text-base font-bold text-slate-900">Restock Produk</h2>
+                <div className="mt-3">
+                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Stok Saat Ini</div>
+                    <div className="mt-1 text-sm font-semibold text-slate-700">{currentStock} pcs</div>
+                </div>
 
-                    <div className="mt-4">
-                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Produk</div>
-                        <div className="mt-1 text-sm font-semibold text-slate-900">{productName}</div>
+                <div className="mt-3">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Tambah Stok</label>
+                    <div className="mt-1 flex gap-2">
+                        {[10, 25, 50, 100].map((n) => (
+                            <button
+                                key={n}
+                                type="button"
+                                onClick={() => setQuantity(String((parseInt(quantity) || 0) + n))}
+                                className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                            >
+                                +{n}
+                            </button>
+                        ))}
                     </div>
-
-                    <div className="mt-3">
-                        <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Stok Saat Ini</div>
-                        <div className="mt-1 text-sm font-semibold text-slate-700">{currentStock} pcs</div>
-                    </div>
-
-                    <div className="mt-3">
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Tambah Stok</label>
-                        <div className="mt-1 flex gap-2">
-                            {[10, 25, 50, 100].map((n) => (
-                                <button
-                                    key={n}
-                                    type="button"
-                                    onClick={() => setQuantity(String((parseInt(quantity) || 0) + n))}
-                                    className="rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
-                                >
-                                    +{n}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="relative mt-2">
-                            <input
-                                type="number"
-                                value={quantity}
-                                onChange={(e) => setQuantity(e.target.value)}
-                                min={1}
-                                placeholder="Jumlah"
-                                className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-4 pr-12 text-sm font-bold tabular-nums focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
-                                autoFocus
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">pcs</span>
-                        </div>
-                    </div>
-
-                    <div className="mt-3">
-                        <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Catatan</label>
-                        <textarea
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Catatan restock (opsional)"
-                            rows={2}
-                            className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                    <div className="relative mt-2">
+                        <input
+                            type="number"
+                            value={quantity}
+                            onChange={(e) => setQuantity(e.target.value)}
+                            min={1}
+                            placeholder="Jumlah"
+                            className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-4 pr-12 text-sm font-bold tabular-nums focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                            autoFocus
                         />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">pcs</span>
                     </div>
+                </div>
 
-                    {qty > 0 && (
-                        <div className="mt-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
-                            <span className="text-xs text-slate-500">Stok Setelah Restock</span>
-                            <span className="text-sm font-bold tabular-nums text-emerald-700">{newStock} pcs</span>
-                        </div>
-                    )}
+                <div className="mt-3">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Catatan</label>
+                    <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Catatan restock (opsional)"
+                        rows={2}
+                        className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
+                    />
+                </div>
 
-                    {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
-
-                    <div className="mt-5 flex gap-3">
-                        <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
-                            Batal
-                        </button>
-                        <button type="submit" disabled={saving || qty <= 0} className="flex-[2] rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
-                            {saving ? 'Menyimpan...' : 'Simpan Restock'}
-                        </button>
+                {qty > 0 && (
+                    <div className="mt-3 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2.5">
+                        <span className="text-xs text-slate-500">Stok Setelah Restock</span>
+                        <span className="text-sm font-bold tabular-nums text-emerald-700">{newStock} pcs</span>
                     </div>
-                </form>
-            </div>
-        </div>
-    ,
-        document.body,
+                )}
+
+                {error && <p className="mt-2 text-xs font-medium text-red-600">{error}</p>}
+
+                <div className="mt-5 flex gap-3">
+                    <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                        Batal
+                    </button>
+                    <button type="submit" disabled={saving || qty <= 0} className="flex-[2] rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50">
+                        {saving ? 'Menyimpan...' : 'Simpan Restock'}
+                    </button>
+                </div>
+            </form>
+        </OwnerModalShell>
     );
-
-;
 }

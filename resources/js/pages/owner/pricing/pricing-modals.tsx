@@ -48,7 +48,7 @@ export function GlobalPriceModal({ open, variant, onClose }: {
     };
 
     return (
-        <OwnerModalShell open={open} onClose={onClose} title="Ubah Harga" subtitle={variant.name} maxWidth="max-w-md">
+        <OwnerModalShell open={open} onClose={onClose} title="Ubah Harga" description={variant.name} maxWidth="max-w-md">
             <div className="space-y-3">
                 <div>
                     <label className="mb-1 block text-xs font-medium text-text-muted">HPP (Harga Pusat)</label>
@@ -99,7 +99,7 @@ export function OutletPriceModal({ open, row, onClose, onSave, saving }: {
     const isNegative = margin < 0;
 
     return (
-        <OwnerModalShell open={open} onClose={onClose} title="Ubah Harga Outlet" subtitle={row.name} maxWidth="max-w-md">
+        <OwnerModalShell open={open} onClose={onClose} title="Ubah Harga Outlet" description={row.name} maxWidth="max-w-md">
             <div className="space-y-3">
                 <div>
                     <label className="mb-1 block text-xs font-medium text-text-muted">Harga Pusat (Global)</label>
