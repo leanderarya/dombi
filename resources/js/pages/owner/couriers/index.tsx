@@ -38,16 +38,13 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                 <CourierStats stats={stats} todayDeliveries={todayDeliveries} />
 
                 {/* Search */}
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle" />
-                    <Input
-                        type="text"
-                        placeholder="Cari kurir..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9"
-                    />
-                </div>
+                <Input
+                    type="text"
+                    placeholder="Cari kurir..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    icon={Search}
+                />
 
                 {/* Table */}
                 {filtered.length === 0 ? (
