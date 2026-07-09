@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { ChevronDown, ChevronUp, Filter, Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 
@@ -113,6 +113,7 @@ export default function OwnerFilterCard({
                         value={searchValue ?? ''}
                         onChange={(e) => onSearch?.(e.target.value)}
                         className="w-[140px]"
+                        icon={Search}
                     />
                 )}
 
