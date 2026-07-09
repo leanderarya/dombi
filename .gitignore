@@ -44,3 +44,5 @@ docs/archive/
 # Claude Code
 .agents/
 .claude/
+.superpowers/
+docs/superpowers/
