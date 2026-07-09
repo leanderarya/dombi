@@ -31,6 +31,20 @@
     --color-danger: #DC2626;
     --color-info: #2563EB;
 
+    /* shadcn/ui compatible mappings */
+    --color-foreground: var(--color-text);
+    --color-muted-foreground: var(--color-text-muted);
+    --color-primary-foreground: #ffffff;
+    --color-destructive: var(--color-danger);
+    --color-destructive-foreground: #ffffff;
+    --color-input: var(--color-border);
+    --color-ring: var(--color-emerald-700);
+    --color-accent: var(--color-surface-muted);
+    --color-accent-foreground: var(--color-text);
+    --color-secondary: var(--color-surface-muted);
+    --color-secondary-foreground: var(--color-text);
+    --color-muted: var(--color-surface-muted);
+
     /* Radius */
     --radius-card: 1rem;         /* rounded-2xl: premium feel */
     --radius-control: 0.625rem;  /* rounded-[10px]: button & input */
