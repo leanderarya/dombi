@@ -1,6 +1,10 @@
 import { Link, router } from '@inertiajs/react';
-import { TrendingDown, TrendingUp, X } from 'lucide-react';
+import { TrendingUp, X } from 'lucide-react';
 import { useState } from 'react';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/format';
 
 interface TrendData {
@@ -53,12 +57,17 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
 
     const periodLabel = period === 'today' ? 'hari ini' : period === 'week' ? 'minggu lalu' : 'bulan lalu';
 
+    if (!kpis) {
+        return <SkeletonPage />;
+    }
+
     return (
         <div className="space-y-4">
             <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
                 {periods.map((p) => (
                     <button
                         key={p.key}
+                        type="button"
                         onClick={() => handlePeriodChange(p.key)}
                         className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                             period === p.key
@@ -75,106 +84,94 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                 <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary-light p-3">
                     <TrendingUp className="h-4 w-4 shrink-0 text-primary" />
                     <p className="flex-1 text-xs font-medium text-primary">{insight}</p>
-                    <button onClick={() => setInsightDismissed(true)} className="shrink-0 text-primary/60 hover:text-primary">
+                    <Button variant="ghost" size="icon" onClick={() => setInsightDismissed(true)} className="h-6 w-6 shrink-0 text-primary/60 hover:text-primary">
                         <X className="h-3.5 w-3.5" />
-                    </button>
+                    </Button>
                 </div>
             )}
 
-            {kpis && (
-                <div className="grid grid-cols-3 gap-3 lg:hidden">
-                    <KpiCard label="Total Revenue" value={formatCurrency(kpis.total_revenue)} trend={kpis.total_revenue_trend} periodLabel={periodLabel} />
-                    <KpiCard label="Total Orders" value={String(kpis.total_orders)} trend={kpis.total_orders_trend} periodLabel={periodLabel} />
-                    <KpiCard label="Active Outlets" value={String(kpis.active_outlets)} trend={kpis.active_outlets_trend} periodLabel={periodLabel} />
-                </div>
-            )}
+            <OwnerKpiStrip
+                cols={3}
+                items={[
+                    {
+                        label: 'Total Revenue',
+                        value: formatCurrency(kpis.total_revenue),
+                        sublabel: kpis.total_revenue_trend
+                            ? `${kpis.total_revenue_trend.positive ? '+' : ''}${kpis.total_revenue_trend.value}% vs ${periodLabel}`
+                            : undefined,
+                        sublabelColor: kpis.total_revenue_trend?.positive ? 'text-emerald-600' : 'text-red-500',
+                    },
+                    {
+                        label: 'Total Orders',
+                        value: kpis.total_orders,
+                        sublabel: kpis.total_orders_trend
+                            ? `${kpis.total_orders_trend.positive ? '+' : ''}${kpis.total_orders_trend.value}% vs ${periodLabel}`
+                            : undefined,
+                        sublabelColor: kpis.total_orders_trend?.positive ? 'text-emerald-600' : 'text-red-500',
+                    },
+                    {
+                        label: 'Active Outlets',
+                        value: kpis.active_outlets,
+                        sublabel: kpis.active_outlets_trend
+                            ? `${kpis.active_outlets_trend.positive ? '+' : ''}${kpis.active_outlets_trend.value}% vs ${periodLabel}`
+                            : undefined,
+                        sublabelColor: kpis.active_outlets_trend?.positive ? 'text-emerald-600' : 'text-red-500',
+                    },
+                ]}
+            />
 
-            <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
-                <div className="space-y-4">
-                    <div className="rounded-lg border border-border bg-white p-4 transition-shadow">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Perbandingan Outlet</div>
-                        {outletRevenue.length === 0 ? (
-                            <p className="py-4 text-center text-sm text-text-muted">Belum ada data</p>
-                        ) : (
-                            <div className="space-y-3">
-                                {outletRevenue.map((item) => (
-                                    <Link
-                                        key={item.outlet_id}
-                                        href={`/owner/outlets/${item.outlet_id}`}
-                                        className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-surface-muted"
-                                    >
-                                        <div>
-                                            <div className="text-sm font-medium text-text">{item.outlet.name}</div>
-                                            <div className="text-xs text-text-muted">{item.orders} orders</div>
-                                        </div>
-                                        <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(item.revenue)}</div>
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="rounded-lg border border-border bg-white p-4 transition-shadow">
-                        <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Produk Terlaris</div>
-                        {topProducts.length === 0 ? (
-                            <p className="py-4 text-center text-sm text-text-muted">Belum ada data</p>
-                        ) : (
-                            <div className="space-y-3">
-                                {topProducts.map((product, index) => (
-                                    <Link
-                                        key={product.product_name}
-                                        href={`/owner/inventories?product=${encodeURIComponent(product.product_name)}`}
-                                        className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-surface-muted"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
-                                                {index + 1}
-                                            </span>
-                                            <div>
-                                                <div className="text-sm font-medium text-text">{product.product_name}</div>
-                                                <div className="text-xs text-text-muted">{product.total_qty} unit</div>
-                                            </div>
-                                        </div>
-                                        <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(product.total_revenue)}</div>
-                                    </Link>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {kpis && (
-                    <div className="hidden lg:block">
-                        <div className="sticky top-4 space-y-3">
-                            <KpiCard label="Total Revenue" value={formatCurrency(kpis.total_revenue)} trend={kpis.total_revenue_trend} periodLabel={periodLabel} />
-                            <KpiCard label="Total Orders" value={String(kpis.total_orders)} trend={kpis.total_orders_trend} periodLabel={periodLabel} />
-                            <KpiCard label="Active Outlets" value={String(kpis.active_outlets)} trend={kpis.active_outlets_trend} periodLabel={periodLabel} />
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-function KpiCard({ label, value, trend, periodLabel }: { label: string; value: string; trend?: TrendData; periodLabel: string }) {
-    return (
-        <div className="rounded-lg border border-border bg-white p-4 transition-all duration-200 hover:border-border/60">
-            <div className="text-xs font-medium text-text-muted">{label}</div>
-            <div className="mt-1 text-lg font-bold tabular-nums text-text">{value}</div>
-            {trend && (
-                <div className="mt-1.5 flex items-center gap-1">
-                    {trend.positive ? (
-                        <TrendingUp className="h-3 w-3 text-emerald-600" />
+            <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-lg border border-border bg-white p-4">
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Perbandingan Outlet</div>
+                    {outletRevenue.length === 0 ? (
+                        <EmptyState title="Belum ada data" />
                     ) : (
-                        <TrendingDown className="h-3 w-3 text-red-500" />
+                        <div className="space-y-3">
+                            {outletRevenue.map((item) => (
+                                <Link
+                                    key={item.outlet_id}
+                                    href={`/owner/outlets/${item.outlet_id}`}
+                                    className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-surface-muted"
+                                >
+                                    <div>
+                                        <div className="text-sm font-medium text-text">{item.outlet.name}</div>
+                                        <div className="text-xs text-text-muted">{item.orders} orders</div>
+                                    </div>
+                                    <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(item.revenue)}</div>
+                                </Link>
+                            ))}
+                        </div>
                     )}
-                    <span className={`text-xs font-semibold ${trend.positive ? 'text-emerald-600' : 'text-red-500'}`}>
-                        {trend.positive ? '+' : ''}{trend.value}%
-                    </span>
-                    <span className="text-xs text-text-muted">vs {periodLabel}</span>
                 </div>
-            )}
+
+                <div className="rounded-lg border border-border bg-white p-4">
+                    <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Produk Terlaris</div>
+                    {topProducts.length === 0 ? (
+                        <EmptyState title="Belum ada data" />
+                    ) : (
+                        <div className="space-y-3">
+                            {topProducts.map((product, index) => (
+                                <Link
+                                    key={product.product_name}
+                                    href={`/owner/inventories?product=${encodeURIComponent(product.product_name)}`}
+                                    className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-surface-muted"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
+                                            {index + 1}
+                                        </span>
+                                        <div>
+                                            <div className="text-sm font-medium text-text">{product.product_name}</div>
+                                            <div className="text-xs text-text-muted">{product.total_qty} unit</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(product.total_revenue)}</div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 }

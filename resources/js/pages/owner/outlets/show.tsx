@@ -12,35 +12,20 @@ import {
     Trash2,
     User,
 } from 'lucide-react';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import HolidayManager from '@/components/owner/holiday-manager';
 import OperatingHoursManager from '@/components/owner/operating-hours-manager';
+import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OutletProducts from '@/components/owner/outlet-products';
 import OutletStatusBadge from '@/components/owner/outlet-status-badge';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { cn } from '@/lib/utils';
 
-const OutletLocationMap = lazy(
-    () => import('@/components/owner/outlet-location-map'),
-);
-
-function getOutletStatusMeta(outlet: any): { label: string; variant: 'success' | 'warning' | 'info' | 'neutral'; color: string } {
-    if (outlet.status !== 'active') {
-return { label: 'Nonaktif', variant: 'neutral', color: 'text-gray-600' };
-}
-
-    if (Number(outlet.low_stock_count) > 0) {
-return { label: 'Stok Rendah', variant: 'warning', color: 'text-amber-600' };
-}
-
-    if (Number(outlet.active_orders_count) >= 3) {
-return { label: 'Sibuk', variant: 'info', color: 'text-blue-600' };
-}
-
-    return { label: 'Aktif', variant: 'success', color: 'text-emerald-600' };
-}
+const OutletLocationMap = lazy(() => import('@/components/owner/outlet-location-map'));
 
 export default function OutletShow({
     outlet,
@@ -55,18 +40,39 @@ export default function OutletShow({
             ? { lat: Number(outlet.latitude), lng: Number(outlet.longitude) }
             : null;
 
-    const statusMeta = getOutletStatusMeta(outlet);
+    const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+
+    if (!outlet) {
+        return (
+            <OwnerPageShell title="Memuat..." subtitle="Detail outlet" backHref="/owner/outlets">
+                <div className="grid gap-4 lg:grid-cols-3">
+                    <div className="lg:col-span-2 space-y-4">
+                        <div className="rounded-lg border border-border p-4 space-y-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-6 w-3/4" />
+                        </div>
+                        <div className="rounded-lg border border-border p-4 space-y-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-20 w-full" />
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="rounded-lg border border-border p-4 space-y-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                        </div>
+                    </div>
+                </div>
+            </OwnerPageShell>
+        );
+    }
 
     const handleArchive = () => {
-        if (
-            !confirm(
-                'Arsipkan outlet ini? Outlet tidak akan muncul ke customer dan tidak menerima pesanan. Histori tetap tersimpan.',
-            )
-        ) {
-	return;
-}
-
-        router.put(`/owner/outlets/${outlet.id}/archive`);
+        router.put(`/owner/outlets/${outlet.id}/archive`, {
+            onFinish: () => setShowArchiveConfirm(false),
+        });
     };
 
     return (
@@ -76,290 +82,272 @@ export default function OutletShow({
             backHref="/owner/outlets"
             headerRight={
                 <div className="flex items-center gap-2">
-                    <Link
-                        href={`/owner/outlets/${outlet.id}/edit`}
-                        className="flex h-8 items-center rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text-muted transition-colors hover:bg-surface-muted"
-                    >
-                        Edit
-                    </Link>
-                    <button
-                        type="button"
-                        onClick={handleArchive}
-                        className="flex h-8 items-center gap-1.5 rounded-lg border border-red-200 bg-white px-2.5 text-xs font-semibold text-red-600 transition-colors hover:bg-red-50"
-                    >
+                    <Button variant="outline" size="sm" asChild>
+                        <Link href={`/owner/outlets/${outlet.id}/edit`}>Edit</Link>
+                    </Button>
+                    <Button variant="danger" size="sm" onClick={() => setShowArchiveConfirm(true)}>
                         <Trash2 className="h-3 w-3" />
                         Arsipkan
-                    </button>
+                    </Button>
                 </div>
             }
         >
-            <div className="grid gap-3 lg:grid-cols-2">
-                {/* Informasi Outlet */}
-                <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Informasi Outlet</div>
-                    <div className="flex items-start justify-between gap-3">
-                        <div>
-                            <h1 className="text-lg font-semibold text-text">{outlet.name ?? '-'}</h1>
-                            <p className="mt-0.5 text-xs text-text-muted">{outlet.address ?? '-'}</p>
-                            {outlet.phone && <p className="text-xs text-text-muted">{outlet.phone}</p>}
+            <div className="grid gap-4 lg:grid-cols-3">
+                <div className="lg:col-span-2 space-y-4">
+                    <div className="rounded-lg border border-border p-4">
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Informasi Outlet</div>
+                        <div className="flex items-start justify-between gap-3">
+                            <div>
+                                <h2 className="text-lg font-semibold text-text">{outlet.name ?? '-'}</h2>
+                                <p className="mt-0.5 text-xs text-text-muted">{outlet.address ?? '-'}</p>
+                                {outlet.phone && <p className="text-xs text-text-muted">{outlet.phone}</p>}
+                            </div>
+                            <OutletStatusBadge status={outlet.status ?? 'active'} />
                         </div>
-                        <OutletStatusBadge status={outlet.status ?? 'active'} />
+
+                        {outlet.pic_name && (
+                            <div className="mt-3 rounded-lg border border-border bg-surface-muted p-3">
+                                <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                                    <User className="h-3 w-3" />
+                                    Penanggung Jawab
+                                </div>
+                                <div className="mt-1 text-xs font-medium text-text">{outlet.pic_name}</div>
+                                {outlet.pic_position && <div className="text-xs text-text-muted">{outlet.pic_position}</div>}
+                                {outlet.pic_phone && <div className="text-xs text-text-muted">{outlet.pic_phone}</div>}
+                            </div>
+                        )}
+
+                        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                            <div className="rounded-lg border border-border bg-surface-muted p-2 text-center">
+                                <div className="text-sm font-semibold tabular-nums text-text">{outlet.active_orders_count ?? 0}</div>
+                                <div className="text-xs font-semibold uppercase tracking-wide opacity-70 text-text-muted">Pesanan Aktif</div>
+                            </div>
+                            <div className="rounded-lg border border-border bg-surface-muted p-2 text-center">
+                                <div className="text-sm font-semibold tabular-nums text-text">{activeDeliveriesCount ?? 0}</div>
+                                <div className="text-xs font-semibold uppercase tracking-wide opacity-70 text-text-muted">Pengiriman</div>
+                            </div>
+                            <div className="rounded-lg border border-border bg-surface-muted p-2 text-center">
+                                <div className="text-sm font-semibold tabular-nums text-text">{outlet.today_orders_count ?? 0}</div>
+                                <div className="text-xs font-semibold uppercase tracking-wide opacity-70 text-text-muted">Hari Ini</div>
+                            </div>
+                        </div>
                     </div>
 
-                    {outlet.pic_name && (
-                        <div className="mt-3 rounded-lg border border-border bg-surface-muted p-2">
-                            <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-text-subtle">
-                                <User className="h-3 w-3" />
-                                Penanggung Jawab
+                    <div className="rounded-lg border border-border p-4 lg:col-span-2">
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Lokasi</div>
+                        <p className="text-xs text-text-muted">
+                            {outlet.kelurahan ?? '-'} &middot; {outlet.kecamatan ?? '-'}
+                            {outlet.city ? ` · ${outlet.city}` : ''}
+                        </p>
+                        <div className="mt-2">
+                            <Suspense
+                                fallback={
+                                    <div className="flex h-40 items-center justify-center rounded-lg border border-border bg-surface-muted text-xs font-semibold text-text-muted">
+                                        Memuat peta...
+                                    </div>
+                                }
+                            >
+                                <OutletLocationMap value={location} onChange={() => undefined} readOnly />
+                            </Suspense>
+                        </div>
+                    </div>
+
+                    <div className="rounded-lg border border-border p-4">
+                        <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
+                            <Clock className="h-3.5 w-3.5" />
+                            Jam Operasional
+                        </div>
+                        <OperatingHoursManager outletId={outlet.id} initialHours={operatingHours ?? []} />
+                    </div>
+
+                    <div className="rounded-lg border border-border p-4">
+                        <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
+                            <Calendar className="h-3.5 w-3.5" />
+                            Hari Libur
+                        </div>
+                        <HolidayManager outletId={outlet.id} initialHolidays={holidays ?? []} />
+                    </div>
+
+                    <div className="rounded-lg border border-border p-4">
+                        <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-text-subtle">
+                            <div className="flex items-center gap-2">
+                                <Package className="h-3.5 w-3.5" />
+                                Produk Outlet
                             </div>
-                            <div className="mt-1 text-xs font-medium text-text">{outlet.pic_name}</div>
-                            {outlet.pic_position && <div className="text-xs text-text-muted">{outlet.pic_position}</div>}
-                            {outlet.pic_phone && <div className="text-xs text-text-muted">{outlet.pic_phone}</div>}
+                        </div>
+                        <p className="mb-2 text-xs text-text-muted">Kelola produk, stok, dan restock outlet ini.</p>
+                        <OutletProducts outletId={outlet.id} />
+                    </div>
+
+                    {settlementSummary && Number(settlementSummary.outstanding) > 0 && (
+                        <div className="rounded-lg border border-border p-4">
+                            <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-text-subtle">
+                                <div className="flex items-center gap-2">
+                                    <DollarSign className="h-3.5 w-3.5" />
+                                    Settlement Outlet
+                                </div>
+                                <Link href={`/owner/finance/settlements/${outlet.id}`} className="text-xs font-semibold text-primary hover:text-primary">
+                                    Lihat Semua
+                                </Link>
+                            </div>
+                            <div className="grid grid-cols-3 gap-2">
+                                <div className="rounded-lg border border-border bg-surface-muted p-2">
+                                    <div className="text-xs font-bold uppercase tracking-wide text-text-subtle">Outstanding</div>
+                                    <div className="mt-0.5 text-xs font-bold tabular-nums text-red-600">{formatCurrency(settlementSummary.outstanding)}</div>
+                                </div>
+                                <div className="rounded-lg border border-border bg-surface-muted p-2">
+                                    <div className="text-xs font-bold uppercase tracking-wide text-text-subtle">Terlambat</div>
+                                    <div className="mt-0.5 text-xs font-bold tabular-nums text-amber-600">{settlementSummary.overdue_count}</div>
+                                </div>
+                                <div className="rounded-lg border border-border bg-surface-muted p-2">
+                                    <div className="text-xs font-bold uppercase tracking-wide text-text-subtle">Dibayar</div>
+                                    <div className="mt-0.5 text-xs font-bold tabular-nums text-emerald-600">{formatCurrency(settlementSummary.paid_this_month)}</div>
+                                </div>
+                            </div>
+
+                            {settlementSummary.recent_settlements?.length > 0 && (
+                                <div className="mt-2">
+                                    <div className="mb-1 text-xs font-bold uppercase tracking-wide text-text-subtle">Settlement Terakhir</div>
+                                    {settlementSummary.recent_settlements.map((s: any) => {
+                                        const variantMap: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
+                                            pending: 'neutral',
+                                            due_today: 'warning',
+                                            overdue: 'danger',
+                                            paid: 'success',
+                                        };
+                                        const labelMap: Record<string, string> = {
+                                            pending: 'Pending',
+                                            due_today: 'Jatuh Tempo',
+                                            overdue: 'Terlambat',
+                                            paid: 'Lunas',
+                                        };
+
+                                        return (
+                                            <OwnerDetailRow
+                                                key={s.id}
+                                                label={s.period_date}
+                                                value={
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="tabular-nums font-semibold">{formatCurrency(s.amount_due)}</span>
+                                                        <StatusBadge variant={variantMap[s.status] ?? 'neutral'} size="sm">
+                                                            {labelMap[s.status] ?? s.status}
+                                                        </StatusBadge>
+                                                    </div>
+                                                }
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
                     )}
 
-                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                        <Metric label="Pesanan Aktif" value={outlet.active_orders_count ?? 0} />
-                        <Metric label="Pengiriman" value={activeDeliveriesCount ?? 0} />
-                        <Metric label="Hari Ini" value={outlet.today_orders_count ?? 0} />
-                    </div>
-                </div>
-
-                {/* Status + Quick Actions */}
-                <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status & Aksi</div>
-                    <div className="flex items-center gap-2">
-                        <OutletStatusBadge status={outlet.status ?? 'active'} />
-                        {Number(outlet.low_stock_count) > 0 && <StatusBadge variant="warning" size="sm">Stok Rendah</StatusBadge>}
-                        {Number(outlet.active_orders_count) >= 3 && <StatusBadge variant="info" size="sm">Sibuk</StatusBadge>}
-                    </div>
-                    <div className="mt-3 space-y-1.5">
-                        <Link
-                            href={`/owner/outlets/${outlet.id}/edit`}
-                            className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
-                        >
-                            <Edit3 className="h-3.5 w-3.5 text-text-subtle" />
-                            Edit Outlet
-                        </Link>
-                        <Link
-                            href={`/owner/inventories?outlet_id=${outlet.id}`}
-                            className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
-                        >
-                            <RefreshCw className="h-3.5 w-3.5 text-text-subtle" />
-                            Restock
-                        </Link>
-                        <Link
-                            href={`/owner/orders?outlet_id=${outlet.id}`}
-                            className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
-                        >
-                            <ShoppingBag className="h-3.5 w-3.5 text-text-subtle" />
-                            Lihat Pesanan
-                        </Link>
-                    </div>
-                    <div className="mt-3 grid grid-cols-2 gap-2">
-                        <SidebarMetric label="Pesanan Aktif" value={outlet.active_orders_count ?? 0} color="text-blue-600" />
-                        <SidebarMetric label="Pengiriman" value={activeDeliveriesCount ?? 0} color="text-emerald-600" />
-                        <SidebarMetric label="Hari Ini" value={outlet.today_orders_count ?? 0} color="text-text" />
-                        <SidebarMetric label="Stok Rendah" value={outlet.low_stock_count ?? 0} color="text-amber-600" warn={Number(outlet.low_stock_count) > 0} />
-                    </div>
-                </div>
-
-                {/* Lokasi */}
-                <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                    <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Lokasi</div>
-                    <p className="text-xs text-text-muted">
-                        {outlet.kelurahan ?? '-'} &middot; {outlet.kecamatan ?? '-'}
-                        {outlet.city ? ` · ${outlet.city}` : ''}
-                    </p>
-                    <div className="mt-2">
-                        <Suspense
-                            fallback={
-                                <div className="flex h-40 items-center justify-center rounded-lg border border-border bg-surface-muted text-xs font-semibold text-text-muted">
-                                    Memuat peta...
-                                </div>
-                            }
-                        >
-                            <OutletLocationMap
-                                value={location}
-                                onChange={() => undefined}
-                                readOnly
-                            />
-                        </Suspense>
-                    </div>
-                </div>
-
-                {/* Jam Operasional */}
-                <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
-                        <Clock className="h-3.5 w-3.5" />
-                        Jam Operasional
-                    </div>
-                    <OperatingHoursManager
-                        outletId={outlet.id}
-                        initialHours={operatingHours ?? []}
-                    />
-                </div>
-
-                {/* Hari Libur */}
-                <div className="rounded-lg border border-border p-4">
-                    <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
-                        <Calendar className="h-3.5 w-3.5" />
-                        Hari Libur
-                    </div>
-                    <HolidayManager
-                        outletId={outlet.id}
-                        initialHolidays={holidays ?? []}
-                    />
-                </div>
-
-                {/* Area Layanan */}
-                {outlet.delivery_radius_km && (
-                    <div className="rounded-lg border border-border p-4">
-                        <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
-                            <MapPin className="h-3.5 w-3.5" />
-                            Area Layanan
-                        </div>
-                        <div className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
-                            <span className="text-text-muted">Radius</span>
-                            <span className="text-text">{outlet.delivery_radius_km} km</span>
-                        </div>
-                        <p className="mt-1 text-xs text-text-muted">
-                            Customer di luar radius ini tidak dapat memesan delivery.
-                        </p>
-                    </div>
-                )}
-
-                {/* Produk Outlet */}
-                <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                    <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-text-subtle">
-                        <div className="flex items-center gap-2">
-                            <Package className="h-3.5 w-3.5" />
-                            Produk Outlet
-                        </div>
-                    </div>
-                    <p className="mb-2 text-xs text-text-muted">Kelola produk, stok, dan restock outlet ini.</p>
-                    <OutletProducts outletId={outlet.id} />
-                </div>
-
-                {/* Settlement Outlet */}
-                {settlementSummary && Number(settlementSummary.outstanding) > 0 && (
-                    <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                        <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-wide text-text-subtle">
-                            <div className="flex items-center gap-2">
-                                <DollarSign className="h-3.5 w-3.5" />
-                                Settlement Outlet
+                    {auditLogs && auditLogs.length > 0 && (
+                        <div className="rounded-lg border border-border p-4">
+                            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
+                                <History className="h-3.5 w-3.5" />
+                                Riwayat Perubahan
                             </div>
-                            <Link href={`/owner/finance/settlements/${outlet.id}`} className="text-xs font-semibold text-primary hover:text-primary">
-                                Lihat Semua
+                            {auditLogs.map((log: any) => (
+                                <OwnerDetailRow
+                                    key={log.id}
+                                    label={log.field ?? '-'}
+                                    value={
+                                        <span className="text-xs">
+                                            {log.old_value ?? '-'} &rarr; {log.new_value ?? '-'}
+                                            <span className="ml-2 text-text-subtle">{log.changed_by?.name ?? '-'} &middot; {formatDate(log.created_at)}</span>
+                                        </span>
+                                }
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="space-y-4">
+                    <div className="rounded-lg border border-border p-4">
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status & Aksi</div>
+                        <div className="flex items-center gap-2 mb-3">
+                            <OutletStatusBadge status={outlet.status ?? 'active'} />
+                            {Number(outlet.low_stock_count) > 0 && <StatusBadge variant="warning" size="sm">Stok Rendah</StatusBadge>}
+                            {Number(outlet.active_orders_count) >= 3 && <StatusBadge variant="info" size="sm">Sibuk</StatusBadge>}
+                        </div>
+                        <div className="space-y-1.5">
+                            <Link
+                                href={`/owner/outlets/${outlet.id}/edit`}
+                                className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
+                            >
+                                <Edit3 className="h-3.5 w-3.5 text-text-subtle" />
+                                Edit Outlet
+                            </Link>
+                            <Link
+                                href={`/owner/inventories?outlet_id=${outlet.id}`}
+                                className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
+                            >
+                                <RefreshCw className="h-3.5 w-3.5 text-text-subtle" />
+                                Restock
+                            </Link>
+                            <Link
+                                href={`/owner/orders?outlet_id=${outlet.id}`}
+                                className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
+                            >
+                                <ShoppingBag className="h-3.5 w-3.5 text-text-subtle" />
+                                Lihat Pesanan
                             </Link>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="mt-3 grid grid-cols-2 gap-2">
                             <div className="rounded-lg border border-border bg-surface-muted p-2">
-                                <div className="text-xs font-bold uppercase tracking-wide text-text-subtle">Outstanding</div>
-                                <div className="mt-0.5 text-xs font-bold tabular-nums text-red-600">{formatCurrency(settlementSummary.outstanding)}</div>
+                                <div className="text-sm font-bold tabular-nums text-blue-600">{outlet.active_orders_count ?? 0}</div>
+                                <div className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Pesanan Aktif</div>
                             </div>
                             <div className="rounded-lg border border-border bg-surface-muted p-2">
-                                <div className="text-xs font-bold uppercase tracking-wide text-text-subtle">Terlambat</div>
-                                <div className="mt-0.5 text-xs font-bold tabular-nums text-amber-600">{settlementSummary.overdue_count}</div>
+                                <div className="text-sm font-bold tabular-nums text-emerald-600">{activeDeliveriesCount ?? 0}</div>
+                                <div className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Pengiriman</div>
                             </div>
                             <div className="rounded-lg border border-border bg-surface-muted p-2">
-                                <div className="text-xs font-bold uppercase tracking-wide text-text-subtle">Dibayar</div>
-                                <div className="mt-0.5 text-xs font-bold tabular-nums text-emerald-600">{formatCurrency(settlementSummary.paid_this_month)}</div>
+                                <div className="text-sm font-bold tabular-nums text-text">{outlet.today_orders_count ?? 0}</div>
+                                <div className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Hari Ini</div>
+                            </div>
+                            <div className={`rounded-lg border p-2 ${Number(outlet.low_stock_count) > 0 ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface-muted'}`}>
+                                <div className="text-sm font-bold tabular-nums text-amber-600">{outlet.low_stock_count ?? 0}</div>
+                                <div className="text-xs font-semibold uppercase tracking-wider text-text-subtle">Stok Rendah</div>
                             </div>
                         </div>
-
-                        {settlementSummary.recent_settlements?.length > 0 && (
-                            <div className="mt-2">
-                                <div className="mb-1 text-xs font-bold uppercase tracking-wide text-text-subtle">Settlement Terakhir</div>
-                                {settlementSummary.recent_settlements.map((s: any) => {
-                                    const variantMap: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
-                                        pending: 'neutral',
-                                        due_today: 'warning',
-                                        overdue: 'danger',
-                                        paid: 'success',
-                                    };
-                                    const labelMap: Record<string, string> = {
-                                        pending: 'Pending',
-                                        due_today: 'Jatuh Tempo',
-                                        overdue: 'Terlambat',
-                                        paid: 'Lunas',
-                                    };
-
-                                    return (
-                                        <div key={s.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
-                                            <span className="text-text-muted">{s.period_date}</span>
-                                            <span className="tabular-nums font-semibold text-text">{formatCurrency(s.amount_due)}</span>
-                                            <StatusBadge variant={variantMap[s.status] ?? 'neutral'} size="sm">{labelMap[s.status] ?? s.status}</StatusBadge>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
                     </div>
-                )}
 
-                {/* Riwayat Perubahan */}
-                {auditLogs && auditLogs.length > 0 && (
-                    <div className="rounded-lg border border-border p-4 lg:col-span-2">
-                        <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
-                            <History className="h-3.5 w-3.5" />
-                            Riwayat Perubahan
+                    {outlet.delivery_radius_km && (
+                        <div className="rounded-lg border border-border p-4">
+                            <div className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-text-subtle">
+                                <MapPin className="h-3.5 w-3.5" />
+                                Area Layanan
+                            </div>
+                            <OwnerDetailRow label="Radius" value={`${outlet.delivery_radius_km} km`} />
+                            <p className="mt-1 text-xs text-text-muted">
+                                Customer di luar radius ini tidak dapat memesan delivery.
+                            </p>
                         </div>
-                        {auditLogs.map((log: any) => (
-                            <div key={log.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-xs last:border-b-0">
-                                <span className="text-text-muted">{log.field ?? '-'}</span>
-                                <span className="text-text">{log.old_value ?? '-'} &rarr; {log.new_value ?? '-'}</span>
-                                <span className="text-text-subtle">{log.changed_by?.name ?? '-'} · {formatDate(log.created_at)}</span>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
+
+            <Dialog open={showArchiveConfirm} onOpenChange={setShowArchiveConfirm}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Arsipkan Outlet?</DialogTitle>
+                        <DialogDescription>
+                            Outlet <strong>{outlet.name}</strong> tidak akan muncul ke customer dan tidak menerima pesanan. Histori tetap tersimpan.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setShowArchiveConfirm(false)}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={handleArchive}>
+                            Arsipkan
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </OwnerPageShell>
-    );
-}
-
-function Metric({
-    label,
-    value,
-    warn = false,
-}: {
-    label: string;
-    value: number;
-    warn?: boolean;
-}) {
-    return (
-        <div
-            className={`rounded-lg border p-2 ${warn ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-border bg-surface-muted text-text-muted'}`}
-        >
-            <div className="text-sm font-semibold tabular-nums">
-                {value ?? 0}
-            </div>
-            <div className="text-xs font-semibold tracking-wide uppercase opacity-70">
-                {label}
-            </div>
-        </div>
-    );
-}
-
-function SidebarMetric({
-    label,
-    value,
-    color,
-    warn = false,
-}: {
-    label: string;
-    value: number;
-    color: string;
-    warn?: boolean;
-}) {
-    return (
-        <div className={cn(
-            'rounded-lg border p-2',
-            warn ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface-muted',
-        )}>
-            <div className={cn('text-sm font-bold tabular-nums', color)}>{value}</div>
-            <div className="text-xs font-semibold uppercase tracking-wider text-text-subtle">{label}</div>
-        </div>
     );
 }

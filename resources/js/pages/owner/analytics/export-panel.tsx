@@ -1,4 +1,5 @@
 import { ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface Props {
     open: boolean;
@@ -9,8 +10,8 @@ interface Props {
 
 export default function ExportPanel({ open, onToggle, exporting, onExport }: Props) {
     return (
-        <div className="rounded-lg border border-border bg-white transition-shadow">
-            <button onClick={onToggle} className="flex w-full items-center justify-between p-4">
+        <div className="rounded-lg border border-border bg-white">
+            <button type="button" onClick={onToggle} className="flex w-full items-center justify-between p-4">
                 <div className="text-sm font-semibold text-text">Download Laporan</div>
                 <ChevronDown className={`h-4 w-4 text-text-muted transition-transform ${open ? 'rotate-180' : ''}`} />
             </button>
@@ -19,24 +20,26 @@ export default function ExportPanel({ open, onToggle, exporting, onExport }: Pro
                     <div>
                         <div className="text-xs font-medium text-text mb-1">Laporan Orders</div>
                         <p className="mb-2 text-xs text-text-muted">Download data order completed</p>
-                        <button
-                            onClick={() => onExport('orders')}
+                        <Button
+                            className="w-full"
+                            loading={exporting === 'orders'}
                             disabled={exporting === 'orders'}
-                            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white transition-all duration-150 hover:bg-primary/90 active:bg-primary/90 disabled:opacity-50"
+                            onClick={() => onExport('orders')}
                         >
                             {exporting === 'orders' ? 'Mengexport...' : 'Download CSV'}
-                        </button>
+                        </Button>
                     </div>
                     <div>
                         <div className="text-xs font-medium text-text mb-1">Laporan Settlements</div>
                         <p className="mb-2 text-xs text-text-muted">Download data settlement outlet</p>
-                        <button
-                            onClick={() => onExport('settlements')}
+                        <Button
+                            className="w-full"
+                            loading={exporting === 'settlements'}
                             disabled={exporting === 'settlements'}
-                            className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-white transition-all duration-150 hover:bg-primary/90 active:bg-primary/90 disabled:opacity-50"
+                            onClick={() => onExport('settlements')}
                         >
                             {exporting === 'settlements' ? 'Mengexport...' : 'Download CSV'}
-                        </button>
+                        </Button>
                     </div>
                 </div>
             )}

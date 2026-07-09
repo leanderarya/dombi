@@ -1,4 +1,4 @@
-import { Link, useForm } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import OutletFormSheet from '@/components/owner/outlet-form-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 
@@ -23,20 +23,16 @@ export default function CreateOutlet({ existingOutlets }: any) {
     const form = useForm(emptyOutletForm);
 
     return (
-        <OwnerPageShell title="Tambah Outlet" backHref="/owner/outlets">
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_280px]">
-                <div className="min-w-0">
-                    <OutletFormSheet
-                        mode="create"
-                        form={form}
-                        existingOutlets={existingOutlets ?? []}
-                        submit={(event) => {
-                            event.preventDefault();
-                            form.post('/owner/outlets');
-                        }}
-                    />
-                </div>
-            </div>
+        <OwnerPageShell title="Tambah Outlet" subtitle="Pilih lokasi pada peta, lalu isi informasi outlet" backHref="/owner/outlets">
+            <OutletFormSheet
+                mode="create"
+                form={form}
+                existingOutlets={existingOutlets ?? []}
+                submit={(event) => {
+                    event.preventDefault();
+                    form.post('/owner/outlets');
+                }}
+            />
         </OwnerPageShell>
     );
 }

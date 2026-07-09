@@ -1,15 +1,8 @@
 import { Link, router } from '@inertiajs/react';
+import OwnerDetailRow from '@/components/owner/owner-detail-row';
+import { Button } from '@/components/ui/button';
 import DistributionStatusBadge from '@/components/ui/distribution-status-badge';
 import { formatDate } from '@/lib/format';
-
-function Metric({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
-    return (
-        <div className={`rounded-lg border p-2 ${muted ? 'border-amber-200 bg-amber-50' : 'border-border bg-slate-50'}`}>
-            <div className={`text-xs font-semibold uppercase tracking-wide ${muted ? 'text-amber-600' : 'text-text-subtle'}`}>{label}</div>
-            <div className={`mt-0.5 truncate text-xs font-bold ${muted ? 'text-amber-800' : 'text-text'}`}>{value}</div>
-        </div>
-    );
-}
 
 export default function DistributionCard({ distribution, restock, totalDistributed }: any) {
     if (!distribution) {
@@ -39,43 +32,36 @@ export default function DistributionCard({ distribution, restock, totalDistribut
                 <DistributionStatusBadge status={distribution.status} />
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
-                <Metric label="Outlet" value={restock.outlet.name} />
-                <Metric label="Total item" value={`${distribution.items?.length ?? 0} SKU`} />
-                <Metric label="Jumlah kirim" value={`${totalDistributed} unit`} />
-                <Metric label="Penanggung jawab" value={distribution.sender?.name ?? restock.approver?.name ?? '-'} />
-                <Metric label="Tanggal kirim" value={formatDate(distribution.sent_at)} />
-                <Metric label="Tanggal terima" value={formatDate(distribution.received_at)} />
+            <div className="mt-3">
+                <OwnerDetailRow label="Outlet" value={restock.outlet.name} />
+                <OwnerDetailRow label="Total item" value={`${distribution.items?.length ?? 0} SKU`} />
+                <OwnerDetailRow label="Jumlah kirim" value={`${totalDistributed} unit`} />
+                <OwnerDetailRow label="Penanggung jawab" value={distribution.sender?.name ?? restock.approver?.name ?? '-'} />
+                <OwnerDetailRow label="Tanggal kirim" value={formatDate(distribution.sent_at)} />
+                <OwnerDetailRow label="Tanggal terima" value={formatDate(distribution.received_at)} />
             </div>
 
             <div className="mt-3 rounded-lg border border-border bg-slate-50 p-3">
                 <div className="mb-2 text-xs font-bold uppercase tracking-wide text-text-subtle">Ringkasan pengiriman</div>
                 {distribution.items.map((item: any) => (
-                    <div key={item.id} className="flex justify-between border-b border-[#f5f5f5] py-1 text-sm last:border-b-0">
-                        <span className="text-text-muted">{item.product?.name ?? item.variant?.name ?? '-'}</span>
-                        <span className="font-bold text-text">{item.quantity}</span>
-                    </div>
+                    <OwnerDetailRow key={item.id} label={item.product?.name ?? item.variant?.name ?? '-'} value={`${item.quantity}`} bold />
                 ))}
             </div>
 
             {distribution.status === 'preparing' && (
-                <button
-                    type="button"
-                    onClick={() => router.post(`/owner/distributions/${distribution.id}/mark-shipped`)}
-                    className="mt-3 flex h-9 w-full items-center justify-center rounded-lg bg-primary px-3 text-xs font-bold text-white transition-all duration-150 active:opacity-80"
-                >
+                <Button className="mt-3 w-full" onClick={() => router.post(`/owner/distributions/${distribution.id}/mark-shipped`)}>
                     Tandai Dikirim
-                </button>
+                </Button>
             )}
 
             {distribution.status === 'shipped' && (
-                <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50 p-2 text-xs font-semibold text-indigo-700">
+                <div className="mt-3 rounded-lg border border-indigo-200 bg-indigo-50 p-2 text-center text-xs font-semibold text-indigo-700">
                     Menunggu Konfirmasi Outlet
                 </div>
             )}
 
             {distribution.status === 'completed' && (
-                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-xs font-semibold text-emerald-700">
+                <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-center text-xs font-semibold text-emerald-700">
                     Distribusi Selesai
                 </div>
             )}

@@ -1,123 +1,143 @@
 import { router } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { Package } from 'lucide-react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatDate } from '@/lib/format';
-import { cn } from '@/lib/utils';
 
-const FILTER_TABS = [
+const statusFilters = [
+    { key: '', label: 'Semua' },
     { key: 'requested', label: 'Butuh Tindakan' },
     { key: 'preparing', label: 'Disiapkan' },
     { key: 'shipped', label: 'Dikirim' },
     { key: 'completed', label: 'Selesai' },
 ];
 
+const colorMap: Record<string, string> = {
+    '': 'text-text bg-surface-muted ring-border',
+    requested: 'text-amber-600 bg-amber-50 ring-amber-200',
+    preparing: 'text-purple-600 bg-purple-50 ring-purple-200',
+    shipped: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
+    completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
+};
+
 export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) {
-    const currentStatus = filters.status ?? 'requested';
+    if (!restocks || !filters) {
+        return (
+            <OwnerPageShell title="Restocks" subtitle="Kelola permintaan restock dari outlet">
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
 
-    const counts = {
-        requested: restocks.data.filter((r: any) => r.status === 'requested').length,
-        preparing: restocks.data.filter((r: any) => r.status === 'preparing').length,
-        shipped: restocks.data.filter((r: any) => r.status === 'shipped').length,
-        completed: restocks.data.filter((r: any) => r.status === 'completed').length,
+    const currentStatus = filters.status ?? '';
+
+    const setFilter = (key: string, value: string) => {
+        router.get(
+            '/owner/restocks',
+            { ...filters, [key]: value || undefined },
+            { preserveState: true, replace: true },
+        );
     };
 
-    useEffect(() => {
-        if (!filters.status && !filters.outlet_id) {
-            router.get('/owner/restocks', { status: 'requested' }, { preserveState: true, replace: true });
-        }
-    }, []);
-
-    const handleTabChange = (status: string) => {
-        router.get('/owner/restocks', { status, outlet_id: filters.outlet_id || undefined }, { preserveState: true, replace: true });
-    };
-
-    const handleApprove = (e: React.MouseEvent, restockId: number) => {
+    const handleMarkPreparing = (e: React.MouseEvent, restockId: number) => {
         e.preventDefault();
         e.stopPropagation();
         router.post(`/owner/restocks/${restockId}/approve`, {}, { preserveScroll: true });
     };
 
+    const requestedCount = restocks.data.filter((r: any) => r.status === 'requested').length;
+    const preparingCount = restocks.data.filter((r: any) => r.status === 'preparing').length;
+    const shippedCount = restocks.data.filter((r: any) => r.status === 'shipped').length;
+    const completedCount = restocks.data.filter((r: any) => r.status === 'completed').length;
+
     return (
         <OwnerPageShell title="Restocks" subtitle="Kelola permintaan restock dari outlet">
-            {/* Status Tabs */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-                {FILTER_TABS.map((tab) => (
-                    <button key={tab.key} type="button" onClick={() => handleTabChange(tab.key)}
-                        className={cn(
-                            'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-all',
-                            currentStatus === tab.key
-                                ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
-                        )}>
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
-
-            {/* Filter controls */}
-            <OwnerFilterCard
-                searchPlaceholder="Cari kode..."
-                searchValue={filters.search ?? ''}
-                onSearch={(val) => {
-                    router.get('/owner/restocks', { ...filters, search: val || undefined, status: currentStatus }, { preserveState: true, replace: true });
-                }}
-                outletOptions={outlets?.map((o: any) => ({ value: String(o.id), label: o.name }))}
-                outletValue={filters.outlet_id ?? ''}
-                onOutletChange={(val) => {
-                    router.get('/owner/restocks', { ...filters, outlet_id: val || undefined, status: currentStatus }, { preserveState: true, replace: true });
-                }}
-                dateValue={filters.date ?? ''}
-                onDateChange={(val) => {
-                    router.get('/owner/restocks', { ...filters, date: val || undefined, status: currentStatus }, { preserveState: true, replace: true });
-                }}
-            />
-
-            {/* KPI Strip */}
             <OwnerKpiStrip items={[
-                { label: 'Menunggu', value: counts.requested, sublabel: counts.requested > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
-                { label: 'Disiapkan', value: counts.preparing },
-                { label: 'Dikirim', value: counts.shipped },
-                { label: 'Selesai', value: counts.completed },
+                { label: 'Menunggu', value: requestedCount, sublabel: requestedCount > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
+                { label: 'Disiapkan', value: preparingCount },
+                { label: 'Dikirim', value: shippedCount },
+                { label: 'Selesai', value: completedCount },
             ]} />
 
-            {/* Table */}
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+                {statusFilters.map((sf) => {
+                    const isActive = currentStatus === sf.key;
+
+                    return (
+                        <button key={sf.key} type="button" onClick={() => setFilter('status', sf.key)}
+                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                                isActive ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                            }`}>
+                            {sf.label}
+                        </button>
+                    );
+                })}
+            </div>
+
+            <OwnerFilterCard
+                collapsible
+                defaultExpanded={false}
+                searchPlaceholder="Cari kode..."
+                searchValue={filters.search ?? ''}
+                onSearch={(val) => setFilter('search', val)}
+                outletOptions={outlets?.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletValue={filters.outlet_id ?? ''}
+                onOutletChange={(val) => setFilter('outlet_id', val)}
+                dateValue={filters.date ?? ''}
+                onDateChange={(val) => setFilter('date', val)}
+            />
+
             {restocks.data.length === 0 ? (
-                <div className="rounded-lg border border-border bg-white py-10 text-center text-xs text-text-muted">
-                    Tidak ada restock
-                </div>
+                <EmptyState
+                    icon={<Package className="h-8 w-8" />}
+                    title="Tidak ada restock"
+                    description="Permintaan restock akan muncul di sini setelah diajukan outlet"
+                />
             ) : (
-                <div className="overflow-hidden rounded-lg border border-border">
-                    {/* Header */}
-                    <div className="grid grid-cols-[80px_1fr_100px_60px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                        <span>Kode</span><span>Outlet</span><span>Status</span><span className="text-center">Items</span><span>Tanggal</span><span />
-                    </div>
-                    {/* Rows */}
-                    {restocks.data.map((r: any) => (
-                        <div key={r.id}
-                            className="grid grid-cols-[80px_1fr_100px_60px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
-                            <span className="font-bold tabular-nums text-text">#{r.id}</span>
-                            <span className="truncate text-text-muted">{r.outlet?.name ?? '-'}</span>
-                            <span><StatusBadge status={r.status} size="sm" /></span>
-                            <span className="text-center text-text-muted">{r.items?.length ?? 0}</span>
-                            <span className="text-text-muted">{formatDate(r.created_at)}</span>
-                            <div className="flex items-center gap-1 justify-end">
-                                {r.status === 'requested' && (
-                                    <button type="button" onClick={(e) => handleApprove(e, r.id)}
-                                        className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-white hover:bg-primary-hover">
-                                        Approve
-                                    </button>
-                                )}
-                                <button type="button" onClick={() => router.visit(`/owner/restocks/${r.id}`)}
-                                    className="rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary-light">
-                                    Detail →
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+                <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full min-w-[600px]">
+                        <thead>
+                            <tr className="bg-surface-muted">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kode</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Outlet</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Items</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Tanggal</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {restocks.data.map((r: any) => (
+                                <tr key={r.id} className="border-t border-border transition-colors hover:bg-surface-muted">
+                                    <td className="px-4 py-3 font-bold tabular-nums text-text">#{r.id}</td>
+                                    <td className="px-4 py-3 text-text-muted">{r.outlet?.name ?? '—'}</td>
+                                    <td className="px-4 py-3">
+                                        <StatusBadge status={r.status} size="sm" />
+                                    </td>
+                                    <td className="px-4 py-3 text-text-muted">{r.items?.length ?? 0} item</td>
+                                    <td className="px-4 py-3 text-text-muted">{formatDate(r.created_at)}</td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center justify-end gap-2">
+                                            {r.status === 'requested' && (
+                                                <Button size="sm" onClick={(e: any) => handleMarkPreparing(e, r.id)}>
+                                                    Approve
+                                                </Button>
+                                            )}
+                                            <Button variant="ghost" size="sm" onClick={() => router.visit(`/owner/restocks/${r.id}`)}>
+                                                Detail
+                                            </Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             )}
 

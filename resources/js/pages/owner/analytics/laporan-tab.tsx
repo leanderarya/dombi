@@ -2,8 +2,9 @@ import { router } from '@inertiajs/react';
 import { CheckCircle, ChevronDown, ClipboardList, DollarSign, Download, Truck, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import FilterSheet from '@/components/owner/filter-sheet';
-import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
+import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/format';
 import BreakdownCard from './breakdown-card';
 import ExportPanel from './export-panel';
@@ -59,19 +60,9 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
 
     function handleExport() {
         const params = new URLSearchParams();
-
-        if (filters.date_from) {
-            params.set('date_from', filters.date_from);
-        }
-
-        if (filters.date_to) {
-            params.set('date_to', filters.date_to);
-        }
-
-        if (filters.outlet_id) {
-            params.set('outlet_id', String(filters.outlet_id));
-        }
-
+        if (filters.date_from) params.set('date_from', filters.date_from);
+        if (filters.date_to) params.set('date_to', filters.date_to);
+        if (filters.outlet_id) params.set('outlet_id', String(filters.outlet_id));
         window.location.href = `/owner/reports/export-csv?${params.toString()}`;
     }
 
@@ -93,35 +84,31 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
     return (
         <div className="space-y-4">
             <div className="flex gap-2">
-                <input
+                <Input
                     type="date"
-                    className="flex-1 rounded-lg border border-border bg-white px-2.5 py-2 text-xs"
+                    className="flex-1"
                     value={filters.date_from ?? ''}
                     onChange={(e) => handleFilter('date_from', e.target.value)}
                 />
-                <input
+                <Input
                     type="date"
-                    className="flex-1 rounded-lg border border-border bg-white px-2.5 py-2 text-xs"
+                    className="flex-1"
                     value={filters.date_to ?? ''}
                     onChange={(e) => handleFilter('date_to', e.target.value)}
                 />
-                <button
-                    onClick={handleExport}
-                    className="flex h-10 items-center gap-1 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text-muted transition-all duration-150 active:bg-surface-muted active:opacity-80"
-                >
+                <Button variant="outline" size="sm" onClick={handleExport}>
                     <Download className="h-4 w-4" /> CSV
-                </button>
-                <div className="relative">
-                    <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}>
-                        <FilterIcon />
-                    </HeaderIconButton>
-                </div>
+                </Button>
+                <Button variant="outline" size="icon" onClick={() => setFilterOpen(true)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                </Button>
             </div>
 
             <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
                 {periods.map((p) => (
                     <button
                         key={p.key}
+                        type="button"
                         onClick={() => setPeriod(p.key)}
                         className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                             period === p.key
@@ -176,8 +163,8 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                             </div>
                         </div>
 
-                        <div className="rounded-lg border border-border bg-white transition-shadow">
-                            <button onClick={() => setSecondaryOpen(!secondaryOpen)} className="flex w-full items-center justify-between p-3">
+                        <div className="rounded-lg border border-border bg-white">
+                            <button type="button" onClick={() => setSecondaryOpen(!secondaryOpen)} className="flex w-full items-center justify-between p-3">
                                 <div className="text-xs font-bold uppercase tracking-wider text-text-muted">Detail Lainnya</div>
                                 <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${secondaryOpen ? 'rotate-180' : ''}`} />
                             </button>
@@ -206,9 +193,7 @@ export function LaporanTab({ summary, ordersByStatus = {}, deliveriesByStatus = 
                                         </div>
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.failedDeliveries}</div>
                                         {summary.failedDeliveries > 0 && (
-                                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">
-                                                Perlu ditinjau
-                                            </div>
+                                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">Perlu ditinjau</div>
                                         )}
                                     </div>
                                 </div>

@@ -1,100 +1,75 @@
 import { useForm } from '@inertiajs/react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function CreateInventory({ outlets, families }: any) {
     const form = useForm({ outlet_id: '', product_variant_id: '', current_stock: 0, minimum_stock: 0, notes: '' });
 
-    const selectedFamily = families?.find((f: any) =>
-        f.variants?.some((v: any) => String(v.id) === String(form.data.product_variant_id))
-    );
-
-    const allVariants = families?.flatMap((f: any) =>
-        (f.variants ?? []).map((v: any) => ({
-            ...v,
-            family_name: f.name,
-            family_id: f.id,
-        }))
-    ) ?? [];
-
     return (
-        <OwnerPageShell title="Tambah Stok" backHref="/owner/inventories">
-            <form
-                onSubmit={(e) => {
- e.preventDefault(); form.post('/owner/inventories'); 
-}}
-                className="mt-5 grid gap-4 rounded-lg border border-border bg-white p-5 sm:grid-cols-2"
-            >
-                <label className="text-sm">
-                    Outlet
-                    <select
+        <OwnerPageShell title="Tambah Stok" subtitle="Catat inventaris baru ke outlet" backHref="/owner/inventories">
+            <div className="mx-auto max-w-lg">
+                <form
+                    onSubmit={(e) => { e.preventDefault(); form.post('/owner/inventories'); }}
+                    className="space-y-4"
+                >
+                    <Select
+                        label="Outlet"
                         value={form.data.outlet_id}
                         onChange={(e) => form.setData('outlet_id', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
-                    >
-                        <option value="">Pilih Outlet</option>
-                        {outlets?.map((o: any) => (
-                            <option key={o.id} value={o.id}>{o.name}</option>
-                        ))}
-                    </select>
-                    {form.errors.outlet_id && <div className="mt-1 text-xs text-red-600">{form.errors.outlet_id}</div>}
-                </label>
+                        options={(outlets ?? []).map((o: any) => ({ value: String(o.id), label: o.name }))}
+                        placeholder="Pilih Outlet"
+                        error={form.errors.outlet_id}
+                    />
 
-                <label className="text-sm">
-                    Varian Produk
-                    <select
+                    <Select
+                        label="Varian Produk"
                         value={form.data.product_variant_id}
                         onChange={(e) => form.setData('product_variant_id', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
-                    >
-                        <option value="">Pilih Varian</option>
-                        {families?.map((family: any) => (
-                            <optgroup key={family.id} label={family.name}>
-                                {family.variants?.map((v: any) => (
-                                    <option key={v.id} value={v.id}>{v.name}</option>
-                                ))}
-                            </optgroup>
-                        ))}
-                    </select>
-                    {form.errors.product_variant_id && <div className="mt-1 text-xs text-red-600">{form.errors.product_variant_id}</div>}
-                </label>
+                        options={(families ?? []).flatMap((f: any) =>
+                            (f.variants ?? []).map((v: any) => ({ value: String(v.id), label: `${f.name} — ${v.name}` }))
+                        )}
+                        placeholder="Pilih Varian"
+                        error={form.errors.product_variant_id}
+                    />
 
-                <label className="text-sm">
-                    Current Stock
-                    <input
+                    <Input
+                        label="Stok Saat Ini"
                         type="number"
-                        min="0"
+                        min={0}
                         value={form.data.current_stock}
                         onChange={(e) => form.setData('current_stock', Number(e.target.value))}
-                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
+                        error={form.errors.current_stock}
                     />
-                </label>
 
-                <label className="text-sm">
-                    Minimum Stock
-                    <input
+                    <Input
+                        label="Stok Minimum"
                         type="number"
-                        min="0"
+                        min={0}
                         value={form.data.minimum_stock}
                         onChange={(e) => form.setData('minimum_stock', Number(e.target.value))}
-                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
+                        error={form.errors.minimum_stock}
                     />
-                </label>
 
-                <label className="text-sm sm:col-span-2">
-                    Catatan
-                    <textarea
+                    <Textarea
+                        label="Catatan"
                         value={form.data.notes}
                         onChange={(e) => form.setData('notes', e.target.value)}
-                        className="mt-1 w-full rounded-md border border-border px-3 py-2"
+                        error={form.errors.notes}
                     />
-                </label>
 
-                <div className="sm:col-span-2">
-                    <button className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">
-                        Simpan
-                    </button>
-                </div>
-            </form>
+                    <div className="flex items-center gap-3 pt-2">
+                        <Button type="submit" loading={form.processing} disabled={form.processing}>
+                            Simpan
+                        </Button>
+                        <a href="/owner/inventories" className="text-xs font-semibold text-text-muted hover:text-text">
+                            Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
         </OwnerPageShell>
     );
 }

@@ -2,9 +2,10 @@ import { router } from '@inertiajs/react';
 import { ArrowDownRight, ArrowUpRight, ClipboardList } from 'lucide-react';
 import { useState } from 'react';
 import FilterSheet from '@/components/owner/filter-sheet';
-import { HeaderIconButton, FilterIcon } from '@/components/owner/header-icon-utils';
+import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/format';
 
 interface Props {
@@ -51,7 +52,11 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
         );
     };
 
-    if (!movements || movements.data.length === 0) {
+    if (!movements) {
+        return <SkeletonPage />;
+    }
+
+    if (movements.data.length === 0) {
         return (
             <EmptyState
                 icon={<ClipboardList className="h-8 w-8 text-text-subtle" />}
@@ -63,14 +68,14 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
 
     return (
         <div className="space-y-4">
-            {/* Filter button */}
             <div className="flex justify-end">
                 <div className="relative">
-                    <HeaderIconButton label="Filter" onClick={() => setFilterOpen(true)}>
-                        <FilterIcon />
-                    </HeaderIconButton>
+                    <Button variant="outline" size="sm" onClick={() => setFilterOpen(true)}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        Filter
+                    </Button>
                     {activeFilterCount > 0 && (
-                        <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-xs font-bold text-white">
+                        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-0.5 text-[10px] font-bold text-white">
                             {activeFilterCount}
                         </span>
                     )}
@@ -78,7 +83,6 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
             </div>
 
             <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
-                {/* Left: movement list */}
                 <div className="space-y-1.5">
                     {movements.data.map((m: any) => (
                         <div
@@ -106,7 +110,6 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                     ))}
                 </div>
 
-                {/* Right: stats sidebar (desktop only) */}
                 <div className="hidden lg:block">
                     <div className="sticky top-4 space-y-3">
                         <div className="rounded-lg border border-border bg-white p-5">
@@ -140,9 +143,8 @@ export function AuditTrailTab({ movements, outlets = [], products = [], filters 
                             </div>
                         </div>
 
-                        {/* Active filters */}
                         {activeFilterCount > 0 && (
-                            <div className="rounded-lg border border-border bg-white p-4 transition-shadow">
+                            <div className="rounded-lg border border-border bg-white p-4">
                                 <div className="mb-3 text-xs font-bold uppercase tracking-wider text-text-muted">Filter Aktif</div>
                                 <div className="space-y-1.5">
                                     {filters.outlet_id && (

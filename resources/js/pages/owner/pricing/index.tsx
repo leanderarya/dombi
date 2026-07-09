@@ -1,14 +1,11 @@
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { Button } from '@/components/ui/button';
 import { OutletTab } from './outlet-tab';
 import { PusatTab } from './pusat-tab';
 import { RiwayatTab } from './riwayat-tab';
 import type { OtherOutlet, OutletData, OutletPriceRow, PaginatedLogs, PusatKpis, PusatVariant } from './types';
-
-/* ------------------------------------------------------------------ */
-/*  Tab configuration                                                  */
-/* ------------------------------------------------------------------ */
 
 const TABS = [
     { key: 'pusat', label: 'Pusat' },
@@ -17,10 +14,6 @@ const TABS = [
 ] as const;
 
 type TabKey = (typeof TABS)[number]['key'];
-
-/* ------------------------------------------------------------------ */
-/*  Props                                                              */
-/* ------------------------------------------------------------------ */
 
 interface Props {
     tab?: string;
@@ -33,10 +26,6 @@ interface Props {
     logs?: PaginatedLogs;
     actionFilter?: string;
 }
-
-/* ------------------------------------------------------------------ */
-/*  Page                                                               */
-/* ------------------------------------------------------------------ */
 
 export default function PricingIndex(props: Props) {
     const [activeTab, setActiveTab] = useState<TabKey>((props.tab as TabKey) ?? 'pusat');
@@ -65,15 +54,15 @@ export default function PricingIndex(props: Props) {
         <OwnerPageShell title="Harga" subtitle="Kelola harga jual produk">
             <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
                 {TABS.map((tab) => (
-                    <button
+                    <Button
                         key={tab.key}
+                        type="button"
+                        variant={activeTab === tab.key ? 'secondary' : 'ghost'}
+                        size="sm"
                         onClick={() => handleTabChange(tab.key)}
-                        className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
-                            activeTab === tab.key ? 'bg-white text-text' : 'text-text-muted hover:text-text'
-                        }`}
                     >
                         {tab.label}
-                    </button>
+                    </Button>
                 ))}
             </div>
 

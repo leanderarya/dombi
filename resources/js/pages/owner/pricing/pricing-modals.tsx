@@ -1,14 +1,10 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
-import OwnerModalShell from '@/components/owner/owner-modal-shell';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { formatCurrency } from '@/lib/format';
 import type { OutletPriceRow, PusatVariant } from './types';
-
-/* ------------------------------------------------------------------ */
-/*  GlobalPriceModal — edit center_price + selling_price               */
-/* ------------------------------------------------------------------ */
 
 export function GlobalPriceModal({ open, variant, onClose }: {
     open: boolean; variant: PusatVariant; onClose: () => void;
@@ -48,47 +44,49 @@ export function GlobalPriceModal({ open, variant, onClose }: {
     };
 
     return (
-        <OwnerModalShell open={open} onClose={onClose} title="Ubah Harga" description={variant.name} maxWidth="max-w-md">
-            <div className="space-y-3">
-                <div>
-                    <label className="mb-1 block text-xs font-medium text-text-muted">HPP (Harga Pusat)</label>
-                    <Input type="number" value={centerPrice} onChange={(e) => setCenterPrice(e.target.value)} prefix="Rp" />
-                </div>
-                <div>
-                    <label className="mb-1 block text-xs font-medium text-text-muted">Harga Jual</label>
-                    <Input type="number" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} prefix="Rp" />
-                </div>
-
-                <div className={`rounded-lg p-3 ${isNegative ? 'bg-red-50' : 'bg-surface-muted'}`}>
-                    <div className="text-xs text-text-muted">Margin</div>
-                    <div className={`text-lg font-bold tabular-nums ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
-                        {formatCurrency(margin)}
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Ubah Harga</DialogTitle>
+                    <DialogDescription>{variant.name}</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3">
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-text-muted">HPP (Harga Pusat)</label>
+                        <Input type="number" value={centerPrice} onChange={(e) => setCenterPrice(e.target.value)} prefix="Rp" />
                     </div>
-                    {isNegative && (
-                        <p className="mt-1 text-xs text-red-600">Margin negatif — harga jual lebih rendah dari HPP</p>
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-text-muted">Harga Jual</label>
+                        <Input type="number" value={sellingPrice} onChange={(e) => setSellingPrice(e.target.value)} prefix="Rp" />
+                    </div>
+
+                    <div className={`rounded-lg p-3 ${isNegative ? 'bg-red-50' : 'bg-surface-muted'}`}>
+                        <div className="text-xs text-text-muted">Margin</div>
+                        <div className={`text-lg font-bold tabular-nums ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
+                            {formatCurrency(margin)}
+                        </div>
+                        {isNegative && (
+                            <p className="mt-1 text-xs text-red-600">Margin negatif — harga jual lebih rendah dari HPP</p>
+                        )}
+                    </div>
+
+                    {variant.outlet_override_count > 0 && (
+                        <p className="text-xs text-amber-600">
+                            {variant.outlet_override_count} outlet memiliki override. Perubahan HPP dapat mempengaruhi margin outlet.
+                        </p>
                     )}
                 </div>
 
-                {variant.outlet_override_count > 0 && (
-                    <p className="text-xs text-amber-600">
-                        {variant.outlet_override_count} outlet memiliki override. Perubahan HPP dapat mempengaruhi margin outlet.
-                    </p>
-                )}
-            </div>
-
-            <div className="mt-6 flex gap-2">
-                <Button type="button" variant="secondary" onClick={onClose} className="flex-1">Batal</Button>
-                <Button type="button" onClick={handleSave} disabled={saving} className="flex-1">
-                    {saving ? 'Menyimpan...' : 'Simpan'}
-                </Button>
-            </div>
-        </OwnerModalShell>
+                <div className="mt-6 flex gap-2">
+                    <Button type="button" variant="secondary" onClick={onClose} className="flex-1">Batal</Button>
+                    <Button type="button" onClick={handleSave} disabled={saving} className="flex-1">
+                        {saving ? 'Menyimpan...' : 'Simpan'}
+                    </Button>
+                </div>
+            </DialogContent>
+        </Dialog>
     );
 }
-
-/* ------------------------------------------------------------------ */
-/*  OutletPriceModal — edit outlet selling_price                       */
-/* ------------------------------------------------------------------ */
 
 export function OutletPriceModal({ open, row, onClose, onSave, saving }: {
     open: boolean; row: OutletPriceRow; onClose: () => void; onSave: (price: number) => void; saving: boolean;
@@ -99,33 +97,39 @@ export function OutletPriceModal({ open, row, onClose, onSave, saving }: {
     const isNegative = margin < 0;
 
     return (
-        <OwnerModalShell open={open} onClose={onClose} title="Ubah Harga Outlet" description={row.name} maxWidth="max-w-md">
-            <div className="space-y-3">
-                <div>
-                    <label className="mb-1 block text-xs font-medium text-text-muted">Harga Pusat (Global)</label>
-                    <div className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-text-muted">
-                        {formatCurrency(row.center_price)}
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+            <DialogContent className="max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Ubah Harga Outlet</DialogTitle>
+                    <DialogDescription>{row.name}</DialogDescription>
+                </DialogHeader>
+                <div className="space-y-3">
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-text-muted">Harga Pusat (Global)</label>
+                        <div className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-text-muted">
+                            {formatCurrency(row.center_price)}
+                        </div>
+                    </div>
+                    <div>
+                        <label className="mb-1 block text-xs font-medium text-text-muted">Harga Jual (Outlet)</label>
+                        <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} prefix="Rp" />
+                    </div>
+
+                    <div className={`rounded-lg p-3 ${isNegative ? 'bg-red-50' : 'bg-surface-muted'}`}>
+                        <div className="text-xs text-text-muted">Margin</div>
+                        <div className={`text-lg font-bold tabular-nums ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
+                            {formatCurrency(margin)}
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <label className="mb-1 block text-xs font-medium text-text-muted">Harga Jual (Outlet)</label>
-                    <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} prefix="Rp" />
-                </div>
 
-                <div className={`rounded-lg p-3 ${isNegative ? 'bg-red-50' : 'bg-surface-muted'}`}>
-                    <div className="text-xs text-text-muted">Margin</div>
-                    <div className={`text-lg font-bold tabular-nums ${isNegative ? 'text-red-600' : 'text-emerald-600'}`}>
-                        {formatCurrency(margin)}
-                    </div>
+                <div className="mt-6 flex gap-2">
+                    <Button type="button" variant="secondary" onClick={onClose} className="flex-1">Batal</Button>
+                    <Button type="button" onClick={() => onSave(parseFloat(price))} disabled={saving} className="flex-1">
+                        {saving ? 'Menyimpan...' : 'Simpan'}
+                    </Button>
                 </div>
-            </div>
-
-            <div className="mt-6 flex gap-2">
-                <Button type="button" variant="secondary" onClick={onClose} className="flex-1">Batal</Button>
-                <Button type="button" onClick={() => onSave(parseFloat(price))} disabled={saving} className="flex-1">
-                    {saving ? 'Menyimpan...' : 'Simpan'}
-                </Button>
-            </div>
-        </OwnerModalShell>
+            </DialogContent>
+        </Dialog>
     );
 }

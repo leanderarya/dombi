@@ -1,21 +1,18 @@
 import { Link, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, ArrowDownRight, Clock, Store, TrendingUp } from 'lucide-react';
+import { Store } from 'lucide-react';
 import { useState } from 'react';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
+import OwnerFilterCard from '@/components/owner/owner-filter-card';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils';
 
 type FilterKey = 'all' | 'active' | 'inactive' | 'low_stock';
-
-const FILTERS: { key: FilterKey; label: string }[] = [
-    { key: 'all', label: 'Semua' },
-    { key: 'active', label: 'Aktif' },
-    { key: 'inactive', label: 'Nonaktif' },
-    { key: 'low_stock', label: 'Stok Rendah' },
-];
 
 function matchesFilter(outlet: any, filter: FilterKey): boolean {
     switch (filter) {
@@ -30,14 +27,47 @@ function matchesFilter(outlet: any, filter: FilterKey): boolean {
     }
 }
 
+function getOutletStatus(outlet: any): { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' } {
+    if (outlet.status !== 'active') {
+        return { label: 'Nonaktif', variant: 'neutral' };
+    }
+    if (Number(outlet.low_stock_count) > 0) {
+        return { label: 'Stok Rendah', variant: 'warning' };
+    }
+    if (Number(outlet.active_orders_count) >= 3) {
+        return { label: 'Sibuk', variant: 'info' as any };
+    }
+    return { label: 'Aktif', variant: 'success' };
+}
+
 export default function OutletsIndex({ outlets }: any) {
     const { flash } = usePage<any>().props;
     const [filter, setFilter] = useState<FilterKey>('active');
-    const filtered = outlets.data.filter((o: any) => matchesFilter(o, filter));
+    const [search, setSearch] = useState('');
+
+    if (!outlets?.data) {
+        return (
+            <OwnerPageShell title="Outlet" subtitle="Manajemen cabang operasional">
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
+
     const totalOutlets = outlets.data.length;
-    const activeOutlets = outlets.data.filter((outlet: any) => outlet.status === 'active').length;
-    const lowStockOutlets = outlets.data.filter((outlet: any) => Number(outlet.low_stock_count) > 0).length;
-    const busyOutlets = outlets.data.filter((outlet: any) => Number(outlet.active_orders_count) >= 3).length;
+    const activeOutlets = outlets.data.filter((o: any) => o.status === 'active').length;
+    const lowStockOutlets = outlets.data.filter((o: any) => Number(o.low_stock_count) > 0).length;
+    const busyOutlets = outlets.data.filter((o: any) => Number(o.active_orders_count) >= 3).length;
+
+    let filtered = outlets.data.filter((o: any) => matchesFilter(o, filter));
+    if (search) {
+        const q = search.toLowerCase();
+        filtered = filtered.filter(
+            (o: any) =>
+                o.name.toLowerCase().includes(q) ||
+                o.kelurahan?.toLowerCase().includes(q) ||
+                o.kecamatan?.toLowerCase().includes(q),
+        );
+    }
 
     return (
         <OwnerPageShell
@@ -49,204 +79,136 @@ export default function OutletsIndex({ outlets }: any) {
                 </Link>
             }
         >
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
-                {/* Left: List */}
-                <div>
-                    {/* Filter Tabs */}
-                    <div className="mb-3 flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
-                        {FILTERS.map((f) => {
-                            const isActive = filter === f.key;
-                            const colorMap: Record<string, string> = {
-                                active: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-                                inactive: 'text-text-muted bg-surface-muted ring-border',
-                                low_stock: 'text-amber-600 bg-amber-50 ring-amber-200',
-                            };
+            <OwnerFilterCard
+                collapsible
+                defaultExpanded={false}
+                searchPlaceholder="Cari outlet..."
+                searchValue={search}
+                onSearch={(val) => setSearch(val)}
+            >
+                <select
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value as FilterKey)}
+                    className="h-8 rounded-md border border-border bg-surface px-2 text-xs font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                >
+                    <option value="all">Semua ({totalOutlets})</option>
+                    <option value="active">Aktif ({activeOutlets})</option>
+                    <option value="inactive">Nonaktif ({totalOutlets - activeOutlets})</option>
+                    <option value="low_stock">Stok Rendah ({lowStockOutlets})</option>
+                </select>
+            </OwnerFilterCard>
 
-                            return (
-                                <button
-                                    key={f.key}
-                                    type="button"
-                                    onClick={() => setFilter(f.key)}
-                                    className={cn(
-                                        'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all',
-                                        isActive
-                                            ? colorMap[f.key] ?? 'bg-primary/10 text-primary ring-primary/20'
-                                            : 'bg-surface text-text-muted ring-border hover:bg-surface-muted',
-                                    )}
-                                >
-                                    {f.label}
-                                    {f.key !== 'all' && (
-                                        <span className="ml-1 tabular-nums opacity-70">
-                                            {f.key === 'active' ? activeOutlets : f.key === 'inactive' ? totalOutlets - activeOutlets : lowStockOutlets}
-                                        </span>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
+            <OwnerKpiStrip
+                items={[
+                    { label: 'Total Outlet', value: totalOutlets, sublabel: 'Semua outlet', sublabelColor: 'text-text-subtle' },
+                    { label: 'Aktif', value: activeOutlets, sublabel: 'Outlet aktif', sublabelColor: 'text-emerald-500' },
+                    { label: 'Stok Rendah', value: lowStockOutlets, sublabel: lowStockOutlets > 0 ? 'Perlu restock' : undefined, sublabelColor: 'text-amber-500' },
+                    { label: 'Sibuk', value: busyOutlets, sublabel: busyOutlets > 0 ? '3+ pesanan aktif' : undefined, sublabelColor: 'text-blue-500' },
+                ]}
+            />
 
-                    <div className="space-y-3">
-                        {filtered.length === 0 && (
-                            <div className="rounded-lg border border-border bg-white p-10 text-center">
-                                <p className="text-sm text-text-muted">Belum ada outlet</p>
-                                <Link href="/owner/outlets/create" className="mt-2 inline-block text-sm font-semibold text-primary">
-                                    + Tambah Outlet
-                                </Link>
-                            </div>
-                        )}
-                        {filtered.map((outlet: any) => {
-                            const status = getOutletStatus(outlet);
-                            const lowStock = Number(outlet.low_stock_count);
+            {filtered.length === 0 ? (
+                <EmptyState
+                    icon={<Store className="h-8 w-8" />}
+                    title="Belum ada outlet"
+                    description="Tambah outlet untuk mulai mengelola cabang"
+                    action={{ label: '+ Tambah Outlet', href: '/owner/outlets/create' }}
+                />
+            ) : (
+                <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full min-w-[600px]">
+                        <thead>
+                            <tr className="bg-surface-muted">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Outlet</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Lokasi</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Pesanan</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filtered.map((outlet: any) => {
+                                const status = getOutletStatus(outlet);
+                                const lowStock = Number(outlet.low_stock_count);
 
-                            return (
-                                <div
-                                    key={outlet.id}
-                                    className="cursor-pointer rounded-lg border border-border bg-white p-4 transition-all duration-200"
-                                    onClick={() => router.visit(`/owner/outlets/${outlet.id}`)}
-                                >
-                                    {/* Row 1: name + badge + orders */}
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-text">{outlet.name}</span>
-                                            <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
-                                        </div>
-                                        <span className="rounded-md bg-surface-muted px-2 py-0.5 text-xs font-bold tabular-nums text-text-muted">
-                                            {outlet.active_orders_count} pesanan
-                                        </span>
-                                    </div>
-
-                                    {/* Row 2: metadata + actions */}
-                                    <div className="mt-1.5 flex items-center justify-between">
-                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-muted">
-                                            <span>{outlet.kelurahan} &middot; {outlet.kecamatan}</span>
-                                            {lowStock > 0 && (
-                                                <>
-                                                    <span className="text-text-subtle">&middot;</span>
-                                                    <span className="font-bold text-amber-600">{lowStock} stok rendah</span>
-                                                </>
-                                            )}
+                                return (
+                                    <tr
+                                        key={outlet.id}
+                                        className="cursor-pointer border-t border-border transition-colors hover:bg-surface-muted"
+                                        onClick={() => router.visit(`/owner/outlets/${outlet.id}`)}
+                                    >
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
+                                                    {outlet.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm font-semibold text-text">{outlet.name}</div>
+                                                    {lowStock > 0 && (
+                                                        <div className="text-xs font-bold text-amber-600">{lowStock} stok rendah</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-xs text-text-muted">
+                                            {outlet.kelurahan} &middot; {outlet.kecamatan}
                                             {Number(outlet.pending_restocks_count) > 0 && (
-                                                <>
-                                                    <span className="text-text-subtle">&middot;</span>
-                                                    <span>{outlet.pending_restocks_count} restock</span>
-                                                </>
+                                                <span className="ml-1">&middot; {outlet.pending_restocks_count} restock</span>
                                             )}
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <Link
-                                                href={`/owner/outlets/${outlet.id}`}
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-primary hover:bg-primary-light"
-                                            >
-                                                Detail
-                                            </Link>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
- e.stopPropagation(); router.visit(`/owner/outlets/${outlet.id}/edit`); 
-}}
-                                                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-text-muted hover:bg-surface-muted"
-                                            >
-                                                Edit
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={(e) => {
- e.stopPropagation(); router.visit(`/owner/inventories?outlet_id=${outlet.id}`); 
-}}
-                                                className="rounded-lg px-2.5 py-1 text-xs font-semibold text-text-muted hover:bg-surface-muted"
-                                            >
-                                                Inv
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    <Pagination links={outlets.links} />
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <span className="rounded-md bg-surface-muted px-2 py-0.5 text-xs font-bold tabular-nums text-text-muted">
+                                                {outlet.active_orders_count}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.visit(`/owner/outlets/${outlet.id}`);
+                                                    }}
+                                                >
+                                                    Detail
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.visit(`/owner/outlets/${outlet.id}/edit`);
+                                                    }}
+                                                >
+                                                    Edit
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        router.visit(`/owner/inventories?outlet_id=${outlet.id}`);
+                                                    }}
+                                                >
+                                                    Inv
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
+            )}
 
-                {/* Right: Summary Sidebar (desktop only) */}
-                <aside className="hidden lg:block">
-                    <div className="sticky top-4 space-y-3">
-                        {/* Total Outlet */}
-                        <div className="rounded-lg border border-border bg-white p-5">
-                            <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <Store className="h-4 w-4 text-text-subtle" />
-                                Total Outlet
-                            </div>
-                            <div className="mt-2 text-3xl font-bold text-text">{totalOutlets}</div>
-                            <div className="mt-1 flex items-center gap-1 text-xs font-medium text-text-subtle">
-                                Semua outlet
-                            </div>
-                        </div>
-
-                        {/* Aktif */}
-                        <div className="rounded-lg border border-border bg-white p-5">
-                            <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <TrendingUp className="h-4 w-4 text-emerald-500" />
-                                Aktif
-                            </div>
-                            <div className="mt-2 text-3xl font-bold text-text">{activeOutlets}</div>
-                            {activeOutlets > 0 && (
-                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">
-                                    Outlet aktif
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Stok Rendah */}
-                        <div className="rounded-lg border border-border bg-white p-5">
-                            <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                                Stok Rendah
-                            </div>
-                            <div className="mt-2 text-3xl font-bold text-text">{lowStockOutlets}</div>
-                            {lowStockOutlets > 0 && (
-                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-amber-500">
-                                    <ArrowDownRight className="h-3 w-3" />
-                                    Perlu restock segera
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Sibuk */}
-                        <div className="rounded-lg border border-border bg-white p-5">
-                            <div className="flex items-center gap-2 text-xs text-text-muted">
-                                <Clock className="h-4 w-4 text-blue-500" />
-                                Sibuk
-                            </div>
-                            <div className="mt-2 text-3xl font-bold text-text">{busyOutlets}</div>
-                            {busyOutlets > 0 && (
-                                <div className="mt-1 flex items-center gap-1 text-xs font-medium text-blue-500">
-                                    3+ pesanan aktif
-                                </div>
-                            )}
-                        </div>
-
-                    </div>
-                </aside>
-            </div>
+            <Pagination links={outlets.links} />
 
             <OutletProvisioningSummary provisioning={flash?.outlet_provisioning} />
         </OwnerPageShell>
     );
 }
-
-function getOutletStatus(outlet: any): { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' } {
-    if (outlet.status !== 'active') {
-	return { label: 'Nonaktif', variant: 'neutral' };
-}
-
-    if (Number(outlet.low_stock_count) > 0) {
-	return { label: 'Stok Rendah', variant: 'warning' };
-}
-
-    if (Number(outlet.active_orders_count) >= 3) {
-	return { label: 'Sibuk', variant: 'info' as any };
-}
-
-    return { label: 'Aktif', variant: 'success' };
-}
-

@@ -1,8 +1,10 @@
 import { router } from '@inertiajs/react';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
+import { SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
-import { EmptyState, LoadingSkeleton } from './pricing-shared';
 import type { PaginatedLogs } from './types';
 
 const ACTION_FILTERS = [
@@ -36,30 +38,28 @@ export function RiwayatTab({ logs, actionFilter }: { logs?: PaginatedLogs; actio
     };
 
     if (!logs) {
-        return <LoadingSkeleton />;
+        return <SkeletonList count={5} />;
     }
 
     return (
         <div>
             <div className="mb-4 flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
                 {ACTION_FILTERS.map((f) => (
-                    <button
+                    <Button
                         key={f.key}
+                        type="button"
+                        size="sm"
+                        variant={(actionFilter ?? '') === f.key ? 'secondary' : 'ghost'}
                         onClick={() => handleFilterChange(f.key)}
-                        className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                            (actionFilter ?? '') === f.key
-                                ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
-                        }`}
                     >
                         {f.label}
-                    </button>
+                    </Button>
                 ))}
             </div>
 
             <div className="space-y-3">
                 {logs.data.length === 0 ? (
-                    <EmptyState message="Belum ada riwayat perubahan harga." />
+                    <EmptyState title="Belum ada riwayat perubahan harga." />
                 ) : (
                     logs.data.map((log) => (
                         <div key={log.id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">

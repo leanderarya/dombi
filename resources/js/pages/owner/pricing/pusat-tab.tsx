@@ -1,12 +1,14 @@
 import { DollarSign, Package, TrendingDown, TrendingUp } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiCard from '@/components/owner/owner-kpi-card';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import { SkeletonList } from '@/components/ui/skeleton';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
 import { GlobalPriceModal } from './pricing-modals';
-import { EmptyState, LoadingSkeleton, PaginationBar, SortBar } from './pricing-shared';
+import { PaginationBar, SortBar } from './pricing-shared';
 import type { MarginFilter, PusatKpis, PusatVariant, SortDir, SortKey } from './types';
 
 export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?: PusatKpis }) {
@@ -19,7 +21,7 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
     const [selectedVariant, setSelectedVariant] = useState<PusatVariant | null>(null);
 
     if (!variants || !kpis) {
-        return <LoadingSkeleton />;
+        return <SkeletonList count={5} />;
     }
 
     const filtered = useMemo(() => {
@@ -75,24 +77,36 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
         [sortKey],
     );
 
+    const kpiItems = [
+        { label: 'Total Produk', value: kpis.total_variants, icon: <Package className="h-5 w-5" /> },
+        { label: 'Rata-rata HPP', value: formatCurrency(kpis.avg_hpp), icon: <DollarSign className="h-5 w-5" /> },
+        { label: 'Rata-rata Margin', value: formatCurrency(kpis.avg_margin), icon: <TrendingUp className="h-5 w-5" /> },
+        {
+            label: 'Margin Negatif',
+            value: kpis.negative_margin_count,
+            icon: <TrendingDown className="h-5 w-5" />,
+            valueClassName: kpis.negative_margin_count > 0 ? 'text-red-600' : undefined,
+        },
+    ];
+
     return (
         <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-6">
             <div>
+                <OwnerKpiStrip items={kpiItems} cols={4} />
+
                 <OwnerFilterCard
+                    collapsible
+                    defaultExpanded={false}
                     searchPlaceholder="Cari produk..."
                     searchValue={search}
-                    onSearch={(v) => {
- setSearch(v); setPage(1); 
-}}
+                    onSearch={(v) => { setSearch(v); setPage(1); }}
                     marginOptions={[
                         { value: 'high', label: 'Margin Tinggi (>20rb)' },
                         { value: 'low', label: 'Margin Rendah (<5rb)' },
                         { value: 'negative', label: 'Margin Negatif' },
                     ]}
                     marginValue={marginFilter === 'all' ? '' : marginFilter}
-                    onMarginChange={(v) => {
- setMarginFilter((v || 'all') as MarginFilter); setPage(1); 
-}}
+                    onMarginChange={(v) => { setMarginFilter((v || 'all') as MarginFilter); setPage(1); }}
                 />
 
                 <SortBar sortKey={sortKey} sortDir={sortDir} toggleSort={toggleSort} />
@@ -113,9 +127,7 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => {
- setSelectedVariant(v); setModalOpen(true); 
-}}
+                                    onClick={() => { setSelectedVariant(v); setModalOpen(true); }}
                                     className="shrink-0 text-primary"
                                 >
                                     Ubah
@@ -135,7 +147,7 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                         </div>
                     ))}
                     {paginated.length === 0 && (
-                        <EmptyState message={search || marginFilter !== 'all' ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'} />
+                        <EmptyState title={search || marginFilter !== 'all' ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'} />
                     )}
                 </div>
 
@@ -144,15 +156,21 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
 
             <aside className="hidden lg:block">
                 <div className="sticky top-4 space-y-3">
-                    <OwnerKpiCard label="Total Produk" value={kpis.total_variants} icon={<Package className="h-5 w-5" />} />
-                    <OwnerKpiCard label="Rata-rata HPP" value={formatCurrency(kpis.avg_hpp)} icon={<DollarSign className="h-5 w-5" />} />
-                    <OwnerKpiCard label="Rata-rata Margin" value={formatCurrency(kpis.avg_margin)} icon={<TrendingUp className="h-5 w-5" />} />
-                    <OwnerKpiCard
-                        label="Margin Negatif"
-                        value={kpis.negative_margin_count}
-                        icon={<TrendingDown className="h-5 w-5" />}
-                        highlight={kpis.negative_margin_count > 0}
-                    />
+                    {kpiItems.map((item, i) => (
+                        <div key={i} className="rounded-lg p-2.5">
+                            <div className="flex items-center gap-2">
+                                {item.icon && (
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted">
+                                        {item.icon}
+                                    </div>
+                                )}
+                                <div className="text-xs font-medium text-text-muted">{item.label}</div>
+                            </div>
+                            <div className={`mt-1 text-base font-bold tabular-nums ${item.valueClassName ?? 'text-text'}`}>
+                                {item.value}
+                            </div>
+                        </div>
+                    ))}
                 </div>
             </aside>
 
@@ -160,9 +178,7 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                 <GlobalPriceModal
                     open={modalOpen}
                     variant={selectedVariant}
-                    onClose={() => {
- setModalOpen(false); setSelectedVariant(null); 
-}}
+                    onClose={() => { setModalOpen(false); setSelectedVariant(null); }}
                 />
             )}
         </div>

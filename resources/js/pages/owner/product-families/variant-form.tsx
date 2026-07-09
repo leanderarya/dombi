@@ -1,5 +1,7 @@
-import type { FormEventHandler } from 'react';
 import type { InertiaFormProps } from '@inertiajs/react';
+import type { FormEventHandler } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export const DEFAULT_MARKUP_PERCENT = 30;
 
@@ -26,88 +28,69 @@ export default function VariantForm({ form, editing, onSubmit, onCancel }: Props
                 {editing ? 'Edit Variant' : 'Tambah Variant'}
             </h2>
             <div className="space-y-3">
-                {/* Required: Rasa + Ukuran + Harga Center */}
                 <div className="grid grid-cols-3 gap-3">
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">Rasa</label>
-                        <input
-                            type="text"
-                            value={form.data.flavor}
-                            onChange={(e) => form.setData('flavor', e.target.value)}
-                            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                            placeholder="Coklat"
-                        />
-                    </div>
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">Ukuran</label>
-                        <input
-                            type="text"
-                            value={form.data.size}
-                            onChange={(e) => form.setData('size', e.target.value)}
-                            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                            placeholder="250ml"
-                        />
-                    </div>
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">Harga Center (Rp)</label>
-                        <input
-                            type="number"
-                            value={form.data.center_price}
-                            onChange={(e) => form.setData('center_price', e.target.value)}
-                            required
-                            min="0"
-                            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                        />
-                    </div>
+                    <Input
+                        label="Rasa"
+                        type="text"
+                        value={form.data.flavor}
+                        onChange={(e) => form.setData('flavor', e.target.value)}
+                        placeholder="Coklat"
+                    />
+                    <Input
+                        label="Ukuran"
+                        type="text"
+                        value={form.data.size}
+                        onChange={(e) => form.setData('size', e.target.value)}
+                        placeholder="250ml"
+                    />
+                    <Input
+                        label="Harga Center (Rp)"
+                        type="number"
+                        value={form.data.center_price}
+                        onChange={(e) => form.setData('center_price', e.target.value)}
+                        required
+                        min="0"
+                    />
                 </div>
 
-                {/* Auto-generated (editable) */}
                 <div className="rounded-lg bg-surface-muted p-3">
                     <div className="mb-2 text-xs font-bold uppercase tracking-wider text-text-subtle">Otomatis (bisa diubah)</div>
                     <div className="grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-text-muted">Nama Variant</label>
-                            <input
-                                type="text"
-                                value={form.data.name}
-                                onChange={(e) => form.setData('name', e.target.value)}
-                                required
-                                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
-                            />
-                            {form.errors.name && <p className="mt-1 text-xs text-red-600">{form.errors.name}</p>}
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-text-muted">SKU</label>
-                            <input
-                                type="text"
-                                value={form.data.sku}
-                                onChange={(e) => form.setData('sku', e.target.value)}
-                                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
-                            />
-                        </div>
+                        <Input
+                            label="Nama Variant"
+                            type="text"
+                            value={form.data.name}
+                            onChange={(e) => form.setData('name', e.target.value)}
+                            required
+                            error={form.errors.name}
+                            className="bg-white"
+                        />
+                        <Input
+                            label="SKU"
+                            type="text"
+                            value={form.data.sku}
+                            onChange={(e) => form.setData('sku', e.target.value)}
+                            className="bg-white"
+                        />
                     </div>
                     <div className="mt-3 grid grid-cols-2 gap-3">
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-text-muted">Harga Jual (Rp) <span className="text-text-subtle">({DEFAULT_MARKUP_PERCENT}% markup)</span></label>
-                            <input
-                                type="number"
-                                value={form.data.selling_price}
-                                onChange={(e) => form.setData('selling_price', e.target.value)}
-                                required
-                                min="0"
-                                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label className="mb-1 block text-xs font-medium text-text-muted">Stok Pusat</label>
-                            <input
-                                type="number"
-                                value={form.data.center_stock || '0'}
-                                onChange={(e) => form.setData('center_stock', e.target.value)}
-                                min="0"
-                                className="w-full rounded-lg border border-border bg-white px-3 py-2 text-sm"
-                            />
-                        </div>
+                        <Input
+                            label={`Harga Jual (Rp) (${DEFAULT_MARKUP_PERCENT}% markup)`}
+                            type="number"
+                            value={form.data.selling_price}
+                            onChange={(e) => form.setData('selling_price', e.target.value)}
+                            required
+                            min="0"
+                            className="bg-white"
+                        />
+                        <Input
+                            label="Stok Pusat"
+                            type="number"
+                            value={form.data.center_stock || '0'}
+                            onChange={(e) => form.setData('center_stock', e.target.value)}
+                            min="0"
+                            className="bg-white"
+                        />
                     </div>
                 </div>
 
@@ -123,20 +106,12 @@ export default function VariantForm({ form, editing, onSubmit, onCancel }: Props
                     </label>
                 )}
                 <div className="flex gap-2">
-                    <button
-                        type="submit"
-                        disabled={form.processing}
-                        className="flex-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary disabled:opacity-50"
-                    >
-                        {form.processing ? 'Menyimpan...' : editing ? 'Update' : 'Simpan'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={onCancel}
-                        className="rounded-lg border border-border px-4 py-2 text-sm font-medium text-slate-700 hover:bg-zinc-50"
-                    >
+                    <Button type="submit" loading={form.processing} className="flex-1">
+                        {editing ? 'Update' : 'Simpan'}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={onCancel}>
                         Batal
-                    </button>
+                    </Button>
                 </div>
             </div>
         </form>

@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import PembayaranTab from './pembayaran-tab';
 import RekeningTab from './rekening-tab';
 import TagihanTab from './tagihan-tab';
@@ -14,11 +15,9 @@ const TABS = [
 export default function FinanceIndex(props: any) {
     const [activeTab, setActiveTab] = useState('tagihan');
 
-    // Sync tab with URL on mount
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const tab = params.get('tab');
-
         if (tab && TABS.some((t) => t.key === tab)) {
             setActiveTab(tab);
         }
@@ -29,9 +28,16 @@ export default function FinanceIndex(props: any) {
         router.get('/owner/finance', { tab }, { preserveState: true, replace: true });
     };
 
+    if (!props.kpis && !props.payments && !props.accounts) {
+        return (
+            <OwnerPageShell title="Keuangan" subtitle="Pantau kewajiban seluruh outlet">
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
+
     return (
         <OwnerPageShell title="Keuangan" subtitle="Pantau kewajiban seluruh outlet">
-            {/* Segmented Control — primary tab navigation */}
             <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1">
                 {TABS.map((tab) => (
                     <button
@@ -40,7 +46,7 @@ export default function FinanceIndex(props: any) {
                         onClick={() => handleTabChange(tab.key)}
                         className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                             activeTab === tab.key
-                                ? 'bg-white text-text'
+                                ? 'bg-white text-text shadow-sm'
                                 : 'text-text-muted hover:text-text'
                         }`}
                     >
@@ -49,7 +55,6 @@ export default function FinanceIndex(props: any) {
                 ))}
             </div>
 
-            {/* Tab Content */}
             {activeTab === 'tagihan' && <TagihanTab {...props} />}
             {activeTab === 'pembayaran' && <PembayaranTab {...props} />}
             {activeTab === 'rekening' && <RekeningTab {...props} />}

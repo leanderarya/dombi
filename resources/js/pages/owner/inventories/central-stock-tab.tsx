@@ -2,12 +2,24 @@ import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
-import OwnerModalShell from '@/components/owner/owner-modal-shell';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import EmptyState from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
+
+const reasonOptions = [
+    { value: 'Stok opname', label: 'Stok Opname' },
+    { value: 'Produk rusak', label: 'Produk Rusak' },
+    { value: 'Produk expired', label: 'Produk Expired' },
+    { value: 'Penerimaan supplier', label: 'Penerimaan Supplier' },
+    { value: 'Koreksi manual', label: 'Koreksi Manual' },
+];
 
 export default function CentralStockTab({ variants, stats }: { variants?: any[]; stats?: any }) {
     const [search, setSearch] = useState('');
-    const [stockFilter, setStockFilter] = useState<'all' | 'zero' | 'low'>('all');
     const [editModal, setEditModal] = useState<any>(null);
     const [newStock, setNewStock] = useState('');
     const [reason, setReason] = useState('');
@@ -20,33 +32,15 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
     const filtered = variants.filter((v) => {
         if (search) {
             const q = search.toLowerCase();
-
             if (!v.name.toLowerCase().includes(q) && !(v.sku ?? '').toLowerCase().includes(q)) {
                 return false;
             }
         }
-
-        if (stockFilter === 'zero' && v.center_stock > 0) {
- return false;
-}
-
-        if (stockFilter === 'low' && (v.center_stock <= 0 || v.center_stock > 10)) {
- return false;
-}
-
         return true;
     });
 
     return (
         <>
-            {/* Filter controls */}
-            <OwnerFilterCard
-                searchPlaceholder="Cari produk atau SKU..."
-                searchValue={search}
-                onSearch={(val) => setSearch(val)}
-            />
-
-            {/* KPI Strip */}
             <OwnerKpiStrip items={[
                 { label: 'Total Variant', value: stats.total_variants },
                 { label: 'Total Stok', value: `${stats.total_stock} pcs` },
@@ -54,118 +48,129 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
                 { label: 'Stok Rendah', value: stats.low_stock, sublabel: stats.low_stock > 0 ? 'Perlu tindakan' : undefined, sublabelColor: 'text-amber-500' },
             ]} />
 
-            {/* Table */}
-            {filtered.length === 0 ? (
-                <div className="rounded-lg border border-border bg-white py-10 text-center text-xs text-text-muted">
-                    Tidak ada produk ditemukan
-                </div>
-            ) : (
-                <div className="overflow-hidden rounded-lg border border-border">
-                    <div className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                        <span>Produk / SKU</span><span className="text-right">Stok</span><span className="text-right">HPP</span><span />
-                    </div>
-                    {filtered.map((v) => {
-                        const isZero = v.center_stock <= 0;
-                        const isLow = v.center_stock > 0 && v.center_stock <= 10;
+            <OwnerFilterCard
+                collapsible
+                defaultExpanded={false}
+                searchPlaceholder="Cari produk atau SKU..."
+                searchValue={search}
+                onSearch={(val) => setSearch(val)}
+            />
 
-                        return (
-                            <div key={v.id}
-                                className="grid grid-cols-[1fr_80px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
-                                <span className="truncate">
-                                    {v.family_name && <span className="text-text-subtle">{v.family_name} </span>}
-                                    <span className="font-bold text-text">{v.name}</span>
-                                    {v.sku && <span className="ml-1 text-xs text-text-muted">{v.sku}</span>}
-                                </span>
-                                <span className={`text-right font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}>
-                                    {v.center_stock} pcs
-                                </span>
-                                <span className="text-right text-text-muted">{formatCurrency(v.center_price)}</span>
-                                <div className="flex items-center gap-1 justify-end">
-                                    <button type="button" onClick={() => {
- setEditModal(v); setNewStock(String(v.center_stock)); setReason(''); 
-}}
-                                        className="rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary-light">
-                                        Edit
-                                    </button>
-                                </div>
-                            </div>
-                        );
-                    })}
+            {filtered.length === 0 ? (
+                <EmptyState
+                    title="Tidak ada produk ditemukan"
+                    description="Coba ubah kata kunci pencarian"
+                />
+            ) : (
+                <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full min-w-[600px]">
+                        <thead>
+                            <tr className="bg-surface-muted">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Produk / SKU</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Stok</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">HPP</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filtered.map((v) => {
+                                const isZero = v.center_stock <= 0;
+                                const isLow = v.center_stock > 0 && v.center_stock <= 10;
+
+                                return (
+                                    <tr key={v.id} className="border-t border-border transition-colors hover:bg-surface-muted">
+                                        <td className="px-4 py-3">
+                                            {v.family_name && <span className="text-text-subtle">{v.family_name} </span>}
+                                            <span className="font-bold text-text">{v.name}</span>
+                                            {v.sku && <span className="ml-1 text-xs text-text-muted">{v.sku}</span>}
+                                        </td>
+                                        <td className={`px-4 py-3 text-right font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}>
+                                            {v.center_stock} pcs
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-text-muted">{formatCurrency(v.center_price)}</td>
+                                        <td className="px-4 py-3">
+                                            <StatusBadge variant={isZero ? 'danger' : isLow ? 'warning' : 'success'} size="sm">
+                                                {isZero ? 'Habis' : isLow ? 'Rendah' : 'Aman'}
+                                            </StatusBadge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex items-center justify-end">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setEditModal(v);
+                                                        setNewStock(String(v.center_stock));
+                                                        setReason('');
+                                                    }}
+                                                >
+                                                    Edit
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                    </table>
                 </div>
             )}
 
-            {/* Edit Modal */}
-            <OwnerModalShell
-                open={!!editModal}
-                onClose={() => setEditModal(null)}
-                title="Edit Stok Pusat"
-                subtitle={editModal?.name}
-                maxWidth="max-w-sm"
-            >
-                <div className="space-y-3">
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">Stok Saat Ini</label>
-                        <div className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-text-muted">
-                            {editModal?.center_stock} pcs
+            <Dialog open={!!editModal} onOpenChange={(isOpen) => { if (!isOpen) setEditModal(null); }}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>Edit Stok Pusat</DialogTitle>
+                        <DialogDescription>{editModal?.name}</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                        <div>
+                            <label className="mb-1 block text-xs font-medium text-text-muted">Stok Saat Ini</label>
+                            <div className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-text-muted">
+                                {editModal?.center_stock} pcs
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">Stok Baru</label>
-                        <input
+                        <Input
+                            label="Stok Baru"
                             type="number"
                             value={newStock}
                             onChange={(e) => setNewStock(e.target.value)}
-                            min="0"
-                            className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
+                            min={0}
                             autoFocus
                         />
-                    </div>
-                    <div>
-                        <label className="mb-1 block text-xs font-medium text-text-muted">Alasan</label>
-                        <select
+                        <Select
+                            label="Alasan"
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
-                            className="w-full rounded-lg border border-border px-3 py-2 text-sm"
-                        >
-                            <option value="">Pilih alasan...</option>
-                            <option value="Stok opname">Stok Opname</option>
-                            <option value="Produk rusak">Produk Rusak</option>
-                            <option value="Produk expired">Produk Expired</option>
-                            <option value="Penerimaan supplier">Penerimaan Supplier</option>
-                            <option value="Koreksi manual">Koreksi Manual</option>
-                        </select>
+                            options={reasonOptions}
+                            placeholder="Pilih alasan..."
+                        />
                     </div>
-                </div>
-
-                <div className="mt-6 flex gap-2">
-                    <button
-                        type="button"
-                        onClick={() => setEditModal(null)}
-                        className="flex-1 rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text hover:bg-surface-muted"
-                    >
-                        Batal
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setSaving(true);
-                            router.patch(`/owner/inventories/central-stock/${editModal.id}`, {
-                                center_stock: parseInt(newStock),
-                                reason: reason || undefined,
-                            }, {
-                                onFinish: () => {
-                                    setSaving(false);
-                                    setEditModal(null);
-                                },
-                            });
-                        }}
-                        disabled={saving || parseInt(newStock) === editModal.center_stock}
-                        className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
-                    >
-                        {saving ? 'Menyimpan...' : 'Simpan'}
-                    </button>
-                </div>
-            </OwnerModalShell>
+                    <DialogFooter>
+                        <Button variant="secondary" onClick={() => setEditModal(null)}>
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setSaving(true);
+                                router.patch(`/owner/inventories/central-stock/${editModal.id}`, {
+                                    center_stock: parseInt(newStock),
+                                    reason: reason || undefined,
+                                }, {
+                                    onFinish: () => {
+                                        setSaving(false);
+                                        setEditModal(null);
+                                    },
+                                });
+                            }}
+                            disabled={saving || parseInt(newStock) === editModal?.center_stock}
+                            loading={saving}
+                        >
+                            Simpan
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </>
     );
 }

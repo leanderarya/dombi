@@ -82,7 +82,7 @@ export default function RestockTimeline({ events }: { events: TimelineEvent[] })
                 <div key={`${event.label}-${index}`} className="flex gap-3">
                     <div className="flex flex-col items-center">
                         <div className={`h-2.5 w-2.5 rounded-full border-2 ${event.active ? 'border-emerald-600 bg-emerald-600' : 'border-border bg-white'}`} />
-                        {index < events.length - 1 && <div className="h-full min-h-8 w-px bg-slate-200" />}
+                        {index < events.length - 1 && <div className="h-full min-h-8 w-px bg-border" />}
                     </div>
                     <div className="pb-3">
                         <div className="text-sm font-bold text-text">{event.label}</div>

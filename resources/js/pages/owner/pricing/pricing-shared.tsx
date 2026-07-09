@@ -4,10 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import type { MarginFilter, OtherOutlet, SortDir, SortKey } from './types';
 
-/* ------------------------------------------------------------------ */
-/*  SortBar                                                            */
-/* ------------------------------------------------------------------ */
-
 export function SortBar({ sortKey, sortDir, toggleSort }: { sortKey: SortKey; sortDir: SortDir; toggleSort: (key: SortKey) => void }) {
     const SortIcon = ({ column }: { column: SortKey }) => {
         if (sortKey !== column) {
@@ -26,25 +22,20 @@ export function SortBar({ sortKey, sortDir, toggleSort }: { sortKey: SortKey; so
                 { key: 'selling_price' as SortKey, label: 'Harga Jual' },
                 { key: 'margin' as SortKey, label: 'Margin' },
             ]).map((col) => (
-                <button
+                <Button
                     key={col.key}
                     type="button"
+                    size="sm"
+                    variant={sortKey === col.key ? 'secondary' : 'ghost'}
                     onClick={() => toggleSort(col.key)}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors ${
-                        sortKey === col.key ? 'bg-primary-light text-primary' : 'bg-surface text-text-muted hover:bg-surface-muted'
-                    }`}
                 >
                     {col.label}
                     <SortIcon column={col.key} />
-                </button>
+                </Button>
             ))}
         </div>
     );
 }
-
-/* ------------------------------------------------------------------ */
-/*  PaginationBar                                                      */
-/* ------------------------------------------------------------------ */
 
 export function PaginationBar({ page, totalPages, total, onPageChange }: { page: number; totalPages: number; total: number; onPageChange: (p: number) => void }) {
     return (
@@ -61,37 +52,6 @@ export function PaginationBar({ page, totalPages, total, onPageChange }: { page:
         </div>
     );
 }
-
-/* ------------------------------------------------------------------ */
-/*  EmptyState                                                         */
-/* ------------------------------------------------------------------ */
-
-export function EmptyState({ icon, message }: { icon?: React.ReactNode; message: string }) {
-    return (
-        <div className="rounded-lg border border-dashed border-border bg-white p-10 text-center">
-            {icon && <div className="mx-auto mb-2 text-text-subtle">{icon}</div>}
-            <p className="text-sm text-text-muted">{message}</p>
-        </div>
-    );
-}
-
-/* ------------------------------------------------------------------ */
-/*  LoadingSkeleton                                                    */
-/* ------------------------------------------------------------------ */
-
-export function LoadingSkeleton() {
-    return (
-        <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 animate-pulse rounded-lg border border-border bg-white" />
-            ))}
-        </div>
-    );
-}
-
-/* ------------------------------------------------------------------ */
-/*  BulkPanel                                                          */
-/* ------------------------------------------------------------------ */
 
 export function BulkPanel({ amount, onChange, onApply, onCancel, saving, count }: {
     amount: string; onChange: (v: string) => void; onApply: () => void; onCancel: () => void; saving: boolean; count: number;
@@ -123,10 +83,6 @@ export function BulkPanel({ amount, onChange, onApply, onCancel, saving, count }
         </div>
     );
 }
-
-/* ------------------------------------------------------------------ */
-/*  CopyPanel                                                          */
-/* ------------------------------------------------------------------ */
 
 export function CopyPanel({ outlets, source, onChange, onApply, onCancel, saving }: {
     outlets: OtherOutlet[]; source: string; onChange: (v: string) => void; onApply: () => void; onCancel: () => void; saving: boolean;

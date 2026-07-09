@@ -1,7 +1,3 @@
-/* ------------------------------------------------------------------ */
-/*  Shared types for Pricing pages                                      */
-/* ------------------------------------------------------------------ */
-
 export interface PusatVariant {
     variant_id: number;
     name: string;

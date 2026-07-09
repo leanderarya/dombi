@@ -3,12 +3,15 @@ import { ArrowLeft, Copy, Plus, RotateCcw } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Select } from '@/components/ui/select';
+import EmptyState from '@/components/ui/empty-state';
+import { SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
 import { OutletPriceModal } from './pricing-modals';
-import { BulkPanel, CopyPanel, EmptyState, LoadingSkeleton, PaginationBar, SortBar } from './pricing-shared';
+import { BulkPanel, CopyPanel, PaginationBar, SortBar } from './pricing-shared';
 import type { MarginFilter, OtherOutlet, OutletData, OutletPriceRow, SortDir, SortKey } from './types';
 
 export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets }: {
@@ -30,6 +33,24 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
     const [copySource, setCopySource] = useState('');
     const [saving, setSaving] = useState(false);
 
+    const [confirmOpen, setConfirmOpen] = useState(false);
+    const [confirmTitle, setConfirmTitle] = useState('');
+    const [confirmDescription, setConfirmDescription] = useState('');
+    const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+
+    const showConfirm = (title: string, description: string, action: () => void) => {
+        setConfirmTitle(title);
+        setConfirmDescription(description);
+        setConfirmAction(() => action);
+        setConfirmOpen(true);
+    };
+
+    const handleConfirm = () => {
+        confirmAction?.();
+        setConfirmOpen(false);
+        setConfirmAction(null);
+    };
+
     const handleOutletChange = (outletId: string) => {
         if (outletId) {
             router.get('/owner/pricing', { tab: 'outlet', outlet_id: outletId }, { preserveState: true, replace: true });
@@ -37,7 +58,7 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
     };
 
     if (!prices) {
-        return <LoadingSkeleton />;
+        return <SkeletonList count={5} />;
     }
 
     const filtered = useMemo(() => {
@@ -100,16 +121,18 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
             return;
         }
 
-        if (!confirm(`${sorted.length} produk akan diperbarui. Lanjutkan?`)) {
-            return;
-        }
-
-        setSaving(true);
-        router.post(`/owner/pricing/outlets/${outlet.id}/bulk-update`, { adjustment: amount }, {
-            onFinish: () => {
-                setSaving(false); setBulkOpen(false); setBulkAmount('');
+        showConfirm(
+            'Atur Massal',
+            `${sorted.length} produk akan diperbarui. Lanjutkan?`,
+            () => {
+                setSaving(true);
+                router.post(`/owner/pricing/outlets/${outlet.id}/bulk-update`, { adjustment: amount }, {
+                    onFinish: () => {
+                        setSaving(false); setBulkOpen(false); setBulkAmount('');
+                    },
+                });
             },
-        });
+        );
     }, [bulkAmount, outlet.id, sorted.length]);
 
     const handleCopy = useCallback(() => {
@@ -117,24 +140,28 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
             return;
         }
 
-        if (!confirm('Ini akan menimpa semua harga outlet ini. Lanjutkan?')) {
-            return;
-        }
-
-        setSaving(true);
-        router.post(`/owner/pricing/outlets/${outlet.id}/copy`, { source_outlet_id: parseInt(copySource) }, {
-            onFinish: () => {
-                setSaving(false); setCopyOpen(false); setCopySource('');
+        showConfirm(
+            'Salin Harga',
+            'Ini akan menimpa semua harga outlet ini. Lanjutkan?',
+            () => {
+                setSaving(true);
+                router.post(`/owner/pricing/outlets/${outlet.id}/copy`, { source_outlet_id: parseInt(copySource) }, {
+                    onFinish: () => {
+                        setSaving(false); setCopyOpen(false); setCopySource('');
+                    },
+                });
             },
-        });
+        );
     }, [copySource, outlet.id]);
 
     const handleReset = useCallback((variantId: number, productName: string) => {
-        if (!confirm(`Reset ${productName} ke Harga Pusat?`)) {
-            return;
-        }
-
-        router.delete(`/owner/pricing/outlets/${outlet.id}/variants/${variantId}`);
+        showConfirm(
+            'Reset Harga',
+            `Reset ${productName} ke Harga Pusat?`,
+            () => {
+                router.delete(`/owner/pricing/outlets/${outlet.id}/variants/${variantId}`);
+            },
+        );
     }, [outlet.id]);
 
     const handleSave = useCallback((newPrice: number) => {
@@ -169,20 +196,18 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
             </div>
 
             <OwnerFilterCard
+                collapsible
+                defaultExpanded={false}
                 searchPlaceholder="Cari produk..."
                 searchValue={search}
-                onSearch={(v) => {
- setSearch(v); setPage(1); 
-}}
+                onSearch={(v) => { setSearch(v); setPage(1); }}
                 marginOptions={[
                     { value: 'high', label: 'Margin Tinggi (>20rb)' },
                     { value: 'low', label: 'Margin Rendah (<5rb)' },
                     { value: 'negative', label: 'Margin Negatif' },
                 ]}
                 marginValue={marginFilter === 'all' ? '' : marginFilter}
-                onMarginChange={(v) => {
- setMarginFilter((v || 'all') as MarginFilter); setPage(1); 
-}}
+                onMarginChange={(v) => { setMarginFilter((v || 'all') as MarginFilter); setPage(1); }}
             >
                 <Button type="button" variant="secondary" size="sm" icon={Plus} onClick={() => setBulkOpen(!bulkOpen)}>
                     Atur Massal
@@ -199,9 +224,7 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                     amount={bulkAmount}
                     onChange={setBulkAmount}
                     onApply={handleBulkUpdate}
-                    onCancel={() => {
- setBulkOpen(false); setBulkAmount(''); 
-}}
+                    onCancel={() => { setBulkOpen(false); setBulkAmount(''); }}
                     saving={saving}
                     count={sorted.length}
                 />
@@ -213,9 +236,7 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                     source={copySource}
                     onChange={setCopySource}
                     onApply={handleCopy}
-                    onCancel={() => {
- setCopyOpen(false); setCopySource(''); 
-}}
+                    onCancel={() => { setCopyOpen(false); setCopySource(''); }}
                     saving={saving}
                 />
             )}
@@ -253,9 +274,7 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                                     type="button"
                                     size="sm"
                                     variant="ghost"
-                                    onClick={() => {
- setSelectedRow(row); setModalOpen(true); 
-}}
+                                    onClick={() => { setSelectedRow(row); setModalOpen(true); }}
                                     className="shrink-0 text-primary"
                                 >
                                     Ubah
@@ -276,7 +295,7 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                     </div>
                 ))}
                 {paginated.length === 0 && (
-                    <EmptyState message={search || marginFilter !== 'all' ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'} />
+                    <EmptyState title={search || marginFilter !== 'all' ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'} />
                 )}
             </div>
 
@@ -286,13 +305,24 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                 <OutletPriceModal
                     open={modalOpen}
                     row={selectedRow}
-                    onClose={() => {
- setModalOpen(false); setSelectedRow(null); 
-}}
+                    onClose={() => { setModalOpen(false); setSelectedRow(null); }}
                     onSave={handleSave}
                     saving={saving}
                 />
             )}
+
+            <Dialog open={confirmOpen} onOpenChange={(isOpen) => !isOpen && setConfirmOpen(false)}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle>{confirmTitle}</DialogTitle>
+                        <DialogDescription>{confirmDescription}</DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button type="button" variant="secondary" onClick={() => setConfirmOpen(false)}>Batal</Button>
+                        <Button type="button" variant="primary" onClick={handleConfirm}>Lanjutkan</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

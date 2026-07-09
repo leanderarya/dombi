@@ -2,6 +2,8 @@ import { Link, router } from '@inertiajs/react';
 import { AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import EmptyState from '@/components/ui/empty-state';
+import Pagination from '@/components/ui/pagination';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatDate } from '@/lib/format';
 
@@ -33,7 +35,11 @@ export function MasalahTab({ reports, filters = {} }: Props) {
         router.get('/owner/analytics', { tab: 'masalah', ...(key ? { status: key } : {}) }, { preserveState: true, replace: true });
     };
 
-    if (!reports || reports.data.length === 0) {
+    if (!reports) {
+        return <SkeletonPage />;
+    }
+
+    if (reports.data.length === 0) {
         return (
             <div className="space-y-4">
                 <FilterChips activeFilter={activeFilter} onChange={handleFilterChange} />
@@ -55,7 +61,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
                     <Link
                         key={report.id}
                         href={`/owner/order-reports/${report.id}`}
-                        className="block rounded-lg border border-border bg-surface p-4 active:opacity-80"
+                        className="block rounded-lg border border-border bg-white p-4 active:opacity-80"
                     >
                         <div className="flex items-start justify-between">
                             <div>
@@ -72,20 +78,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
                 ))}
             </div>
 
-            {reports.last_page > 1 && (
-                <div className="mt-4 flex justify-center gap-2">
-                    {reports.links?.map((link: any, i: number) => (
-                        <Link
-                            key={i}
-                            href={link.url ?? '#'}
-                            className={`flex min-h-11 min-w-11 items-center justify-center rounded-lg text-sm ${
-                                link.active ? 'bg-primary text-white' : 'bg-surface-muted text-text-muted'
-                            }`}
-                            dangerouslySetInnerHTML={{ __html: link.label }}
-                        />
-                    ))}
-                </div>
-            )}
+            {reports.links && <Pagination links={reports.links} />}
         </div>
     );
 }
@@ -103,6 +96,7 @@ function FilterChips({ activeFilter, onChange }: { activeFilter: string; onChang
             {reportStatusFilters.map((option) => (
                 <button
                     key={option.key}
+                    type="button"
                     onClick={() => onChange(option.key)}
                     className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                         activeFilter === option.key

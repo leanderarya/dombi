@@ -1,34 +1,39 @@
 import { router } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { Package, Truck } from 'lucide-react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatDate } from '@/lib/format';
-import { cn } from '@/lib/utils';
 
-const FILTER_TABS = [
+const statusFilters = [
+    { key: '', label: 'Semua' },
     { key: 'preparing', label: 'Disiapkan' },
     { key: 'shipped', label: 'Dikirim' },
     { key: 'completed', label: 'Selesai' },
 ];
 
 export default function OwnerDistributionsIndex({ distributions, filters, outlets }: any) {
-    const currentStatus = filters.status ?? 'preparing';
+    if (!distributions || !filters) {
+        return (
+            <OwnerPageShell title="Distribusi" subtitle="Kelola distribusi stok ke outlet">
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
 
-    const preparingCount = distributions.data.filter((d: any) => d.status === 'preparing').length;
-    const shippedCount = distributions.data.filter((d: any) => d.status === 'shipped').length;
-    const completedCount = distributions.data.filter((d: any) => d.status === 'completed').length;
+    const currentStatus = filters.status ?? '';
 
-    useEffect(() => {
-        if (!filters.status && !filters.outlet_id) {
-            router.get('/owner/distributions', { status: 'preparing' }, { preserveState: true, replace: true });
-        }
-    }, []);
-
-    const handleTabChange = (status: string) => {
-        router.get('/owner/distributions', { status, outlet_id: filters.outlet_id || undefined }, { preserveState: true, replace: true });
+    const setFilter = (key: string, value: string) => {
+        router.get(
+            '/owner/distributions',
+            { ...filters, [key]: value || undefined },
+            { preserveState: true, replace: true },
+        );
     };
 
     const handleMarkShipped = (e: React.MouseEvent, distributionId: number) => {
@@ -37,82 +42,98 @@ export default function OwnerDistributionsIndex({ distributions, filters, outlet
         router.post(`/owner/distributions/${distributionId}/mark-shipped`, {}, { preserveScroll: true });
     };
 
+    const preparingCount = distributions.data.filter((d: any) => d.status === 'preparing').length;
+    const shippedCount = distributions.data.filter((d: any) => d.status === 'shipped').length;
+    const completedCount = distributions.data.filter((d: any) => d.status === 'completed').length;
+
     return (
         <OwnerPageShell title="Distribusi" subtitle="Kelola distribusi stok ke outlet">
-            {/* Status Tabs */}
+            <OwnerKpiStrip items={[
+                { label: 'Disiapkan', value: preparingCount, sublabel: preparingCount > 0 ? 'Siap dikirim' : undefined, sublabelColor: 'text-amber-600' },
+                { label: 'Dalam Perjalanan', value: shippedCount, sublabel: shippedCount > 0 ? 'Sedang dikirim' : undefined, sublabelColor: 'text-blue-600' },
+                { label: 'Selesai', value: completedCount },
+            ]} />
+
             <div className="mb-4 flex flex-wrap items-center gap-2">
-                {FILTER_TABS.map((tab) => (
-                    <button key={tab.key} type="button" onClick={() => handleTabChange(tab.key)}
-                        className={cn(
-                            'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 transition-all',
-                            currentStatus === tab.key
-                                ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
-                        )}>
-                        {tab.label}
-                    </button>
-                ))}
+                {statusFilters.map((sf) => {
+                    const isActive = currentStatus === sf.key;
+                    const colorMap: Record<string, string> = {
+                        '': 'text-text bg-surface-muted ring-border',
+                        preparing: 'text-purple-600 bg-purple-50 ring-purple-200',
+                        shipped: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
+                        completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
+                    };
+
+                    return (
+                        <button key={sf.key} type="button" onClick={() => setFilter('status', sf.key)}
+                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                                isActive ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                            }`}>
+                            {sf.label}
+                        </button>
+                    );
+                })}
             </div>
 
-            {/* Filter controls */}
             <OwnerFilterCard
+                collapsible
+                defaultExpanded={false}
                 searchPlaceholder="Cari kode..."
                 searchValue={filters.search ?? ''}
-                onSearch={(val) => {
-                    router.get('/owner/distributions', { ...filters, search: val || undefined, status: currentStatus }, { preserveState: true, replace: true });
-                }}
+                onSearch={(val) => setFilter('search', val)}
                 outletOptions={outlets?.map((o: any) => ({ value: String(o.id), label: o.name }))}
                 outletValue={filters.outlet_id ?? ''}
-                onOutletChange={(val) => {
-                    router.get('/owner/distributions', { ...filters, outlet_id: val || undefined, status: currentStatus }, { preserveState: true, replace: true });
-                }}
+                onOutletChange={(val) => setFilter('outlet_id', val)}
                 dateValue={filters.date ?? ''}
-                onDateChange={(val) => {
-                    router.get('/owner/distributions', { ...filters, date: val || undefined, status: currentStatus }, { preserveState: true, replace: true });
-                }}
+                onDateChange={(val) => setFilter('date', val)}
             />
 
-            {/* KPI Strip */}
-            <OwnerKpiStrip
-                items={[
-                    { label: 'Disiapkan', value: preparingCount, sublabel: preparingCount > 0 ? 'Siap dikirim' : undefined, sublabelColor: 'text-amber-600' },
-                    { label: 'Dalam Perjalanan', value: shippedCount, sublabel: shippedCount > 0 ? 'Sedang dikirim' : undefined, sublabelColor: 'text-blue-600' },
-                    { label: 'Selesai', value: completedCount },
-                ]}
-            />
-
-            {/* Table */}
             {distributions.data.length === 0 ? (
-                <div className="rounded-lg border border-border bg-white py-10 text-center text-xs text-text-muted">
-                    Tidak ada distribusi
-                </div>
+                <EmptyState
+                    icon={<Package className="h-8 w-8" />}
+                    title="Tidak ada distribusi"
+                    description="Distribusi akan muncul di sini setelah stok dikirim ke outlet"
+                />
             ) : (
-                <div className="overflow-hidden rounded-lg border border-border">
-                    <div className="grid grid-cols-[80px_1fr_100px_100px_100px_80px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
-                        <span>Kode</span><span>Outlet</span><span>Status</span><span>Items</span><span>Tanggal</span><span />
-                    </div>
-                    {distributions.data.map((d: any) => (
-                        <div key={d.id}
-                            className="grid grid-cols-[80px_1fr_100px_100px_100px_80px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
-                            <span className="font-bold tabular-nums text-text">#{d.id}</span>
-                            <span className="truncate text-text-muted">{d.outlet?.name ?? '-'}</span>
-                            <span><StatusBadge status={d.status} size="sm" /></span>
-                            <span className="text-text-muted">{d.items?.length ?? 0} item</span>
-                            <span className="text-text-muted">{d.sent_at ? formatDate(d.sent_at) : 'Belum dikirim'}</span>
-                            <div className="flex items-center gap-1 justify-end">
-                                {d.status === 'preparing' && (
-                                    <button type="button" onClick={(e) => handleMarkShipped(e, d.id)}
-                                        className="rounded-md bg-primary px-2 py-0.5 text-xs font-semibold text-white hover:bg-primary-hover">
-                                        Kirim
-                                    </button>
-                                )}
-                                <button type="button" onClick={() => router.visit(`/owner/distributions/${d.id}`)}
-                                    className="rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary-light">
-                                    Detail →
-                                </button>
-                            </div>
-                        </div>
-                    ))}
+                <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full min-w-[600px]">
+                        <thead>
+                            <tr className="bg-surface-muted">
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Kode</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Outlet</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Items</th>
+                                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-text-muted">Tanggal</th>
+                                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {distributions.data.map((d: any) => (
+                                <tr key={d.id} className="border-t border-border transition-colors hover:bg-surface-muted">
+                                    <td className="px-4 py-3 font-bold tabular-nums text-text">#{d.id}</td>
+                                    <td className="px-4 py-3 text-text-muted">{d.outlet?.name ?? '—'}</td>
+                                    <td className="px-4 py-3">
+                                        <StatusBadge status={d.status} size="sm" />
+                                    </td>
+                                    <td className="px-4 py-3 text-text-muted">{d.items?.length ?? 0} item</td>
+                                    <td className="px-4 py-3 text-text-muted">{d.sent_at ? formatDate(d.sent_at) : 'Belum dikirim'}</td>
+                                    <td className="px-4 py-3">
+                                        <div className="flex items-center justify-end gap-2">
+                                            {d.status === 'preparing' && (
+                                                <Button size="sm" onClick={(e: any) => handleMarkShipped(e, d.id)}>
+                                                    <Truck className="h-3.5 w-3.5" />
+                                                    Kirim
+                                                </Button>
+                                            )}
+                                            <Button variant="ghost" size="sm" onClick={() => router.visit(`/owner/distributions/${d.id}`)}>
+                                                Detail
+                                            </Button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             )}
 

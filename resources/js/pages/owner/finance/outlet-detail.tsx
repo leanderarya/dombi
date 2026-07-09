@@ -1,8 +1,11 @@
 import { Send, DollarSign } from 'lucide-react';
 import { useState } from 'react';
 import InvoiceModal from '@/components/owner/invoice-modal';
+import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import PaymentModal from '@/components/owner/settlement-payment-modal';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 
@@ -21,27 +24,14 @@ function getOverdueLabel(dueDate: string): string | null {
     due.setHours(0, 0, 0, 0);
     now.setHours(0, 0, 0, 0);
     const diff = Math.floor((now.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diff <= 0) {
-        return null;
-    }
-
+    if (diff <= 0) return null;
     return `${diff} Hari`;
 }
 
 function getSettlementBadgeVariant(status: string): 'success' | 'warning' | 'danger' | 'neutral' {
-    if (status === 'paid') {
-return 'success';
-}
-
-    if (status === 'partial') {
-return 'warning';
-}
-
-    if (status === 'overdue' || status === 'due_today') {
-return 'danger';
-}
-
+    if (status === 'paid') return 'success';
+    if (status === 'partial') return 'warning';
+    if (status === 'overdue' || status === 'due_today') return 'danger';
     return 'neutral';
 }
 
@@ -49,12 +39,37 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
     const [paymentOpen, setPaymentOpen] = useState(false);
     const [invoiceOpen, setInvoiceOpen] = useState(false);
 
+    if (!outlet || !summary) {
+        return (
+            <OwnerPageShell title="Memuat..." subtitle="Detail tagihan outlet" backHref="/owner/finance">
+                <div className="grid gap-4 lg:grid-cols-3">
+                    <div className="lg:col-span-2 space-y-4">
+                        <div className="rounded-lg border border-border p-4 space-y-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                        </div>
+                        <div className="rounded-lg border border-border p-4 space-y-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-6 w-full" />
+                            <Skeleton className="h-6 w-full" />
+                        </div>
+                    </div>
+                    <div className="space-y-4">
+                        <div className="rounded-lg border border-border p-4 space-y-3">
+                            <Skeleton className="h-4 w-24" />
+                            <Skeleton className="h-8 w-full" />
+                            <Skeleton className="h-6 w-3/4" />
+                        </div>
+                    </div>
+                </div>
+            </OwnerPageShell>
+        );
+    }
+
     const statusLabel = summary.display_status === 'paid' ? 'Lunas' : summary.display_status === 'partial' ? 'Sebagian' : 'Belum Bayar';
-    const statusClass = summary.display_status === 'paid'
-        ? 'bg-emerald-50 text-emerald-700'
-        : summary.display_status === 'partial'
-            ? 'bg-blue-50 text-blue-700'
-            : 'bg-red-50 text-red-700';
+    const statusVariant = summary.display_status === 'paid' ? 'success' : summary.display_status === 'partial' ? 'warning' : 'danger';
 
     return (
         <OwnerPageShell
@@ -62,131 +77,126 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
             subtitle="Ringkasan tagihan outlet"
             backHref="/owner/finance"
         >
-            {/* Summary Card */}
-            <section className="mb-5 rounded-lg border border-border bg-white p-5">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Status</h2>
-                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass}`}>{statusLabel}</span>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <div>
-                        <div className="text-xs font-semibold uppercase text-text-subtle">Omset Produk</div>
-                        <div className="mt-1 text-lg font-bold tabular-nums text-text">{formatCurrency(summary.total_sales)}</div>
-                    </div>
-                    <div>
-                        <div className="text-xs font-semibold uppercase text-text-subtle">Ongkos Kirim</div>
-                        <div className="mt-1 text-lg font-bold tabular-nums text-blue-600">{formatCurrency(summary.total_delivery_fee)}</div>
-                    </div>
-                    <div>
-                        <div className="text-xs font-semibold uppercase text-text-subtle">Sisa Tagihan</div>
-                        <div className="mt-1 text-lg font-bold tabular-nums text-red-600">{formatCurrency(summary.outstanding)}</div>
-                    </div>
-                    {summary.overpaid > 0 ? (
-                        <div>
-                            <div className="text-xs font-semibold uppercase text-text-subtle">Kelebihan Bayar</div>
-                            <div className="mt-1 text-lg font-bold tabular-nums text-blue-600">{formatCurrency(summary.overpaid)}</div>
-                        </div>
-                    ) : (
-                        <div>
-                            <div className="text-xs font-semibold uppercase text-text-subtle">Keterlambatan</div>
-                            <div className="mt-1 text-lg font-bold tabular-nums text-text">
-                                {summary.days_overdue > 0 ? `${summary.days_overdue} Hari` : '-'}
-                            </div>
+            <div className="grid gap-4 lg:grid-cols-3">
+                <div className="lg:col-span-2 space-y-4">
+                    {summary.outstanding > 0 && (
+                        <div className="sticky top-0 z-20 flex gap-3 rounded-lg border border-border bg-white p-3">
+                            <Button
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => setInvoiceOpen(true)}
+                            >
+                                <Send className="h-4 w-4" />
+                                Kirim Tagihan
+                            </Button>
+                            <Button
+                                className="flex-1"
+                                onClick={() => setPaymentOpen(true)}
+                            >
+                                <DollarSign className="h-4 w-4" />
+                                Catat Pembayaran
+                            </Button>
                         </div>
                     )}
-                </div>
-                {summary.oldest_due_date && (
-                    <div className="mt-3 text-xs text-text-muted">
-                        Tagihan terlama: {summary.oldest_due_date}
+
+                    <div className="rounded-lg border border-border p-4">
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Ringkasan</div>
+                        <OwnerDetailRow label="Omset Produk" value={formatCurrency(summary.total_sales)} bold />
+                        <OwnerDetailRow label="Ongkos Kirim" value={<span className="text-blue-600">{formatCurrency(summary.total_delivery_fee)}</span>} />
+                        <OwnerDetailRow label="Sisa Tagihan" value={<span className="font-semibold text-red-600">{formatCurrency(summary.outstanding)}</span>} bold />
+                        {summary.overpaid > 0 ? (
+                            <OwnerDetailRow label="Kelebihan Bayar" value={<span className="text-blue-600">{formatCurrency(summary.overpaid)}</span>} />
+                        ) : (
+                            <OwnerDetailRow label="Keterlambatan" value={summary.days_overdue > 0 ? `${summary.days_overdue} Hari` : '-'} />
+                        )}
+                        {summary.oldest_due_date && (
+                            <div className="mt-2 text-xs text-text-muted">
+                                Tagihan terlama: {summary.oldest_due_date}
+                            </div>
+                        )}
                     </div>
-                )}
-            </section>
 
-            {/* Sticky Action Bar — only when there is outstanding */}
-            {summary.outstanding > 0 && (
-                <div className="sticky top-0 z-20 mb-4 flex gap-3 rounded-lg border border-border bg-white p-3">
-                    <button
-                        type="button"
-                        onClick={() => setInvoiceOpen(true)}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 py-2.5 text-sm font-bold text-blue-700 hover:bg-blue-100"
-                    >
-                        <Send className="h-4 w-4" />
-                        Kirim Tagihan
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setPaymentOpen(true)}
-                        className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary-dark"
-                    >
-                        <DollarSign className="h-4 w-4" />
-                        Catat Pembayaran
-                    </button>
-                </div>
-            )}
+                    <div className="rounded-lg border border-border p-4">
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Daftar Tagihan</div>
+                        {settlements.length === 0 ? (
+                            <p className="py-6 text-center text-sm text-text-muted">Tidak ada tagihan.</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {settlements.map((s: any) => {
+                                    const badge = STATUS_CONFIG[s.status] ?? STATUS_CONFIG.generated;
+                                    const overdueLabel = getOverdueLabel(s.due_date);
 
-            {/* Settlement List */}
-            <section>
-                <h2 className="mb-3 text-base font-semibold text-text">Daftar Tagihan</h2>
-                {settlements.length === 0 && (
-                    <div className="rounded-lg border border-border bg-white p-10 text-center">
-                        <p className="text-sm text-text-muted">Tidak ada tagihan.</p>
-                    </div>
-                )}
-                <div className="space-y-3">
-                    {settlements.map((s: any) => {
-                        const badge = STATUS_CONFIG[s.status] ?? STATUS_CONFIG.generated;
-                        const overdueLabel = getOverdueLabel(s.due_date);
-
-                        return (
-                            <div key={s.id} className="rounded-lg border border-border bg-white p-5 transition-all duration-200">
-                                {/* Top row: period + status + amount due */}
-                                <div className="flex items-start justify-between">
-                                    <div>
-                                        <div className="text-lg font-bold tabular-nums text-text">{s.period_label}</div>
-                                        <div className="mt-1 flex items-center gap-2">
-                                            <StatusBadge variant={getSettlementBadgeVariant(s.status)} size="sm">
-                                                {badge.label}
-                                            </StatusBadge>
-                                            {overdueLabel && (
-                                                <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">{overdueLabel}</span>
+                                    return (
+                                        <div key={s.id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <div className="text-base font-bold tabular-nums text-text">{s.period_label}</div>
+                                                    <div className="mt-1 flex items-center gap-2">
+                                                        <StatusBadge variant={getSettlementBadgeVariant(s.status)} size="sm">
+                                                            {badge.label}
+                                                        </StatusBadge>
+                                                        {overdueLabel && (
+                                                            <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">{overdueLabel}</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <span className="text-lg font-bold tabular-nums text-primary">{formatCurrency(s.amount_due)}</span>
+                                            </div>
+                                            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
+                                                <span>Produk: {formatCurrency(s.sales_amount)}</span>
+                                                {s.delivery_fee_amount > 0 && (
+                                                    <>
+                                                        <span className="text-text-subtle">&middot;</span>
+                                                        <span className="text-blue-600">Ongkir: {formatCurrency(s.delivery_fee_amount)}</span>
+                                                    </>
+                                                )}
+                                                <span className="text-text-subtle">&middot;</span>
+                                                <span className="text-emerald-600">Dibayar: {formatCurrency(s.paid_amount)}</span>
+                                                {s.outstanding > 0 && (
+                                                    <>
+                                                        <span className="text-text-subtle">&middot;</span>
+                                                        <span className="font-semibold text-red-600">Sisa: {formatCurrency(s.outstanding)}</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                            {s.overpaid_amount > 0 && (
+                                                <div className="mt-2">
+                                                    <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                                                        Kelebihan {formatCurrency(s.overpaid_amount)}
+                                                    </span>
+                                                </div>
                                             )}
                                         </div>
-                                    </div>
-                                    <span className="text-lg font-bold tabular-nums text-primary">{formatCurrency(s.amount_due)}</span>
-                                </div>
-
-                                {/* Middle row: metadata */}
-                                <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-muted">
-                                    <span>Produk: {formatCurrency(s.sales_amount)}</span>
-                                    {s.delivery_fee_amount > 0 && (
-                                        <>
-                                            <span className="text-text-subtle">&middot;</span>
-                                            <span className="text-blue-600">Ongkir: {formatCurrency(s.delivery_fee_amount)}</span>
-                                        </>
-                                    )}
-                                    <span className="text-text-subtle">&middot;</span>
-                                    <span className="text-emerald-600">Dibayar: {formatCurrency(s.paid_amount)}</span>
-                                    {s.outstanding > 0 && (
-                                        <>
-                                            <span className="text-text-subtle">&middot;</span>
-                                            <span className="font-semibold text-red-600">Sisa: {formatCurrency(s.outstanding)}</span>
-                                        </>
-                                    )}
-                                </div>
-                                {s.overpaid_amount > 0 && (
-                                    <div className="mt-2">
-                                        <span className="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
-                                            Kelebihan {formatCurrency(s.overpaid_amount)}
-                                        </span>
-                                    </div>
-                                )}
+                                    );
+                                })}
                             </div>
-                        );
-                    })}
+                        )}
+                    </div>
                 </div>
-            </section>
 
-            {/* Payment Modal — sends to outlet-level endpoint with FIFO */}
+                <div className="space-y-4">
+                    <div className="rounded-lg border border-border p-4">
+                        <div className="mb-3 text-xs font-bold uppercase tracking-wide text-text-subtle">Status</div>
+                        <div className="flex items-center gap-2">
+                            <StatusBadge variant={statusVariant} size="md">{statusLabel}</StatusBadge>
+                        </div>
+                        <div className="mt-4 space-y-2">
+                            <OwnerDetailRow label="Omset" value={formatCurrency(summary.total_sales)} />
+                            <OwnerDetailRow label="Sisa" value={<span className="font-semibold text-red-600">{formatCurrency(summary.outstanding)}</span>} bold />
+                            {summary.overpaid > 0 && (
+                                <OwnerDetailRow label="Kelebihan" value={<span className="text-blue-600">{formatCurrency(summary.overpaid)}</span>} />
+                            )}
+                            <OwnerDetailRow label="Keterlambatan" value={summary.days_overdue > 0 ? `${summary.days_overdue} Hari` : '-'} />
+                        </div>
+                        {summary.oldest_due_date && (
+                            <div className="mt-3 text-xs text-text-muted">
+                                Tagihan terlama: {summary.oldest_due_date}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
             {paymentOpen && (
                 <PaymentModal
                     open={paymentOpen}
@@ -197,7 +207,6 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                 />
             )}
 
-            {/* Invoice Modal — shows all unpaid breakdown */}
             {invoiceOpen && (
                 <InvoiceModal
                     open={invoiceOpen}
