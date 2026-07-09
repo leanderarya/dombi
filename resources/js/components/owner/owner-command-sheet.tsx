@@ -1,6 +1,12 @@
 import { Link, router } from '@inertiajs/react';
 import { BarChart3, Clock, CreditCard, DollarSign, FileText, LogOut, Shield, User } from 'lucide-react';
-import BottomSheet from '@/components/ui/bottom-sheet';
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetDescription,
+} from "@/components/ui/sheet";
 
 interface Props {
     open: boolean;
@@ -20,41 +26,49 @@ const sheetItems = [
 
 export default function OwnerCommandSheet({ open, onClose }: Props) {
     return (
-        <BottomSheet open={open} onClose={onClose} title="Menu">
-            <div className="mb-4 space-y-0.5">
-                {sheetItems.map((item, i) => {
-                    if ('divider' in item && item.divider) {
-                        return <div key={i} className="my-2 h-px bg-border" />;
-                    }
+        <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+            <SheetContent side="bottom">
+                <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                    <SheetDescription>Navigasi cepat untuk owner dashboard.</SheetDescription>
+                </SheetHeader>
+                <div className="mt-4 px-4 pb-4">
+                    <div className="mb-4 space-y-0.5">
+                        {sheetItems.map((item, i) => {
+                            if ('divider' in item && item.divider) {
+                                return <div key={i} className="my-2 h-px bg-border" />;
+                            }
 
-                    const Icon = item.icon!;
+                            const Icon = item.icon!;
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href!}
-                            onClick={onClose}
-                            className="flex items-center gap-3 rounded-lg px-3 py-3 text-text active:opacity-80"
-                        >
-                            <Icon className="h-5 w-5 text-text-muted" />
-                            <span className="text-sm font-medium">{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </div>
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={item.href!}
+                                    onClick={onClose}
+                                    className="flex items-center gap-3 rounded-lg px-3 py-3 text-text active:opacity-80"
+                                >
+                                    <Icon className="h-5 w-5 text-text-muted" />
+                                    <span className="text-sm font-medium">{item.label}</span>
+                                </Link>
+                            );
+                        })}
+                    </div>
 
-            <div className="border-t border-border pt-3">
-                <button
-                    type="button"
-                    onClick={() => {
+                    <div className="border-t border-border pt-3">
+                        <button
+                            type="button"
+                            onClick={() => {
  onClose(); router.post('/logout'); 
-}}
-                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-red-600 active:opacity-80"
-                >
-                    <LogOut className="h-5 w-5" />
-                    <span className="text-sm font-medium">Keluar</span>
-                </button>
-            </div>
-        </BottomSheet>
+ }}
+                            className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-red-600 active:opacity-80"
+                        >
+                            <LogOut className="h-5 w-5" />
+                            <span className="text-sm font-medium">Keluar</span>
+                        </button>
+                    </div>
+                </div>
+            </SheetContent>
+        </Sheet>
     );
 }

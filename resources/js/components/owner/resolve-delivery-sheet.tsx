@@ -1,8 +1,15 @@
 import { useForm } from '@inertiajs/react';
 import { Package, TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { formatDate } from '@/lib/format';
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetDescription,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface Props {
     delivery: any;
@@ -55,35 +62,6 @@ export default function ResolveDeliverySheet({ delivery, open, onClose }: Props)
         }
     }, [open]);
 
-    // Lock body scroll when open
-    useEffect(() => {
-        if (open) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-
-        return () => {
- document.body.style.overflow = ''; 
-};
-    }, [open]);
-
-    // ESC to close
-    useEffect(() => {
-        if (!open) {
-return;
-}
-
-        const handler = (e: KeyboardEvent) => {
- if (e.key === 'Escape') {
-onClose();
-} 
-};
-        document.addEventListener('keydown', handler);
-
-        return () => document.removeEventListener('keydown', handler);
-    }, [open, onClose]);
-
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
@@ -98,33 +76,18 @@ onClose();
         });
     }
 
-    if (!open) {
-return null;
-}
-
     const order = delivery.order;
 
-    return createPortal(
-        <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-
-            {/* Sheet */}
-            <div className="relative w-full max-w-lg animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-safe" style={{ maxHeight: '80vh', overflowY: 'auto' }}>
-                {/* Drag handle */}
-                <div className="sticky top-0 z-10 flex justify-center bg-white pt-3 pb-2">
-                    <div className="h-1 w-12 rounded-full bg-slate-300" />
-                </div>
-
-                <div className="px-4 pb-4">
-                    {/* Header */}
-                    <div>
-                        <h2 className="text-base font-bold text-slate-900">Selesaikan Pengiriman Gagal</h2>
-                        <p className="mt-0.5 text-xs text-slate-500">Pilih tindakan operasional untuk order ini.</p>
-                    </div>
-
+    return (
+        <Sheet open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+            <SheetContent side="bottom">
+                <SheetHeader>
+                    <SheetTitle>Selesaikan Pengiriman Gagal</SheetTitle>
+                    <SheetDescription>Pilih tindakan operasional untuk order ini.</SheetDescription>
+                </SheetHeader>
+                <div className="mt-4 px-4 pb-4">
                     {/* Incident Summary */}
-                    <div className="mt-3 rounded-lg border border-red-100 bg-red-50/50 p-3">
+                    <div className="rounded-lg border border-red-100 bg-red-50/50 p-3">
                         <div className="text-xs font-bold uppercase tracking-wider text-red-600">Insiden</div>
                         <div className="mt-1.5 space-y-1 text-xs">
                             <div className="flex justify-between"><span className="text-slate-500">Alasan</span><span className="font-medium text-slate-900">{delivery.failed_reason ?? '-'}</span></div>
@@ -160,7 +123,7 @@ return null;
                                         </div>
                                         <input type="radio" name="resolution" value={opt.value} checked={isSelected} onChange={() => {
  form.setData('resolution', opt.value); setConfirmDestructive(false); 
-}} className="sr-only" />
+ }} className="sr-only" />
                                     </label>
                                 );
                             })}
@@ -194,22 +157,17 @@ return null;
                         )}
 
                         {/* Submit */}
-                        <button
+                        <Button
                             type="submit"
+                            variant={isDestructive ? "destructive" : "default"}
                             disabled={!form.data.resolution || !form.data.resolution_notes || form.processing}
-                            className={`mt-3 flex min-h-[48px] w-full items-center justify-center rounded-lg text-sm font-bold transition-all duration-150 active:opacity-80 disabled:opacity-40 ${
-                                isDestructive ? 'bg-red-600 text-white' : 'bg-emerald-700 text-white'
-                            }`}
+                            className="mt-3 w-full"
                         >
                             {form.processing ? 'Memproses...' : (confirmDestructive && isDestructive) ? 'Konfirmasi Batalkan Pesanan' : selectedOption?.ctaLabel ?? 'Pilih Tindakan'}
-                        </button>
+                        </Button>
                     </form>
                 </div>
-            </div>
-        </div>
-    ,
-        document.body,
+            </SheetContent>
+        </Sheet>
     );
-
-;
 }
