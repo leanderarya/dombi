@@ -104,7 +104,7 @@ export default function OwnerOrdersIndex({
             ) : (
                 <div className="overflow-hidden rounded-lg border border-border">
                     {/* Header */}
-                    <div className="grid grid-cols-[90px_1fr_100px_80px_70px] items-center gap-3 bg-[#fafafa] px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
+                    <div className="grid grid-cols-[90px_1fr_100px_80px_70px] items-center gap-3 bg-surface-muted px-3 py-2 text-xs font-semibold uppercase tracking-wide text-text-muted">
                         <span>Kode</span><span>Customer / Outlet</span><span>Status</span><span className="text-right">Total</span><span />
                     </div>
                     {/* Rows */}
@@ -113,7 +113,7 @@ export default function OwnerOrdersIndex({
 
                         return (
                             <div key={order.id}
-                                className="grid grid-cols-[90px_1fr_100px_80px_70px] items-center gap-3 border-t border-[#f0f0f0] px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
+                                className="grid grid-cols-[90px_1fr_100px_80px_70px] items-center gap-3 border-t border-border px-3 py-2 text-sm transition-colors last:border-t-0 hover:bg-surface-muted">
                                 <span className="font-bold tabular-nums text-text">{order.order_code}</span>
                                 <span className="truncate text-text-muted">{order.customer_name ?? '—'} · {order.outlet?.name ?? '—'}</span>
                                 <span><StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge></span>
