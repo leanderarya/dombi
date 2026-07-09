@@ -208,6 +208,10 @@ select:focus {
     padding-right: 10px !important;
 }
 
+.owner-filter-card .relative input {
+    padding-left: 2.5rem !important;
+}
+
 /* ─── Owner Desktop Experience ─────────────────────────── */
 
 /* Card hover — subtle lift */
