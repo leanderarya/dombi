@@ -1,8 +1,9 @@
 import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import PenukaranTab from './penukaran-tab';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import PengembalianTab from './pengembalian-tab';
+import PenukaranTab from './penukaran-tab';
 
 const TABS = [
     { key: 'pengembalian', label: 'Pengembalian' },
@@ -29,6 +30,14 @@ export default function OwnerReturnsIndex(props: any) {
         router.get('/owner/returns', { tab: t }, { preserveState: true, replace: true });
     };
 
+    if (!props.returns && !props.exchanges) {
+        return (
+            <OwnerPageShell title="Return & Tukar" subtitle="Kelola pengembalian dan penukaran barang">
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
+
     return (
         <OwnerPageShell title="Return & Tukar" subtitle="Kelola pengembalian dan penukaran barang">
             {/* Segmented Control */}
@@ -38,7 +47,7 @@ export default function OwnerReturnsIndex(props: any) {
                         key={t.key}
                         onClick={() => handleTabChange(t.key)}
                         className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
-                            activeTab === t.key ? 'bg-white text-text' : 'text-text-muted hover:text-text'
+                            activeTab === t.key ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'
                         }`}
                     >
                         {t.label}
