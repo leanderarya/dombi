@@ -81,8 +81,10 @@ export default function PenukaranTab({ exchanges, filters, dashboard, outlets }:
                 })}
             </div>
 
-            {/* Filter controls */}
+            {/* Filter controls - Collapsible */}
             <OwnerFilterCard
+                collapsible
+                defaultExpanded={false}
                 searchPlaceholder="Cari kode..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => navigate({ search: val || undefined })}

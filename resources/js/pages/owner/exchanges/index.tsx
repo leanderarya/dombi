@@ -84,8 +84,10 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                 })}
             </div>
 
-            {/* Filter controls */}
+            {/* Filter controls - Collapsible */}
             <OwnerFilterCard
+                collapsible
+                defaultExpanded={false}
                 searchPlaceholder="Cari kode..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => setFilter('search', val)}
