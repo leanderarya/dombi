@@ -1,5 +1,6 @@
 import { Link } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, Plus } from 'lucide-react';
+import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 
 interface FilterOption {
@@ -8,6 +9,9 @@ interface FilterOption {
 }
 
 interface OwnerFilterCardProps {
+    collapsible?: boolean;
+    defaultExpanded?: boolean;
+
     searchPlaceholder?: string;
     searchValue?: string;
     onSearch?: (value: string) => void;
@@ -44,6 +48,8 @@ const selectBase =
     'h-8 rounded-md border border-border bg-surface outline-none appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23717171%27 stroke-width=%272.5%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpolyline points=%276 9 12 15 18 9%27/%3E%3C/svg%3E")] bg-[length:10px] bg-[right_8px_center] bg-no-repeat pr-7 focus:border-primary focus:ring-1 focus:ring-primary/20';
 
 export default function OwnerFilterCard({
+    collapsible = false,
+    defaultExpanded = true,
     searchPlaceholder,
     searchValue,
     onSearch,
@@ -68,8 +74,37 @@ export default function OwnerFilterCard({
     onDateChange,
     children,
 }: OwnerFilterCardProps) {
+    const [expanded, setExpanded] = useState(defaultExpanded);
+
+    if (collapsible && !expanded) {
+        return (
+            <div className="owner-filter-card mb-4">
+                <button
+                    type="button"
+                    onClick={() => setExpanded(true)}
+                    className="flex items-center gap-2 text-sm text-text-muted hover:text-text"
+                >
+                    <Filter className="h-4 w-4" />
+                    Filter
+                    <ChevronDown className="h-4 w-4" />
+                </button>
+            </div>
+        );
+    }
+
     return (
         <div className="owner-filter-card mb-4 rounded-lg border border-border bg-white p-3">
+            {collapsible && (
+                <button
+                    type="button"
+                    onClick={() => setExpanded(false)}
+                    className="mb-2 flex items-center gap-2 text-sm text-text-muted hover:text-text"
+                >
+                    <Filter className="h-4 w-4" />
+                    Filter
+                    <ChevronUp className="h-4 w-4" />
+                </button>
+            )}
             <div className="flex flex-wrap items-center gap-2">
                 {searchPlaceholder && (
                     <Input
