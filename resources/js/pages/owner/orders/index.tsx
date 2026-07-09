@@ -11,6 +11,7 @@ import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
 
 const statusFilters = [
+    { key: '', label: 'Semua' },
     { key: 'needs_action', label: 'Butuh Tindakan' },
     { key: 'active', label: 'Aktif' },
     { key: 'completed', label: 'Selesai' },
@@ -55,6 +56,7 @@ export default function OwnerOrdersIndex({
                 {statusFilters.map((sf) => {
                     const isActive = currentStatus === sf.key;
                     const colorMap: Record<string, string> = {
+                        '': 'text-primary bg-primary/10 ring-primary/20',
                         needs_action: 'text-amber-600 bg-amber-50 ring-amber-200',
                         active: 'text-blue-600 bg-blue-50 ring-blue-200',
                         completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
