@@ -44,7 +44,8 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                         placeholder="Cari kurir..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="h-9 w-full rounded-md border border-input bg-transparent pl-10 pr-3 text-sm text-text placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        className="h-9 w-full rounded-md border border-input bg-transparent pr-3 text-sm text-text placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        style={{ paddingLeft: '2.5rem' }}
                     />
                 </div>
 
