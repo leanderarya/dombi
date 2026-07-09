@@ -5,7 +5,6 @@ import CourierStats from '@/components/owner/courier-stats';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button, buttonVariants } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
-import { Input } from '@/components/ui/input';
 import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
 import { cn } from '@/lib/utils';
@@ -38,13 +37,16 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                 <CourierStats stats={stats} todayDeliveries={todayDeliveries} />
 
                 {/* Search */}
-                <Input
-                    type="text"
-                    placeholder="Cari kurir..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    icon={Search}
-                />
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-subtle pointer-events-none" />
+                    <input
+                        type="text"
+                        placeholder="Cari kurir..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="h-9 w-full rounded-md border border-input bg-transparent pl-10 pr-3 text-sm text-text placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    />
+                </div>
 
                 {/* Table */}
                 {filtered.length === 0 ? (
