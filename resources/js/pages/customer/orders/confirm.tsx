@@ -149,7 +149,7 @@ return;
         <CustomerMobileLayout hideTopBar hideCartBar hideBottomNav>
             <div className="flex min-h-[80dvh] flex-col">
                 {/* Header */}
-                <div className="mb-6 flex items-center gap-3">
+                <div className="mb-6 flex items-center gap-3 pt-safe">
                     <button
                         onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/')}
                         className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm"
