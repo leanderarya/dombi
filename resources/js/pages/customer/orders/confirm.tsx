@@ -1,45 +1,52 @@
 import { router } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, Clock, Copy, Loader2, Package, Shield, XCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock, Copy, Loader2, Shield, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { formatCurrency } from '@/lib/format';
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
+const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
+
 export default function ConfirmPage({ order, isLoggedIn }: any) {
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
         const s = order.payment_status;
-
-        if (s === 'paid' || s === 'failed' || s === 'expired') {
-return s;
-}
-
+        if (s === 'paid' || s === 'failed' || s === 'expired') return s;
         return 'pending';
     });
     const [countdown, setCountdown] = useState<number | null>(null);
     const [copied, setCopied] = useState(false);
     const [payLoading, setPayLoading] = useState(false);
+    const [payError, setPayError] = useState<string | null>(null);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+    const pollStart = useRef(Date.now());
+    const submitLock = useRef(false);
 
-    // Push history so browser Back goes to orders list (skips payment gateway)
+    // Replace history entry so back button goes to orders list
     useEffect(() => {
         const backUrl = isLoggedIn ? '/customer/orders' : '/';
+        window.history.replaceState(null, '', backUrl);
         window.history.pushState(null, '', window.location.href);
         const onPop = () => {
             window.location.href = backUrl;
         };
         window.addEventListener('popstate', onPop);
-
         return () => window.removeEventListener('popstate', onPop);
     }, [isLoggedIn]);
 
-    // Poll payment status as webhook fallback
+    // Poll payment status as webhook fallback (max 5 min)
     useEffect(() => {
-        if (paymentStatus !== 'pending') {
-return;
-}
+        if (paymentStatus !== 'pending') return;
+
+        pollStart.current = Date.now();
 
         pollInterval.current = setInterval(async () => {
+            // Stop polling after timeout
+            if (Date.now() - pollStart.current > POLL_TIMEOUT_MS) {
+                if (pollInterval.current) clearInterval(pollInterval.current);
+                return;
+            }
+
             try {
                 const response = await fetch(`/customer/orders/${order.id}/payment-status`, {
                     headers: { 'Accept': 'application/json' },
@@ -50,18 +57,11 @@ return;
 
                     if (data.payment_status === 'paid') {
                         setPaymentStatus('paid');
-
-                        if (pollInterval.current) {
-clearInterval(pollInterval.current);
-}
-
+                        if (pollInterval.current) clearInterval(pollInterval.current);
                         router.reload();
                     } else if (['failed', 'expired', 'cancelled'].includes(data.payment_status)) {
                         setPaymentStatus(data.payment_status as PaymentStatus);
-
-                        if (pollInterval.current) {
-clearInterval(pollInterval.current);
-}
+                        if (pollInterval.current) clearInterval(pollInterval.current);
                     }
                 }
             } catch {
@@ -70,30 +70,30 @@ clearInterval(pollInterval.current);
         }, 5000);
 
         return () => {
-            if (pollInterval.current) {
-clearInterval(pollInterval.current);
-}
+            if (pollInterval.current) clearInterval(pollInterval.current);
         };
     }, [paymentStatus]);
 
-    // Countdown timer — only for display, never override actual payment status
+    // Countdown timer — auto-expire when reaching 0
     useEffect(() => {
-        if (!order.confirmation_expires_at) {
-return;
-}
+        if (!order.confirmation_expires_at || paymentStatus !== 'pending') return;
 
         const target = new Date(order.confirmation_expires_at).getTime();
 
         const tick = () => {
             const remaining = Math.max(0, Math.floor((target - Date.now()) / 1000));
             setCountdown(remaining);
+
+            if (remaining === 0) {
+                setPaymentStatus('expired');
+                if (pollInterval.current) clearInterval(pollInterval.current);
+            }
         };
 
         tick();
         const timer = setInterval(tick, 1000);
-
         return () => clearInterval(timer);
-    }, [order.confirmation_expires_at]);
+    }, [order.confirmation_expires_at, paymentStatus]);
 
     const handleCopy = useCallback(() => {
         navigator.clipboard.writeText(order.order_code).then(() => {
@@ -102,16 +102,17 @@ return;
         });
     }, [order.order_code]);
 
-    const handlePay = useCallback(async () => {
+    const handlePay = useCallback(() => {
+        if (submitLock.current || payLoading) return;
+        submitLock.current = true;
         setPayLoading(true);
+        setPayError(null);
 
         try {
-            // Use form submission — follows cross-origin redirects natively
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = `/customer/orders/${order.id}/pay`;
 
-            // CSRF token
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
             const csrfInput = document.createElement('input');
             csrfInput.type = 'hidden';
@@ -119,26 +120,20 @@ return;
             csrfInput.value = csrf;
             form.appendChild(csrfInput);
 
-            // XMLHttpRequest flag for Laravel
-            const xhrInput = document.createElement('input');
-            xhrInput.type = 'hidden';
-            xhrInput.name = '_method';
-            xhrInput.value = 'POST';
-            form.appendChild(xhrInput);
-
             document.body.appendChild(form);
             form.submit();
         } catch {
-            alert('Terjadi kesalahan. Coba lagi.');
+            setPayError('Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.');
             setPayLoading(false);
+            submitLock.current = false;
         }
-    }, [order.id]);
+    }, [order.id, payLoading]);
 
     const statusConfig: Record<PaymentStatus, { icon: typeof CheckCircle2; color: string; bg: string; border: string; title: string; message: string }> = {
         paid: { icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', title: 'Pembayaran Berhasil', message: 'Pesanan Anda sedang diproses oleh outlet.' },
-        pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', title: 'Menunggu Pembayaran', message: 'Selesaikan pembayaran Anda.' },
-        failed: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Pembayaran Gagal', message: 'Pembayaran tidak berhasil diproses.' },
-        expired: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', title: 'Waktu Habis', message: 'Batas waktu pembayaran telah berakhir.' },
+        pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', title: 'Menunggu Pembayaran', message: 'Selesaikan pembayaran dalam waktu yang ditentukan.' },
+        failed: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Pembayaran Gagal', message: 'Pembayaran tidak berhasil diproses. Anda bisa mencoba lagi.' },
+        expired: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', title: 'Waktu Habis', message: 'Batas waktu pembayaran telah berakhir. Silakan buat pesanan baru.' },
         cancelled: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Dibatalkan', message: 'Pembayaran dibatalkan.' },
     };
 
@@ -147,12 +142,12 @@ return;
 
     return (
         <CustomerMobileLayout hideTopBar hideCartBar hideBottomNav>
-            <div className="flex min-h-[80dvh] flex-col">
+            <div className="flex min-h-[80dvh] flex-col px-4">
                 {/* Header */}
                 <div className="mb-6 flex items-center gap-3 pt-safe">
                     <button
                         onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/')}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm"
+                        className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm active:opacity-80"
                     >
                         <ArrowLeft className="h-5 w-5" />
                     </button>
@@ -172,19 +167,25 @@ return;
                     {paymentStatus === 'pending' && countdown !== null && countdown > 0 && (
                         <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/80 px-3 py-1.5 text-xs font-medium text-slate-600">
                             <Clock className="h-3 w-3" />
-                            <span>{formatTime(countdown)}</span>
+                            <span>Sisa waktu: {formatTime(countdown)}</span>
                         </div>
                     )}
                 </div>
 
+                {/* Error Message */}
+                {payError && (
+                    <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                        {payError}
+                    </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="mt-4 space-y-3">
-                    {/* Pending: continue to payment */}
                     {paymentStatus === 'pending' && (
                         <button
                             onClick={handlePay}
                             disabled={payLoading}
-                            className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98] disabled:opacity-50"
+                            className="w-full min-h-12 rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80 disabled:opacity-50"
                         >
                             {payLoading ? (
                                 <span className="flex items-center justify-center gap-2">
@@ -195,36 +196,36 @@ return;
                         </button>
                     )}
 
-                    {/* Paid: go to order */}
                     {paymentStatus === 'paid' && (
                         <button
                             onClick={() => isLoggedIn ? router.visit(`/customer/orders/${order.id}`) : router.visit(`/track/${order.recovery_token}`)}
-                            className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98]"
+                            className="w-full min-h-12 rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80"
                         >
                             Lihat Pesanan
                         </button>
                     )}
 
-                    {/* Failed/Expired: retry payment or go home */}
                     {(paymentStatus === 'failed' || paymentStatus === 'expired') && (
                         <>
-                            <button
-                                onClick={handlePay}
-                                disabled={payLoading}
-                                className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-sm active:scale-[0.98] disabled:opacity-50"
-                            >
-                                {payLoading ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Memproses...
-                                    </span>
-                                ) : 'Bayar Sekarang'}
-                            </button>
+                            {paymentStatus === 'failed' && (
+                                <button
+                                    onClick={handlePay}
+                                    disabled={payLoading}
+                                    className="w-full min-h-12 rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80 disabled:opacity-50"
+                                >
+                                    {payLoading ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                            Memproses...
+                                        </span>
+                                    ) : 'Bayar Sekarang'}
+                                </button>
+                            )}
                             <button
                                 onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/')}
-                                className="w-full rounded-xl bg-white py-3.5 text-sm font-bold text-slate-600 shadow-sm active:scale-[0.98]"
+                                className="w-full min-h-12 rounded-xl bg-white text-sm font-bold text-slate-600 shadow-sm active:opacity-80"
                             >
-                                Kembali
+                                {paymentStatus === 'expired' ? 'Pesan Ulang' : 'Kembali'}
                             </button>
                         </>
                     )}
@@ -235,8 +236,11 @@ return;
                     <div className="rounded-2xl bg-white p-4 shadow-sm">
                         <div className="mb-3 flex items-center justify-between">
                             <span className="text-xs font-medium text-slate-500">Kode Pesanan</span>
-                            <button onClick={handleCopy} className="flex items-center gap-1 text-xs font-medium text-emerald-600">
-                                <Copy className="h-3 w-3" />
+                            <button
+                                onClick={handleCopy}
+                                className="flex min-h-10 items-center gap-1 rounded-lg px-2 text-xs font-medium text-emerald-600 active:opacity-80"
+                            >
+                                <Copy className="h-3.5 w-3.5" />
                                 {copied ? 'Disalin!' : 'Salin'}
                             </button>
                         </div>
@@ -255,26 +259,26 @@ return;
                         </div>
                     </div>
 
-                    {/* Trust badges */}
-                    <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-400">
-                        <span className="flex items-center gap-1">
-                            <Shield className="h-3 w-3" />
-                            Pembayaran Aman
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <Package className="h-3 w-3" />
-                            DOKU
-                        </span>
+                    {/* Trust badge — single, meaningful */}
+                    <div className="mt-4 flex items-center justify-center gap-2 text-xs text-slate-500">
+                        <Shield className="h-4 w-4 text-emerald-600" />
+                        <span>Pembayaran diproses oleh DOKU, payment gateway terpercaya di Indonesia</span>
                     </div>
 
-                    {/* Guest recovery */}
+                    {/* Guest recovery — more prominent */}
                     {!isLoggedIn && (
-                        <div className="mt-4 rounded-xl bg-blue-50 p-3 text-center">
-                            <p className="text-xs text-blue-700">
-                                Simpan kode pesanan untuk melacak pesanan Anda.
-                            </p>
+                        <div className="mt-4 rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
+                            <p className="text-sm font-medium text-blue-800">Simpan kode pesanan Anda</p>
+                            <p className="mt-1 text-xs text-blue-600">Gunakan kode ini untuk melacak pesanan di halaman Lacak Pesanan.</p>
                         </div>
                     )}
+
+                    {/* Help link */}
+                    <div className="mt-4 text-center">
+                        <a href="/customer/help" className="text-xs text-slate-400 underline underline-offset-2 active:text-slate-600">
+                            Butuh bantuan?
+                        </a>
+                    </div>
                 </div>
             </div>
         </CustomerMobileLayout>
@@ -284,6 +288,5 @@ return;
 function formatTime(seconds: number): string {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-
     return `${m}:${s.toString().padStart(2, '0')}`;
 }
