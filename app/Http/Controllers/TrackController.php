@@ -192,6 +192,12 @@ class TrackController extends Controller
 
     public function cancel(string $token, Request $request, OrderStatusService $orderStatusService): JsonResponse|RedirectResponse
     {
+        $user = $request->user();
+
+        if (! $user) {
+            return response()->json(['success' => false, 'error' => 'Silakan masuk terlebih dahulu.'], 401);
+        }
+
         $order = Order::query()
             ->where('recovery_token', strtoupper($token))
             ->first();
@@ -200,10 +206,9 @@ class TrackController extends Controller
             return response()->json(['success' => false, 'error' => 'Tidak dapat membatalkan pesanan ini.'], 422);
         }
 
-        // Ownership check: recovery token IS the ownership proof for guests
-        // For logged-in users, also verify they own the order
-        $user = $request->user();
-        if ($user && $order->customer && $order->customer->user_id && $order->customer->user_id !== $user->id) {
+        // Ownership check: pastikan caller adalah pemilik pesanan
+        $customer = $order->customer;
+        if (! $customer || $customer->user_id !== $user->id) {
             return response()->json(['success' => false, 'error' => 'Anda tidak memiliki akses ke pesanan ini.'], 403);
         }
 

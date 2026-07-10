@@ -169,7 +169,7 @@ Route::post('/customer/orders/{order}/pay', [CustomerOrderController::class, 'pa
 Route::get('/customer/orders/{order}/payment-status', [CustomerOrderController::class, 'paymentStatus'])->middleware('throttle:60,1')->name('orders.payment-status');
 
 // Cancel route — requires authentication to prevent unauthorized cancellation
-Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware('throttle:track-cancel')->name('track.cancel');
+Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware(['auth', 'throttle:track-cancel'])->name('track.cancel');
 
 // DOKU payment — no auth, signature-verified (called by DOKU servers)
 Route::match(['get', 'post'], '/payment/doku/notify', [DokuPaymentController::class, 'notify'])->name('doku.notify');

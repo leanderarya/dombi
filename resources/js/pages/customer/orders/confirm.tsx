@@ -143,19 +143,14 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
         if (!cancelReason) return;
         setCancelLoading(true);
 
-        // Use recovery token route for guests (no auth required)
-        const cancelUrl = isLoggedIn
-            ? `/customer/orders/${order.id}/cancel`
-            : `/track/${order.recovery_token}/cancel`;
-
-        router.post(cancelUrl, { reason: cancelReason }, {
+        router.post(`/customer/orders/${order.id}/cancel`, { reason: cancelReason }, {
             onFinish: () => setCancelLoading(false),
             onSuccess: () => {
                 setCancelDialogOpen(false);
                 setPaymentStatus('cancelled');
             },
         });
-    }, [order.id, order.recovery_token, isLoggedIn, cancelReason]);
+    }, [order.id, cancelReason]);
 
     const handlePay = useCallback(() => {
         if (submitLock.current || payLoading) return;
@@ -250,12 +245,14 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                                     </span>
                                 ) : 'Lanjutkan Pembayaran'}
                             </button>
-                            <button
-                                onClick={() => setCancelDialogOpen(true)}
-                                className="w-full min-h-11 text-xs font-medium text-slate-400 active:text-red-500"
-                            >
-                                Batalkan Pesanan
-                            </button>
+                            {isLoggedIn && (
+                                <button
+                                    onClick={() => setCancelDialogOpen(true)}
+                                    className="w-full min-h-11 text-xs font-medium text-slate-400 active:text-red-500"
+                                >
+                                    Batalkan Pesanan
+                                </button>
+                            )}
                         </>
                     )}
 
