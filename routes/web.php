@@ -241,6 +241,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::put('variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
         Route::delete('variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
         Route::patch('variants/{variant}/toggle', [ProductVariantController::class, 'toggle'])->name('variants.toggle');
+        Route::get('pricing/outlets/compare', [PricingController::class, 'compare'])->name('pricing.outlets.compare');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
         Route::get('pricing/outlets/{outlet}', [PricingController::class, 'show'])->name('pricing.outlets.show');
         Route::patch('pricing/variants/{variant}', [PricingController::class, 'updateGlobal'])->name('pricing.variants.update');

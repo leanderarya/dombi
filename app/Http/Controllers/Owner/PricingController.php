@@ -145,6 +145,33 @@ class PricingController extends Controller
     /**
      * Redirect from old outlet show route.
      */
+    /**
+     * Compare prices across outlets (1-3).
+     */
+    public function compare(Request $request, PricingService $pricingService): JsonResponse
+    {
+        $outletIds = $request->input('outlet_ids', []);
+
+        if (count($outletIds) < 2 || count($outletIds) > 3) {
+            return response()->json(['data' => []], 422);
+        }
+
+        $data = collect($outletIds)->map(function ($outletId) use ($pricingService) {
+            $outlet = Outlet::find($outletId);
+            if (! $outlet) {
+                return null;
+            }
+
+            return [
+                'outlet_id' => $outlet->id,
+                'outlet_name' => $outlet->name,
+                'prices' => $pricingService->getOutletPrices($outlet->id),
+            ];
+        })->filter()->values();
+
+        return response()->json(['data' => $data]);
+    }
+
     public function show(Outlet $outlet): RedirectResponse
     {
         return redirect()->route('owner.pricing.index', ['tab' => 'outlet', 'outlet_id' => $outlet->id]);
