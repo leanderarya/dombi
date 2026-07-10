@@ -462,14 +462,18 @@ class DokuService
     {
         $requestId = $refundNo;
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
-        $endpoint = '/v1/refund';
+        $endpoint = '/cancellation/credit-card/refund';
+
+        // Get original request_id from PaymentTransaction
+        $transaction = PaymentTransaction::where('order_id', $order->id)->first();
+        $originalRequestId = $transaction?->raw_response['response']['headers']['request_id'] ?? $order->doku_order_id;
 
         $body = [
             'order' => [
                 'invoice_number' => $order->order_code,
             ],
             'payment' => [
-                'original_request_id' => $order->doku_order_id,
+                'original_request_id' => $originalRequestId,
             ],
             'refund' => [
                 'amount' => $amount,
