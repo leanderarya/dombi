@@ -1,6 +1,6 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { CheckCircle2, ChevronLeft, Clock, MapPin, MessageCircle, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
@@ -26,7 +26,7 @@ type TrackOrder = {
     outlet?: { name: string; address?: string; phone?: string; operating_hours?: string; latitude?: number; longitude?: number };
     items: { product_name: string; quantity: number; price: number; subtotal: number }[];
     status_histories: { to_status: string; notes?: string | null; created_at?: string | null }[];
-    delivery?: { courier?: { name: string; phone?: string } };
+    delivery?: { courier?: { name: string; phone?: string }; failed_reason?: string | null };
     customer_name?: string;
     customer_phone?: string;
     customer_address?: string;
@@ -79,6 +79,10 @@ const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; 
         nextStep: 'Silakan ambil di outlet sebelum jam tutup',
         cta: { label: 'Navigasi ke Outlet', action: 'navigate' },
     },
+    ready_for_pickup_delivery: {
+        description: 'Pesanan sudah siap, menunggu kurir',
+        nextStep: 'Kurir akan segera menjemput dan mengantar ke alamat Anda',
+    },
     completed: {
         description: 'Pesanan telah selesai',
         nextStep: 'Terima kasih sudah pesan di Dombi!',
@@ -116,12 +120,21 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     const [cancelLoading, setCancelLoading] = useState(false);
     const countdown = useCountdown(order?.confirmation_expires_at);
 
+    // Auto-polling for non-terminal orders
+    const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'].includes(order?.status ?? '');
+    useEffect(() => {
+        if (isTerminal || !order) return;
+        const interval = setInterval(() => {
+            router.reload({ only: ['order'] });
+        }, 15000);
+        return () => clearInterval(interval);
+    }, [isTerminal, order?.id]);
+
     if (!found || !order) {
         return <NotFoundState />;
     }
 
     const isPickup = order.fulfillment_type === 'pickup';
-    const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'].includes(order.status);
     const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
     const trackingUrl = order.tracking_url;
 
@@ -207,8 +220,37 @@ return;
 
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
-                    <StatusBadge status={order.status === 'pending_confirmation' && order.payment_status !== 'paid' ? (order.payment_status === 'failed' || order.payment_status === 'expired' ? 'payment_failed' : 'pending_payment') : order.status} />
+                    {order.status === 'ready_for_pickup' && !isPickup ? (
+                        <StatusBadge variant="info">Menunggu Kurir</StatusBadge>
+                    ) : (
+                        <StatusBadge status={order.status === 'pending_confirmation' && order.payment_status !== 'paid' ? (order.payment_status === 'failed' || order.payment_status === 'expired' ? 'payment_failed' : 'pending_payment') : order.status} />
+                    )}
                 </div>
+
+                {/* Payment Issue Banner */}
+                {order.status === 'pending_confirmation' && (order.payment_status === 'failed' || order.payment_status === 'expired') && (
+                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                        <div className="flex items-start gap-3">
+                            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+                            <div>
+                                <div className="text-sm font-semibold text-red-800">
+                                    {order.payment_status === 'failed' ? 'Pembayaran Gagal' : 'Pembayaran Kadaluarsa'}
+                                </div>
+                                <div className="mt-1 text-xs text-red-600">
+                                    {order.payment_status === 'failed'
+                                        ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar ulang.'
+                                        : 'Batas waktu pembayaran telah habis. Silakan coba bayar ulang.'}
+                                </div>
+                                <Link
+                                    href={`/customer/orders/confirm/${order.order_code}`}
+                                    className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80"
+                                >
+                                    Bayar Ulang
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* What's Next Guidance */}
                 {(() => {
@@ -217,9 +259,10 @@ return;
                     const isPendingUnpaid = order.status === 'pending_confirmation'
                         && order.payment_status !== 'paid';
                     const isPaymentFailed = order.payment_status === 'failed' || order.payment_status === 'expired';
+                    const isDelivery = order.fulfillment_type !== 'pickup';
                     const guidanceKey = isPendingUnpaid
                         ? (isPaymentFailed ? 'pending_confirmation_payment_failed' : 'pending_confirmation_unpaid')
-                        : order.status;
+                        : (order.status === 'ready_for_pickup' && isDelivery ? 'ready_for_pickup_delivery' : order.status);
                     const guidance = STATUS_GUIDANCE[guidanceKey];
 
                     if (!guidance) {
@@ -429,6 +472,15 @@ return null;
                             <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle" />
                             <div className="min-w-0 flex-1">
                                 <div className="line-clamp-2 text-sm font-medium text-text">{order.customer_address}</div>
+                                {order.customer_address_detail && (
+                                    <div className="mt-0.5 text-xs text-text-muted">{order.customer_address_detail}</div>
+                                )}
+                                {order.customer_landmark && (
+                                    <div className="mt-1 flex items-center gap-1 text-xs text-text-subtle">
+                                        <MapPin className="h-3 w-3" />
+                                        {order.customer_landmark}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -488,6 +540,9 @@ return null;
                             <AlertTriangle className="h-4 w-4 text-amber-600" />
                             <div className="text-[13px] text-amber-700">Pengiriman Gagal</div>
                         </div>
+                        {order.delivery?.failed_reason && (
+                            <div className="mt-1.5 text-sm font-medium text-amber-900">{order.delivery.failed_reason}</div>
+                        )}
                         <div className="mt-2 text-sm text-amber-800">Silakan hubungi outlet untuk bantuan.</div>
                         {order.outlet?.phone && (
                             <a

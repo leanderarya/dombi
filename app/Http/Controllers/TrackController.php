@@ -102,12 +102,13 @@ class TrackController extends Controller
                     'courier' => $order->delivery->courier
                         ? ['name' => self::maskName($order->delivery->courier->name)]
                         : null,
+                    'failed_reason' => $order->delivery->failed_reason,
                 ] : null,
                 'customer_name' => self::maskName($order->customer_name),
                 'customer_phone' => self::maskPhone($order->customer_phone),
                 'customer_address' => self::maskAddress($order->customer_address, $order->customer_address_detail, $order->customer_landmark),
-                'customer_address_detail' => null,
-                'customer_landmark' => null,
+                'customer_address_detail' => $order->customer_address_detail,
+                'customer_landmark' => $order->customer_landmark,
                 'rejection_reason' => $order->rejection_reason,
                 'rejection_note' => $order->rejection_note,
                 'cancellation_reason' => $order->cancellation_reason,
