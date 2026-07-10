@@ -19,6 +19,14 @@ interface Props {
     editing: boolean;
     onSubmit: FormEventHandler;
     onCancel: () => void;
+    /** Pre-fill form for copy mode — name and sku are NOT pre-filled by caller */
+    initialData?: {
+        flavor?: string;
+        size?: string;
+        center_price?: number;
+        selling_price?: number;
+        center_stock?: number;
+    };
 }
 
 export default function VariantForm({ form, editing, onSubmit, onCancel }: Props) {
@@ -94,17 +102,15 @@ export default function VariantForm({ form, editing, onSubmit, onCancel }: Props
                     </div>
                 </div>
 
-                {editing && (
-                    <label className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={form.data.is_active}
-                            onChange={(e) => form.setData('is_active', e.target.checked)}
-                            className="rounded border-zinc-300"
-                        />
-                        <span className="text-sm text-zinc-700">Aktif</span>
-                    </label>
-                )}
+                <label className="flex items-center gap-2">
+                    <input
+                        type="checkbox"
+                        checked={form.data.is_active}
+                        onChange={(e) => form.setData('is_active', e.target.checked)}
+                        className="rounded border-zinc-300"
+                    />
+                    <span className="text-sm text-zinc-700">Aktif</span>
+                </label>
                 <div className="flex gap-2">
                     <Button type="submit" loading={form.processing} className="flex-1">
                         {editing ? 'Update' : 'Simpan'}
