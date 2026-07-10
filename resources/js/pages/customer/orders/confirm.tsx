@@ -142,14 +142,20 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     const handleCancel = useCallback(() => {
         if (!cancelReason) return;
         setCancelLoading(true);
-        router.post(`/customer/orders/${order.id}/cancel`, { reason: cancelReason }, {
+
+        // Use recovery token route for guests (no auth required)
+        const cancelUrl = isLoggedIn
+            ? `/customer/orders/${order.id}/cancel`
+            : `/track/${order.recovery_token}/cancel`;
+
+        router.post(cancelUrl, { reason: cancelReason }, {
             onFinish: () => setCancelLoading(false),
             onSuccess: () => {
                 setCancelDialogOpen(false);
                 setPaymentStatus('cancelled');
             },
         });
-    }, [order.id, cancelReason]);
+    }, [order.id, order.recovery_token, isLoggedIn, cancelReason]);
 
     const handlePay = useCallback(() => {
         if (submitLock.current || payLoading) return;
