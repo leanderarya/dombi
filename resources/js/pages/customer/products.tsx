@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { Search, Store, ThumbsUp, Truck } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
@@ -46,6 +46,8 @@ interface FamilySection {
 /* ─── Main ─────────────────────────────────────────────────── */
 
 function ProductsInner() {
+    const { auth } = usePage().props as any;
+    const isLoggedIn = !!auth?.user;
     const { selectedOutlet, loading: outletLoading } = useOutlet();
     const { families, loading, error, retry } = useProducts(
         selectedOutlet?.id ?? null,
@@ -131,6 +133,7 @@ opts.push({ key: String(f.id), label: f.name });
                         <FulfillmentToggle
                             value={fulfillmentType}
                             onChange={switchTo}
+                            deliveryDisabled={!isLoggedIn}
                         />
                         <p className="mt-2 text-center text-[11px] text-white/60">
                             {fulfillmentType === 'pickup'
