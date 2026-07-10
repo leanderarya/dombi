@@ -510,7 +510,6 @@ class CheckoutController extends Controller
 
         $validated = $request->validate([
             'payment_method' => ['required', Rule::in(self::PAYMENT_METHODS)],
-            'use_credit' => ['boolean'],
         ]);
 
         // Idempotency: prevent duplicate order from double-tap/refresh
@@ -559,7 +558,6 @@ class CheckoutController extends Controller
                 'delivery_distance_km' => $deliveryQuote['distance_km'] ?? 0,
                 'recommended_outlet_id' => $deliveryQuote['outlet']['id'] ?? null,
                 'payment_fee' => $paymentFee,
-                'use_credit' => $validated['use_credit'] ?? false,
                 'notes' => $location['delivery_notes'] ?? null,
             ]);
 
