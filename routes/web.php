@@ -237,6 +237,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::resource('products', OwnerProductController::class)->except(['show']);
         Route::resource('product-families', ProductFamilyController::class)->parameters(['product-families' => 'family'])->except(['create', 'edit']);
         Route::post('product-families/{family}/variants', [ProductVariantController::class, 'store'])->name('product-families.variants.store');
+        Route::post('product-families/{family}/variants/bulk-update', [ProductVariantController::class, 'bulkUpdate'])->name('product-families.variants.bulk-update');
         Route::put('variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
         Route::delete('variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
         Route::patch('variants/{variant}/toggle', [ProductVariantController::class, 'toggle'])->name('variants.toggle');

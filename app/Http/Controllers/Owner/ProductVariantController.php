@@ -72,4 +72,35 @@ class ProductVariantController extends Controller
         return redirect()->back()
             ->with('success', "Variant berhasil {$status}.");
     }
+
+    public function bulkUpdate(Request $request, ProductFamily $family): RedirectResponse
+    {
+        $validated = $request->validate([
+            'variant_ids' => ['required', 'array', 'min:1'],
+            'variant_ids.*' => ['exists:product_variants,id'],
+            'center_price' => ['nullable', 'numeric', 'min:0'],
+            'selling_price' => ['nullable', 'numeric', 'min:0'],
+            'center_stock' => ['nullable', 'integer', 'min:0'],
+            'is_active' => ['nullable', 'boolean'],
+        ]);
+
+        $updates = array_filter([
+            'center_price' => $validated['center_price'] ?? null,
+            'selling_price' => $validated['selling_price'] ?? null,
+            'center_stock' => $validated['center_stock'] ?? null,
+            'is_active' => array_key_exists('is_active', $validated) ? $validated['is_active'] : null,
+        ], fn ($v) => $v !== null);
+
+        if (empty($updates)) {
+            return redirect()->back()->with('error', 'Tidak ada perubahan.');
+        }
+
+        ProductVariant::whereIn('id', $validated['variant_ids'])
+            ->where('product_family_id', $family->id)
+            ->update($updates);
+
+        $count = count($validated['variant_ids']);
+
+        return redirect()->back()->with('success', "{$count} variant berhasil diperbarui.");
+    }
 }
