@@ -381,20 +381,22 @@ return;
                             Coba Lagi
                         </Link>
                     )}
-                    {/* Waiting for payment — show pay + cancel buttons */}
+                    {/* Waiting for payment — show pay + cancel buttons (logged-in only) */}
                     {isWaitingForPayment && !hasPaymentIssue && (
                         <>
-                            <button
-                                type="button"
-                                disabled={cancelLoading}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleCancelClick();
-                                }}
-                                className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
-                            >
-                                {cancelLoading ? 'Membatalkan...' : 'Batalkan'}
-                            </button>
+                            {isLoggedIn && (
+                                <button
+                                    type="button"
+                                    disabled={cancelLoading}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleCancelClick();
+                                    }}
+                                    className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
+                                >
+                                    {cancelLoading ? 'Membatalkan...' : 'Batalkan'}
+                                </button>
+                            )}
                             <Link
                                 href={`/customer/orders/confirm/${order.order_code}`}
                                 className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
@@ -403,20 +405,22 @@ return;
                             </Link>
                         </>
                     )}
-                    {/* Pending (paid, waiting outlet) — show cancel + continue buttons */}
+                    {/* Pending (paid, waiting outlet) — show cancel + continue buttons (logged-in only) */}
                     {isPending && !isExpired && !hasPaymentIssue && !isWaitingForPayment && (
                         <>
-                            <button
-                                type="button"
-                                disabled={cancelLoading}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    handleCancelClick();
-                                }}
-                                className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
-                            >
-                                {cancelLoading ? 'Membatalkan...' : 'Batalkan'}
-                            </button>
+                            {isLoggedIn && (
+                                <button
+                                    type="button"
+                                    disabled={cancelLoading}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleCancelClick();
+                                    }}
+                                    className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80 disabled:opacity-40"
+                                >
+                                    {cancelLoading ? 'Membatalkan...' : 'Batalkan'}
+                                </button>
+                            )}
                             <Link
                                 href={href}
                                 className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
