@@ -11,7 +11,7 @@ import { formatCurrency, formatDistance } from '@/lib/format';
 import { isDifferentRecipient } from '@/lib/recipient';
 import { useCart } from '@/lib/use-cart';
 
-export default function CheckoutPayment({ draft, summary, creditBalance = 0 }: any) {
+export default function CheckoutPayment({ draft, summary }: any) {
     const cart = useCart();
     const { markUsedForOrder } = useCustomerLocation();
     const fulfillmentType = draft?.fulfillment?.fulfillment_type ?? 'pickup';
@@ -23,13 +23,10 @@ export default function CheckoutPayment({ draft, summary, creditBalance = 0 }: a
     const [stockWarnings, setStockWarnings] = useState<string[]>([]);
     const [adjustmentModal, setAdjustmentModal] = useState<{ warnings: string[]; adjustments: any[] } | null>(null);
     const paymentOptions = summary.payment_options ?? [];
-    const [useCredit, setUseCredit] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState(paymentOptions[0]?.value ?? 'qris');
     const selectedOption = paymentOptions.find((option: any) => option.value === paymentMethod) ?? paymentOptions[0];
     const paymentFee = Math.round((summary.subtotal ?? 0) * (selectedOption?.fee_rate ?? 0) * 100) / 100;
-    const subtotalBeforeCredit = (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
-    const creditApplied = useCredit ? Math.min(creditBalance, subtotalBeforeCredit) : 0;
-    const total = subtotalBeforeCredit - creditApplied;
+    const total = (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
     const deliveryBlocked = isDelivery && !!summary.delivery_quote && summary.delivery_quote.is_serviceable === false;
     const ctaLabel = `Bayar ${formatCurrency(total)}`;
 
@@ -83,7 +80,7 @@ export default function CheckoutPayment({ draft, summary, creditBalance = 0 }: a
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                 },
-                body: JSON.stringify({ payment_method: paymentMethod, use_credit: useCredit }),
+                body: JSON.stringify({ payment_method: paymentMethod }),
             });
 
             const data = await response.json();
@@ -150,7 +147,7 @@ export default function CheckoutPayment({ draft, summary, creditBalance = 0 }: a
                     'X-Requested-With': 'XMLHttpRequest',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
                 },
-                body: JSON.stringify({ payment_method: paymentMethod, use_credit: useCredit, confirm_adjusted: true }),
+                body: JSON.stringify({ payment_method: paymentMethod, confirm_adjusted: true }),
             });
 
             const data = await response.json();
@@ -350,31 +347,12 @@ export default function CheckoutPayment({ draft, summary, creditBalance = 0 }: a
                 )}
             </section>
 
-            {/* Credit Toggle */}
-            {creditBalance > 0 && (
-                <section className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                    <label className="flex items-center gap-3">
-                        <input
-                            type="checkbox"
-                            checked={useCredit}
-                            onChange={(e) => setUseCredit(e.target.checked)}
-                            className="h-5 w-5 rounded border-border text-primary"
-                        />
-                        <div>
-                            <div className="text-sm font-semibold text-text">Pakai Saldo Kredit</div>
-                            <div className="text-xs text-text-muted">Rp {formatCurrency(creditBalance)}</div>
-                        </div>
-                    </label>
-                </section>
-            )}
-
             {/* Total Card */}
             <section className="mt-4 rounded-xl bg-primary px-4 py-3 text-white">
                 <div className="space-y-1">
                     <SummaryRow label="Subtotal" value={formatCurrency(summary.subtotal)} />
                     {summary.delivery_fee > 0 && <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />}
                     {paymentFee > 0 && <SummaryRow label="Biaya Layanan" value={formatCurrency(paymentFee)} />}
-                    {creditApplied > 0 && <SummaryRow label="Saldo Kredit" value={`- ${formatCurrency(creditApplied)}`} />}
                 </div>
                 <div className="mt-2 border-t border-white/20 pt-2 flex items-center justify-between">
                     <span className="text-sm font-semibold text-white">Total</span>
