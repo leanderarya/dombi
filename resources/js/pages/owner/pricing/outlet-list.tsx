@@ -22,16 +22,14 @@ export default function OutletList({ outlets, selectedId, onSelect }: Props) {
     return (
         <div className="flex h-full flex-col" aria-label="Daftar outlet">
             <div className="mb-3">
-                <div className="relative">
-                    <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-text-subtle" aria-hidden="true" />
-                    <Input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Cari outlet..."
-                        className="h-8 pl-7 text-xs"
-                    />
-                </div>
+                <Input
+                    type="text"
+                    icon={Search}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Cari outlet..."
+                    className="h-8 text-xs"
+                />
             </div>
 
             <div className="flex-1 space-y-1 overflow-y-auto">
