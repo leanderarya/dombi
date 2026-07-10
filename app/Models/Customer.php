@@ -18,7 +18,6 @@ class Customer extends Model
         'is_registered',
         'user_id',
         'last_order_at',
-        'credit_balance',
     ];
 
     protected function casts(): array
@@ -26,7 +25,6 @@ class Customer extends Model
         return [
             'is_registered' => 'boolean',
             'last_order_at' => 'datetime',
-            'credit_balance' => 'decimal:2',
         ];
     }
 
