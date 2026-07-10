@@ -58,6 +58,7 @@ use App\Http\Controllers\Owner\ProductVariantController;
 use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\RestockController as OwnerRestockController;
+use App\Http\Controllers\Owner\RefundController;
 use App\Http\Controllers\Owner\ReturnController as OwnerReturnController;
 use App\Http\Controllers\Owner\SettlementPaymentController;
 use App\Http\Controllers\Owner\StockDistributionController as OwnerStockDistributionController;
@@ -284,6 +285,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('finance/settlements/{outlet}/payments', [FinanceSettlementController::class, 'recordPayment'])->name('finance.settlements.payments');
         Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
         Route::resource('finance/payment-accounts', PaymentAccountController::class)->only(['store', 'update', 'destroy']);
+        Route::get('refunds', [RefundController::class, 'index'])->name('refunds.index');
+        Route::post('refunds/{order}/retry', [RefundController::class, 'retry'])->name('refunds.retry');
+        Route::post('refunds/{order}/resolve', [RefundController::class, 'resolve'])->name('refunds.resolve');
         Route::get('returns', [OwnerReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/{returnRequest}', [OwnerReturnController::class, 'show'])->name('returns.show');
         Route::post('returns/{returnRequest}/approve', [OwnerReturnController::class, 'approve'])->name('returns.approve');
