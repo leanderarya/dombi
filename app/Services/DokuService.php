@@ -296,6 +296,34 @@ class DokuService
     }
 
     /**
+     * Process refund via DOKU API.
+     * Returns ['status' => 'success'|'failed'|'already_refunded'|'skipped', ...]
+     */
+    public function refund(Order $order, string $reason = 'Order cancelled'): array
+    {
+        if ($order->payment_status === 'refunded') {
+            return ['status' => 'already_refunded'];
+        }
+
+        if ($order->payment_status !== 'paid') {
+            return ['status' => 'skipped', 'reason' => 'Order not paid'];
+        }
+
+        if ($order->payment_method === 'cash') {
+            return ['status' => 'skipped', 'reason' => 'Cash payment'];
+        }
+
+        $refundNo = 'REF-' . $order->order_code . '-' . time();
+        $amount = (int) $order->total;
+
+        if ($order->payment_method === 'credit_card') {
+            return $this->refundCreditCard($order, $refundNo, $amount, $reason);
+        }
+
+        return $this->refundDirectDebit($order, $refundNo, $amount, $reason);
+    }
+
+    /**
      * Map Dombi payment method to DOKU payment_method_types value.
      */
     private function mapPaymentMethod(?string $method): string
@@ -328,9 +356,17 @@ class DokuService
         // Reload to get fresh state
         $order->refresh();
 
+        // Transition order status via state machine (creates history, handles side effects)
         if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
-            $order->update(['status' => Order::STATUS_CONFIRMED, 'confirmed_at' => now()]);
-            app(NotificationService::class)->notifyOrderConfirmed($order);
+            try {
+                app(OrderStatusService::class)->updateStatus($order, Order::STATUS_CONFIRMED);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // Already transitioned by concurrent request — safe to ignore
+                Log::info('Order status transition skipped (already transitioned)', [
+                    'order_id' => $order->id,
+                    'current_status' => $order->fresh()->status,
+                ]);
+            }
         }
 
         // Notify outlet about new paid order
@@ -410,6 +446,124 @@ class DokuService
             'email' => $customer?->email ?? null,
             'phone' => $customer?->phone ?? $order->customer_phone,
         ];
+    }
+
+    private function refundCreditCard(Order $order, string $refundNo, int $amount, string $reason): array
+    {
+        $requestId = $refundNo;
+        $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
+        $endpoint = '/v1/refund';
+
+        $body = [
+            'order' => [
+                'invoice_number' => $order->order_code,
+            ],
+            'payment' => [
+                'original_request_id' => $order->doku_order_id,
+            ],
+            'refund' => [
+                'amount' => $amount,
+                'type' => 'FULL_REFUND',
+            ],
+        ];
+
+        $headers = $this->generateHeaders($requestId, $timestamp, $endpoint, json_encode($body));
+
+        try {
+            $response = Http::withHeaders($headers)
+                ->withBody(json_encode($body), 'application/json')
+                ->post($this->baseUrl . $endpoint);
+
+            return $this->handleRefundResponse($order, $response->json(), $refundNo);
+        } catch (\Exception $e) {
+            Log::error('DOKU credit card refund failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            $order->update([
+                'payment_status' => 'refund_failed',
+                'refund_reason' => $e->getMessage(),
+            ]);
+
+            return ['status' => 'failed', 'error' => $e->getMessage()];
+        }
+    }
+
+    private function refundDirectDebit(Order $order, string $refundNo, int $amount, string $reason): array
+    {
+        $requestId = $refundNo;
+        $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
+        $endpoint = '/direct-debit/core/v1/debit/refund';
+
+        $body = [
+            'originalPartnerReferenceNo' => $order->order_code,
+            'partnerRefundNo' => $refundNo,
+            'refundAmount' => [
+                'value' => number_format($amount, 2, '.', ''),
+                'currency' => 'IDR',
+            ],
+            'reason' => $reason,
+            'additionalInfo' => [
+                'originalExternalId' => $order->doku_order_id,
+            ],
+        ];
+
+        $headers = $this->generateHeaders($requestId, $timestamp, $endpoint, json_encode($body));
+
+        try {
+            $response = Http::withHeaders($headers)
+                ->withBody(json_encode($body), 'application/json')
+                ->post($this->baseUrl . $endpoint);
+
+            return $this->handleRefundResponse($order, $response->json(), $refundNo);
+        } catch (\Exception $e) {
+            Log::error('DOKU direct debit refund failed', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            $order->update([
+                'payment_status' => 'refund_failed',
+                'refund_reason' => $e->getMessage(),
+            ]);
+
+            return ['status' => 'failed', 'error' => $e->getMessage()];
+        }
+    }
+
+    private function handleRefundResponse(Order $order, array $response, string $refundNo): array
+    {
+        $isSuccess = ($response['refund']['status'] ?? '') === 'SUCCESS'
+            || ($response['transactionStatus'] ?? '') === 'SUCCESS';
+
+        if ($isSuccess) {
+            $order->update([
+                'payment_status' => 'refunded',
+                'refunded_at' => now(),
+                'refund_amount' => $order->total,
+                'refund_reason' => $order->refund_reason ?? 'Order cancelled',
+                'doku_refund_id' => $refundNo,
+            ]);
+
+            return ['status' => 'success', 'refund_id' => $refundNo];
+        }
+
+        $errorMessage = $response['error']['message'] ?? $response['refund']['reason'] ?? 'Unknown error';
+
+        $order->update([
+            'payment_status' => 'refund_failed',
+            'refund_reason' => $errorMessage,
+        ]);
+
+        Log::error('DOKU refund failed', [
+            'order_id' => $order->id,
+            'order_code' => $order->order_code,
+            'error' => $errorMessage,
+            'response' => $response,
+        ]);
+
+        return ['status' => 'failed', 'error' => $errorMessage];
     }
 
     /**
