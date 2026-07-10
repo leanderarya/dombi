@@ -1022,6 +1022,29 @@ class NotificationService
         }
     }
 
+    // ─── REFUND NOTIFICATIONS ────────────────────────────────────────
+
+    public function notifyRefundProcessed(Order $order, float $amount): void
+    {
+        $formattedAmount = 'Rp ' . number_format($amount, 0, ',', '.');
+
+        // Push notification
+        $this->notify(
+            $order->customer_id,
+            'Refund Berhasil',
+            "{$formattedAmount} telah dikembalikan ke metode pembayaran Anda. Order #{$order->order_code} dibatalkan.",
+            ['order_id' => $order->id]
+        );
+
+        // WhatsApp
+        if ($order->customer_phone) {
+            $this->sendWhatsApp(
+                $order->customer_phone,
+                "Refund {$formattedAmount} telah diproses untuk order #{$order->order_code}. Dana akan kembali dalam 1-3 hari kerja."
+            );
+        }
+    }
+
     // ─── HELPER METHODS ───────────────────────────────────────────────
 
     private function create(
