@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { ArrowLeft, CheckCircle2, Clock, Copy, Loader2, Shield, XCircle } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, Clock, Copy, Loader2, Shield, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import Dialog from '@/components/ui/dialog';
@@ -194,18 +194,18 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
         <CustomerMobileLayout hideTopBar hideCartBar hideBottomNav>
             <div className="flex min-h-[80dvh] flex-col px-4">
                 {/* Header */}
-                <div className="mb-6 flex items-center gap-3 pt-safe">
-                    <button
-                        onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/customer/home')}
-                        className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm active:opacity-80"
-                    >
-                        <ArrowLeft className="h-5 w-5" />
-                    </button>
-                    <div>
-                        <h1 className="text-lg font-bold text-slate-900">Konfirmasi Pesanan</h1>
-                        <p className="text-xs text-slate-500">#{order.order_code}</p>
+                <header className="sticky top-0 z-30 bg-white/95 backdrop-blur pt-safe">
+                    <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+                        <button
+                            onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/customer/home')}
+                            className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                        >
+                            <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <h1 className="text-base font-bold text-text">Konfirmasi Pesanan</h1>
+                        <div className="h-11 w-11" />
                     </div>
-                </div>
+                </header>
 
                 {/* Status Card */}
                 <div className={`rounded-2xl border ${status.border} ${status.bg} p-6 text-center`}>

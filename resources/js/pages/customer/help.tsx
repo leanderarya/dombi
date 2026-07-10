@@ -11,7 +11,7 @@ export default function Help() {
                     <Link href="/customer/profile" className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80">
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
-                    <h1 className="text-sm font-semibold text-text">Bantuan</h1>
+                    <h1 className="text-base font-bold text-text">Bantuan</h1>
                     <div className="h-11 w-11" />
                 </div>
             </header>
