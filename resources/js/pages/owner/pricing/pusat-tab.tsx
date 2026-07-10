@@ -1,5 +1,6 @@
 import { DollarSign, Package, TrendingDown, TrendingUp } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import { Button } from '@/components/ui/button';
@@ -77,6 +78,8 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
         [sortKey],
     );
 
+    const maxMargin = useMemo(() => Math.max(...sorted.map((v) => v.margin), 1), [sorted]);
+
     const kpiItems = [
         { label: 'Total Produk', value: kpis.total_variants, icon: <Package className="h-5 w-5" aria-hidden="true" /> },
         { label: 'Rata-rata HPP', value: formatCurrency(kpis.avg_hpp), icon: <DollarSign className="h-5 w-5" aria-hidden="true" /> },
@@ -141,14 +144,21 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                             </div>
                             <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
                                 <span className="text-text-muted">
-                                    HPP: <span className="tabular-nums text-text">{formatCurrency(v.center_price)}</span>
+                                    HPP: <span className="tabular-nums text-text-muted">{formatCurrency(v.center_price)}</span>
                                 </span>
                                 <span className="text-text-muted">
-                                    Jual: <span className="font-semibold tabular-nums text-text">{formatCurrency(v.selling_price)}</span>
+                                    Jual: <span className="text-lg font-bold tabular-nums text-text">{formatCurrency(v.selling_price)}</span>
                                 </span>
-                                <span className={`font-bold tabular-nums ${marginColor(v.margin, v.selling_price)}`}>
-                                    {formatCurrency(v.margin)} {formatMarginPercent(v.margin, v.selling_price)}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`font-bold tabular-nums ${marginColor(v.margin, v.selling_price)}`}>
+                                        {formatCurrency(v.margin)} {formatMarginPercent(v.margin, v.selling_price)}
+                                    </span>
+                                    <MarginBarInline
+                                        margin={v.margin}
+                                        maxMargin={maxMargin}
+                                        sellingPrice={v.selling_price}
+                                    />
+                                </div>
                             </div>
                         </div>
                     ))}
