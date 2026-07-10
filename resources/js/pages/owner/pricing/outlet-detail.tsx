@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import { ArrowLeft, Copy, Plus, RotateCcw } from 'lucide-react';
+import { MarginBarInline } from '@/components/owner';
 import { useCallback, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import { Button } from '@/components/ui/button';
@@ -53,7 +54,7 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
 
     const handleOutletChange = (outletId: string) => {
         if (outletId) {
-            router.get('/owner/pricing', { tab: 'outlet', outlet_id: outletId }, { preserveState: true, replace: true });
+            router.reload({ only: ['outletPrices', 'selectedOutlet'], data: { tab: 'outlet', outlet_id: outletId }, preserveState: true, replace: true });
         }
     };
 
@@ -298,9 +299,12 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                             <span className="text-text-muted">
                                 Jual: <span className="font-semibold tabular-nums text-text">{formatCurrency(row.selling_price)}</span>
                             </span>
+                            <div className="flex items-center gap-2">
                             <span className={`font-bold tabular-nums ${marginColor(row.margin, row.selling_price)}`}>
                                 {formatCurrency(row.margin)} {formatMarginPercent(row.margin, row.selling_price)}
                             </span>
+                            <MarginBarInline margin={row.margin} maxMargin={Math.max(...sorted.map((r) => r.margin), 1)} sellingPrice={row.selling_price} />
+                        </div>
                         </div>
                     </div>
                 ))}
