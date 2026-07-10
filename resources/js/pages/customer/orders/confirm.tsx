@@ -26,12 +26,12 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     useEffect(() => {
         window.history.pushState(null, '', window.location.href);
         const onPop = () => {
-            // Go back twice to skip the pushed state, landing on the real previous page
-            window.history.go(-2);
+            // Redirect to safe page instead of going back to payment gateway
+            window.location.href = isLoggedIn ? '/customer/orders' : '/customer/home';
         };
         window.addEventListener('popstate', onPop);
         return () => window.removeEventListener('popstate', onPop);
-    }, []);
+    }, [isLoggedIn]);
 
     // Poll payment status as webhook fallback (max 5 min)
     useEffect(() => {
@@ -145,7 +145,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                 {/* Header */}
                 <div className="mb-6 flex items-center gap-3 pt-safe">
                     <button
-                        onClick={() => window.history.length > 1 ? window.history.back() : router.visit('/customer/home')}
+                        onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/customer/home')}
                         className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm active:opacity-80"
                     >
                         <ArrowLeft className="h-5 w-5" />
@@ -221,7 +221,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                                 </button>
                             )}
                             <button
-                                onClick={() => window.history.length > 1 ? window.history.back() : router.visit('/customer/home')}
+                                onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/customer/home')}
                                 className="w-full min-h-12 rounded-xl bg-white text-sm font-bold text-slate-600 shadow-sm active:opacity-80"
                             >
                                 {paymentStatus === 'expired' ? 'Pesan Ulang' : 'Kembali'}
