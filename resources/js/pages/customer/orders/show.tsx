@@ -312,7 +312,6 @@ function OrderInfoCard({ order, isPickup }: { order: any; isPickup: boolean }) {
                     <SummaryRow label="Metode" value={isPickup ? 'Ambil di Outlet' : 'Kirim ke Alamat'} />
                     <SummaryRow label="Pembayaran" value={order.payment_method} />
                     {Number(order.delivery_fee) > 0 && <SummaryRow label="Ongkir" value={formatCurrency(order.delivery_fee)} />}
-                    {Number(order.credit_applied) > 0 && <SummaryRow label="Saldo Kredit" value={`-Rp ${formatCurrency(order.credit_applied)}`} accent />}
                     <div className="flex items-center justify-between text-xs font-semibold text-text pt-1 border-t border-border/50">
                         <span>Total</span>
                         <span className="tabular-nums">{formatCurrency(order.total)}</span>
