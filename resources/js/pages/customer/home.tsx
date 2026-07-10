@@ -39,13 +39,12 @@ export default function Home({ customerName, activeOrders }: any) {
     }, []);
 
     const handleDelivery = () => {
-        localStorage.setItem('dombi_fulfillment_type', 'delivery');
-
         if (!isLoggedIn) {
-setDeliverySheetOpen(true);
-} else {
-router.get('/customer/products');
-}
+            setDeliverySheetOpen(true);
+        } else {
+            localStorage.setItem('dombi_fulfillment_type', 'delivery');
+            router.get('/customer/products');
+        }
     };
 
     return (
