@@ -192,7 +192,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
 
     return (
         <CustomerMobileLayout hideTopBar hideCartBar hideBottomNav>
-            <div className="flex min-h-[80dvh] flex-col px-4">
+            <div className="flex min-h-[80dvh] flex-col">
                 {/* Header */}
                 <header className="sticky top-0 z-30 bg-white/95 backdrop-blur pt-safe">
                     <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
@@ -206,6 +206,9 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                         <div className="h-11 w-11" />
                     </div>
                 </header>
+
+                {/* Content */}
+                <div className="px-4">
 
                 {/* Status Card */}
                 <div className={`rounded-2xl border ${status.border} ${status.bg} p-6 text-center`}>
@@ -339,6 +342,8 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                             Butuh bantuan?
                         </a>
                     </div>
+                </div>
+
                 </div>
 
                 {/* Cancel Dialog */}
