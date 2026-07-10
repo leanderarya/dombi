@@ -209,19 +209,23 @@ function StatusBadge({ active }: { active: boolean }) {
 }
 
 function StockBadge({ status, stock }: { status: string; stock: number }) {
-    const { displayLabel } = getOwnerStockStatus(status, stock);
-    
+    const { variant } = getOwnerStockStatus(status, stock);
+
     const styles: Record<string, string> = {
         success: 'bg-emerald-50 text-emerald-700',
         warning: 'bg-amber-50 text-amber-700',
         danger: 'bg-red-50 text-red-700',
     };
-    
-    const { variant } = getOwnerStockStatus(status, stock);
-    
+
+    const statusLabel: Record<string, string> = {
+        available: 'Sehat',
+        low: 'Rendah',
+        out_of_stock: 'Habis',
+    };
+
     return (
         <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${styles[variant]}`}>
-            {displayLabel}
+            {stock} · {statusLabel[status] ?? status}
         </span>
     );
 }
@@ -264,11 +268,11 @@ return;
 setOpen(false);
 }
         };
-        document.addEventListener('mousedown', handler);
+        document.addEventListener('click', handler);
         document.addEventListener('keydown', escHandler);
 
         return () => {
-            document.removeEventListener('mousedown', handler);
+            document.removeEventListener('click', handler);
             document.removeEventListener('keydown', escHandler);
         };
     }, [open]);

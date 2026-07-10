@@ -26,6 +26,20 @@ class CourierAvailabilityController extends Controller
         );
     }
 
+    public function startShift(Request $request): RedirectResponse
+    {
+        $request->user()->startShift();
+
+        return redirect()->route('courier.dashboard')->with('success', 'Shift dimulai.');
+    }
+
+    public function endShift(Request $request): RedirectResponse
+    {
+        $request->user()->endShift();
+
+        return redirect()->route('courier.dashboard')->with('success', 'Shift berakhir.');
+    }
+
     public function status(Request $request): JsonResponse
     {
         $user = $request->user();

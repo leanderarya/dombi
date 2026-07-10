@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('orders', function (Blueprint $table) {
-            $table->enum('payment_status', ['pending', 'paid', 'settled', 'expired', 'failed'])->nullable()->after('payment_method');
+            $table->enum('payment_status', ['pending', 'paid', 'settled', 'expired', 'failed', 'refunded', 'refund_failed'])->nullable()->after('payment_method');
             $table->string('midtrans_order_id')->nullable()->unique()->after('payment_status');
             $table->timestamp('paid_at')->nullable()->after('midtrans_order_id');
         });

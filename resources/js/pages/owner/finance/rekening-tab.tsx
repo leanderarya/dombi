@@ -110,42 +110,29 @@ return;
                     action={{ label: 'Tambah Rekening', onClick: handleAddClick }}
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Daftar rekening pembayaran">
-                    <table className="w-full min-w-[600px]">
-                        <thead>
-                            <tr className="bg-surface-muted">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Bank</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">No. Rekening</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Pemilik</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {accounts.map((account) => (
-                                <tr key={account.id} className="border-t border-border transition-colors hover:bg-surface-muted">
-                                    <td className="px-4 py-3 font-bold text-text">{account.bank_name}</td>
-                                    <td className="px-4 py-3 tabular-nums text-text-muted">{account.account_number}</td>
-                                    <td className="px-4 py-3 text-text-muted">a.n. {account.account_holder}</td>
-                                    <td className="px-4 py-3">
-                                        <StatusBadge variant={account.is_active ? 'success' : 'neutral'} size="sm">
-                                            {account.is_active ? 'Aktif' : 'Nonaktif'}
-                                        </StatusBadge>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
-                                                Edit
-                                            </Button>
-                                            <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account.id)} className="text-red-600 hover:text-red-700">
-                                                Hapus
-                                            </Button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                <div className="space-y-2" aria-label="Daftar rekening pembayaran">
+                    {accounts.map((account) => (
+                        <div key={account.id} className="rounded-lg border border-border bg-surface p-4 transition-colors hover:bg-surface-muted sm:flex sm:items-center sm:justify-between sm:gap-4">
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
+                                <span className="font-bold text-text">{account.bank_name}</span>
+                                <span className="tabular-nums text-sm text-text-muted">{account.account_number}</span>
+                                <span className="text-sm text-text-muted">a.n. {account.account_holder}</span>
+                            </div>
+                            <div className="mt-3 flex items-center justify-between sm:mt-0 sm:shrink-0">
+                                <StatusBadge variant={account.is_active ? 'success' : 'neutral'} size="sm">
+                                    {account.is_active ? 'Aktif' : 'Nonaktif'}
+                                </StatusBadge>
+                                <div className="flex items-center gap-1">
+                                    <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
+                                        Edit
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account.id)} className="text-red-600 hover:text-red-700">
+                                        Hapus
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
                 </div>
             )}
 

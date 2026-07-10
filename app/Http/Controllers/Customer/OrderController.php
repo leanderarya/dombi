@@ -123,6 +123,15 @@ class OrderController extends Controller
     {
         $order = Order::where('order_code', $orderCode)->firstOrFail();
 
+        // Only allow confirmation for pending orders
+        if ($order->status !== Order::STATUS_PENDING_CONFIRMATION) {
+            return Inertia::render('customer/orders/confirm', [
+                'order' => null,
+                'isLoggedIn' => $request->user() !== null,
+                'error' => 'Pesanan sudah tidak dapat dikonfirmasi.',
+            ]);
+        }
+
         // Verify the user owns this order
         $user = $request->user();
         if ($user && $order->customer_id && $order->customer_id !== $user->getCustomerOrCreate()->id) {
@@ -135,7 +144,7 @@ class OrderController extends Controller
                 'order_code' => $order->order_code,
                 'items' => $order->items->map(fn ($item) => [
                     'product_name' => $item->product_name,
-                    'variant_name' => $item->variant_name,
+                    'variant_name' => $item->variant_name_snapshot,
                     'quantity' => $item->quantity,
                     'subtotal' => $item->subtotal,
                 ]),

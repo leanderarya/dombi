@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\ProductVariant;
+use App\Services\InventoryService;
 use App\Services\OutletAuditService;
+use App\Exceptions\InsufficientStockException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -169,37 +171,38 @@ class OutletProductController extends Controller
     /**
      * Restock a product variant at an outlet.
      */
-    public function restock(Request $request, Outlet $outlet, OutletAuditService $auditService): JsonResponse
+    public function restock(Request $request, Outlet $outlet): JsonResponse
     {
         $validated = $request->validate([
-            'variant_id' => ['required', 'integer'],
+            'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
             'quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $inventory = OutletInventory::where('outlet_id', $outlet->id)
-            ->where('product_variant_id', $validated['variant_id'])
-            ->first();
+        try {
+            app(InventoryService::class)->restockOutlet(
+                $outlet->id,
+                $validated['variant_id'],
+                $validated['quantity'],
+                $validated['notes'] ?? null,
+            );
 
-        if (! $inventory) {
-            return response()->json(['error' => 'Produk belum ditambahkan ke outlet.'], 404);
+            $inventory = OutletInventory::where('outlet_id', $outlet->id)
+                ->where('product_variant_id', $validated['variant_id'])
+                ->first();
+
+            return response()->json([
+                'success' => true,
+                'new_stock' => $inventory?->current_stock ?? 0,
+            ]);
+        } catch (InsufficientStockException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['error' => $e->getMessage()], 404);
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json(['error' => 'Gagal melakukan restock.'], 500);
         }
-
-        $oldStock = (int) $inventory->current_stock;
-        $inventory->update(['current_stock' => $oldStock + $validated['quantity']]);
-
-        $auditService->log(
-            $outlet,
-            'stock_restock',
-            (string) $oldStock,
-            (string) ($oldStock + $validated['quantity']),
-            $request->user(),
-        );
-
-        return response()->json([
-            'success' => true,
-            'new_stock' => $inventory->current_stock,
-        ]);
     }
 
     private function getStockStatus(int $available, int $minimum): string

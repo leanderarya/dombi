@@ -357,8 +357,8 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                 </form>
             </BottomSheet>
 
-            {/* Reject Sheet */}
-            <BottomSheet open={showRejectSheet} onClose={() => setShowRejectSheet(false)} title="Tolak Pesanan">
+            {/* Reject Dialog */}
+            <Dialog open={showRejectSheet} onClose={() => setShowRejectSheet(false)} title="Tolak Pesanan">
                 <p className="text-sm text-text-muted">Pilih alasan penolakan.</p>
 
                 <div className="mt-4 space-y-2">
@@ -400,7 +400,7 @@ export default function OutletOrderShow({ order, couriers, rejectionReasons = []
                 >
                     {rejectForm.processing ? 'Menolak...' : 'Tolak Pesanan'}
                 </button>
-            </BottomSheet>
+            </Dialog>
 
             {/* Cancel Reason Sheet */}
             <BottomSheet open={showCancelSheet} onClose={() => setShowCancelSheet(false)} title="Batalkan Pesanan">

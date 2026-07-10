@@ -156,8 +156,8 @@ export function getOwnerStockStatus(status: string, availableStock?: number): St
     const config = OWNER_STOCK_STATUSES[status] ?? { label: status, variant: 'neutral' };
     let displayLabel = config.label;
 
-    if (status === 'low' && availableStock !== undefined) {
-        displayLabel = `Stok Rendah (${availableStock})`;
+    if (availableStock !== undefined) {
+        displayLabel = `${config.label} (${availableStock})`;
     }
 
     return { ...config, displayLabel };

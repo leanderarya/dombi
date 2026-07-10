@@ -88,9 +88,9 @@ class ReturnController extends Controller
         ]);
     }
 
-    public function show(ReturnRequest $returnRequest): Response
+    public function show(Request $request, ReturnRequest $returnRequest): Response
     {
-        $outlet = request()->user()->outlet;
+        $outlet = $request->user()->outlet;
         abort_unless($outlet && $outlet->id === $returnRequest->outlet_id, 403);
 
         $returnRequest->load(['items.variant', 'requester', 'reviewer', 'receiver', 'statusHistories.actor', 'exchangeRequest']);

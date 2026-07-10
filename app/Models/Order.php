@@ -141,7 +141,7 @@ class Order extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'refunded_at' => 'datetime',
-        'refund_amount' => 'decimal:2',
+            'refund_amount' => 'decimal:2',
         ];
     }
 

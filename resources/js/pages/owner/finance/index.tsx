@@ -7,9 +7,9 @@ import RekeningTab from './rekening-tab';
 import TagihanTab from './tagihan-tab';
 
 const TABS = [
-    { key: 'tagihan', label: 'Tagihan' },
-    { key: 'pembayaran', label: 'Pembayaran' },
-    { key: 'rekening', label: 'Rekening' },
+    { key: 'tagihan', label: 'Tagihan', description: 'Tagihan outlet per periode' },
+    { key: 'pembayaran', label: 'Pembayaran', description: 'Verifikasi pembayaran masuk' },
+    { key: 'rekening', label: 'Rekening', description: 'Rekening tujuan pembayaran' },
 ];
 
 export default function FinanceIndex(props: any) {
@@ -46,6 +46,7 @@ export default function FinanceIndex(props: any) {
                         type="button"
                         role="tab"
                         aria-selected={activeTab === tab.key}
+                        aria-describedby={`${tab.key}-desc`}
                         onClick={() => handleTabChange(tab.key)}
                         className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
                             activeTab === tab.key
@@ -57,6 +58,9 @@ export default function FinanceIndex(props: any) {
                     </button>
                 ))}
             </div>
+            <p id={`${TABS.find((t) => t.key === activeTab)?.key}-desc`} className="mb-4 text-xs text-text-muted">
+                {TABS.find((t) => t.key === activeTab)?.description}
+            </p>
 
             <div role="tabpanel" aria-label={`Tab ${TABS.find((t) => t.key === activeTab)?.label}`}>
                 {activeTab === 'tagihan' && <TagihanTab {...props} />}

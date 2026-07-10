@@ -10,7 +10,6 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
-use App\Models\StockMovement;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -109,20 +108,11 @@ class InventoryController extends Controller
             'reason' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $before = $variant->center_stock;
-        $variant->update(['center_stock' => $validated['center_stock']]);
-
-        // Log via StockMovement (outlet_id = null for central stock)
-        StockMovement::create([
-            'outlet_id' => null,
-            'product_variant_id' => $variant->id,
-            'type' => 'stock_adjustment',
-            'quantity' => $validated['center_stock'] - $before,
-            'before_stock' => $before,
-            'after_stock' => $validated['center_stock'],
-            'notes' => $validated['reason'] ?? 'Stok pusat diubah manual',
-            'created_by' => $request->user()->id,
-        ]);
+        app(InventoryService::class)->updateCenterStock(
+            $variant->id,
+            $validated['center_stock'],
+            $validated['reason'] ?? null,
+        );
 
         return back()->with('success', "Stok pusat {$variant->full_name} berhasil diperbarui.");
     }

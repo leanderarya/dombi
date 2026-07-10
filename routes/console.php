@@ -15,6 +15,12 @@ Schedule::command('orders:expire-pending')
     ->everyMinute()
     ->withoutOverlapping()
     ->onOneServer()
+    ->after(function () {
+        \Illuminate\Support\Facades\Log::info('orders:expire-pending completed');
+    })
+    ->onFailure(function () {
+        \Illuminate\Support\Facades\Log::alert('orders:expire-pending FAILED');
+    })
     ->appendOutputTo(storage_path('logs/expire-pending.log'));
 
 Schedule::command('orders:resolve-stale')
@@ -22,6 +28,12 @@ Schedule::command('orders:resolve-stale')
     ->at('03:30')
     ->withoutOverlapping()
     ->onOneServer()
+    ->after(function () {
+        \Illuminate\Support\Facades\Log::info('orders:resolve-stale completed');
+    })
+    ->onFailure(function () {
+        \Illuminate\Support\Facades\Log::alert('orders:resolve-stale FAILED');
+    })
     ->appendOutputTo(storage_path('logs/resolve-stale.log'));
 
 // ─── COURIER MANAGEMENT ─────────────────────────────────────────────

@@ -189,7 +189,7 @@ export default function Dashboard({
     if (actionRequired.pendingSettlementVerifications > 0) {
         actionItems.push({
             key: 'settlements',
-            href: '/owner/settlement-payments',
+            href: '/owner/finance?tab=pembayaran',
             icon: <CreditCard className="h-4 w-4" />,
             iconBg: 'bg-blue-100',
             iconColor: 'text-blue-600',

@@ -193,8 +193,6 @@ class DeliveryService
                 'delivery_note' => $payload['delivery_note'] ?? $delivery->delivery_note,
             ]);
 
-            $this->inventoryService->completeOrderStock($delivery->order);
-
             $courier->recordActivity();
             $this->recordHistory($delivery, 'delivering', 'completed', $courier, 'courier', 'Pengiriman selesai.');
 
@@ -375,40 +373,22 @@ class DeliveryService
 
     private function handleReturnedToOutlet(Order $order, User $resolver): void
     {
-        // Reserved stock stays. Order goes back to preparing for re-processing.
-        $order = Order::query()->lockForUpdate()->findOrFail($order->id);
-        $fromStatus = $order->status;
-        $order->update(['status' => 'preparing']);
-        $order->statusHistories()->create([
-            'from_status' => $fromStatus,
-            'to_status' => 'preparing',
+        app(OrderStatusService::class)->transition($order, 'preparing', [
+            'reason' => 'returned_to_outlet',
+            'actor_id' => $resolver->id,
+            'actor_type' => 'system',
             'notes' => 'Barang dikembalikan ke outlet, order bisa diproses ulang.',
-            'changed_by' => $resolver->id,
-            'created_at' => now(),
         ]);
     }
 
     private function handleCancelledAndReleased(Order $order, User $resolver): void
     {
-        // Release reserved stock. Order becomes cancelled.
-        $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
-        $fromStatus = $order->status;
-
-        $this->inventoryService->releaseReservedStock($order);
-
-        $order->update(['status' => 'cancelled_by_outlet']);
-        $order->statusHistories()->create([
-            'from_status' => $fromStatus,
-            'to_status' => 'cancelled_by_outlet',
+        app(OrderStatusService::class)->transition($order, 'cancelled_by_outlet', [
+            'reason' => 'delivery_failed',
+            'actor_id' => $resolver->id,
+            'actor_type' => 'owner',
             'notes' => 'Delivery gagal dan dibatalkan, reserved stock dilepas.',
-            'changed_by' => $resolver->id,
-            'changed_by_type' => 'owner',
-            'created_at' => now(),
         ]);
-
-        if ($order->payment_status === 'paid') {
-            app(CustomerCreditService::class)->refund($order);
-        }
     }
 
     /**

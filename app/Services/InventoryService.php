@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use App\Models\StockMovement;
 use App\Support\OperationalLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -274,6 +275,132 @@ class InventoryService
             'notes' => $notes,
             'created_by' => Auth::id(),
         ]);
+    }
+
+    /**
+     * Transfer stock from center to outlet (quick restock).
+     * Deducts center_stock, increments outlet current_stock, creates audit trail.
+     */
+    public function restockOutlet(int $outletId, int $variantId, int $quantity, ?string $notes = null): void
+    {
+        DB::transaction(function () use ($outletId, $variantId, $quantity, $notes) {
+            $variant = ProductVariant::where('id', $variantId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($variant->center_stock < $quantity) {
+                throw new InsufficientStockException(
+                    outletId: $outletId,
+                    productId: $variantId,
+                    stockType: 'center_stock',
+                    required: $quantity,
+                    available: $variant->center_stock,
+                    message: "Stok pusat tidak cukup. Tersedia: {$variant->center_stock}, diminta: {$quantity}",
+                );
+            }
+
+            $inventory = OutletInventory::where('outlet_id', $outletId)
+                ->where('product_variant_id', $variantId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $inventory) {
+                throw new \InvalidArgumentException('Produk belum ditambahkan ke outlet.');
+            }
+
+            $centerBefore = $variant->center_stock;
+            $variant->decrement('center_stock', $quantity);
+
+            $outletBefore = $inventory->current_stock;
+            $inventory->increment('current_stock', $quantity);
+
+            $userId = Auth::id();
+
+            StockMovement::create([
+                'outlet_id' => null,
+                'product_variant_id' => $variantId,
+                'type' => 'distribution_out',
+                'quantity' => -$quantity,
+                'before_stock' => $centerBefore,
+                'after_stock' => $variant->fresh()->center_stock,
+                'before_reserved' => 0,
+                'after_reserved' => 0,
+                'notes' => $notes ?? 'Quick restock to outlet #'.$outletId,
+                'created_by' => $userId,
+            ]);
+
+            StockMovement::create([
+                'outlet_id' => $outletId,
+                'product_variant_id' => $variantId,
+                'type' => 'restock_in',
+                'quantity' => $quantity,
+                'before_stock' => $outletBefore,
+                'after_stock' => $inventory->fresh()->current_stock,
+                'before_reserved' => $inventory->reserved_stock,
+                'after_reserved' => $inventory->reserved_stock,
+                'notes' => $notes ?? 'Quick restock from center',
+                'created_by' => $userId,
+            ]);
+
+            $this->checkAndNotifyLowStock($outletId, $inventory, $variantId);
+        });
+    }
+
+    /**
+     * Update center stock with locking and audit trail.
+     */
+    public function updateCenterStock(int $variantId, int $newStock, ?string $notes = null): void
+    {
+        DB::transaction(function () use ($variantId, $newStock, $notes) {
+            $variant = ProductVariant::where('id', $variantId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $before = $variant->center_stock;
+            $variant->update(['center_stock' => $newStock]);
+
+            StockMovement::create([
+                'outlet_id' => null,
+                'product_variant_id' => $variantId,
+                'type' => 'stock_adjustment',
+                'quantity' => $newStock - $before,
+                'before_stock' => $before,
+                'after_stock' => $newStock,
+                'before_reserved' => 0,
+                'after_reserved' => 0,
+                'notes' => $notes ?? 'Manual adjustment by owner',
+                'created_by' => Auth::id(),
+            ]);
+        });
+    }
+
+    /**
+     * Stock opname: set outlet stock to exact count with locking and audit trail.
+     */
+    public function stockOpname(int $outletId, int $variantId, int $actualCount, ?string $notes = null): void
+    {
+        DB::transaction(function () use ($outletId, $variantId, $actualCount, $notes) {
+            $inventory = OutletInventory::where('outlet_id', $outletId)
+                ->where('product_variant_id', $variantId)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $before = $inventory->current_stock;
+            $inventory->update(['current_stock' => $actualCount]);
+
+            StockMovement::create([
+                'outlet_id' => $outletId,
+                'product_variant_id' => $variantId,
+                'type' => 'stock_opname',
+                'quantity' => $actualCount - $before,
+                'before_stock' => $before,
+                'after_stock' => $actualCount,
+                'before_reserved' => $inventory->reserved_stock,
+                'after_reserved' => $inventory->reserved_stock,
+                'notes' => $notes ?? "Stock opname: {$before} → {$actualCount}",
+                'created_by' => Auth::id(),
+            ]);
+        });
     }
 
     private function checkAndNotifyLowStock(int $outletId, OutletInventory $inventory, int $variantId): void

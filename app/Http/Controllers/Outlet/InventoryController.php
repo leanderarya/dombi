@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\OutletInventory;
 use App\Models\ProductFamily;
-use App\Models\StockMovement;
+use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -52,28 +51,17 @@ class InventoryController extends Controller
 
         $systemCount = $inventory->current_stock;
         $actualCount = $validated['actual_count'];
-        $difference = $actualCount - $systemCount;
 
-        if ($difference === 0) {
+        if ($actualCount === $systemCount) {
             return back()->with('success', 'Stok sesuai. Tidak ada perubahan.');
         }
 
-        DB::transaction(function () use ($inventory, $actualCount, $difference, $validated, $user) {
-            $before = $inventory->current_stock;
-            $inventory->update(['current_stock' => $actualCount]);
-
-            StockMovement::create([
-                'outlet_id' => $inventory->outlet_id,
-                'product_id' => $inventory->product_id,
-                'product_variant_id' => $inventory->product_variant_id,
-                'type' => 'stock_opname',
-                'quantity' => $difference,
-                'before_stock' => $before,
-                'after_stock' => $actualCount,
-                'notes' => $validated['notes'] ?? "Stock opname: {$before} → {$actualCount}",
-                'created_by' => $user->id,
-            ]);
-        });
+        app(InventoryService::class)->stockOpname(
+            $outlet->id,
+            $validated['product_variant_id'],
+            $actualCount,
+            $validated['notes'] ?? null,
+        );
 
         return back()->with('success', "Stok berhasil diperbarui: {$systemCount} → {$actualCount}");
     }

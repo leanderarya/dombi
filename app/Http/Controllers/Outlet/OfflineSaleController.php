@@ -70,6 +70,7 @@ class OfflineSaleController extends Controller
 
         $inventory = OutletInventory::where('outlet_id', $outlet->id)
             ->where('product_variant_id', $variant->id)
+            ->lockForUpdate()
             ->first();
 
         if (! $inventory || $inventory->current_stock < $validated['quantity']) {
@@ -132,31 +133,43 @@ class OfflineSaleController extends Controller
         abort_unless($outlet && $offlineSale->outlet_id === $outlet->id, 403);
 
         DB::transaction(function () use ($outlet, $offlineSale, $settlementGenerator) {
-            // Reverse stock
+            // Reverse stock with lock
             $inventory = OutletInventory::where('outlet_id', $outlet->id)
                 ->where('product_variant_id', $offlineSale->product_variant_id)
+                ->lockForUpdate()
                 ->first();
 
             if ($inventory) {
+                $before = $inventory->current_stock;
                 $inventory->increment('current_stock', $offlineSale->quantity);
+
+                // Reversal StockMovement (keep original, add reversal)
+                StockMovement::create([
+                    'outlet_id' => $outlet->id,
+                    'product_id' => $offlineSale->variant->product_id,
+                    'product_variant_id' => $offlineSale->product_variant_id,
+                    'type' => 'stock_adjustment',
+                    'quantity' => $offlineSale->quantity,
+                    'before_stock' => $before,
+                    'after_stock' => $inventory->fresh()->current_stock,
+                    'notes' => "Batal penjualan offline: {$offlineSale->quantity}x {$offlineSale->variant->name}",
+                    'created_by' => $request->user()->id,
+                ]);
             }
 
-            // Delete related stock movement
-            StockMovement::where('outlet_id', $outlet->id)
-                ->where('product_variant_id', $offlineSale->product_variant_id)
-                ->where('type', 'offline_sale')
-                ->where('quantity', -$offlineSale->quantity)
-                ->where('created_by', $offlineSale->created_by)
-                ->where('created_at', $offlineSale->created_at)
-                ->delete();
-
-            // Delete related outlet payable (audit trail)
-            // Use exact notes match to avoid false positives (e.g. "10x" matching "100x")
-            OutletPayable::where('outlet_id', $outlet->id)
-                ->where('type', 'sale')
-                ->where('notes', "Penjualan offline: {$offlineSale->quantity}x {$offlineSale->variant->name}")
-                ->where('created_by', $offlineSale->created_by)
-                ->delete();
+            // Reversal OutletPayable (keep original, add reversal entry)
+            OutletPayable::create([
+                'outlet_id' => $outlet->id,
+                'type' => 'adjustment',
+                'amount' => -$offlineSale->total_amount,
+                'center_share' => -$offlineSale->total_amount,
+                'outlet_margin' => 0,
+                'due_date' => now()->endOfWeek(Carbon::SUNDAY)->addDays(7)->toDateString(),
+                'paid_amount' => 0,
+                'remaining_amount' => 0,
+                'notes' => "Batal penjualan offline: {$offlineSale->quantity}x {$offlineSale->variant->name}",
+                'created_by' => $request->user()->id,
+            ]);
 
             // Delete the sale
             $offlineSale->delete();

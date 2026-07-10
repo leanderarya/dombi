@@ -1,9 +1,7 @@
 import { Link, router } from '@inertiajs/react';
 import {
-    Calendar,
     Clock,
     DollarSign,
-    Edit3,
     History,
     MapPin,
     Package,
@@ -82,8 +80,8 @@ export default function OutletShow({
             backHref="/owner/outlets"
             headerRight={
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href={`/owner/outlets/${outlet.id}/edit`}>Edit</Link>
+                    <Button variant="outline" size="sm" onClick={() => router.visit(`/owner/outlets/${outlet.id}/edit`)}>
+                        Edit
                     </Button>
                     <Button variant="danger" size="sm" onClick={() => setShowArchiveConfirm(true)}>
                         <Trash2 className="h-3 w-3" aria-hidden="true" />
@@ -96,14 +94,9 @@ export default function OutletShow({
                 <div className="lg:col-span-2 space-y-4">
                     <div className="rounded-lg border border-border p-4" aria-label="Informasi Outlet">
                         <div className="mb-3 text-xs font-semibold text-text-subtle">Informasi Outlet</div>
-                        <div className="flex items-start justify-between gap-3">
-                            <div>
-                                <h2 className="text-lg font-semibold text-text">{outlet.name ?? '-'}</h2>
-                                <p className="mt-0.5 text-xs text-text-muted">{outlet.address ?? '-'}</p>
-                                {outlet.phone && <p className="text-xs text-text-muted">{outlet.phone}</p>}
-                            </div>
-                            <OutletStatusBadge status={outlet.status ?? 'active'} />
-                        </div>
+                        <h2 className="text-lg font-semibold text-text">{outlet.name ?? '-'}</h2>
+                        <p className="mt-0.5 text-xs text-text-muted">{outlet.address ?? '-'}</p>
+                        {outlet.phone && <p className="text-xs text-text-muted">{outlet.phone}</p>}
 
                         {outlet.pic_name && (
                             <div className="mt-3 rounded-lg border border-border bg-surface-muted p-3">
@@ -116,24 +109,9 @@ export default function OutletShow({
                                 {outlet.pic_phone && <div className="text-xs text-text-muted">{outlet.pic_phone}</div>}
                             </div>
                         )}
-
-                        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                            <div className="rounded-lg border border-border bg-surface-muted p-2 text-center">
-                                <div className="text-sm font-semibold tabular-nums text-text">{outlet.active_orders_count ?? 0}</div>
-                                <div className="text-xs font-medium opacity-70 text-text-muted">Pesanan Aktif</div>
-                            </div>
-                            <div className="rounded-lg border border-border bg-surface-muted p-2 text-center">
-                                <div className="text-sm font-semibold tabular-nums text-text">{activeDeliveriesCount ?? 0}</div>
-                                <div className="text-xs font-medium opacity-70 text-text-muted">Pengiriman</div>
-                            </div>
-                            <div className="rounded-lg border border-border bg-surface-muted p-2 text-center">
-                                <div className="text-sm font-semibold tabular-nums text-text">{outlet.today_orders_count ?? 0}</div>
-                                <div className="text-xs font-medium opacity-70 text-text-muted">Hari Ini</div>
-                            </div>
-                        </div>
                     </div>
 
-                    <div className="rounded-lg border border-border p-4 lg:col-span-2" aria-label="Lokasi">
+                    <div className="rounded-lg border border-border p-4" aria-label="Lokasi">
                         <div className="mb-3 text-xs font-semibold text-text-subtle">Lokasi</div>
                         <p className="text-xs text-text-muted">
                             {outlet.kelurahan ?? '-'} &middot; {outlet.kecamatan ?? '-'}
@@ -152,20 +130,17 @@ export default function OutletShow({
                         </div>
                     </div>
 
-                    <div className="rounded-lg border border-border p-4" aria-label="Jam Operasional">
+                    <div className="rounded-lg border border-border p-4" aria-label="Jadwal Outlet">
                         <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
                             <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                            Jam Operasional
+                            Jadwal Outlet
                         </div>
+                        <div className="mb-3 text-xs font-medium text-text-muted">Jam Operasional</div>
                         <OperatingHoursManager outletId={outlet.id} initialHours={operatingHours ?? []} />
-                    </div>
-
-                    <div className="rounded-lg border border-border p-4" aria-label="Hari Libur">
-                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
-                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-                            Hari Libur
+                        <div className="mt-4 border-t border-border pt-3 text-xs font-medium text-text-muted">Hari Libur</div>
+                        <div className="mt-2">
+                            <HolidayManager outletId={outlet.id} initialHolidays={holidays ?? []} />
                         </div>
-                        <HolidayManager outletId={outlet.id} initialHolidays={holidays ?? []} />
                     </div>
 
                     <div className="rounded-lg border border-border p-4" aria-label="Produk Outlet">
@@ -274,13 +249,6 @@ export default function OutletShow({
                         </div>
                         <div className="space-y-1.5">
                             <Link
-                                href={`/owner/outlets/${outlet.id}/edit`}
-                                className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
-                            >
-                                <Edit3 className="h-3.5 w-3.5 text-text-subtle" aria-hidden="true" />
-                                Edit Outlet
-                            </Link>
-                            <Link
                                 href={`/owner/inventories?outlet_id=${outlet.id}`}
                                 className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
                             >
@@ -331,7 +299,7 @@ export default function OutletShow({
             </div>
 
             <Dialog open={showArchiveConfirm} onOpenChange={setShowArchiveConfirm}>
-                <DialogContent>
+                <DialogContent className="z-[2000]" overlayClassName="z-[1999]">
                     <DialogHeader>
                         <DialogTitle>Arsipkan Outlet?</DialogTitle>
                         <DialogDescription>

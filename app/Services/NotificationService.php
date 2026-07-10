@@ -90,6 +90,9 @@ class NotificationService
 
     public const RETURNED_DELIVERY_PENDING = 'system.returned_delivery_pending';
 
+    // Refund notifications
+    public const REFUND_PROCESSED = 'order.refund_processed';
+
     // Settlement notifications
     public const SETTLEMENT_REMINDER = 'settlement.reminder';
 
@@ -1028,19 +1031,17 @@ class NotificationService
     {
         $formattedAmount = 'Rp ' . number_format($amount, 0, ',', '.');
 
-        // Push notification
-        $this->notify(
-            $order->customer_id,
-            'Refund Berhasil',
-            "{$formattedAmount} telah dikembalikan ke metode pembayaran Anda. Order #{$order->order_code} dibatalkan.",
-            ['order_id' => $order->id]
-        );
-
-        // WhatsApp
-        if ($order->customer_phone) {
-            $this->sendWhatsApp(
-                $order->customer_phone,
-                "Refund {$formattedAmount} telah diproses untuk order #{$order->order_code}. Dana akan kembali dalam 1-3 hari kerja."
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::REFUND_PROCESSED,
+                title: 'Refund Berhasil',
+                message: "{$formattedAmount} telah dikembalikan ke metode pembayaran Anda. Order #{$order->order_code} dibatalkan.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'amount' => $amount],
+                entityType: 'order',
+                entityId: $order->id
             );
         }
     }

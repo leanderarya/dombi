@@ -237,9 +237,9 @@ class PricingController extends Controller
     /**
      * Reset outlet price to global (delete override).
      */
-    public function resetOutlet(Outlet $outlet, ProductVariant $variant, PricingService $pricingService): RedirectResponse
+    public function resetOutlet(Request $request, Outlet $outlet, ProductVariant $variant, PricingService $pricingService): RedirectResponse
     {
-        $pricingService->resetToGlobal($outlet->id, $variant->id, request()->user());
+        $pricingService->resetToGlobal($outlet->id, $variant->id, $request->user());
 
         return back()->with('success', 'Harga berhasil direset ke harga pusat.');
     }

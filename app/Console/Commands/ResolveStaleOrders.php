@@ -6,8 +6,9 @@ use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\DeliveryService;
-use App\Services\InventoryService;
+use App\Services\OrderStatusService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class ResolveStaleOrders extends Command
 {
@@ -22,12 +23,12 @@ class ResolveStaleOrders extends Command
 
     public function handle(
         DeliveryService $deliveryService,
-        InventoryService $inventoryService,
+        OrderStatusService $orderStatusService,
     ): int {
         $dryRun = $this->option('dry-run');
         $totalResolved = 0;
 
-        // 1. Cancel stale preparing orders (outlet started but never finished)
+        // 1. Cancel stale preparing orders
         $preparingHours = (int) $this->option('preparing-hours');
         $stalePreparing = Order::query()
             ->where('status', 'preparing')
@@ -41,30 +42,21 @@ class ResolveStaleOrders extends Command
                 $this->line("  [DRY RUN] Would cancel order #{$order->id} ({$order->order_code})");
             } else {
                 try {
-                    $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
-                    $inventoryService->releaseReservedStock($order);
-                    $order->update([
-                        'status' => 'cancelled_by_outlet',
-                        'cancelled_at' => now(),
-                        'cancellation_reason' => 'Auto-cancelled: stale preparing',
-                    ]);
-                    $order->statusHistories()->create([
-                        'from_status' => 'preparing',
-                        'to_status' => 'cancelled_by_outlet',
+                    $orderStatusService->transition($order, 'cancelled_by_outlet', [
+                        'reason' => "Auto-cancelled: stale preparing (>{$preparingHours}h)",
+                        'actor_type' => 'system',
                         'notes' => "Auto-cancelled: outlet did not complete preparation within {$preparingHours} hours.",
-                        'changed_by_type' => 'system',
-                        'created_at' => now(),
                     ]);
                     $this->line("  Cancelled order #{$order->id} ({$order->order_code})");
                     $totalResolved++;
                 } catch (\Throwable $e) {
                     $this->error("  Failed to cancel order #{$order->id}: {$e->getMessage()}");
-                    report($e);
+                    Log::error("ResolveStaleOrders: failed to cancel preparing order #{$order->id}", ['error' => $e->getMessage()]);
                 }
             }
         }
 
-        // 2. Cancel stale ready_for_pickup orders (ready but never picked up)
+        // 2. Cancel stale ready_for_pickup orders
         $readyHours = (int) $this->option('ready-hours');
         $staleReady = Order::query()
             ->where('status', 'ready_for_pickup')
@@ -78,30 +70,21 @@ class ResolveStaleOrders extends Command
                 $this->line("  [DRY RUN] Would cancel order #{$order->id} ({$order->order_code})");
             } else {
                 try {
-                    $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
-                    $inventoryService->releaseReservedStock($order);
-                    $order->update([
-                        'status' => 'cancelled_by_outlet',
-                        'cancelled_at' => now(),
-                        'cancellation_reason' => 'Auto-cancelled: stale ready_for_pickup',
-                    ]);
-                    $order->statusHistories()->create([
-                        'from_status' => 'ready_for_pickup',
-                        'to_status' => 'cancelled_by_outlet',
+                    $orderStatusService->transition($order, 'cancelled_by_outlet', [
+                        'reason' => "Auto-cancelled: stale ready_for_pickup (>{$readyHours}h)",
+                        'actor_type' => 'system',
                         'notes' => "Auto-cancelled: no courier assigned within {$readyHours} hours.",
-                        'changed_by_type' => 'system',
-                        'created_at' => now(),
                     ]);
                     $this->line("  Cancelled order #{$order->id} ({$order->order_code})");
                     $totalResolved++;
                 } catch (\Throwable $e) {
                     $this->error("  Failed to cancel order #{$order->id}: {$e->getMessage()}");
-                    report($e);
+                    Log::error("ResolveStaleOrders: failed to cancel ready order #{$order->id}", ['error' => $e->getMessage()]);
                 }
             }
         }
 
-        // 2. Auto-resolve old failed_deliveries
+        // 3. Auto-resolve old failed_deliveries
         $failedDays = (int) $this->option('failed-days');
         $staleFailed = Order::query()
             ->where('status', 'failed_delivery')
@@ -112,7 +95,7 @@ class ResolveStaleOrders extends Command
 
         foreach ($staleFailed as $order) {
             if ($dryRun) {
-                $this->line("  [DRY RUN] Would resolve order #{$order->id} ({$order->order_code}) to cancelled_and_released");
+                $this->line("  [DRY RUN] Would resolve order #{$order->id} ({$order->order_code}) to cancelled_by_outlet");
             } else {
                 try {
                     $delivery = Delivery::where('order_id', $order->id)->first();
@@ -124,25 +107,22 @@ class ResolveStaleOrders extends Command
                             "Auto-resolved after {$failedDays} days without resolution."
                         );
                     } else {
-                        // No delivery record — manually cancel the order
-                        $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
-                        $inventoryService->releaseReservedStock($order);
-                        $order->update([
-                            'status' => 'cancelled_by_outlet',
-                            'cancelled_at' => now(),
-                            'cancellation_reason' => 'Auto-resolved: stale failed_delivery',
+                        $orderStatusService->transition($order, 'cancelled_by_outlet', [
+                            'reason' => "Auto-resolved: stale failed_delivery (>{$failedDays}d)",
+                            'actor_type' => 'system',
+                            'notes' => "Auto-resolved: failed delivery unresolved for {$failedDays} days.",
                         ]);
                     }
                     $this->line("  Resolved order #{$order->id} ({$order->order_code})");
                     $totalResolved++;
                 } catch (\Throwable $e) {
                     $this->error("  Failed to resolve order #{$order->id}: {$e->getMessage()}");
-                    report($e);
+                    Log::error("ResolveStaleOrders: failed to resolve failed_delivery #{$order->id}", ['error' => $e->getMessage()]);
                 }
             }
         }
 
-        // 3. Timeout stalled delivering deliveries
+        // 4. Timeout stalled delivering deliveries
         $deliveringHours = (int) $this->option('delivering-hours');
         $stalledDelivering = Delivery::query()
             ->where('status', 'delivering')
@@ -161,19 +141,21 @@ class ResolveStaleOrders extends Command
                         'status' => 'failed',
                         'failed_reason' => "Auto-failed: stalled for {$deliveringHours} hours",
                     ]);
-                    $delivery->order()->update(['status' => 'failed_delivery']);
-                    $delivery->order->statusHistories()->create([
-                        'from_status' => 'delivering',
-                        'to_status' => 'failed_delivery',
-                        'notes' => "Auto-failed: delivery stalled for {$deliveringHours} hours.",
-                        'changed_by_type' => 'system',
-                        'created_at' => now(),
-                    ]);
+
+                    $order = $delivery->order;
+                    if ($order) {
+                        $orderStatusService->transition($order, 'failed_delivery', [
+                            'reason' => "Auto-failed: delivery stalled (>{$deliveringHours}h)",
+                            'actor_type' => 'system',
+                            'notes' => "Auto-failed: delivery stalled for {$deliveringHours} hours.",
+                        ]);
+                    }
+
                     $this->line("  Failed delivery #{$delivery->id} for order #{$delivery->order_id}");
                     $totalResolved++;
                 } catch (\Throwable $e) {
                     $this->error("  Failed to timeout delivery #{$delivery->id}: {$e->getMessage()}");
-                    report($e);
+                    Log::error("ResolveStaleOrders: failed to timeout delivery #{$delivery->id}", ['error' => $e->getMessage()]);
                 }
             }
         }

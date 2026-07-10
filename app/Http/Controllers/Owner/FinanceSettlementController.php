@@ -25,7 +25,7 @@ class FinanceSettlementController extends Controller
     /**
      * Dashboard Tagihan — all outlets with sales + settlement aggregation.
      */
-    public function dashboard(): Response
+    public function dashboard(Request $request): Response
     {
         // Don't cache Eloquent models — they have serialization issues
         $outlets = Outlet::where('status', 'active')
@@ -164,7 +164,7 @@ class FinanceSettlementController extends Controller
         }
 
         // Pembayaran tab data
-        $status = request()->string('status', 'all')->toString();
+        $status = $request->string('status', 'all')->toString();
         $paymentQuery = SettlementPayment::query()->with(['outlet', 'verifier', 'settlement']);
         if ($status !== 'all') {
             $paymentQuery->where('status', $status);
@@ -312,7 +312,7 @@ class FinanceSettlementController extends Controller
             ]);
 
             // FIFO allocate to unpaid settlements
-            $this->paymentService->fifoAllocate($outlet->id, (float) $validated['amount']);
+            $paymentService->fifoAllocate($outlet->id, (float) $validated['amount']);
 
             return $payment;
         });
@@ -323,7 +323,7 @@ class FinanceSettlementController extends Controller
     /**
      * Send invoice for all unpaid settlements of an outlet.
      */
-    public function sendInvoice(Outlet $outlet): RedirectResponse
+    public function sendInvoice(Request $request, Outlet $outlet): RedirectResponse
     {
         $unpaidSettlements = Settlement::where('outlet_id', $outlet->id)
             ->where('status', '!=', Settlement::STATUS_PAID)
@@ -334,7 +334,7 @@ class FinanceSettlementController extends Controller
 
             SettlementAuditLog::create([
                 'settlement_id' => $settlement->id,
-                'user_id' => request()->user()->id,
+                'user_id' => $request->user()->id,
                 'action' => 'invoice_sent',
                 'notes' => 'Tagihan dikirim ke outlet',
             ]);

@@ -112,23 +112,6 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                         </div>
                     )}
 
-                    <div className="rounded-lg border border-border p-4" aria-label="Ringkasan keuangan">
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">Ringkasan</div>
-                        <OwnerDetailRow label="Omset Produk" value={formatCurrency(summary.total_sales)} bold />
-                        <OwnerDetailRow label="Ongkos Kirim" value={<span className="text-blue-600">{formatCurrency(summary.total_delivery_fee)}</span>} />
-                        <OwnerDetailRow label="Sisa Tagihan" value={<span className="font-semibold text-red-600">{formatCurrency(summary.outstanding)}</span>} bold />
-                        {summary.overpaid > 0 ? (
-                            <OwnerDetailRow label="Kelebihan Bayar" value={<span className="text-blue-600">{formatCurrency(summary.overpaid)}</span>} />
-                        ) : (
-                            <OwnerDetailRow label="Keterlambatan" value={summary.days_overdue > 0 ? `${summary.days_overdue} Hari` : '-'} />
-                        )}
-                        {summary.oldest_due_date && (
-                            <div className="mt-2 text-xs text-text-muted">
-                                Tagihan terlama: {summary.oldest_due_date}
-                            </div>
-                        )}
-                    </div>
-
                     <div className="rounded-lg border border-border p-4" aria-label="Daftar Tagihan">
                         <div className="mb-3 text-xs font-semibold text-text-subtle">Daftar Tagihan</div>
                         {settlements.length === 0 ? (
@@ -195,6 +178,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                         </div>
                         <div className="mt-4 space-y-2">
                             <OwnerDetailRow label="Omset" value={formatCurrency(summary.total_sales)} />
+                            <OwnerDetailRow label="Ongkos Kirim" value={<span className="text-blue-600">{formatCurrency(summary.total_delivery_fee)}</span>} />
                             <OwnerDetailRow label="Sisa" value={<span className="font-semibold text-red-600">{formatCurrency(summary.outstanding)}</span>} bold />
                             {summary.overpaid > 0 && (
                                 <OwnerDetailRow label="Kelebihan" value={<span className="text-blue-600">{formatCurrency(summary.overpaid)}</span>} />

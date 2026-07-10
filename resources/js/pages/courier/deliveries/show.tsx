@@ -1,7 +1,7 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, MessageCircle, Package, Phone, Store, Truck, XCircle } from 'lucide-react';
 import { useState } from 'react';
-import BottomSheet from '@/components/ui/bottom-sheet';
+import Dialog from '@/components/ui/dialog';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
@@ -71,6 +71,14 @@ const FAILURE_REASONS = [
     'Lainnya',
 ];
 
+const REJECTION_REASONS = [
+    'Sedang Mengantar Pesanan Lain',
+    'Kendaraan Bermasalah',
+    'Di Luar Area Operasional',
+    'Kendala Pribadi',
+    'Lainnya',
+];
+
 const timelineSteps = [
     { key: 'waiting_pickup', label: 'Ditugaskan', icon: Clock },
     { key: 'picked_up', label: 'Diambil', icon: Package },
@@ -92,9 +100,9 @@ export default function CourierDeliveryShow({ delivery }: Props) {
     const canConfirmPickup = delivery.status === 'waiting_pickup';
     const canStartDelivery = delivery.status === 'picked_up';
     const canComplete = delivery.status === 'delivering';
-    const canFail = delivery.status === 'delivering' || delivery.status === 'picked_up';
+    const canFail = delivery.status === 'delivering';
     const canReject = delivery.status === 'waiting_pickup';
-    const canReturn = delivery.status === 'picked_up';
+    const canReturn = delivery.status === 'failed';
     const hasActions = canConfirmPickup || canStartDelivery || canComplete || canFail || canReject || canReturn;
 
     const openMaps = () => {
@@ -127,10 +135,6 @@ export default function CourierDeliveryShow({ delivery }: Props) {
 
     const startDelivery = () => {
         router.post(`/courier/deliveries/${delivery.id}/start-delivery`, {}, { preserveScroll: true });
-    };
-
-    const rejectDelivery = () => {
-        router.post(`/courier/deliveries/${delivery.id}/reject`, {}, { preserveScroll: true });
     };
 
     const returnToOutlet = () => {
@@ -412,67 +416,44 @@ export default function CourierDeliveryShow({ delivery }: Props) {
             )}
 
 
-            {/* Complete Sheet */}
-            <BottomSheet open={showCompleteSheet} onClose={() => setShowCompleteSheet(false)} title="Selesaikan Pengiriman">
+            {/* Complete Dialog */}
+            <Dialog open={showCompleteSheet} onClose={() => setShowCompleteSheet(false)} title="Selesaikan Pengiriman">
                 <CompleteSheetContent deliveryId={delivery.id} onClose={() => setShowCompleteSheet(false)} />
-            </BottomSheet>
+            </Dialog>
 
-            {/* Fail Sheet */}
-            <BottomSheet open={showFailSheet} onClose={() => setShowFailSheet(false)} title="Gagal Antar">
+            {/* Fail Dialog */}
+            <Dialog open={showFailSheet} onClose={() => setShowFailSheet(false)} title="Gagal Antar">
                 <FailSheetContent deliveryId={delivery.id} onClose={() => setShowFailSheet(false)} />
-            </BottomSheet>
+            </Dialog>
 
-            {/* Reject Sheet */}
-            <BottomSheet open={showRejectSheet} onClose={() => setShowRejectSheet(false)} title="Tolak Pesanan">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3 rounded-lg bg-red-50 p-4">
-                        <AlertTriangle className="h-5 w-5 shrink-0 text-red-600" />
-                        <p className="text-sm text-red-800">
-                            Anda yakin ingin menolak pesanan <strong>{order.order_code}</strong>? Pesanan akan dikembalikan ke daftar menunggu.
-                        </p>
-                    </div>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => setShowRejectSheet(false)}
-                            className="flex-1 rounded-lg border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
-                        >
-                            Batal
-                        </button>
-                        <button
-                            onClick={rejectDelivery}
-                            className="flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-bold text-white transition-colors active:bg-red-700"
-                        >
-                            Ya, Tolak
-                        </button>
-                    </div>
-                </div>
-            </BottomSheet>
+            {/* Reject Dialog */}
+            <Dialog open={showRejectSheet} onClose={() => setShowRejectSheet(false)} title="Tolak Pesanan">
+                <RejectSheetContent deliveryId={delivery.id} onClose={() => setShowRejectSheet(false)} />
+            </Dialog>
 
-            {/* Return to Outlet Sheet */}
-            <BottomSheet open={showReturnSheet} onClose={() => setShowReturnSheet(false)} title="Kembali ke Outlet">
-                <div className="space-y-4">
-                    <div className="flex items-center gap-3 rounded-lg bg-amber-50 p-4">
-                        <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-                        <p className="text-sm text-amber-800">
-                            Anda yakin ingin mengembalikan pesanan <strong>{order.order_code}</strong> ke outlet? Pesanan perlu diambil ulang.
-                        </p>
-                    </div>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={() => setShowReturnSheet(false)}
-                            className="flex-1 rounded-lg border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
-                        >
-                            Batal
-                        </button>
-                        <button
-                            onClick={returnToOutlet}
-                            className="flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-bold text-white transition-colors active:bg-red-700"
-                        >
-                            Ya, Kembalikan
-                        </button>
-                    </div>
+            {/* Return to Outlet Dialog */}
+            <Dialog open={showReturnSheet} onClose={() => setShowReturnSheet(false)} title="Kembali ke Outlet">
+                <div className="flex items-center gap-3 rounded-lg bg-amber-50 p-4">
+                    <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
+                    <p className="text-sm text-amber-800">
+                        Anda yakin ingin mengembalikan pesanan <strong>{order.order_code}</strong> ke outlet? Pesanan perlu diambil ulang.
+                    </p>
                 </div>
-            </BottomSheet>
+                <div className="flex gap-3">
+                    <button
+                        onClick={() => setShowReturnSheet(false)}
+                        className="flex-1 rounded-lg border border-border bg-white px-4 py-3 text-sm font-semibold text-text transition-colors active:bg-surface-muted"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        onClick={returnToOutlet}
+                        className="flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-bold text-white transition-colors active:bg-red-700"
+                    >
+                        Ya, Kembalikan
+                    </button>
+                </div>
+            </Dialog>
         </CourierLayout>
     );
 }
@@ -627,6 +608,74 @@ function FailSheetContent({ deliveryId, onClose }: { deliveryId: number; onClose
                 className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition-colors active:bg-red-700 disabled:opacity-50"
             >
                 {form.processing ? 'Memproses...' : 'Konfirmasi Gagal'}
+            </button>
+        </form>
+    );
+}
+
+function RejectSheetContent({ deliveryId, onClose }: { deliveryId: number; onClose: () => void }) {
+    const form = useForm({
+        rejection_reason: '',
+        rejection_note: '',
+    });
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        form.post(`/courier/deliveries/${deliveryId}/reject`, {
+            onSuccess: () => onClose(),
+        });
+    };
+
+    return (
+        <form onSubmit={handleSubmit}>
+            <div className="space-y-2">
+                {REJECTION_REASONS.map((reason) => (
+                    <label
+                        key={reason}
+                        className={`flex cursor-pointer items-center rounded-lg border p-3 transition-colors ${
+                            form.data.rejection_reason === reason
+                                ? 'border-red-300 bg-red-50'
+                                : 'border-border bg-white active:bg-surface-muted'
+                        }`}
+                    >
+                        <input
+                            type="radio"
+                            name="rejection_reason"
+                            value={reason}
+                            checked={form.data.rejection_reason === reason}
+                            onChange={() => form.setData('rejection_reason', reason)}
+                            className="mr-3"
+                        />
+                        <span className="text-sm font-medium text-text">{reason}</span>
+                    </label>
+                ))}
+            </div>
+
+            {form.data.rejection_reason === 'Lainnya' && (
+                <div className="mt-3">
+                    <textarea
+                        value={form.data.rejection_note}
+                        onChange={(e) => form.setData('rejection_note', e.target.value)}
+                        placeholder="Jelaskan alasan penolakan"
+                        rows={3}
+                        className="block w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
+                    />
+                </div>
+            )}
+
+            {form.errors.rejection_reason && (
+                <p className="mt-1 text-xs text-red-600">{form.errors.rejection_reason}</p>
+            )}
+            {form.errors.rejection_note && (
+                <p className="mt-1 text-xs text-red-600">{form.errors.rejection_note}</p>
+            )}
+
+            <button
+                type="submit"
+                disabled={!form.data.rejection_reason || form.processing}
+                className="mt-4 flex min-h-12 w-full items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-bold text-white transition-colors active:bg-red-700 disabled:opacity-50"
+            >
+                {form.processing ? 'Memproses...' : 'Konfirmasi Tolak'}
             </button>
         </form>
     );

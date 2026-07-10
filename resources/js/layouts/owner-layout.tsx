@@ -34,6 +34,7 @@ const navGroups: NavGroup[] = [
         label: 'Operasional',
         icon: <OperationalIcon />,
         items: [
+            { href: '/owner/outlets', label: 'Outlet' },
             { href: '/owner/orders', label: 'Pesanan' },
             { href: '/owner/deliveries', label: 'Pengiriman' },
             { href: '/owner/couriers', label: 'Kurir' },
@@ -52,7 +53,6 @@ const navGroups: NavGroup[] = [
         label: 'Master Data',
         icon: <MasterDataIcon />,
         items: [
-            { href: '/owner/outlets', label: 'Outlet' },
             { href: '/owner/products', label: 'Produk', isActive: (url: string) => url.startsWith('/owner/products') || url.startsWith('/owner/product-families') },
             { href: '/owner/pricing', label: 'Harga', isActive: (url: string) => url.split('?')[0] === '/owner/pricing' },
         ],

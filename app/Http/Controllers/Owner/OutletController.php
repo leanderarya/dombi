@@ -137,11 +137,11 @@ class OutletController extends Controller
         return redirect()->route('owner.outlets.index')->with('success', 'Outlet berhasil diarsipkan.');
     }
 
-    public function archive(Outlet $outlet, OutletAuditService $auditService): RedirectResponse
+    public function archive(Request $request, Outlet $outlet, OutletAuditService $auditService): RedirectResponse
     {
         $oldStatus = $outlet->status;
         $outlet->update(['status' => 'archived']);
-        $auditService->log($outlet, 'status', $oldStatus, 'archived', request()->user());
+        $auditService->log($outlet, 'status', $oldStatus, 'archived', $request->user());
 
         return redirect()->route('owner.outlets.index')->with('success', 'Outlet berhasil diarsipkan.');
     }

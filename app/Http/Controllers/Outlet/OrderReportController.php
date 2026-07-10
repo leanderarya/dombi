@@ -34,10 +34,10 @@ class OrderReportController extends Controller
         ]);
     }
 
-    public function show(OrderReport $report): Response
+    public function show(Request $request, OrderReport $report): Response
     {
         // Scope: only reports for this outlet's orders
-        $user = request()->user();
+        $user = $request->user();
         if ($report->order->outlet_id !== $user->outlet_id) {
             abort(403);
         }

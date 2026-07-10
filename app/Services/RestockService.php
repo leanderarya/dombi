@@ -87,7 +87,7 @@ class RestockService
                 'approved_at' => now(),
             ]);
 
-            $this->createDistribution($request->fresh('items'), $owner);
+            $this->createDistribution($request->fresh('items'));
 
             $this->notificationService->notifyRestockApproved($request->fresh());
 
@@ -137,7 +137,7 @@ class RestockService
         });
     }
 
-    public function createDistribution(RestockRequest $request, User $owner): StockDistribution
+    public function createDistribution(RestockRequest $request): StockDistribution
     {
         return DB::transaction(function () use ($request): StockDistribution {
             $request = RestockRequest::query()->lockForUpdate()->with(['items', 'distribution'])->findOrFail($request->id);

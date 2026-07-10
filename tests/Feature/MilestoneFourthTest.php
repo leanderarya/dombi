@@ -134,7 +134,7 @@ class MilestoneFourthTest extends TestCase
         $distribution = $this->makeDistribution($context);
         $restock = $distribution->restockRequest()->with('items')->firstOrFail();
 
-        $sameDistribution = app(RestockService::class)->createDistribution($restock, $context['owner']);
+        $sameDistribution = app(RestockService::class)->createDistribution($restock);
 
         $this->assertSame($distribution->id, $sameDistribution->id);
         $this->assertSame(1, StockDistribution::where('restock_request_id', $restock->id)->count());
