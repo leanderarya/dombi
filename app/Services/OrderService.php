@@ -123,23 +123,6 @@ class OrderService
                 ]);
             }
 
-            // Apply credit if requested
-            if ($payload['use_credit'] ?? false) {
-                $creditService = app(CustomerCreditService::class);
-                $creditApplied = $creditService->applyToOrder($order, $customer);
-
-                if ($creditApplied >= (float) $order->total) {
-                    $order->update([
-                        'payment_method' => 'credit',
-                        'payment_status' => 'paid',
-                        'paid_at' => now(),
-                        'status' => Order::STATUS_CONFIRMED,
-                        'confirmed_at' => now(),
-                    ]);
-                    $this->notificationService->notifyOrderCreated($order);
-                }
-            }
-
             return $order;
         });
     }
