@@ -56,8 +56,8 @@ return null;
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                     <h2 className="text-sm font-bold text-text">Catat Penjualan</h2>
-                    <button onClick={onClose} className="w-7 h-7 flex items-center justify-center rounded-full text-text-muted hover:bg-surface-muted transition-colors">
-                        <X className="w-3.5 h-3.5" />
+                    <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full text-text-muted hover:bg-surface-muted transition-colors">
+                        <X className="w-4 h-4" />
                     </button>
                 </div>
 
@@ -81,7 +81,7 @@ return null;
                                     max={selectedVariant?.stock ?? 999}
                                     value={form.data.quantity}
                                     onChange={(e) => form.setData('quantity', Math.max(1, parseInt(e.target.value) || 1))}
-                                    className="w-full h-9 text-center text-sm font-semibold text-text border border-border rounded-lg bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    className="w-full min-h-11 text-center text-sm font-semibold text-text border border-border rounded-lg bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 />
                             </div>
                             <div className="flex-1">
@@ -91,7 +91,7 @@ return null;
                                     value={form.data.notes}
                                     onChange={(e) => form.setData('notes', e.target.value)}
                                     placeholder="Opsional"
-                                    className="w-full h-9 rounded-lg border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
+                                    className="w-full min-h-11 rounded-lg border border-border bg-surface px-2.5 text-sm text-text placeholder:text-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/30"
                                 />
                             </div>
                         </div>
@@ -110,7 +110,7 @@ return null;
                         <button
                             type="submit"
                             disabled={form.processing || !form.data.variant_id}
-                            className="w-full h-9 rounded-lg bg-emerald-600 text-xs font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle transition-colors"
+                            className="w-full min-h-11 rounded-lg bg-emerald-600 text-sm font-bold text-white active:opacity-80 disabled:bg-border disabled:text-text-subtle transition-colors"
                         >
                             {form.processing ? 'Menyimpan...' : 'Simpan'}
                         </button>

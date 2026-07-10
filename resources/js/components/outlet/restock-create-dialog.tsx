@@ -79,7 +79,7 @@ return null;
                     <h2 className="text-base font-bold text-text">Buat Restock</h2>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors"
+                        className="w-10 h-10 flex items-center justify-center rounded-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -110,7 +110,7 @@ return null;
 updateItem(0, 'quantity', current - 1);
 }
                                     }}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors"
+                                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors"
                                 >
                                     <Minus className="w-3.5 h-3.5" />
                                 </button>
@@ -127,7 +127,7 @@ updateItem(0, 'quantity', current - 1);
                                         const current = form.data.items[0]?.quantity ?? 1;
                                         updateItem(0, 'quantity', current + 1);
                                     }}
-                                    className="w-9 h-9 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors"
+                                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors"
                                 >
                                     <Plus className="w-3.5 h-3.5" />
                                 </button>

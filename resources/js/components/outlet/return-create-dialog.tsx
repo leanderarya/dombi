@@ -125,7 +125,7 @@ return null;
                     <h2 className="text-base font-bold text-text">Ajukan Return</h2>
                     <button
                         onClick={onClose}
-                        className="w-8 h-8 flex items-center justify-center rounded-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors"
+                        className="w-10 h-10 flex items-center justify-center rounded-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors"
                     >
                         <X className="w-4 h-4" />
                     </button>
@@ -164,7 +164,7 @@ return null;
                                         <button
                                             type="button"
                                             onClick={() => removeImage(index)}
-                                            className="absolute top-0.5 right-0.5 w-5 h-5 flex items-center justify-center rounded-full bg-red-500 text-white"
+                                            className="absolute top-0.5 right-0.5 w-7 h-7 flex items-center justify-center rounded-full bg-red-500 text-white"
                                         >
                                             <Trash2 className="w-3 h-3" />
                                         </button>
@@ -211,11 +211,11 @@ return null;
                                             </button>
                                             {isSelected && (
                                                 <div className="mt-2 flex items-center justify-end gap-2">
-                                                    <button type="button" onClick={() => updateQuantity(v.id, (selectedVariants.get(v.id) ?? 1) - 1)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-text-muted">
+                                                    <button type="button" onClick={() => updateQuantity(v.id, (selectedVariants.get(v.id) ?? 1) - 1)} className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-text-muted">
                                                         <Minus className="w-3.5 h-3.5" />
                                                     </button>
                                                     <span className="w-8 text-center text-sm font-bold text-text">{selectedVariants.get(v.id) ?? 1}</span>
-                                                    <button type="button" onClick={() => updateQuantity(v.id, (selectedVariants.get(v.id) ?? 1) + 1)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-text-muted">
+                                                    <button type="button" onClick={() => updateQuantity(v.id, (selectedVariants.get(v.id) ?? 1) + 1)} className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-text-muted">
                                                         <Plus className="w-3.5 h-3.5" />
                                                     </button>
                                                 </div>

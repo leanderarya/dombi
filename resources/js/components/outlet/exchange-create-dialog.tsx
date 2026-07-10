@@ -65,7 +65,7 @@ return null;
                 {/* Header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                     <h2 className="text-base font-bold text-text">Buat Penukaran</h2>
-                    <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors">
+                    <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full text-text-muted hover:text-text hover:bg-surface-muted transition-colors">
                         <X className="w-4 h-4" />
                     </button>
                 </div>
@@ -92,11 +92,11 @@ return null;
                                 <div className="flex-1">
                                     <label className="text-xs font-medium text-text-muted mb-1 block">Jumlah</label>
                                     <div className="flex items-center gap-1.5">
-                                        <button type="button" onClick={() => form.data.return_quantity > 1 && form.setData('return_quantity', form.data.return_quantity - 1)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors">
+                                        <button type="button" onClick={() => form.data.return_quantity > 1 && form.setData('return_quantity', form.data.return_quantity - 1)} className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors">
                                             <Minus className="w-3 h-3" />
                                         </button>
                                         <input type="number" min="1" value={form.data.return_quantity} onChange={(e) => form.setData('return_quantity', Math.max(1, parseInt(e.target.value) || 1))} className="w-14 h-8 text-center text-sm font-semibold text-text border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-red-300" />
-                                        <button type="button" onClick={() => form.setData('return_quantity', form.data.return_quantity + 1)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors">
+                                        <button type="button" onClick={() => form.setData('return_quantity', form.data.return_quantity + 1)} className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors">
                                             <Plus className="w-3 h-3" />
                                         </button>
                                     </div>
@@ -128,11 +128,11 @@ return null;
                                 <div className="flex-1">
                                     <label className="text-xs font-medium text-text-muted mb-1 block">Jumlah</label>
                                     <div className="flex items-center gap-1.5">
-                                        <button type="button" onClick={() => form.data.replacement_quantity > 1 && form.setData('replacement_quantity', form.data.replacement_quantity - 1)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors">
+                                        <button type="button" onClick={() => form.data.replacement_quantity > 1 && form.setData('replacement_quantity', form.data.replacement_quantity - 1)} className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors">
                                             <Minus className="w-3 h-3" />
                                         </button>
                                         <input type="number" min="1" value={form.data.replacement_quantity} onChange={(e) => form.setData('replacement_quantity', Math.max(1, parseInt(e.target.value) || 1))} className="w-14 h-8 text-center text-sm font-semibold text-text border border-border rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-300" />
-                                        <button type="button" onClick={() => form.setData('replacement_quantity', form.data.replacement_quantity + 1)} className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors">
+                                        <button type="button" onClick={() => form.setData('replacement_quantity', form.data.replacement_quantity + 1)} className="w-10 h-10 flex items-center justify-center rounded-lg border border-border text-text-muted hover:bg-surface-muted transition-colors">
                                             <Plus className="w-3 h-3" />
                                         </button>
                                     </div>
