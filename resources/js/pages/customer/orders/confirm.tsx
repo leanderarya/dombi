@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { ArrowLeft, CheckCircle2, Clock, Copy, Loader2, Shield, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import Dialog from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/format';
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
@@ -18,6 +19,9 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     const [copied, setCopied] = useState(false);
     const [payLoading, setPayLoading] = useState(false);
     const [payError, setPayError] = useState<string | null>(null);
+    const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+    const [cancelLoading, setCancelLoading] = useState(false);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
     const pollStart = useRef(Date.now());
     const submitLock = useRef(false);
@@ -133,6 +137,20 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
         }
     }, [order.order_code]);
 
+    const CANCEL_REASONS = ['Salah Pesan', 'Ingin Mengubah Pesanan', 'Alamat Salah', 'Tidak Jadi Membeli', 'Lainnya'];
+
+    const handleCancel = useCallback(() => {
+        if (!cancelReason) return;
+        setCancelLoading(true);
+        router.post(`/customer/orders/${order.id}/cancel`, { reason: cancelReason }, {
+            onFinish: () => setCancelLoading(false),
+            onSuccess: () => {
+                setCancelDialogOpen(false);
+                setPaymentStatus('cancelled');
+            },
+        });
+    }, [order.id, cancelReason]);
+
     const handlePay = useCallback(() => {
         if (submitLock.current || payLoading) return;
         submitLock.current = true;
@@ -213,18 +231,26 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                 {/* Action Buttons */}
                 <div className="mt-4 space-y-3">
                     {paymentStatus === 'pending' && (
-                        <button
-                            onClick={handlePay}
-                            disabled={payLoading}
-                            className="w-full min-h-12 rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80 disabled:opacity-50"
-                        >
-                            {payLoading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                    Memproses...
-                                </span>
-                            ) : 'Lanjutkan Pembayaran'}
-                        </button>
+                        <>
+                            <button
+                                onClick={handlePay}
+                                disabled={payLoading}
+                                className="w-full min-h-12 rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80 disabled:opacity-50"
+                            >
+                                {payLoading ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Memproses...
+                                    </span>
+                                ) : 'Lanjutkan Pembayaran'}
+                            </button>
+                            <button
+                                onClick={() => setCancelDialogOpen(true)}
+                                className="w-full min-h-11 text-xs font-medium text-slate-400 active:text-red-500"
+                            >
+                                Batalkan Pesanan
+                            </button>
+                        </>
                     )}
 
                     {paymentStatus === 'paid' && (
@@ -311,6 +337,44 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                         </a>
                     </div>
                 </div>
+
+                {/* Cancel Dialog */}
+                <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} title="Batalkan Pesanan">
+                    <p className="text-sm text-slate-600">Pesanan yang dibatalkan tidak dapat dipulihkan.</p>
+                    <div className="mt-4 space-y-2">
+                        {CANCEL_REASONS.map((reason) => (
+                            <button
+                                key={reason}
+                                type="button"
+                                onClick={() => setCancelReason(reason)}
+                                className={`flex min-h-11 w-full items-center rounded-lg border px-4 text-left text-sm font-medium transition-all ${
+                                    cancelReason === reason
+                                        ? 'border-red-300 bg-red-50 text-red-700'
+                                        : 'border-slate-200 text-slate-700 active:bg-slate-50'
+                                }`}
+                            >
+                                {reason}
+                            </button>
+                        ))}
+                    </div>
+                    <div className="mt-4 flex gap-2">
+                        <button
+                            type="button"
+                            onClick={() => setCancelDialogOpen(false)}
+                            className="flex-1 min-h-12 rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 active:bg-slate-50"
+                        >
+                            Kembali
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleCancel}
+                            disabled={!cancelReason || cancelLoading}
+                            className="flex-1 min-h-12 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                        >
+                            {cancelLoading ? 'Membatalkan...' : 'Ya, Batalkan'}
+                        </button>
+                    </div>
+                </Dialog>
             </div>
         </CustomerMobileLayout>
     );
