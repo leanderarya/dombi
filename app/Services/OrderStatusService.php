@@ -6,14 +6,15 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class OrderStatusService
 {
     private const TRANSITIONS = [
-        'pending_confirmation' => ['confirmed', 'rejected_by_outlet', 'cancelled_by_customer'],
-        'confirmed' => ['preparing', 'cancelled_by_outlet'],
-        'preparing' => ['ready_for_pickup', 'cancelled_by_outlet'],
+        'pending_confirmation' => ['confirmed', 'rejected_by_outlet', 'cancelled_by_customer', 'expired'],
+        'confirmed' => ['preparing', 'cancelled_by_outlet', 'cancelled_by_customer'],
+        'preparing' => ['ready_for_pickup', 'cancelled_by_outlet', 'cancelled_by_customer'],
         'ready_for_pickup' => ['picked_up', 'cancelled_by_outlet'],
         'picked_up' => ['delivering'],
         'delivering' => ['completed', 'failed_delivery'],
@@ -21,7 +22,7 @@ class OrderStatusService
         'cancelled_by_customer' => [],
         'cancelled_by_outlet' => [],
         'rejected_by_outlet' => [],
-        'failed_delivery' => [],
+        'failed_delivery' => ['cancelled_by_outlet', 'preparing'],
         'expired' => [],
     ];
 
@@ -80,10 +81,6 @@ class OrderStatusService
 
             if (in_array($status, ['cancelled_by_outlet', 'cancelled_by_customer', 'rejected_by_outlet'], true)) {
                 $this->inventoryService->releaseReservedStock($order);
-
-                if ($status === 'cancelled_by_outlet' && $order->payment_status === 'paid') {
-                    app(CustomerCreditService::class)->refund($order);
-                }
             }
 
             $updateData = ['status' => $status];
@@ -172,10 +169,6 @@ class OrderStatusService
 
             $this->inventoryService->releaseReservedStock($order);
 
-            if ($order->payment_status === 'paid') {
-                app(CustomerCreditService::class)->refund($order);
-            }
-
             $order->update([
                 'status' => Order::REJECTED,
                 'rejected_at' => now(),
@@ -214,51 +207,19 @@ class OrderStatusService
             ]);
         }
 
-        return DB::transaction(function () use ($order, $reason, $note): Order {
-            $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
-
-            $allowedStatuses = [
-                Order::STATUS_PENDING_CONFIRMATION,
-                Order::STATUS_CONFIRMED,
-                Order::STATUS_PREPARING,
-            ];
-
-            if (! in_array($order->status, $allowedStatuses, true)) {
-                throw ValidationException::withMessages([
-                    'status' => 'Pesanan tidak dapat dibatalkan pada status ini.',
-                ]);
-            }
-
-            $this->inventoryService->releaseReservedStock($order);
-
-            if ($order->payment_status === 'paid') {
-                app(CustomerCreditService::class)->refund($order);
-            }
-
-            $fromStatus = $order->status;
-
-            $order->update([
-                'status' => Order::CANCELLED_BY_CUSTOMER,
-                'cancelled_at' => now(),
-                'cancelled_by' => $order->customer_id,
-                'cancellation_reason' => $reason,
-                'cancellation_note' => $note,
-            ]);
-
-            $order->statusHistories()->create([
-                'from_status' => $fromStatus,
-                'to_status' => Order::CANCELLED_BY_CUSTOMER,
-                'notes' => "Pesanan dibatalkan customer. Alasan: {$reason}",
+        try {
+            return $this->transition($order, 'cancelled_by_customer', [
                 'reason' => $reason,
-                'changed_by' => $order->customer_id,
-                'changed_by_type' => 'customer',
-                'created_at' => now(),
+                'note' => $note,
+                'actor_id' => $order->customer_id,
+                'actor_type' => 'customer',
+                'notes' => "Pesanan dibatalkan customer. Alasan: {$reason}",
             ]);
-
-            $this->notificationService->notifyOrderCancelled($order);
-
-            return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
-        });
+        } catch (\App\Exceptions\InvalidOrderTransitionException $e) {
+            throw ValidationException::withMessages([
+                'status' => 'Pesanan tidak dapat dibatalkan pada status ini.',
+            ]);
+        }
     }
 
     public function completePickup(Order $order, User $user): Order
@@ -308,44 +269,157 @@ class OrderStatusService
 
     public function expireOrder(Order $order, string $reason = 'Confirmation timeout'): Order
     {
-        return DB::transaction(function () use ($order, $reason): Order {
-            $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
-
-            if (! $order->isPendingConfirmation()) {
-                return $order;
-            }
-
-            $this->inventoryService->releaseReservedStock($order);
-
-            $order->update([
-                'status' => Order::EXPIRED,
-                'expired_at' => now(),
-                'expired_reason' => $reason,
-            ]);
-
-            $notes = $reason === 'Confirmation timeout'
+        return $this->transition($order, 'expired', [
+            'reason' => $reason,
+            'actor_type' => 'system',
+            'notes' => $reason === 'Confirmation timeout'
                 ? 'Pesanan kadaluarsa. Outlet tidak memberikan konfirmasi dalam batas waktu yang ditentukan.'
-                : "Pesanan kadaluarsa. {$reason}.";
-
-            $order->statusHistories()->create([
-                'from_status' => Order::STATUS_PENDING_CONFIRMATION,
-                'to_status' => Order::EXPIRED,
-                'notes' => $notes,
-                'reason' => $reason,
-                'changed_by' => null,
-                'changed_by_type' => 'system',
-                'created_at' => now(),
-            ]);
-
-            $this->notificationService->notifyOrderExpired($order);
-
-            return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
-        });
+                : "Pesanan kadaluarsa. {$reason}.",
+        ]);
     }
 
     public function canTransition(string $from, string $to): bool
     {
         return in_array($to, self::TRANSITIONS[$from] ?? [], true);
+    }
+
+    /**
+     * Unified entry point for all order status changes.
+     * Validates transition, updates status, handles side effects, creates history.
+     */
+    public function transition(Order $order, string $newStatus, array $context = []): Order
+    {
+        return DB::transaction(function () use ($order, $newStatus, $context): Order {
+            $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
+            $fromStatus = $order->status;
+
+            if (! $this->canTransition($fromStatus, $newStatus)) {
+                throw new \App\Exceptions\InvalidOrderTransitionException($fromStatus, $newStatus);
+            }
+
+            // Fulfillment-aware guard
+            if ($order->isPickup() && in_array($newStatus, [
+                Order::STATUS_PICKED_UP,
+                Order::STATUS_DELIVERING,
+            ], true)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'status' => 'Pesanan pickup tidak dapat masuk ke status pengiriman.',
+                ]);
+            }
+
+            // Build update data
+            $updateData = ['status' => $newStatus];
+
+            if ($newStatus === 'confirmed') {
+                $updateData['confirmed_at'] = now();
+                $updateData['confirmed_by'] = $context['actor_id'] ?? null;
+            }
+
+            if ($newStatus === 'cancelled_by_outlet') {
+                $updateData['cancelled_at'] = now();
+                $updateData['cancelled_by'] = $context['actor_id'] ?? null;
+                $updateData['cancellation_reason'] = $context['reason'] ?? 'System';
+            }
+
+            if ($newStatus === 'cancelled_by_customer') {
+                $updateData['cancelled_at'] = now();
+                $updateData['cancelled_by'] = $order->customer_id;
+                $updateData['cancellation_reason'] = $context['reason'] ?? 'Customer cancelled';
+                $updateData['cancellation_note'] = $context['note'] ?? null;
+            }
+
+            if ($newStatus === 'expired') {
+                $updateData['expired_at'] = now();
+                $updateData['expired_reason'] = $context['reason'] ?? 'Confirmation timeout';
+            }
+
+            if ($newStatus === Order::STATUS_COMPLETED) {
+                $updateData['completed_at'] = now();
+            }
+
+            $order->update($updateData);
+
+            // Side effects
+            $this->handleSideEffects($order, $fromStatus, $newStatus, $context);
+
+            // Status history
+            $historyData = [
+                'from_status' => $fromStatus,
+                'to_status' => $newStatus,
+                'notes' => $context['notes'] ?? $this->statusNote($newStatus, $order),
+                'reason' => $context['reason'] ?? null,
+                'changed_by' => $context['actor_id'] ?? null,
+                'changed_by_type' => $context['actor_type'] ?? 'system',
+                'created_at' => now(),
+            ];
+
+            $order->statusHistories()->create($historyData);
+
+            // Notifications
+            $this->fireStatusNotifications($order, $fromStatus, $newStatus);
+
+            return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
+        });
+    }
+
+    /**
+     * Handle side effects for status transitions (stock, credit, settlement).
+     */
+    private function handleSideEffects(Order $order, string $from, string $to, array $ctx): void
+    {
+        // Stock release on cancellation/expiration/rejection
+        if (in_array($to, ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired', 'failed_delivery'], true)) {
+            $this->inventoryService->releaseReservedStock($order);
+        }
+
+        // Refund on cancellation/expiration/rejection (if paid via DOKU)
+        if (in_array($to, ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'], true)) {
+            if ($order->payment_status === 'paid') {
+                $this->processRefund($order, $to);
+            }
+        }
+
+        // Settlement on completion
+        if ($to === Order::STATUS_COMPLETED) {
+            $this->inventoryService->completeOrderStock($order);
+            $this->settlementService->recordSale($order);
+            if ($order->outlet_id) {
+                $outlet = Outlet::find($order->outlet_id);
+                if ($outlet) {
+                    $this->settlementGeneratorService->generateForOutlet($outlet, now());
+                }
+            }
+        }
+    }
+
+    private function processRefund(Order $order, string $reason): void
+    {
+        if (in_array($order->payment_status, ['refunded', 'refund_failed'], true)) {
+            return;
+        }
+
+        try {
+            $result = app(DokuService::class)->refund($order, $reason);
+
+            if ($result['status'] === 'failed') {
+                Log::warning('Refund failed, queued for manual review', [
+                    'order_id' => $order->id,
+                    'error' => $result['error'] ?? 'Unknown',
+                ]);
+            } elseif ($result['status'] === 'success') {
+                app(NotificationService::class)->notifyRefundProcessed($order, (float) $order->total);
+            }
+        } catch (\Exception $e) {
+            Log::error('Refund exception', [
+                'order_id' => $order->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            $order->update([
+                'payment_status' => 'refund_failed',
+                'refund_reason' => $e->getMessage(),
+            ]);
+        }
     }
 
     public static function validStatuses(): array
@@ -392,6 +466,9 @@ class OrderStatusService
     {
         match ($toStatus) {
             'confirmed' => $this->notificationService->notifyOrderConfirmed($order),
+            'rejected_by_outlet' => $this->notificationService->notifyOrderRejected($order, $order->rejection_reason ?? 'Ditolak outlet'),
+            'cancelled_by_customer', 'cancelled_by_outlet' => $this->notificationService->notifyOrderCancelled($order),
+            'expired' => $this->notificationService->notifyOrderExpired($order),
             default => null,
         };
     }
