@@ -49,8 +49,8 @@ export default function Profile({ defaultAddress }: any) {
                                 <div className="mt-1 line-clamp-2 text-xs leading-relaxed text-text-muted">{defaultAddress.address}</div>
                             </div>
                         </div>
-                        <Link href="/customer/addresses" className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-border text-xs font-semibold text-text active:opacity-80">
-                            Kelola Alamat
+                        <Link href={isLoggedIn ? '/customer/addresses' : '/oauth/google'} className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-border text-xs font-semibold text-text active:opacity-80">
+                            {isLoggedIn ? 'Kelola Alamat' : 'Login untuk Kelola Alamat'}
                         </Link>
                     </div>
                 </section>
@@ -61,7 +61,7 @@ export default function Profile({ defaultAddress }: any) {
                 <h2 className="text-[13px] text-text-subtle">Menu</h2>
                 <div className="mt-2 space-y-1">
                     <MenuItem href="/customer/orders" title="Pesanan Saya" icon={<Package className="h-5 w-5 text-text-subtle" />} />
-                    <MenuItem href="/customer/addresses" title="Alamat Saya" icon={<MapPin className="h-5 w-5 text-text-subtle" />} />
+                    <MenuItem href={isLoggedIn ? '/customer/addresses' : '/oauth/google'} title="Alamat Saya" icon={<MapPin className="h-5 w-5 text-text-subtle" />} />
                     <MenuItem href="/customer/help" title="Bantuan" icon={<HelpCircle className="h-5 w-5 text-text-subtle" />} />
                     <MenuItem href="/customer/about" title="Tentang Dombi" icon={<Info className="h-5 w-5 text-text-subtle" />} />
                 </div>
