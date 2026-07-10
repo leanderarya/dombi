@@ -199,7 +199,7 @@ return;
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <button
                         type="button"
-                        onClick={() => window.history.length > 1 ? window.history.back() : window.location.href = isLoggedIn ? '/customer/orders' : '/customer/home'}
+                        onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/customer/home')}
                         className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
                         aria-label="Kembali"
                     >
