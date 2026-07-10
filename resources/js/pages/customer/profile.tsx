@@ -1,11 +1,14 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { HelpCircle, Info, LogOut, MapPin, Package } from 'lucide-react';
+import { useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import LoginDialog from '@/components/customer/login-dialog';
 
 export default function Profile({ defaultAddress }: any) {
     const { auth, appVersion } = usePage<any>().props;
     const user = auth?.user;
     const isLoggedIn = !!auth?.user;
+    const [loginDialogOpen, setLoginDialogOpen] = useState(false);
 
     const initials = user?.name
         ?.split(' ')
@@ -49,9 +52,19 @@ export default function Profile({ defaultAddress }: any) {
                                 <div className="mt-1 line-clamp-2 text-xs leading-relaxed text-text-muted">{defaultAddress.address}</div>
                             </div>
                         </div>
-                        <Link href={isLoggedIn ? '/customer/addresses' : '/oauth/google'} className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-border text-xs font-semibold text-text active:opacity-80">
-                            {isLoggedIn ? 'Kelola Alamat' : 'Login untuk Kelola Alamat'}
-                        </Link>
+                        {isLoggedIn ? (
+                            <Link href="/customer/addresses" className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-border text-xs font-semibold text-text active:opacity-80">
+                                Kelola Alamat
+                            </Link>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => setLoginDialogOpen(true)}
+                                className="mt-3 flex min-h-[44px] w-full items-center justify-center rounded-lg border border-border text-xs font-semibold text-text active:opacity-80"
+                            >
+                                Login untuk Kelola Alamat
+                            </button>
+                        )}
                     </div>
                 </section>
             )}
@@ -61,7 +74,23 @@ export default function Profile({ defaultAddress }: any) {
                 <h2 className="text-[13px] text-text-subtle">Menu</h2>
                 <div className="mt-2 space-y-1">
                     <MenuItem href="/customer/orders" title="Pesanan Saya" icon={<Package className="h-5 w-5 text-text-subtle" />} />
-                    <MenuItem href={isLoggedIn ? '/customer/addresses' : '/oauth/google'} title="Alamat Saya" icon={<MapPin className="h-5 w-5 text-text-subtle" />} />
+                    {isLoggedIn ? (
+                        <MenuItem href="/customer/addresses" title="Alamat Saya" icon={<MapPin className="h-5 w-5 text-text-subtle" />} />
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => setLoginDialogOpen(true)}
+                            className="flex min-h-[52px] w-full items-center gap-3.5 rounded-xl px-1 active:opacity-80"
+                        >
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
+                                <MapPin className="h-5 w-5 text-text-subtle" />
+                            </div>
+                            <span className="text-sm font-medium text-text">Alamat Saya</span>
+                            <svg className="ml-auto h-4 w-4 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    )}
                     <MenuItem href="/customer/help" title="Bantuan" icon={<HelpCircle className="h-5 w-5 text-text-subtle" />} />
                     <MenuItem href="/customer/about" title="Tentang Dombi" icon={<Info className="h-5 w-5 text-text-subtle" />} />
                 </div>
@@ -80,6 +109,9 @@ export default function Profile({ defaultAddress }: any) {
 
             {/* Version */}
             <p className="mt-4 mb-4 text-center text-xs text-text-subtle">Versi {appVersion ?? '1.0.0'}</p>
+
+            {/* Login Dialog */}
+            <LoginDialog open={loginDialogOpen} onClose={() => setLoginDialogOpen(false)} />
         </CustomerMobileLayout>
     );
 }
