@@ -159,7 +159,6 @@ function useCancelOrder() {
 type OrderItem = {
     product_name: string;
     quantity: number;
-    image?: string | null;
 };
 
 type Props = {
@@ -300,15 +299,11 @@ return;
                 </div> {/* close flex-1 */}
             </div> {/* close flex items-start */}
 
-            {/* Product — image + name (matches history card) */}
+            {/* Product — icon + name (matches history card) */}
             {firstItem && (
                 <div className="mt-3 flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted overflow-hidden">
-                        {firstItem.image ? (
-                            <img src={firstItem.image} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                            <span className="text-lg">&#129371;</span>
-                        )}
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
+                        <span className="text-lg">&#129371;</span>
                     </div>
                     <div className="min-w-0">
                         <div className="truncate text-sm font-medium text-text">{firstItem.product_name}</div>
