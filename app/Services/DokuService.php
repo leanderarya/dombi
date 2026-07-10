@@ -338,38 +338,48 @@ class DokuService
     /**
      * Mark order as paid and trigger side effects.
      * Uses atomic update to prevent race condition from concurrent webhook + redirect.
+     * Handles late payments (after cancellation/expiry) by auto-refunding.
      */
     private function markOrderPaid(Order $order): void
     {
-        // Atomic update — only one concurrent request can succeed
         $updated = Order::where('id', $order->id)
             ->where('payment_status', '!=', 'paid')
+            ->where('payment_status', '!=', 'refunded')
+            ->where('payment_status', '!=', 'refund_failed')
             ->update([
                 'paid_at' => now(),
                 'payment_status' => 'paid',
             ]);
 
         if ($updated === 0) {
-            return; // Already paid by concurrent request
+            return;
         }
 
-        // Reload to get fresh state
         $order->refresh();
 
-        // Transition order status via state machine (creates history, handles side effects)
+        $terminalStatuses = [
+            Order::STATUS_CANCELLED_BY_CUSTOMER,
+            Order::STATUS_CANCELLED_BY_OUTLET,
+            Order::STATUS_REJECTED_BY_OUTLET,
+            Order::STATUS_EXPIRED,
+        ];
+
+        if (in_array($order->status, $terminalStatuses, true)) {
+            $this->refund($order, 'Race condition: payment after ' . $order->status);
+            return;
+        }
+
         if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
             try {
                 app(OrderStatusService::class)->updateStatus($order, Order::STATUS_CONFIRMED);
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                // Already transitioned by concurrent request — safe to ignore
-                Log::info('Order status transition skipped (already transitioned)', [
+            } catch (\Exception $e) {
+                Log::info('Order status transition skipped', [
                     'order_id' => $order->id,
                     'current_status' => $order->fresh()->status,
                 ]);
             }
         }
 
-        // Notify outlet about new paid order
         app(NotificationService::class)->notifyOrderCreated($order);
 
         Cache::forget("outlet:{$order->outlet_id}:pending_orders");
