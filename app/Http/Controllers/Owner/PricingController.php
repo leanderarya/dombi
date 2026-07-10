@@ -124,6 +124,11 @@ class PricingController extends Controller
             $query->where('action', $actionFilter);
         }
 
+        $outletFilter = $request->string('outlet_id', '')->toString();
+        if ($outletFilter) {
+            $query->where('outlet_id', $outletFilter);
+        }
+
         $logs = $query->paginate(20)->withQueryString()->through(fn (PricingAuditLog $log) => [
             'id' => $log->id,
             'outlet' => $log->outlet_id === null ? 'Global' : ($log->outlet?->name ?? '-'),
@@ -135,10 +140,21 @@ class PricingController extends Controller
             'created_at' => $log->created_at?->toISOString(),
         ]);
 
+        $outlets = Outlet::where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         return Inertia::render('owner/pricing/index', [
             'tab' => 'riwayat',
             'logs' => $logs,
             'actionFilter' => $actionFilter,
+            'outlets' => $outlets->map(fn ($o) => [
+                'id' => $o->id,
+                'name' => $o->name,
+                'override_count' => 0,
+                'total_variants' => 0,
+                'all_standard' => true,
+            ]),
         ]);
     }
 

@@ -77,7 +77,7 @@ export default function PricingIndex(props: Props) {
                     otherOutlets={props.otherOutlets}
                 />
             )}
-            {activeTab === 'riwayat' && <RiwayatTab logs={props.logs} actionFilter={props.actionFilter} />}
+            {activeTab === 'riwayat' && <RiwayatTab logs={props.logs} actionFilter={props.actionFilter} outlets={props.outlets} />}
         </OwnerPageShell>
     );
 }
