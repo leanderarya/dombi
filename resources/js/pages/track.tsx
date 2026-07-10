@@ -195,7 +195,7 @@ return;
             <OfflineBanner />
 
             {/* Header */}
-            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-safe">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                     <button
                         type="button"
