@@ -101,7 +101,7 @@ class Order extends Model
         'rejected_at', 'rejected_by', 'rejection_reason', 'rejection_note',
         'cancelled_at', 'cancelled_by', 'cancellation_reason', 'cancellation_note',
         'expired_at', 'expired_reason',
-        'credit_applied',
+        'completed_at', 'refunded_at', 'refund_amount', 'refund_reason', 'doku_refund_id',
     ];
 
     protected $appends = [
@@ -140,7 +140,8 @@ class Order extends Model
             'completed_at' => 'datetime',
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
-            'credit_applied' => 'decimal:2',
+            'refunded_at' => 'datetime',
+        'refund_amount' => 'decimal:2',
         ];
     }
 
