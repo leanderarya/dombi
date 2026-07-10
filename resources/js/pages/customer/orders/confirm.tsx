@@ -22,13 +22,13 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     const pollStart = useRef(Date.now());
     const submitLock = useRef(false);
 
-    // Replace history entry so back button goes to appropriate page
+    // Replace history entry so back button works naturally
     useEffect(() => {
-        const backUrl = isLoggedIn ? '/customer/orders' : '/customer/home';
-        window.history.replaceState(null, '', backUrl);
+        const fallback = isLoggedIn ? '/customer/orders' : '/customer/home';
+        window.history.replaceState(null, '', fallback);
         window.history.pushState(null, '', window.location.href);
         const onPop = () => {
-            window.location.href = backUrl;
+            window.location.href = fallback;
         };
         window.addEventListener('popstate', onPop);
         return () => window.removeEventListener('popstate', onPop);
@@ -146,7 +146,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                 {/* Header */}
                 <div className="mb-6 flex items-center gap-3 pt-safe">
                     <button
-                        onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/customer/home')}
+                        onClick={() => window.history.length > 1 ? window.history.back() : router.visit(isLoggedIn ? '/customer/orders' : '/customer/home')}
                         className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm active:opacity-80"
                     >
                         <ArrowLeft className="h-5 w-5" />
