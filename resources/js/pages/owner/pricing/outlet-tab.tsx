@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import OutletList from './outlet-list';
 import OutletDetail from './outlet-detail';
@@ -21,6 +22,14 @@ export function OutletTab({ outlets, selectedOutlet, outletPrices, otherOutlets 
 
     const selectedOutletData = outlets.find((o) => o.id === selectedId);
 
+    const handleSelect = (id: number) => {
+        setSelectedId(id);
+        router.reload({
+            only: ['outletPrices', 'selectedOutlet'],
+            data: { tab: 'outlet', outlet_id: String(id) },
+        });
+    };
+
     return (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
             {/* Panel Kiri — Outlet List */}
@@ -28,9 +37,7 @@ export function OutletTab({ outlets, selectedOutlet, outletPrices, otherOutlets 
                 <OutletList
                     outlets={outlets}
                     selectedId={selectedId}
-                    onSelect={(id) => {
-                        setSelectedId(id);
-                    }}
+                    onSelect={handleSelect}
                 />
             </div>
 
@@ -39,7 +46,7 @@ export function OutletTab({ outlets, selectedOutlet, outletPrices, otherOutlets 
                 {selectedId && selectedOutletData ? (
                     <OutletDetail
                         outlet={{ id: selectedId, name: selectedOutletData.name }}
-                        prices={outletPrices}
+                        prices={selectedId === selectedOutlet?.id ? outletPrices : undefined}
                         otherOutlets={otherOutlets}
                         allOutlets={outlets}
                     />

@@ -32,7 +32,8 @@ export default function MarginBar({ margin, maxMargin, sellingPrice = 0, classNa
 }
 
 export function MarginBarInline({ margin, maxMargin, sellingPrice }: Props) {
-    if (sellingPrice <= 0 && margin <= 0) {
+    const sp = sellingPrice ?? 0;
+    if (sp <= 0 && margin <= 0) {
         return <span className="tabular-nums font-bold text-red-600">{margin}</span>;
     }
 
@@ -51,7 +52,7 @@ export function MarginBarInline({ margin, maxMargin, sellingPrice }: Props) {
             <span className={cn('tabular-nums font-bold', textColor)}>
                 {margin.toLocaleString('id-ID')}
             </span>
-            <MarginBar margin={margin} maxMargin={maxMargin} sellingPrice={sellingPrice} />
+            <MarginBar margin={margin} maxMargin={maxMargin} sellingPrice={sp} />
         </span>
     );
 }

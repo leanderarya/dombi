@@ -54,7 +54,7 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
 
     const handleOutletChange = (outletId: string) => {
         if (outletId) {
-            router.reload({ only: ['outletPrices', 'selectedOutlet'], data: { tab: 'outlet', outlet_id: outletId }, preserveState: true, replace: true });
+            router.reload({ only: ['outletPrices', 'selectedOutlet'], data: { tab: 'outlet', outlet_id: outletId } });
         }
     };
 
