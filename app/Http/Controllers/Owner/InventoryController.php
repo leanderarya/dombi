@@ -156,9 +156,18 @@ class InventoryController extends Controller
         try {
             DB::transaction(function () use ($data, $inventory, $inventoryService): void {
                 $variantId = $inventory->product_variant_id;
+                $inventoryService->adjustStock($inventory->outlet_id, (int) $variantId, (int) $data['current_stock'], $data['notes'] ?? null);
+                $inventory->update(['minimum_stock' => $data['minimum_stock']]);
+            });
+        } catch (InsufficientStockException $e) {
+            return redirect()->back()->withErrors(['current_stock' => 'Stok tidak boleh lebih rendah dari reserved stock.'])->withInput();
+        }
+
+        return redirect()->route('owner.inventories.index')->with('success', 'Inventory berhasil diperbarui.');
+    }
 
     /**
-     * Remind outlet about low/critical stock via notification.
+     * Send low/critical stock reminder notification to outlet.
      */
     public function remindStock(Request $request): JsonResponse
     {
