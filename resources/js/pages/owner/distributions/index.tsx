@@ -1,11 +1,12 @@
 import { router } from '@inertiajs/react';
-import { Truck } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { Truck, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
@@ -24,6 +25,9 @@ type SortKey = 'id' | 'outlet' | 'items' | 'date';
 export default function OwnerDistributionsIndex({ distributions, filters, outlets }: any) {
     const [sortKey, setSortKey] = useState<SortKey>('id');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+    const [detailModal, setDetailModal] = useState<any>(null);
+    const [detailData, setDetailData] = useState<any>(null);
+    const [loadingDetail, setLoadingDetail] = useState(false);
 
     const toggleSort = (key: SortKey) => {
         if (sortKey === key) { setSortDir((d) => (d === 'asc' ? 'desc' : 'asc')); } else { setSortKey(key); setSortDir('asc'); }
@@ -58,6 +62,15 @@ export default function OwnerDistributionsIndex({ distributions, filters, outlet
         const cmp = typeof av === 'string' ? av.localeCompare(String(bv)) : Number(av) - Number(bv);
         return sortDir === 'asc' ? cmp : -cmp;
     }), [distributions.data, sortKey, sortDir]);
+
+    const handleOpenDetail = (dist: any) => {
+        setDetailModal(dist);
+        setLoadingDetail(true);
+        fetch(`/owner/distributions/${dist.id}`, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => { setDetailData(data.distribution ?? data); setLoadingDetail(false); })
+            .catch(() => setLoadingDetail(false));
+    };
 
     const preparingCount = distributions.data.filter((d: any) => d.status === 'preparing').length;
     const shippedCount = distributions.data.filter((d: any) => d.status === 'shipped').length;
@@ -132,7 +145,7 @@ export default function OwnerDistributionsIndex({ distributions, filters, outlet
                                                     <Truck className="h-3.5 w-3.5 mr-1" aria-hidden="true" />Kirim
                                                 </Button>
                                             )}
-                                            <Button variant="ghost" size="sm" onClick={() => router.visit(`/owner/distributions/${d.id}`)}>Detail</Button>
+                                            <Button variant="ghost" size="sm" onClick={() => handleOpenDetail(d)}>Detail</Button>
                                         </div>
                                     </td>
                                 </tr>
@@ -143,6 +156,35 @@ export default function OwnerDistributionsIndex({ distributions, filters, outlet
             )}
 
             <Pagination links={distributions.links} />
+
+            {/* Detail Modal */}
+            <Dialog open={!!detailModal} onOpenChange={(open) => { if (!open) { setDetailModal(null); setDetailData(null); } }}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader><DialogTitle>Distribusi #{detailModal?.id}</DialogTitle></DialogHeader>
+                    {loadingDetail ? (
+                        <p className="py-8 text-center text-sm text-text-muted">Memuat...</p>
+                    ) : detailData ? (
+                        <div className="space-y-3">
+                            <div className="flex justify-between text-sm"><span className="text-text-muted">Outlet</span><span className="font-medium text-text">{detailData.outlet?.name ?? '—'}</span></div>
+                            <div className="flex justify-between text-sm"><span className="text-text-muted">Status</span><StatusBadge status={detailData.status} size="sm" /></div>
+                            <div className="border-t border-border pt-2">
+                                <div className="mb-1 text-xs font-semibold text-text-subtle">Items</div>
+                                {(detailData.items ?? []).map((item: any) => (
+                                    <div key={item.id} className="flex justify-between py-1 text-sm">
+                                        <span className="text-text">{item.variant?.name ?? item.product?.name ?? '-'}</span>
+                                        <span className="font-semibold tabular-nums">{item.quantity}</span>
+                                    </div>
+                                ))}
+                            </div>
+                            {detailData.sent_at && <div className="flex justify-between text-sm"><span className="text-text-muted">Dikirim</span><span className="text-text">{formatDate(detailData.sent_at)}</span></div>}
+                            {detailData.received_at && <div className="flex justify-between text-sm"><span className="text-text-muted">Diterima</span><span className="text-text">{formatDate(detailData.received_at)}</span></div>}
+                        </div>
+                    ) : null}
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setDetailModal(null); setDetailData(null); }}>Tutup</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </OwnerPageShell>
     );
 }

@@ -7,6 +7,7 @@ use App\Http\Requests\Owner\MarkDistributionShippedRequest;
 use App\Models\Outlet;
 use App\Models\StockDistribution;
 use App\Services\RestockService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -36,10 +37,16 @@ class StockDistributionController extends Controller
         ]);
     }
 
-    public function show(StockDistribution $distribution): Response
+    public function show(Request $request, StockDistribution $distribution): Response|JsonResponse
     {
+        $distribution->load(['outlet', 'items.variant.family', 'restockRequest.items.variant.family', 'sender', 'receiver']);
+
+        if ($request->expectsJson()) {
+            return response()->json(['distribution' => $distribution]);
+        }
+
         return Inertia::render('owner/distributions/show', [
-            'distribution' => $distribution->load(['outlet', 'items.variant.family', 'restockRequest.items.variant.family', 'sender', 'receiver']),
+            'distribution' => $distribution,
         ]);
     }
 

@@ -272,6 +272,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('reports/settlements/export', [ReportController::class, 'exportSettlements'])->name('reports.settlements.export');
         Route::get('restocks', [OwnerRestockController::class, 'index'])->name('restocks.index');
         Route::get('restocks/create', [OwnerRestockController::class, 'create'])->name('restocks.create');
+        Route::post('restocks', [OwnerRestockController::class, 'store'])->name('restocks.store');
         Route::get('restocks/{restockRequest}', [OwnerRestockController::class, 'show'])->name('restocks.show');
         Route::post('restocks/{restockRequest}/approve', [OwnerRestockController::class, 'approve'])->name('restocks.approve');
         Route::post('restocks/{restockRequest}/reject', [OwnerRestockController::class, 'reject'])->name('restocks.reject');

@@ -9,6 +9,7 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\RestockRequest;
 use App\Services\RestockService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -57,7 +58,39 @@ class RestockController extends Controller
         ]);
     }
 
-    public function show(RestockRequest $restockRequest): Response
+    public function store(Request $request, RestockService $restockService): RedirectResponse
+    {
+        $validated = $request->validate([
+            'outlet_id' => ['required', 'exists:outlets,id'],
+            'notes' => ['nullable', 'string'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.product_variant_id' => ['required', 'exists:product_variants,id'],
+            'items.*.requested_quantity' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $user = $request->user();
+        $outletUser = \App\Models\User::where('outlet_id', $validated['outlet_id'])
+            ->where('role', 'outlet')
+            ->first();
+
+        $restock = RestockRequest::create([
+            'outlet_id' => $validated['outlet_id'],
+            'requested_by' => $outletUser?->id ?? $user->id,
+            'status' => 'requested',
+            'notes' => $validated['notes'] ?? null,
+        ]);
+
+        foreach ($validated['items'] as $item) {
+            $restock->items()->create([
+                'product_variant_id' => $item['product_variant_id'],
+                'requested_quantity' => $item['requested_quantity'],
+            ]);
+        }
+
+        return redirect()->route('owner.restocks.index')->with('success', 'Restock request berhasil dibuat.');
+    }
+
+    public function show(Request $request, RestockRequest $restockRequest): Response|JsonResponse
     {
         $restockRequest->load([
             'outlet',
@@ -71,12 +104,21 @@ class RestockController extends Controller
             'distribution.receiver',
         ]);
 
+        $inventories = OutletInventory::with('variant.family')
+            ->where('outlet_id', $restockRequest->outlet_id)
+            ->whereIn('product_variant_id', $restockRequest->items->pluck('product_variant_id'))
+            ->get();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'restock' => $restockRequest,
+                'inventories' => $inventories,
+            ]);
+        }
+
         return Inertia::render('owner/restocks/show', [
             'restock' => $restockRequest,
-            'inventories' => OutletInventory::with('variant.family')
-                ->where('outlet_id', $restockRequest->outlet_id)
-                ->whereIn('product_variant_id', $restockRequest->items->pluck('product_variant_id'))
-                ->get(),
+            'inventories' => $inventories,
         ]);
     }
 

@@ -13,6 +13,7 @@ import StatusBadge from '@/components/ui/status-badge';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import CentralStockTab from './central-stock-tab';
+import RestockCreateModal from '@/components/owner/restock-create-modal';
 
 const TABS = [{ key: 'pusat', label: 'Stok Pusat' }, { key: 'outlet', label: 'Outlet' }] as const;
 type TabKey = (typeof TABS)[number]['key'];
@@ -22,6 +23,7 @@ type SortKey = 'name' | 'current_stock' | 'minimum_stock' | 'status';
 export default function InventoriesIndex({ tab: initialTab, outletSections, stats, centralStock, centralStats }: any) {
     const [activeTab, setActiveTab] = useState<TabKey>((initialTab as TabKey) ?? 'pusat');
     const [editItem, setEditItem] = useState<any>(null);
+    const [restockModal, setRestockModal] = useState<{ outletId: number; variantId: number } | null>(null);
     const [search, setSearch] = useState('');
     const [outletFilter, setOutletFilter] = useState<string>('all');
     const [sortKey, setSortKey] = useState<SortKey>('name');
@@ -174,7 +176,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                                                 <td className="px-3 py-3 text-right">
                                                     <div className="flex items-center justify-end gap-1">
                                                         {(isCritical || isLow) && (
-                                                            <Button size="sm" onClick={() => router.visit(`/owner/restocks/create?outlet_id=${row.outlet_id}&product_id=${row.product_id ?? row.variant_id ?? row.variant?.id}&return_to=/owner/inventories`)}>Restock</Button>
+                                                            <Button size="sm" onClick={() => setRestockModal({ outletId: row.outlet_id, variantId: row.variant_id?.id ?? row.product_id ?? row.variant?.id })}>Restock</Button>
                                                         )}
                                                         <Button variant="ghost" size="sm" onClick={() => { setEditItem(row); editForm.setData({ current_stock: row.current_stock, minimum_stock: row.minimum_stock, notes: '' }); }}>Edit</Button>
                                                     </div>
@@ -209,6 +211,10 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                     </form>
                 </DialogContent>
             </Dialog>
+
+            {/* Restock Create Modal */}
+            <RestockCreateModal open={!!restockModal} preselectedOutletId={restockModal?.outletId} preselectedProductId={restockModal?.variantId} onClose={() => setRestockModal(null)} onSuccess={() => setRestockModal(null)} />
+
         </OwnerPageShell>
     );
 }
