@@ -51,6 +51,8 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
     }
 
     // Flatten + group by outlet
+    const outletList = useMemo(() => (outletSections ?? []).map((s: any) => ({ id: s.outlet.id, name: s.outlet.name })), [outletSections]);
+
     const { outlets, items } = useMemo(() => {
         const all = (outletSections ?? [] as any[]).flatMap((section: any) =>
             section.inventories.map((item: any) => ({
@@ -213,7 +215,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
             </Dialog>
 
             {/* Restock Create Modal */}
-            <RestockCreateModal open={!!restockModal} preselectedOutletId={restockModal?.outletId} preselectedProductId={restockModal?.variantId} onClose={() => setRestockModal(null)} onSuccess={() => setRestockModal(null)} />
+            <RestockCreateModal open={!!restockModal} outlets={outletList} preselectedOutletId={restockModal?.outletId} preselectedProductId={restockModal?.variantId} onClose={() => setRestockModal(null)} onSuccess={() => setRestockModal(null)} />
 
         </OwnerPageShell>
     );

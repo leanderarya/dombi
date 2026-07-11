@@ -20,7 +20,16 @@ interface Props {
 
 export default function RestockCreateModal({ open, outlets: outletsProp, preselectedOutletId, preselectedProductId, onClose, onSuccess }: Props) {
     const [outletId, setOutletId] = useState('');
-    const [outlets] = useState<any[]>(outletsProp ?? []);
+    const [outlets, setOutlets] = useState<any[]>(outletsProp ?? []);
+
+    // Fallback: fetch outlets if not passed as prop
+    useEffect(() => {
+        if (!open || (outletsProp && outletsProp.length > 0)) return;
+        fetch('/owner/outlets', { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.json())
+            .then(data => { if (Array.isArray(data)) setOutlets(data); })
+            .catch(() => {});
+    }, [open, outletsProp]);
     const [families, setFamilies] = useState<any[]>([]);
     const [inventories, setInventories] = useState<any[]>([]);
     const [loadingOpen, setLoadingOpen] = useState(false);
