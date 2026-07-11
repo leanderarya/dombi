@@ -1,4 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
+import { Bell } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
@@ -13,7 +15,6 @@ import StatusBadge from '@/components/ui/status-badge';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import CentralStockTab from './central-stock-tab';
-import RestockCreateModal from '@/components/owner/restock-create-modal';
 
 const TABS = [{ key: 'pusat', label: 'Stok Pusat' }, { key: 'outlet', label: 'Outlet' }] as const;
 type TabKey = (typeof TABS)[number]['key'];
@@ -23,7 +24,6 @@ type SortKey = 'name' | 'current_stock' | 'minimum_stock' | 'status';
 export default function InventoriesIndex({ tab: initialTab, outletSections, stats, centralStock, centralStats }: any) {
     const [activeTab, setActiveTab] = useState<TabKey>((initialTab as TabKey) ?? 'pusat');
     const [editItem, setEditItem] = useState<any>(null);
-    const [restockModal, setRestockModal] = useState<{ outletId: number; variantId: number } | null>(null);
     const [search, setSearch] = useState('');
     const [outletFilter, setOutletFilter] = useState<string>('all');
     const [sortKey, setSortKey] = useState<SortKey>('name');
@@ -50,16 +50,11 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
         return <OwnerPageShell title="Inventaris" subtitle="Monitor stok seluruh outlet"><SkeletonPage /></OwnerPageShell>;
     }
 
-    // Flatten + group by outlet
     const outletList = useMemo(() => (outletSections ?? []).map((s: any) => ({ id: s.outlet.id, name: s.outlet.name })), [outletSections]);
 
     const { outlets, items } = useMemo(() => {
         const all = (outletSections ?? [] as any[]).flatMap((section: any) =>
-            section.inventories.map((item: any) => ({
-                ...item,
-                outlet_name: section.outlet.name,
-                outlet_id: section.outlet.id,
-            }))
+            section.inventories.map((item: any) => ({ ...item, outlet_name: section.outlet.name, outlet_id: section.outlet.id }))
         );
 
         const uniqueOutlets = [...new Set(all.map((i: any) => i.outlet_name as string))].sort() as string[];
@@ -79,9 +74,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
             );
         }
 
-        if (outletFilter !== 'all') {
-            result = result.filter((i: any) => i.outlet_name === outletFilter);
-        }
+        if (outletFilter !== 'all') result = result.filter((i: any) => i.outlet_name === outletFilter);
 
         return result;
     }, [items, search, outletFilter]);
@@ -123,12 +116,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                         { label: 'Stok Sehat', value: stats.healthyCount },
                     ]} />
 
-                    <OwnerFilterCard
-                        collapsible defaultExpanded={false}
-                        searchPlaceholder="Cari produk atau outlet..."
-                        searchValue={search}
-                        onSearch={setSearch}
-                    >
+                    <OwnerFilterCard collapsible defaultExpanded={false} searchPlaceholder="Cari produk atau outlet..." searchValue={search} onSearch={setSearch}>
                         <select value={outletFilter} onChange={(e) => setOutletFilter(e.target.value)}
                             className="h-8 rounded-md border border-border bg-surface px-2 text-xs font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary/20">
                             <option value="all">Semua Outlet</option>
@@ -178,7 +166,16 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                                                 <td className="px-3 py-3 text-right">
                                                     <div className="flex items-center justify-end gap-1">
                                                         {(isCritical || isLow) && (
-                                                            <Button size="sm" onClick={() => setRestockModal({ outletId: row.outlet_id, variantId: row.variant_id?.id ?? row.product_id ?? row.variant?.id })}>Restock</Button>
+                                                            <Button size="sm" variant="secondary" onClick={() => {
+                                                                const outlet = outletList.find((o: any) => o.id === row.outlet_id);
+
+                                                                toast.success(`Outlet ${outlet?.name ?? row.outlet_name} diingatkan`, {
+                                                                    description: `Stok ${variantName} ${isCritical ? 'kritis' : 'rendah'} — segera ajukan restock.`,
+                                                                    duration: 4000,
+                                                                });
+                                                            }}>
+                                                                <Bell className="mr-1 h-3 w-3" />Ingatkan
+                                                            </Button>
                                                         )}
                                                         <Button variant="ghost" size="sm" onClick={() => { setEditItem(row); editForm.setData({ current_stock: row.current_stock, minimum_stock: row.minimum_stock, notes: '' }); }}>Edit</Button>
                                                     </div>
@@ -213,10 +210,6 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                     </form>
                 </DialogContent>
             </Dialog>
-
-            {/* Restock Create Modal */}
-            <RestockCreateModal open={!!restockModal} outlets={outletList} preselectedOutletId={restockModal?.outletId} preselectedProductId={restockModal?.variantId} onClose={() => setRestockModal(null)} onSuccess={() => setRestockModal(null)} />
-
         </OwnerPageShell>
     );
 }
