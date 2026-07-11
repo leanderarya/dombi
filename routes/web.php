@@ -256,6 +256,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('inventories/{inventory}/edit', [OwnerInventoryController::class, 'edit'])->name('inventories.edit');
         Route::put('inventories/{inventory}', [OwnerInventoryController::class, 'update'])->name('inventories.update');
         Route::patch('inventories/central-stock/{variant}', [OwnerInventoryController::class, 'updateCenterStock'])->name('inventories.central-stock.update');
+        Route::post('inventories/remind-stock', [OwnerInventoryController::class, 'remindStock'])->name('inventories.remind-stock');
         Route::get('orders', [OwnerOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [OwnerOrderController::class, 'show'])->name('orders.show');
         Route::get('order-reports/{report}', [App\Http\Controllers\Owner\OrderReportController::class, 'show'])->name('order-reports.show');

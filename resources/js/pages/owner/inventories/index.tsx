@@ -18,8 +18,13 @@ import CentralStockTab from './central-stock-tab';
 
 const TABS = [{ key: 'pusat', label: 'Stok Pusat' }, { key: 'outlet', label: 'Outlet' }] as const;
 type TabKey = (typeof TABS)[number]['key'];
-
 type SortKey = 'name' | 'current_stock' | 'minimum_stock' | 'status';
+
+function getCsrfToken(): string {
+    const el = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement;
+
+    return el?.content ?? '';
+}
 
 export default function InventoriesIndex({ tab: initialTab, outletSections, stats, centralStock, centralStats }: any) {
     const [activeTab, setActiveTab] = useState<TabKey>((initialTab as TabKey) ?? 'pusat');
@@ -28,7 +33,6 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
     const [outletFilter, setOutletFilter] = useState<string>('all');
     const [sortKey, setSortKey] = useState<SortKey>('name');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-
     const editForm = useForm({ current_stock: 0, minimum_stock: 0, notes: '' });
 
     const toggleSort = (key: SortKey) => {
@@ -53,11 +57,11 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
     const outletList = useMemo(() => (outletSections ?? []).map((s: any) => ({ id: s.outlet.id, name: s.outlet.name })), [outletSections]);
 
     const { outlets, items } = useMemo(() => {
-        const all = (outletSections ?? [] as any[]).flatMap((section: any) =>
-            section.inventories.map((item: any) => ({ ...item, outlet_name: section.outlet.name, outlet_id: section.outlet.id }))
+        const all = (outletSections ?? []).flatMap((s: any) =>
+            s.inventories.map((item: any) => ({ ...item, outlet_name: s.outlet.name, outlet_id: s.outlet.id }))
         );
 
-        const uniqueOutlets = [...new Set(all.map((i: any) => i.outlet_name as string))].sort() as string[];
+        const uniqueOutlets = [...new Set(all.map((i: any) => i.outlet_name))].sort();
 
         return { outlets: uniqueOutlets, items: all };
     }, [outletSections]);
@@ -91,8 +95,33 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
         }
 
         const cmp = typeof av === 'string' ? av.localeCompare(String(bv)) : Number(av) - Number(bv);
+
         return sortDir === 'asc' ? cmp : -cmp;
     }), [filtered, sortKey, sortDir]);
+
+    const handleRemind = (row: any, variantName: string, isCritical: boolean) => {
+        const outlet = outletList.find((o: any) => o.id === row.outlet_id);
+        const variantId = row.product_variant_id ?? row.variant?.id;
+
+        fetch('/owner/inventories/remind-stock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': getCsrfToken(),
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ outlet_id: row.outlet_id, product_variant_id: variantId }),
+        })
+            .then(r => r.json())
+            .then(() => {
+                toast.success(`Outlet ${outlet?.name ?? row.outlet_name} diingatkan`, {
+                    description: `Notifikasi stok ${variantName} ${isCritical ? 'kritis' : 'rendah'} terkirim ke outlet.`,
+                    duration: 4000,
+                });
+            })
+            .catch(() => toast.error('Gagal mengirim pengingat.'));
+    };
 
     return (
         <OwnerPageShell title="Inventaris" subtitle="Pantau stok semua outlet dan pusat">
@@ -120,7 +149,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                         <select value={outletFilter} onChange={(e) => setOutletFilter(e.target.value)}
                             className="h-8 rounded-md border border-border bg-surface px-2 text-xs font-medium outline-none focus:border-primary focus:ring-1 focus:ring-primary/20">
                             <option value="all">Semua Outlet</option>
-                            {outlets.map((o) => <option key={o} value={o}>{o}</option>)}
+                            {outlets.map((o: string) => <option key={o} value={o}>{o}</option>)}
                         </select>
                     </OwnerFilterCard>
 
@@ -166,14 +195,7 @@ export default function InventoriesIndex({ tab: initialTab, outletSections, stat
                                                 <td className="px-3 py-3 text-right">
                                                     <div className="flex items-center justify-end gap-1">
                                                         {(isCritical || isLow) && (
-                                                            <Button size="sm" variant="secondary" onClick={() => {
-                                                                const outlet = outletList.find((o: any) => o.id === row.outlet_id);
-
-                                                                toast.success(`Outlet ${outlet?.name ?? row.outlet_name} diingatkan`, {
-                                                                    description: `Stok ${variantName} ${isCritical ? 'kritis' : 'rendah'} — segera ajukan restock.`,
-                                                                    duration: 4000,
-                                                                });
-                                                            }}>
+                                                            <Button size="sm" variant="secondary" onClick={() => handleRemind(row, variantName, isCritical)}>
                                                                 <Bell className="mr-1 h-3 w-3" />Ingatkan
                                                             </Button>
                                                         )}

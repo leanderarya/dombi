@@ -11,6 +11,8 @@ use App\Models\OutletInventory;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use App\Services\InventoryService;
+use App\Services\NotificationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -154,13 +156,36 @@ class InventoryController extends Controller
         try {
             DB::transaction(function () use ($data, $inventory, $inventoryService): void {
                 $variantId = $inventory->product_variant_id;
-                $inventoryService->adjustStock($inventory->outlet_id, (int) $variantId, (int) $data['current_stock'], $data['notes'] ?? null);
-                $inventory->update(['minimum_stock' => $data['minimum_stock']]);
-            });
-        } catch (InsufficientStockException $e) {
-            return redirect()->back()->withErrors(['current_stock' => 'Stok tidak boleh lebih rendah dari reserved stock.'])->withInput();
+
+    /**
+     * Remind outlet about low/critical stock via notification.
+     */
+    public function remindStock(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'outlet_id' => ['required', 'exists:outlets,id'],
+            'product_variant_id' => ['required', 'exists:product_variants,id'],
+        ]);
+
+        $inventory = OutletInventory::where('outlet_id', $validated['outlet_id'])
+            ->where('product_variant_id', $validated['product_variant_id'])
+            ->first();
+
+        if (! $inventory) {
+            return response()->json(['message' => 'Item tidak ditemukan.'], 404);
         }
 
-        return redirect()->route('owner.inventories.index')->with('success', 'Inventory berhasil diperbarui.');
+        $variant = ProductVariant::find($validated['product_variant_id']);
+        $productName = $variant->full_name ?? 'Produk';
+        $available = max(0, $inventory->current_stock - $inventory->reserved_stock);
+
+        app(NotificationService::class)->notifyLowStock(
+            outletId: $validated['outlet_id'],
+            productName: $productName,
+            available: $available,
+            minimum: $inventory->minimum_stock,
+        );
+
+        return response()->json(['message' => 'Pengingat stok dikirim ke outlet.']);
     }
 }
