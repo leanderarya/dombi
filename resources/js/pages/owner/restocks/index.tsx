@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
@@ -38,18 +38,17 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
     };
 
     if (!restocks || !filters) {
-        return <OwnerPageShell title="Restocks" subtitle="Kelola permintaan restock dari outlet"><SkeletonPage /></OwnerPageShell>;
+        return <OwnerPageShell
+            title="Restocks"
+            subtitle="Kelola permintaan restock dari outlet"
+            headerRight={<Link href="/owner/restocks/create" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">+ Buat Restock</Link>}
+        ><SkeletonPage /></OwnerPageShell>;
     }
 
     const currentStatus = filters.status ?? '';
 
     const setFilter = (key: string, value: string) => {
         router.get('/owner/restocks', { ...filters, [key]: value || undefined }, { preserveState: true, replace: true });
-    };
-
-    const handleMarkPreparing = (e: React.MouseEvent, restockId: number) => {
-        e.preventDefault(); e.stopPropagation();
-        router.post(`/owner/restocks/${restockId}/approve`, {}, { preserveScroll: true });
     };
 
     const sorted = useMemo(() => [...restocks.data].sort((a: any, b: any) => {
@@ -73,7 +72,11 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
     const completedCount = restocks.data.filter((r: any) => r.status === 'completed').length;
 
     return (
-        <OwnerPageShell title="Restocks" subtitle="Kelola permintaan restock dari outlet">
+        <OwnerPageShell
+            title="Restocks"
+            subtitle="Kelola permintaan restock dari outlet"
+            headerRight={<Link href="/owner/restocks/create" className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover">+ Buat Restock</Link>}
+        >
             <OwnerKpiStrip items={[
                 { label: 'Menunggu', value: requestedCount, sublabel: requestedCount > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
                 { label: 'Disiapkan', value: preparingCount },
@@ -132,7 +135,7 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
                                     <td className="px-3 py-3 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             {r.status === 'requested' && (
-                                                <Button size="sm" onClick={(e: any) => handleMarkPreparing(e, r.id)}>Approve</Button>
+                                                <Button size="sm" onClick={() => router.visit(`/owner/restocks/${r.id}`)}>Approve</Button>
                                             )}
                                             <Button variant="ghost" size="sm" onClick={() => router.visit(`/owner/restocks/${r.id}`)}>Detail</Button>
                                         </div>
