@@ -104,6 +104,7 @@ class Order extends Model
         'expired_at', 'expired_reason',
         'completed_at', 'refunded_at', 'refund_amount', 'refund_reason', 'doku_refund_id',
         'refund_requested_at', 'refund_proof_image', 'refunded_by', 'refund_rejected_reason',
+        'gateway_fee', 'absorbed_fee',
     ];
 
     protected $appends = [
@@ -145,6 +146,8 @@ class Order extends Model
             'refunded_at' => 'datetime',
             'refund_amount' => 'decimal:2',
             'refund_requested_at' => 'datetime',
+            'gateway_fee' => 'decimal:2',
+            'absorbed_fee' => 'decimal:2',
         ];
     }
 
