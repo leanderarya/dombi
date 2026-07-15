@@ -18,7 +18,7 @@ enum PaymentStatus: string
 
     public function isTerminal(): bool
     {
-        return in_array($this, [self::Paid, self::Refunded, self::RefundRejected, self::RefundFailed], true);
+        return in_array($this, [self::Refunded, self::RefundRejected, self::RefundFailed], true);
     }
 
     public function isMutable(): bool

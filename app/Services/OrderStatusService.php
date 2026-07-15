@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentStatus;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\User;
@@ -13,8 +14,8 @@ class OrderStatusService
 {
     private const TRANSITIONS = [
         'pending_confirmation' => ['confirmed', 'rejected_by_outlet', 'cancelled_by_customer', 'expired'],
-        'confirmed' => ['preparing', 'cancelled_by_outlet', 'cancelled_by_customer'],
-        'preparing' => ['ready_for_pickup', 'cancelled_by_outlet', 'cancelled_by_customer'],
+        'confirmed' => ['preparing', 'cancelled_by_outlet'],
+        'preparing' => ['ready_for_pickup', 'cancelled_by_outlet'],
         'ready_for_pickup' => ['picked_up', 'cancelled_by_outlet'],
         'picked_up' => ['delivering'],
         'delivering' => ['completed', 'failed_delivery'],
@@ -394,31 +395,19 @@ class OrderStatusService
 
     private function processRefund(Order $order, string $reason): void
     {
-        if (in_array($order->payment_status, ['refunded', 'refund_failed'], true)) {
+        if (in_array($order->payment_status, ['refunded', 'refund_failed', 'refund_pending'], true)) {
             return;
         }
 
-        try {
-            $result = app(DokuService::class)->refund($order, $reason);
+        $ok = app(PaymentStatusService::class)->transition($order, PaymentStatus::RefundPending, [
+            'refund_requested_at' => now(),
+            'refund_reason' => $reason,
+        ]);
 
-            if ($result['status'] === 'failed') {
-                Log::warning('Refund failed, queued for manual review', [
-                    'order_id' => $order->id,
-                    'error' => $result['error'] ?? 'Unknown',
-                ]);
-            } elseif ($result['status'] === 'success') {
-                app(NotificationService::class)->notifyRefundProcessed($order, (float) $order->total);
+        if ($ok) {
+            if (method_exists(app(NotificationService::class), 'notifyRefundRequested')) {
+                app(NotificationService::class)->notifyRefundRequested($order);
             }
-        } catch (\Exception $e) {
-            Log::error('Refund exception', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage(),
-            ]);
-
-            $order->update([
-                'payment_status' => 'refund_failed',
-                'refund_reason' => $e->getMessage(),
-            ]);
         }
     }
 
