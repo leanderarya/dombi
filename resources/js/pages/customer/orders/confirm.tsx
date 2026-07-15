@@ -22,6 +22,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [cancelLoading, setCancelLoading] = useState(false);
+    const [needsRefund, setNeedsRefund] = useState(false);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
     const pollStart = useRef(Date.now());
     const submitLock = useRef(false);
@@ -147,6 +148,9 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
             onFinish: () => setCancelLoading(false),
             onSuccess: () => {
                 setCancelDialogOpen(false);
+                if (paymentStatus === 'paid') {
+                    setNeedsRefund(true);
+                }
                 setPaymentStatus('cancelled');
             },
         });
@@ -184,7 +188,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
         pending: { icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', title: 'Menunggu Pembayaran', message: 'Selesaikan pembayaran dalam waktu yang ditentukan.' },
         failed: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Pembayaran Gagal', message: 'Pembayaran tidak berhasil diproses. Anda bisa mencoba lagi.' },
         expired: { icon: XCircle, color: 'text-gray-600', bg: 'bg-gray-50', border: 'border-gray-200', title: 'Waktu Habis', message: 'Batas waktu pembayaran telah berakhir. Silakan buat pesanan baru.' },
-        cancelled: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Dibatalkan', message: 'Pembayaran dibatalkan.' },
+        cancelled: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', title: 'Dibatalkan', message: needsRefund ? 'Pesanan dibatalkan. Refund sedang diproses.' : 'Pembayaran dibatalkan.' },
     };
 
     const status = statusConfig[paymentStatus] ?? statusConfig.pending;
@@ -248,7 +252,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                                     </span>
                                 ) : 'Lanjutkan Pembayaran'}
                             </button>
-                            {isLoggedIn && (
+                            {isLoggedIn && order.status === 'pending_confirmation' && (
                                 <button
                                     onClick={() => setCancelDialogOpen(true)}
                                     className="w-full min-h-11 text-xs font-medium text-slate-400 active:text-red-500"
@@ -257,6 +261,15 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                                 </button>
                             )}
                         </>
+                    )}
+
+                    {paymentStatus === 'paid' && isLoggedIn && order.status === 'pending_confirmation' && (
+                        <button
+                            onClick={() => setCancelDialogOpen(true)}
+                            className="w-full min-h-11 text-xs font-medium text-slate-400 active:text-red-500"
+                        >
+                            Batalkan Pesanan
+                        </button>
                     )}
 
                     {paymentStatus === 'paid' && (
