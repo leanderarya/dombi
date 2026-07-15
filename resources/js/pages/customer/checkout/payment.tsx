@@ -25,7 +25,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const paymentOptions = summary.payment_options ?? [];
     const [paymentMethod, setPaymentMethod] = useState(paymentOptions[0]?.value ?? 'qris');
     const selectedOption = paymentOptions.find((option: any) => option.value === paymentMethod) ?? paymentOptions[0];
-    const paymentFee = Math.round((summary.subtotal ?? 0) * (selectedOption?.fee_rate ?? 0) * 100) / 100;
+    const paymentFee = selectedOption?.customer_fee ?? Math.round((summary.subtotal ?? 0) * (selectedOption?.fee_rate ?? 0) * 100) / 100;
     const total = (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
     const deliveryBlocked = isDelivery && !!summary.delivery_quote && summary.delivery_quote.is_serviceable === false;
     const ctaLabel = `Bayar ${formatCurrency(total)}`;
@@ -310,11 +310,13 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             {selectedOption?.description ?? 'Scan QR untuk membayar'}
                         </div>
                     </div>
-                    {paymentFee > 0 && (
-                        <div className="text-sm font-bold tabular-nums text-text-muted">
-                            + {formatCurrency(paymentFee)}
-                        </div>
-                    )}
+                    <div className="text-sm font-bold tabular-nums">
+                        {selectedOption?.is_absorbed ? (
+                            <span className="text-emerald-600">Biaya admin Rp 0</span>
+                        ) : paymentFee > 0 ? (
+                            <span className="text-text-muted">+ {formatCurrency(paymentFee)}</span>
+                        ) : null}
+                    </div>
                 </div>
 
                 {/* Other options — expandable */}
@@ -322,27 +324,35 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     <div className="mt-2 space-y-2">
                         {paymentOptions
                             .filter((option: any) => option.value !== paymentMethod)
-                            .map((option: any) => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={() => {
-                                        setPaymentMethod(option.value);
-                                        setPaymentExpanded(false);
-                                    }}
-                                    className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-left transition-all active:opacity-80"
-                                >
-                                    <div>
-                                        <div className="text-sm font-medium text-text">{option.label}</div>
-                                        <div className="mt-0.5 text-[11px] text-text-subtle">{option.description}</div>
-                                    </div>
-                                    {option.fee_rate > 0 && (
-                                        <div className="text-xs font-bold tabular-nums text-text-muted">
-                                            + {formatCurrency(Math.round((summary.subtotal ?? 0) * option.fee_rate * 100) / 100)}
+                            .map((option: any) => {
+                                const optFee = option.customer_fee ?? Math.round((summary.subtotal ?? 0) * (option.fee_rate ?? 0) * 100) / 100;
+                                return (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => {
+                                            setPaymentMethod(option.value);
+                                            setPaymentExpanded(false);
+                                        }}
+                                        className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-left transition-all active:opacity-80"
+                                    >
+                                        <div>
+                                            <div className="text-sm font-medium text-text">{option.label}</div>
+                                            <div className="mt-0.5 text-[11px] text-text-subtle">{option.description}</div>
                                         </div>
-                                    )}
-                                </button>
-                            ))}
+                                        <div className="text-xs font-bold tabular-nums">
+                                            {option.is_absorbed ? (
+                                                <span className="text-emerald-600">Biaya admin Rp 0</span>
+                                            ) : optFee > 0 ? (
+                                                <span className="text-text-muted">+ {formatCurrency(optFee)}</span>
+                                            ) : null}
+                                        </div>
+                                    </button>
+                                );
+                            })}
+                        <div className="text-[11px] text-text-muted px-1 pt-1">
+                            *Subtotal &lt; Rp 500rb: QRIS/Transfer/E-Wallet ditanggung Dombi (Biaya admin Rp 0). Kartu Kredit selalu ditanggung pembeli. Threshold dari subtotal saja (tanpa ongkir).
+                        </div>
                     </div>
                 )}
             </section>
@@ -352,7 +362,10 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 <div className="space-y-1">
                     <SummaryRow label="Subtotal" value={formatCurrency(summary.subtotal)} />
                     {summary.delivery_fee > 0 && <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />}
-                    {paymentFee > 0 && <SummaryRow label="Biaya Layanan" value={formatCurrency(paymentFee)} />}
+                    <SummaryRow
+                        label="Biaya Admin"
+                        value={selectedOption?.is_absorbed ? 'Rp 0' : paymentFee > 0 ? formatCurrency(paymentFee) : 'Rp 0'}
+                    />
                 </div>
                 <div className="mt-2 border-t border-white/20 pt-2 flex items-center justify-between">
                     <span className="text-sm font-semibold text-white">Total</span>

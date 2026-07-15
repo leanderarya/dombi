@@ -33,7 +33,7 @@ class CheckoutController extends Controller
 
     private const CHECKOUT_VISIBLE_FULFILLMENT_TYPES = ['pickup', 'delivery_dombi'];
 
-    private const PAYMENT_METHODS = ['qris', 'credit_card'];
+    private const PAYMENT_METHODS = ['qris', 'transfer', 'ewallet', 'credit_card', 'gopay', 'shopeepay', 'dana'];
 
     public function redirect(Request $request): RedirectResponse
     {
@@ -460,12 +460,32 @@ class CheckoutController extends Controller
             ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService)
             : null;
 
-        // Must pay online to prevent fake orders
-        // Payment via DOKU. Fee = Biaya Layanan (customer-borne, sopan)
-        $paymentOptions = [
-            ['value' => 'qris', 'label' => 'QRIS', 'fee_rate' => 0.007, 'description' => 'Scan QR untuk membayar'],
-            ['value' => 'credit_card', 'label' => 'Kartu Kredit', 'fee_rate' => 0.029, 'description' => 'Bayar dengan kartu kredit'],
-        ];
+        // Payment via DOKU — 4 metode, threshold subtotal only, full absorb <500k except CC
+        $methods = config('doku.methods', []);
+        $enabled = config('doku.enabled_methods', ['qris', 'transfer', 'ewallet', 'credit_card']);
+        $calculator = app(\App\Services\PaymentFeeCalculator::class);
+
+        $paymentOptions = collect($enabled)
+            ->map(fn ($key) => isset($methods[$key]) ? array_merge($methods[$key], ['value' => $key]) : null)
+            ->filter()
+            ->map(function ($m) use ($subtotal, $calculator) {
+                $methodEnum = \App\Enums\PaymentMethod::tryFrom($m['value']) ?? \App\Enums\PaymentMethod::Qris;
+                $feeResult = $calculator->calculate($methodEnum, (float) $subtotal);
+                return [
+                    'value' => $m['value'],
+                    'label' => $m['label'],
+                    'fee_rate' => $m['fee_rate'],
+                    'customer_fee' => $feeResult['customer_fee'],
+                    'dombi_fee' => $feeResult['dombi_fee'],
+                    'gateway_fee' => $feeResult['gateway_fee'],
+                    'is_absorbed' => $feeResult['customer_fee'] === 0.0 && $feeResult['gateway_fee'] > 0,
+                    'description' => $feeResult['customer_fee'] === 0.0 && $feeResult['gateway_fee'] > 0
+                        ? 'Biaya admin Rp 0 (ditanggung Dombi)'
+                        : 'Biaya admin ditanggung pembeli',
+                ];
+            })
+            ->values()
+            ->all();
 
         return Inertia::render('customer/checkout/payment', [
             'draft' => [
@@ -545,6 +565,8 @@ class CheckoutController extends Controller
 
         $deliveryFee = $fulfillmentType === 'delivery_dombi' ? (float) ($deliveryQuote['delivery_fee'] ?? 0) : 0;
         $paymentFee = $this->calculatePaymentFee($validated['payment_method'], $subtotal);
+        $gatewayFee = $this->calculateGatewayFee($validated['payment_method'], $subtotal);
+        $absorbedFee = $this->calculateAbsorbedFee($validated['payment_method'], $subtotal);
 
         try {
             $order = $orderService->createCheckoutOrder($request->user(), [
@@ -558,6 +580,8 @@ class CheckoutController extends Controller
                 'delivery_distance_km' => $deliveryQuote['distance_km'] ?? 0,
                 'recommended_outlet_id' => $deliveryQuote['outlet']['id'] ?? null,
                 'payment_fee' => $paymentFee,
+                'gateway_fee' => $gatewayFee,
+                'absorbed_fee' => $absorbedFee,
                 'notes' => $location['delivery_notes'] ?? null,
             ]);
 
@@ -925,14 +949,20 @@ class CheckoutController extends Controller
 
     private function calculatePaymentFee(string $paymentMethod, float $subtotal): float
     {
-        return match ($paymentMethod) {
-            'qris' => round($subtotal * 0.007, 2),       // 0.7% QRIS fee
-            'credit_card' => round($subtotal * 0.029, 2), // 2.9% credit card fee
-            'gopay' => round($subtotal * 0.015, 2),       // 1.5% e-wallet
-            'shopeepay' => round($subtotal * 0.015, 2),
-            'dana' => round($subtotal * 0.015, 2),
-            default => 0,
-        };
+        $method = \App\Enums\PaymentMethod::tryFrom($paymentMethod) ?? \App\Enums\PaymentMethod::Qris;
+        return app(\App\Services\PaymentFeeCalculator::class)->calculate($method, $subtotal)['customer_fee'];
+    }
+
+    private function calculateGatewayFee(string $paymentMethod, float $subtotal): float
+    {
+        $method = \App\Enums\PaymentMethod::tryFrom($paymentMethod) ?? \App\Enums\PaymentMethod::Qris;
+        return app(\App\Services\PaymentFeeCalculator::class)->calculate($method, $subtotal)['gateway_fee'];
+    }
+
+    private function calculateAbsorbedFee(string $paymentMethod, float $subtotal): float
+    {
+        $method = \App\Enums\PaymentMethod::tryFrom($paymentMethod) ?? \App\Enums\PaymentMethod::Qris;
+        return app(\App\Services\PaymentFeeCalculator::class)->calculate($method, $subtotal)['dombi_fee'];
     }
 
     private function normalizeIndonesianPhone(string $phone): string

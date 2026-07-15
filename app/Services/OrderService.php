@@ -101,6 +101,8 @@ class OrderService
             $deliveryFee = (float) ($payload['delivery_fee'] ?? 0);
             $deliveryDistance = (float) ($payload['delivery_distance_km'] ?? 0);
             $paymentFee = (float) ($payload['payment_fee'] ?? 0);
+            $gatewayFee = (float) ($payload['gateway_fee'] ?? $paymentFee);
+            $absorbedFee = (float) ($payload['absorbed_fee'] ?? 0);
 
             // Try each outlet until reservation succeeds
             $order = null;
@@ -108,7 +110,7 @@ class OrderService
                 try {
                     $order = $this->createOrderWithReservation(
                         $customer, $outlet, $items, $payload, $fulfillmentType, $address,
-                        $subtotal, $deliveryFee, $deliveryDistance, $paymentFee,
+                        $subtotal, $deliveryFee, $deliveryDistance, $paymentFee, $gatewayFee, $absorbedFee,
                     );
                     break;
                 } catch (ValidationException $e) {
@@ -138,6 +140,8 @@ class OrderService
         float $deliveryFee,
         float $deliveryDistance,
         float $paymentFee,
+        float $gatewayFee = 0,
+        float $absorbedFee = 0,
     ): Order {
         // Re-resolve prices for the specific outlet (per-outlet pricing)
         $items = $this->applyOutletPricing($items, $outlet->id);
@@ -155,6 +159,8 @@ class OrderService
             'delivery_distance_km' => $deliveryDistance,
             'payment_method' => $payload['payment_method'],
             'payment_fee' => $paymentFee,
+            'gateway_fee' => $gatewayFee,
+            'absorbed_fee' => $absorbedFee,
             'total' => $subtotal + $deliveryFee + $paymentFee,
             'customer_name' => $address?->recipient_name ?? ($payload['customer_name'] ?? $customer->name),
             'customer_phone' => $address?->phone ?? ($payload['phone_number'] ?? $customer->phone),
