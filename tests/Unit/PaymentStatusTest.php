@@ -12,7 +12,7 @@ class PaymentStatusTest extends TestCase
         $cases = array_map(fn ($c) => $c->value, PaymentStatus::cases());
         $this->assertSame([
             'pending', 'paid', 'failed', 'expired',
-            'refund_pending', 'refunded', 'refund_rejected',
+            'refund_pending', 'refunded', 'refund_rejected', 'refund_failed',
         ], $cases);
     }
 
