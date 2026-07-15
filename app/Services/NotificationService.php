@@ -12,8 +12,8 @@ use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
-use App\Models\StockDistribution;
 use App\Models\User;
+use App\Notifications\LowStockNotification;
 use App\Notifications\NewOrderNotification;
 
 class NotificationService
@@ -91,6 +91,8 @@ class NotificationService
     public const RETURNED_DELIVERY_PENDING = 'system.returned_delivery_pending';
 
     // Refund notifications
+    public const REFUND_REQUESTED = 'order.refund_requested';
+
     public const REFUND_PROCESSED = 'order.refund_processed';
 
     // Settlement notifications
@@ -493,8 +495,9 @@ class NotificationService
         // Notify outlet
         $outletUser = $this->getOutletUser($outletId);
         if ($outletUser) {
-            $severity = $available <= 0 ? self::CRITICAL_STOCK : self::LOW_STOCK;
-            $title = $available <= 0 ? 'Stok Kritis' : 'Stok Rendah';
+            $isCritical = $available <= 0;
+            $severity = $isCritical ? self::CRITICAL_STOCK : self::LOW_STOCK;
+            $title = $isCritical ? 'Stok Kritis' : 'Stok Rendah';
             $message = "{$productName}: tersedia {$available}, minimum {$minimum}.";
 
             $this->create(
@@ -508,6 +511,15 @@ class NotificationService
                 entityType: 'outlet',
                 entityId: $outletId
             );
+
+            // Send web push notification to outlet
+            $outletUser->notify(new LowStockNotification(
+                productName: $productName,
+                available: $available,
+                minimum: $minimum,
+                outletId: $outletId,
+                isCritical: $isCritical,
+            ));
         }
 
         // Notify owners
@@ -587,26 +599,26 @@ class NotificationService
         }
     }
 
-    public function notifyDistributionSent(StockDistribution $distribution): void
+    public function notifyRestockShipped(RestockRequest $restock): void
     {
         // Notify outlet
-        $outletUser = $this->getOutletUser($distribution->outlet_id);
+        $outletUser = $this->getOutletUser($restock->outlet_id);
         if ($outletUser) {
             $this->create(
                 userType: 'outlet',
                 userId: $outletUser->id,
                 customerId: null,
                 type: self::DISTRIBUTION_SENT,
-                title: 'Distribusi Dikirim',
-                message: "Distribusi #{$distribution->id} sedang dikirim ke outlet Anda.",
-                data: ['distribution_id' => $distribution->id],
-                entityType: 'stock_distribution',
-                entityId: $distribution->id
+                title: 'Restock Dikirim',
+                message: "Restock #{$restock->id} sedang dikirim ke outlet Anda.",
+                data: ['restock_id' => $restock->id],
+                entityType: 'restock_request',
+                entityId: $restock->id
             );
         }
     }
 
-    public function notifyDistributionReceived(StockDistribution $distribution): void
+    public function notifyRestockReceived(RestockRequest $restock): void
     {
         // Notify owners
         foreach ($this->getOwners() as $ownerId) {
@@ -615,11 +627,11 @@ class NotificationService
                 userId: $ownerId,
                 customerId: null,
                 type: self::DISTRIBUTION_RECEIVED,
-                title: 'Distribusi Diterima',
-                message: "Distribusi #{$distribution->id} telah diterima outlet.",
-                data: ['distribution_id' => $distribution->id],
-                entityType: 'stock_distribution',
-                entityId: $distribution->id
+                title: 'Restock Diterima',
+                message: "Restock #{$restock->id} telah diterima outlet.",
+                data: ['restock_id' => $restock->id],
+                entityType: 'restock_request',
+                entityId: $restock->id
             );
         }
     }
@@ -1026,6 +1038,25 @@ class NotificationService
     }
 
     // ─── REFUND NOTIFICATIONS ────────────────────────────────────────
+
+    public function notifyRefundRequested(Order $order): void
+    {
+        $formattedAmount = 'Rp ' . number_format($order->total, 0, ',', '.');
+
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::REFUND_REQUESTED,
+                title: 'Refund Diproses',
+                message: "Pesanan {$order->order_code} dibatalkan. Refund sebesar {$formattedAmount} sedang diproses.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'total' => $order->total, 'payment_status' => $order->payment_status],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
 
     public function notifyRefundProcessed(Order $order, float $amount): void
     {
