@@ -65,9 +65,10 @@ class PaymentStatusService
      * States not listed here (Expired, RefundPending, RefundRejected) are immutable.
      */
     private const VALID_TRANSITIONS = [
-        'pending' => ['paid', 'failed', 'expired'],
-        'paid'    => ['refund_pending'],
-        'failed'  => ['paid', 'expired'],
+        'pending'         => ['paid', 'failed', 'expired'],
+        'paid'            => ['refund_pending'],
+        'failed'          => ['paid', 'expired'],
+        'refund_pending'  => ['refunded', 'refund_rejected'],
     ];
 
     private function isValidTransition(PaymentStatus $from, PaymentStatus $to): bool

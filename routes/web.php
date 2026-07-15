@@ -61,7 +61,7 @@ use App\Http\Controllers\Owner\RestockController as OwnerRestockController;
 use App\Http\Controllers\Owner\RefundController;
 use App\Http\Controllers\Owner\ReturnController as OwnerReturnController;
 use App\Http\Controllers\Owner\SettlementPaymentController;
-use App\Http\Controllers\Owner\StockDistributionController as OwnerStockDistributionController;
+
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\TrackController;
 use Illuminate\Support\Facades\Route;
@@ -273,14 +273,10 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('reports/orders/export', [ReportController::class, 'exportOrders'])->name('reports.orders.export');
         Route::get('reports/settlements/export', [ReportController::class, 'exportSettlements'])->name('reports.settlements.export');
         Route::get('restocks', [OwnerRestockController::class, 'index'])->name('restocks.index');
-        Route::get('restocks/create', [OwnerRestockController::class, 'create'])->name('restocks.create');
-        Route::post('restocks', [OwnerRestockController::class, 'store'])->name('restocks.store');
         Route::get('restocks/{restockRequest}', [OwnerRestockController::class, 'show'])->name('restocks.show');
         Route::post('restocks/{restockRequest}/approve', [OwnerRestockController::class, 'approve'])->name('restocks.approve');
         Route::post('restocks/{restockRequest}/reject', [OwnerRestockController::class, 'reject'])->name('restocks.reject');
-        Route::get('distributions', [OwnerStockDistributionController::class, 'index'])->name('distributions.index');
-        Route::get('distributions/{distribution}', [OwnerStockDistributionController::class, 'show'])->name('distributions.show');
-        Route::post('distributions/{distribution}/mark-shipped', [OwnerStockDistributionController::class, 'markShipped'])->name('distributions.mark-shipped');
+        Route::post('restocks/{restockRequest}/mark-shipped', [OwnerRestockController::class, 'markShipped'])->name('restocks.mark-shipped');
         Route::post('finance/settlement-payments/{payment}/verify', [SettlementPaymentController::class, 'verify'])->name('finance.settlement-payments.verify');
         Route::post('finance/settlement-payments/{payment}/reject', [SettlementPaymentController::class, 'reject'])->name('finance.settlement-payments.reject');
         Route::post('finance/settlement-payments/bulk-verify', [SettlementPaymentController::class, 'bulkVerify'])->name('finance.settlement-payments.bulk-verify');
@@ -291,8 +287,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
         Route::resource('finance/payment-accounts', PaymentAccountController::class)->only(['store', 'update', 'destroy']);
         Route::get('refunds', [RefundController::class, 'index'])->name('refunds.index');
-        Route::post('refunds/{order}/retry', [RefundController::class, 'retry'])->name('refunds.retry');
-        Route::post('refunds/{order}/resolve', [RefundController::class, 'resolve'])->name('refunds.resolve');
+        Route::post('refunds/{order}/mark-refunded', [RefundController::class, 'markRefunded'])->name('refunds.mark-refunded');
+        Route::post('refunds/{order}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
         Route::get('returns', [OwnerReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/{returnRequest}', [OwnerReturnController::class, 'show'])->name('returns.show');
         Route::post('returns/{returnRequest}/approve', [OwnerReturnController::class, 'approve'])->name('returns.approve');
@@ -339,7 +335,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('/restocks', [OutletRestockController::class, 'store'])->name('restocks.store');
         Route::get('/restocks/{restockRequest}', [OutletRestockController::class, 'show'])->name('restocks.show');
         Route::post('/restocks/{restockRequest}/cancel', [OutletRestockController::class, 'cancel'])->name('restocks.cancel');
-        Route::post('/distributions/{distribution}/confirm-received', [OutletRestockController::class, 'confirmReceived'])->name('distributions.confirm-received');
+        Route::post('restocks/{restockRequest}/confirm-received', [OutletRestockController::class, 'confirmReceived'])->name('restocks.confirm-received');
         Route::get('/settlement', [SettlementController::class, 'index'])->name('settlement.index');
         Route::get('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'index'])->name('settlement-payments.index');
         Route::post('/settlement-payments', [App\Http\Controllers\Outlet\SettlementPaymentController::class, 'store'])->name('settlement-payments.store');

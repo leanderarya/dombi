@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Owner;
 
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Owner\ManualRefundRequest;
 use App\Models\Order;
-use App\Services\DokuService;
 use App\Services\NotificationService;
+use App\Services\PaymentStatusService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -15,9 +16,9 @@ class RefundController extends Controller
 {
     public function index(): Response
     {
-        $orders = Order::where('payment_status', 'refund_failed')
+        $orders = Order::refundable()
             ->with(['outlet', 'customer'])
-            ->orderByDesc('updated_at')
+            ->orderByDesc('refund_requested_at')
             ->paginate(20);
 
         return Inertia::render('owner/finance/refund-tab', [
@@ -25,32 +26,37 @@ class RefundController extends Controller
         ]);
     }
 
-    public function retry(Order $order): RedirectResponse
+    public function markRefunded(Order $order, ManualRefundRequest $request, PaymentStatusService $payment): RedirectResponse
     {
-        if ($order->payment_status !== 'refund_failed') {
-            return redirect()->back()->with('error', 'Order ini tidak dalam status refund_failed.');
+        if ($order->payment_status_enum !== PaymentStatus::RefundPending) {
+            return redirect()->back()->with('error', 'Order ini tidak dalam antrean refund.');
         }
 
-        $result = app(DokuService::class)->refund($order, $order->refund_reason ?? 'Manual retry');
+        $path = $request->file('proof')->store('refunds', 'public');
 
-        if ($result['status'] === 'success') {
-            app(NotificationService::class)->notifyRefundProcessed($order, (float) $order->total);
-            return redirect()->back()->with('success', 'Refund berhasil diproses.');
-        }
-
-        return redirect()->back()->with('error', 'Refund gagal: ' . ($result['error'] ?? 'Unknown error'));
-    }
-
-    public function resolve(Order $order): RedirectResponse
-    {
-        if ($order->payment_status !== 'refund_failed') {
-            return redirect()->back()->with('error', 'Order ini tidak dalam status refund_failed.');
-        }
-
-        $order->update([
-            'refund_reason' => '[Manual] ' . ($order->refund_reason ?? 'Resolved by owner'),
+        $payment->transition($order, PaymentStatus::Refunded, [
+            'refund_amount' => $request->input('refund_amount'),
+            'refund_reason' => $request->input('refund_reason'),
+            'refund_proof_image' => $path,
+            'refunded_by' => auth()->id(),
+            'refunded_at' => now(),
         ]);
 
+        app(NotificationService::class)->notifyRefundProcessed($order, (float) $request->input('refund_amount'));
+
         return redirect()->back()->with('success', 'Refund ditandai selesai.');
+    }
+
+    public function reject(Order $order): RedirectResponse
+    {
+        if ($order->payment_status_enum !== PaymentStatus::RefundPending) {
+            return redirect()->back()->with('error', 'Order ini tidak dalam antrean refund.');
+        }
+
+        app(PaymentStatusService::class)->transition($order, PaymentStatus::RefundRejected, [
+            'refund_rejected_reason' => request('reason', 'Ditolak owner'),
+        ]);
+
+        return redirect()->back()->with('success', 'Refund ditolak.');
     }
 }
