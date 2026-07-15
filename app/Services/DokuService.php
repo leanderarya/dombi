@@ -257,7 +257,7 @@ class DokuService
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
         $endpoint = '/checkout/v1/payment/'.$order->doku_order_id;
 
-        try {
+        return $this->withRetry(function () use ($requestId, $timestamp, $endpoint, $order) {
             $response = Http::withHeaders($this->generateHeaders($requestId, $timestamp, $endpoint, ''))
                 ->timeout(10)
                 ->get($this->baseUrl.$endpoint);
@@ -274,24 +274,45 @@ class DokuService
                     'doku_order_id' => $order->doku_order_id,
                 ]);
 
-                return null;
+                return null; // 404 = not expired; do not retry
             }
 
-            Log::warning('DOKU status check failed', [
+            Log::warning('DOKU status check failed (will retry)', [
                 'order_id' => $order->id,
                 'status_code' => $response->status(),
                 'body' => $response->body(),
             ]);
 
-            return null;
-        } catch (\Exception $e) {
-            Log::error('DOKU status check error', [
-                'order_id' => $order->id,
-                'error' => $e->getMessage(),
-            ]);
+            return null; // triggers retry in withRetry
+        });
+    }
 
-            return null;
+    /**
+     * Retry a callable up to $maxAttempts times with small backoff.
+     * Retries on null return OR thrown exception. Returns null after exhaustion.
+     */
+    private function withRetry(callable $call, int $maxAttempts = 3): mixed
+    {
+        $attempt = 0;
+        $lastErr = null;
+        while ($attempt < $maxAttempts) {
+            $attempt++;
+            try {
+                $res = $call();
+                if ($res !== null) {
+                    return $res;
+                }
+            } catch (\Exception $e) {
+                $lastErr = $e;
+            }
+            if ($attempt < $maxAttempts) {
+                usleep(500_000 * $attempt); // 0.5s, 1s backoff
+            }
         }
+        if ($lastErr) {
+            Log::warning('DOKU call exhausted retries', ['error' => $lastErr->getMessage()]);
+        }
+        return null;
     }
 
     /**
