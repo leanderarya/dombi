@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Enums\PaymentStatus;
 use App\Exceptions\DokuPaymentException;
 use App\Models\Order;
 use App\Models\PaymentTransaction;
-use Illuminate\Support\Facades\Cache;
+use App\Services\NotificationService;
+use App\Services\OrderStatusService;
+use App\Services\PaymentStatusService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -144,7 +147,7 @@ class DokuService
         }
 
         // Idempotency: skip if already in terminal state
-        if (in_array($order->payment_status, ['paid', 'refunded'], true)) {
+        if ($order->payment_status_enum->isTerminal()) {
             Log::info('DOKU webhook: order already in terminal state, skipping', [
                 'order_id' => $order->id,
             ]);
@@ -340,22 +343,11 @@ class DokuService
      * Uses atomic update to prevent race condition from concurrent webhook + redirect.
      * Handles late payments (after cancellation/expiry) by auto-refunding.
      */
-    private function markOrderPaid(Order $order): void
+    public function markOrderPaid(Order $order): void
     {
-        $updated = Order::where('id', $order->id)
-            ->where('payment_status', '!=', 'paid')
-            ->where('payment_status', '!=', 'refunded')
-            ->where('payment_status', '!=', 'refund_failed')
-            ->update([
-                'paid_at' => now(),
-                'payment_status' => 'paid',
-            ]);
-
-        if ($updated === 0) {
-            return;
+        if (! app(PaymentStatusService::class)->transition($order, PaymentStatus::Paid, ['paid_at' => now()])) {
+            return; // already paid/terminal — no double marking
         }
-
-        $order->refresh();
 
         $terminalStatuses = [
             Order::STATUS_CANCELLED_BY_CUSTOMER,
@@ -365,7 +357,11 @@ class DokuService
         ];
 
         if (in_array($order->status, $terminalStatuses, true)) {
-            $this->refund($order, 'Race condition: payment after ' . $order->status);
+            // Late payment after cancellation/expiry → flag manual refund, no Doku call.
+            app(PaymentStatusService::class)->transition($order, PaymentStatus::RefundPending, [
+                'refund_requested_at' => now(),
+            ]);
+            app(NotificationService::class)->notifyRefundRequested($order);
             return;
         }
 
@@ -381,10 +377,11 @@ class DokuService
         }
 
         app(NotificationService::class)->notifyOrderCreated($order);
+    }
 
-        Cache::forget("outlet:{$order->outlet_id}:pending_orders");
-        Cache::forget('owner:pending_counts');
-        Cache::forget('owner:order_stats');
+    public function markOrderPaidPublic(Order $order): void
+    {
+        $this->markOrderPaid($order);
     }
 
     /**
@@ -394,16 +391,15 @@ class DokuService
      */
     public function processPaymentStatusChange(Order $order, string $status): void
     {
-        if ($status === 'paid' && $order->payment_status !== 'paid') {
+        $to = PaymentStatus::from($status);
+        if ($to === PaymentStatus::Paid) {
             $this->markOrderPaid($order);
-        } elseif (in_array($status, ['failed', 'expired'], true) && $order->payment_status === 'pending') {
-            // Mark payment as failed/expired — but keep order as pending_confirmation
-            // so customer can retry payment via the confirm page.
-            // Reset confirmation_expires_at so customer gets a fresh retry window
-            // instead of being left with the remnant of the original 15-min outlet timeout.
+            return;
+        }
+        if (in_array($status, ['failed', 'expired'], true)
+            && $order->payment_status === 'pending') {
             $retryWindowMinutes = config('order.payment_retry_window_minutes', 15);
-            $order->update([
-                'payment_status' => $status,
+            app(PaymentStatusService::class)->transition($order, $to, [
                 'confirmation_expires_at' => now()->addMinutes($retryWindowMinutes),
             ]);
         }
