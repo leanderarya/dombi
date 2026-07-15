@@ -16,4 +16,7 @@ return [
     // Allowed payment methods (null = all methods)
     'payment_methods' => env('DOKU_PAYMENT_METHODS', 'QRIS'),
     'callback_url' => env('DOKU_CALLBACK_URL'),
+
+    // Max age (seconds) for a webhook timestamp to be considered fresh.
+    'webhook_max_age_seconds' => env('DOKU_WEBHOOK_MAX_AGE_SECONDS', 300),
 ];

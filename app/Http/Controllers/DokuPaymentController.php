@@ -24,12 +24,14 @@ class DokuPaymentController extends Controller
         ]);
 
         // Verify webhook signature
+        $clientIdHeader = $request->header('Client-Id');
         if (! $doku->verifySignature(
             $payload,
             $requestId,
             $rawBody,
             $request->header('Request-Timestamp'),
-            $request->header('Signature')
+            $request->header('Signature'),
+            $clientIdHeader
         )) {
             Log::warning('DOKU webhook: invalid signature', ['request_id' => $requestId]);
 

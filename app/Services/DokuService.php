@@ -182,13 +182,22 @@ class DokuService
      * Verify DOKU webhook signature.
      * DOKU Non-SNAP signature: HMAC-SHA256 of assembled header/body fields.
      */
-    public function verifySignature(array $payload, string $requestId, string $rawBody, ?string $timestampHeader = null, ?string $signatureHeader = null): bool
+    public function verifySignature(array $payload, string $requestId, string $rawBody, ?string $timestampHeader = null, ?string $signatureHeader = null, ?string $clientIdHeader = null): bool
     {
+        $clientId = $clientIdHeader ?? $payload['client_id'] ?? $this->clientId;
+        if (! hash_equals($clientId, $this->clientId)) {
+            Log::warning('DOKU webhook: client id mismatch', ['provided' => $clientId]);
+            return false;
+        }
+
         $timestamp = $timestampHeader ?? $payload['timestamp'] ?? '';
+        if (! $this->isTimestampFresh($timestamp)) {
+            Log::warning('DOKU webhook: stale timestamp', ['timestamp' => $timestamp]);
+            return false;
+        }
+
         $requestTarget = '/payment/doku/notify';
-
         $digest = base64_encode(hash('sha256', $rawBody, true));
-
         $assembled = 'Client-Id:'.$this->clientId."\n"
             .'Request-Id:'.$requestId."\n"
             .'Request-Timestamp:'.$timestamp."\n"
@@ -199,6 +208,37 @@ class DokuService
         $provided = $signatureHeader ?? $payload['signature'] ?? '';
 
         return hash_equals($expected, $provided);
+    }
+
+    private function isTimestampFresh(string $timestamp): bool
+    {
+        if (! $timestamp) {
+            return false;
+        }
+        $parsed = \DateTime::createFromFormat('Y-m-d\TH:i:s\Z', $timestamp);
+        if (! $parsed) {
+            return false;
+        }
+        $diff = abs(now('UTC')->getTimestamp() - $parsed->getTimestamp());
+        return $diff <= (int) config('doku.webhook_max_age_seconds', 300);
+    }
+
+    // --- test helpers ---
+    public function refreshKeysForTest(string $clientId, string $secretKey): void
+    {
+        $this->clientId = $clientId;
+        $this->secretKey = $secretKey;
+    }
+
+    public function signForTest(string $requestId, string $timestamp, string $endpoint, string $body): string
+    {
+        $digest = base64_encode(hash('sha256', $body, true));
+        $assembled = 'Client-Id:'.$this->clientId."\n"
+            .'Request-Id:'.$requestId."\n"
+            .'Request-Timestamp:'.$timestamp."\n"
+            .'Request-Target:'.$endpoint."\n"
+            .'Digest:'.$digest;
+        return 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
     }
 
     /**
