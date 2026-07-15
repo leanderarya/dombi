@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\PaymentWebhookLog;
 use App\Services\DokuService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -17,6 +18,16 @@ class DokuPaymentController extends Controller
         $rawBody = $request->getContent();
         $payload = json_decode($rawBody, true) ?? [];
         $requestId = $request->header('Request-Id', '');
+        $invoiceNumber = $payload['order']['invoice_number'] ?? $request->query('invoice_number') ?? null;
+
+        $log = PaymentWebhookLog::create([
+            'request_id' => $requestId,
+            'source' => 'notify',
+            'invoice_number' => $invoiceNumber,
+            'status' => 'received',
+            'signature_valid' => false,
+            'payload' => $payload,
+        ]);
 
         Log::debug('DOKU webhook received', [
             'method' => $request->method(),
@@ -34,6 +45,7 @@ class DokuPaymentController extends Controller
             $clientIdHeader
         )) {
             Log::warning('DOKU webhook: invalid signature', ['request_id' => $requestId]);
+            $log->update(['status' => 'signature_invalid']);
 
             return response()->json(['message' => 'Invalid signature'], 401);
         }
@@ -42,6 +54,7 @@ class DokuPaymentController extends Controller
         $idempotencyKey = 'doku_webhook:'.$requestId;
         if (Cache::has($idempotencyKey)) {
             Log::info('DOKU webhook: duplicate, already processed', ['request_id' => $requestId]);
+            $log->update(['status' => 'processed', 'signature_valid' => true]);
 
             return response()->json(['message' => 'OK']);
         }
@@ -51,11 +64,13 @@ class DokuPaymentController extends Controller
 
             // Mark as processed after successful handling
             Cache::put($idempotencyKey, true, 86400); // 24h TTL
+            $log->update(['status' => 'processed', 'signature_valid' => true]);
         } catch (\Exception $e) {
             Log::error('DOKU webhook error', [
                 'error' => $e->getMessage(),
                 'payload' => $payload,
             ]);
+            $log->update(['status' => 'error', 'error' => $e->getMessage()]);
 
             return response()->json(['message' => 'Internal error'], 500);
         }
@@ -67,6 +82,14 @@ class DokuPaymentController extends Controller
     {
         $invoiceNumber = $request->query('invoice_number') ?? $request->query('order_id');
         $dokuStatus = $request->query('status');
+
+        PaymentWebhookLog::create([
+            'source' => 'redirect',
+            'invoice_number' => $invoiceNumber,
+            'status' => 'received',
+            'signature_valid' => false,
+            'payload' => $request->query(),
+        ]);
 
         Log::info('Doku redirect hit', [
             'invoice_number' => $invoiceNumber,
