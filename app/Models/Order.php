@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use App\Enums\PaymentStatus;
 
 class Order extends Model
 {
@@ -143,6 +144,24 @@ class Order extends Model
             'refunded_at' => 'datetime',
             'refund_amount' => 'decimal:2',
         ];
+    }
+
+    public function getPaymentStatusEnumAttribute(): PaymentStatus
+    {
+        return PaymentStatus::from($this->payment_status ?? 'pending');
+    }
+
+    public function scopePaymentStatus(\Illuminate\Database\Eloquent\Builder $query, PaymentStatus $status): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('payment_status', $status->value);
+    }
+
+    public function scopeRefundable(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->whereIn('payment_status', [
+            PaymentStatus::Paid->value,
+            PaymentStatus::RefundPending->value,
+        ]);
     }
 
     private static function generateRecoveryToken(): string

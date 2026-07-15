@@ -12,9 +12,13 @@ enum PaymentStatus: string
     case Refunded = 'refunded';
     case RefundRejected = 'refund_rejected';
 
+    // Legacy status retained for backward compatibility with older orders.
+    // No longer produced by new code (refunds are manual, see Track B).
+    case RefundFailed = 'refund_failed';
+
     public function isTerminal(): bool
     {
-        return in_array($this, [self::Paid, self::Refunded, self::RefundRejected], true);
+        return in_array($this, [self::Paid, self::Refunded, self::RefundRejected, self::RefundFailed], true);
     }
 
     public function isMutable(): bool
