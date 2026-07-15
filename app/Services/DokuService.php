@@ -359,16 +359,25 @@ class DokuService
         };
     }
 
+    public function mapPaymentMethodPublic(?string $method): string
+    {
+        return $this->mapPaymentMethod($method);
+    }
+
     /**
-     * Map Dombi payment method to DOKU payment_method_types value.
+     * Map Dombi payment method to DOKU payment_method_types value via enum.
      */
     private function mapPaymentMethod(?string $method): string
     {
-        return match ($method) {
-            'credit_card' => 'CREDIT_CARD',
-            'qris' => 'QRIS',
-            default => 'QRIS',
-        };
+        $enum = \App\Enums\PaymentMethod::tryFrom($method ?? '') ?? \App\Enums\PaymentMethod::Qris;
+        return $enum->dokuType();
+    }
+
+    private function channelInfo(?string $method): ?array
+    {
+        $enum = \App\Enums\PaymentMethod::tryFrom($method ?? '') ?? \App\Enums\PaymentMethod::Qris;
+        $channel = config("doku.methods.{$enum->value}.channel");
+        return $channel ? ['channel' => $channel] : null;
     }
 
     /**

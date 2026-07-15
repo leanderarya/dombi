@@ -61,6 +61,26 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                         {order.items.map((item: any) => (
                             <OwnerDetailRow key={item.id} label={`${item.product_name} x${item.quantity}`} value={formatCurrency(item.subtotal)} bold />
                         ))}
+                        <div className="mt-3 space-y-1.5 border-t border-border pt-3">
+                            <OwnerDetailRow label="Subtotal" value={formatCurrency(order.subtotal)} />
+                            {Number(order.delivery_fee) > 0 && <OwnerDetailRow label="Ongkir" value={formatCurrency(order.delivery_fee)} />}
+                            <OwnerDetailRow
+                                label="Biaya Admin (Customer)"
+                                value={Number(order.payment_fee) > 0 ? formatCurrency(order.payment_fee) : 'Rp 0'}
+                            />
+                            {Number(order.gateway_fee) > 0 && (
+                                <>
+                                    <OwnerDetailRow label="Biaya Gateway" value={formatCurrency(order.gateway_fee)} />
+                                    <OwnerDetailRow
+                                        label="Ditanggung Dombi"
+                                        value={formatCurrency(order.absorbed_fee ?? 0)}
+                                    />
+                                </>
+                            )}
+                            <div className="mt-1 text-[11px] text-text-muted">
+                                Metode: {order.payment_method} · Threshold subtotal &lt; Rp 500rb ditanggung Dombi (full absorb), CC selalu customer.
+                            </div>
+                        </div>
                         <div className="mt-2 rounded-lg bg-surface-muted p-3 text-right text-lg font-bold tabular-nums">{formatCurrency(order.total)}</div>
                     </div>
 
