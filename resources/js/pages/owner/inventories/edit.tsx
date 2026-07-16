@@ -6,7 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 export default function EditInventory({ inventory }: any) {
-    const form = useForm({ current_stock: inventory.current_stock, minimum_stock: inventory.minimum_stock, notes: '' });
+    const form = useForm({
+        current_stock: inventory.current_stock,
+        minimum_stock: inventory.minimum_stock,
+        notes: '',
+    });
 
     const variantName = displayProductName(inventory.variant);
     const familyName = inventory.variant?.family?.name ?? '';
@@ -14,17 +18,27 @@ export default function EditInventory({ inventory }: any) {
     return (
         <OwnerPageShell title="Edit Stok" backHref="/owner/inventories">
             <section className="mb-4" aria-label="Detail Inventaris">
-                <div className="text-sm font-semibold text-text">{inventory.outlet?.name}</div>
+                <div className="text-sm font-semibold text-text">
+                    {inventory.outlet?.name}
+                </div>
                 <div className="mt-0.5 text-sm text-text-muted">
-                    {familyName && <span className="text-text-subtle">{familyName} &middot; </span>}
+                    {familyName && (
+                        <span className="text-text-subtle">
+                            {familyName} &middot;{' '}
+                        </span>
+                    )}
                     {variantName}
                 </div>
             </section>
-            <section className="mx-auto max-w-lg" aria-label="Form Edit Inventaris">
+            <section
+                className="mx-auto max-w-lg"
+                aria-label="Form Edit Inventaris"
+            >
                 <form
                     onSubmit={(e) => {
- e.preventDefault(); form.put(`/owner/inventories/${inventory.id}`); 
-}}
+                        e.preventDefault();
+                        form.put(`/owner/inventories/${inventory.id}`);
+                    }}
                     className="space-y-4"
                 >
                     <Input
@@ -32,7 +46,12 @@ export default function EditInventory({ inventory }: any) {
                         type="number"
                         min={0}
                         value={form.data.current_stock}
-                        onChange={(e) => form.setData('current_stock', Number(e.target.value))}
+                        onChange={(e) =>
+                            form.setData(
+                                'current_stock',
+                                Number(e.target.value),
+                            )
+                        }
                         error={form.errors.current_stock}
                     />
 
@@ -41,7 +60,12 @@ export default function EditInventory({ inventory }: any) {
                         type="number"
                         min={0}
                         value={form.data.minimum_stock}
-                        onChange={(e) => form.setData('minimum_stock', Number(e.target.value))}
+                        onChange={(e) =>
+                            form.setData(
+                                'minimum_stock',
+                                Number(e.target.value),
+                            )
+                        }
                         error={form.errors.minimum_stock}
                     />
 
@@ -53,10 +77,17 @@ export default function EditInventory({ inventory }: any) {
                     />
 
                     <div className="flex items-center gap-3 pt-2">
-                        <Button type="submit" loading={form.processing} disabled={form.processing}>
+                        <Button
+                            type="submit"
+                            loading={form.processing}
+                            disabled={form.processing}
+                        >
                             Update
                         </Button>
-                        <a href="/owner/inventories" className="text-xs font-semibold text-text-muted hover:text-text">
+                        <a
+                            href="/owner/inventories"
+                            className="text-xs font-semibold text-text-muted hover:text-text"
+                        >
                             Batal
                         </a>
                     </div>

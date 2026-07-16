@@ -47,7 +47,7 @@ class FavoritesStore {
             this.mode = 'user';
             const serverOk = await this.loadFromServer();
 
-            if (! serverOk) {
+            if (!serverOk) {
                 // Server fetch failed — don't proceed with merge
                 return;
             }
@@ -166,7 +166,9 @@ class FavoritesStore {
 
             if (res.ok) {
                 const data = await res.json();
-                const ids = (data.variant_ids ?? []).filter((id: unknown): id is number => typeof id === 'number');
+                const ids = (data.variant_ids ?? []).filter(
+                    (id: unknown): id is number => typeof id === 'number',
+                );
                 this.favorites = new Set(ids);
                 this.commit();
 
@@ -194,7 +196,9 @@ class FavoritesStore {
 
             if (res.ok) {
                 const data = await res.json();
-                const ids = (data.variant_ids ?? []).filter((id: unknown): id is number => typeof id === 'number');
+                const ids = (data.variant_ids ?? []).filter(
+                    (id: unknown): id is number => typeof id === 'number',
+                );
                 this.favorites = new Set(ids);
                 this.commit();
             }
@@ -218,7 +222,9 @@ class FavoritesStore {
                 const parsed = JSON.parse(stored);
 
                 if (Array.isArray(parsed)) {
-                    return parsed.filter((id: unknown): id is number => typeof id === 'number');
+                    return parsed.filter(
+                        (id: unknown): id is number => typeof id === 'number',
+                    );
                 }
             }
         } catch {
@@ -230,7 +236,10 @@ class FavoritesStore {
 
     private persistGuestToStorage(): void {
         try {
-            localStorage.setItem(GUEST_KEY, JSON.stringify([...this.favorites]));
+            localStorage.setItem(
+                GUEST_KEY,
+                JSON.stringify([...this.favorites]),
+            );
         } catch {
             // Non-critical
         }
@@ -245,7 +254,10 @@ class FavoritesStore {
     }
 
     private headers(): Record<string, string> {
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+        const token =
+            document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content') ?? '';
 
         return {
             'Content-Type': 'application/json',
@@ -279,10 +291,20 @@ const getSnapshot = () => favoritesStore.getSnapshot();
 const getServerSnapshot = () => new Set<number>();
 
 export function useFavorites() {
-    const favorites = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+    const favorites = useSyncExternalStore(
+        subscribe,
+        getSnapshot,
+        getServerSnapshot,
+    );
 
-    const isFavorite = useCallback((variantId: number) => favoritesStore.isFavorite(variantId), []);
-    const toggle = useCallback((variantId: number) => favoritesStore.toggle(variantId), []);
+    const isFavorite = useCallback(
+        (variantId: number) => favoritesStore.isFavorite(variantId),
+        [],
+    );
+    const toggle = useCallback(
+        (variantId: number) => favoritesStore.toggle(variantId),
+        [],
+    );
 
     return { favorites, isFavorite, toggle };
 }

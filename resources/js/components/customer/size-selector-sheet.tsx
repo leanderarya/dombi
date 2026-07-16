@@ -24,7 +24,14 @@ interface Props {
     onAdded?: () => void;
 }
 
-export default function SizeSelectorSheet({ open, onClose, familyName, flavorName, variants, onAdded }: Props) {
+export default function SizeSelectorSheet({
+    open,
+    onClose,
+    familyName,
+    flavorName,
+    variants,
+    onAdded,
+}: Props) {
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
@@ -33,7 +40,9 @@ export default function SizeSelectorSheet({ open, onClose, familyName, flavorNam
     const cart = useCart();
 
     const sortedVariants = useMemo(() => {
-        return [...variants].sort((a, b) => sizeToMl(a.size) - sizeToMl(b.size));
+        return [...variants].sort(
+            (a, b) => sizeToMl(a.size) - sizeToMl(b.size),
+        );
     }, [variants]);
 
     // Reset selection to smallest when sheet opens
@@ -45,21 +54,27 @@ export default function SizeSelectorSheet({ open, onClose, familyName, flavorNam
         }
     }, [open, sortedVariants]);
 
-    const selectedVariant = sortedVariants.find((v) => v.id === selectedId) ?? sortedVariants[0];
+    const selectedVariant =
+        sortedVariants.find((v) => v.id === selectedId) ?? sortedVariants[0];
     const isOutOfStock = selectedVariant?.stock_status === 'out_of_stock';
-    const effectiveMax = Math.min(maxQuantity, selectedVariant?.available_stock ?? 999);
+    const effectiveMax = Math.min(
+        maxQuantity,
+        selectedVariant?.available_stock ?? 999,
+    );
     const isAtMaxQuantity = quantity >= effectiveMax;
 
     const handleAdd = async () => {
         if (!selectedVariant || adding || isOutOfStock) {
-return;
-}
+            return;
+        }
 
         setAdding(true);
         cart.addItem(selectedVariant.id, quantity, selectedVariant.price);
 
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const token = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
             const response = await fetch('/customer/cart/add', {
                 method: 'POST',
                 headers: {
@@ -88,19 +103,17 @@ return;
         onClose();
     };
 
-    const title = flavorName
-        ? `${familyName} ${flavorName}`
-        : familyName;
+    const title = flavorName ? `${familyName} ${flavorName}` : familyName;
 
     return (
         <Dialog open={open} onClose={onClose} title={title}>
             <div className="space-y-5">
-
                 {/* Size Options */}
                 <div className="space-y-2">
                     {sortedVariants.map((variant) => {
                         const isSelected = selectedVariant?.id === variant.id;
-                        const outOfStock = variant.stock_status === 'out_of_stock';
+                        const outOfStock =
+                            variant.stock_status === 'out_of_stock';
 
                         return (
                             <button
@@ -113,15 +126,23 @@ return;
                                         : 'border-border bg-white'
                                 }`}
                             >
-                                <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                                    isSelected ? 'border-emerald-600' : 'border-border'
-                                }`}>
-                                    {isSelected && <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />}
+                                <div
+                                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                        isSelected
+                                            ? 'border-emerald-600'
+                                            : 'border-border'
+                                    }`}
+                                >
+                                    {isSelected && (
+                                        <div className="h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                                    )}
                                 </div>
                                 <div className="flex-1">
-                                    <div className="text-sm font-medium text-text">{variant.size ?? variant.name}</div>
+                                    <div className="text-sm font-medium text-text">
+                                        {variant.size ?? variant.name}
+                                    </div>
                                 </div>
-                                <div className="text-sm font-bold tabular-nums text-text">
+                                <div className="text-sm font-bold text-text tabular-nums">
                                     {formatCurrency(variant.price)}
                                 </div>
                             </button>
@@ -134,38 +155,65 @@ return;
                     <div className="flex items-center gap-3">
                         <div className="flex items-center rounded-xl border border-border bg-white">
                             <button
-                                onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                className="flex h-11 w-11 items-center justify-center text-text-muted active:bg-surface-muted rounded-l-xl"
+                                onClick={() =>
+                                    setQuantity(Math.max(1, quantity - 1))
+                                }
+                                className="flex h-11 w-11 items-center justify-center rounded-l-xl text-text-muted active:bg-surface-muted"
                             >
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                >
                                     <path strokeLinecap="round" d="M5 12h14" />
                                 </svg>
                             </button>
-                            <span className="w-10 text-center text-sm font-bold text-text">{quantity}</span>
+                            <span className="w-10 text-center text-sm font-bold text-text">
+                                {quantity}
+                            </span>
                             <button
-                                onClick={() => setQuantity(Math.min(effectiveMax, quantity + 1))}
+                                onClick={() =>
+                                    setQuantity(
+                                        Math.min(effectiveMax, quantity + 1),
+                                    )
+                                }
                                 disabled={isAtMaxQuantity}
-                                className="flex h-11 w-11 items-center justify-center text-text-muted active:bg-surface-muted rounded-r-xl disabled:opacity-30"
+                                className="flex h-11 w-11 items-center justify-center rounded-r-xl text-text-muted active:bg-surface-muted disabled:opacity-30"
                             >
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                    <path strokeLinecap="round" d="M12 5v14M5 12h14" />
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth="2.5"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        d="M12 5v14M5 12h14"
+                                    />
                                 </svg>
                             </button>
                         </div>
                         {effectiveMax < 999 && (
-                            <span className="text-xs text-text-muted">Maks: {effectiveMax}</span>
+                            <span className="text-xs text-text-muted">
+                                Maks: {effectiveMax}
+                            </span>
                         )}
 
                         <button
                             onClick={handleAdd}
                             disabled={adding || isOutOfStock}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white active:bg-emerald-700 shadow-sm disabled:opacity-60"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-sm active:bg-emerald-700 disabled:opacity-60"
                         >
-                            {isOutOfStock ? (
-                                'Habis'
-                            ) : (
-                                adding ? 'Menambahkan...' : 'Tambah'
-                            )}
+                            {isOutOfStock
+                                ? 'Habis'
+                                : adding
+                                  ? 'Menambahkan...'
+                                  : 'Tambah'}
                         </button>
                     </div>
                 )}

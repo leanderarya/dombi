@@ -28,7 +28,12 @@ class OrderRecoveryStore {
 
     save(phone: string, orderCodes: string[]): void {
         const existing = this.data;
-        const mergedCodes = [...new Set([...(existing?.recent_order_codes ?? []), ...orderCodes])].slice(0, 20);
+        const mergedCodes = [
+            ...new Set([
+                ...(existing?.recent_order_codes ?? []),
+                ...orderCodes,
+            ]),
+        ].slice(0, 20);
 
         this.data = {
             phone,
@@ -41,8 +46,8 @@ class OrderRecoveryStore {
 
     addOrder(phone: string, orderCode: string): void {
         if (!orderCode) {
-return;
-}
+            return;
+        }
 
         const existing = this.data;
         const codes = [orderCode, ...(existing?.recent_order_codes ?? [])];
@@ -92,12 +97,16 @@ return;
             const stored = localStorage.getItem(STORAGE_KEY);
 
             if (!stored) {
-return;
-}
+                return;
+            }
 
             const parsed = JSON.parse(stored) as RecoveryData;
 
-            if (parsed && typeof parsed.phone === 'string' && Array.isArray(parsed.recent_order_codes)) {
+            if (
+                parsed &&
+                typeof parsed.phone === 'string' &&
+                Array.isArray(parsed.recent_order_codes)
+            ) {
                 this.data = parsed;
             }
         } catch {
@@ -112,8 +121,8 @@ export function maskPhone(phone: string): string {
     const digits = phone.replace(/\D/g, '');
 
     if (digits.length < 6) {
-return phone;
-}
+        return phone;
+    }
 
     return digits.slice(0, 4) + 'xxxx' + digits.slice(-3);
 }
@@ -166,17 +175,19 @@ export async function recoverOrders(
     active_orders?: any[];
     recent_orders?: any[];
 }> {
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const token = document
+        .querySelector('meta[name="csrf-token"]')
+        ?.getAttribute('content');
 
     const body: Record<string, string> = { phone };
 
     if (recoveryToken) {
-body.recovery_token = recoveryToken;
-}
+        body.recovery_token = recoveryToken;
+    }
 
     if (orderCode) {
-body.order_code = orderCode;
-}
+        body.order_code = orderCode;
+    }
 
     const response = await fetch('/customer/orders/recovery', {
         method: 'POST',

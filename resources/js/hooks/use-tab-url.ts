@@ -12,8 +12,8 @@ export function useTabUrl<T extends string>(
 ): [T, (key: T) => void] {
     const getInitial = (): T => {
         if (typeof window === 'undefined') {
-return defaultTab;
-}
+            return defaultTab;
+        }
 
         const url = new URL(window.location.href);
         const val = url.searchParams.get(param) as T;
@@ -28,7 +28,11 @@ return defaultTab;
             setActiveTab(key);
             const url = new URL(window.location.href);
             url.searchParams.set(param, key);
-            router.get(url.pathname + url.search, {}, { preserveState: true, replace: true });
+            router.get(
+                url.pathname + url.search,
+                {},
+                { preserveState: true, replace: true },
+            );
         },
         [param],
     );

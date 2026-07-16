@@ -15,7 +15,11 @@ interface Props {
  * Leaflet map picker with draggable marker.
  * Lazy-loads Leaflet to avoid SSR issues.
  */
-export default function LeafletPicker({ latitude, longitude, onChange }: Props) {
+export default function LeafletPicker({
+    latitude,
+    longitude,
+    onChange,
+}: Props) {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstanceRef = useRef<any>(null);
     const markerRef = useRef<any>(null);
@@ -23,7 +27,8 @@ export default function LeafletPicker({ latitude, longitude, onChange }: Props) 
 
     const lat = latitude ? Number(latitude) : null;
     const lng = longitude ? Number(longitude) : null;
-    const hasCoords = lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng);
+    const hasCoords =
+        lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng);
 
     useEffect(() => {
         let cancelled = false;
@@ -33,18 +38,23 @@ export default function LeafletPicker({ latitude, longitude, onChange }: Props) 
             await import('leaflet/dist/leaflet.css');
 
             if (cancelled || !mapRef.current || mapInstanceRef.current) {
-return;
-}
+                return;
+            }
 
             // Fix default marker icon path
             delete (L.Icon.Default.prototype as any)._getIconUrl;
             L.Icon.Default.mergeOptions({
-                iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-                iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-                shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+                iconRetinaUrl:
+                    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+                iconUrl:
+                    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+                shadowUrl:
+                    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
             });
 
-            const center: [number, number] = hasCoords ? [lat!, lng!] : [DEFAULT_LAT, DEFAULT_LNG];
+            const center: [number, number] = hasCoords
+                ? [lat!, lng!]
+                : [DEFAULT_LAT, DEFAULT_LNG];
 
             const map = L.map(mapRef.current, {
                 center,
@@ -59,7 +69,9 @@ return;
 
             L.control.zoom({ position: 'topright' }).addTo(map);
 
-            const marker = hasCoords ? L.marker(center, { draggable: true }).addTo(map) : null;
+            const marker = hasCoords
+                ? L.marker(center, { draggable: true }).addTo(map)
+                : null;
 
             if (marker) {
                 marker.on('dragend', () => {
@@ -70,7 +82,9 @@ return;
 
             map.on('click', (e: any) => {
                 if (!markerRef.current) {
-                    markerRef.current = L.marker(e.latlng, { draggable: true }).addTo(map);
+                    markerRef.current = L.marker(e.latlng, {
+                        draggable: true,
+                    }).addTo(map);
                     markerRef.current.on('dragend', () => {
                         const pos = markerRef.current.getLatLng();
                         onChange(pos.lat, pos.lng);
@@ -104,17 +118,22 @@ return;
         if (mapInstanceRef.current && markerRef.current && hasCoords) {
             const pos = markerRef.current.getLatLng();
 
-            if (Math.abs(pos.lat - lat!) > 0.0001 || Math.abs(pos.lng - lng!) > 0.0001) {
+            if (
+                Math.abs(pos.lat - lat!) > 0.0001 ||
+                Math.abs(pos.lng - lng!) > 0.0001
+            ) {
                 markerRef.current.setLatLng([lat!, lng!]);
                 mapInstanceRef.current.setView([lat!, lng!], DEFAULT_ZOOM);
             }
         } else if (mapInstanceRef.current && hasCoords) {
             import('leaflet').then((L) => {
                 if (!mapInstanceRef.current || markerRef.current) {
-return;
-}
+                    return;
+                }
 
-                markerRef.current = L.marker([lat!, lng!], { draggable: true }).addTo(mapInstanceRef.current);
+                markerRef.current = L.marker([lat!, lng!], {
+                    draggable: true,
+                }).addTo(mapInstanceRef.current);
                 markerRef.current.on('dragend', () => {
                     const pos = markerRef.current.getLatLng();
                     onChange(pos.lat, pos.lng);
@@ -126,10 +145,16 @@ return;
 
     return (
         <div className="relative overflow-hidden rounded-lg border border-border">
-            <div ref={mapRef} className="h-[260px] w-full bg-zinc-100 sm:h-[300px]" style={{ touchAction: 'pan-x pan-y' }} />
+            <div
+                ref={mapRef}
+                className="h-[260px] w-full bg-zinc-100 sm:h-[300px]"
+                style={{ touchAction: 'pan-x pan-y' }}
+            />
             {!loaded && (
                 <div className="absolute inset-0 flex items-center justify-center bg-surface-muted">
-                    <span className="text-xs text-text-subtle">Memuat peta...</span>
+                    <span className="text-xs text-text-subtle">
+                        Memuat peta...
+                    </span>
                 </div>
             )}
             {loaded && !hasCoords && (

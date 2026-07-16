@@ -5,7 +5,14 @@ import PaymentHistoryCard from '@/components/owner/finance/payment-history-card'
 import PaymentProofModal from '@/components/owner/finance/payment-proof-modal';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
@@ -19,7 +26,11 @@ const STATUS_FILTERS = [
     { key: 'rejected', label: 'Ditolak' },
 ];
 
-export default function PembayaranTab({ payments, statusFilter, paymentKpis }: any) {
+export default function PembayaranTab({
+    payments,
+    statusFilter,
+    paymentKpis,
+}: any) {
     const [rejectingId, setRejectingId] = useState<number | null>(null);
     const [rejectReason, setRejectReason] = useState('');
     const [processing, setProcessing] = useState(false);
@@ -31,7 +42,11 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
 
     useEffect(() => {
         if (!statusFilter || statusFilter === 'all') {
-            router.get('/owner/finance', { tab: 'pembayaran', status: 'pending_verification' }, { replace: true, preserveState: true });
+            router.get(
+                '/owner/finance',
+                { tab: 'pembayaran', status: 'pending_verification' },
+                { replace: true, preserveState: true },
+            );
         }
     }, []);
 
@@ -46,35 +61,43 @@ export default function PembayaranTab({ payments, statusFilter, paymentKpis }: a
 
     const handleVerifyConfirm = () => {
         if (!verifyTargetId) {
-return;
-}
+            return;
+        }
 
         setProcessing(true);
         setVerifyDialogOpen(false);
-        router.post(`/owner/finance/settlement-payments/${verifyTargetId}/verify`, {}, {
-            onFinish: () => {
-                setProcessing(false);
-                setVerifyTargetId(null);
+        router.post(
+            `/owner/finance/settlement-payments/${verifyTargetId}/verify`,
+            {},
+            {
+                onFinish: () => {
+                    setProcessing(false);
+                    setVerifyTargetId(null);
+                },
             },
-        });
+        );
     };
 
     const handleReject = (paymentId: number) => {
         if (rejectingId === paymentId) {
             if (!rejectReason.trim()) {
-return;
-}
+                return;
+            }
 
             setProcessing(true);
-            router.post(`/owner/finance/settlement-payments/${paymentId}/reject`, {
-                rejection_reason: rejectReason,
-            }, {
-                onSuccess: () => {
-                    setRejectingId(null);
-                    setRejectReason('');
+            router.post(
+                `/owner/finance/settlement-payments/${paymentId}/reject`,
+                {
+                    rejection_reason: rejectReason,
                 },
-                onFinish: () => setProcessing(false),
-            });
+                {
+                    onSuccess: () => {
+                        setRejectingId(null);
+                        setRejectReason('');
+                    },
+                    onFinish: () => setProcessing(false),
+                },
+            );
         } else {
             setRejectingId(paymentId);
             setRejectReason('');
@@ -88,32 +111,64 @@ return;
     const handleBatchVerifyConfirm = () => {
         setBatchDialogOpen(false);
         setBatchVerifying(true);
-        router.post('/owner/finance/settlement-payments/bulk-verify', {}, {
-            onFinish: () => setBatchVerifying(false),
-        });
+        router.post(
+            '/owner/finance/settlement-payments/bulk-verify',
+            {},
+            {
+                onFinish: () => setBatchVerifying(false),
+            },
+        );
     };
 
-    const pendingPayments = payments.data.filter((p: any) => p.status === 'pending_verification');
+    const pendingPayments = payments.data.filter(
+        (p: any) => p.status === 'pending_verification',
+    );
 
     const handleStatusFilterChange = (key: string) => {
-        router.get('/owner/finance', { tab: 'pembayaran', status: key || undefined }, { preserveState: true });
+        router.get(
+            '/owner/finance',
+            { tab: 'pembayaran', status: key || undefined },
+            { preserveState: true },
+        );
     };
 
     return (
         <>
-            <OwnerKpiStrip items={[
-                { label: 'Pending', value: paymentKpis?.pending_count ?? 0, sublabel: (paymentKpis?.pending_count ?? 0) > 0 ? 'Perlu verifikasi' : undefined, sublabelColor: 'text-amber-600' },
-                { label: 'Hari Ini', value: formatCurrency(paymentKpis?.verified_today ?? 0) },
-                { label: 'Bulan Ini', value: formatCurrency(paymentKpis?.verified_month ?? 0) },
-            ]} />
+            <OwnerKpiStrip
+                items={[
+                    {
+                        label: 'Pending',
+                        value: paymentKpis?.pending_count ?? 0,
+                        sublabel:
+                            (paymentKpis?.pending_count ?? 0) > 0
+                                ? 'Perlu verifikasi'
+                                : undefined,
+                        sublabelColor: 'text-amber-600',
+                    },
+                    {
+                        label: 'Hari Ini',
+                        value: formatCurrency(paymentKpis?.verified_today ?? 0),
+                    },
+                    {
+                        label: 'Bulan Ini',
+                        value: formatCurrency(paymentKpis?.verified_month ?? 0),
+                    },
+                ]}
+            />
 
-            <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter dan aksi pembayaran">
+            <div
+                className="mb-4 flex flex-wrap items-center gap-2"
+                role="group"
+                aria-label="Filter dan aksi pembayaran"
+            >
                 {STATUS_FILTERS.map((sf) => {
                     const isActive = (statusFilter ?? '') === sf.key;
                     const colorMap: Record<string, string> = {
                         '': 'text-text bg-surface-muted ring-border',
-                        pending_verification: 'text-amber-600 bg-amber-50 ring-amber-200',
-                        verified: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
+                        pending_verification:
+                            'text-amber-600 bg-amber-50 ring-amber-200',
+                        verified:
+                            'text-emerald-600 bg-emerald-50 ring-emerald-200',
                         rejected: 'text-red-600 bg-red-50 ring-red-200',
                     };
 
@@ -124,34 +179,48 @@ return;
                             onClick={() => handleStatusFilterChange(sf.key)}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 isActive
-                                    ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
+                                    ? (colorMap[sf.key] ??
+                                      'bg-primary/10 text-primary ring-primary/20')
+                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
                             }`}
                         >
                             {sf.label}
                         </button>
                     );
                 })}
-                {pendingPayments.length > 0 && statusFilter !== 'verified' && statusFilter !== 'rejected' && (
-                    <Button
-                        size="sm"
-                        onClick={handleBatchVerifyClick}
-                        disabled={batchVerifying}
-                        className="ml-auto"
-                    >
-                        {batchVerifying ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                        ) : (
-                            <CheckCircle className="h-3.5 w-3.5" aria-hidden="true" />
-                        )}
-                        Verifikasi Semua ({pendingPayments.length})
-                    </Button>
-                )}
+                {pendingPayments.length > 0 &&
+                    statusFilter !== 'verified' &&
+                    statusFilter !== 'rejected' && (
+                        <Button
+                            size="sm"
+                            onClick={handleBatchVerifyClick}
+                            disabled={batchVerifying}
+                            className="ml-auto"
+                        >
+                            {batchVerifying ? (
+                                <Loader2
+                                    className="h-3.5 w-3.5 animate-spin"
+                                    aria-hidden="true"
+                                />
+                            ) : (
+                                <CheckCircle
+                                    className="h-3.5 w-3.5"
+                                    aria-hidden="true"
+                                />
+                            )}
+                            Verifikasi Semua ({pendingPayments.length})
+                        </Button>
+                    )}
             </div>
 
             {rejectingId && (
-                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4" aria-label="Form penolakan pembayaran">
-                    <div className="text-sm font-semibold text-red-800">Alasan Penolakan</div>
+                <div
+                    className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4"
+                    aria-label="Form penolakan pembayaran"
+                >
+                    <div className="text-sm font-semibold text-red-800">
+                        Alasan Penolakan
+                    </div>
                     <Textarea
                         value={rejectReason}
                         onChange={(e) => setRejectReason(e.target.value)}
@@ -172,8 +241,9 @@ return;
                             variant="outline"
                             size="sm"
                             onClick={() => {
- setRejectingId(null); setRejectReason(''); 
-}}
+                                setRejectingId(null);
+                                setRejectReason('');
+                            }}
                         >
                             Batal
                         </Button>
@@ -195,8 +265,9 @@ return;
                             payment={payment}
                             onVerify={handleVerifyClick}
                             onReject={(id) => {
- setRejectingId(id); setRejectReason(''); 
-}}
+                                setRejectingId(id);
+                                setRejectReason('');
+                            }}
                             onShowProof={(url) => setProofUrl(url)}
                             processing={processing}
                         />
@@ -209,8 +280,9 @@ return;
                                 payment={payment}
                                 onVerify={handleVerifyClick}
                                 onReject={(id) => {
- setRejectingId(id); setRejectReason(''); 
-}}
+                                    setRejectingId(id);
+                                    setRejectReason('');
+                                }}
                                 onShowProof={(url) => setProofUrl(url)}
                                 processing={processing}
                             />
@@ -221,18 +293,33 @@ return;
             <Pagination links={payments.links} />
 
             {proofUrl && (
-                <PaymentProofModal open={!!proofUrl} onClose={() => setProofUrl(null)} imageUrl={proofUrl} />
+                <PaymentProofModal
+                    open={!!proofUrl}
+                    onClose={() => setProofUrl(null)}
+                    imageUrl={proofUrl}
+                />
             )}
 
             <Dialog open={verifyDialogOpen} onOpenChange={setVerifyDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Verifikasi Pembayaran</DialogTitle>
-                        <DialogDescription>Verifikasi pembayaran ini? Tindakan ini tidak dapat dibatalkan.</DialogDescription>
+                        <DialogDescription>
+                            Verifikasi pembayaran ini? Tindakan ini tidak dapat
+                            dibatalkan.
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setVerifyDialogOpen(false)}>Batal</Button>
-                        <Button onClick={handleVerifyConfirm} disabled={processing}>
+                        <Button
+                            variant="outline"
+                            onClick={() => setVerifyDialogOpen(false)}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleVerifyConfirm}
+                            disabled={processing}
+                        >
                             {processing ? 'Memverifikasi...' : 'Verifikasi'}
                         </Button>
                     </DialogFooter>
@@ -244,12 +331,20 @@ return;
                     <DialogHeader>
                         <DialogTitle>Verifikasi Semua</DialogTitle>
                         <DialogDescription>
-                            Verifikasi semua {pendingPayments.length} pembayaran yang pending?
+                            Verifikasi semua {pendingPayments.length} pembayaran
+                            yang pending?
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setBatchDialogOpen(false)}>Batal</Button>
-                        <Button onClick={handleBatchVerifyConfirm}>Verifikasi Semua</Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setBatchDialogOpen(false)}
+                        >
+                            Batal
+                        </Button>
+                        <Button onClick={handleBatchVerifyConfirm}>
+                            Verifikasi Semua
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

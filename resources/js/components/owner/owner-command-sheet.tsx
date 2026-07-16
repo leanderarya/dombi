@@ -1,12 +1,21 @@
 import { Link, router } from '@inertiajs/react';
-import { BarChart3, Clock, CreditCard, DollarSign, FileText, LogOut, Shield, User } from 'lucide-react';
+import {
+    BarChart3,
+    Clock,
+    CreditCard,
+    DollarSign,
+    FileText,
+    LogOut,
+    Shield,
+    User,
+} from 'lucide-react';
 import {
     Sheet,
     SheetContent,
     SheetHeader,
     SheetTitle,
     SheetDescription,
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet';
 
 interface Props {
     open: boolean;
@@ -17,10 +26,22 @@ const sheetItems = [
     { href: '/owner/profile', label: 'Akun', icon: User },
     { divider: true },
     { href: '/owner/analytics?tab=laporan', label: 'Laporan', icon: FileText },
-    { href: '/owner/pricing?tab=pusat', label: 'Harga Produk', icon: DollarSign },
+    {
+        href: '/owner/pricing?tab=pusat',
+        label: 'Harga Produk',
+        icon: DollarSign,
+    },
     { href: '/owner/pricing?tab=riwayat', label: 'Riwayat Harga', icon: Clock },
-    { href: '/owner/finance?tab=pembayaran', label: 'Riwayat Pembayaran', icon: CreditCard },
-    { href: '/owner/analytics?tab=audit', label: 'Audit Aktivitas', icon: Shield },
+    {
+        href: '/owner/finance?tab=pembayaran',
+        label: 'Riwayat Pembayaran',
+        icon: CreditCard,
+    },
+    {
+        href: '/owner/analytics?tab=audit',
+        label: 'Audit Aktivitas',
+        icon: Shield,
+    },
     { href: '/owner/analytics', label: 'Analitik', icon: BarChart3 },
 ];
 
@@ -30,13 +51,20 @@ export default function OwnerCommandSheet({ open, onClose }: Props) {
             <SheetContent side="bottom">
                 <SheetHeader>
                     <SheetTitle>Menu</SheetTitle>
-                    <SheetDescription>Navigasi cepat untuk owner dashboard.</SheetDescription>
+                    <SheetDescription>
+                        Navigasi cepat untuk owner dashboard.
+                    </SheetDescription>
                 </SheetHeader>
                 <div className="mt-4 px-4 pb-4">
                     <div className="mb-4 space-y-0.5">
                         {sheetItems.map((item, i) => {
                             if ('divider' in item && item.divider) {
-                                return <div key={i} className="my-2 h-px bg-border" />;
+                                return (
+                                    <div
+                                        key={i}
+                                        className="my-2 h-px bg-border"
+                                    />
+                                );
                             }
 
                             const Icon = item.icon!;
@@ -49,7 +77,9 @@ export default function OwnerCommandSheet({ open, onClose }: Props) {
                                     className="flex items-center gap-3 rounded-lg px-3 py-3 text-text active:opacity-80"
                                 >
                                     <Icon className="h-5 w-5 text-text-muted" />
-                                    <span className="text-sm font-medium">{item.label}</span>
+                                    <span className="text-sm font-medium">
+                                        {item.label}
+                                    </span>
                                 </Link>
                             );
                         })}
@@ -59,8 +89,9 @@ export default function OwnerCommandSheet({ open, onClose }: Props) {
                         <button
                             type="button"
                             onClick={() => {
- onClose(); router.post('/logout'); 
- }}
+                                onClose();
+                                router.post('/logout');
+                            }}
                             className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-red-600 active:opacity-80"
                         >
                             <LogOut className="h-5 w-5" />

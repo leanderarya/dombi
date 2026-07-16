@@ -51,17 +51,26 @@ interface Props {
     };
 }
 
-export default function CourierDashboard({ courier, stats, performance, tasks }: Props) {
+export default function CourierDashboard({
+    courier,
+    stats,
+    performance,
+    tasks,
+}: Props) {
     usePolling(15000);
 
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
     const handleAvailabilityToggle = () => {
         setLoadingAction('availability');
-        router.post('/courier/availability/toggle', {}, {
-            preserveScroll: true,
-            onFinish: () => setLoadingAction(null),
-        });
+        router.post(
+            '/courier/availability/toggle',
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => setLoadingAction(null),
+            },
+        );
     };
 
     return (
@@ -72,7 +81,9 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
             <SectionCard>
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                        <div className={`h-3.5 w-3.5 rounded-full ${courier.is_online ? 'bg-emerald-500' : 'bg-text-subtle'}`} />
+                        <div
+                            className={`h-3.5 w-3.5 rounded-full ${courier.is_online ? 'bg-emerald-500' : 'bg-text-subtle'}`}
+                        />
                         <div className="text-base font-bold text-text">
                             {courier.is_online ? 'Online' : 'Offline'}
                         </div>
@@ -86,7 +97,11 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                                 : 'bg-primary text-white active:opacity-80'
                         }`}
                     >
-                        {loadingAction === 'availability' ? '...' : courier.is_online ? 'Offline' : 'Online'}
+                        {loadingAction === 'availability'
+                            ? '...'
+                            : courier.is_online
+                              ? 'Offline'
+                              : 'Online'}
                     </button>
                 </div>
             </SectionCard>
@@ -96,13 +111,19 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                 <StatCard label="Pickup" value={stats.waitingPickup} />
                 <StatCard label="Antar" value={stats.inTransit} />
                 <StatCard label="Selesai" value={stats.completedToday} />
-                <StatCard label="Gagal" value={stats.failedToday} dimmed={stats.failedToday === 0} />
+                <StatCard
+                    label="Gagal"
+                    value={stats.failedToday}
+                    dimmed={stats.failedToday === 0}
+                />
             </div>
 
             {/* In Transit — highest priority */}
             {tasks.inTransit.length > 0 && (
                 <div className="mt-4">
-                    <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-text-subtle">Sedang Diantar</h2>
+                    <h2 className="mb-3 text-xs font-bold tracking-wider text-text-subtle uppercase">
+                        Sedang Diantar
+                    </h2>
                     <div className="space-y-2">
                         {tasks.inTransit.map((task) => (
                             <Link
@@ -112,14 +133,22 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-base font-bold text-text">{task.order_code}</div>
-                                        <div className="mt-1 text-sm font-medium text-text">{task.customer_name}</div>
+                                        <div className="text-base font-bold text-text">
+                                            {task.order_code}
+                                        </div>
+                                        <div className="mt-1 text-sm font-medium text-text">
+                                            {task.customer_name}
+                                        </div>
                                         <div className="mt-1 flex items-center gap-1.5 text-sm text-text-muted">
                                             <MapPin className="h-4 w-4 shrink-0" />
-                                            <span className="line-clamp-1">{task.customer_address}</span>
+                                            <span className="line-clamp-1">
+                                                {task.customer_address}
+                                            </span>
                                         </div>
                                     </div>
-                                    <StatusBadge status={task.status ?? 'delivering'} />
+                                    <StatusBadge
+                                        status={task.status ?? 'delivering'}
+                                    />
                                 </div>
                             </Link>
                         ))}
@@ -130,7 +159,9 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
             {/* Waiting Pickup */}
             {tasks.waitingPickup.length > 0 && (
                 <div className="mt-4">
-                    <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-text-subtle">Menunggu Pickup ({tasks.waitingPickup.length})</h2>
+                    <h2 className="mb-3 text-xs font-bold tracking-wider text-text-subtle uppercase">
+                        Menunggu Pickup ({tasks.waitingPickup.length})
+                    </h2>
                     <div className="space-y-2">
                         {tasks.waitingPickup.map((task) => (
                             <Link
@@ -140,19 +171,28 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-base font-bold text-text">{task.order_code}</div>
-                                        <div className="mt-1 text-sm font-medium text-text">{task.customer_name}</div>
-                                        <div className="mt-1 text-sm text-text-muted">Outlet: {task.outlet_name}</div>
+                                        <div className="text-base font-bold text-text">
+                                            {task.order_code}
+                                        </div>
+                                        <div className="mt-1 text-sm font-medium text-text">
+                                            {task.customer_name}
+                                        </div>
+                                        <div className="mt-1 text-sm text-text-muted">
+                                            Outlet: {task.outlet_name}
+                                        </div>
                                     </div>
-                                    {task.age_minutes !== undefined && task.age_minutes > 15 && (
-                                        <span className={`rounded-md px-2 py-1 text-xs font-bold ring-1 ${
-                                            task.age_minutes > 30
-                                                ? 'bg-red-100 text-red-800 ring-red-200'
-                                                : 'bg-amber-100 text-amber-800 ring-amber-200'
-                                        }`}>
-                                            {task.age_minutes}m
-                                        </span>
-                                    )}
+                                    {task.age_minutes !== undefined &&
+                                        task.age_minutes > 15 && (
+                                            <span
+                                                className={`rounded-md px-2 py-1 text-xs font-bold ring-1 ${
+                                                    task.age_minutes > 30
+                                                        ? 'bg-red-100 text-red-800 ring-red-200'
+                                                        : 'bg-amber-100 text-amber-800 ring-amber-200'
+                                                }`}
+                                            >
+                                                {task.age_minutes}m
+                                            </span>
+                                        )}
                                 </div>
                             </Link>
                         ))}
@@ -163,7 +203,9 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
             {/* Needs Action */}
             {tasks.needsAction.length > 0 && (
                 <div className="mt-4">
-                    <h2 className="mb-3 text-xs font-bold uppercase tracking-wider text-text-subtle">Perlu Tindakan ({tasks.needsAction.length})</h2>
+                    <h2 className="mb-3 text-xs font-bold tracking-wider text-text-subtle uppercase">
+                        Perlu Tindakan ({tasks.needsAction.length})
+                    </h2>
                     <div className="space-y-2">
                         {tasks.needsAction.map((task) => (
                             <Link
@@ -173,8 +215,12 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                             >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-base font-bold text-text">{task.order_code}</div>
-                                        <div className="mt-1 text-sm font-medium text-text">{task.customer_name}</div>
+                                        <div className="text-base font-bold text-text">
+                                            {task.order_code}
+                                        </div>
+                                        <div className="mt-1 text-sm font-medium text-text">
+                                            {task.customer_name}
+                                        </div>
                                         {task.failed_reason && (
                                             <div className="mt-2 flex items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
                                                 <AlertCircle className="h-4 w-4 shrink-0" />
@@ -196,8 +242,13 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
             {tasks.completedToday.length > 0 && (
                 <div className="mt-4">
                     <div className="mb-3 flex items-center justify-between">
-                        <h2 className="text-xs font-bold uppercase tracking-wider text-text-subtle">Selesai Hari Ini ({tasks.completedToday.length})</h2>
-                        <Link href="/courier/deliveries?status=completed" className="min-h-11 inline-flex items-center gap-1 rounded-lg bg-surface-muted px-3 text-xs font-bold text-text active:opacity-80">
+                        <h2 className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                            Selesai Hari Ini ({tasks.completedToday.length})
+                        </h2>
+                        <Link
+                            href="/courier/deliveries?status=completed"
+                            className="inline-flex min-h-11 items-center gap-1 rounded-lg bg-surface-muted px-3 text-xs font-bold text-text active:opacity-80"
+                        >
                             Semua
                             <ArrowRight className="h-3.5 w-3.5" />
                         </Link>
@@ -209,8 +260,12 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
                                 className="flex items-center justify-between rounded-xl border border-border bg-white p-4"
                             >
                                 <div>
-                                    <div className="text-sm font-bold text-text">{task.order_code}</div>
-                                    <div className="mt-0.5 text-sm text-text-muted">{task.customer_name}</div>
+                                    <div className="text-sm font-bold text-text">
+                                        {task.order_code}
+                                    </div>
+                                    <div className="mt-0.5 text-sm text-text-muted">
+                                        {task.customer_name}
+                                    </div>
                                 </div>
                                 {task.delivered_to && (
                                     <span className="rounded-md bg-primary-light px-2.5 py-1 text-xs font-bold text-primary ring-1 ring-primary/20">
@@ -224,22 +279,40 @@ export default function CourierDashboard({ courier, stats, performance, tasks }:
             )}
 
             {/* Empty State */}
-            {tasks.waitingPickup.length === 0 && tasks.inTransit.length === 0 && tasks.needsAction.length === 0 && (
-                <EmptyState
-                    icon={<Package className="h-12 w-12 text-text-subtle" />}
-                    title="Tidak ada tugas aktif"
-                    description="Tugas baru akan muncul saat Anda di-assign."
-                />
-            )}
+            {tasks.waitingPickup.length === 0 &&
+                tasks.inTransit.length === 0 &&
+                tasks.needsAction.length === 0 && (
+                    <EmptyState
+                        icon={
+                            <Package className="h-12 w-12 text-text-subtle" />
+                        }
+                        title="Tidak ada tugas aktif"
+                        description="Tugas baru akan muncul saat Anda di-assign."
+                    />
+                )}
         </CourierLayout>
     );
 }
 
-function StatCard({ label, value, dimmed }: { label: string; value: number; dimmed?: boolean }) {
+function StatCard({
+    label,
+    value,
+    dimmed,
+}: {
+    label: string;
+    value: number;
+    dimmed?: boolean;
+}) {
     return (
-        <div className={`rounded-xl border border-border bg-white p-3 text-center ${dimmed ? 'opacity-50' : ''}`}>
-            <div className="text-2xl font-bold text-text tabular-nums">{value}</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-text-muted">{label}</div>
+        <div
+            className={`rounded-xl border border-border bg-white p-3 text-center ${dimmed ? 'opacity-50' : ''}`}
+        >
+            <div className="text-2xl font-bold text-text tabular-nums">
+                {value}
+            </div>
+            <div className="text-xs font-bold tracking-wider text-text-muted uppercase">
+                {label}
+            </div>
         </div>
     );
 }

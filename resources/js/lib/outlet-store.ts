@@ -17,8 +17,14 @@ class OutletStore {
     }
 
     getSnapshot(): Snapshot {
-        if (this.cachedSnapshot.outletId !== this.outletId || this.cachedSnapshot.autoSelected !== this.autoSelected) {
-            this.cachedSnapshot = { outletId: this.outletId, autoSelected: this.autoSelected };
+        if (
+            this.cachedSnapshot.outletId !== this.outletId ||
+            this.cachedSnapshot.autoSelected !== this.autoSelected
+        ) {
+            this.cachedSnapshot = {
+                outletId: this.outletId,
+                autoSelected: this.autoSelected,
+            };
         }
 
         return this.cachedSnapshot;
@@ -64,7 +70,10 @@ class OutletStore {
             if (this.outletId === null) {
                 localStorage.removeItem(STORAGE_KEY);
             } else {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(this.outletId));
+                localStorage.setItem(
+                    STORAGE_KEY,
+                    JSON.stringify(this.outletId),
+                );
             }
 
             localStorage.setItem(AUTO_KEY, JSON.stringify(this.autoSelected));
@@ -121,5 +130,11 @@ export function useOutletStore() {
         store.clear();
     }, []);
 
-    return { outletId: snapshot.outletId, autoSelected: snapshot.autoSelected, save, autoSave, clear };
+    return {
+        outletId: snapshot.outletId,
+        autoSelected: snapshot.autoSelected,
+        save,
+        autoSave,
+        clear,
+    };
 }

@@ -27,7 +27,9 @@ export function useProducts(outletId: number | null, outletLoading: boolean) {
     const [families, setFamilies] = useState<Family[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const cacheRef = useRef<Map<number, { data: Family[]; ts: number }>>(new Map());
+    const cacheRef = useRef<Map<number, { data: Family[]; ts: number }>>(
+        new Map(),
+    );
     const abortRef = useRef<AbortController | null>(null);
 
     const fetch = useCallback((id: number | null) => {
@@ -50,18 +52,22 @@ export function useProducts(outletId: number | null, outletLoading: boolean) {
 
         const params = id ? `?outlet_id=${id}` : '';
 
-        window.fetch(`/customer/products/api${params}`, {
-            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            credentials: 'same-origin',
-            signal: ac.signal,
-        })
+        window
+            .fetch(`/customer/products/api${params}`, {
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                credentials: 'same-origin',
+                signal: ac.signal,
+            })
             .then((r) => {
- if (!r.ok) {
-throw new Error();
-}
+                if (!r.ok) {
+                    throw new Error();
+                }
 
- return r.json(); 
-})
+                return r.json();
+            })
             .then((d) => {
                 if (!ac.signal.aborted) {
                     const list: Family[] = d.families ?? [];
@@ -85,22 +91,22 @@ throw new Error();
 
         for (const [k, v] of cacheRef.current) {
             if (now - v.ts > CACHE_TTL_MS) {
-cacheRef.current.delete(k);
-}
+                cacheRef.current.delete(k);
+            }
         }
     });
 
     // Fetch when outlet ready
     useEffect(() => {
         if (!outletLoading && outletId != null) {
-fetch(outletId);
-}
+            fetch(outletId);
+        }
     }, [outletId, outletLoading, fetch]);
 
     const retry = useCallback(() => {
         if (outletId != null) {
-fetch(outletId);
-}
+            fetch(outletId);
+        }
     }, [outletId, fetch]);
 
     return { families, loading: outletLoading || loading, error, retry };

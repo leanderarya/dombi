@@ -11,11 +11,17 @@ interface Props {
     fallbackHref?: string;
 }
 
-export default function OrderHeader({ orderCode, orderedAt, trackingUrl, isConfirmation = false, fallbackHref = '/customer/orders' }: Props) {
+export default function OrderHeader({
+    orderCode,
+    orderedAt,
+    trackingUrl,
+    isConfirmation = false,
+    fallbackHref = '/customer/orders',
+}: Props) {
     const handleShare = trackingUrl ? useShareTracking(trackingUrl) : undefined;
 
     return (
-        <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-safe">
+        <header className="sticky top-0 z-30 border-b border-border bg-white/95 pt-safe backdrop-blur">
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
                 <button
                     type="button"
@@ -34,9 +40,13 @@ export default function OrderHeader({ orderCode, orderedAt, trackingUrl, isConfi
                     <ChevronLeft className="h-5 w-5" />
                 </button>
                 <div className="text-center">
-                    <div className="text-sm font-semibold text-text">{orderCode}</div>
+                    <div className="text-sm font-semibold text-text">
+                        {orderCode}
+                    </div>
                     {orderedAt && (
-                        <div className="text-[11px] text-text-muted">{formatDate(orderedAt)}</div>
+                        <div className="text-[11px] text-text-muted">
+                            {formatDate(orderedAt)}
+                        </div>
                     )}
                 </div>
                 {handleShare ? (

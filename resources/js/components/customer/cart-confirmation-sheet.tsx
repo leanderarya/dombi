@@ -12,8 +12,8 @@ interface Props {
 
 export default function CartConfirmationSheet({ open, onClose, data }: Props) {
     if (!data) {
-return null;
-}
+        return null;
+    }
 
     const handleCheckout = () => {
         onClose();
@@ -30,19 +30,31 @@ return null;
                 <div className="flex items-center gap-3 rounded-xl bg-emerald-50 p-4">
                     <CheckCircle className="h-8 w-8 shrink-0 text-emerald-600" />
                     <div>
-                        <div className="text-sm font-semibold text-emerald-800">Berhasil ditambahkan!</div>
-                        <div className="text-xs text-emerald-600">Produk sudah ada di keranjang Anda</div>
+                        <div className="text-sm font-semibold text-emerald-800">
+                            Berhasil ditambahkan!
+                        </div>
+                        <div className="text-xs text-emerald-600">
+                            Produk sudah ada di keranjang Anda
+                        </div>
                     </div>
                 </div>
 
                 <div className="rounded-xl border border-border bg-white p-4">
-                    <div className="text-sm font-semibold text-text">{data.productName}</div>
+                    <div className="text-sm font-semibold text-text">
+                        {data.productName}
+                    </div>
                     {data.variantName && (
-                        <div className="mt-0.5 text-xs text-text-muted">{data.variantName}</div>
+                        <div className="mt-0.5 text-xs text-text-muted">
+                            {data.variantName}
+                        </div>
                     )}
                     <div className="mt-2 flex items-center justify-between">
-                        <span className="text-xs text-text-muted">Jumlah: {data.quantity}</span>
-                        <span className="text-sm font-semibold text-emerald-700">{formatCurrency(data.price * data.quantity)}</span>
+                        <span className="text-xs text-text-muted">
+                            Jumlah: {data.quantity}
+                        </span>
+                        <span className="text-sm font-semibold text-emerald-700">
+                            {formatCurrency(data.price * data.quantity)}
+                        </span>
                     </div>
                 </div>
 

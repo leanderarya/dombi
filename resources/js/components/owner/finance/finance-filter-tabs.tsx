@@ -11,7 +11,7 @@ interface Props {
 
 export default function FinanceFilterTabs({ tabs, active, onChange }: Props) {
     return (
-        <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none">
+        <div className="scrollbar-none flex flex-wrap gap-2 overflow-x-auto">
             {tabs.map((tab) => {
                 const isActive = active === tab.key;
 

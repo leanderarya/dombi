@@ -27,7 +27,10 @@ const ORDER_STATUSES: Record<string, StatusConfig> = {
     failed_delivery: { label: 'Pengiriman Gagal', variant: 'danger' },
     expired: { label: 'Kadaluarsa', variant: 'neutral' },
     payment_failed: { label: 'Pembayaran Gagal', variant: 'danger' },
-    pending_confirmation_payment_failed: { label: 'Pembayaran Gagal', variant: 'danger' },
+    pending_confirmation_payment_failed: {
+        label: 'Pembayaran Gagal',
+        variant: 'danger',
+    },
 };
 
 // ─── DELIVERY STATUSES ─────────────────────────────────────────
@@ -118,31 +121,67 @@ export const ALL_STATUSES: Record<string, StatusConfig> = {
 };
 
 export function getOrderStatus(status: string): StatusConfig {
-    return ORDER_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
+    return (
+        ORDER_STATUSES[status] ?? {
+            label: status.replaceAll('_', ' '),
+            variant: 'neutral',
+        }
+    );
 }
 
 export function getDeliveryStatus(status: string): StatusConfig {
-    return DELIVERY_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
+    return (
+        DELIVERY_STATUSES[status] ?? {
+            label: status.replaceAll('_', ' '),
+            variant: 'neutral',
+        }
+    );
 }
 
 export function getRestockStatus(status: string): StatusConfig {
-    return RESTOCK_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
+    return (
+        RESTOCK_STATUSES[status] ?? {
+            label: status.replaceAll('_', ' '),
+            variant: 'neutral',
+        }
+    );
 }
 
 export function getDistributionStatus(status: string): StatusConfig {
-    return DISTRIBUTION_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
+    return (
+        DISTRIBUTION_STATUSES[status] ?? {
+            label: status.replaceAll('_', ' '),
+            variant: 'neutral',
+        }
+    );
 }
 
 export function getReturnStatus(status: string): StatusConfig {
-    return RETURN_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
+    return (
+        RETURN_STATUSES[status] ?? {
+            label: status.replaceAll('_', ' '),
+            variant: 'neutral',
+        }
+    );
 }
 
 export function getExchangeStatus(status: string): StatusConfig {
-    return EXCHANGE_STATUSES[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' };
+    return (
+        EXCHANGE_STATUSES[status] ?? {
+            label: status.replaceAll('_', ' '),
+            variant: 'neutral',
+        }
+    );
 }
 
-export function getCustomerStockStatus(status: string, availableStock?: number): StatusConfig & { displayLabel: string } {
-    const config = CUSTOMER_STOCK_STATUSES[status] ?? { label: status, variant: 'neutral' };
+export function getCustomerStockStatus(
+    status: string,
+    availableStock?: number,
+): StatusConfig & { displayLabel: string } {
+    const config = CUSTOMER_STOCK_STATUSES[status] ?? {
+        label: status,
+        variant: 'neutral',
+    };
     let displayLabel = config.label;
 
     if (status === 'low' && availableStock !== undefined) {
@@ -152,8 +191,14 @@ export function getCustomerStockStatus(status: string, availableStock?: number):
     return { ...config, displayLabel };
 }
 
-export function getOwnerStockStatus(status: string, availableStock?: number): StatusConfig & { displayLabel: string } {
-    const config = OWNER_STOCK_STATUSES[status] ?? { label: status, variant: 'neutral' };
+export function getOwnerStockStatus(
+    status: string,
+    availableStock?: number,
+): StatusConfig & { displayLabel: string } {
+    const config = OWNER_STOCK_STATUSES[status] ?? {
+        label: status,
+        variant: 'neutral',
+    };
     let displayLabel = config.label;
 
     if (availableStock !== undefined) {
@@ -181,7 +226,10 @@ const ORDER_STATUS_TONE: Record<string, string> = {
 };
 
 export function getOrderStatusTone(status: string): string {
-    return ORDER_STATUS_TONE[status] ?? 'bg-surface-muted text-text-muted ring-border';
+    return (
+        ORDER_STATUS_TONE[status] ??
+        'bg-surface-muted text-text-muted ring-border'
+    );
 }
 
 export type { StatusConfig, StatusVariant };

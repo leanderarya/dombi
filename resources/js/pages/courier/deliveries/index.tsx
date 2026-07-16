@@ -25,7 +25,11 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
-        router.get('/courier/deliveries', { status: key || undefined }, { preserveState: true, replace: true });
+        router.get(
+            '/courier/deliveries',
+            { status: key || undefined },
+            { preserveState: true, replace: true },
+        );
     };
 
     const fetchOptimizedRoute = async () => {
@@ -44,13 +48,19 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
     };
 
     const hasActiveDeliveries = deliveries.data.some((d: any) =>
-        ['waiting_pickup', 'picked_up', 'delivering'].includes(d.status)
+        ['waiting_pickup', 'picked_up', 'delivering'].includes(d.status),
     );
 
     return (
         <CourierLayout
             title="Pengiriman"
-            headerBelow={<FilterChips options={filterOptions} active={activeFilter} onChange={handleFilterChange} />}
+            headerBelow={
+                <FilterChips
+                    options={filterOptions}
+                    active={activeFilter}
+                    onChange={handleFilterChange}
+                />
+            }
         >
             <Head title="Pengiriman" />
 
@@ -79,18 +89,30 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
                         <div className="grid grid-cols-3 gap-3">
                             <div className="flex flex-col items-center rounded-lg bg-surface-muted p-3">
                                 <MapPin className="mb-1 h-4 w-4 text-primary" />
-                                <div className="text-lg font-bold text-text">{routeSummary.stops}</div>
-                                <div className="text-[11px] text-text-muted">Stops</div>
+                                <div className="text-lg font-bold text-text">
+                                    {routeSummary.stops}
+                                </div>
+                                <div className="text-[11px] text-text-muted">
+                                    Stops
+                                </div>
                             </div>
                             <div className="flex flex-col items-center rounded-lg bg-surface-muted p-3">
                                 <Route className="mb-1 h-4 w-4 text-primary" />
-                                <div className="text-lg font-bold text-text">{routeSummary.total_distance_km}</div>
-                                <div className="text-[11px] text-text-muted">KM</div>
+                                <div className="text-lg font-bold text-text">
+                                    {routeSummary.total_distance_km}
+                                </div>
+                                <div className="text-[11px] text-text-muted">
+                                    KM
+                                </div>
                             </div>
                             <div className="flex flex-col items-center rounded-lg bg-surface-muted p-3">
                                 <Clock className="mb-1 h-4 w-4 text-primary" />
-                                <div className="text-lg font-bold text-text">{routeSummary.estimated_minutes}</div>
-                                <div className="text-[11px] text-text-muted">Menit</div>
+                                <div className="text-lg font-bold text-text">
+                                    {routeSummary.estimated_minutes}
+                                </div>
+                                <div className="text-[11px] text-text-muted">
+                                    Menit
+                                </div>
                             </div>
                         </div>
                     </SectionCard>
@@ -103,14 +125,23 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
                     <SectionCard label="Urutan Pengiriman">
                         <div className="space-y-3">
                             {optimizedRoute.map((stop: any, index: number) => (
-                                <div key={stop.id} className="flex items-start gap-3">
+                                <div
+                                    key={stop.id}
+                                    className="flex items-start gap-3"
+                                >
                                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary-light text-xs font-bold text-primary">
                                         {index + 1}
                                     </div>
                                     <div className="min-w-0 flex-1">
-                                        <div className="text-sm font-medium text-text">{stop.customer_name}</div>
-                                        <div className="mt-0.5 text-xs text-text-muted line-clamp-2">{stop.address}</div>
-                                        <div className="mt-1 text-xs font-medium text-primary">{stop.order_code}</div>
+                                        <div className="text-sm font-medium text-text">
+                                            {stop.customer_name}
+                                        </div>
+                                        <div className="mt-0.5 line-clamp-2 text-xs text-text-muted">
+                                            {stop.address}
+                                        </div>
+                                        <div className="mt-1 text-xs font-medium text-primary">
+                                            {stop.order_code}
+                                        </div>
                                     </div>
                                     <StatusBadge status={stop.status} />
                                 </div>
@@ -139,10 +170,18 @@ export default function CourierDeliveriesIndex({ deliveries, filters }: any) {
                         >
                             <div className="flex items-start justify-between gap-3">
                                 <div className="min-w-0 flex-1">
-                                    <div className="text-sm font-bold text-text">{delivery.order.order_code}</div>
-                                    <div className="mt-0.5 text-xs text-text-muted">{delivery.order.outlet?.name ?? '-'}</div>
-                                    <div className="mt-1 text-sm font-medium text-text">{delivery.order.customer_name}</div>
-                                    <div className="mt-0.5 text-xs text-text-muted line-clamp-1">{delivery.order.customer_address}</div>
+                                    <div className="text-sm font-bold text-text">
+                                        {delivery.order.order_code}
+                                    </div>
+                                    <div className="mt-0.5 text-xs text-text-muted">
+                                        {delivery.order.outlet?.name ?? '-'}
+                                    </div>
+                                    <div className="mt-1 text-sm font-medium text-text">
+                                        {delivery.order.customer_name}
+                                    </div>
+                                    <div className="mt-0.5 line-clamp-1 text-xs text-text-muted">
+                                        {delivery.order.customer_address}
+                                    </div>
                                 </div>
                                 <StatusBadge status={delivery.status} />
                             </div>

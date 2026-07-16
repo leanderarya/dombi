@@ -17,16 +17,56 @@ export default function OwnerProfile() {
                                 {user?.name?.charAt(0)?.toUpperCase() ?? 'O'}
                             </div>
                             <div className="min-w-0">
-                                <div className="truncate text-sm font-bold text-text">{user?.name ?? 'Owner'}</div>
-                                <div className="truncate text-xs text-text-muted">{user?.email ?? '-'}</div>
+                                <div className="truncate text-sm font-bold text-text">
+                                    {user?.name ?? 'Owner'}
+                                </div>
+                                <div className="truncate text-xs text-text-muted">
+                                    {user?.email ?? '-'}
+                                </div>
                             </div>
                         </div>
 
                         <div className="mt-4 grid grid-cols-2 gap-2">
-                            <InfoBox label="Role" value="Owner" icon={<Shield className="h-3.5 w-3.5" aria-hidden="true" />} />
-                            <InfoBox label="Status" value={user?.is_active ? 'Active' : 'Inactive'} icon={<User className="h-3.5 w-3.5" aria-hidden="true" />} />
-                            <InfoBox label="Phone" value={user?.phone ?? '-'} icon={<Phone className="h-3.5 w-3.5" aria-hidden="true" />} />
-                            <InfoBox label="Version" value={appVersion ?? '1.0.0'} icon={<Package className="h-3.5 w-3.5" aria-hidden="true" />} />
+                            <InfoBox
+                                label="Role"
+                                value="Owner"
+                                icon={
+                                    <Shield
+                                        className="h-3.5 w-3.5"
+                                        aria-hidden="true"
+                                    />
+                                }
+                            />
+                            <InfoBox
+                                label="Status"
+                                value={user?.is_active ? 'Active' : 'Inactive'}
+                                icon={
+                                    <User
+                                        className="h-3.5 w-3.5"
+                                        aria-hidden="true"
+                                    />
+                                }
+                            />
+                            <InfoBox
+                                label="Phone"
+                                value={user?.phone ?? '-'}
+                                icon={
+                                    <Phone
+                                        className="h-3.5 w-3.5"
+                                        aria-hidden="true"
+                                    />
+                                }
+                            />
+                            <InfoBox
+                                label="Version"
+                                value={appVersion ?? '1.0.0'}
+                                icon={
+                                    <Package
+                                        className="h-3.5 w-3.5"
+                                        aria-hidden="true"
+                                    />
+                                }
+                            />
                         </div>
                     </div>
                 </div>
@@ -35,12 +75,17 @@ export default function OwnerProfile() {
                 <div className="hidden lg:block" aria-label="Aksi cepat">
                     <div className="sticky top-4 space-y-3">
                         <div className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
-                            <div className="text-xs font-medium text-text-subtle mb-3">Quick Actions</div>
+                            <div className="mb-3 text-xs font-medium text-text-subtle">
+                                Quick Actions
+                            </div>
                             <button
                                 onClick={() => router.post('/logout')}
                                 className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 text-sm font-bold text-red-700 transition-all duration-150 hover:bg-red-100 active:opacity-80"
                             >
-                                <LogOut className="h-4 w-4" aria-hidden="true" />
+                                <LogOut
+                                    className="h-4 w-4"
+                                    aria-hidden="true"
+                                />
                                 Logout
                             </button>
                         </div>
@@ -62,14 +107,24 @@ export default function OwnerProfile() {
     );
 }
 
-function InfoBox({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+function InfoBox({
+    label,
+    value,
+    icon,
+}: {
+    label: string;
+    value: string;
+    icon?: React.ReactNode;
+}) {
     return (
         <div className="rounded-lg border border-border bg-surface-muted p-3 transition-all duration-200">
             <div className="flex items-center gap-1.5 text-xs font-medium text-text-subtle">
                 {icon}
                 {label}
             </div>
-            <div className="mt-1 truncate text-sm font-semibold text-text">{value}</div>
+            <div className="mt-1 truncate text-sm font-semibold text-text">
+                {value}
+            </div>
         </div>
     );
 }

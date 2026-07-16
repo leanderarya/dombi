@@ -10,7 +10,14 @@ interface Props {
     onRemove: () => void;
 }
 
-export default function CheckoutItemCard({ name, price, quantity, image, onQuantityChange, onRemove }: Props) {
+export default function CheckoutItemCard({
+    name,
+    price,
+    quantity,
+    image,
+    onQuantityChange,
+    onRemove,
+}: Props) {
     const unitPrice = Number(price);
     const subtotal = unitPrice * quantity;
 
@@ -19,7 +26,11 @@ export default function CheckoutItemCard({ name, price, quantity, image, onQuant
             {/* Thumbnail */}
             <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface">
                 {image ? (
-                    <img src={image} alt={name} className="h-full w-full object-cover" />
+                    <img
+                        src={image}
+                        alt={name}
+                        className="h-full w-full object-cover"
+                    />
                 ) : (
                     <Package className="h-6 w-6 text-text-subtle" />
                 )}
@@ -27,22 +38,32 @@ export default function CheckoutItemCard({ name, price, quantity, image, onQuant
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold leading-tight text-text">{name}</div>
-                <div className="mt-0.5 text-xs text-text-muted">{formatCurrency(unitPrice)} × {quantity}</div>
-                <div className="mt-0.5 text-sm font-bold tabular-nums text-text">{formatCurrency(subtotal)}</div>
+                <div className="text-sm leading-tight font-semibold text-text">
+                    {name}
+                </div>
+                <div className="mt-0.5 text-xs text-text-muted">
+                    {formatCurrency(unitPrice)} × {quantity}
+                </div>
+                <div className="mt-0.5 text-sm font-bold text-text tabular-nums">
+                    {formatCurrency(subtotal)}
+                </div>
             </div>
 
             {/* Quantity Stepper */}
             <div className="flex shrink-0 items-center">
                 <button
                     type="button"
-                    onClick={() => quantity > 1 ? onQuantityChange(quantity - 1) : onRemove()}
+                    onClick={() =>
+                        quantity > 1
+                            ? onQuantityChange(quantity - 1)
+                            : onRemove()
+                    }
                     className="flex min-h-11 min-w-11 items-center justify-center rounded-l-lg border border-border px-2 text-sm font-semibold text-text active:opacity-80"
                     aria-label="Kurangi"
                 >
                     −
                 </button>
-                <span className="flex min-h-11 min-w-11 items-center justify-center border-y border-border px-2 text-xs font-bold tabular-nums text-text">
+                <span className="flex min-h-11 min-w-11 items-center justify-center border-y border-border px-2 text-xs font-bold text-text tabular-nums">
                     {quantity}
                 </span>
                 <button

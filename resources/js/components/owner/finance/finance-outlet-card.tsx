@@ -24,12 +24,13 @@ export default function FinanceOutletCard({
 }: Props) {
     const overdueDays = getOverdueDays(nearestDueDate);
     const isOverdue = displayStatus === 'overdue';
-    const needsAction = displayStatus === 'overdue' || displayStatus === 'unpaid';
+    const needsAction =
+        displayStatus === 'overdue' || displayStatus === 'unpaid';
 
     return (
         <Link
             href={`/owner/finance/settlements/${outletId}`}
-            className="group flex items-center gap-4 rounded-xl bg-surface shadow-card p-4 transition-all duration-200"
+            className="group flex items-center gap-4 rounded-xl bg-surface p-4 shadow-card transition-all duration-200"
         >
             {/* Status badge */}
             <FinanceStatusBadge status={displayStatus} />
@@ -37,7 +38,9 @@ export default function FinanceOutletCard({
             {/* Info */}
             <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-text">{outletName}</span>
+                    <span className="text-sm font-semibold text-text">
+                        {outletName}
+                    </span>
                     {isOverdue && overdueDays > 0 && (
                         <span className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-bold text-red-700">
                             {overdueDays} Hari
@@ -45,13 +48,28 @@ export default function FinanceOutletCard({
                     )}
                 </div>
                 <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-text-muted">
-                    {totalSales > 0 && <span>Penjualan: {formatCurrency(totalSales)}</span>}
-                    {totalOutstanding > 0 && <span className="font-semibold text-red-600">Sisa: {formatCurrency(totalOutstanding)}</span>}
-                    {totalPaid > 0 && <span className="text-emerald-600">Dibayar: {formatCurrency(totalPaid)}</span>}
+                    {totalSales > 0 && (
+                        <span>Penjualan: {formatCurrency(totalSales)}</span>
+                    )}
+                    {totalOutstanding > 0 && (
+                        <span className="font-semibold text-red-600">
+                            Sisa: {formatCurrency(totalOutstanding)}
+                        </span>
+                    )}
+                    {totalPaid > 0 && (
+                        <span className="text-emerald-600">
+                            Dibayar: {formatCurrency(totalPaid)}
+                        </span>
+                    )}
                 </div>
                 {nearestDueDate && needsAction && (
                     <p className="mt-1 text-xs text-text-subtle">
-                        Jatuh tempo: {new Date(nearestDueDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        Jatuh tempo:{' '}
+                        {new Date(nearestDueDate).toLocaleDateString('id-ID', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                        })}
                     </p>
                 )}
             </div>
@@ -59,7 +77,7 @@ export default function FinanceOutletCard({
             {/* CTA */}
             <div className="flex items-center gap-2">
                 {needsAction && totalOutstanding > 0 && (
-                    <span className="hidden rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-primary-hover sm:inline-flex items-center gap-1">
+                    <span className="hidden items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-primary-hover sm:inline-flex">
                         Lihat Detail
                         <ArrowUpRight className="h-3 w-3" />
                     </span>

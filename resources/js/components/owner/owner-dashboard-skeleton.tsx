@@ -4,7 +4,7 @@ export default function OwnerDashboardSkeleton() {
     return (
         <div className="space-y-4">
             {/* Hero Bar */}
-            <div className="rounded-lg bg-primary p-5 space-y-3">
+            <div className="space-y-3 rounded-lg bg-primary p-5">
                 <Skeleton className="h-3 w-24 bg-primary-hover" />
                 <Skeleton className="h-8 w-40 bg-primary-hover" />
                 <Skeleton className="h-4 w-32 bg-primary-hover" />
@@ -16,7 +16,7 @@ export default function OwnerDashboardSkeleton() {
             {/* 2-column grid: Actions + Stok Kritis */}
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-10">
                 {/* Butuh Tindakan */}
-                <div className="lg:col-span-7 rounded-xl bg-surface p-4 shadow-card space-y-3">
+                <div className="space-y-3 rounded-xl bg-surface p-4 shadow-card lg:col-span-7">
                     <Skeleton className="h-4 w-28" />
                     <div className="space-y-2">
                         <Skeleton className="h-12 w-full rounded-lg" />
@@ -26,7 +26,7 @@ export default function OwnerDashboardSkeleton() {
                 </div>
 
                 {/* Stok Kritis */}
-                <div className="lg:col-span-3 rounded-xl bg-surface p-4 shadow-card space-y-3">
+                <div className="space-y-3 rounded-xl bg-surface p-4 shadow-card lg:col-span-3">
                     <Skeleton className="h-4 w-24" />
                     <div className="space-y-2">
                         <Skeleton className="h-12 w-full rounded-lg" />

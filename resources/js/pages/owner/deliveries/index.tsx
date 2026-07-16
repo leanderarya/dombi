@@ -28,7 +28,10 @@ export default function OwnerDeliveriesIndex({
 }: any) {
     if (!deliveries || !filters) {
         return (
-            <OwnerPageShell title="Pengiriman" subtitle="Kelola pengiriman dari semua outlet">
+            <OwnerPageShell
+                title="Pengiriman"
+                subtitle="Kelola pengiriman dari semua outlet"
+            >
                 <SkeletonPage />
             </OwnerPageShell>
         );
@@ -48,31 +51,71 @@ export default function OwnerDeliveriesIndex({
             subtitle="Kelola pengiriman dari semua outlet"
         >
             {/* KPI Strip */}
-            <OwnerKpiStrip cols={4} items={[
-                { label: 'Total', value: stats.total_today, sublabel: (stats.total_today ?? 0) > 0 ? 'Hari ini' : undefined, sublabelColor: 'text-blue-600' },
-                { label: 'Aktif', value: stats.active, sublabel: (stats.active ?? 0) > 0 ? 'Sedang berjalan' : undefined, sublabelColor: 'text-blue-600' },
-                { label: 'Selesai', value: stats.completed_today },
-                { label: 'Gagal', value: stats.failed_today, sublabel: (stats.failed_today ?? 0) > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-red-600' },
-            ]} />
+            <OwnerKpiStrip
+                cols={4}
+                items={[
+                    {
+                        label: 'Total',
+                        value: stats.total_today,
+                        sublabel:
+                            (stats.total_today ?? 0) > 0
+                                ? 'Hari ini'
+                                : undefined,
+                        sublabelColor: 'text-blue-600',
+                    },
+                    {
+                        label: 'Aktif',
+                        value: stats.active,
+                        sublabel:
+                            (stats.active ?? 0) > 0
+                                ? 'Sedang berjalan'
+                                : undefined,
+                        sublabelColor: 'text-blue-600',
+                    },
+                    { label: 'Selesai', value: stats.completed_today },
+                    {
+                        label: 'Gagal',
+                        value: stats.failed_today,
+                        sublabel:
+                            (stats.failed_today ?? 0) > 0
+                                ? 'Perlu ditinjau'
+                                : undefined,
+                        sublabelColor: 'text-red-600',
+                    },
+                ]}
+            />
 
             {/* Status Pills */}
-            <div aria-label="Filter status pengiriman" className="mb-4 flex flex-wrap items-center gap-2">
+            <div
+                aria-label="Filter status pengiriman"
+                className="mb-4 flex flex-wrap items-center gap-2"
+            >
                 {statusOptions.map((opt) => {
                     const isActive = (filters.status ?? '') === opt.value;
                     const colorMap: Record<string, string> = {
                         '': 'text-text bg-surface-muted ring-border',
-                        waiting_pickup: 'text-amber-600 bg-amber-50 ring-amber-200',
+                        waiting_pickup:
+                            'text-amber-600 bg-amber-50 ring-amber-200',
                         picked_up: 'text-blue-600 bg-blue-50 ring-blue-200',
-                        delivering: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
-                        completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
+                        delivering:
+                            'text-indigo-600 bg-indigo-50 ring-indigo-200',
+                        completed:
+                            'text-emerald-600 bg-emerald-50 ring-emerald-200',
                         failed: 'text-red-600 bg-red-50 ring-red-200',
                     };
 
                     return (
-                        <button key={opt.value} type="button" onClick={() => setFilter('status', opt.value)}
+                        <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setFilter('status', opt.value)}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive ? colorMap[opt.value] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}>
+                                isActive
+                                    ? (colorMap[opt.value] ??
+                                      'bg-primary/10 text-primary ring-primary/20')
+                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                            }`}
+                        >
                             {opt.label}
                         </button>
                     );
@@ -86,10 +129,16 @@ export default function OwnerDeliveriesIndex({
                 searchPlaceholder="Cari kode..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => setFilter('search', val)}
-                outletOptions={outlets?.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletOptions={outlets?.map((o: any) => ({
+                    value: String(o.id),
+                    label: o.name,
+                }))}
                 outletValue={filters.outlet_id ?? ''}
                 onOutletChange={(val) => setFilter('outlet_id', val)}
-                courierOptions={couriers.map((c: any) => ({ value: String(c.id), label: c.name }))}
+                courierOptions={couriers.map((c: any) => ({
+                    value: String(c.id),
+                    label: c.name,
+                }))}
                 courierValue={filters.courier_id ?? ''}
                 onCourierChange={(val) => setFilter('courier_id', val)}
                 dateValue={filters.date ?? ''}
@@ -105,42 +154,84 @@ export default function OwnerDeliveriesIndex({
                 />
             ) : (
                 <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table aria-label="Daftar pengiriman" className="w-full min-w-[600px]">
+                    <table
+                        aria-label="Daftar pengiriman"
+                        className="w-full min-w-[600px]"
+                    >
                         <thead>
                             <tr className="bg-surface-muted/50">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kurir</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Tanggal</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Kode
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Outlet
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Kurir
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Status
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Tanggal
+                                </th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                    Aksi
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             {deliveries.data.map((d: any) => {
-                                const isActive = ['delivering', 'picked_up'].includes(d.status);
+                                const isActive = [
+                                    'delivering',
+                                    'picked_up',
+                                ].includes(d.status);
 
                                 return (
-                                    <tr key={d.id} className="border-t border-border/20 transition-colors hover:bg-mint-wash">
-                                        <td className="px-4 py-3 font-bold tabular-nums text-text">{d.order?.order_code ?? '-'}</td>
-                                        <td className="px-4 py-3 text-text-muted">{d.order?.outlet?.name ?? '-'}</td>
-                                        <td className="px-4 py-3 text-text-muted">{d.courier?.name ?? 'Belum ada kurir'}</td>
-                                        <td className="px-4 py-3">
-                                            <DeliveryStatusBadge status={d.status} />
+                                    <tr
+                                        key={d.id}
+                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                    >
+                                        <td className="px-4 py-3 font-bold text-text tabular-nums">
+                                            {d.order?.order_code ?? '-'}
                                         </td>
-                                        <td className="px-4 py-3 text-text-muted">{formatDate(d.assigned_at)}</td>
+                                        <td className="px-4 py-3 text-text-muted">
+                                            {d.order?.outlet?.name ?? '-'}
+                                        </td>
+                                        <td className="px-4 py-3 text-text-muted">
+                                            {d.courier?.name ??
+                                                'Belum ada kurir'}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <DeliveryStatusBadge
+                                                status={d.status}
+                                            />
+                                        </td>
+                                        <td className="px-4 py-3 text-text-muted">
+                                            {formatDate(d.assigned_at)}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-2">
                                                 {isActive && (
-                                                    <Button variant="outline" size="sm">
-                                                        <MapPin aria-hidden="true" className="h-3.5 w-3.5" />
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                    >
+                                                        <MapPin
+                                                            aria-hidden="true"
+                                                            className="h-3.5 w-3.5"
+                                                        />
                                                         Lacak
                                                     </Button>
                                                 )}
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => router.visit(`/owner/deliveries/${d.id}`)}
+                                                    onClick={() =>
+                                                        router.visit(
+                                                            `/owner/deliveries/${d.id}`,
+                                                        )
+                                                    }
                                                 >
                                                     Detail
                                                 </Button>

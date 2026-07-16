@@ -14,7 +14,13 @@ interface Props extends PropsWithChildren {
     clickable?: boolean;
 }
 
-export default function OrderCardShell({ orderId, recoveryToken, status, clickable, children }: Props) {
+export default function OrderCardShell({
+    orderId,
+    recoveryToken,
+    status,
+    clickable,
+    children,
+}: Props) {
     const { auth } = usePage<any>().props;
     const isLoggedIn = !!auth?.user;
 
@@ -33,15 +39,14 @@ export default function OrderCardShell({ orderId, recoveryToken, status, clickab
 
     if (isClickable) {
         return (
-            <Link href={href} className={`block ${cardClass} active:opacity-80`}>
+            <Link
+                href={href}
+                className={`block ${cardClass} active:opacity-80`}
+            >
                 {children}
             </Link>
         );
     }
 
-    return (
-        <div className={cardClass}>
-            {children}
-        </div>
-    );
+    return <div className={cardClass}>{children}</div>;
 }

@@ -6,12 +6,16 @@ import DevToolbar from '@/components/dev-toolbar';
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName} Admin` : `${appName} Admin`),
+    title: (title) =>
+        title ? `${title} - ${appName} Admin` : `${appName} Admin`,
     progress: {
         color: '#047857',
     },
     resolve: (name) => {
-        const pages = import.meta.glob('./pages/{owner,outlet,courier,auth}/**/*.tsx', { eager: true });
+        const pages = import.meta.glob(
+            './pages/{owner,outlet,courier,auth}/**/*.tsx',
+            { eager: true },
+        );
         const page = pages[`./pages/${name}.tsx`];
 
         if (!page) {
@@ -26,13 +30,28 @@ createInertiaApp({
             <>
                 <App {...props} />
                 <Toaster position="top-center" richColors closeButton />
-                {(props.initialPage.props.dev as Record<string, unknown>)?.isLocal && (
+                {(props.initialPage.props.dev as Record<string, unknown>)
+                    ?.isLocal && (
                     <DevToolbar
-                        currentRole={(props.initialPage.props.dev as Record<string, unknown>).currentRole as string | null}
-                        env={(props.initialPage.props.dev as Record<string, unknown>).env as string}
+                        currentRole={
+                            (
+                                props.initialPage.props.dev as Record<
+                                    string,
+                                    unknown
+                                >
+                            ).currentRole as string | null
+                        }
+                        env={
+                            (
+                                props.initialPage.props.dev as Record<
+                                    string,
+                                    unknown
+                                >
+                            ).env as string
+                        }
                     />
                 )}
-            </>
+            </>,
         );
     },
 });

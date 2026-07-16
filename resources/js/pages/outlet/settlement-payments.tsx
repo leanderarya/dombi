@@ -43,7 +43,9 @@ export default function OutletSettlementPayments({ payments }: Props) {
     const [showForm, setShowForm] = useState(false);
     const [amount, setAmount] = useState('');
     const [referenceNumber, setReferenceNumber] = useState('');
-    const [paymentDate, setPaymentDate] = useState(new Date().toISOString().split('T')[0]);
+    const [paymentDate, setPaymentDate] = useState(
+        new Date().toISOString().split('T')[0],
+    );
     const [notes, setNotes] = useState('');
     const [proofFile, setProofFile] = useState<File | null>(null);
     const [saving, setSaving] = useState(false);
@@ -94,7 +96,10 @@ export default function OutletSettlementPayments({ payments }: Props) {
     };
 
     return (
-        <OutletLayout title="Riwayat Pembayaran" subtitle="Daftar pembayaran yang sudah dikirim">
+        <OutletLayout
+            title="Riwayat Pembayaran"
+            subtitle="Daftar pembayaran yang sudah dikirim"
+        >
             <Head title="Riwayat Pembayaran" />
             <OutletPageShell>
                 <div className="flex items-center justify-between">
@@ -105,8 +110,13 @@ export default function OutletSettlementPayments({ payments }: Props) {
 
                 {/* Payment Form */}
                 {showForm && (
-                    <form onSubmit={handleSubmit} className="mb-4 rounded-xl border border-border bg-white p-4">
-                        <h2 className="mb-3 text-sm font-semibold text-text">Submit Pembayaran</h2>
+                    <form
+                        onSubmit={handleSubmit}
+                        className="mb-4 rounded-xl border border-border bg-white p-4"
+                    >
+                        <h2 className="mb-3 text-sm font-semibold text-text">
+                            Submit Pembayaran
+                        </h2>
 
                         <div className="space-y-3">
                             <Input
@@ -124,7 +134,9 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                 type="text"
                                 label="Nomor Referensi"
                                 value={referenceNumber}
-                                onChange={(e) => setReferenceNumber(e.target.value)}
+                                onChange={(e) =>
+                                    setReferenceNumber(e.target.value)
+                                }
                                 required
                                 maxLength={100}
                                 placeholder="TRF-20260605-001"
@@ -151,17 +163,32 @@ export default function OutletSettlementPayments({ payments }: Props) {
                             />
 
                             <div>
-                                <label className="mb-1 block text-sm font-medium text-text">Bukti Transfer (opsional)</label>
+                                <label className="mb-1 block text-sm font-medium text-text">
+                                    Bukti Transfer (opsional)
+                                </label>
                                 <input
                                     type="file"
                                     accept="image/*"
-                                    onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                                    className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                                    onChange={(e) =>
+                                        setProofFile(
+                                            e.target.files?.[0] || null,
+                                        )
+                                    }
+                                    className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                                 />
-                                {errors.proof_image && <p className="mt-1 text-xs text-danger">{errors.proof_image}</p>}
+                                {errors.proof_image && (
+                                    <p className="mt-1 text-xs text-danger">
+                                        {errors.proof_image}
+                                    </p>
+                                )}
                             </div>
 
-                            <Button type="submit" size="lg" loading={saving} className="w-full">
+                            <Button
+                                type="submit"
+                                size="lg"
+                                loading={saving}
+                                className="w-full"
+                            >
                                 Kirim Pembayaran
                             </Button>
                         </div>
@@ -172,41 +199,63 @@ export default function OutletSettlementPayments({ payments }: Props) {
                 <div className="space-y-2">
                     {payments.data.length === 0 ? (
                         <EmptyState
-                            icon={<Receipt className="h-8 w-8 text-text-subtle" />}
+                            icon={
+                                <Receipt className="h-8 w-8 text-text-subtle" />
+                            }
                             title="Belum ada pembayaran"
                             description="Riwayat pembayaran Anda akan muncul di sini"
                         />
                     ) : (
                         payments.data.map((payment) => (
-                            <div key={payment.id} className="rounded-xl border border-border bg-white p-4">
+                            <div
+                                key={payment.id}
+                                className="rounded-xl border border-border bg-white p-4"
+                            >
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <div className="text-sm font-semibold text-text">{formatCurrency(payment.amount)}</div>
-                                        <div className="text-xs text-text-muted">{payment.reference_number}</div>
-                                        <div className="text-xs text-text-subtle">{formatDate(payment.payment_date)}</div>
+                                        <div className="text-sm font-semibold text-text">
+                                            {formatCurrency(payment.amount)}
+                                        </div>
+                                        <div className="text-xs text-text-muted">
+                                            {payment.reference_number}
+                                        </div>
+                                        <div className="text-xs text-text-subtle">
+                                            {formatDate(payment.payment_date)}
+                                        </div>
                                     </div>
-                                    <StatusBadge variant={statusVariants[payment.status]}>
+                                    <StatusBadge
+                                        variant={statusVariants[payment.status]}
+                                    >
                                         {statusLabels[payment.status]}
                                     </StatusBadge>
                                 </div>
                                 {payment.notes && (
-                                    <div className="mt-2 text-xs text-text-muted">{payment.notes}</div>
+                                    <div className="mt-2 text-xs text-text-muted">
+                                        {payment.notes}
+                                    </div>
                                 )}
                                 {payment.proof_image && (
                                     <div className="mt-2">
-                                        <a href={`/storage/${payment.proof_image}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary underline">
+                                        <a
+                                            href={`/storage/${payment.proof_image}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-primary underline"
+                                        >
                                             Lihat Bukti Transfer
                                         </a>
                                     </div>
                                 )}
                                 {payment.rejection_reason && (
                                     <div className="mt-2 rounded-lg bg-red-50 p-2 text-xs text-red-700">
-                                        Alasan ditolak: {payment.rejection_reason}
+                                        Alasan ditolak:{' '}
+                                        {payment.rejection_reason}
                                     </div>
                                 )}
                                 {payment.verifier && (
                                     <div className="mt-2 text-xs text-text-subtle">
-                                        Diverifikasi oleh {payment.verifier.name}
+                                        Diverifikasi oleh{' '}
+                                        {payment.verifier.name}
                                     </div>
                                 )}
                             </div>

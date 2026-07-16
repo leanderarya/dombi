@@ -13,22 +13,42 @@ interface Props {
 const colorMap: Record<string, { bg: string; dot: string; text: string }> = {
     slate: { bg: 'bg-slate-100', dot: 'bg-slate-400', text: 'text-slate-700' },
     blue: { bg: 'bg-blue-100', dot: 'bg-blue-500', text: 'text-blue-700' },
-    purple: { bg: 'bg-purple-100', dot: 'bg-purple-500', text: 'text-purple-700' },
+    purple: {
+        bg: 'bg-purple-100',
+        dot: 'bg-purple-500',
+        text: 'text-purple-700',
+    },
     amber: { bg: 'bg-amber-100', dot: 'bg-amber-500', text: 'text-amber-700' },
-    green: { bg: 'bg-emerald-100', dot: 'bg-emerald-500', text: 'text-emerald-700' },
+    green: {
+        bg: 'bg-emerald-100',
+        dot: 'bg-emerald-500',
+        text: 'text-emerald-700',
+    },
 };
 
-export default function DeliveryBoardColumn({ title, count, items, color, emptyMessage, onAssignCourier, onResolve }: Props) {
+export default function DeliveryBoardColumn({
+    title,
+    count,
+    items,
+    color,
+    emptyMessage,
+    onAssignCourier,
+    onResolve,
+}: Props) {
     const colors = colorMap[color] ?? colorMap.slate;
 
     return (
         <div className="flex flex-col">
             {/* Column Header */}
             <div className="sticky top-0 z-10 flex items-center gap-2 px-1 pb-2">
-                <span className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold ${colors.bg} ${colors.text}`}>
+                <span
+                    className={`flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-bold ${colors.bg} ${colors.text}`}
+                >
                     {count}
                 </span>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">{title}</h3>
+                <h3 className="text-xs font-bold tracking-wider text-slate-500 uppercase">
+                    {title}
+                </h3>
             </div>
 
             {/* Cards */}

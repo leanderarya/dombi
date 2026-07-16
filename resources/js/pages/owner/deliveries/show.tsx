@@ -16,17 +16,21 @@ export default function OwnerDeliveryShow({ delivery }: any) {
 
     if (!delivery) {
         return (
-            <OwnerPageShell title="Memuat..." subtitle="Detail pengiriman" backHref="/owner/deliveries">
+            <OwnerPageShell
+                title="Memuat..."
+                subtitle="Detail pengiriman"
+                backHref="/owner/deliveries"
+            >
                 <div className="grid gap-4 lg:grid-cols-3">
-                    <div className="lg:col-span-2 space-y-4">
-                        <div className="rounded-lg border border-border p-4 space-y-3">
+                    <div className="space-y-4 lg:col-span-2">
+                        <div className="space-y-3 rounded-lg border border-border p-4">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="rounded-lg border border-border p-4 space-y-3">
+                        <div className="space-y-3 rounded-lg border border-border p-4">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                         </div>
@@ -37,7 +41,11 @@ export default function OwnerDeliveryShow({ delivery }: any) {
     }
 
     const order = delivery.order;
-    const canResolve = ['failed', 'retry_delivery', 'returned_to_outlet'].includes(delivery.status);
+    const canResolve = [
+        'failed',
+        'retry_delivery',
+        'returned_to_outlet',
+    ].includes(delivery.status);
     const isActive = ['delivering', 'picked_up'].includes(delivery.status);
 
     return (
@@ -48,40 +56,87 @@ export default function OwnerDeliveryShow({ delivery }: any) {
         >
             <div className="grid gap-4 lg:grid-cols-3">
                 {/* Main Content - 2 columns */}
-                <div className="lg:col-span-2 space-y-4">
+                <div className="space-y-4 lg:col-span-2">
                     {/* Status */}
-                    <div aria-label="Status pengiriman" className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">Status</div>
-                        <OwnerDetailRow label="Pesanan" value={<OrderStatusBadge status={order.status} />} />
-                        <OwnerDetailRow label="Pengiriman" value={<DeliveryStatusBadge status={delivery.status} />} />
+                    <div
+                        aria-label="Status pengiriman"
+                        className="rounded-lg border border-border p-4"
+                    >
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">
+                            Status
+                        </div>
+                        <OwnerDetailRow
+                            label="Pesanan"
+                            value={<OrderStatusBadge status={order.status} />}
+                        />
+                        <OwnerDetailRow
+                            label="Pengiriman"
+                            value={
+                                <DeliveryStatusBadge status={delivery.status} />
+                            }
+                        />
                         {isActive && (
                             <div className="mt-3 flex h-9 items-center justify-center gap-2 rounded-lg bg-indigo-50 text-sm font-semibold text-indigo-700">
-                                <MapPin aria-hidden="true" className="h-3.5 w-3.5" />
+                                <MapPin
+                                    aria-hidden="true"
+                                    className="h-3.5 w-3.5"
+                                />
                                 Sedang Dalam Pengiriman
                             </div>
                         )}
                     </div>
 
                     {/* Delivery Info */}
-                    <div aria-label="Info pengiriman" className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">Info Pengiriman</div>
-                        <OwnerDetailRow label="Outlet" value={order.outlet?.name ?? '-'} />
-                        <OwnerDetailRow label="Pelanggan" value={order.customer_name} />
-                        <OwnerDetailRow label="Alamat" value={order.customer_address} align="right" />
-                        <OwnerDetailRow label="Pengambilan" value={formatDate(delivery.pickup_time)} />
-                        <OwnerDetailRow label="Terkirim" value={formatDate(delivery.delivered_time)} />
+                    <div
+                        aria-label="Info pengiriman"
+                        className="rounded-lg border border-border p-4"
+                    >
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">
+                            Info Pengiriman
+                        </div>
+                        <OwnerDetailRow
+                            label="Outlet"
+                            value={order.outlet?.name ?? '-'}
+                        />
+                        <OwnerDetailRow
+                            label="Pelanggan"
+                            value={order.customer_name}
+                        />
+                        <OwnerDetailRow
+                            label="Alamat"
+                            value={order.customer_address}
+                            align="right"
+                        />
+                        <OwnerDetailRow
+                            label="Pengambilan"
+                            value={formatDate(delivery.pickup_time)}
+                        />
+                        <OwnerDetailRow
+                            label="Terkirim"
+                            value={formatDate(delivery.delivered_time)}
+                        />
                         {delivery.failed_reason && (
                             <div className="mt-2 rounded-md bg-red-50 p-2 text-sm text-red-700">
-                                <strong>Alasan gagal:</strong> {delivery.failed_reason}
+                                <strong>Alasan gagal:</strong>{' '}
+                                {delivery.failed_reason}
                             </div>
                         )}
                         {delivery.resolution_status && (
                             <div className="mt-2 rounded-md bg-amber-50 p-2 text-sm text-amber-800">
-                                <strong>Resolusi:</strong> {delivery.resolution_status.replaceAll('_', ' ')}
-                                {delivery.resolution_notes && <div className="mt-1">{delivery.resolution_notes}</div>}
+                                <strong>Resolusi:</strong>{' '}
+                                {delivery.resolution_status.replaceAll(
+                                    '_',
+                                    ' ',
+                                )}
+                                {delivery.resolution_notes && (
+                                    <div className="mt-1">
+                                        {delivery.resolution_notes}
+                                    </div>
+                                )}
                                 {delivery.resolved_by && (
                                     <div className="mt-1 text-amber-600">
-                                        oleh {delivery.resolved_by.name} - {formatDate(delivery.resolved_at)}
+                                        oleh {delivery.resolved_by.name} -{' '}
+                                        {formatDate(delivery.resolved_at)}
                                     </div>
                                 )}
                             </div>
@@ -89,10 +144,20 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                     </div>
 
                     {/* Items */}
-                    <div aria-label="Item pesanan" className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">Item Pesanan</div>
+                    <div
+                        aria-label="Item pesanan"
+                        className="rounded-lg border border-border p-4"
+                    >
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">
+                            Item Pesanan
+                        </div>
                         {order.items.map((item: any) => (
-                            <OwnerDetailRow key={item.id} label={`${item.product_name} x${item.quantity}`} value={formatCurrency(item.subtotal)} bold />
+                            <OwnerDetailRow
+                                key={item.id}
+                                label={`${item.product_name} x${item.quantity}`}
+                                value={formatCurrency(item.subtotal)}
+                                bold
+                            />
                         ))}
                     </div>
                 </div>
@@ -101,29 +166,57 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                 <div className="space-y-4">
                     {/* Courier */}
                     {delivery.courier && (
-                        <div aria-label="Informasi kurir" className="rounded-lg border border-border p-4">
-                            <div className="mb-3 text-xs font-semibold text-text-subtle">Kurir</div>
-                            <OwnerDetailRow label="Nama" value={delivery.courier.name} />
+                        <div
+                            aria-label="Informasi kurir"
+                            className="rounded-lg border border-border p-4"
+                        >
+                            <div className="mb-3 text-xs font-semibold text-text-subtle">
+                                Kurir
+                            </div>
+                            <OwnerDetailRow
+                                label="Nama"
+                                value={delivery.courier.name}
+                            />
                         </div>
                     )}
 
                     {/* Timeline */}
-                    <div aria-label="Linimasa pengiriman" className="rounded-lg border border-border p-4">
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">Linimasa</div>
+                    <div
+                        aria-label="Linimasa pengiriman"
+                        className="rounded-lg border border-border p-4"
+                    >
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">
+                            Linimasa
+                        </div>
                         <div className="space-y-3">
                             {order.status_histories.map((history: any) => {
-                                const statusInfo = getOrderStatus(history.to_status);
+                                const statusInfo = getOrderStatus(
+                                    history.to_status,
+                                );
 
                                 return (
-                                    <div key={history.id} className="border-l-2 border-primary/20 pl-3">
+                                    <div
+                                        key={history.id}
+                                        className="border-l-2 border-primary/20 pl-3"
+                                    >
                                         <div className="flex items-center gap-2">
-                                            <StatusBadge variant={statusInfo.variant} size="sm">
+                                            <StatusBadge
+                                                variant={statusInfo.variant}
+                                                size="sm"
+                                            >
                                                 {statusInfo.label}
                                             </StatusBadge>
                                         </div>
-                                        {history.notes && <div className="mt-1 text-xs text-text-muted">{history.notes}</div>}
+                                        {history.notes && (
+                                            <div className="mt-1 text-xs text-text-muted">
+                                                {history.notes}
+                                            </div>
+                                        )}
                                         <div className="mt-1 text-xs text-text-subtle">
-                                            {formatDate(history.created_at)} {history.actor ? `oleh ${history.actor.name}` : ''}
+                                            {formatDate(history.created_at)}{' '}
+                                            {history.actor
+                                                ? `oleh ${history.actor.name}`
+                                                : ''}
                                         </div>
                                     </div>
                                 );
@@ -133,10 +226,16 @@ export default function OwnerDeliveryShow({ delivery }: any) {
 
                     {/* Resolve */}
                     {canResolve && (
-                        <div aria-label="Insiden belum diselesaikan" className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                            <div className="mb-1 text-sm font-bold text-amber-900">Insiden Belum Diselesaikan</div>
+                        <div
+                            aria-label="Insiden belum diselesaikan"
+                            className="rounded-lg border border-amber-200 bg-amber-50 p-4"
+                        >
+                            <div className="mb-1 text-sm font-bold text-amber-900">
+                                Insiden Belum Diselesaikan
+                            </div>
                             <p className="text-xs text-amber-700">
-                                Delivery ini gagal dan membutuhkan tindakan operasional.
+                                Delivery ini gagal dan membutuhkan tindakan
+                                operasional.
                             </p>
                             <Button
                                 variant="destructive"
@@ -150,7 +249,11 @@ export default function OwnerDeliveryShow({ delivery }: any) {
                 </div>
             </div>
 
-            <ResolveDeliverySheet delivery={delivery} open={resolveOpen} onClose={() => setResolveOpen(false)} />
+            <ResolveDeliverySheet
+                delivery={delivery}
+                open={resolveOpen}
+                onClose={() => setResolveOpen(false)}
+            />
         </OwnerPageShell>
     );
 }

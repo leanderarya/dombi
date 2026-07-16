@@ -11,7 +11,11 @@ export function useDefaultRedirect(defaultStatus: string, basePath: string) {
 
         if (!url.searchParams.has('status')) {
             url.searchParams.set('status', defaultStatus);
-            router.get(url.pathname + url.search, {}, { preserveState: true, replace: true });
+            router.get(
+                url.pathname + url.search,
+                {},
+                { preserveState: true, replace: true },
+            );
         }
     }, [defaultStatus, basePath]);
 }

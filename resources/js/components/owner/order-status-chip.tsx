@@ -17,7 +17,9 @@ export default function OrderStatusChip({ status }: { status: string }) {
     const { label } = getOrderStatus(status);
 
     return (
-        <span className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-bold uppercase tracking-wide ${style}`}>
+        <span
+            className={`inline-flex rounded-md border px-2 py-0.5 text-xs font-bold tracking-wide uppercase ${style}`}
+        >
             {label}
         </span>
     );

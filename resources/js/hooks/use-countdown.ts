@@ -7,12 +7,24 @@ interface CountdownResult {
     totalSeconds: number;
 }
 
-export function useCountdown(targetIso: string | null | undefined): CountdownResult {
-    const [result, setResult] = useState<CountdownResult>({ minutes: 0, seconds: 0, expired: true, totalSeconds: 0 });
+export function useCountdown(
+    targetIso: string | null | undefined,
+): CountdownResult {
+    const [result, setResult] = useState<CountdownResult>({
+        minutes: 0,
+        seconds: 0,
+        expired: true,
+        totalSeconds: 0,
+    });
 
     useEffect(() => {
         if (!targetIso) {
-            setResult({ minutes: 0, seconds: 0, expired: true, totalSeconds: 0 });
+            setResult({
+                minutes: 0,
+                seconds: 0,
+                expired: true,
+                totalSeconds: 0,
+            });
 
             return;
         }
@@ -24,7 +36,12 @@ export function useCountdown(targetIso: string | null | undefined): CountdownRes
             const diff = Math.max(0, Math.floor((target - now) / 1000));
 
             if (diff <= 0) {
-                setResult({ minutes: 0, seconds: 0, expired: true, totalSeconds: 0 });
+                setResult({
+                    minutes: 0,
+                    seconds: 0,
+                    expired: true,
+                    totalSeconds: 0,
+                });
 
                 return;
             }

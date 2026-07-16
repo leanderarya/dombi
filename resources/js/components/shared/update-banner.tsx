@@ -15,8 +15,8 @@ export default function UpdateBanner() {
                 const res = await fetch('/api/version');
 
                 if (!res.ok) {
-return;
-}
+                    return;
+                }
 
                 const data = await res.json();
 
@@ -42,12 +42,14 @@ return;
     }, []);
 
     if (!updateAvailable) {
-return null;
-}
+        return null;
+    }
 
     return (
-        <div className="fixed inset-x-0 bottom-0 z-50 border-t border-emerald-200 bg-emerald-50 px-4 py-3 text-center shadow-lg safe-bottom">
-            <p className="text-sm font-medium text-emerald-800">Versi baru tersedia</p>
+        <div className="safe-bottom fixed inset-x-0 bottom-0 z-50 border-t border-emerald-200 bg-emerald-50 px-4 py-3 text-center shadow-lg">
+            <p className="text-sm font-medium text-emerald-800">
+                Versi baru tersedia
+            </p>
             <button
                 onClick={() => window.location.reload()}
                 className="mt-1 rounded-md bg-emerald-700 px-4 py-1.5 text-sm font-medium text-white active:bg-emerald-800"

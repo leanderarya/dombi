@@ -1,5 +1,5 @@
-import {  useEffect, useRef } from 'react';
-import type {RefObject} from 'react';
+import { useEffect, useRef } from 'react';
+import type { RefObject } from 'react';
 
 /**
  * IntersectionObserver that adds 'visible' class to observed elements (once).
@@ -10,8 +10,8 @@ export function useSectionReveal(deps: unknown[]) {
 
     const setRef = (id: number, el: HTMLDivElement | null) => {
         if (el) {
-mapRef.current.set(id, el);
-}
+            mapRef.current.set(id, el);
+        }
     };
 
     useEffect(() => {

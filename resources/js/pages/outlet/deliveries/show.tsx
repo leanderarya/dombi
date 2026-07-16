@@ -17,10 +17,14 @@ export default function OutletDeliveryShow({ delivery }: any) {
 
             {/* Status Strip */}
             <div className="mt-4 mb-4 flex items-center justify-between">
-                <div className="text-sm text-text-muted">Kurir: {delivery.courier?.name ?? '-'}</div>
+                <div className="text-sm text-text-muted">
+                    Kurir: {delivery.courier?.name ?? '-'}
+                </div>
                 <div className="flex items-center gap-2">
                     <StatusBadge status={delivery.status} />
-                    {delivery.sla_health && <DeliverySlaBadge health={delivery.sla_health} />}
+                    {delivery.sla_health && (
+                        <DeliverySlaBadge health={delivery.sla_health} />
+                    )}
                 </div>
             </div>
 
@@ -28,12 +32,24 @@ export default function OutletDeliveryShow({ delivery }: any) {
             <SectionCard label="Customer">
                 <div className="mt-2 space-y-1.5 text-sm">
                     <div className="font-medium">{delivery.customer_name}</div>
-                    <div className="text-text-muted">{delivery.customer_address}</div>
-                    {delivery.customer_phone && <div className="text-text-muted">{delivery.customer_phone}</div>}
+                    <div className="text-text-muted">
+                        {delivery.customer_address}
+                    </div>
+                    {delivery.customer_phone && (
+                        <div className="text-text-muted">
+                            {delivery.customer_phone}
+                        </div>
+                    )}
                     {delivery.delivery_age != null && (
                         <div>
                             <span className="text-text-muted">Usia:</span>{' '}
-                            <span className={delivery.delivery_age > 60 ? 'font-medium text-red-600' : ''}>
+                            <span
+                                className={
+                                    delivery.delivery_age > 60
+                                        ? 'font-medium text-red-600'
+                                        : ''
+                                }
+                            >
                                 {formatDeliveryAge(delivery.delivery_age)}
                             </span>
                         </div>
@@ -45,12 +61,21 @@ export default function OutletDeliveryShow({ delivery }: any) {
             <SectionCard label="Pesanan">
                 <div className="mt-2 space-y-2">
                     {order.items.map((item: any) => (
-                        <div key={item.id} className="flex justify-between text-sm">
+                        <div
+                            key={item.id}
+                            className="flex justify-between text-sm"
+                        >
                             <div>
-                                <span className="font-medium">{item.product_name}</span>
-                                <span className="ml-2 text-text-muted">x{item.quantity}</span>
+                                <span className="font-medium">
+                                    {item.product_name}
+                                </span>
+                                <span className="ml-2 text-text-muted">
+                                    x{item.quantity}
+                                </span>
                             </div>
-                            <span className="font-medium">{formatCurrency(item.subtotal)}</span>
+                            <span className="font-medium">
+                                {formatCurrency(item.subtotal)}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -64,10 +89,16 @@ export default function OutletDeliveryShow({ delivery }: any) {
             {delivery.failed_reason && (
                 <SectionCard>
                     <div className="flex items-center gap-2">
-                        <StatusBadge variant="danger" size="sm">Gagal</StatusBadge>
-                        <span className="text-xs font-bold uppercase tracking-wider text-text-subtle">Alasan Gagal</span>
+                        <StatusBadge variant="danger" size="sm">
+                            Gagal
+                        </StatusBadge>
+                        <span className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                            Alasan Gagal
+                        </span>
                     </div>
-                    <p className="mt-1 text-sm text-text">{delivery.failed_reason}</p>
+                    <p className="mt-1 text-sm text-text">
+                        {delivery.failed_reason}
+                    </p>
                 </SectionCard>
             )}
 
@@ -75,17 +106,27 @@ export default function OutletDeliveryShow({ delivery }: any) {
             {delivery.resolution_status && (
                 <SectionCard>
                     <div className="flex items-center gap-2">
-                        <StatusBadge variant="warning" size="sm">Resolusi</StatusBadge>
+                        <StatusBadge variant="warning" size="sm">
+                            Resolusi
+                        </StatusBadge>
                     </div>
-                    <p className="mt-1 text-sm text-text">{getDeliveryStatus(delivery.resolution_status).label}</p>
-                    {delivery.resolution_notes && <p className="mt-1 text-xs text-text-muted">{delivery.resolution_notes}</p>}
+                    <p className="mt-1 text-sm text-text">
+                        {getDeliveryStatus(delivery.resolution_status).label}
+                    </p>
+                    {delivery.resolution_notes && (
+                        <p className="mt-1 text-xs text-text-muted">
+                            {delivery.resolution_notes}
+                        </p>
+                    )}
                 </SectionCard>
             )}
 
             {/* Timeline */}
             <SectionCard label="Timeline">
                 <div className="mt-2">
-                    <DeliveryTimeline histories={delivery.status_histories ?? []} />
+                    <DeliveryTimeline
+                        histories={delivery.status_histories ?? []}
+                    />
                 </div>
             </SectionCard>
         </OutletLayout>

@@ -14,7 +14,9 @@ type TabKey = (typeof TABS)[number]['key'];
 
 export default function OwnerReturnsIndex(props: any) {
     const { tab: initialTab } = props;
-    const [activeTab, setActiveTab] = useState<TabKey>((initialTab as TabKey) ?? 'pengembalian');
+    const [activeTab, setActiveTab] = useState<TabKey>(
+        (initialTab as TabKey) ?? 'pengembalian',
+    );
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -27,21 +29,35 @@ export default function OwnerReturnsIndex(props: any) {
 
     const handleTabChange = (t: TabKey) => {
         setActiveTab(t);
-        router.get('/owner/returns', { tab: t }, { preserveState: true, replace: true });
+        router.get(
+            '/owner/returns',
+            { tab: t },
+            { preserveState: true, replace: true },
+        );
     };
 
     if (!props.returns && !props.exchanges) {
         return (
-            <OwnerPageShell title="Return & Tukar" subtitle="Kelola pengembalian dan penukaran barang">
+            <OwnerPageShell
+                title="Return & Tukar"
+                subtitle="Kelola pengembalian dan penukaran barang"
+            >
                 <SkeletonPage />
             </OwnerPageShell>
         );
     }
 
     return (
-        <OwnerPageShell title="Return & Tukar" subtitle="Kelola pengembalian dan penukaran barang">
+        <OwnerPageShell
+            title="Return & Tukar"
+            subtitle="Kelola pengembalian dan penukaran barang"
+        >
             {/* Segmented Control */}
-            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1" role="tablist" aria-label="Jenis Return">
+            <div
+                className="mb-5 inline-flex rounded-lg bg-surface-muted p-1"
+                role="tablist"
+                aria-label="Jenis Return"
+            >
                 {TABS.map((t) => (
                     <button
                         key={t.key}
@@ -49,7 +65,9 @@ export default function OwnerReturnsIndex(props: any) {
                         aria-selected={activeTab === t.key}
                         onClick={() => handleTabChange(t.key)}
                         className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
-                            activeTab === t.key ? 'bg-white text-text shadow-sm' : 'text-text-muted hover:text-text'
+                            activeTab === t.key
+                                ? 'bg-white text-text shadow-sm'
+                                : 'text-text-muted hover:text-text'
                         }`}
                     >
                         {t.label}

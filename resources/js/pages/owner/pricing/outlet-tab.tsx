@@ -4,18 +4,27 @@ import OutletList from './outlet-list';
 import OutletDetail from './outlet-detail';
 import type { OtherOutlet, OutletData, OutletPriceRow } from './types';
 
-export function OutletTab({ outlets, selectedOutlet, outletPrices, otherOutlets }: {
+export function OutletTab({
+    outlets,
+    selectedOutlet,
+    outletPrices,
+    otherOutlets,
+}: {
     outlets?: OutletData[];
     selectedOutlet?: { id: number; name: string };
     outletPrices?: OutletPriceRow[];
     otherOutlets?: OtherOutlet[];
 }) {
-    const [selectedId, setSelectedId] = useState<number | null>(selectedOutlet?.id ?? null);
+    const [selectedId, setSelectedId] = useState<number | null>(
+        selectedOutlet?.id ?? null,
+    );
 
     if (!outlets || outlets.length === 0) {
         return (
-            <div className="rounded-xl bg-surface shadow-card p-12 text-center">
-                <p className="text-sm text-text-muted">Belum ada outlet aktif.</p>
+            <div className="rounded-xl bg-surface p-12 text-center shadow-card">
+                <p className="text-sm text-text-muted">
+                    Belum ada outlet aktif.
+                </p>
             </div>
         );
     }
@@ -33,7 +42,7 @@ export function OutletTab({ outlets, selectedOutlet, outletPrices, otherOutlets 
     return (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
             {/* Panel Kiri — Outlet List */}
-            <div className="rounded-xl bg-surface shadow-card p-3 lg:max-h-[calc(100vh-14rem)]">
+            <div className="rounded-xl bg-surface p-3 shadow-card lg:max-h-[calc(100vh-14rem)]">
                 <OutletList
                     outlets={outlets}
                     selectedId={selectedId}
@@ -45,14 +54,24 @@ export function OutletTab({ outlets, selectedOutlet, outletPrices, otherOutlets 
             <div>
                 {selectedId && selectedOutletData ? (
                     <OutletDetail
-                        outlet={{ id: selectedId, name: selectedOutletData.name }}
-                        prices={selectedId === selectedOutlet?.id ? outletPrices : undefined}
+                        outlet={{
+                            id: selectedId,
+                            name: selectedOutletData.name,
+                        }}
+                        prices={
+                            selectedId === selectedOutlet?.id
+                                ? outletPrices
+                                : undefined
+                        }
                         otherOutlets={otherOutlets}
                         allOutlets={outlets}
                     />
                 ) : (
                     <div className="rounded-lg border border-dashed border-border bg-surface p-12 text-center">
-                        <p className="text-sm text-text-muted">Pilih outlet di panel kiri untuk melihat detail harga.</p>
+                        <p className="text-sm text-text-muted">
+                            Pilih outlet di panel kiri untuk melihat detail
+                            harga.
+                        </p>
                     </div>
                 )}
             </div>
