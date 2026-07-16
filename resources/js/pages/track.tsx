@@ -92,7 +92,7 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     }
 
     async function handleCancel() {
-        if (!cancelReason) {
+        if (!cancelReason || !order) {
 return;
 }
 
@@ -245,8 +245,8 @@ return;
                     delivery={order.delivery}
                     customerAddress={order.customer_address}
                     customerAddressDetail={order.customer_address_detail}
-                    latitude={order.latitude}
-                    longitude={order.longitude}
+                    latitude={order.outlet?.latitude}
+                    longitude={order.outlet?.longitude}
                     fulfillmentType={order.fulfillment_type}
                 />
 

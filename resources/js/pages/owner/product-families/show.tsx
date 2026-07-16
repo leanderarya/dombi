@@ -146,7 +146,7 @@ export default function ProductFamilyShow({ family }: Props) {
         e.preventDefault();
         familyForm.put(`/owner/product-families/${family.id}`, {
             onSuccess: () => { setShowFamilyEdit(false); },
-            onError: (errors) => { familyForm.setErrors(errors); },
+            onError: (errors) => { Object.entries(errors as Record<string, string>).forEach(([key, value]) => familyForm.setError(key as keyof typeof familyForm.data, value)); },
         });
     };
     const handleDeleteFamily = () => { router.delete(`/owner/product-families/${family.id}`, { onSuccess: () => setDeleteFamilyDialog(false) }); };

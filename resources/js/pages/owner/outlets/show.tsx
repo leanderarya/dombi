@@ -68,7 +68,7 @@ export default function OutletShow({
     }
 
     const handleArchive = () => {
-        router.put(`/owner/outlets/${outlet.id}/archive`, {
+        router.put(`/owner/outlets/${outlet.id}/archive`, {}, {
             onFinish: () => setShowArchiveConfirm(false),
         });
     };
