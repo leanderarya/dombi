@@ -6,7 +6,7 @@ import StickyActionBar from '@/components/ui/sticky-action-bar';
 import OutletLayout from '@/layouts/outlet-layout';
 
 export default function OutletRestockShow({ restock }: any) {
-    const canConfirmReceived = restock.distribution?.status === 'shipped';
+    const canConfirmReceived = restock.status === 'shipped';
     const [showForm, setShowForm] = useState(false);
     const [receivedNotes, setReceivedNotes] = useState('');
     const [damageNotes, setDamageNotes] = useState('');
@@ -14,7 +14,7 @@ export default function OutletRestockShow({ restock }: any) {
     const [cancelling, setCancelling] = useState(false);
 
     const handleConfirmReceived = () => {
-        router.post(`/outlet/distributions/${restock.distribution.id}/confirm-received`, {
+        router.post(`/outlet/restocks/${restock.id}/confirm-received`, {
             received_notes: receivedNotes || null,
             damage_notes: damageNotes || null,
         });
@@ -102,22 +102,19 @@ export default function OutletRestockShow({ restock }: any) {
                 )}
             </SectionCard>
 
-            {/* Distribution */}
-            {restock.distribution && (
-                <SectionCard label="Distribusi">
-                    <div className="mt-2">
-                        <StatusBadge status={restock.distribution.status} />
-                    </div>
-                    {restock.distribution.received_notes && (
-                        <div className="mt-3">
+            {/* Received Info */}
+            {(restock.received_notes || restock.damage_notes) && (
+                <SectionCard label="Info Penerimaan">
+                    {restock.received_notes && (
+                        <div className="mt-2">
                             <span className="text-sm text-text-muted">Catatan Penerimaan:</span>
-                            <p className="mt-1 text-sm text-text">{restock.distribution.received_notes}</p>
+                            <p className="mt-1 text-sm text-text">{restock.received_notes}</p>
                         </div>
                     )}
-                    {restock.distribution.damage_notes && (
+                    {restock.damage_notes && (
                         <div className="mt-2">
                             <span className="text-sm text-text-muted">Catatan Kerusakan:</span>
-                            <p className="mt-1 text-sm text-text">{restock.distribution.damage_notes}</p>
+                            <p className="mt-1 text-sm text-text">{restock.damage_notes}</p>
                         </div>
                     )}
                 </SectionCard>

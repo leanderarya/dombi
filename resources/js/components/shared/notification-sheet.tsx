@@ -1,4 +1,5 @@
-import { CircleCheck, CircleX, Clock, Ban, Truck, Package, Bike, TriangleAlert, Undo2, RefreshCw, Bell, ClipboardList, Mail } from 'lucide-react';
+import { CircleCheck, CircleX, Clock, Ban, Truck, Package, Bike, TriangleAlert, Undo2, RefreshCw, Bell, ClipboardList, Mail, AlertTriangle } from 'lucide-react';
+import { router } from '@inertiajs/react';
 import { useState, useEffect, useCallback  } from 'react';
 import type {ReactNode} from 'react';
 import { createPortal } from 'react-dom';
@@ -17,25 +18,53 @@ interface Notification {
 interface Props {
     open: boolean;
     onClose: () => void;
+    /** Called when user clicks an inventory-related notification (optional). */
+    onNavigate?: (type: string, data: Record<string, unknown> | null) => void;
 }
 
+
+/** Notification types that should navigate the outlet to restock page. */
+const INVENTORY_ACTION_TYPES = new Set([
+    'inventory.low_stock',
+    'inventory.critical_stock',
+    'inventory.restock_created',
+    'inventory.restock_approved',
+    'inventory.restock_rejected',
+]);
+
 const typeIcons: Record<string, ReactNode> = {
+    // Pesanan
     'order.confirmed': <CircleCheck className="h-5 w-5 text-emerald-600" />,
     'order.rejected': <CircleX className="h-5 w-5 text-red-600" />,
     'order.expired': <Clock className="h-5 w-5 text-amber-600" />,
     'order.cancelled': <Ban className="h-5 w-5 text-slate-500" />,
+    // Pengiriman
     'delivery.courier_assigned': <Truck className="h-5 w-5 text-blue-600" />,
     'delivery.picked_up': <Package className="h-5 w-5 text-emerald-600" />,
     'delivery.out_for_delivery': <Bike className="h-5 w-5 text-blue-600" />,
     'delivery.completed': <CircleCheck className="h-5 w-5 text-emerald-600" />,
     'delivery.failed': <TriangleAlert className="h-5 w-5 text-red-600" />,
     'delivery.returned_to_outlet': <Undo2 className="h-5 w-5 text-amber-600" />,
+    // Operasional
     'operational.courier_rejected': <RefreshCw className="h-5 w-5 text-amber-600" />,
     'operational.sla_violation': <Bell className="h-5 w-5 text-red-600" />,
     'operational.returned_pending': <ClipboardList className="h-5 w-5 text-blue-600" />,
+    // Inventaris — Stok
+    'inventory.low_stock': <TriangleAlert className="h-5 w-5 text-amber-600" />,
+    'inventory.critical_stock': <AlertTriangle className="h-5 w-5 text-red-600" />,
+    // Inventaris — Restock
+    'inventory.restock_created': <Package className="h-5 w-5 text-blue-600" />,
+    'inventory.restock_approved': <CircleCheck className="h-5 w-5 text-emerald-600" />,
+    'inventory.restock_rejected': <CircleX className="h-5 w-5 text-red-600" />,
+    // Inventaris — Distribusi
+    'inventory.distribution_sent': <Truck className="h-5 w-5 text-blue-600" />,
+    'inventory.distribution_received': <Package className="h-5 w-5 text-emerald-600" />,
+    // Inventaris — Return & Tukar
+    'inventory.return_request_created': <Undo2 className="h-5 w-5 text-amber-600" />,
+    'inventory.exchange_request_created': <RefreshCw className="h-5 w-5 text-blue-600" />,
 };
 
-export default function NotificationSheet({ open, onClose }: Props) {
+export default function NotificationSheet({ open, onClose, onNavigate }: Props) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
@@ -91,13 +120,19 @@ onClose();
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
     };
 
-    const handleMarkAsRead = async (id: number) => {
+    const handleMarkAsRead = async (id: number, type: string, data: Record<string, unknown> | null) => {
         try {
             await fetch(`/notifications/${id}/read`, { method: 'POST', headers: csrfHeaders });
             setNotifications(prev => prev.map(n => n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch {
             // Silently fail
+        }
+
+        // Navigate for inventory action types
+        if (onNavigate && INVENTORY_ACTION_TYPES.has(type)) {
+            onClose();
+            onNavigate(type, data);
         }
     };
 
@@ -150,7 +185,7 @@ return null;
                             {notifications.map((notification) => (
                                 <button
                                     key={notification.id}
-                                    onClick={() => handleMarkAsRead(notification.id)}
+                                    onClick={() => handleMarkAsRead(notification.id, notification.type, notification.data)}
                                     className={`w-full rounded-lg border p-3 text-left transition-colors ${
                                         notification.read_at
                                             ? 'border-slate-100 bg-white'

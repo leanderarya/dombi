@@ -525,3 +525,76 @@ select:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(4, 120, 87, 0.15);
 }
+
+/* ─── Stitch Design System ──────────────────────────────── */
+
+/* Card shadow — emerald-tinted layered depth */
+.shadow-card {
+    box-shadow:
+        0 1px 3px rgba(0, 109, 50, 0.04),
+        0 4px 12px rgba(0, 109, 50, 0.03);
+}
+
+.shadow-card-hover {
+    box-shadow:
+        0 10px 25px rgba(0, 109, 50, 0.1);
+}
+
+/* Sparkline bar entrance */
+@keyframes sparklineUp {
+    from {
+        opacity: 0;
+        transform: scaleY(0);
+    }
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+}
+
+.sparkline-bar {
+    animation: sparklineUp 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--delay, 0ms);
+    transform-origin: bottom;
+}
+
+/* Horizontal bar grow */
+@keyframes barGrow {
+    from { width: 0; }
+}
+
+.bar-grow {
+    animation: barGrow 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--delay, 0ms);
+}
+
+/* Chart line draw */
+@keyframes chartDraw {
+    from { stroke-dashoffset: 1000; }
+    to { stroke-dashoffset: 0; }
+}
+
+.chart-line {
+    stroke-dasharray: 1000;
+    animation: chartDraw 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Spring transition — tactile feedback */
+.spring-transition {
+    transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .sparkline-bar,
+    .bar-grow,
+    .chart-line {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .spring-transition {
+        transition: none;
+    }
+}

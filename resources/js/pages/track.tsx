@@ -1,13 +1,15 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CheckCircle2, ChevronLeft, Clock, MapPin, MessageCircle, Navigation, Package, Phone, RotateCcw, Share2, Store, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
+import { CheckCircle2, Clock, MapPin, MessageCircle, Navigation, Phone, RotateCcw, Share2, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import OrderHeader from '@/components/customer/order/order-header';
+import OrderInfoCard from '@/components/customer/order/order-info-card';
+import StatusGuidanceCard from '@/components/customer/order/status-guidance-card';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
 import Dialog from '@/components/ui/dialog';
 import StatusBadge from '@/components/ui/status-badge';
-import { useCountdown } from '@/hooks/use-countdown';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 
 type TrackOrder = {
     id: number;
@@ -51,64 +53,6 @@ type Props = {
 
 const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
 
-const STATUS_GUIDANCE: Record<string, { description: string; nextStep?: string; cta?: { label: string; href?: string; action?: string } }> = {
-    pending_confirmation: {
-        description: 'Menunggu outlet mengkonfirmasi pesanan Anda',
-        nextStep: 'Biasanya dikonfirmasi dalam beberapa menit',
-    },
-    // Payment not yet completed — shown when payment_status is pending/null
-    pending_confirmation_unpaid: {
-        description: 'Menunggu Pembayaran',
-        nextStep: 'Selesaikan pembayaran untuk melanjutkan pesanan',
-    },
-    // Payment failed but order still active — customer can retry
-    pending_confirmation_payment_failed: {
-        description: 'Pembayaran Gagal',
-        nextStep: 'Pembayaran sebelumnya gagal. Anda masih bisa coba bayar ulang sebelum waktu habis.',
-    },
-    confirmed: {
-        description: 'Pesanan sudah dikonfirmasi oleh outlet',
-        nextStep: 'Outlet sedang menyiapkan pesanan Anda',
-    },
-    preparing: {
-        description: 'Pesanan sedang disiapkan',
-        nextStep: 'Pesanan akan segera siap',
-    },
-    ready_for_pickup: {
-        description: 'Pesanan sudah siap diambil!',
-        nextStep: 'Silakan ambil di outlet sebelum jam tutup',
-        cta: { label: 'Navigasi ke Outlet', action: 'navigate' },
-    },
-    ready_for_pickup_delivery: {
-        description: 'Pesanan sudah siap, menunggu kurir',
-        nextStep: 'Kurir akan segera menjemput dan mengantar ke alamat Anda',
-    },
-    completed: {
-        description: 'Pesanan telah selesai',
-        nextStep: 'Terima kasih sudah pesan di Dombi!',
-    },
-    rejected_by_outlet: {
-        description: 'Outlet tidak dapat memproses pesanan',
-        nextStep: 'Silakan coba pesan dari outlet lain',
-    },
-    cancelled_by_customer: {
-        description: 'Pesanan telah Anda batalkan',
-    },
-    cancelled_by_outlet: {
-        description: 'Pesanan dibatalkan oleh outlet',
-        nextStep: 'Silakan coba pesan lagi',
-    },
-    failed_delivery: {
-        description: 'Pengiriman gagal',
-        nextStep: 'Silakan hubungi kami untuk bantuan',
-        cta: { label: 'Hubungi WhatsApp', action: 'wa_outlet' },
-    },
-    expired: {
-        description: 'Pesanan kadaluarsa',
-        nextStep: 'Outlet tidak konfirmasi dalam batas waktu',
-    },
-};
-
 export default function TrackPage({ order, found, cancellationReasons = [], canCancel = false, canCreateAccount = false, accountPhone, accountName }: Props) {
     const { auth } = usePage().props as any;
     const isLoggedIn = !!auth?.user;
@@ -118,7 +62,6 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     const [cancelLast4Hp, setCancelLast4Hp] = useState('');
     const [cancelError, setCancelError] = useState<string | null>(null);
     const [cancelLoading, setCancelLoading] = useState(false);
-    const countdown = useCountdown(order?.confirmation_expires_at);
 
     // Auto-polling for non-terminal orders
     const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'].includes(order?.status ?? '');
@@ -190,30 +133,15 @@ return;
     }
 
     return (
-        <div className="min-h-dvh bg-surface">
+        <div className="min-h-dvh bg-background">
             <Head title={`Pesanan ${order.order_code}`} />
             <OfflineBanner />
 
-            {/* Header */}
-            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-safe">
-                <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <button
-                        type="button"
-                        onClick={() => router.visit(isLoggedIn ? '/customer/orders' : '/customer/home')}
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
-                        aria-label="Kembali"
-                    >
-                        <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <div className="text-center">
-                        <div className="text-sm font-semibold text-text">{order.order_code}</div>
-                        {order.ordered_at && (
-                            <div className="text-[11px] text-text-muted">{formatDate(order.ordered_at)}</div>
-                        )}
-                    </div>
-                    <div className="h-11 w-11" />
-                </div>
-            </header>
+            <OrderHeader
+                orderCode={order.order_code}
+                orderedAt={order.ordered_at}
+                trackingUrl={trackingUrl}
+            />
 
             {/* Content */}
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
@@ -253,79 +181,17 @@ return;
                 )}
 
                 {/* What's Next Guidance */}
-                {(() => {
-                    // Determine the effective guidance key:
-                    // For pending_confirmation with unpaid, show payment guidance
-                    const isPendingUnpaid = order.status === 'pending_confirmation'
-                        && order.payment_status !== 'paid';
-                    const isPaymentFailed = order.payment_status === 'failed' || order.payment_status === 'expired';
-                    const isDelivery = order.fulfillment_type !== 'pickup';
-                    const guidanceKey = isPendingUnpaid
-                        ? (isPaymentFailed ? 'pending_confirmation_payment_failed' : 'pending_confirmation_unpaid')
-                        : (order.status === 'ready_for_pickup' && isDelivery ? 'ready_for_pickup_delivery' : order.status);
-                    const guidance = STATUS_GUIDANCE[guidanceKey];
+                <StatusGuidanceCard
+                    status={order.status}
+                    paymentStatus={order.payment_status}
+                    isPickup={isPickup}
+                    confirmationExpiresAt={order.confirmation_expires_at}
+                    outletPhone={order.outlet?.phone}
+                    outletLatitude={order.outlet?.latitude}
+                    outletLongitude={order.outlet?.longitude}
+                />
 
-                    if (!guidance) {
-return null;
-}
-
-                    const isPickupReady = order.status === 'ready_for_pickup' && order.outlet?.latitude && order.outlet?.longitude;
-                    const showCountdown = order.status === 'pending_confirmation' && !isPendingUnpaid && !countdown.expired && countdown.totalSeconds > 0;
-
-                    return (
-                        <div className="mt-3 rounded-xl border border-border bg-white p-4">
-                            <div className="text-sm font-semibold text-text">{guidance.description}</div>
-                            {showCountdown && (
-                                <div className="mt-2 flex items-center gap-2">
-                                    <div className="flex items-center gap-1 rounded-lg bg-amber-50 px-3 py-1.5">
-                                        <Clock className="h-3.5 w-3.5 text-amber-600" />
-                                        <span className="text-sm font-bold tabular-nums text-amber-700">
-                                            {String(countdown.minutes).padStart(2, '0')}:{String(countdown.seconds).padStart(2, '0')}
-                                        </span>
-                                    </div>
-                                    <span className="text-xs text-text-subtle">sisa waktu konfirmasi</span>
-                                </div>
-                            )}
-                            {guidance.nextStep && (
-                                <div className="mt-1 text-xs text-text-muted">{guidance.nextStep}</div>
-                            )}
-                            {guidance.cta && (
-                                <div className="mt-3">
-                                    {isPickupReady && guidance.cta.action === 'navigate' ? (
-                                        <a
-                                            href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet!.latitude},${order.outlet!.longitude}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                                        >
-                                            <MapPin className="h-4 w-4" />
-                                            {guidance.cta.label}
-                                        </a>
-                                    ) : guidance.cta.action === 'wa_outlet' && order.outlet?.phone ? (
-                                        <a
-                                            href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                                        >
-                                            <Phone className="h-4 w-4" />
-                                            {guidance.cta.label}
-                                        </a>
-                                    ) : guidance.cta.href ? (
-                                        <Link
-                                            href={guidance.cta.href}
-                                            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                                        >
-                                            {guidance.cta.label}
-                                        </Link>
-                                    ) : null}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })()}
-
-                {/* QR Code — promoted above fold for pickup ready_for_pickup */}
+                {/* QR Code */}
                 {isPickup && order.status === 'ready_for_pickup' && (
                     <OrderQRCard orderCode={order.order_code} />
                 )}
@@ -343,7 +209,7 @@ return null;
                     </div>
                 )}
 
-                {/* Share Tracking — hidden when completed */}
+                {/* Share Tracking */}
                 {!isTerminal && trackingUrl && (
                     <div className="mt-4">
                         <button
@@ -357,7 +223,7 @@ return null;
                     </div>
                 )}
 
-                {/* Timeline — collapsible */}
+                {/* Timeline */}
                 <div className="mt-4">
                     <OrderTimeline
                         currentStatus={order.status}
@@ -367,139 +233,22 @@ return null;
                     />
                 </div>
 
-                {/* Order Items */}
-                <div className="mt-4 rounded-xl border border-border bg-white p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-surface-muted">
-                            <Package className="h-3.5 w-3.5 text-text-muted" />
-                        </div>
-                        <span className="text-[13px] text-text-subtle">Item Pesanan</span>
-                    </div>
-                    <div className="space-y-2">
-                        {order.items.map((item, index) => (
-                            <div key={index} className="flex items-center justify-between text-sm">
-                                <div className="min-w-0">
-                                    <span className="text-text">{item.product_name}</span>
-                                    <span className="ml-1 text-xs text-text-subtle">x{item.quantity}</span>
-                                </div>
-                                <span className="shrink-0 font-semibold tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="mt-3 border-t border-border pt-3 space-y-1">
-                        <div className="flex items-center justify-between text-xs text-text-muted">
-                            <span>Subtotal</span>
-                            <span>{formatCurrency(order.subtotal)}</span>
-                        </div>
-                        {order.delivery_fee > 0 && (
-                            <div className="flex items-center justify-between text-xs text-text-muted">
-                                <span>Ongkir</span>
-                                <span>{formatCurrency(order.delivery_fee)}</span>
-                            </div>
-                        )}
-                        <div className="flex items-center justify-between text-sm font-semibold text-text pt-1">
-                            <span>Total</span>
-                            <span className="tabular-nums">{formatCurrency(order.total)}</span>
-                        </div>
-                    </div>
-                </div>
-
                 {/* Order Info */}
-                <div className="mt-4 rounded-xl border border-border bg-white p-4">
-                    <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                            <span className="text-text-muted">Metode</span>
-                            <span className="font-medium text-text">{isPickup ? 'Ambil di Outlet' : 'Kirim ke Alamat'}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-text-muted">Pembayaran</span>
-                            <span className="font-medium text-text">{order.payment_method}</span>
-                        </div>
-                        {order.ordered_at && (
-                            <div className="flex justify-between">
-                                <span className="text-text-muted">Tanggal</span>
-                                <span className="font-medium text-text">{formatDate(order.ordered_at)}</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Outlet */}
-                {order.outlet && (
-                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
-                        <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                                <div className="flex items-center gap-2">
-                                    <Store className="h-4 w-4 text-text-subtle" />
-                                    <span className="text-sm font-semibold text-text">{order.outlet.name}</span>
-                                </div>
-                                {order.outlet.address && (
-                                    <div className="mt-1 text-xs text-text-muted">{order.outlet.address}</div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="mt-3 flex gap-2">
-                            {order.outlet.latitude && order.outlet.longitude && (
-                                <a
-                                    href={`https://www.google.com/maps/dir/?api=1&destination=${order.outlet.latitude},${order.outlet.longitude}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                                >
-                                    <Navigation className="h-4 w-4" />
-                                    Navigasi
-                                </a>
-                            )}
-                            {order.outlet.phone && (
-                                <a
-                                    href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex flex-1 min-h-11 items-center justify-center gap-2 rounded-lg border border-border text-sm font-semibold text-text active:opacity-80"
-                                >
-                                    <Phone className="h-4 w-4" />
-                                    WhatsApp
-                                </a>
-                            )}
-                        </div>
-                    </div>
-                )}
-
-                {/* Delivery Address */}
-                {!isPickup && order.customer_address && (
-                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
-                        <div className="flex items-start gap-2">
-                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-text-subtle" />
-                            <div className="min-w-0 flex-1">
-                                <div className="line-clamp-2 text-sm font-medium text-text">{order.customer_address}</div>
-                                {order.customer_address_detail && (
-                                    <div className="mt-0.5 text-xs text-text-muted">{order.customer_address_detail}</div>
-                                )}
-                                {order.customer_landmark && (
-                                    <div className="mt-1 flex items-center gap-1 text-xs text-text-subtle">
-                                        <MapPin className="h-3 w-3" />
-                                        {order.customer_landmark}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Courier */}
-                {order.delivery?.courier && (
-                    <div className="mt-4 rounded-xl border border-border bg-white p-4">
-                        <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-muted">
-                                <UserCheck className="h-5 w-5 text-text-muted" />
-                            </div>
-                            <div>
-                                <div className="text-[11px] text-text-subtle">Kurir</div>
-                                <div className="text-sm font-semibold text-text">{order.delivery.courier.name}</div>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <OrderInfoCard
+                    items={order.items}
+                    subtotal={order.subtotal}
+                    deliveryFee={order.delivery_fee}
+                    total={order.total}
+                    isPickup={isPickup}
+                    paymentMethod={order.payment_method}
+                    outlet={order.outlet}
+                    delivery={order.delivery}
+                    customerAddress={order.customer_address}
+                    customerAddressDetail={order.customer_address_detail}
+                    latitude={order.latitude}
+                    longitude={order.longitude}
+                    fulfillmentType={order.fulfillment_type}
+                />
 
                 {/* Rejection / Cancellation */}
                 {order.status === 'rejected_by_outlet' && order.rejection_reason && (
