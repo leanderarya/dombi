@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { Textarea } from '@/components/ui/textarea';
+import { displayProductName } from '@/lib/display';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { getReturnStatus } from '@/lib/status-labels';
 
@@ -96,7 +97,7 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                     <div className="rounded-lg border border-border p-4" aria-label="Item Return">
                         <div className="mb-3 text-xs font-semibold text-text-subtle">Item Return</div>
                         {ret.items?.map((item: any) => (
-                            <OwnerDetailRow key={item.id} label={`${item.variant?.full_name ?? item.variant?.name} x${item.quantity}`} value={formatCurrency(item.subtotal)} bold />
+                            <OwnerDetailRow key={item.id} label={`${displayProductName(item.variant)} x${item.quantity}`} value={formatCurrency(item.subtotal)} bold />
                         ))}
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 import { router, useForm } from '@inertiajs/react';
-import { Bike, Car, Package, Search } from 'lucide-react';
+import { Bike, Car, MapPin, Package, Search, Truck, Users } from 'lucide-react';
 import { useState } from 'react';
-import CourierStats from '@/components/owner/courier-stats';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
@@ -57,7 +57,12 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
             }
         >
             <div className="space-y-4">
-                <CourierStats stats={stats} todayDeliveries={todayDeliveries} />
+                <OwnerKpiStrip cols={4} items={[
+                    { label: 'Total Kurir', value: stats.total, icon: <Users className="h-5 w-5" />, accentColor: '#2563EB' },
+                    { label: 'Online', value: stats.online, icon: <Truck className="h-5 w-5" />, accentColor: '#16A34A' },
+                    { label: 'Lokasi Aktif', value: stats.active_location, icon: <MapPin className="h-5 w-5" />, accentColor: '#4F46E5' },
+                    { label: 'Pengiriman Hari Ini', value: todayDeliveries, icon: <Bike className="h-5 w-5" />, accentColor: '#D97706' },
+                ]} />
 
                 {/* Search */}
                 <Input
@@ -76,10 +81,10 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                         description={search ? 'Coba kata kunci lain' : 'Tambah kurir untuk mulai mengelola pengiriman'}
                     />
                 ) : (
-                    <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Daftar Kurir">
+                    <div className="overflow-x-auto rounded-xl bg-surface shadow-card" aria-label="Daftar Kurir">
                         <table className="w-full min-w-[500px]">
                             <thead>
-                                <tr className="bg-surface-muted">
+                                <tr className="bg-surface-muted/50">
                                     <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kurir</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kendaraan</th>
                                     <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
@@ -92,7 +97,7 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                                     const VehicleIcon = vehicleIcon;
 
                                     return (
-                                        <tr key={courier.id} className="border-t border-border transition-colors hover:bg-surface-muted">
+                                        <tr key={courier.id} className="border-t border-border/20 transition-colors hover:bg-mint-wash">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
@@ -185,7 +190,7 @@ export default function CouriersIndex({ couriers, stats, todayDeliveries }: any)
                                                 'flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold transition-all',
                                                 isSelected
                                                     ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
-                                                    : 'border-border bg-white text-text-muted hover:bg-surface-muted',
+                                                    : 'border-border bg-surface text-text-muted hover:bg-mint-wash',
                                             )}
                                         >
                                             <Icon className="h-4 w-4" aria-hidden="true" />

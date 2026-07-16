@@ -1,5 +1,5 @@
 import { router } from '@inertiajs/react';
-import { Copy, Plus, RotateCcw } from 'lucide-react';
+import { Copy, Package, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
@@ -8,8 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import EmptyState from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
 import { SkeletonList } from '@/components/ui/skeleton';
-import StatusBadge from '@/components/ui/status-badge';
-import { formatCurrency, formatMarginPercent } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
 import { OutletPriceModal } from './pricing-modals';
 import { BulkPanel, CopyPanel, PaginationBar } from './pricing-shared';
@@ -43,6 +42,11 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
     };
 
     if (!prices) return <SkeletonList count={5} />;
+
+    // Summary stats
+    const customCount = prices.filter((p) => p.has_override).length;
+    const avgMargin = prices.length > 0 ? prices.reduce((sum, p) => sum + p.margin, 0) / prices.length : 0;
+    const negativeCount = prices.filter((p) => p.margin < 0).length;
 
     const filtered = useMemo(() => prices.filter((p) => {
         if (search) { const q = search.toLowerCase(); if (!p.name.toLowerCase().includes(q) && !(p.family_name ?? '').toLowerCase().includes(q)) return false; }
@@ -106,6 +110,29 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
 
     return (
         <div>
+            {/* Outlet Summary KPIs */}
+            <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="rounded-xl bg-surface p-4 shadow-card">
+                    <div className="text-[11px] font-medium text-text-muted">Total Produk</div>
+                    <div className="mt-1 text-xl font-bold tabular-nums text-text">{prices.length}</div>
+                </div>
+                <div className="rounded-xl bg-surface p-4 shadow-card">
+                    <div className="text-[11px] font-medium text-text-muted">Harga Custom</div>
+                    <div className="mt-1 text-xl font-bold tabular-nums text-text">{customCount}</div>
+                    <div className="text-[11px] text-blue-600">{customCount > 0 ? `${customCount}/${prices.length} produk` : 'Semua standar'}</div>
+                </div>
+                <div className="rounded-xl bg-surface p-4 shadow-card">
+                    <div className="text-[11px] font-medium text-text-muted">Rata-rata Margin</div>
+                    <div className="mt-1 text-xl font-bold tabular-nums text-text">{formatCurrency(Math.round(avgMargin))}</div>
+                </div>
+                <div className="rounded-xl bg-surface p-4 shadow-card">
+                    <div className="text-[11px] font-medium text-text-muted">Margin Negatif</div>
+                    <div className={`mt-1 text-xl font-bold tabular-nums ${negativeCount > 0 ? 'text-red-600' : 'text-text'}`}>{negativeCount}</div>
+                    {negativeCount > 0 && <div className="text-[11px] text-red-600">Perlu perbaikan</div>}
+                </div>
+            </div>
+
+            {/* Filters + Actions */}
             <OwnerFilterCard
                 collapsible
                 defaultExpanded={false}
@@ -148,56 +175,72 @@ export default function OutletDetail({ outlet, prices, otherOutlets, allOutlets 
                 <CopyPanel outlets={otherOutlets} source={copySource} onChange={setCopySource} onApply={handleCopy} onCancel={() => { setCopyOpen(false); setCopySource(''); }} saving={saving} />
             )}
 
-
             {paginated.length === 0 ? (
-                <EmptyState title={search || marginFilter !== 'all' ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'} />
+                <EmptyState
+                    icon={<Package className="h-8 w-8 text-text-subtle" />}
+                    title={search || marginFilter !== 'all' ? 'Produk tidak ditemukan' : 'Belum ada produk aktif'}
+                    description={search || marginFilter !== 'all' ? 'Coba kata kunci atau filter lain' : 'Produk akan muncul di sini'}
+                />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-white">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
                     <table className="w-full text-sm">
                         <thead>
-                            <tr className="border-b border-border bg-surface-muted/50 text-left">
-                                <th className="cursor-pointer select-none px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-text-muted" onClick={() => toggleSort('name')}>
+                            <tr className="border-b border-border/30 bg-surface-muted/50">
+                                <th className="cursor-pointer select-none px-6 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-text-muted" onClick={() => toggleSort('name')}>
                                     Produk<SortMarker col="name" />
                                 </th>
-                                <th className="cursor-pointer select-none px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-muted" onClick={() => toggleSort('center_price')}>
+                                <th className="cursor-pointer select-none px-6 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-text-muted" onClick={() => toggleSort('center_price')}>
                                     HPP<SortMarker col="center_price" />
                                 </th>
-                                <th className="cursor-pointer select-none px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-muted" onClick={() => toggleSort('selling_price')}>
+                                <th className="cursor-pointer select-none px-6 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-text-muted" onClick={() => toggleSort('selling_price')}>
                                     Harga Jual<SortMarker col="selling_price" />
                                 </th>
-                                <th className="cursor-pointer select-none px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-muted" onClick={() => toggleSort('margin')}>
+                                <th className="cursor-pointer select-none px-6 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-text-muted" onClick={() => toggleSort('margin')}>
                                     Margin<SortMarker col="margin" />
                                 </th>
-                                <th className="w-24 px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-muted">Aksi</th>
+                                <th className="px-6 py-3.5 text-center text-[11px] font-semibold uppercase tracking-wider text-text-muted">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border/50">
+                        <tbody className="divide-y divide-border/20">
                             {paginated.map((row) => (
-                                <tr key={row.variant_id} className="transition-colors hover:bg-surface-muted/30">
-                                    <td className="px-3 py-3">
-                                        <div className="font-semibold text-text">{row.name}</div>
-                                        <div className="mt-0.5">
+                                <tr key={row.variant_id} className="hover:bg-mint-wash transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold text-text">{row.name}</span>
                                             {row.has_override ? (
-                                                <StatusBadge variant="info" size="sm">Custom</StatusBadge>
+                                                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">Custom</span>
                                             ) : (
-                                                <StatusBadge variant="neutral" size="sm">Standar</StatusBadge>
+                                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[10px] font-medium text-text-muted">Standar</span>
                                             )}
                                         </div>
+                                        {row.family_name && (
+                                            <div className="mt-0.5 text-xs text-text-muted">{row.family_name}</div>
+                                        )}
                                     </td>
-                                    <td className="px-3 py-3 text-right tabular-nums text-text-muted">{formatCurrency(row.center_price)}</td>
-                                    <td className="px-3 py-3 text-right text-base font-bold tabular-nums text-text">{formatCurrency(row.selling_price)}</td>
-                                    <td className="px-3 py-3 text-right">
+                                    <td className="px-6 py-4 text-right tabular-nums text-text-muted">{formatCurrency(row.center_price)}</td>
+                                    <td className="px-6 py-4 text-right text-base font-bold tabular-nums text-text">{formatCurrency(row.selling_price)}</td>
+                                    <td className="px-6 py-4 text-right">
                                         <MarginBarInline margin={row.margin} maxMargin={maxMargin} sellingPrice={row.selling_price} />
                                     </td>
-                                    <td className="px-3 py-3">
-                                        <div className="flex items-center justify-center gap-0.5">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center justify-center gap-1">
                                             {row.has_override && (
-                                                <button type="button" onClick={() => handleReset(row.variant_id, row.name)} title="Reset" className="rounded p-1 text-text-subtle hover:bg-red-50 hover:text-red-600">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleReset(row.variant_id, row.name)}
+                                                    title="Reset ke harga pusat"
+                                                    className="rounded-lg p-1.5 text-text-subtle transition-colors hover:bg-red-50 hover:text-red-600"
+                                                >
                                                     <RotateCcw className="h-3.5 w-3.5" />
                                                 </button>
                                             )}
-                                            <button type="button" onClick={() => { setSelectedRow(row); setModalOpen(true); }} title="Ubah" className="rounded p-1 text-text-subtle hover:bg-surface-muted hover:text-primary">
-                                                Ubah
+                                            <button
+                                                type="button"
+                                                onClick={() => { setSelectedRow(row); setModalOpen(true); }}
+                                                title="Ubah harga"
+                                                className="rounded-lg p-1.5 text-text-subtle transition-colors hover:bg-mint-wash hover:text-primary"
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" />
                                             </button>
                                         </div>
                                     </td>

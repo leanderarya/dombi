@@ -71,7 +71,7 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
                     return (
                         <button key={f.key} type="button" onClick={() => navigate({ status: f.key || undefined })}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive ? statusColorMap[f.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                                isActive ? statusColorMap[f.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}>
                             {f.label}
                         </button>
@@ -100,10 +100,10 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
             {returns.data.length === 0 ? (
                 <EmptyState icon="package" title="Tidak ada permintaan return" description="Belum ada pengajuan return dari outlet" />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Tabel Pengembalian">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card" aria-label="Tabel Pengembalian">
                     <table className="w-full min-w-[600px] text-sm">
                         <thead>
-                            <tr className="bg-[#fafafa] text-xs font-medium text-text-muted">
+                            <tr className="bg-surface-muted/50 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
                                 <th className="px-3 py-2.5 text-left">Kode</th>
                                 <th className="px-3 py-2.5 text-left">Outlet / Alasan</th>
                                 <th className="px-3 py-2.5 text-left">Status</th>
@@ -116,7 +116,7 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
                                 const status = getReturnStatus(ret.status);
 
                                 return (
-                                    <tr key={ret.id} className="border-t border-[#f0f0f0] transition-colors last:border-b-0 hover:bg-surface-muted">
+                                    <tr key={ret.id} className="border-t border-border/20 transition-colors last:border-b-0 hover:bg-mint-wash">
                                         <td className="px-3 py-2.5 font-bold tabular-nums text-text">#{ret.id}</td>
                                         <td className="px-3 py-2.5 truncate text-text-muted">{ret.outlet?.name ?? '-'} · {(ret.reason ?? '').replaceAll('_', ' ')}</td>
                                         <td className="px-3 py-2.5"><StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge></td>

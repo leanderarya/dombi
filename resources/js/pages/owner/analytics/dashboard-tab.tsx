@@ -72,7 +72,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                         className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                             period === p.key
                                 ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                                : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                         }`}
                     >
                         {p.label}
@@ -121,7 +121,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
             />
 
             <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-lg border border-border bg-white p-4" aria-label="Perbandingan Outlet">
+                <div className="rounded-xl bg-surface shadow-card p-4" aria-label="Perbandingan Outlet">
                     <div className="mb-3 text-xs font-medium text-text-muted">Perbandingan Outlet</div>
                     {outletRevenue.length === 0 ? (
                         <EmptyState title="Belum ada data" />
@@ -131,7 +131,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                                 <Link
                                     key={item.outlet_id}
                                     href={`/owner/outlets/${item.outlet_id}`}
-                                    className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-surface-muted"
+                                    className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-mint-wash"
                                 >
                                     <div>
                                         <div className="text-sm font-medium text-text">{item.outlet.name}</div>
@@ -144,7 +144,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                     )}
                 </div>
 
-                <div className="rounded-lg border border-border bg-white p-4" aria-label="Produk Terlaris">
+                <div className="rounded-xl bg-surface shadow-card p-4" aria-label="Produk Terlaris">
                     <div className="mb-3 text-xs font-medium text-text-muted">Produk Terlaris</div>
                     {topProducts.length === 0 ? (
                         <EmptyState title="Belum ada data" />
@@ -154,7 +154,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                                 <Link
                                     key={product.product_name}
                                     href={`/owner/inventories?product=${encodeURIComponent(product.product_name)}`}
-                                    className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-surface-muted"
+                                    className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-mint-wash"
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">

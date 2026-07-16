@@ -80,7 +80,7 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
             {paginated.length === 0 ? (
                 <EmptyState title={search || marginFilter !== 'all' ? 'Produk tidak ditemukan.' : 'Belum ada produk aktif.'} />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-white">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-border bg-surface-muted/50 text-left">
@@ -101,7 +101,7 @@ export function PusatTab({ variants, kpis }: { variants?: PusatVariant[]; kpis?:
                         </thead>
                         <tbody className="divide-y divide-border/50">
                             {paginated.map((v) => (
-                                <tr key={v.variant_id} className="transition-colors hover:bg-surface-muted/30">
+                                <tr key={v.variant_id} className="transition-colors hover:bg-mint-wash/30">
                                     <td className="px-3 py-3">
                                         <div className="font-semibold text-text">{v.name}</div>
                                         {v.outlet_override_count > 0 && (

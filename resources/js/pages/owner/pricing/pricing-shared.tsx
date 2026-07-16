@@ -57,8 +57,8 @@ export function BulkPanel({ amount, onChange, onApply, onCancel, saving, count }
     amount: string; onChange: (v: string) => void; onApply: () => void; onCancel: () => void; saving: boolean; count: number;
 }) {
     return (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <div className="text-xs font-semibold text-amber-600">Atur Semua Harga</div>
+        <div className="mb-4 rounded-xl border border-border/30 bg-surface p-4 shadow-card">
+            <div className="text-xs font-semibold text-text">Atur Semua Harga</div>
             <div className="mt-2 flex flex-wrap items-center gap-2">
                 <div className="flex flex-wrap gap-1">
                     {[1000, 2000, 5000, 10000].map((amt) => (
@@ -77,8 +77,8 @@ export function BulkPanel({ amount, onChange, onApply, onCancel, saving, count }
                     <Input type="number" value={amount} onChange={(e) => onChange(e.target.value)} placeholder="Custom" className="w-24 pl-7 text-xs" />
                 </div>
                 <Button type="button" size="sm" onClick={onApply} disabled={saving || !amount}>Terapkan</Button>
-                <Button type="button" size="sm" variant="ghost" onClick={onCancel} className="text-amber-700">Batal</Button>
-                <span className="text-xs text-amber-600">{count} produk</span>
+                <Button type="button" size="sm" variant="ghost" onClick={onCancel}>Batal</Button>
+                <span className="text-xs text-text-muted">{count} produk</span>
             </div>
         </div>
     );
@@ -88,8 +88,8 @@ export function CopyPanel({ outlets, source, onChange, onApply, onCancel, saving
     outlets: OtherOutlet[]; source: string; onChange: (v: string) => void; onApply: () => void; onCancel: () => void; saving: boolean;
 }) {
     return (
-        <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <div className="text-xs font-semibold text-blue-600">Salin Harga Dari Outlet Lain</div>
+        <div className="mb-4 rounded-xl border border-border/30 bg-surface p-4 shadow-card">
+            <div className="text-xs font-semibold text-text">Salin Harga Dari Outlet Lain</div>
             <div className="mt-2 flex items-center gap-2">
                 <Select
                     value={source}
@@ -99,7 +99,7 @@ export function CopyPanel({ outlets, source, onChange, onApply, onCancel, saving
                     className="flex-1"
                 />
                 <Button type="button" size="sm" onClick={onApply} disabled={saving || !source}>Salin</Button>
-                <Button type="button" size="sm" variant="ghost" onClick={onCancel} className="text-blue-700">Batal</Button>
+                <Button type="button" size="sm" variant="ghost" onClick={onCancel}>Batal</Button>
             </div>
         </div>
     );
