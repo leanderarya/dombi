@@ -1,34 +1,83 @@
 import { Link } from '@inertiajs/react';
+import { ChevronRight, Package, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { orderStatusLabel } from '@/lib/customer-status';
+
+const DISMISS_KEY = 'dombi_active_order_dismissed';
+
+function getDismissedOrderCode(): string | null {
+    try {
+        return localStorage.getItem(DISMISS_KEY);
+    } catch {
+        return null;
+    }
+}
+
+function setDismissedOrderCode(code: string): void {
+    try {
+        localStorage.setItem(DISMISS_KEY, code);
+    } catch {
+        // ignore
+    }
+}
 
 interface Props {
     order?: any;
+    bottomNavVisible?: boolean;
 }
 
-export default function ActiveOrderBar({ order }: Props) {
-    if (!order) {
-return null;
-}
+export default function ActiveOrderBar({ order, bottomNavVisible = true }: Props) {
+    const [dismissed, setDismissed] = useState(() => getDismissedOrderCode() === order?.order_code);
+
+    useEffect(() => {
+        setDismissed(getDismissedOrderCode() === order?.order_code);
+    }, [order?.order_code]);
+
+    if (!order || dismissed) {
+        return null;
+    }
+
+    const handleDismiss = () => {
+        setDismissedOrderCode(order.order_code);
+        setDismissed(true);
+    };
+
+    const bottom = bottomNavVisible
+        ? 'calc(4.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem)'
+        : 'calc(1rem + env(safe-area-inset-bottom, 0px))';
 
     return (
-        <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0))] z-30 px-4">
-            <Link
-                href={`/customer/orders/${order.id}`}
-                className="mx-auto flex max-w-lg items-center gap-3 rounded-xl bg-text px-4 py-3 shadow-lg active:bg-text/90"
-            >
+        <div
+            className="fixed inset-x-0 z-30 px-4 transition-[bottom] duration-300 ease-in-out"
+            style={{ bottom }}
+        >
+            <div className="mx-auto flex max-w-lg w-full items-center gap-3 rounded-xl border border-white/10 bg-text px-4 py-3 shadow-lg">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-600/20">
-                    <svg className="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" />
-                    </svg>
+                    <Package className="h-4 w-4 text-emerald-400" />
                 </div>
-                <div className="min-w-0 flex-1">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-white/50">Order aktif</div>
-                    <div className="truncate text-sm font-semibold text-white">{orderStatusLabel(order.status)}</div>
-                </div>
-                <span className="shrink-0 rounded-md bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-white">
-                    Lacak
-                </span>
-            </Link>
+
+                <Link
+                    href={`/customer/orders/${order.id}`}
+                    className="min-w-0 flex-1"
+                >
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-white">Pesanan Aktif</span>
+                        <span className={order.status === 'pending_confirmation' ? 'text-[11px] font-bold text-amber-400' : 'text-[11px] font-bold text-emerald-400'}>{orderStatusLabel(order.status)}</span>
+                    </div>
+                    <div className="mt-0.5 text-[11px] text-white/60 truncate">{order.order_code} · {order.outlet?.name ?? 'Outlet'}</div>
+                </Link>
+
+                <ChevronRight className="h-4 w-4 shrink-0 text-white/40" />
+
+                <button
+                    type="button"
+                    onClick={handleDismiss}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-white/40 active:bg-white/10"
+                    aria-label="Tutup"
+                >
+                    <X className="h-3.5 w-3.5" />
+                </button>
+            </div>
         </div>
     );
 }

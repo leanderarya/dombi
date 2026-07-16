@@ -20,6 +20,12 @@ class DokuPaymentController extends Controller
         $requestId = $request->header('Request-Id', '');
         $invoiceNumber = $payload['order']['invoice_number'] ?? $request->query('invoice_number') ?? null;
 
+        // DOKU sends GET requests for endpoint verification — return OK without processing
+        if ($request->isMethod('GET')) {
+            Log::debug('DOKU webhook: GET verification request, returning OK');
+            return response()->json(['message' => 'OK']);
+        }
+
         $log = PaymentWebhookLog::create([
             'request_id' => $requestId,
             'source' => 'notify',

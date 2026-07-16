@@ -15,6 +15,7 @@ interface Variant {
     size: string | null;
     price: number;
     is_active: boolean;
+    image?: string | null;
     available_stock?: number;
     stock_status?: string;
 }
@@ -23,6 +24,7 @@ interface Props {
     variant: Variant;
     familyId: number;
     familyDescription: string | null;
+    familyImage?: string | null;
     displayPrice: number;
     displayLabel: string;
     variantCount?: number;
@@ -30,7 +32,7 @@ interface Props {
     loading?: boolean;
 }
 
-const VariantListItem = memo(function VariantListItem({ variant, familyId, familyDescription, displayPrice, displayLabel, variantCount = 1, onQuickAdd, loading }: Props) {
+const VariantListItem = memo(function VariantListItem({ variant, familyId, familyDescription, familyImage, displayPrice, displayLabel, variantCount = 1, onQuickAdd, loading }: Props) {
     const [adding, setAdding] = useState(false);
     const [toast, setToast] = useState(false);
     const cart = useCart();
@@ -119,7 +121,7 @@ params.set('size', variant.size);
                     <Skeleton className="h-16 w-16 rounded-xl" />
                 ) : (
                     <>
-                        <ProductImage name={variant.name} size="md" />
+                        <ProductImage name={variant.name} src={variant.image ?? familyImage} size="md" />
                         {/* Favorite button */}
                         <button
                             type="button"
