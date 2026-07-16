@@ -1,6 +1,8 @@
 import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import RevenueTrendChart from '@/components/outlet/revenue-trend-chart';
+import TopProductsChart from '@/components/outlet/top-products-chart';
 import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
@@ -102,42 +104,12 @@ export default function OutletAnalytics({ outlet, kpis, topProducts, dailyRevenu
 
                 <div className="rounded-xl border border-border bg-white p-4">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-3">Produk Terlaris</div>
-                    {topProducts.length === 0 ? (
-                        <p className="text-sm text-text-muted text-center py-4">Belum ada data penjualan</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {topProducts.map((product, index) => (
-                                <div key={product.product_name} className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-surface-muted text-[11px] font-bold text-text-muted">
-                                            {index + 1}
-                                        </span>
-                                        <div>
-                                            <div className="text-sm font-medium text-text">{product.product_name}</div>
-                                            <div className="text-[11px] text-text-muted">{product.total_qty} unit</div>
-                                        </div>
-                                    </div>
-                                    <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(product.total_revenue)}</div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <TopProductsChart data={topProducts} />
                 </div>
 
                 <div className="rounded-xl border border-border bg-white p-4">
                     <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-3">Trend Revenue</div>
-                    {dailyRevenue.length === 0 ? (
-                        <p className="text-sm text-text-muted text-center py-4">Belum ada data</p>
-                    ) : (
-                        <div className="space-y-2">
-                            {dailyRevenue.map((day) => (
-                                <div key={day.date} className="flex items-center justify-between">
-                                    <span className="text-sm text-text-muted">{day.date}</span>
-                                    <span className="text-sm font-semibold tabular-nums text-text">{formatCurrency(day.revenue)}</span>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <RevenueTrendChart data={dailyRevenue} />
                 </div>
             </OutletPageShell>
         </OutletLayout>
