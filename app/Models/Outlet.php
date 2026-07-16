@@ -95,11 +95,6 @@ class Outlet extends Model
         return $this->hasMany(RestockRequest::class);
     }
 
-    public function stockDistributions(): HasMany
-    {
-        return $this->hasMany(StockDistribution::class);
-    }
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

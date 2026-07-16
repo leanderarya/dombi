@@ -51,9 +51,4 @@ class Product extends Model
     {
         return $this->hasMany(RestockRequestItem::class);
     }
-
-    public function stockDistributionItems(): HasMany
-    {
-        return $this->hasMany(StockDistributionItem::class);
-    }
 }

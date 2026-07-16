@@ -8,9 +8,9 @@ class ConfirmDistributionReceivedRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        $distribution = $this->route('distribution');
+        $restockRequest = $this->route('restockRequest');
 
-        return $this->user()?->outlet?->id === $distribution?->outlet_id;
+        return $this->user()?->outlet?->id === $restockRequest?->outlet_id;
     }
 
     public function rules(): array

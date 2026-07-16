@@ -46,50 +46,6 @@ class RestockController extends Controller
         ]);
     }
 
-    public function create(Request $request): Response
-    {
-        $outletId = $request->integer('outlet_id');
-
-        return Inertia::render('owner/restocks/create', [
-            'outlets' => Outlet::orderBy('name')->get(['id', 'name']),
-            'selectedOutletId' => $outletId,
-            'selectedProductId' => $request->integer('product_id'),
-            'returnTo' => $request->query('return_to'),
-        ]);
-    }
-
-    public function store(Request $request, RestockService $restockService): RedirectResponse
-    {
-        $validated = $request->validate([
-            'outlet_id' => ['required', 'exists:outlets,id'],
-            'notes' => ['nullable', 'string'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.product_variant_id' => ['required', 'exists:product_variants,id'],
-            'items.*.requested_quantity' => ['required', 'integer', 'min:1'],
-        ]);
-
-        $user = $request->user();
-        $outletUser = \App\Models\User::where('outlet_id', $validated['outlet_id'])
-            ->where('role', 'outlet')
-            ->first();
-
-        $restock = RestockRequest::create([
-            'outlet_id' => $validated['outlet_id'],
-            'requested_by' => $outletUser?->id ?? $user->id,
-            'status' => 'requested',
-            'notes' => $validated['notes'] ?? null,
-        ]);
-
-        foreach ($validated['items'] as $item) {
-            $restock->items()->create([
-                'product_variant_id' => $item['product_variant_id'],
-                'requested_quantity' => $item['requested_quantity'],
-            ]);
-        }
-
-        return redirect()->route('owner.restocks.index')->with('success', 'Restock request berhasil dibuat.');
-    }
-
     public function show(Request $request, RestockRequest $restockRequest): Response|JsonResponse
     {
         $restockRequest->load([
@@ -99,9 +55,8 @@ class RestockController extends Controller
             'rejecter',
             'items.product',
             'items.variant.family',
-            'distribution.items.variant.family',
-            'distribution.sender',
-            'distribution.receiver',
+            'sender',
+            'receiver',
         ]);
 
         $inventories = OutletInventory::with('variant.family')
@@ -110,9 +65,13 @@ class RestockController extends Controller
             ->get();
 
         if ($request->expectsJson()) {
+            $centralStock = \App\Models\ProductVariant::whereIn('id', $restockRequest->items->pluck('product_variant_id'))
+                ->pluck('center_stock', 'id');
+
             return response()->json([
                 'restock' => $restockRequest,
                 'inventories' => $inventories,
+                'centralStock' => $centralStock,
             ]);
         }
 
@@ -126,7 +85,7 @@ class RestockController extends Controller
     {
         $restockService->approveRequest($restockRequest, $request->user(), $request->validated('items'), $request->validated('owner_notes'));
 
-        return redirect()->route('owner.restocks.show', $restockRequest)->with('success', 'Restock request disetujui dan distribution dibuat.');
+        return redirect()->route('owner.restocks.show', $restockRequest)->with('success', 'Restock request disetujui.');
     }
 
     public function reject(RejectRestockRequest $request, RestockRequest $restockRequest, RestockService $restockService): RedirectResponse
@@ -134,5 +93,12 @@ class RestockController extends Controller
         $restockService->rejectRequest($restockRequest, $request->user(), $request->validated('rejected_reason'));
 
         return redirect()->route('owner.restocks.show', $restockRequest)->with('success', 'Restock request ditolak.');
+    }
+
+    public function markShipped(RestockRequest $restockRequest, RestockService $restockService): RedirectResponse
+    {
+        $restockService->markShipped($restockRequest, request()->user());
+
+        return redirect()->route('owner.restocks.show', $restockRequest)->with('success', 'Restock ditandai shipped.');
     }
 }
