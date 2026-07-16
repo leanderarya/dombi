@@ -33,7 +33,7 @@ class DokuService
      */
     public function createPayment(Order $order): string
     {
-        $requestId = 'DMB-'.$order->id.'-'.time();
+        $requestId = 'DMB-'.$order->id.'-'.time().'-'.bin2hex(random_bytes(4));
         $invoiceNumber = $order->order_code;
         $amount = (int) $order->total;
         $timestamp = now('UTC')->format('Y-m-d\TH:i:s\Z');
@@ -49,9 +49,10 @@ class DokuService
                 'payment_due_date' => config('doku.payment_timeout', 30),
                 'line_items' => $this->buildLineItems($order),
             ],
-            'payment' => [
-                'payment_method_types' => [$this->mapPaymentMethod($order->payment_method)],
-            ],
+            'payment' => array_merge(
+                ['payment_method_types' => [$this->mapPaymentMethod($order->payment_method)]],
+                $this->channelInfo($order->payment_method) ?? []
+            ),
             'customer' => $this->buildCustomerInfo($order),
         ];
 
@@ -206,6 +207,14 @@ class DokuService
 
         $expected = 'HMACSHA256='.base64_encode(hash_hmac('sha256', $assembled, $this->secretKey, true));
         $provided = $signatureHeader ?? $payload['signature'] ?? '';
+
+        if (! hash_equals($expected, $provided)) {
+            Log::warning('DOKU webhook: signature mismatch', [
+                'request_id' => $requestId,
+                'expected' => substr($expected, 0, 30).'...',
+                'provided' => substr($provided, 0, 30).'...',
+            ]);
+        }
 
         return hash_equals($expected, $provided);
     }

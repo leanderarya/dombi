@@ -333,7 +333,11 @@ class OrderService
         if ($user instanceof User) {
             $customer = $user->customer;
             if ($customer) {
-                $customer->update(['last_order_at' => now()]);
+                $updates = ['last_order_at' => now()];
+                if (! $customer->phone && ! empty($payload['phone_number'])) {
+                    $updates['phone'] = $payload['phone_number'];
+                }
+                $customer->update($updates);
 
                 return $customer;
             }

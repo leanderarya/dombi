@@ -37,6 +37,12 @@ class ProductController extends Controller
             },
         ]);
 
+        // Resolve image URLs for Inertia serialization
+        $family->image = $this->resolveImage($family->image);
+        $family->variants->each(function ($variant) {
+            $variant->image = $this->resolveImage($variant->image);
+        });
+
         // Compute stock status and outlet price for each variant
         $family->variants->each(function ($variant) use ($outletId) {
             $availableStock = 0;
@@ -74,5 +80,18 @@ class ProductController extends Controller
             'otherFamilies' => $otherFamilies,
             'outletId' => $outletId,
         ]);
+    }
+
+    private function resolveImage(?string $image): ?string
+    {
+        if (! $image) {
+            return null;
+        }
+
+        if (str_starts_with($image, 'http://') || str_starts_with($image, 'https://')) {
+            return $image;
+        }
+
+        return asset("storage/{$image}");
     }
 }

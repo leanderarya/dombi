@@ -310,13 +310,11 @@ export default function CheckoutPayment({ draft, summary }: any) {
                             {selectedOption?.description ?? 'Scan QR untuk membayar'}
                         </div>
                     </div>
-                    <div className="text-sm font-bold tabular-nums">
-                        {selectedOption?.is_absorbed ? (
-                            <span className="text-emerald-600">Biaya admin Rp 0</span>
-                        ) : paymentFee > 0 ? (
+                    {paymentFee > 0 && (
+                        <div className="text-sm font-bold tabular-nums">
                             <span className="text-text-muted">+ {formatCurrency(paymentFee)}</span>
-                        ) : null}
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Other options — expandable */}
@@ -340,18 +338,16 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                             <div className="text-sm font-medium text-text">{option.label}</div>
                                             <div className="mt-0.5 text-[11px] text-text-subtle">{option.description}</div>
                                         </div>
-                                        <div className="text-xs font-bold tabular-nums">
-                                            {option.is_absorbed ? (
-                                                <span className="text-emerald-600">Biaya admin Rp 0</span>
-                                            ) : optFee > 0 ? (
+                                        {optFee > 0 && (
+                                            <div className="text-xs font-bold tabular-nums">
                                                 <span className="text-text-muted">+ {formatCurrency(optFee)}</span>
-                                            ) : null}
-                                        </div>
+                                            </div>
+                                        )}
                                     </button>
                                 );
                             })}
                         <div className="text-[11px] text-text-muted px-1 pt-1">
-                            *Subtotal &lt; Rp 500rb: QRIS/Transfer/E-Wallet ditanggung Dombi (Biaya admin Rp 0). Kartu Kredit selalu ditanggung pembeli. Threshold dari subtotal saja (tanpa ongkir).
+                            *Subtotal &lt; Rp 500rb: QRIS/Transfer/E-Wallet Biaya Layanan Rp 0. Kartu Kredit selalu dikenakan biaya layanan. Threshold dari subtotal saja (tanpa ongkir).
                         </div>
                     </div>
                 )}
@@ -362,10 +358,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 <div className="space-y-1">
                     <SummaryRow label="Subtotal" value={formatCurrency(summary.subtotal)} />
                     {summary.delivery_fee > 0 && <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />}
-                    <SummaryRow
-                        label="Biaya Admin"
-                        value={selectedOption?.is_absorbed ? 'Rp 0' : paymentFee > 0 ? formatCurrency(paymentFee) : 'Rp 0'}
-                    />
+                    <SummaryRow label="Biaya Layanan" value={paymentFee > 0 ? formatCurrency(paymentFee) : 'Rp 0'} />
                 </div>
                 <div className="mt-2 border-t border-white/20 pt-2 flex items-center justify-between">
                     <span className="text-sm font-semibold text-white">Total</span>

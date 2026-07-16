@@ -60,6 +60,7 @@ class CustomerProductApiController extends Controller
                     'size' => $variant->size,
                     'price' => $price,
                     'sku' => $variant->sku,
+                    'image' => $this->resolveImage($variant->image, $variant->updated_at),
                     'available_stock' => $availableStock,
                     'stock_status' => $stockStatus,
                     'is_active' => $variant->is_active,
@@ -71,10 +72,28 @@ class CustomerProductApiController extends Controller
                 'name' => $family->name,
                 'brand' => $family->brand,
                 'description' => $family->description,
+                'image' => $this->resolveImage($family->image, $family->updated_at),
                 'variants' => $variants->values(),
             ];
         });
 
         return response()->json(['families' => $result]);
+    }
+
+    private function resolveImage(?string $image, $updatedAt): ?string
+    {
+        if (! $image) {
+            return null;
+        }
+
+        $separator = str_contains($image, '?') ? '&' : '?';
+
+        // Already a full URL (external image) — return as-is with cache-busting
+        if (str_starts_with($image, 'http://') || str_starts_with($image, 'https://')) {
+            return $image.$separator.'v='.$updatedAt->timestamp;
+        }
+
+        // Local storage path — generate full URL
+        return asset("storage/{$image}").$separator.'v='.$updatedAt->timestamp;
     }
 }
