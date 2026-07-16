@@ -1,5 +1,5 @@
 import { Head, router } from '@inertiajs/react';
-import { CheckCircle, Download } from 'lucide-react';
+import { CheckCircle, Download, LoaderCircle } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import FilterChips from '@/components/ui/filter-chips';
@@ -30,6 +30,7 @@ export default function OutletReports({ outlet, preview }: Props) {
     const [period, setPeriod] = useState('month');
     const [dateFrom, setDateFrom] = useState(() => new Date().toISOString().split('T')[0]);
     const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0]);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const handlePeriodChange = (newPeriod: string) => {
         setPeriod(newPeriod);
@@ -51,6 +52,12 @@ return;
         }
 
         return `/outlet/reports/sales/export?period=${period}`;
+    };
+
+    const handleDownload = () => {
+        setIsDownloading(true);
+        window.location.href = buildExportUrl();
+        setTimeout(() => setIsDownloading(false), 3000);
     };
 
     return (
@@ -85,13 +92,19 @@ return;
                     </div>
                 )}
 
-                <a
-                    href={buildExportUrl()}
-                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:opacity-80"
+                <button
+                    type="button"
+                    onClick={handleDownload}
+                    disabled={isDownloading}
+                    className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-60"
                 >
-                    <Download className="h-4 w-4" />
-                    Download CSV
-                </a>
+                    {isDownloading ? (
+                        <LoaderCircle className="h-4 w-4 animate-spin" />
+                    ) : (
+                        <Download className="h-4 w-4" />
+                    )}
+                    {isDownloading ? 'Menyiapkan...' : 'Download CSV'}
+                </button>
 
                 {/* Preview Summary */}
                 {preview && preview.total_orders > 0 && (
