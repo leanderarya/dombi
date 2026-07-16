@@ -46,12 +46,19 @@ export default function AnalyticsIndex(props: Props) {
 
     const handleTabChange = (tab: TabKey) => {
         setActiveTab(tab);
-        router.get('/owner/analytics', { tab }, { preserveState: true, replace: true });
+        router.get(
+            '/owner/analytics',
+            { tab },
+            { preserveState: true, replace: true },
+        );
     };
 
     if (!props.kpis && !props.movements && !props.summary && !props.reports) {
         return (
-            <OwnerPageShell title="Analitik" subtitle="Analitik performa bisnis">
+            <OwnerPageShell
+                title="Analitik"
+                subtitle="Analitik performa bisnis"
+            >
                 <SkeletonPage />
             </OwnerPageShell>
         );
@@ -59,7 +66,11 @@ export default function AnalyticsIndex(props: Props) {
 
     return (
         <OwnerPageShell title="Analitik" subtitle="Analitik performa bisnis">
-            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1" role="tablist" aria-label="Tab navigasi analitik">
+            <div
+                className="mb-5 inline-flex rounded-lg bg-surface-muted p-1"
+                role="tablist"
+                aria-label="Tab navigasi analitik"
+            >
                 {TABS.map((tab) => (
                     <button
                         key={tab.key}

@@ -16,16 +16,22 @@ export function useOrderAlert() {
                 const res = await fetch('/outlet/orders/pending-count');
 
                 if (!res.ok) {
-return;
-}
+                    return;
+                }
 
                 const data = await res.json();
                 const count = data.pending_count as number;
 
                 // Play sound if count increased (not on first fetch) and not on order detail page
-                const isOrderDetail = /^\/outlet\/orders\/\d+/.test(window.location.pathname);
+                const isOrderDetail = /^\/outlet\/orders\/\d+/.test(
+                    window.location.pathname,
+                );
 
-                if (prevCount.current !== -1 && count > prevCount.current && !isOrderDetail) {
+                if (
+                    prevCount.current !== -1 &&
+                    count > prevCount.current &&
+                    !isOrderDetail
+                ) {
                     audioRef.current?.play().catch(() => {});
                 }
 

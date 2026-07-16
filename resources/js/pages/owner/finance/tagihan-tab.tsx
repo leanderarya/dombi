@@ -26,15 +26,20 @@ export default function TagihanTab({ kpis, outlets }: any) {
     const filtered = useMemo(() => {
         return outlets.filter((o: any) => {
             if (filter === 'action_needed') {
-                if (o.display_status !== 'overdue' && o.display_status !== 'unpaid') {
-return false;
-}
+                if (
+                    o.display_status !== 'overdue' &&
+                    o.display_status !== 'unpaid'
+                ) {
+                    return false;
+                }
             } else if (filter && o.display_status !== filter) {
                 return false;
             }
 
             if (search) {
-                return o.outlet_name.toLowerCase().includes(search.toLowerCase());
+                return o.outlet_name
+                    .toLowerCase()
+                    .includes(search.toLowerCase());
             }
 
             return true;
@@ -43,18 +48,50 @@ return false;
 
     return (
         <>
-            <OwnerKpiStrip items={[
-                { label: 'Belum Dibayar', value: formatCurrency(kpis.total_unpaid), valueClassName: kpis.total_unpaid > 0 ? 'text-red-600' : 'text-text' },
-                { label: 'Outlet', value: kpis.outlets_unpaid, sublabel: kpis.outlets_unpaid > 0 ? 'Memiliki tagihan' : 'Semua lunas', sublabelColor: kpis.outlets_unpaid > 0 ? 'text-amber-600' : 'text-emerald-600' },
-                { label: 'Jatuh Tempo', value: formatCurrency(kpis.due_this_week), valueClassName: kpis.due_this_week > 0 ? 'text-orange-600' : 'text-text' },
-            ]} />
+            <OwnerKpiStrip
+                items={[
+                    {
+                        label: 'Belum Dibayar',
+                        value: formatCurrency(kpis.total_unpaid),
+                        valueClassName:
+                            kpis.total_unpaid > 0
+                                ? 'text-red-600'
+                                : 'text-text',
+                    },
+                    {
+                        label: 'Outlet',
+                        value: kpis.outlets_unpaid,
+                        sublabel:
+                            kpis.outlets_unpaid > 0
+                                ? 'Memiliki tagihan'
+                                : 'Semua lunas',
+                        sublabelColor:
+                            kpis.outlets_unpaid > 0
+                                ? 'text-amber-600'
+                                : 'text-emerald-600',
+                    },
+                    {
+                        label: 'Jatuh Tempo',
+                        value: formatCurrency(kpis.due_this_week),
+                        valueClassName:
+                            kpis.due_this_week > 0
+                                ? 'text-orange-600'
+                                : 'text-text',
+                    },
+                ]}
+            />
 
-            <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Filter status tagihan">
+            <div
+                className="mb-4 flex flex-wrap items-center gap-2"
+                role="group"
+                aria-label="Filter status tagihan"
+            >
                 {STATUS_FILTERS.map((sf) => {
                     const isActive = filter === sf.key;
                     const colorMap: Record<string, string> = {
                         '': 'text-text bg-surface-muted ring-border',
-                        action_needed: 'text-amber-600 bg-amber-50 ring-amber-200',
+                        action_needed:
+                            'text-amber-600 bg-amber-50 ring-amber-200',
                         overdue: 'text-red-600 bg-red-50 ring-red-200',
                         unpaid: 'text-blue-600 bg-blue-50 ring-blue-200',
                         paid: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
@@ -67,8 +104,9 @@ return false;
                             onClick={() => setFilter(sf.key)}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 isActive
-                                    ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20'
-                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
+                                    ? (colorMap[sf.key] ??
+                                      'bg-primary/10 text-primary ring-primary/20')
+                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
                             }`}
                         >
                             {sf.label}
@@ -87,24 +125,35 @@ return false;
 
             {filtered.length === 0 ? (
                 <EmptyState
-                    icon={search ? <Store className="h-8 w-8" aria-hidden="true" /> : filter === 'paid' || filter === 'action_needed' ? <PartyPopper className="h-8 w-8" aria-hidden="true" /> : <Store className="h-8 w-8" aria-hidden="true" />}
+                    icon={
+                        search ? (
+                            <Store className="h-8 w-8" aria-hidden="true" />
+                        ) : filter === 'paid' || filter === 'action_needed' ? (
+                            <PartyPopper
+                                className="h-8 w-8"
+                                aria-hidden="true"
+                            />
+                        ) : (
+                            <Store className="h-8 w-8" aria-hidden="true" />
+                        )
+                    }
                     title={
                         search
                             ? 'Outlet tidak ditemukan'
                             : filter === 'action_needed'
-                                ? 'Tidak ada outlet yang butuh tindakan'
-                                : filter === 'paid'
-                                    ? 'Semua outlet sudah lunas'
-                                    : 'Belum ada outlet dengan status ini'
+                              ? 'Tidak ada outlet yang butuh tindakan'
+                              : filter === 'paid'
+                                ? 'Semua outlet sudah lunas'
+                                : 'Belum ada outlet dengan status ini'
                     }
                     description={
                         search
                             ? 'Coba kata kunci lain'
                             : filter === 'action_needed'
-                                ? 'Semua tagihan sudah tertangani'
-                                : filter === 'paid'
-                                    ? 'Tidak ada tagihan aktif'
-                                    : 'Coba filter lain untuk melihat outlet'
+                              ? 'Semua tagihan sudah tertangani'
+                              : filter === 'paid'
+                                ? 'Tidak ada tagihan aktif'
+                                : 'Coba filter lain untuk melihat outlet'
                     }
                 />
             ) : (

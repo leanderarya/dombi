@@ -2,7 +2,14 @@ import { router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
@@ -16,7 +23,11 @@ interface PaymentAccount {
     is_active: boolean;
 }
 
-export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }) {
+export default function RekeningTab({
+    accounts,
+}: {
+    accounts: PaymentAccount[];
+}) {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -74,8 +85,8 @@ export default function RekeningTab({ accounts }: { accounts: PaymentAccount[] }
 
     const handleDeleteConfirm = () => {
         if (!deleteTargetId) {
-return;
-}
+            return;
+        }
 
         setDeleteDialogOpen(false);
         router.delete(`/owner/finance/payment-accounts/${deleteTargetId}`, {
@@ -91,13 +102,20 @@ return;
 
     return (
         <>
-            <OwnerKpiStrip items={[
-                { label: 'Total Rekening', value: accounts.length },
-                { label: 'Aktif', value: activeCount },
-            ]} />
+            <OwnerKpiStrip
+                items={[
+                    { label: 'Total Rekening', value: accounts.length },
+                    { label: 'Aktif', value: activeCount },
+                ]}
+            />
 
-            <div className="mb-4 flex items-center justify-between" aria-label="Header rekening pembayaran">
-                <h2 className="text-sm font-semibold text-text">Rekening Pembayaran</h2>
+            <div
+                className="mb-4 flex items-center justify-between"
+                aria-label="Header rekening pembayaran"
+            >
+                <h2 className="text-sm font-semibold text-text">
+                    Rekening Pembayaran
+                </h2>
                 <Button size="sm" onClick={handleAddClick}>
                     Tambah Rekening
                 </Button>
@@ -107,26 +125,59 @@ return;
                 <EmptyState
                     title="Belum ada rekening"
                     description="Tambah rekening pembayaran untuk menerima pembayaran outlet."
-                    action={{ label: 'Tambah Rekening', onClick: handleAddClick }}
+                    action={{
+                        label: 'Tambah Rekening',
+                        onClick: handleAddClick,
+                    }}
                 />
             ) : (
-                <div className="space-y-2" aria-label="Daftar rekening pembayaran">
+                <div
+                    className="space-y-2"
+                    aria-label="Daftar rekening pembayaran"
+                >
                     {accounts.map((account) => (
-                        <div key={account.id} className="rounded-xl bg-surface shadow-card p-4 transition-colors hover:bg-mint-wash sm:flex sm:items-center sm:justify-between sm:gap-4">
+                        <div
+                            key={account.id}
+                            className="hover:bg-mint-wash rounded-xl bg-surface p-4 shadow-card transition-colors sm:flex sm:items-center sm:justify-between sm:gap-4"
+                        >
                             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
-                                <span className="font-bold text-text">{account.bank_name}</span>
-                                <span className="tabular-nums text-sm text-text-muted">{account.account_number}</span>
-                                <span className="text-sm text-text-muted">a.n. {account.account_holder}</span>
+                                <span className="font-bold text-text">
+                                    {account.bank_name}
+                                </span>
+                                <span className="text-sm text-text-muted tabular-nums">
+                                    {account.account_number}
+                                </span>
+                                <span className="text-sm text-text-muted">
+                                    a.n. {account.account_holder}
+                                </span>
                             </div>
                             <div className="mt-3 flex items-center justify-between sm:mt-0 sm:shrink-0">
-                                <StatusBadge variant={account.is_active ? 'success' : 'neutral'} size="sm">
+                                <StatusBadge
+                                    variant={
+                                        account.is_active
+                                            ? 'success'
+                                            : 'neutral'
+                                    }
+                                    size="sm"
+                                >
                                     {account.is_active ? 'Aktif' : 'Nonaktif'}
                                 </StatusBadge>
                                 <div className="flex items-center gap-1">
-                                    <Button variant="ghost" size="sm" onClick={() => handleEdit(account)}>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEdit(account)}
+                                    >
                                         Edit
                                     </Button>
-                                    <Button variant="ghost" size="sm" onClick={() => handleDeleteClick(account.id)} className="text-red-600 hover:text-red-700">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                            handleDeleteClick(account.id)
+                                        }
+                                        className="text-red-600 hover:text-red-700"
+                                    >
                                         Hapus
                                     </Button>
                                 </div>
@@ -139,16 +190,36 @@ return;
             <Dialog open={showForm} onOpenChange={setShowForm}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{editingId ? 'Edit Rekening' : 'Tambah Rekening'}</DialogTitle>
-                        <DialogDescription>{editingId ? 'Perbarui data rekening.' : 'Tambah rekening pembayaran baru.'}</DialogDescription>
+                        <DialogTitle>
+                            {editingId ? 'Edit Rekening' : 'Tambah Rekening'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {editingId
+                                ? 'Perbarui data rekening.'
+                                : 'Tambah rekening pembayaran baru.'}
+                        </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit}>
-                        <AccountForm data={data} setData={setData} errors={errors} editingId={editingId} />
+                        <AccountForm
+                            data={data}
+                            setData={setData}
+                            errors={errors}
+                            editingId={editingId}
+                        />
                     </form>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowForm(false)}>Batal</Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowForm(false)}
+                        >
+                            Batal
+                        </Button>
                         <Button onClick={handleSubmit} disabled={processing}>
-                            {processing ? 'Menyimpan...' : editingId ? 'Perbarui' : 'Simpan'}
+                            {processing
+                                ? 'Menyimpan...'
+                                : editingId
+                                  ? 'Perbarui'
+                                  : 'Simpan'}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -158,11 +229,24 @@ return;
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Hapus Rekening</DialogTitle>
-                        <DialogDescription>Rekening ini akan dihapus. Tindakan ini tidak dapat dibatalkan.</DialogDescription>
+                        <DialogDescription>
+                            Rekening ini akan dihapus. Tindakan ini tidak dapat
+                            dibatalkan.
+                        </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Batal</Button>
-                        <Button variant="destructive" onClick={handleDeleteConfirm}>Hapus</Button>
+                        <Button
+                            variant="outline"
+                            onClick={() => setDeleteDialogOpen(false)}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteConfirm}
+                        >
+                            Hapus
+                        </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -170,8 +254,18 @@ return;
     );
 }
 
-function AccountForm({ data, setData, errors, editingId }: {
-    data: { bank_name: string; account_number: string; account_holder: string; is_active: boolean };
+function AccountForm({
+    data,
+    setData,
+    errors,
+    editingId,
+}: {
+    data: {
+        bank_name: string;
+        account_number: string;
+        account_holder: string;
+        is_active: boolean;
+    };
     setData: (key: string, value: any) => void;
     errors: Record<string, string>;
     editingId: number | null;
@@ -179,7 +273,9 @@ function AccountForm({ data, setData, errors, editingId }: {
     return (
         <div className="space-y-3">
             <div>
-                <label className="mb-1 block text-xs font-medium text-text-muted">Nama Bank</label>
+                <label className="mb-1 block text-xs font-medium text-text-muted">
+                    Nama Bank
+                </label>
                 <Input
                     type="text"
                     value={data.bank_name}
@@ -187,10 +283,16 @@ function AccountForm({ data, setData, errors, editingId }: {
                     required
                     placeholder="BCA, Mandiri, BRI..."
                 />
-                {errors.bank_name && <p className="mt-1 text-xs text-red-600">{errors.bank_name}</p>}
+                {errors.bank_name && (
+                    <p className="mt-1 text-xs text-red-600">
+                        {errors.bank_name}
+                    </p>
+                )}
             </div>
             <div>
-                <label className="mb-1 block text-xs font-medium text-text-muted">Nomor Rekening</label>
+                <label className="mb-1 block text-xs font-medium text-text-muted">
+                    Nomor Rekening
+                </label>
                 <Input
                     type="text"
                     value={data.account_number}
@@ -198,10 +300,16 @@ function AccountForm({ data, setData, errors, editingId }: {
                     required
                     placeholder="1234567890"
                 />
-                {errors.account_number && <p className="mt-1 text-xs text-red-600">{errors.account_number}</p>}
+                {errors.account_number && (
+                    <p className="mt-1 text-xs text-red-600">
+                        {errors.account_number}
+                    </p>
+                )}
             </div>
             <div>
-                <label className="mb-1 block text-xs font-medium text-text-muted">Nama Pemilik</label>
+                <label className="mb-1 block text-xs font-medium text-text-muted">
+                    Nama Pemilik
+                </label>
                 <Input
                     type="text"
                     value={data.account_holder}
@@ -209,7 +317,11 @@ function AccountForm({ data, setData, errors, editingId }: {
                     required
                     placeholder="PT Dombi Indonesia"
                 />
-                {errors.account_holder && <p className="mt-1 text-xs text-red-600">{errors.account_holder}</p>}
+                {errors.account_holder && (
+                    <p className="mt-1 text-xs text-red-600">
+                        {errors.account_holder}
+                    </p>
+                )}
             </div>
             <div className="flex items-center gap-2">
                 <input
@@ -219,7 +331,9 @@ function AccountForm({ data, setData, errors, editingId }: {
                     onChange={(e) => setData('is_active', e.target.checked)}
                     className="h-4 w-4 rounded border-border"
                 />
-                <label htmlFor="is_active" className="text-sm text-text">Aktif</label>
+                <label htmlFor="is_active" className="text-sm text-text">
+                    Aktif
+                </label>
             </div>
         </div>
     );

@@ -27,7 +27,13 @@ const roleDashboards: Record<string, string> = {
 
 export default function Login({ auth }: Props) {
     const user = auth?.user;
-    const form = useForm({ email: '', phone: '', password: '', remember: false, usePhone: false });
+    const form = useForm({
+        email: '',
+        phone: '',
+        password: '',
+        remember: false,
+        usePhone: false,
+    });
     const { data, setData, errors, processing } = form;
 
     if (user) {
@@ -36,11 +42,17 @@ export default function Login({ auth }: Props) {
                 <Head title="Login" />
                 <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
                     <h1 className="text-2xl font-semibold">Sudah Masuk</h1>
-                    <p className="mt-1 text-sm text-zinc-500">Anda masuk sebagai akun berikut.</p>
+                    <p className="mt-1 text-sm text-zinc-500">
+                        Anda masuk sebagai akun berikut.
+                    </p>
 
                     <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <div className="text-sm font-semibold text-slate-900">{user.name}</div>
-                        <div className="text-xs text-slate-500">{user.email}</div>
+                        <div className="text-sm font-semibold text-slate-900">
+                            {user.name}
+                        </div>
+                        <div className="text-xs text-slate-500">
+                            {user.email}
+                        </div>
                         <div className="mt-1">
                             <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
                                 {roleLabels[user.role] ?? user.role}
@@ -50,7 +62,11 @@ export default function Login({ auth }: Props) {
 
                     <div className="mt-5 flex gap-2">
                         <button
-                            onClick={() => router.visit(roleDashboards[user.role] ?? '/dashboard')}
+                            onClick={() =>
+                                router.visit(
+                                    roleDashboards[user.role] ?? '/dashboard',
+                                )
+                            }
                             className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-emerald-700 text-sm font-semibold text-white active:bg-emerald-800"
                         >
                             Buka Dashboard
@@ -70,37 +86,87 @@ export default function Login({ auth }: Props) {
     return (
         <div className="flex min-h-screen items-center justify-center bg-zinc-50 p-4">
             <Head title="Login" />
-                <form onSubmit={(e) => {
- e.preventDefault(); form.post('/login');
- }} className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault();
+                    form.post('/login');
+                }}
+                className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-6 shadow-sm"
+            >
                 <h1 className="text-2xl font-semibold">Login Dombi</h1>
-                <p className="mt-1 text-sm text-zinc-500">Masuk sebagai owner, customer, outlet, atau courier.</p>
+                <p className="mt-1 text-sm text-zinc-500">
+                    Masuk sebagai owner, customer, outlet, atau courier.
+                </p>
 
                 <div className="mt-5 flex rounded-lg border border-zinc-200 p-0.5">
-                    <button type="button" onClick={() => {
- setData('usePhone', false); setData('phone', ''); 
-}} className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${!data.usePhone ? 'bg-emerald-600 text-white' : 'text-zinc-500'}`}>Email</button>
-                    <button type="button" onClick={() => {
- setData('usePhone', true); setData('email', ''); 
-}} className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${data.usePhone ? 'bg-emerald-600 text-white' : 'text-zinc-500'}`}>No. HP</button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setData('usePhone', false);
+                            setData('phone', '');
+                        }}
+                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${!data.usePhone ? 'bg-emerald-600 text-white' : 'text-zinc-500'}`}
+                    >
+                        Email
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setData('usePhone', true);
+                            setData('email', '');
+                        }}
+                        className={`flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${data.usePhone ? 'bg-emerald-600 text-white' : 'text-zinc-500'}`}
+                    >
+                        No. HP
+                    </button>
                 </div>
 
                 {data.usePhone ? (
                     <>
                         <label className="mt-4 block text-sm">No. HP</label>
-                        <input value={data.phone} onChange={(e) => setData('phone', e.target.value)} placeholder="628xxxxxxxxxx" className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2" />
+                        <input
+                            value={data.phone}
+                            onChange={(e) => setData('phone', e.target.value)}
+                            placeholder="628xxxxxxxxxx"
+                            className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
+                        />
                     </>
                 ) : (
                     <>
                         <label className="mt-4 block text-sm">Email</label>
-                        <input value={data.email} onChange={(e) => setData('email', e.target.value)} className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2" />
+                        <input
+                            value={data.email}
+                            onChange={(e) => setData('email', e.target.value)}
+                            className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
+                        />
                     </>
                 )}
-                {errors.email && <div className="mt-1 text-sm text-red-600">{errors.email}</div>}
+                {errors.email && (
+                    <div className="mt-1 text-sm text-red-600">
+                        {errors.email}
+                    </div>
+                )}
                 <label className="mt-4 block text-sm">Password</label>
-                <input type="password" value={data.password} onChange={(e) => setData('password', e.target.value)} className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2" />
-                <label className="mt-4 flex items-center gap-2 text-sm"><input type="checkbox" checked={data.remember} onChange={(e) => setData('remember', e.target.checked)} /> Remember me</label>
-                <button disabled={processing} className="mt-6 w-full rounded-md bg-emerald-700 px-4 py-2 font-medium text-white">Login</button>
+                <input
+                    type="password"
+                    value={data.password}
+                    onChange={(e) => setData('password', e.target.value)}
+                    className="mt-1 w-full rounded-md border border-zinc-300 px-3 py-2"
+                />
+                <label className="mt-4 flex items-center gap-2 text-sm">
+                    <input
+                        type="checkbox"
+                        checked={data.remember}
+                        onChange={(e) => setData('remember', e.target.checked)}
+                    />{' '}
+                    Remember me
+                </label>
+                <button
+                    disabled={processing}
+                    className="mt-6 w-full rounded-md bg-emerald-700 px-4 py-2 font-medium text-white"
+                >
+                    Login
+                </button>
             </form>
         </div>
     );

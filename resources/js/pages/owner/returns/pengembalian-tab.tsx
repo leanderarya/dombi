@@ -27,7 +27,13 @@ const statusColorMap: Record<string, string> = {
     rejected: 'text-red-600 bg-red-50 ring-red-200',
 };
 
-export default function PengembalianTab({ returns, filters, dashboard, outlets, reasons }: any) {
+export default function PengembalianTab({
+    returns,
+    filters,
+    dashboard,
+    outlets,
+    reasons,
+}: any) {
     if (!returns || !dashboard) {
         return (
             <div className="space-y-4">
@@ -41,38 +47,76 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
     const handleApprove = (id: number, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        router.post(`/owner/returns/${id}/approve`, {}, { preserveScroll: true });
+        router.post(
+            `/owner/returns/${id}/approve`,
+            {},
+            { preserveScroll: true },
+        );
     };
 
     const currentStatus = filters.status ?? '';
 
     const navigate = (params: Record<string, string | undefined>) => {
-        router.get('/owner/returns', { tab: 'pengembalian', ...filters, ...params }, { preserveState: true, replace: true });
+        router.get(
+            '/owner/returns',
+            { tab: 'pengembalian', ...filters, ...params },
+            { preserveState: true, replace: true },
+        );
     };
 
     return (
         <>
             {/* KPI Strip */}
             <div aria-label="Ringkasan Pengembalian">
-            <OwnerKpiStrip
-                items={[
-                    { label: 'Return Tertunda', value: dashboard.pending_returns, sublabel: dashboard.pending_returns > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
-                    { label: 'Nilai Return', value: formatCurrency(dashboard.returned_value) },
-                    ...(dashboard.total_returns !== undefined ? [{ label: 'Total Return', value: dashboard.total_returns }] : []),
-                ]}
-            />
+                <OwnerKpiStrip
+                    items={[
+                        {
+                            label: 'Return Tertunda',
+                            value: dashboard.pending_returns,
+                            sublabel:
+                                dashboard.pending_returns > 0
+                                    ? 'Perlu ditinjau'
+                                    : undefined,
+                            sublabelColor: 'text-amber-600',
+                        },
+                        {
+                            label: 'Nilai Return',
+                            value: formatCurrency(dashboard.returned_value),
+                        },
+                        ...(dashboard.total_returns !== undefined
+                            ? [
+                                  {
+                                      label: 'Total Return',
+                                      value: dashboard.total_returns,
+                                  },
+                              ]
+                            : []),
+                    ]}
+                />
             </div>
 
             {/* Status Pills */}
-            <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Filter Status Pengembalian">
+            <div
+                className="mb-4 flex flex-wrap items-center gap-2"
+                aria-label="Filter Status Pengembalian"
+            >
                 {RETURN_STATUS_FILTERS.map((f) => {
                     const isActive = currentStatus === f.key;
 
                     return (
-                        <button key={f.key} type="button" onClick={() => navigate({ status: f.key || undefined })}
+                        <button
+                            key={f.key}
+                            type="button"
+                            onClick={() =>
+                                navigate({ status: f.key || undefined })
+                            }
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive ? statusColorMap[f.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}>
+                                isActive
+                                    ? (statusColorMap[f.key] ??
+                                      'bg-primary/10 text-primary ring-primary/20')
+                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                            }`}
+                        >
                             {f.label}
                         </button>
                     );
@@ -86,10 +130,18 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
                 searchPlaceholder="Cari kode..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => navigate({ search: val || undefined })}
-                outletOptions={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletOptions={outlets.map((o: any) => ({
+                    value: String(o.id),
+                    label: o.name,
+                }))}
                 outletValue={filters.outlet_id ?? ''}
-                onOutletChange={(val) => navigate({ outlet_id: val || undefined })}
-                reasonOptions={Object.entries(reasons).map(([v, l]) => ({ value: v, label: String(l) }))}
+                onOutletChange={(val) =>
+                    navigate({ outlet_id: val || undefined })
+                }
+                reasonOptions={Object.entries(reasons).map(([v, l]) => ({
+                    value: v,
+                    label: String(l),
+                }))}
                 reasonValue={filters.reason ?? ''}
                 onReasonChange={(val) => navigate({ reason: val || undefined })}
                 dateValue={filters.date ?? ''}
@@ -98,16 +150,29 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
 
             {/* Table */}
             {returns.data.length === 0 ? (
-                <EmptyState icon="package" title="Tidak ada permintaan return" description="Belum ada pengajuan return dari outlet" />
+                <EmptyState
+                    icon="package"
+                    title="Tidak ada permintaan return"
+                    description="Belum ada pengajuan return dari outlet"
+                />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card" aria-label="Tabel Pengembalian">
+                <div
+                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
+                    aria-label="Tabel Pengembalian"
+                >
                     <table className="w-full min-w-[600px] text-sm">
                         <thead>
-                            <tr className="bg-surface-muted/50 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+                            <tr className="bg-surface-muted/50 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                 <th className="px-3 py-2.5 text-left">Kode</th>
-                                <th className="px-3 py-2.5 text-left">Outlet / Alasan</th>
-                                <th className="px-3 py-2.5 text-left">Status</th>
-                                <th className="px-3 py-2.5 text-right">Nilai</th>
+                                <th className="px-3 py-2.5 text-left">
+                                    Outlet / Alasan
+                                </th>
+                                <th className="px-3 py-2.5 text-left">
+                                    Status
+                                </th>
+                                <th className="px-3 py-2.5 text-right">
+                                    Nilai
+                                </th>
                                 <th className="px-3 py-2.5 text-right">Aksi</th>
                             </tr>
                         </thead>
@@ -116,19 +181,56 @@ export default function PengembalianTab({ returns, filters, dashboard, outlets, 
                                 const status = getReturnStatus(ret.status);
 
                                 return (
-                                    <tr key={ret.id} className="border-t border-border/20 transition-colors last:border-b-0 hover:bg-mint-wash">
-                                        <td className="px-3 py-2.5 font-bold tabular-nums text-text">#{ret.id}</td>
-                                        <td className="px-3 py-2.5 truncate text-text-muted">{ret.outlet?.name ?? '-'} · {(ret.reason ?? '').replaceAll('_', ' ')}</td>
-                                        <td className="px-3 py-2.5"><StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge></td>
-                                        <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-primary">{formatCurrency(ret.total_value)}</td>
+                                    <tr
+                                        key={ret.id}
+                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors last:border-b-0"
+                                    >
+                                        <td className="px-3 py-2.5 font-bold text-text tabular-nums">
+                                            #{ret.id}
+                                        </td>
+                                        <td className="truncate px-3 py-2.5 text-text-muted">
+                                            {ret.outlet?.name ?? '-'} ·{' '}
+                                            {(ret.reason ?? '').replaceAll(
+                                                '_',
+                                                ' ',
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-2.5">
+                                            <StatusBadge
+                                                variant={status.variant}
+                                                size="sm"
+                                            >
+                                                {status.label}
+                                            </StatusBadge>
+                                        </td>
+                                        <td className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
+                                            {formatCurrency(ret.total_value)}
+                                        </td>
                                         <td className="px-3 py-2.5 text-right">
-                                            <div className="flex items-center gap-1 justify-end">
+                                            <div className="flex items-center justify-end gap-1">
                                                 {ret.status === 'submitted' && (
-                                                    <Button size="sm" variant="default" onClick={(e) => handleApprove(ret.id, e)}>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="default"
+                                                        onClick={(e) =>
+                                                            handleApprove(
+                                                                ret.id,
+                                                                e,
+                                                            )
+                                                        }
+                                                    >
                                                         Setujui
                                                     </Button>
                                                 )}
-                                                <Button size="sm" variant="ghost" onClick={() => router.visit(`/owner/returns/${ret.id}`)}>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        router.visit(
+                                                            `/owner/returns/${ret.id}`,
+                                                        )
+                                                    }
+                                                >
                                                     Tinjau
                                                 </Button>
                                             </div>

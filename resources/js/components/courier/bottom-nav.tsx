@@ -2,21 +2,21 @@ import { Link, usePage } from '@inertiajs/react';
 import { ClipboardList, History, User } from 'lucide-react';
 
 const navItems = [
-    { 
-        href: '/courier/dashboard', 
-        label: 'Tugas', 
+    {
+        href: '/courier/dashboard',
+        label: 'Tugas',
         icon: ClipboardList,
         match: ['/courier/dashboard'],
     },
-    { 
-        href: '/courier/deliveries', 
-        label: 'Riwayat', 
+    {
+        href: '/courier/deliveries',
+        label: 'Riwayat',
         icon: History,
         match: ['/courier/deliveries'],
     },
-    { 
-        href: '/courier/profile', 
-        label: 'Profil', 
+    {
+        href: '/courier/profile',
+        label: 'Profil',
         icon: User,
         match: ['/courier/profile'],
     },
@@ -39,7 +39,9 @@ export default function CourierBottomNav({ visible = true }: Props) {
         >
             <div className="mx-auto grid h-14 max-w-lg grid-cols-3">
                 {navItems.map((item) => {
-                    const active = item.match.some((href) => url === href || url.startsWith(`${href}/`));
+                    const active = item.match.some(
+                        (href) => url === href || url.startsWith(`${href}/`),
+                    );
                     const Icon = item.icon;
 
                     return (
@@ -50,7 +52,10 @@ export default function CourierBottomNav({ visible = true }: Props) {
                                 active ? 'text-emerald-700' : 'text-slate-400'
                             }`}
                         >
-                            <Icon className="h-5 w-5" strokeWidth={active ? 2 : 1.5} />
+                            <Icon
+                                className="h-5 w-5"
+                                strokeWidth={active ? 2 : 1.5}
+                            />
                             <span>{item.label}</span>
                         </Link>
                     );

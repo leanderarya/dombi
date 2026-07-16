@@ -3,7 +3,10 @@ interface Props {
     className?: string;
 }
 
-const CONFIG: Record<string, { label: string; dotClass: string; badgeClass: string }> = {
+const CONFIG: Record<
+    string,
+    { label: string; dotClass: string; badgeClass: string }
+> = {
     overdue: {
         label: 'Terlambat',
         dotClass: 'bg-red-500',
@@ -40,7 +43,9 @@ export default function FinanceStatusBadge({ status, className = '' }: Props) {
     const config = CONFIG[status] ?? CONFIG.no_activity;
 
     return (
-        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${config.badgeClass} ${className}`}>
+        <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${config.badgeClass} ${className}`}
+        >
             <span className={`h-1.5 w-1.5 rounded-full ${config.dotClass}`} />
             {config.label}
         </span>
@@ -49,8 +54,8 @@ export default function FinanceStatusBadge({ status, className = '' }: Props) {
 
 export function getOverdueDays(dueDate: string | null): number {
     if (!dueDate) {
-return 0;
-}
+        return 0;
+    }
 
     const due = new Date(dueDate);
     const now = new Date();

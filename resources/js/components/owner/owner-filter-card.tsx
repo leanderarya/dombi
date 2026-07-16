@@ -119,7 +119,10 @@ export default function OwnerFilterCard({
                     <Select
                         value={outletValue ?? ''}
                         onChange={(e) => onOutletChange?.(e.target.value)}
-                        options={[{ value: '', label: 'Semua Outlet' }, ...outletOptions]}
+                        options={[
+                            { value: '', label: 'Semua Outlet' },
+                            ...outletOptions,
+                        ]}
                         className="w-[150px]"
                         aria-label="Filter outlet"
                     />
@@ -129,7 +132,10 @@ export default function OwnerFilterCard({
                     <Select
                         value={reasonValue ?? ''}
                         onChange={(e) => onReasonChange?.(e.target.value)}
-                        options={[{ value: '', label: 'Semua Alasan' }, ...reasonOptions]}
+                        options={[
+                            { value: '', label: 'Semua Alasan' },
+                            ...reasonOptions,
+                        ]}
                         className="w-[150px]"
                         aria-label="Filter alasan"
                     />
@@ -139,7 +145,10 @@ export default function OwnerFilterCard({
                     <Select
                         value={courierValue ?? ''}
                         onChange={(e) => onCourierChange?.(e.target.value)}
-                        options={[{ value: '', label: 'Semua Kurir' }, ...courierOptions]}
+                        options={[
+                            { value: '', label: 'Semua Kurir' },
+                            ...courierOptions,
+                        ]}
                         className="w-[150px]"
                         aria-label="Filter kurir"
                     />
@@ -159,7 +168,10 @@ export default function OwnerFilterCard({
                     <Select
                         value={marginValue ?? ''}
                         onChange={(e) => onMarginChange?.(e.target.value)}
-                        options={[{ value: '', label: marginLabel }, ...marginOptions]}
+                        options={[
+                            { value: '', label: marginLabel },
+                            ...marginOptions,
+                        ]}
                         className="w-[160px]"
                         aria-label="Filter margin"
                     />

@@ -4,8 +4,8 @@ const STORAGE_KEY = 'dombi_fulfillment_type';
 
 function loadFulfillmentType(): 'pickup' | 'delivery' {
     if (typeof window === 'undefined') {
-return 'pickup';
-}
+        return 'pickup';
+    }
 
     const stored = localStorage.getItem(STORAGE_KEY);
 
@@ -24,9 +24,13 @@ type OverlayState = 'hidden' | 'entering' | 'visible' | 'exiting';
  * Sequence: entering (400ms) → visible (300ms) → exiting (400ms) → hidden
  */
 export function useFulfillmentOverlay() {
-    const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>(loadFulfillmentType);
+    const [fulfillmentType, setFulfillmentType] = useState<
+        'pickup' | 'delivery'
+    >(loadFulfillmentType);
     const [overlayState, setOverlayState] = useState<OverlayState>('hidden');
-    const [overlayTarget, setOverlayTarget] = useState<'pickup' | 'delivery'>('pickup');
+    const [overlayTarget, setOverlayTarget] = useState<'pickup' | 'delivery'>(
+        'pickup',
+    );
     const timerRef = useRef<ReturnType<typeof setTimeout>>();
 
     // Inject keyframes once
@@ -36,14 +40,14 @@ export function useFulfillmentOverlay() {
         document.head.appendChild(s);
 
         return () => {
- s.remove(); 
-};
+            s.remove();
+        };
     }, []);
 
     const switchTo = (target: 'pickup' | 'delivery') => {
         if (target === fulfillmentType) {
-return;
-}
+            return;
+        }
 
         clearTimeout(timerRef.current);
 

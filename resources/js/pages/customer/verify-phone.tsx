@@ -13,7 +13,10 @@ export default function VerifyPhone() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+    const csrf = () =>
+        document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') ?? '';
 
     const submitPhone = useCallback(async () => {
         if (!phone || phone.length < 9) {
@@ -74,9 +77,12 @@ export default function VerifyPhone() {
         <div className="flex min-h-screen items-center justify-center bg-surface px-4">
             <div className="w-full max-w-sm space-y-6">
                 <div className="text-center">
-                    <h1 className="text-xl font-semibold text-text">Hubungkan Nomor HP</h1>
+                    <h1 className="text-xl font-semibold text-text">
+                        Hubungkan Nomor HP
+                    </h1>
                     <p className="mt-1 text-sm text-text-subtle">
-                        {step === 'phone' && 'Masukkan nomor HP untuk mengelola pesanan'}
+                        {step === 'phone' &&
+                            'Masukkan nomor HP untuk mengelola pesanan'}
                         {step === 'confirm' && 'Pastikan nomor HP sudah benar'}
                         {step === 'done' && 'Nomor HP berhasil dihubungkan!'}
                     </p>
@@ -106,18 +112,28 @@ export default function VerifyPhone() {
                 {step === 'confirm' && (
                     <div className="space-y-4">
                         <div className="rounded-lg border border-border bg-surface-muted p-4 text-center">
-                            <p className="text-sm text-text-subtle">Nomor HP Anda:</p>
-                            <p className="mt-1 text-lg font-semibold text-text">+62 {phone}</p>
+                            <p className="text-sm text-text-subtle">
+                                Nomor HP Anda:
+                            </p>
+                            <p className="mt-1 text-lg font-semibold text-text">
+                                +62 {phone}
+                            </p>
                         </div>
 
-                        {error && <p className="text-center text-sm text-danger">{error}</p>}
+                        {error && (
+                            <p className="text-center text-sm text-danger">
+                                {error}
+                            </p>
+                        )}
 
                         <button
                             onClick={handleSubmit}
                             disabled={loading}
                             className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50"
                         >
-                            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                            {loading && (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            )}
                             Ya, Hubungkan
                         </button>
 
@@ -137,7 +153,9 @@ export default function VerifyPhone() {
                 {step === 'done' && (
                     <div className="flex flex-col items-center gap-3">
                         <CheckCircle2 className="h-12 w-12 text-green-500" />
-                        <p className="text-sm text-text">Nomor HP berhasil dihubungkan</p>
+                        <p className="text-sm text-text">
+                            Nomor HP berhasil dihubungkan
+                        </p>
                     </div>
                 )}
             </div>

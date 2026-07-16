@@ -11,9 +11,16 @@ interface Props {
     className?: string;
 }
 
-export default function OwnerSegmentedTabs({ tabs, activeTab, onChange, className = '' }: Props) {
+export default function OwnerSegmentedTabs({
+    tabs,
+    activeTab,
+    onChange,
+    className = '',
+}: Props) {
     return (
-        <div className={`mb-6 inline-flex rounded-lg bg-mint-wash p-1 ${className}`}>
+        <div
+            className={`bg-mint-wash mb-6 inline-flex rounded-lg p-1 ${className}`}
+        >
             {tabs.map((tab) => (
                 <button
                     key={tab.key}

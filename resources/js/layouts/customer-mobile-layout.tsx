@@ -37,7 +37,8 @@ export default function CustomerMobileLayout({
     const visible = keepBottomNavVisible ? true : scrollVisible;
     const { totalItems } = useCart();
 
-    const showCartBar = !hideCartBar && !footerSlot && !activeOrder && totalItems > 0;
+    const showCartBar =
+        !hideCartBar && !footerSlot && !activeOrder && totalItems > 0;
     const hasFloatingBar = !!footerSlot || !!activeOrder || showCartBar;
 
     return (
@@ -45,15 +46,25 @@ export default function CustomerMobileLayout({
             <div className="min-h-dvh bg-background text-text">
                 <CustomerLocationBootstrap />
                 <OfflineBanner />
-                {!hideTopBar && <CustomerTopBar addressOverride={topAddress} customerName={customerName} />}
+                {!hideTopBar && (
+                    <CustomerTopBar
+                        addressOverride={topAddress}
+                        customerName={customerName}
+                    />
+                )}
 
-                <main className={`mx-auto max-w-lg px-4 ${hideTopBar ? '' : 'pt-5'} ${hasFloatingBar ? 'pb-[calc(10rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(5.5rem+env(safe-area-inset-bottom,0))]'}`}>
+                <main
+                    className={`mx-auto max-w-lg px-4 ${hideTopBar ? '' : 'pt-5'} ${hasFloatingBar ? 'pb-[calc(10rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(5.5rem+env(safe-area-inset-bottom,0))]'}`}
+                >
                     {children}
                 </main>
 
                 {footerSlot ??
                     (activeOrder ? (
-                        <ActiveOrderBar order={activeOrder} bottomNavVisible={visible} />
+                        <ActiveOrderBar
+                            order={activeOrder}
+                            bottomNavVisible={visible}
+                        />
                     ) : showCartBar ? (
                         <FloatingCartBar bottomNavVisible={visible} />
                     ) : null)}

@@ -11,7 +11,11 @@ interface PickupState {
 }
 
 export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
-    const [state, setState] = useState<PickupState>({ loading: false, error: null, foundOutletName: null });
+    const [state, setState] = useState<PickupState>({
+        loading: false,
+        error: null,
+        foundOutletName: null,
+    });
     const timerRef = useRef<ReturnType<typeof setTimeout>>();
     const { autoSave } = useOutletStore();
 
@@ -19,16 +23,23 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
 
     const start = useCallback(async () => {
         if (state.loading) {
-return;
-}
+            return;
+        }
 
         setState({ loading: true, error: null, foundOutletName: null });
         localStorage.setItem('dombi_fulfillment_type', 'pickup');
 
         // Use cached nearest outlet if available (already saved by useNearestOutlet)
         if (nearestOutlet?.name) {
-            setState({ loading: true, error: null, foundOutletName: nearestOutlet.name });
-            timerRef.current = setTimeout(() => router.get('/customer/products'), 2000);
+            setState({
+                loading: true,
+                error: null,
+                foundOutletName: nearestOutlet.name,
+            });
+            timerRef.current = setTimeout(
+                () => router.get('/customer/products'),
+                2000,
+            );
 
             return;
         }
@@ -37,30 +48,43 @@ return;
         let outletName: string | null = null;
 
         try {
-            const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });
-            });
+            const pos = await new Promise<GeolocationPosition>(
+                (resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, {
+                        timeout: 5000,
+                    });
+                },
+            );
             const { latitude, longitude } = pos.coords;
-            saveCustomerLocationSnapshot({ latitude, longitude, timestamp: Date.now() });
+            saveCustomerLocationSnapshot({
+                latitude,
+                longitude,
+                timestamp: Date.now(),
+            });
 
-            const res = await fetch(`/customer/checkout/pickup-outlets?latitude=${latitude}&longitude=${longitude}`);
+            const res = await fetch(
+                `/customer/checkout/pickup-outlets?latitude=${latitude}&longitude=${longitude}`,
+            );
             const data = await res.json();
             outletName = data.recommended?.name ?? null;
 
             // Save recommended outlet to store so products page uses same outlet
             if (data.recommended?.id) {
-autoSave(data.recommended.id);
-}
+                autoSave(data.recommended.id);
+            }
         } catch {
             // silent
         }
 
         if (!outletName) {
-outletName = 'Outlet Dombi';
-}
+            outletName = 'Outlet Dombi';
+        }
 
         setState({ loading: true, error: null, foundOutletName: outletName });
-        timerRef.current = setTimeout(() => router.get('/customer/products'), 2000);
+        timerRef.current = setTimeout(
+            () => router.get('/customer/products'),
+            2000,
+        );
     }, [nearestOutlet, state.loading, autoSave]);
 
     const retry = useCallback(() => {

@@ -11,8 +11,8 @@
  */
 export function normalizePhone(phone: string | null | undefined): string {
     if (!phone) {
-return '';
-}
+        return '';
+    }
 
     // Strip everything except digits
     const digits = phone.replace(/\D/g, '');
@@ -40,11 +40,12 @@ export function isDifferentRecipient(order: {
 
     // No recipient data → same as orderer
     if (!rn && !rp) {
-return false;
-}
+        return false;
+    }
 
     const nameDiffers = !!rn && rn !== order.customer_name?.trim();
-    const phoneDiffers = !!rp && normalizePhone(rp) !== normalizePhone(order.customer_phone);
+    const phoneDiffers =
+        !!rp && normalizePhone(rp) !== normalizePhone(order.customer_phone);
 
     return nameDiffers || phoneDiffers;
 }

@@ -21,14 +21,23 @@ interface Props extends PropsWithChildren {
     actionBarSlot?: ReactNode;
 }
 
-export default function CourierLayout({ children, title, subtitle, backHref, hideNav = false, headerBelow, actionBarSlot }: Props) {
+export default function CourierLayout({
+    children,
+    title,
+    subtitle,
+    backHref,
+    hideNav = false,
+    headerBelow,
+    actionBarSlot,
+}: Props) {
     const page = usePage<any>();
     const { auth } = page.props;
     const [notificationOpen, setNotificationOpen] = useState(false);
     const { visible } = useHideOnScroll();
 
     const isOnline = auth?.user?.is_online;
-    const onlineLabel = isOnline !== undefined ? (isOnline ? 'Online' : 'Offline') : undefined;
+    const onlineLabel =
+        isOnline !== undefined ? (isOnline ? 'Online' : 'Offline') : undefined;
 
     const rightSlot = (
         <div className="flex items-center gap-1">
@@ -50,7 +59,9 @@ export default function CourierLayout({ children, title, subtitle, backHref, hid
 
     return (
         <MobileRoleLayout
-            footerSlot={!hideNav ? <CourierBottomNav visible={visible} /> : undefined}
+            footerSlot={
+                !hideNav ? <CourierBottomNav visible={visible} /> : undefined
+            }
             actionBarSlot={actionBarSlot}
         >
             <PageHeader
@@ -61,7 +72,10 @@ export default function CourierLayout({ children, title, subtitle, backHref, hid
                 below={headerBelow}
             />
             {children}
-            <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
+            <NotificationSheet
+                open={notificationOpen}
+                onClose={() => setNotificationOpen(false)}
+            />
         </MobileRoleLayout>
     );
 }

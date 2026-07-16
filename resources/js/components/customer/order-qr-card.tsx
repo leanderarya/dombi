@@ -13,8 +13,8 @@ export default function OrderQRCard({ orderCode }: Props) {
         const svg = containerRef.current?.querySelector('svg');
 
         if (!svg) {
-return;
-}
+            return;
+        }
 
         const canvas = document.createElement('canvas');
         const size = 640; // 4x for high quality
@@ -24,8 +24,8 @@ return;
         const ctx = canvas.getContext('2d');
 
         if (!ctx) {
-return;
-}
+            return;
+        }
 
         // White background
         ctx.fillStyle = '#ffffff';
@@ -33,14 +33,22 @@ return;
 
         // Serialize SVG
         const svgData = new XMLSerializer().serializeToString(svg);
-        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const svgBlob = new Blob([svgData], {
+            type: 'image/svg+xml;charset=utf-8',
+        });
         const url = URL.createObjectURL(svgBlob);
 
         const img = new Image();
         img.onload = () => {
             // Center QR code
             const padding = 80;
-            ctx.drawImage(img, padding, padding, size - padding * 2, size - padding * 2);
+            ctx.drawImage(
+                img,
+                padding,
+                padding,
+                size - padding * 2,
+                size - padding * 2,
+            );
 
             // Add order code text below
             ctx.fillStyle = '#1e40af';
@@ -53,8 +61,8 @@ return;
             // Trigger download
             canvas.toBlob((blob) => {
                 if (!blob) {
-return;
-}
+                    return;
+                }
 
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
@@ -69,7 +77,7 @@ return;
     }, [orderCode]);
 
     return (
-        <div className="mt-4 rounded-xl border border-border bg-white p-4 flex flex-col items-center">
+        <div className="mt-4 flex flex-col items-center rounded-xl border border-border bg-white p-4">
             <div ref={containerRef}>
                 <QRCodeSVG
                     value={orderCode}
@@ -81,8 +89,12 @@ return;
                 />
             </div>
             <div className="mt-2 text-center">
-                <div className="text-sm font-bold tracking-wider text-primary">{orderCode}</div>
-                <div className="mt-1 text-[11px] text-text-subtle">Tunjukkan QR ini ke kasir</div>
+                <div className="text-sm font-bold tracking-wider text-primary">
+                    {orderCode}
+                </div>
+                <div className="mt-1 text-[11px] text-text-subtle">
+                    Tunjukkan QR ini ke kasir
+                </div>
             </div>
             <button
                 type="button"

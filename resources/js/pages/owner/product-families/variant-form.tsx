@@ -29,9 +29,18 @@ interface Props {
     };
 }
 
-export default function VariantForm({ form, editing, onSubmit, onCancel }: Props) {
+export default function VariantForm({
+    form,
+    editing,
+    onSubmit,
+    onCancel,
+}: Props) {
     return (
-        <form onSubmit={onSubmit} className="mb-4 rounded-lg border border-border bg-white p-4" aria-label={editing ? 'Edit Variant' : 'Tambah Variant'}>
+        <form
+            onSubmit={onSubmit}
+            className="mb-4 rounded-lg border border-border bg-white p-4"
+            aria-label={editing ? 'Edit Variant' : 'Tambah Variant'}
+        >
             <h2 className="mb-3 text-sm font-semibold text-text">
                 {editing ? 'Edit Variant' : 'Tambah Variant'}
             </h2>
@@ -55,20 +64,29 @@ export default function VariantForm({ form, editing, onSubmit, onCancel }: Props
                         label="Harga Center (Rp)"
                         type="number"
                         value={form.data.center_price}
-                        onChange={(e) => form.setData('center_price', e.target.value)}
+                        onChange={(e) =>
+                            form.setData('center_price', e.target.value)
+                        }
                         required
                         min="0"
                     />
                 </div>
 
-                <div className="rounded-lg bg-surface-muted p-3" aria-label="Field otomatis">
-                    <div className="mb-2 text-xs font-medium text-text-subtle">Otomatis (bisa diubah)</div>
+                <div
+                    className="rounded-lg bg-surface-muted p-3"
+                    aria-label="Field otomatis"
+                >
+                    <div className="mb-2 text-xs font-medium text-text-subtle">
+                        Otomatis (bisa diubah)
+                    </div>
                     <div className="grid grid-cols-2 gap-3">
                         <Input
                             label="Nama Variant"
                             type="text"
                             value={form.data.name}
-                            onChange={(e) => form.setData('name', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('name', e.target.value)
+                            }
                             required
                             error={form.errors.name}
                             className="bg-white"
@@ -77,7 +95,9 @@ export default function VariantForm({ form, editing, onSubmit, onCancel }: Props
                             label="SKU"
                             type="text"
                             value={form.data.sku}
-                            onChange={(e) => form.setData('sku', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('sku', e.target.value)
+                            }
                             className="bg-white"
                         />
                     </div>
@@ -86,7 +106,9 @@ export default function VariantForm({ form, editing, onSubmit, onCancel }: Props
                             label={`Harga Jual (Rp) (${DEFAULT_MARKUP_PERCENT}% markup)`}
                             type="number"
                             value={form.data.selling_price}
-                            onChange={(e) => form.setData('selling_price', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('selling_price', e.target.value)
+                            }
                             required
                             min="0"
                             className="bg-white"
@@ -95,7 +117,9 @@ export default function VariantForm({ form, editing, onSubmit, onCancel }: Props
                             label="Stok Pusat"
                             type="number"
                             value={form.data.center_stock || '0'}
-                            onChange={(e) => form.setData('center_stock', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('center_stock', e.target.value)
+                            }
                             min="0"
                             className="bg-white"
                         />
@@ -106,13 +130,19 @@ export default function VariantForm({ form, editing, onSubmit, onCancel }: Props
                     <input
                         type="checkbox"
                         checked={form.data.is_active}
-                        onChange={(e) => form.setData('is_active', e.target.checked)}
+                        onChange={(e) =>
+                            form.setData('is_active', e.target.checked)
+                        }
                         className="rounded border-zinc-300"
                     />
                     <span className="text-sm text-zinc-700">Aktif</span>
                 </label>
                 <div className="flex gap-2">
-                    <Button type="submit" loading={form.processing} className="flex-1">
+                    <Button
+                        type="submit"
+                        loading={form.processing}
+                        className="flex-1"
+                    >
                         {editing ? 'Update' : 'Simpan'}
                     </Button>
                     <Button type="button" variant="outline" onClick={onCancel}>

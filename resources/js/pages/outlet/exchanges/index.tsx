@@ -22,58 +22,88 @@ const statusFilters = [
     { key: 'rejected', label: 'Ditolak' },
 ];
 
-export default function OutletExchangesIndex({ exchanges, filters, variants, outletInventory, pendingReturns }: any) {
+export default function OutletExchangesIndex({
+    exchanges,
+    filters,
+    variants,
+    outletInventory,
+    pendingReturns,
+}: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const [showCreate, setShowCreate] = useState(false);
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
-        router.get('/outlet/exchanges', key ? { status: key } : {}, { preserveState: true, replace: true });
+        router.get('/outlet/exchanges', key ? { status: key } : {}, {
+            preserveState: true,
+            replace: true,
+        });
     };
 
     return (
         <OutletLayout
             title="Tukar Produk"
-            headerBelow={<FilterChips options={statusFilters} active={activeFilter} onChange={handleFilterChange} />}
+            headerBelow={
+                <FilterChips
+                    options={statusFilters}
+                    active={activeFilter}
+                    onChange={handleFilterChange}
+                />
+            }
         >
             <Head title="Tukar Produk" />
             <OutletPageShell hasStickyBar>
-            {/* Action Bar */}
-            <div className="flex justify-end">
-                <Button size="lg" onClick={() => setShowCreate(true)} icon={Plus}>
-                    Ajukan Tukar
-                </Button>
-            </div>
+                {/* Action Bar */}
+                <div className="flex justify-end">
+                    <Button
+                        size="lg"
+                        onClick={() => setShowCreate(true)}
+                        icon={Plus}
+                    >
+                        Ajukan Tukar
+                    </Button>
+                </div>
 
-            <div className="space-y-2">
-                {exchanges.data.length === 0 ? (
-                    <EmptyState
-                        title="Belum ada pengajuan tukar produk"
-                        description="Ajukan tukar produk untuk produk pengganti."
-                        action={{ label: 'Ajukan Tukar', onClick: () => setShowCreate(true) }}
-                    />
-                ) : (
-                    exchanges.data.map((ex: any) => (
-                        <Link
-                            key={ex.id}
-                            href={`/outlet/exchanges/${ex.id}`}
-                            className="block rounded-xl border border-border bg-white p-4 active:opacity-80"
-                        >
-                            <div className="flex items-start justify-between">
-                                <div className="text-sm font-semibold text-text">Tukar Produk #{ex.id}</div>
-                                <StatusBadge status={ex.status} />
-                            </div>
-                            <div className="mt-2 flex items-center justify-between text-xs text-text-muted">
-                                <span>{ex.items?.length ?? 0} item pengganti</span>
-                                <span className="font-semibold text-text">{formatCurrency(ex.exchange_value)}</span>
-                            </div>
-                            <div className="mt-1 text-[11px] text-text-subtle">{formatDate(ex.created_at)}</div>
-                        </Link>
-                    ))
-                )}
-            </div>
+                <div className="space-y-2">
+                    {exchanges.data.length === 0 ? (
+                        <EmptyState
+                            title="Belum ada pengajuan tukar produk"
+                            description="Ajukan tukar produk untuk produk pengganti."
+                            action={{
+                                label: 'Ajukan Tukar',
+                                onClick: () => setShowCreate(true),
+                            }}
+                        />
+                    ) : (
+                        exchanges.data.map((ex: any) => (
+                            <Link
+                                key={ex.id}
+                                href={`/outlet/exchanges/${ex.id}`}
+                                className="block rounded-xl border border-border bg-white p-4 active:opacity-80"
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className="text-sm font-semibold text-text">
+                                        Tukar Produk #{ex.id}
+                                    </div>
+                                    <StatusBadge status={ex.status} />
+                                </div>
+                                <div className="mt-2 flex items-center justify-between text-xs text-text-muted">
+                                    <span>
+                                        {ex.items?.length ?? 0} item pengganti
+                                    </span>
+                                    <span className="font-semibold text-text">
+                                        {formatCurrency(ex.exchange_value)}
+                                    </span>
+                                </div>
+                                <div className="mt-1 text-[11px] text-text-subtle">
+                                    {formatDate(ex.created_at)}
+                                </div>
+                            </Link>
+                        ))
+                    )}
+                </div>
 
-            <Pagination links={exchanges.links} />
+                <Pagination links={exchanges.links} />
             </OutletPageShell>
 
             {/* Create Exchange Dialog */}

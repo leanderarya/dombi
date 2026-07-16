@@ -4,8 +4,8 @@
  */
 export function sizeToMl(size: string | null): number {
     if (!size) {
-return 0;
-}
+        return 0;
+    }
 
     const s = size.trim().toLowerCase();
 

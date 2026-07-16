@@ -82,7 +82,12 @@ const FALLBACK: StatusConfig = {
  * Get status label + badge class for an order status.
  */
 export function getOrderStatusConfig(status: string): StatusConfig {
-    return STATUS_CONFIG[status] ?? { ...FALLBACK, label: status.replaceAll('_', ' ') };
+    return (
+        STATUS_CONFIG[status] ?? {
+            ...FALLBACK,
+            label: status.replaceAll('_', ' '),
+        }
+    );
 }
 
 /**

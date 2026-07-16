@@ -33,7 +33,10 @@ export default function OwnerOrdersIndex({
 
     if (!orders || !filters) {
         return (
-            <OwnerPageShell title="Pesanan" subtitle="Kelola semua pesanan dari semua outlet">
+            <OwnerPageShell
+                title="Pesanan"
+                subtitle="Kelola semua pesanan dari semua outlet"
+            >
                 <SkeletonPage />
             </OwnerPageShell>
         );
@@ -55,31 +58,66 @@ export default function OwnerOrdersIndex({
             subtitle="Kelola semua pesanan dari semua outlet"
         >
             {/* KPI Strip - Moved to top */}
-            <OwnerKpiStrip cols={4} items={[
-                { label: 'Total', value: stats?.total_today ?? 0, sublabel: (stats?.total_today ?? 0) > 0 ? 'Hari ini' : undefined, sublabelColor: 'text-blue-600' },
-                { label: 'Tindakan', value: stats?.pending ?? 0, sublabel: (stats?.pending ?? 0) > 0 ? 'Perlu assign kurir' : undefined, sublabelColor: 'text-amber-600' },
-                { label: 'Selesai', value: stats?.completed_today ?? 0 },
-                { label: 'Revenue', value: formatCurrency(stats?.revenue_today ?? 0) },
-            ]} />
+            <OwnerKpiStrip
+                cols={4}
+                items={[
+                    {
+                        label: 'Total',
+                        value: stats?.total_today ?? 0,
+                        sublabel:
+                            (stats?.total_today ?? 0) > 0
+                                ? 'Hari ini'
+                                : undefined,
+                        sublabelColor: 'text-blue-600',
+                    },
+                    {
+                        label: 'Tindakan',
+                        value: stats?.pending ?? 0,
+                        sublabel:
+                            (stats?.pending ?? 0) > 0
+                                ? 'Perlu assign kurir'
+                                : undefined,
+                        sublabelColor: 'text-amber-600',
+                    },
+                    { label: 'Selesai', value: stats?.completed_today ?? 0 },
+                    {
+                        label: 'Revenue',
+                        value: formatCurrency(stats?.revenue_today ?? 0),
+                    },
+                ]}
+            />
 
             {/* Status Pills */}
-            <div aria-label="Filter status pesanan" className="mb-4 flex flex-wrap items-center gap-2">
+            <div
+                aria-label="Filter status pesanan"
+                className="mb-4 flex flex-wrap items-center gap-2"
+            >
                 {statusFilters.map((sf) => {
                     const isActive = currentStatus === sf.key;
                     const colorMap: Record<string, string> = {
                         '': 'text-text bg-surface-muted ring-border',
-                        needs_action: 'text-amber-600 bg-amber-50 ring-amber-200',
+                        needs_action:
+                            'text-amber-600 bg-amber-50 ring-amber-200',
                         active: 'text-blue-600 bg-blue-50 ring-blue-200',
-                        completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
-                        cancelled: 'text-text-muted bg-surface-muted ring-border',
+                        completed:
+                            'text-emerald-600 bg-emerald-50 ring-emerald-200',
+                        cancelled:
+                            'text-text-muted bg-surface-muted ring-border',
                         failed: 'text-red-600 bg-red-50 ring-red-200',
                     };
 
                     return (
-                        <button key={sf.key} type="button" onClick={() => setFilter('status', sf.key)}
+                        <button
+                            key={sf.key}
+                            type="button"
+                            onClick={() => setFilter('status', sf.key)}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}>
+                                isActive
+                                    ? (colorMap[sf.key] ??
+                                      'bg-primary/10 text-primary ring-primary/20')
+                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                            }`}
+                        >
                             {sf.label}
                         </button>
                     );
@@ -93,10 +131,16 @@ export default function OwnerOrdersIndex({
                 searchPlaceholder="Cari kode..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => setFilter('search', val)}
-                outletOptions={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletOptions={outlets.map((o: any) => ({
+                    value: String(o.id),
+                    label: o.name,
+                }))}
                 outletValue={filters.outlet_id ?? ''}
                 onOutletChange={(val) => setFilter('outlet_id', val)}
-                courierOptions={couriers?.map((c: any) => ({ value: String(c.id), label: c.name }))}
+                courierOptions={couriers?.map((c: any) => ({
+                    value: String(c.id),
+                    label: c.name,
+                }))}
                 courierValue={filters.courier_id ?? ''}
                 onCourierChange={(val) => setFilter('courier_id', val)}
                 dateValue={filters.date ?? ''}
@@ -112,15 +156,30 @@ export default function OwnerOrdersIndex({
                 />
             ) : (
                 <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table aria-label="Daftar pesanan" className="w-full min-w-[600px]">
+                    <table
+                        aria-label="Daftar pesanan"
+                        className="w-full min-w-[600px]"
+                    >
                         <thead>
                             <tr className="bg-surface-muted/50">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Customer</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Total</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Kode
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Customer
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Outlet
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Status
+                                </th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                    Total
+                                </th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                    Aksi
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -128,28 +187,54 @@ export default function OwnerOrdersIndex({
                                 const s = getOrderStatus(order.status);
 
                                 return (
-                                    <tr key={order.id} className="border-t border-border/20 transition-colors hover:bg-mint-wash">
-                                        <td className="px-4 py-3 font-bold tabular-nums text-text">{order.order_code}</td>
-                                        <td className="px-4 py-3 text-text-muted">{order.customer_name ?? '—'}</td>
-                                        <td className="px-4 py-3 text-text-muted">{order.outlet?.name ?? '—'}</td>
-                                        <td className="px-4 py-3">
-                                            <StatusBadge variant={s.variant} size="sm">{s.label}</StatusBadge>
+                                    <tr
+                                        key={order.id}
+                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                    >
+                                        <td className="px-4 py-3 font-bold text-text tabular-nums">
+                                            {order.order_code}
                                         </td>
-                                        <td className="px-4 py-3 text-right font-semibold tabular-nums text-primary">{formatCurrency(order.total)}</td>
+                                        <td className="px-4 py-3 text-text-muted">
+                                            {order.customer_name ?? '—'}
+                                        </td>
+                                        <td className="px-4 py-3 text-text-muted">
+                                            {order.outlet?.name ?? '—'}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <StatusBadge
+                                                variant={s.variant}
+                                                size="sm"
+                                            >
+                                                {s.label}
+                                            </StatusBadge>
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-semibold text-primary tabular-nums">
+                                            {formatCurrency(order.total)}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-2">
-                                                {order.status === 'ready_for_pickup' && !order.delivery && (
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => setAssignOrder(order)}
-                                                    >
-                                                        Assign
-                                                    </Button>
-                                                )}
+                                                {order.status ===
+                                                    'ready_for_pickup' &&
+                                                    !order.delivery && (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                setAssignOrder(
+                                                                    order,
+                                                                )
+                                                            }
+                                                        >
+                                                            Assign
+                                                        </Button>
+                                                    )}
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    onClick={() => router.visit(`/owner/orders/${order.id}`)}
+                                                    onClick={() =>
+                                                        router.visit(
+                                                            `/owner/orders/${order.id}`,
+                                                        )
+                                                    }
                                                 >
                                                     Detail
                                                 </Button>

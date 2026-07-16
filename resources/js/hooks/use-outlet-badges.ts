@@ -19,7 +19,8 @@ const EMPTY_COUNTS: OutletBadgeCounts = {
 };
 
 export function useOutletBadges() {
-    const [badgeCounts, setBadgeCounts] = useState<OutletBadgeCounts>(EMPTY_COUNTS);
+    const [badgeCounts, setBadgeCounts] =
+        useState<OutletBadgeCounts>(EMPTY_COUNTS);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -28,8 +29,8 @@ export function useOutletBadges() {
                 const res = await fetch('/outlet/badge-counts');
 
                 if (!res.ok) {
-return;
-}
+                    return;
+                }
 
                 const data = await res.json();
                 setBadgeCounts({

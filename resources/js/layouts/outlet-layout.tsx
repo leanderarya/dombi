@@ -26,7 +26,15 @@ interface Props extends PropsWithChildren {
     actionBarSlot?: ReactNode;
 }
 
-export default function OutletLayout({ children, title, subtitle, backHref, headerBelow, headerRight, actionBarSlot }: Props) {
+export default function OutletLayout({
+    children,
+    title,
+    subtitle,
+    backHref,
+    headerBelow,
+    headerRight,
+    actionBarSlot,
+}: Props) {
     const page = usePage<any>();
     const { auth } = page.props;
     const [notificationOpen, setNotificationOpen] = useState(false);
@@ -72,7 +80,7 @@ export default function OutletLayout({ children, title, subtitle, backHref, head
             {/* Quick Scan FAB — always accessible */}
             <Link
                 href="/outlet/scan"
-                className="fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0))] right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg active:scale-95 transition-transform"
+                className="fixed right-4 bottom-[calc(1.5rem+env(safe-area-inset-bottom,0))] z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-lg transition-transform active:scale-95"
                 aria-label="Scan QR"
             >
                 <QrCode className="h-6 w-6" />

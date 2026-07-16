@@ -30,12 +30,17 @@ export default function CreateAddress() {
         <div className="min-h-dvh bg-background text-text">
             <Head title="Tambah Alamat" />
 
-            <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-safe">
+            <header className="sticky top-0 z-30 border-b border-border bg-white/95 pt-safe backdrop-blur">
                 <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                    <Link href="/customer/addresses" className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80">
+                    <Link
+                        href="/customer/addresses"
+                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
+                    >
                         <ChevronLeft className="h-5 w-5" />
                     </Link>
-                    <h1 className="text-sm font-semibold text-text">Tambah Alamat Baru</h1>
+                    <h1 className="text-sm font-semibold text-text">
+                        Tambah Alamat Baru
+                    </h1>
                     <div className="h-11 w-11" />
                 </div>
             </header>

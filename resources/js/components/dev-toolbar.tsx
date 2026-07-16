@@ -26,16 +26,23 @@ export default function DevToolbar({ currentRole, env }: DevToolbarProps) {
     };
 
     return (
-        <div className="fixed bottom-4 right-4 z-[9999]">
+        <div className="fixed right-4 bottom-4 z-[9999]">
             {isOpen && (
                 <div className="mb-2 rounded-lg border border-zinc-700 bg-zinc-900 p-3 shadow-xl">
                     <div className="mb-2 flex items-center justify-between">
-                        <span className="text-xs font-bold uppercase tracking-wider text-zinc-400">Dev Toolbar</span>
-                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[11px] font-bold text-amber-400">LOCAL</span>
+                        <span className="text-xs font-bold tracking-wider text-zinc-400 uppercase">
+                            Dev Toolbar
+                        </span>
+                        <span className="rounded bg-amber-500/20 px-1.5 py-0.5 text-[11px] font-bold text-amber-400">
+                            LOCAL
+                        </span>
                     </div>
 
                     <div className="mb-2 text-xs text-zinc-300">
-                        Current: <span className="font-bold text-white">{currentRole ?? 'Guest'}</span>
+                        Current:{' '}
+                        <span className="font-bold text-white">
+                            {currentRole ?? 'Guest'}
+                        </span>
                     </div>
 
                     <div className="flex flex-col gap-1">
@@ -44,7 +51,8 @@ export default function DevToolbar({ currentRole, env }: DevToolbarProps) {
                                 key={role.label}
                                 onClick={() => handleSwitch(role.route)}
                                 className={`flex items-center gap-2 rounded px-3 py-1.5 text-xs font-medium transition-colors ${
-                                    currentRole?.toLowerCase() === role.label.toLowerCase()
+                                    currentRole?.toLowerCase() ===
+                                    role.label.toLowerCase()
                                         ? 'bg-emerald-600 text-white'
                                         : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
                                 }`}

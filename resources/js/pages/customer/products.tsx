@@ -15,8 +15,8 @@ import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useFulfillmentOverlay } from '@/hooks/use-fulfillment-overlay';
 import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
-import {  useProducts } from '@/hooks/use-products';
-import type {Family} from '@/hooks/use-products';
+import { useProducts } from '@/hooks/use-products';
+import type { Family } from '@/hooks/use-products';
 import { useSectionReveal } from '@/hooks/use-section-reveal';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
@@ -82,8 +82,8 @@ function ProductsInner() {
         ];
 
         for (const f of families) {
-opts.push({ key: String(f.id), label: f.name });
-}
+            opts.push({ key: String(f.id), label: f.name });
+        }
 
         return opts;
     }, [families]);
@@ -215,7 +215,11 @@ opts.push({ key: String(f.id), label: f.name });
                                                                 group.familyDescription
                                                             }
                                                             familyImage={
-                                                                families.find((f) => f.id === group.familyId)?.image ?? null
+                                                                families.find(
+                                                                    (f) =>
+                                                                        f.id ===
+                                                                        group.familyId,
+                                                                )?.image ?? null
                                                             }
                                                             displayPrice={
                                                                 group.lowestPrice
@@ -367,8 +371,8 @@ function FulfillmentOverlay({
     target: 'pickup' | 'delivery';
 }) {
     if (state === 'hidden') {
-return null;
-}
+        return null;
+    }
 
     return (
         <div
@@ -414,14 +418,14 @@ function buildSections(
 
     for (const family of families) {
         if (activeFilter !== 'all' && String(family.id) !== activeFilter) {
-continue;
-}
+            continue;
+        }
 
         const active = family.variants.filter((v) => v.is_active);
 
         if (active.length === 0) {
-continue;
-}
+            continue;
+        }
 
         const flavorMap = new Map<string, Family['variants']>();
 
@@ -430,10 +434,10 @@ continue;
             const arr = flavorMap.get(key);
 
             if (arr) {
-arr.push(v);
-} else {
-flavorMap.set(key, [v]);
-}
+                arr.push(v);
+            } else {
+                flavorMap.set(key, [v]);
+            }
         }
 
         const flavorGroups: FlavorGroup[] = [];

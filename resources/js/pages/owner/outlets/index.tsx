@@ -21,13 +21,18 @@ function matchesFilter(outlet: any, filter: FilterKey): boolean {
         case 'inactive':
             return outlet.status !== 'active';
         case 'low_stock':
-            return outlet.status === 'active' && Number(outlet.low_stock_count) > 0;
+            return (
+                outlet.status === 'active' && Number(outlet.low_stock_count) > 0
+            );
         default:
             return true;
     }
 }
 
-function getOutletStatus(outlet: any): { label: string; variant: 'success' | 'warning' | 'danger' | 'neutral' } {
+function getOutletStatus(outlet: any): {
+    label: string;
+    variant: 'success' | 'warning' | 'danger' | 'neutral';
+} {
     if (outlet.status !== 'active') {
         return { label: 'Nonaktif', variant: 'neutral' };
     }
@@ -50,16 +55,25 @@ export default function OutletsIndex({ outlets }: any) {
 
     if (!outlets?.data) {
         return (
-            <OwnerPageShell title="Outlet" subtitle="Manajemen cabang operasional">
+            <OwnerPageShell
+                title="Outlet"
+                subtitle="Manajemen cabang operasional"
+            >
                 <SkeletonPage />
             </OwnerPageShell>
         );
     }
 
     const totalOutlets = outlets.data.length;
-    const activeOutlets = outlets.data.filter((o: any) => o.status === 'active').length;
-    const lowStockOutlets = outlets.data.filter((o: any) => Number(o.low_stock_count) > 0).length;
-    const busyOutlets = outlets.data.filter((o: any) => Number(o.active_orders_count) >= 3).length;
+    const activeOutlets = outlets.data.filter(
+        (o: any) => o.status === 'active',
+    ).length;
+    const lowStockOutlets = outlets.data.filter(
+        (o: any) => Number(o.low_stock_count) > 0,
+    ).length;
+    const busyOutlets = outlets.data.filter(
+        (o: any) => Number(o.active_orders_count) >= 3,
+    ).length;
 
     let filtered = outlets.data.filter((o: any) => matchesFilter(o, filter));
 
@@ -78,7 +92,12 @@ export default function OutletsIndex({ outlets }: any) {
             title="Outlet"
             subtitle="Manajemen cabang operasional"
             headerRight={
-                <Link href="/owner/outlets/create" className={cn(buttonVariants({ variant: 'primary', size: 'md' }))}>
+                <Link
+                    href="/owner/outlets/create"
+                    className={cn(
+                        buttonVariants({ variant: 'primary', size: 'md' }),
+                    )}
+                >
                     + Tambah Outlet
                 </Link>
             }
@@ -97,18 +116,44 @@ export default function OutletsIndex({ outlets }: any) {
                 >
                     <option value="all">Semua ({totalOutlets})</option>
                     <option value="active">Aktif ({activeOutlets})</option>
-                    <option value="inactive">Nonaktif ({totalOutlets - activeOutlets})</option>
-                    <option value="low_stock">Stok Rendah ({lowStockOutlets})</option>
+                    <option value="inactive">
+                        Nonaktif ({totalOutlets - activeOutlets})
+                    </option>
+                    <option value="low_stock">
+                        Stok Rendah ({lowStockOutlets})
+                    </option>
                 </select>
             </OwnerFilterCard>
 
             <OwnerKpiStrip
                 cols={4}
                 items={[
-                    { label: 'Total Outlet', value: totalOutlets, sublabel: 'Semua outlet', sublabelColor: 'text-text-subtle' },
-                    { label: 'Aktif', value: activeOutlets, sublabel: 'Outlet aktif', sublabelColor: 'text-emerald-500' },
-                    { label: 'Stok Rendah', value: lowStockOutlets, sublabel: lowStockOutlets > 0 ? 'Perlu restock' : undefined, sublabelColor: 'text-amber-500' },
-                    { label: 'Sibuk', value: busyOutlets, sublabel: busyOutlets > 0 ? '3+ pesanan aktif' : undefined, sublabelColor: 'text-blue-500' },
+                    {
+                        label: 'Total Outlet',
+                        value: totalOutlets,
+                        sublabel: 'Semua outlet',
+                        sublabelColor: 'text-text-subtle',
+                    },
+                    {
+                        label: 'Aktif',
+                        value: activeOutlets,
+                        sublabel: 'Outlet aktif',
+                        sublabelColor: 'text-emerald-500',
+                    },
+                    {
+                        label: 'Stok Rendah',
+                        value: lowStockOutlets,
+                        sublabel:
+                            lowStockOutlets > 0 ? 'Perlu restock' : undefined,
+                        sublabelColor: 'text-amber-500',
+                    },
+                    {
+                        label: 'Sibuk',
+                        value: busyOutlets,
+                        sublabel:
+                            busyOutlets > 0 ? '3+ pesanan aktif' : undefined,
+                        sublabelColor: 'text-blue-500',
+                    },
                 ]}
             />
 
@@ -117,18 +162,34 @@ export default function OutletsIndex({ outlets }: any) {
                     icon={<Store className="h-8 w-8" />}
                     title="Belum ada outlet"
                     description="Tambah outlet untuk mulai mengelola cabang"
-                    action={{ label: '+ Tambah Outlet', href: '/owner/outlets/create' }}
+                    action={{
+                        label: '+ Tambah Outlet',
+                        href: '/owner/outlets/create',
+                    }}
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card" aria-label="Daftar Outlet">
+                <div
+                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
+                    aria-label="Daftar Outlet"
+                >
                     <table className="w-full min-w-[600px]">
                         <thead>
                             <tr className="bg-surface-muted/50">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Lokasi</th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Pesanan</th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Outlet
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Lokasi
+                                </th>
+                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Status
+                                </th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                    Pesanan
+                                </th>
+                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                    Aksi
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -139,33 +200,58 @@ export default function OutletsIndex({ outlets }: any) {
                                 return (
                                     <tr
                                         key={outlet.id}
-                                        className="cursor-pointer border-t border-border/20 transition-colors hover:bg-mint-wash"
-                                        onClick={() => router.visit(`/owner/outlets/${outlet.id}`)}
+                                        className="hover:bg-mint-wash cursor-pointer border-t border-border/20 transition-colors"
+                                        onClick={() =>
+                                            router.visit(
+                                                `/owner/outlets/${outlet.id}`,
+                                            )
+                                        }
                                     >
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
-                                                    {outlet.name.charAt(0).toUpperCase()}
+                                                    {outlet.name
+                                                        .charAt(0)
+                                                        .toUpperCase()}
                                                 </div>
                                                 <div>
-                                                    <div className="text-sm font-semibold text-text">{outlet.name}</div>
+                                                    <div className="text-sm font-semibold text-text">
+                                                        {outlet.name}
+                                                    </div>
                                                     {lowStock > 0 && (
-                                                        <div className="text-xs font-bold text-amber-600">{lowStock} stok rendah</div>
+                                                        <div className="text-xs font-bold text-amber-600">
+                                                            {lowStock} stok
+                                                            rendah
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-xs text-text-muted">
-                                            {outlet.kelurahan} &middot; {outlet.kecamatan}
-                                            {Number(outlet.pending_restocks_count) > 0 && (
-                                                <span className="ml-1">&middot; {outlet.pending_restocks_count} restock</span>
+                                            {outlet.kelurahan} &middot;{' '}
+                                            {outlet.kecamatan}
+                                            {Number(
+                                                outlet.pending_restocks_count,
+                                            ) > 0 && (
+                                                <span className="ml-1">
+                                                    &middot;{' '}
+                                                    {
+                                                        outlet.pending_restocks_count
+                                                    }{' '}
+                                                    restock
+                                                </span>
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge>
+                                            <StatusBadge
+                                                variant={status.variant}
+                                                size="sm"
+                                            >
+                                                {status.label}
+                                            </StatusBadge>
                                         </td>
                                         <td className="px-4 py-3 text-right">
-                                            <span className="rounded-md bg-surface-muted px-2 py-0.5 text-xs font-bold tabular-nums text-text-muted">
+                                            <span className="rounded-md bg-surface-muted px-2 py-0.5 text-xs font-bold text-text-muted tabular-nums">
                                                 {outlet.active_orders_count}
                                             </span>
                                         </td>
@@ -176,7 +262,9 @@ export default function OutletsIndex({ outlets }: any) {
                                                     size="sm"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        router.visit(`/owner/outlets/${outlet.id}`);
+                                                        router.visit(
+                                                            `/owner/outlets/${outlet.id}`,
+                                                        );
                                                     }}
                                                 >
                                                     Detail
@@ -186,7 +274,9 @@ export default function OutletsIndex({ outlets }: any) {
                                                     size="sm"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        router.visit(`/owner/outlets/${outlet.id}/edit`);
+                                                        router.visit(
+                                                            `/owner/outlets/${outlet.id}/edit`,
+                                                        );
                                                     }}
                                                 >
                                                     Edit
@@ -196,7 +286,9 @@ export default function OutletsIndex({ outlets }: any) {
                                                     size="sm"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        router.visit(`/owner/inventories?outlet_id=${outlet.id}`);
+                                                        router.visit(
+                                                            `/owner/inventories?outlet_id=${outlet.id}`,
+                                                        );
                                                     }}
                                                 >
                                                     Inv
@@ -213,7 +305,9 @@ export default function OutletsIndex({ outlets }: any) {
 
             <Pagination links={outlets.links} />
 
-            <OutletProvisioningSummary provisioning={flash?.outlet_provisioning} />
+            <OutletProvisioningSummary
+                provisioning={flash?.outlet_provisioning}
+            />
         </OwnerPageShell>
     );
 }

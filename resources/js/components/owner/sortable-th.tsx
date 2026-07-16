@@ -9,12 +9,19 @@ interface Props {
     className?: string;
 }
 
-export default function SortableTh({ label, active, dir, align = 'left', onClick, className }: Props) {
+export default function SortableTh({
+    label,
+    active,
+    dir,
+    align = 'left',
+    onClick,
+    className,
+}: Props) {
     return (
         <th
             onClick={onClick}
             className={cn(
-                'cursor-pointer select-none px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-text-muted transition-colors hover:text-text',
+                'cursor-pointer px-6 py-3 text-[11px] font-semibold tracking-wider text-text-muted uppercase transition-colors select-none hover:text-text',
                 active && 'text-text',
                 align === 'right' && 'text-right',
                 align === 'center' && 'text-center',
@@ -22,7 +29,11 @@ export default function SortableTh({ label, active, dir, align = 'left', onClick
             )}
         >
             {label}
-            {active && <span className="ml-0.5 text-primary text-[10px]">{dir === 'asc' ? '▲' : '▼'}</span>}
+            {active && (
+                <span className="ml-0.5 text-[10px] text-primary">
+                    {dir === 'asc' ? '▲' : '▼'}
+                </span>
+            )}
         </th>
     );
 }

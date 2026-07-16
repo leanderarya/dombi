@@ -34,28 +34,49 @@ const METHOD_LABELS: Record<string, string> = {
     other: 'Lainnya',
 };
 
-export default function PaymentHistoryCard({ payment, onVerify, onReject, onShowProof, processing }: Props) {
+export default function PaymentHistoryCard({
+    payment,
+    onVerify,
+    onReject,
+    onShowProof,
+    processing,
+}: Props) {
     const isPending = payment.status === 'pending_verification';
     const isRejected = payment.status === 'rejected';
 
     return (
-        <div className={`rounded-lg border p-5 transition-all duration-200 ${
-            isPending
-                ? 'border-amber-300 bg-amber-50/30'
-                : 'border-border bg-surface'
-        }`}>
+        <div
+            className={`rounded-lg border p-5 transition-all duration-200 ${
+                isPending
+                    ? 'border-amber-300 bg-amber-50/30'
+                    : 'border-border bg-surface'
+            }`}
+        >
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                    <div className="text-base font-semibold text-text">{payment.outlet.name}</div>
-                    <div className="mt-1 text-2xl font-bold tabular-nums text-text">{formatCurrency(payment.amount)}</div>
+                    <div className="text-base font-semibold text-text">
+                        {payment.outlet.name}
+                    </div>
+                    <div className="mt-1 text-2xl font-bold text-text tabular-nums">
+                        {formatCurrency(payment.amount)}
+                    </div>
                 </div>
-                <FinanceStatusBadge status={payment.status === 'pending_verification' ? 'pending' : payment.status} />
+                <FinanceStatusBadge
+                    status={
+                        payment.status === 'pending_verification'
+                            ? 'pending'
+                            : payment.status
+                    }
+                />
             </div>
 
             {/* Meta */}
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
-                <span>{METHOD_LABELS[payment.payment_method] ?? payment.payment_method}</span>
+                <span>
+                    {METHOD_LABELS[payment.payment_method] ??
+                        payment.payment_method}
+                </span>
                 {payment.reference_number && (
                     <>
                         <span className="text-text-subtle">•</span>
@@ -68,7 +89,9 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
 
             {/* Notes */}
             {payment.notes && (
-                <div className="mt-2 text-xs text-text-muted">{payment.notes}</div>
+                <div className="mt-2 text-xs text-text-muted">
+                    {payment.notes}
+                </div>
             )}
 
             {/* Rejection reason */}

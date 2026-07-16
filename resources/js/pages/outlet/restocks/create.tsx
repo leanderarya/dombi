@@ -7,16 +7,27 @@ import OutletLayout from '@/layouts/outlet-layout';
 import { calculateStockStatus } from '@/lib/stock';
 
 export default function CreateRestock({ families, inventories }: any) {
-    const allVariants = families?.flatMap((f: any) =>
-        (f.variants ?? []).map((v: any) => ({
-            ...v,
-            family_name: f.name,
-            family_id: f.id,
-        }))
-    ) ?? [];
+    const allVariants =
+        families?.flatMap((f: any) =>
+            (f.variants ?? []).map((v: any) => ({
+                ...v,
+                family_name: f.name,
+                family_id: f.id,
+            })),
+        ) ?? [];
 
-    const form = useForm({ notes: '', items: [{ product_variant_id: allVariants[0]?.id ?? '', requested_quantity: 1 }] });
-    const inventoryByVariant = new Map(inventories.map((item: any) => [item.product_variant_id, item]));
+    const form = useForm({
+        notes: '',
+        items: [
+            {
+                product_variant_id: allVariants[0]?.id ?? '',
+                requested_quantity: 1,
+            },
+        ],
+    });
+    const inventoryByVariant = new Map(
+        inventories.map((item: any) => [item.product_variant_id, item]),
+    );
 
     const setItem = (index: number, key: string, value: any) => {
         const items = [...form.data.items] as any[];
@@ -25,11 +36,20 @@ export default function CreateRestock({ families, inventories }: any) {
     };
 
     const addItem = () => {
-        form.setData('items', [...form.data.items, { product_variant_id: allVariants[0]?.id ?? '', requested_quantity: 1 }] as any);
+        form.setData('items', [
+            ...form.data.items,
+            {
+                product_variant_id: allVariants[0]?.id ?? '',
+                requested_quantity: 1,
+            },
+        ] as any);
     };
 
     const removeItem = (index: number) => {
-        form.setData('items', form.data.items.filter((_: any, i: number) => i !== index) as any);
+        form.setData(
+            'items',
+            form.data.items.filter((_: any, i: number) => i !== index) as any,
+        );
     };
 
     const handleSubmit = () => {
@@ -58,12 +78,16 @@ export default function CreateRestock({ families, inventories }: any) {
             {/* Items */}
             <div className="mt-4 space-y-3">
                 {form.data.items.map((item: any, index: number) => {
-                    const inventory: any = inventoryByVariant.get(Number(item.product_variant_id));
+                    const inventory: any = inventoryByVariant.get(
+                        Number(item.product_variant_id),
+                    );
 
                     return (
                         <SectionCard key={index}>
                             <div className="flex items-start justify-between">
-                                <div className="text-xs font-bold uppercase tracking-wider text-text-subtle">Item {index + 1}</div>
+                                <div className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                                    Item {index + 1}
+                                </div>
                                 {form.data.items.length > 1 && (
                                     <button
                                         type="button"
@@ -76,16 +100,29 @@ export default function CreateRestock({ families, inventories }: any) {
                             </div>
 
                             <div className="mt-3">
-                                <label className="text-xs font-medium text-text-muted">Varian Produk</label>
+                                <label className="text-xs font-medium text-text-muted">
+                                    Varian Produk
+                                </label>
                                 <select
                                     value={item.product_variant_id}
-                                    onChange={(e) => setItem(index, 'product_variant_id', e.target.value)}
-                                    className="mt-1 w-full min-h-11 rounded-lg border border-border px-3 text-sm"
+                                    onChange={(e) =>
+                                        setItem(
+                                            index,
+                                            'product_variant_id',
+                                            e.target.value,
+                                        )
+                                    }
+                                    className="mt-1 min-h-11 w-full rounded-lg border border-border px-3 text-sm"
                                 >
                                     {families?.map((family: any) => (
-                                        <optgroup key={family.id} label={family.name}>
+                                        <optgroup
+                                            key={family.id}
+                                            label={family.name}
+                                        >
                                             {family.variants?.map((v: any) => (
-                                                <option key={v.id} value={v.id}>{v.name}</option>
+                                                <option key={v.id} value={v.id}>
+                                                    {v.name}
+                                                </option>
                                             ))}
                                         </optgroup>
                                     ))}
@@ -95,28 +132,48 @@ export default function CreateRestock({ families, inventories }: any) {
                             {inventory && (
                                 <div className="mt-2 flex items-center gap-3 rounded-lg bg-surface-muted p-2.5 text-xs">
                                     <div>
-                                        <span className="text-text-muted">Stok:</span>{' '}
-                                        <span className="font-semibold">{inventory.current_stock}</span>
+                                        <span className="text-text-muted">
+                                            Stok:
+                                        </span>{' '}
+                                        <span className="font-semibold">
+                                            {inventory.current_stock}
+                                        </span>
                                     </div>
                                     <div>
-                                        <span className="text-text-muted">Min:</span>{' '}
-                                        <span className="font-semibold">{inventory.minimum_stock}</span>
+                                        <span className="text-text-muted">
+                                            Min:
+                                        </span>{' '}
+                                        <span className="font-semibold">
+                                            {inventory.minimum_stock}
+                                        </span>
                                     </div>
                                     <StockLevelBadge
-                                        {...calculateStockStatus(inventory.current_stock, inventory.reserved_stock, inventory.minimum_stock)}
+                                        {...calculateStockStatus(
+                                            inventory.current_stock,
+                                            inventory.reserved_stock,
+                                            inventory.minimum_stock,
+                                        )}
                                         showQuantity
                                     />
                                 </div>
                             )}
 
                             <div className="mt-3">
-                                <label className="text-xs font-medium text-text-muted">Jumlah Diminta</label>
+                                <label className="text-xs font-medium text-text-muted">
+                                    Jumlah Diminta
+                                </label>
                                 <input
                                     type="number"
                                     min="1"
                                     value={item.requested_quantity}
-                                    onChange={(e) => setItem(index, 'requested_quantity', Number(e.target.value))}
-                                    className="mt-1 w-full min-h-11 rounded-lg border border-border px-3 text-sm"
+                                    onChange={(e) =>
+                                        setItem(
+                                            index,
+                                            'requested_quantity',
+                                            Number(e.target.value),
+                                        )
+                                    }
+                                    className="mt-1 min-h-11 w-full rounded-lg border border-border px-3 text-sm"
                                 />
                             </div>
                         </SectionCard>
@@ -136,7 +193,9 @@ export default function CreateRestock({ families, inventories }: any) {
 
             {/* Notes */}
             <div>
-                <label className="text-xs font-medium text-text-muted">Catatan</label>
+                <label className="text-xs font-medium text-text-muted">
+                    Catatan
+                </label>
                 <textarea
                     value={form.data.notes}
                     onChange={(e) => form.setData('notes', e.target.value)}
@@ -145,7 +204,11 @@ export default function CreateRestock({ families, inventories }: any) {
                 />
             </div>
 
-            {form.errors.items && <div className="mt-2 text-xs text-red-600">{form.errors.items}</div>}
+            {form.errors.items && (
+                <div className="mt-2 text-xs text-red-600">
+                    {form.errors.items}
+                </div>
+            )}
         </OutletLayout>
     );
 }

@@ -32,10 +32,19 @@ const colorMap: Record<string, string> = {
     rejected: 'text-red-600 bg-red-50 ring-red-200',
 };
 
-export default function OwnerExchangesIndex({ exchanges, filters, dashboard, outlets, reasons }: any) {
+export default function OwnerExchangesIndex({
+    exchanges,
+    filters,
+    dashboard,
+    outlets,
+    reasons,
+}: any) {
     if (!exchanges || !filters) {
         return (
-            <OwnerPageShell title="Permintaan Tukar Produk" subtitle="Kelola penukaran barang dari outlet">
+            <OwnerPageShell
+                title="Permintaan Tukar Produk"
+                subtitle="Kelola penukaran barang dari outlet"
+            >
                 <SkeletonPage />
             </OwnerPageShell>
         );
@@ -44,7 +53,11 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
     const handleApprove = (id: number, e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        router.post(`/owner/exchanges/${id}/approve`, {}, { preserveScroll: true });
+        router.post(
+            `/owner/exchanges/${id}/approve`,
+            {},
+            { preserveScroll: true },
+        );
     };
 
     const currentStatus = filters.status ?? '';
@@ -58,28 +71,59 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
     };
 
     return (
-        <OwnerPageShell title="Permintaan Tukar Produk" subtitle="Kelola penukaran barang dari outlet">
+        <OwnerPageShell
+            title="Permintaan Tukar Produk"
+            subtitle="Kelola penukaran barang dari outlet"
+        >
             {/* KPI Strip */}
             <div aria-label="Ringkasan Tukar Produk">
-            <OwnerKpiStrip
-                items={[
-                    { label: 'Tertunda', value: dashboard.pending_exchanges, sublabel: dashboard.pending_exchanges > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
-                    { label: 'Nilai Tukar', value: formatCurrency(dashboard.exchange_value) },
-                    ...(dashboard.total_exchanges !== undefined ? [{ label: 'Total', value: dashboard.total_exchanges }] : []),
-                ]}
-            />
+                <OwnerKpiStrip
+                    items={[
+                        {
+                            label: 'Tertunda',
+                            value: dashboard.pending_exchanges,
+                            sublabel:
+                                dashboard.pending_exchanges > 0
+                                    ? 'Perlu ditinjau'
+                                    : undefined,
+                            sublabelColor: 'text-amber-600',
+                        },
+                        {
+                            label: 'Nilai Tukar',
+                            value: formatCurrency(dashboard.exchange_value),
+                        },
+                        ...(dashboard.total_exchanges !== undefined
+                            ? [
+                                  {
+                                      label: 'Total',
+                                      value: dashboard.total_exchanges,
+                                  },
+                              ]
+                            : []),
+                    ]}
+                />
             </div>
 
             {/* Status Pills */}
-            <div className="mb-4 flex flex-wrap items-center gap-2" aria-label="Filter Status Tukar Produk">
+            <div
+                className="mb-4 flex flex-wrap items-center gap-2"
+                aria-label="Filter Status Tukar Produk"
+            >
                 {statusFilters.map((sf) => {
                     const isActive = currentStatus === sf.key;
 
                     return (
-                        <button key={sf.key} type="button" onClick={() => setFilter('status', sf.key)}
+                        <button
+                            key={sf.key}
+                            type="button"
+                            onClick={() => setFilter('status', sf.key)}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
-                            }`}>
+                                isActive
+                                    ? (colorMap[sf.key] ??
+                                      'bg-primary/10 text-primary ring-primary/20')
+                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                            }`}
+                        >
                             {sf.label}
                         </button>
                     );
@@ -93,10 +137,20 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                 searchPlaceholder="Cari kode..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => setFilter('search', val)}
-                outletOptions={outlets.map((o: any) => ({ value: String(o.id), label: o.name }))}
+                outletOptions={outlets.map((o: any) => ({
+                    value: String(o.id),
+                    label: o.name,
+                }))}
                 outletValue={filters.outlet_id ?? ''}
                 onOutletChange={(val) => setFilter('outlet_id', val)}
-                reasonOptions={reasons ? Object.entries(reasons).map(([v, l]) => ({ value: v, label: String(l) })) : undefined}
+                reasonOptions={
+                    reasons
+                        ? Object.entries(reasons).map(([v, l]) => ({
+                              value: v,
+                              label: String(l),
+                          }))
+                        : undefined
+                }
                 reasonValue={filters.reason ?? ''}
                 onReasonChange={(val) => setFilter('reason', val)}
                 dateValue={filters.date ?? ''}
@@ -105,16 +159,29 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
 
             {/* Table */}
             {exchanges.data.length === 0 ? (
-                <EmptyState icon="package" title="Tidak ada permintaan tukar produk" description="Belum ada pengajuan penukaran dari outlet" />
+                <EmptyState
+                    icon="package"
+                    title="Tidak ada permintaan tukar produk"
+                    description="Belum ada pengajuan penukaran dari outlet"
+                />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card" aria-label="Tabel Tukar Produk">
+                <div
+                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
+                    aria-label="Tabel Tukar Produk"
+                >
                     <table className="w-full min-w-[600px] text-sm">
                         <thead>
                             <tr className="bg-surface-muted/50 text-xs font-medium text-text-muted">
                                 <th className="px-3 py-2.5 text-left">Kode</th>
-                                <th className="px-3 py-2.5 text-left">Outlet / Info</th>
-                                <th className="px-3 py-2.5 text-left">Status</th>
-                                <th className="px-3 py-2.5 text-right">Nilai</th>
+                                <th className="px-3 py-2.5 text-left">
+                                    Outlet / Info
+                                </th>
+                                <th className="px-3 py-2.5 text-left">
+                                    Status
+                                </th>
+                                <th className="px-3 py-2.5 text-right">
+                                    Nilai
+                                </th>
                                 <th className="px-3 py-2.5 text-right">Aksi</th>
                             </tr>
                         </thead>
@@ -123,19 +190,55 @@ export default function OwnerExchangesIndex({ exchanges, filters, dashboard, out
                                 const status = getExchangeStatus(ex.status);
 
                                 return (
-                                    <tr key={ex.id} className="border-t border-border/20 transition-colors last:border-b-0 hover:bg-mint-wash">
-                                        <td className="px-3 py-2.5 font-bold tabular-nums text-text">#{ex.id}</td>
-                                        <td className="px-3 py-2.5 truncate text-text-muted">{ex.outlet?.name ?? '-'} · {ex.return_request_id ? `Return #${ex.return_request_id}` : 'Tanpa return'}</td>
-                                        <td className="px-3 py-2.5"><StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge></td>
-                                        <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-primary">{formatCurrency(ex.exchange_value)}</td>
+                                    <tr
+                                        key={ex.id}
+                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors last:border-b-0"
+                                    >
+                                        <td className="px-3 py-2.5 font-bold text-text tabular-nums">
+                                            #{ex.id}
+                                        </td>
+                                        <td className="truncate px-3 py-2.5 text-text-muted">
+                                            {ex.outlet?.name ?? '-'} ·{' '}
+                                            {ex.return_request_id
+                                                ? `Return #${ex.return_request_id}`
+                                                : 'Tanpa return'}
+                                        </td>
+                                        <td className="px-3 py-2.5">
+                                            <StatusBadge
+                                                variant={status.variant}
+                                                size="sm"
+                                            >
+                                                {status.label}
+                                            </StatusBadge>
+                                        </td>
+                                        <td className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
+                                            {formatCurrency(ex.exchange_value)}
+                                        </td>
                                         <td className="px-3 py-2.5 text-right">
-                                            <div className="flex items-center gap-1 justify-end">
+                                            <div className="flex items-center justify-end gap-1">
                                                 {ex.status === 'submitted' && (
-                                                    <Button size="sm" variant="default" onClick={(e) => handleApprove(ex.id, e)}>
+                                                    <Button
+                                                        size="sm"
+                                                        variant="default"
+                                                        onClick={(e) =>
+                                                            handleApprove(
+                                                                ex.id,
+                                                                e,
+                                                            )
+                                                        }
+                                                    >
                                                         Setujui
                                                     </Button>
                                                 )}
-                                                <Button size="sm" variant="ghost" onClick={() => router.visit(`/owner/exchanges/${ex.id}`)}>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        router.visit(
+                                                            `/owner/exchanges/${ex.id}`,
+                                                        )
+                                                    }
+                                                >
                                                     Tinjau
                                                 </Button>
                                             </div>

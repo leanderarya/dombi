@@ -6,9 +6,16 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 import { Search, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { MapContainer, Marker, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
-import { searchPlaces  } from '@/lib/geocoding';
-import type {PlaceSuggestion} from '@/lib/geocoding';
+import {
+    MapContainer,
+    Marker,
+    Popup,
+    TileLayer,
+    useMap,
+    useMapEvents,
+} from 'react-leaflet';
+import { searchPlaces } from '@/lib/geocoding';
+import type { PlaceSuggestion } from '@/lib/geocoding';
 
 type LatLng = { lat: number; lng: number };
 
@@ -46,35 +53,52 @@ function haversineDistance(a: LatLng, b: LatLng): number {
     const dLng = ((b.lng - a.lng) * Math.PI) / 180;
     const sinLat = Math.sin(dLat / 2);
     const sinLng = Math.sin(dLng / 2);
-    const h = sinLat * sinLat + Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * sinLng * sinLng;
+    const h =
+        sinLat * sinLat +
+        Math.cos((a.lat * Math.PI) / 180) *
+            Math.cos((b.lat * Math.PI) / 180) *
+            sinLng *
+            sinLng;
 
     return R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-export default function OutletLocationMap({ value, onChange, readOnly = false, existingOutlets = [] }: Props) {
+export default function OutletLocationMap({
+    value,
+    onChange,
+    readOnly = false,
+    existingOutlets = [],
+}: Props) {
     const marker = value?.lat && value?.lng ? value : null;
     const center = marker ?? SEMARANG_CENTER;
-    const selectedIcon = useMemo(() => L.icon({
-        iconRetinaUrl: markerIcon2x,
-        iconUrl: markerIcon,
-        shadowUrl: markerShadow,
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41],
-    }), []);
+    const selectedIcon = useMemo(
+        () =>
+            L.icon({
+                iconRetinaUrl: markerIcon2x,
+                iconUrl: markerIcon,
+                shadowUrl: markerShadow,
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41],
+            }),
+        [],
+    );
 
     // Find nearest outlet to selected marker
     const nearest = useMemo(() => {
         if (!marker || existingOutlets.length === 0) {
-return null;
-}
+            return null;
+        }
 
         let minDist = Infinity;
         let closest: ExistingOutlet | null = null;
 
         for (const o of existingOutlets) {
-            const d = haversineDistance(marker, { lat: Number(o.latitude), lng: Number(o.longitude) });
+            const d = haversineDistance(marker, {
+                lat: Number(o.latitude),
+                lng: Number(o.longitude),
+            });
 
             if (d < minDist) {
                 minDist = d;
@@ -87,7 +111,9 @@ return null;
 
     return (
         <div className="overflow-hidden rounded-lg border border-slate-300 bg-slate-100">
-            {!readOnly && <MapSearchBox onSelect={(lat, lng) => onChange({ lat, lng })} />}
+            {!readOnly && (
+                <MapSearchBox onSelect={(lat, lng) => onChange({ lat, lng })} />
+            )}
             <div className="h-[200px] w-full lg:h-[400px]">
                 <MapContainer
                     center={[center.lat, center.lng]}
@@ -102,7 +128,10 @@ return null;
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
-                    <MapFitBounds existingOutlets={existingOutlets} position={marker} />
+                    <MapFitBounds
+                        existingOutlets={existingOutlets}
+                        position={marker}
+                    />
                     <MapCenter position={marker} />
                     {!readOnly && <MapClickHandler onChange={onChange} />}
 
@@ -115,8 +144,14 @@ return null;
                         >
                             <Popup>
                                 <div className="text-xs">
-                                    <div className="font-bold text-slate-900">{o.name}</div>
-                                    {o.address && <div className="mt-0.5 text-slate-500">{o.address}</div>}
+                                    <div className="font-bold text-slate-900">
+                                        {o.name}
+                                    </div>
+                                    {o.address && (
+                                        <div className="mt-0.5 text-slate-500">
+                                            {o.address}
+                                        </div>
+                                    )}
                                 </div>
                             </Popup>
                         </Marker>
@@ -131,7 +166,10 @@ return null;
                             eventHandlers={{
                                 dragend: (event) => {
                                     const point = event.target.getLatLng();
-                                    onChange({ lat: point.lat, lng: point.lng });
+                                    onChange({
+                                        lat: point.lat,
+                                        lng: point.lng,
+                                    });
                                 },
                             }}
                         />
@@ -140,17 +178,32 @@ return null;
             </div>
             <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-white px-3 py-2 text-xs">
                 <span className="font-semibold text-slate-500">
-                    {readOnly ? 'Outlet coordinates' : nearest ? `Outlet terdekat: ${nearest.outlet.name} (${nearest.distance.toFixed(1)} km)` : 'Tap map atau drag marker'}
+                    {readOnly
+                        ? 'Outlet coordinates'
+                        : nearest
+                          ? `Outlet terdekat: ${nearest.outlet.name} (${nearest.distance.toFixed(1)} km)`
+                          : 'Tap map atau drag marker'}
                 </span>
                 <span className="rounded-md bg-[#F8FAFC] px-2 py-1 font-semibold text-slate-700 tabular-nums">
-                    Lat: {marker ? marker.lat.toFixed(5) : SEMARANG_CENTER.lat.toFixed(2)} · Lng: {marker ? marker.lng.toFixed(5) : SEMARANG_CENTER.lng.toFixed(2)}
+                    Lat:{' '}
+                    {marker
+                        ? marker.lat.toFixed(5)
+                        : SEMARANG_CENTER.lat.toFixed(2)}{' '}
+                    · Lng:{' '}
+                    {marker
+                        ? marker.lng.toFixed(5)
+                        : SEMARANG_CENTER.lng.toFixed(2)}
                 </span>
             </div>
         </div>
     );
 }
 
-function MapSearchBox({ onSelect }: { onSelect: (lat: number, lng: number) => void }) {
+function MapSearchBox({
+    onSelect,
+}: {
+    onSelect: (lat: number, lng: number) => void;
+}) {
     const [query, setQuery] = useState('');
     const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
     const [loading, setLoading] = useState(false);
@@ -162,12 +215,12 @@ function MapSearchBox({ onSelect }: { onSelect: (lat: number, lng: number) => vo
         setQuery(value);
 
         if (debounceRef.current) {
-clearTimeout(debounceRef.current);
-}
+            clearTimeout(debounceRef.current);
+        }
 
         if (abortRef.current) {
-abortRef.current.abort();
-}
+            abortRef.current.abort();
+        }
 
         if (value.trim().length < 3) {
             setSuggestions([]);
@@ -193,12 +246,15 @@ abortRef.current.abort();
         }, 350);
     }, []);
 
-    const handleSelect = useCallback((suggestion: PlaceSuggestion) => {
-        onSelect(suggestion.latitude, suggestion.longitude);
-        setQuery(suggestion.title);
-        setSuggestions([]);
-        setOpen(false);
-    }, [onSelect]);
+    const handleSelect = useCallback(
+        (suggestion: PlaceSuggestion) => {
+            onSelect(suggestion.latitude, suggestion.longitude);
+            setQuery(suggestion.title);
+            setSuggestions([]);
+            setOpen(false);
+        },
+        [onSelect],
+    );
 
     const handleClear = useCallback(() => {
         setQuery('');
@@ -206,8 +262,8 @@ abortRef.current.abort();
         setOpen(false);
 
         if (abortRef.current) {
-abortRef.current.abort();
-}
+            abortRef.current.abort();
+        }
     }, []);
 
     return (
@@ -223,7 +279,11 @@ abortRef.current.abort();
                     className="flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none"
                 />
                 {query && (
-                    <button type="button" onClick={handleClear} className="text-slate-400 hover:text-slate-600">
+                    <button
+                        type="button"
+                        onClick={handleClear}
+                        className="text-slate-400 hover:text-slate-600"
+                    >
                         <X className="h-4 w-4" />
                     </button>
                 )}
@@ -241,8 +301,12 @@ abortRef.current.abort();
                             onClick={() => handleSelect(s)}
                             className="flex w-full flex-col px-3 py-2 text-left hover:bg-emerald-50 active:bg-emerald-100"
                         >
-                            <span className="text-sm font-medium text-slate-900">{s.title}</span>
-                            <span className="text-xs text-slate-500">{s.subtitle}</span>
+                            <span className="text-sm font-medium text-slate-900">
+                                {s.title}
+                            </span>
+                            <span className="text-xs text-slate-500">
+                                {s.subtitle}
+                            </span>
                         </button>
                     ))}
                 </div>
@@ -274,25 +338,35 @@ function MapCenter({ position }: { position: LatLng | null }) {
         }
 
         if (position) {
-            map.setView([position.lat, position.lng], MARKER_ZOOM, { animate: true });
+            map.setView([position.lat, position.lng], MARKER_ZOOM, {
+                animate: true,
+            });
         }
     }, [map, position]);
 
     return null;
 }
 
-function MapFitBounds({ existingOutlets, position }: { existingOutlets: ExistingOutlet[]; position: LatLng | null }) {
+function MapFitBounds({
+    existingOutlets,
+    position,
+}: {
+    existingOutlets: ExistingOutlet[];
+    position: LatLng | null;
+}) {
     const map = useMap();
     const hasFitted = useRef(false);
 
     useEffect(() => {
         if (hasFitted.current) {
-return;
-}
+            return;
+        }
 
         // If we have a position (editing), zoom to it
         if (position) {
-            map.setView([position.lat, position.lng], MARKER_ZOOM, { animate: false });
+            map.setView([position.lat, position.lng], MARKER_ZOOM, {
+                animate: false,
+            });
             hasFitted.current = true;
 
             return;
@@ -301,15 +375,21 @@ return;
         // If we have existing outlets, fit bounds to show them all
         if (existingOutlets.length >= 2) {
             const bounds = L.latLngBounds(
-                existingOutlets.map(o => [parseFloat(o.latitude), parseFloat(o.longitude)])
+                existingOutlets.map((o) => [
+                    parseFloat(o.latitude),
+                    parseFloat(o.longitude),
+                ]),
             );
             map.fitBounds(bounds, { maxZoom: MARKER_ZOOM, padding: [40, 40] });
             hasFitted.current = true;
         } else if (existingOutlets.length === 1) {
             map.setView(
-                [parseFloat(existingOutlets[0].latitude), parseFloat(existingOutlets[0].longitude)],
+                [
+                    parseFloat(existingOutlets[0].latitude),
+                    parseFloat(existingOutlets[0].longitude),
+                ],
                 MARKER_ZOOM,
-                { animate: false }
+                { animate: false },
             );
             hasFitted.current = true;
         }

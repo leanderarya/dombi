@@ -32,7 +32,17 @@ interface Props {
     loading?: boolean;
 }
 
-const VariantListItem = memo(function VariantListItem({ variant, familyId, familyDescription, familyImage, displayPrice, displayLabel, variantCount = 1, onQuickAdd, loading }: Props) {
+const VariantListItem = memo(function VariantListItem({
+    variant,
+    familyId,
+    familyDescription,
+    familyImage,
+    displayPrice,
+    displayLabel,
+    variantCount = 1,
+    onQuickAdd,
+    loading,
+}: Props) {
     const [adding, setAdding] = useState(false);
     const [toast, setToast] = useState(false);
     const cart = useCart();
@@ -47,20 +57,22 @@ const VariantListItem = memo(function VariantListItem({ variant, familyId, famil
         const params = new URLSearchParams();
 
         if (selectedOutlet) {
-params.set('outlet_id', String(selectedOutlet.id));
-}
+            params.set('outlet_id', String(selectedOutlet.id));
+        }
 
         if (variant.flavor) {
-params.set('flavor', variant.flavor);
-}
+            params.set('flavor', variant.flavor);
+        }
 
         if (variant.size) {
-params.set('size', variant.size);
-}
+            params.set('size', variant.size);
+        }
 
         const qs = params.toString();
 
-        return qs ? `/customer/products/${familyId}?${qs}` : `/customer/products/${familyId}`;
+        return qs
+            ? `/customer/products/${familyId}?${qs}`
+            : `/customer/products/${familyId}`;
     })();
 
     const handleQuickAdd = async (e: React.MouseEvent) => {
@@ -81,7 +93,9 @@ params.set('size', variant.size);
         cart.addItem(variant.id, 1, displayPrice);
 
         try {
-            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const token = document
+                .querySelector('meta[name="csrf-token"]')
+                ?.getAttribute('content');
             await fetch('/customer/cart/add', {
                 method: 'POST',
                 headers: {
@@ -113,7 +127,7 @@ params.set('size', variant.size);
     return (
         <Link
             href={productHref}
-            className={`flex items-center gap-3.5 p-3 active:bg-surface-muted transition-colors ${isOutOfStock ? 'opacity-50' : ''}`}
+            className={`flex items-center gap-3.5 p-3 transition-colors active:bg-surface-muted ${isOutOfStock ? 'opacity-50' : ''}`}
         >
             {/* Image */}
             <div className="relative shrink-0">
@@ -121,13 +135,21 @@ params.set('size', variant.size);
                     <Skeleton className="h-16 w-16 rounded-xl" />
                 ) : (
                     <>
-                        <ProductImage name={variant.name} src={variant.image ?? familyImage} size="md" />
+                        <ProductImage
+                            name={variant.name}
+                            src={variant.image ?? familyImage}
+                            size="md"
+                        />
                         {/* Favorite button */}
                         <button
                             type="button"
                             onClick={handleFavorite}
-                            className="absolute -right-1 -top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm"
-                            aria-label={isFav ? 'Hapus dari favorit' : 'Tambah ke favorit'}
+                            className="absolute -top-1 -right-1 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm"
+                            aria-label={
+                                isFav
+                                    ? 'Hapus dari favorit'
+                                    : 'Tambah ke favorit'
+                            }
                         >
                             <Heart
                                 className={`h-3.5 w-3.5 ${isFav ? 'fill-red-500 text-red-500' : 'text-text-muted'}`}
@@ -143,16 +165,20 @@ params.set('size', variant.size);
                     {displayLabel}
                 </div>
                 {familyDescription && (
-                    <div className="mt-0.5 text-xs text-text-muted line-clamp-2">
+                    <div className="mt-0.5 line-clamp-2 text-xs text-text-muted">
                         {familyDescription}
                     </div>
                 )}
                 <div className="mt-1 flex items-center justify-between">
                     <div>
                         {showMulaiDari && (
-                            <div className="text-[10px] text-text-muted">Mulai dari</div>
+                            <div className="text-[10px] text-text-muted">
+                                Mulai dari
+                            </div>
                         )}
-                        <div className="text-sm font-bold tabular-nums text-text">{formatCurrency(displayPrice)}</div>
+                        <div className="text-sm font-bold text-text tabular-nums">
+                            {formatCurrency(displayPrice)}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -161,8 +187,18 @@ params.set('size', variant.size);
             <div className="shrink-0">
                 {toast ? (
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        <svg
+                            className="h-4 w-4 text-emerald-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                            />
                         </svg>
                     </div>
                 ) : (
@@ -175,15 +211,33 @@ params.set('size', variant.size);
                                 ? 'bg-surface-muted text-text-muted'
                                 : 'bg-primary text-white active:bg-primary-hover'
                         }`}
-                        aria-label={isOutOfStock ? 'Habis' : 'Tambah ke keranjang'}
+                        aria-label={
+                            isOutOfStock ? 'Habis' : 'Tambah ke keranjang'
+                        }
                     >
                         {isOutOfStock ? (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                            <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                            >
                                 <path strokeLinecap="round" d="M18 12H6" />
                             </svg>
                         ) : (
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" />
+                            <svg
+                                className="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth="2.5"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 5v14M5 12h14"
+                                />
                             </svg>
                         )}
                     </button>

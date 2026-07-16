@@ -20,12 +20,19 @@ const fallbackColors = [
     'from-purple-100 to-purple-200',
 ];
 
-export default function ProductImage({ name, src, size = 'md', className = '' }: ProductImageProps) {
+export default function ProductImage({
+    name,
+    src,
+    size = 'md',
+    className = '',
+}: ProductImageProps) {
     const colorIndex = name.length % fallbackColors.length;
 
     if (src) {
         return (
-            <div className={`relative shrink-0 overflow-hidden rounded-xl ${sizeClasses[size]} ${className}`}>
+            <div
+                className={`relative shrink-0 overflow-hidden rounded-xl ${sizeClasses[size]} ${className}`}
+            >
                 <img
                     src={src}
                     alt={name}
@@ -37,7 +44,9 @@ export default function ProductImage({ name, src, size = 'md', className = '' }:
     }
 
     return (
-        <div className={`flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${fallbackColors[colorIndex]} ${sizeClasses[size]} ${className}`}>
+        <div
+            className={`flex shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${fallbackColors[colorIndex]} ${sizeClasses[size]} ${className}`}
+        >
             &#129371;
         </div>
     );

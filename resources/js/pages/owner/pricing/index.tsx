@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import { OutletTab } from './outlet-tab';
 import { PusatTab } from './pusat-tab';
 import { RiwayatTab } from './riwayat-tab';
-import type { OtherOutlet, OutletData, OutletPriceRow, PaginatedLogs, PusatKpis, PusatVariant } from './types';
+import type {
+    OtherOutlet,
+    OutletData,
+    OutletPriceRow,
+    PaginatedLogs,
+    PusatKpis,
+    PusatVariant,
+} from './types';
 
 const TABS = [
     { key: 'pusat', label: 'Pusat' },
@@ -28,7 +35,9 @@ interface Props {
 }
 
 export default function PricingIndex(props: Props) {
-    const [activeTab, setActiveTab] = useState<TabKey>((props.tab as TabKey) ?? 'pusat');
+    const [activeTab, setActiveTab] = useState<TabKey>(
+        (props.tab as TabKey) ?? 'pusat',
+    );
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -47,12 +56,19 @@ export default function PricingIndex(props: Props) {
             params.outlet_id = String(props.selectedOutlet.id);
         }
 
-        router.get('/owner/pricing', params, { preserveState: true, replace: true });
+        router.get('/owner/pricing', params, {
+            preserveState: true,
+            replace: true,
+        });
     };
 
     return (
         <OwnerPageShell title="Harga" subtitle="Kelola harga jual produk">
-            <div className="mb-5 inline-flex rounded-lg bg-surface-muted p-1" role="tablist" aria-label="Tab navigasi harga">
+            <div
+                className="mb-5 inline-flex rounded-lg bg-surface-muted p-1"
+                role="tablist"
+                aria-label="Tab navigasi harga"
+            >
                 {TABS.map((tab) => (
                     <Button
                         key={tab.key}
@@ -68,7 +84,12 @@ export default function PricingIndex(props: Props) {
                 ))}
             </div>
 
-            {activeTab === 'pusat' && <PusatTab variants={props.pusatVariants} kpis={props.pusatKpis} />}
+            {activeTab === 'pusat' && (
+                <PusatTab
+                    variants={props.pusatVariants}
+                    kpis={props.pusatKpis}
+                />
+            )}
             {activeTab === 'outlet' && (
                 <OutletTab
                     outlets={props.outlets}
@@ -77,7 +98,13 @@ export default function PricingIndex(props: Props) {
                     otherOutlets={props.otherOutlets}
                 />
             )}
-            {activeTab === 'riwayat' && <RiwayatTab logs={props.logs} actionFilter={props.actionFilter} outlets={props.outlets} />}
+            {activeTab === 'riwayat' && (
+                <RiwayatTab
+                    logs={props.logs}
+                    actionFilter={props.actionFilter}
+                    outlets={props.outlets}
+                />
+            )}
         </OwnerPageShell>
     );
 }

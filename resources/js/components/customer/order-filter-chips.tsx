@@ -11,7 +11,7 @@ interface Props {
 
 export default function OrderFilterChips({ options, active, onChange }: Props) {
     return (
-        <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+        <div className="scrollbar-none flex gap-2 overflow-x-auto pb-1">
             {options.map((option) => {
                 const isActive = active === option.key;
 

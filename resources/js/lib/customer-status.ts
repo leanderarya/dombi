@@ -1,7 +1,25 @@
-import { getOrderStatus, getDeliveryStatus, getOrderStatusTone } from '@/lib/status-labels';
+import {
+    getOrderStatus,
+    getDeliveryStatus,
+    getOrderStatusTone,
+} from '@/lib/status-labels';
 
-export const activeOrderStatuses = ['pending_confirmation', 'confirmed', 'preparing', 'ready_for_pickup', 'picked_up', 'delivering'] as const;
-export const historyOrderStatuses = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'failed_delivery', 'expired'] as const;
+export const activeOrderStatuses = [
+    'pending_confirmation',
+    'confirmed',
+    'preparing',
+    'ready_for_pickup',
+    'picked_up',
+    'delivering',
+] as const;
+export const historyOrderStatuses = [
+    'completed',
+    'cancelled_by_customer',
+    'cancelled_by_outlet',
+    'rejected_by_outlet',
+    'failed_delivery',
+    'expired',
+] as const;
 
 /** @deprecated Use getOrderStatus(status).label instead */
 export function orderStatusLabel(status?: string | null): string {
@@ -22,7 +40,10 @@ export function deliveryStatusLabel(status?: string | null): string {
     return getDeliveryStatus(status).label;
 }
 
-export function getOrderStatusLabel(status: string, fulfillmentType?: string): string {
+export function getOrderStatusLabel(
+    status: string,
+    fulfillmentType?: string,
+): string {
     const isPickup = fulfillmentType === 'pickup';
 
     if (status === 'ready_for_pickup') {
@@ -40,7 +61,10 @@ export function getOrderStatusLabel(status: string, fulfillmentType?: string): s
     return orderStatusLabel(status);
 }
 
-export function orderProgressIndex(status: string, fulfillmentType?: string): number {
+export function orderProgressIndex(
+    status: string,
+    fulfillmentType?: string,
+): number {
     const isPickup = fulfillmentType === 'pickup';
 
     const pickupSteps = [

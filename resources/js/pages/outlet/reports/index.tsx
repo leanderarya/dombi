@@ -28,22 +28,34 @@ const periods = [
 
 export default function OutletReports({ outlet, preview }: Props) {
     const [period, setPeriod] = useState('month');
-    const [dateFrom, setDateFrom] = useState(() => new Date().toISOString().split('T')[0]);
-    const [dateTo, setDateTo] = useState(() => new Date().toISOString().split('T')[0]);
+    const [dateFrom, setDateFrom] = useState(
+        () => new Date().toISOString().split('T')[0],
+    );
+    const [dateTo, setDateTo] = useState(
+        () => new Date().toISOString().split('T')[0],
+    );
     const [isDownloading, setIsDownloading] = useState(false);
 
     const handlePeriodChange = (newPeriod: string) => {
         setPeriod(newPeriod);
 
         if (newPeriod === 'custom') {
-return;
-}
+            return;
+        }
 
-        router.get('/outlet/reports', { period: newPeriod }, { preserveState: true });
+        router.get(
+            '/outlet/reports',
+            { period: newPeriod },
+            { preserveState: true },
+        );
     };
 
     const handleCustomApply = () => {
-        router.get('/outlet/reports', { period: 'custom', date_from: dateFrom, date_to: dateTo }, { preserveState: true });
+        router.get(
+            '/outlet/reports',
+            { period: 'custom', date_from: dateFrom, date_to: dateTo },
+            { preserveState: true },
+        );
     };
 
     const buildExportUrl = () => {
@@ -61,11 +73,20 @@ return;
     };
 
     return (
-        <OutletLayout title="Laporan Penjualan" subtitle={`Laporan untuk ${outlet.name}`}>
+        <OutletLayout
+            title="Laporan Penjualan"
+            subtitle={`Laporan untuk ${outlet.name}`}
+        >
             <Head title="Laporan Penjualan" />
 
             <OutletPageShell>
-                <FilterChips options={periods} active={period} onChange={handlePeriodChange} size="sm" variant="ring" />
+                <FilterChips
+                    options={periods}
+                    active={period}
+                    onChange={handlePeriodChange}
+                    size="sm"
+                    variant="ring"
+                />
 
                 {period === 'custom' && (
                     <div className="flex items-center gap-2">
@@ -109,19 +130,33 @@ return;
                 {/* Preview Summary */}
                 {preview && preview.total_orders > 0 && (
                     <div className="rounded-xl border border-border bg-white p-4">
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-3">Ringkasan Laporan</div>
+                        <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                            Ringkasan Laporan
+                        </div>
                         <div className="grid grid-cols-3 gap-3">
                             <div className="text-center">
-                                <div className="text-lg font-bold tabular-nums text-text">{preview.total_orders}</div>
-                                <div className="text-[10px] text-text-subtle">Pesanan</div>
+                                <div className="text-lg font-bold text-text tabular-nums">
+                                    {preview.total_orders}
+                                </div>
+                                <div className="text-[10px] text-text-subtle">
+                                    Pesanan
+                                </div>
                             </div>
                             <div className="text-center">
-                                <div className="text-lg font-bold tabular-nums text-text">{preview.total_items}</div>
-                                <div className="text-[10px] text-text-subtle">Item</div>
+                                <div className="text-lg font-bold text-text tabular-nums">
+                                    {preview.total_items}
+                                </div>
+                                <div className="text-[10px] text-text-subtle">
+                                    Item
+                                </div>
                             </div>
                             <div className="text-center">
-                                <div className="text-lg font-bold tabular-nums text-text">{formatCurrency(preview.total_revenue)}</div>
-                                <div className="text-[10px] text-text-subtle">Revenue</div>
+                                <div className="text-lg font-bold text-text tabular-nums">
+                                    {formatCurrency(preview.total_revenue)}
+                                </div>
+                                <div className="text-[10px] text-text-subtle">
+                                    Revenue
+                                </div>
                             </div>
                         </div>
                         <div className="mt-2 text-center text-[11px] text-text-subtle">
@@ -132,35 +167,31 @@ return;
 
                 {preview && preview.total_orders === 0 && (
                     <div className="rounded-xl border border-border bg-white p-4 text-center">
-                        <p className="text-sm text-text-muted">Tidak ada data penjualan pada periode ini.</p>
+                        <p className="text-sm text-text-muted">
+                            Tidak ada data penjualan pada periode ini.
+                        </p>
                     </div>
                 )}
 
                 <div className="rounded-xl border border-border bg-white p-4">
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle mb-2">Konten Laporan</div>
+                    <div className="mb-2 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                        Konten Laporan
+                    </div>
                     <ul className="space-y-2 text-sm text-text-muted">
                         <li className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-primary" />
-                                
-                            
                             Tanggal dan kode order
                         </li>
                         <li className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-primary" />
-                                
-                            
                             Nama produk dan variant
                         </li>
                         <li className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-primary" />
-                                
-                            
                             Quantity, harga, dan subtotal
                         </li>
                         <li className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-primary" />
-                                
-                            
                             Margin per item
                         </li>
                     </ul>

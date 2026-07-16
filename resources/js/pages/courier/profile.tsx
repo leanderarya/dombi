@@ -13,10 +13,14 @@ export default function CourierProfile() {
             <div className="mt-4 mb-6 rounded-xl bg-white p-4">
                 <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
-                        <span className="text-lg font-bold">{auth?.user?.name?.charAt(0) ?? 'K'}</span>
+                        <span className="text-lg font-bold">
+                            {auth?.user?.name?.charAt(0) ?? 'K'}
+                        </span>
                     </div>
                     <div>
-                        <div className="text-base font-semibold text-text">{auth?.user?.name ?? 'Kurir'}</div>
+                        <div className="text-base font-semibold text-text">
+                            {auth?.user?.name ?? 'Kurir'}
+                        </div>
                         <div className="text-sm text-text-subtle">Kurir</div>
                     </div>
                 </div>
