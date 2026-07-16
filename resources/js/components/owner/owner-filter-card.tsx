@@ -91,7 +91,7 @@ export default function OwnerFilterCard({
     }
 
     return (
-        <div className="owner-filter-card mb-4 rounded-lg border border-border bg-white p-3">
+        <div className="owner-filter-card mb-4 rounded-xl bg-surface p-3 shadow-card">
             {collapsible && (
                 <button
                     type="button"
