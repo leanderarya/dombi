@@ -4,19 +4,24 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExchangeRequest;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\ProductVariant;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
 use App\Models\SettlementPayment;
 use App\Services\SettlementReconciliationService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function __invoke(SettlementReconciliationService $reconciliationService): Response
+    public function __invoke(Request $request, SettlementReconciliationService $reconciliationService): Response
     {
         $collection = $reconciliationService->getCollectionCenter();
 
@@ -70,6 +75,7 @@ class DashboardController extends Controller
                 ->take(5)
                 ->values()
                 ->all(),
+            'revenueTrend' => $this->revenueTrend((int) $request->input('days', 7)),
         ]);
     }
 
@@ -126,5 +132,50 @@ class DashboardController extends Controller
         }
 
         return 15;
+    }
+
+    /**
+     * Get daily revenue for the last 7 days from completed orders.
+     *
+     * @return array{labels: string[], values: int[], total: int}
+     */
+    private function revenueTrend(int $days = 7): array
+    {
+        $days = max(7, min(30, $days));
+        $today = Carbon::today();
+        $startDate = $today->copy()->subDays($days - 1);
+
+        $rows = Order::query()
+            ->where('status', Order::STATUS_COMPLETED)
+            ->whereBetween('completed_at', [$startDate->startOfDay(), $today->endOfDay()])
+            ->select(
+                DB::raw('DATE(completed_at) as date'),
+                DB::raw('SUM(total) as revenue'),
+            )
+            ->groupBy('date')
+            ->pluck('revenue', 'date')
+            ->map(fn ($val) => (int) $val);
+
+        $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        $labels = [];
+        $values = [];
+        $total = 0;
+
+        for ($date = $startDate->copy(); $date->lte($today); $date->addDay()) {
+            $key = $date->format('Y-m-d');
+            // For 30 days: show date number. For 7 days: show day name
+            $labels[] = $days <= 7
+                ? $dayNames[(int) $date->format('w')]
+                : $date->format('j');
+            $amount = (int) ($rows[$key] ?? 0);
+            $values[] = $amount;
+            $total += $amount;
+        }
+
+        return [
+            'labels' => $labels,
+            'values' => $values,
+            'total' => $total,
+        ];
     }
 }
