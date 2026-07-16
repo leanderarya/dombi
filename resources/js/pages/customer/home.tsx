@@ -1,5 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { ChevronRight, MapPinned, MessageCircle, Milk, Package, Store, Truck } from 'lucide-react';
+import { ChatCircleFill, MapPinFill, PackageFill, ShoppingBagFill, StorefrontFill, TruckFill } from '@/components/icons/phosphor-fill';
 import { useEffect, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import { useHeroSlides } from '@/hooks/use-hero-slides';
@@ -48,7 +48,7 @@ export default function Home({ customerName, activeOrders }: any) {
     };
 
     return (
-        <CustomerMobileLayout customerName={customerName} hideTopBar>
+        <CustomerMobileLayout customerName={customerName} hideTopBar activeOrder={activeOrder} keepBottomNavVisible>
             <Head title="Home" />
             <HeroCarousel hero={hero} />
             <GreetingCard isLoggedIn={isLoggedIn} customerName={customerName} auth={auth} />
@@ -67,8 +67,6 @@ export default function Home({ customerName, activeOrders }: any) {
                 onDelivery={handleDelivery}
                 pickupLoading={pickup.loading}
             />
-
-            {activeOrder && <ActiveOrderBanner order={activeOrder} />}
 
             <ExploreGrid nearestOutlet={nearestOutlet} isLoggedIn={isLoggedIn} />
             <TrustBadges />
@@ -167,7 +165,7 @@ function QuickActions({ onPickup, onDelivery, pickupLoading }: { onPickup: () =>
                     className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-2xl bg-primary-light/30 p-4 transition-all active:opacity-80 active:scale-[0.98] disabled:opacity-50"
                 >
                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
-                        <Store className="h-5 w-5 text-primary" />
+                        <StorefrontFill className="h-6 w-6 text-primary" />
                     </div>
                     <div className="text-center">
                         <div className="text-sm font-bold text-text">Pick Up</div>
@@ -180,7 +178,7 @@ function QuickActions({ onPickup, onDelivery, pickupLoading }: { onPickup: () =>
                     className="group flex min-h-[100px] flex-col items-center justify-center gap-2.5 rounded-2xl bg-amber-50/40 p-4 transition-all active:opacity-80 active:scale-[0.98]"
                 >
                     <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
-                        <Truck className="h-5 w-5 text-amber-600" />
+                        <TruckFill className="h-6 w-6 text-amber-600" />
                     </div>
                     <div className="text-center">
                         <div className="text-sm font-bold text-text">Delivery</div>
@@ -188,38 +186,6 @@ function QuickActions({ onPickup, onDelivery, pickupLoading }: { onPickup: () =>
                     </div>
                 </button>
             </div>
-        </section>
-    );
-}
-
-function ActiveOrderBanner({ order }: { order: any }) {
-    const statusLabel =
-        order.status === 'pending_confirmation' ? 'Menunggu Konfirmasi'
-        : order.status === 'confirmed' ? 'Dikonfirmasi'
-        : order.status === 'preparing' ? 'Disiapkan'
-        : order.status === 'ready_for_pickup' ? 'Siap Diambil'
-        : order.status === 'picked_up' ? 'Diambil Kurir'
-        : order.status === 'delivering' ? 'Dikirim'
-        : 'Aktif';
-
-    return (
-        <section className="mt-6">
-            <Link
-                href={`/customer/orders/${order.id}`}
-                className="group flex items-center gap-3 rounded-2xl bg-primary-light/20 p-4 shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all active:opacity-80"
-            >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-light">
-                    <Package className="h-5 w-5 text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-text">Pesanan Aktif</span>
-                        <span className={order.status === 'pending_confirmation' ? 'fore-badge-warning' : 'fore-badge-success'}>{statusLabel}</span>
-                    </div>
-                    <div className="mt-0.5 text-xs text-text-muted">{order.order_code} · {order.outlet?.name ?? 'Outlet'}</div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-text-subtle" />
-            </Link>
         </section>
     );
 }
@@ -236,10 +202,10 @@ interface ExploreCard {
 
 function ExploreGrid({ nearestOutlet, isLoggedIn }: { nearestOutlet: { name: string } | null; isLoggedIn: boolean }) {
     const cards: ExploreCard[] = [
-        { icon: <Milk className="h-4 w-4 text-primary" />, bg: 'bg-primary-light', title: 'Produk Segar', subtitle: 'Susu kambing pilihan', href: '/customer/products' },
-        { icon: <MapPinned className="h-4 w-4 text-blue-600" />, bg: 'bg-blue-50', title: 'Outlet Terdekat', subtitle: nearestOutlet?.name ?? 'Cari outlet terdekat', href: '/customer/products' },
-        { icon: <Package className="h-4 w-4 text-amber-600" />, bg: 'bg-amber-50', title: 'Riwayat Pesanan', subtitle: isLoggedIn ? 'Lihat pesanan sebelumnya' : 'Login untuk melihat', href: isLoggedIn ? '/customer/orders' : '/oauth/google' },
-        { icon: <MessageCircle className="h-4 w-4 text-purple-600" />, bg: 'bg-purple-50', title: 'Butuh Bantuan?', subtitle: 'Hubungi via WhatsApp', href: 'https://wa.me/6281111111111', isButton: true },
+        { icon: <ShoppingBagFill className="h-5 w-5 text-primary" />, bg: 'bg-primary-light', title: 'Produk Segar', subtitle: 'Susu kambing pilihan', href: '/customer/products' },
+        { icon: <MapPinFill className="h-5 w-5 text-blue-600" />, bg: 'bg-blue-50', title: 'Outlet Terdekat', subtitle: nearestOutlet?.name ?? 'Cari outlet terdekat', href: '/customer/products' },
+        { icon: <PackageFill className="h-5 w-5 text-amber-600" />, bg: 'bg-amber-50', title: 'Riwayat Pesanan', subtitle: isLoggedIn ? 'Lihat pesanan sebelumnya' : 'Login untuk melihat', href: isLoggedIn ? '/customer/orders' : '/oauth/google' },
+        { icon: <ChatCircleFill className="h-5 w-5 text-purple-600" />, bg: 'bg-purple-50', title: 'Butuh Bantuan?', subtitle: 'Hubungi via WhatsApp', href: 'https://wa.me/6281111111111', isButton: true },
     ];
 
     return (
@@ -257,7 +223,7 @@ function ExploreGrid({ nearestOutlet, isLoggedIn }: { nearestOutlet: { name: str
                             {...extra}
                             className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
                         >
-                            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${card.bg}`}>{card.icon}</div>
+                            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.bg} shadow-inner`}>{card.icon}</div>
                             <div className="min-w-0">
                                 <div className="text-xs font-bold text-text">{card.title}</div>
                                 <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted">{card.subtitle}</div>

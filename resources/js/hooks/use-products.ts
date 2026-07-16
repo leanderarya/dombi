@@ -7,6 +7,7 @@ export interface Variant {
     size: string | null;
     price: number;
     is_active: boolean;
+    image: string | null;
     available_stock?: number;
     stock_status?: string;
 }
@@ -16,6 +17,7 @@ export interface Family {
     name: string;
     brand: string | null;
     description: string | null;
+    image: string | null;
     variants: Variant[];
 }
 

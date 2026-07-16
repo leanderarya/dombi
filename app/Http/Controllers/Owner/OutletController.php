@@ -75,7 +75,7 @@ class OutletController extends Controller
                 ->where('outlet_id', $outlet->id)
                 ->whereIn('status', ['ready_for_pickup', 'picked_up', 'delivering']))
                 ->count(),
-            'recentRestocks' => RestockRequest::with('distribution')
+            'recentRestocks' => RestockRequest::query()
                 ->where('outlet_id', $outlet->id)
                 ->latest()
                 ->limit(5)

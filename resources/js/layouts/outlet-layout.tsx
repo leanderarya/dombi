@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { QrCode } from 'lucide-react';
 import { useState } from 'react';
 import type { ReactNode } from 'react';
@@ -50,7 +50,16 @@ export default function OutletLayout({ children, title, subtitle, backHref, head
                 below={headerBelow}
             />
             {children}
-            <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
+            <NotificationSheet
+                open={notificationOpen}
+                onClose={() => setNotificationOpen(false)}
+                onNavigate={(type, data) => {
+                    const outletId = (data as any)?.outlet_id;
+                    if (type.startsWith('inventory.')) {
+                        router.visit('/outlet/restocks');
+                    }
+                }}
+            />
             <OutletNavigationSheet
                 open={navOpen}
                 onClose={() => setNavOpen(false)}

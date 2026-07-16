@@ -14,6 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useFulfillmentOverlay } from '@/hooks/use-fulfillment-overlay';
+import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 import {  useProducts } from '@/hooks/use-products';
 import type {Family} from '@/hooks/use-products';
 import { useSectionReveal } from '@/hooks/use-section-reveal';
@@ -66,6 +67,7 @@ function ProductsInner() {
     }>({ variants: [], flavor: '', family: '' });
 
     useFlashToast();
+    const { visible } = useHideOnScroll();
     const { totalItems } = useCart();
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -212,6 +214,9 @@ opts.push({ key: String(f.id), label: f.name });
                                                             familyDescription={
                                                                 group.familyDescription
                                                             }
+                                                            familyImage={
+                                                                families.find((f) => f.id === group.familyId)?.image ?? null
+                                                            }
                                                             displayPrice={
                                                                 group.lowestPrice
                                                             }
@@ -253,8 +258,8 @@ opts.push({ key: String(f.id), label: f.name });
                 flavorName={sheetData.flavor}
                 variants={sheetData.variants}
             />
-            {totalItems > 0 && <FloatingCartBar />}
-            <CustomerBottomNav />
+            {totalItems > 0 && <FloatingCartBar bottomNavVisible={visible} />}
+            <CustomerBottomNav visible={visible} />
             <FulfillmentOverlay state={overlayState} target={overlayTarget} />
         </>
     );

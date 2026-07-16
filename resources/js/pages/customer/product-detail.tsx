@@ -15,6 +15,7 @@ interface Variant {
     size: string | null;
     selling_price: number;
     is_active: boolean;
+    image: string | null;
     available_stock?: number;
     stock_status?: string;
 }
@@ -24,6 +25,7 @@ interface Family {
     name: string;
     brand: string | null;
     description: string | null;
+    image: string | null;
     variants: Variant[];
 }
 
@@ -159,8 +161,12 @@ return;
                 {toast && <AddToCartToast name={toast.name} />}
 
                 <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
-                    <div className="mb-5 flex h-72 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-50 to-zinc-50">
-                        <span className="text-8xl">&#129371;</span>
+                    <div className="mb-5 flex h-72 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 to-zinc-50">
+                        {!!(selectedVariant?.image ?? family.image) ? (
+                            <img src={selectedVariant?.image ?? family.image} alt={family.name} className="h-full w-full object-cover" />
+                        ) : (
+                            <span className="text-8xl">&#129371;</span>
+                        )}
                     </div>
 
                     <h1 className="text-xl font-bold text-text">{family.name}</h1>
