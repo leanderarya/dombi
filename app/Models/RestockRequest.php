@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class RestockRequest extends Model
 {
@@ -23,6 +22,12 @@ class RestockRequest extends Model
         'rejected_by',
         'rejected_at',
         'rejected_reason',
+        'sent_by',
+        'sent_at',
+        'received_by',
+        'received_at',
+        'received_notes',
+        'damage_notes',
     ];
 
     protected function casts(): array
@@ -30,6 +35,8 @@ class RestockRequest extends Model
         return [
             'approved_at' => 'datetime',
             'rejected_at' => 'datetime',
+            'sent_at' => 'datetime',
+            'received_at' => 'datetime',
         ];
     }
 
@@ -58,8 +65,13 @@ class RestockRequest extends Model
         return $this->hasMany(RestockRequestItem::class);
     }
 
-    public function distribution(): HasOne
+    public function sender(): BelongsTo
     {
-        return $this->hasOne(StockDistribution::class);
+        return $this->belongsTo(User::class, 'sent_by');
+    }
+
+    public function receiver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'received_by');
     }
 }
