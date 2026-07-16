@@ -13,15 +13,15 @@ interface Props {
 
 export default function OwnerSegmentedTabs({ tabs, activeTab, onChange, className = '' }: Props) {
     return (
-        <div className={`mb-5 inline-flex rounded-lg bg-surface-muted p-1 ${className}`}>
+        <div className={`mb-6 inline-flex rounded-lg bg-mint-wash p-1 ${className}`}>
             {tabs.map((tab) => (
                 <button
                     key={tab.key}
                     onClick={() => onChange(tab.key)}
-                    className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                    className={`relative rounded-lg px-5 py-2 text-[12px] font-semibold transition-all duration-200 ${
                         activeTab === tab.key
-                            ? 'bg-white text-text'
-                            : 'text-text-muted hover:text-text'
+                            ? 'bg-white text-primary shadow-sm'
+                            : 'text-text-muted hover:text-primary'
                     }`}
                 >
                     {tab.label}

@@ -12,7 +12,7 @@ export default function CourierAvailabilityCard({ couriers }: Props) {
     const totalActive = couriers.reduce((sum, c) => sum + c.active_deliveries, 0);
 
     return (
-        <div className="rounded-lg border border-slate-200 bg-white p-3">
+        <div className="rounded-lg border border-slate-200 bg-surface p-3">
             <div className="flex items-center justify-between">
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-400">Kurir Aktif</div>
                 <span className="text-xs font-medium text-slate-500">{totalActive} tugas aktif</span>

@@ -14,7 +14,7 @@ export default function SortableTh({ label, active, dir, align = 'left', onClick
         <th
             onClick={onClick}
             className={cn(
-                'cursor-pointer select-none px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-text-muted transition-colors hover:text-text',
+                'cursor-pointer select-none px-6 py-3 text-[11px] font-semibold uppercase tracking-wider text-text-muted transition-colors hover:text-text',
                 active && 'text-text',
                 align === 'right' && 'text-right',
                 align === 'center' && 'text-center',

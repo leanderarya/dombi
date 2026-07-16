@@ -27,4 +27,3 @@ export { default as RestockModal } from './restock-modal';
 export { default as SettlementPaymentModal } from './settlement-payment-modal';
 export { default as TambahProdukModal } from './tambah-produk-modal';
 export { default as MarginBar, MarginBarInline } from './margin-bar';
-export { default as RestockCreateModal } from './restock-create-modal';

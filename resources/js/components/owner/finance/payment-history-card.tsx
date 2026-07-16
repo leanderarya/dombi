@@ -42,7 +42,7 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
         <div className={`rounded-lg border p-5 transition-all duration-200 ${
             isPending
                 ? 'border-amber-300 bg-amber-50/30'
-                : 'border-border bg-white'
+                : 'border-border bg-surface'
         }`}>
             {/* Header */}
             <div className="flex items-start justify-between gap-3">
@@ -113,7 +113,7 @@ export default function PaymentHistoryCard({ payment, onVerify, onReject, onShow
                         type="button"
                         onClick={() => onReject(payment.id)}
                         disabled={processing}
-                        className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 disabled:opacity-50"
+                        className="flex items-center justify-center gap-1.5 rounded-lg border border-red-200 bg-surface px-4 py-2.5 text-sm font-semibold text-red-600 transition-all hover:bg-red-50 disabled:opacity-50"
                     >
                         <X className="h-4 w-4" />
                         Tolak

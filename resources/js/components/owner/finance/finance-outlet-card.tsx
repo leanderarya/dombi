@@ -29,7 +29,7 @@ export default function FinanceOutletCard({
     return (
         <Link
             href={`/owner/finance/settlements/${outletId}`}
-            className="group flex items-center gap-4 rounded-lg border border-border bg-white p-4 transition-all duration-200"
+            className="group flex items-center gap-4 rounded-xl bg-surface shadow-card p-4 transition-all duration-200"
         >
             {/* Status badge */}
             <FinanceStatusBadge status={displayStatus} />

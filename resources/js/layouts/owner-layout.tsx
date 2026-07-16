@@ -1,8 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
-import { User } from 'lucide-react';
 import { useState } from 'react';
-import type {ReactNode} from 'react';
-import type { PropsWithChildren } from 'react';
+import type { PropsWithChildren, ReactNode } from 'react';
 import OwnerCommandSheet from '@/components/owner/owner-command-sheet';
 import OwnerPageSkeleton from '@/components/owner/owner-page-skeleton';
 import OwnerSidebarNav from '@/components/owner/owner-sidebar-nav';
@@ -10,6 +8,7 @@ import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
 import OfflineBanner from '@/components/shared/offline-banner';
 import UpdateBanner from '@/components/shared/update-banner';
+import { SidebarProvider, useSidebar } from '@/contexts/sidebar-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 
@@ -63,7 +62,6 @@ const navGroups: NavGroup[] = [
         items: [
             { href: '/owner/inventories', label: 'Inventaris' },
             { href: '/owner/restocks', label: 'Restock' },
-            { href: '/owner/distributions', label: 'Distribusi' },
         ],
     },
     {
@@ -76,54 +74,103 @@ const navGroups: NavGroup[] = [
 ];
 
 export default function OwnerLayout({ children }: PropsWithChildren) {
+    return (
+        <SidebarProvider>
+            <OwnerLayoutInner>{children}</OwnerLayoutInner>
+        </SidebarProvider>
+    );
+}
+
+function OwnerLayoutInner({ children }: PropsWithChildren) {
     useFlashToast();
     const { loading } = useInertiaLoading();
     const page = usePage<any>();
     const { auth, ownerOperationalCounts } = page.props;
-    const url = page.url;
     const pendingCounts = ownerOperationalCounts ?? { pendingReturns: 0, pendingExchanges: 0 };
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [commandOpen, setCommandOpen] = useState(false);
+    const { collapsed } = useSidebar();
 
     return (
-        <div className="min-h-screen bg-surface-muted text-text">
+        <div className="min-h-screen bg-mint-canvas text-text">
             <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-white focus:outline-none">
                 Langsung ke konten
             </a>
             <OfflineBanner />
             <UpdateBanner />
 
-            {/* Sidebar — desktop only */}
-            <aside className="fixed inset-y-0 left-0 z-50 w-56 bg-surface">
+            {/* Sidebar */}
+            <aside className={`fixed inset-y-0 left-0 z-50 bg-surface transition-[width] duration-200 ease-out ${collapsed ? 'w-16' : 'w-56'}`} style={{ boxShadow: '1px 0 0 0 rgba(0,0,0,0.04)' }}>
                 <div className="flex h-full flex-col">
                     {/* Brand */}
-                    <div className="border-b border-border px-4 pt-5 pb-4">
-                        <div className="rounded-lg bg-primary px-3 py-2 text-lg font-semibold text-white">Dombi</div>
-                        <div className="mt-3 text-sm font-medium text-text">{auth?.user?.name}</div>
-                        <div className="text-[11px] font-semibold uppercase tracking-wider text-text-subtle">Owner</div>
+                    <div className={`${collapsed ? 'px-3 py-5' : 'px-4 pt-6 pb-5'}`}>
+                        {collapsed ? (
+                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                                <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-2.5">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+                                    <svg className="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                                </div>
+                                <div>
+                                    <div className="text-sm font-bold text-primary">Dombi</div>
+                                    <div className="text-[10px] font-medium text-text-subtle uppercase tracking-wider">Panel</div>
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     {/* Navigation */}
-                    <OwnerSidebarNav navGroups={navGroups} pendingCounts={pendingCounts} />
+                    <OwnerSidebarNav navGroups={navGroups} pendingCounts={pendingCounts} collapsed={collapsed} />
 
                     {/* Footer */}
-                    <div className="border-t border-border px-4 py-3">
-                        <div className="mb-2">
-                            <NotificationBell onClick={() => setNotificationOpen(true)} />
-                        </div>
-                        <button onClick={() => router.post('/logout')} className="w-full rounded-md border border-border px-3 py-2 text-sm text-text-muted transition-colors duration-150 hover:text-text">Logout</button>
-                        <div className="mt-2 text-[11px] text-text-subtle">v{page.props.appVersion ?? '1.0.0'}</div>
+                    <div className={`${collapsed ? 'px-2 py-3' : 'px-3 py-4'}`}>
+                        {collapsed ? (
+                            <div className="flex flex-col items-center gap-1">
+                                <button
+                                    onClick={() => setNotificationOpen(true)}
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-mint-wash hover:text-primary"
+                                    title="Notifikasi"
+                                >
+                                    <NotificationBellIcon />
+                                </button>
+                                <button
+                                    onClick={() => router.post('/logout')}
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-mint-wash hover:text-red-600"
+                                    title="Logout"
+                                >
+                                    <LogoutIcon />
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <div className="mb-2">
+                                    <NotificationBell onClick={() => setNotificationOpen(true)} />
+                                </div>
+                                <button onClick={() => router.post('/logout')} className="w-full rounded-lg px-3 py-2 text-sm font-medium text-text-muted transition-colors hover:bg-mint-wash hover:text-red-600">Logout</button>
+                                <div className="mt-2 text-[10px] text-text-subtle">v{page.props.appVersion ?? '1.0.0'}</div>
+                            </>
+                        )}
                     </div>
                 </div>
             </aside>
 
             {/* Main content */}
-            <main id="main-content" className="pl-56">
-                <div className="mx-auto max-w-7xl px-6 py-6">
+            <main id="main-content" className={`transition-[padding] duration-200 ease-out ${collapsed ? 'pl-16' : 'pl-56'}`}>
+                <div className="px-6 py-6">
                     {loading ? <OwnerPageSkeleton /> : children}
                 </div>
             </main>
-            <NotificationSheet open={notificationOpen} onClose={() => setNotificationOpen(false)} />
+            <NotificationSheet
+                open={notificationOpen}
+                onClose={() => setNotificationOpen(false)}
+                onNavigate={(type) => {
+                    if (type.startsWith('inventory.')) {
+                        router.visit('/owner/inventories');
+                    }
+                }}
+            />
             <OwnerCommandSheet open={commandOpen} onClose={() => setCommandOpen(false)} />
         </div>
     );
@@ -155,4 +202,10 @@ function AnalyticsIcon() {
     return <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>;
 }
 
+function NotificationBellIcon() {
+    return <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>;
+}
 
+function LogoutIcon() {
+    return <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>;
+}
