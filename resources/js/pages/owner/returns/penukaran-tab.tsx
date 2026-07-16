@@ -75,7 +75,7 @@ export default function PenukaranTab({ exchanges, filters, dashboard, outlets }:
                     return (
                         <button key={f.key} type="button" onClick={() => navigate({ status: f.key || undefined })}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive ? statusColorMap[f.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                                isActive ? statusColorMap[f.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}>
                             {f.label}
                         </button>
@@ -101,10 +101,10 @@ export default function PenukaranTab({ exchanges, filters, dashboard, outlets }:
             {exchanges.data.length === 0 ? (
                 <EmptyState icon="package" title="Tidak ada permintaan tukar produk" description="Belum ada pengajuan penukaran dari outlet" />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Tabel Penukaran">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card" aria-label="Tabel Penukaran">
                     <table className="w-full min-w-[600px] text-sm">
                         <thead>
-                            <tr className="bg-[#fafafa] text-xs font-medium text-text-muted">
+                            <tr className="bg-surface-muted/50 text-[11px] font-semibold uppercase tracking-wider text-text-muted">
                                 <th className="px-3 py-2.5 text-left">Kode</th>
                                 <th className="px-3 py-2.5 text-left">Outlet / Info</th>
                                 <th className="px-3 py-2.5 text-left">Status</th>
@@ -117,7 +117,7 @@ export default function PenukaranTab({ exchanges, filters, dashboard, outlets }:
                                 const status = getExchangeStatus(ex.status);
 
                                 return (
-                                    <tr key={ex.id} className="border-t border-[#f0f0f0] transition-colors last:border-b-0 hover:bg-surface-muted">
+                                    <tr key={ex.id} className="border-t border-border/20 transition-colors last:border-b-0 hover:bg-mint-wash">
                                         <td className="px-3 py-2.5 font-bold tabular-nums text-text">#{ex.id}</td>
                                         <td className="px-3 py-2.5 truncate text-text-muted">{ex.outlet?.name ?? '-'} · {ex.return_request_id ? `Return #${ex.return_request_id}` : 'Tanpa return'}</td>
                                         <td className="px-3 py-2.5"><StatusBadge variant={status.variant} size="sm">{status.label}</StatusBadge></td>

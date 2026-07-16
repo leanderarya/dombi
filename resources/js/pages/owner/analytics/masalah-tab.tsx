@@ -61,7 +61,7 @@ export function MasalahTab({ reports, filters = {} }: Props) {
                     <Link
                         key={report.id}
                         href={`/owner/order-reports/${report.id}`}
-                        className="block rounded-lg border border-border bg-white p-4 active:opacity-80"
+                        className="block rounded-xl bg-surface shadow-card p-4 active:opacity-80"
                     >
                         <div className="flex items-start justify-between">
                             <div>
@@ -101,7 +101,7 @@ function FilterChips({ activeFilter, onChange }: { activeFilter: string; onChang
                     className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                         activeFilter === option.key
                             ? colorMap[option.key] ?? 'bg-primary/10 text-primary ring-primary/20'
-                            : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                            : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                     }`}
                 >
                     {option.label}

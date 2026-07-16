@@ -99,7 +99,7 @@ export default function OutletShow({
                         {outlet.phone && <p className="text-xs text-text-muted">{outlet.phone}</p>}
 
                         {outlet.pic_name && (
-                            <div className="mt-3 rounded-lg border border-border bg-surface-muted p-3">
+                            <div className="mt-3 rounded-xl bg-surface shadow-card-muted p-3">
                                 <div className="flex items-center gap-1.5 text-xs font-medium text-text-subtle">
                                     <User className="h-3 w-3" aria-hidden="true" />
                                     Penanggung Jawab
@@ -120,7 +120,7 @@ export default function OutletShow({
                         <div className="mt-2">
                             <Suspense
                                 fallback={
-                                    <div className="flex h-40 items-center justify-center rounded-lg border border-border bg-surface-muted text-xs font-semibold text-text-muted">
+                                    <div className="flex h-40 items-center justify-center rounded-xl bg-surface shadow-card-muted text-xs font-semibold text-text-muted">
                                         Memuat peta...
                                     </div>
                                 }
@@ -166,15 +166,15 @@ export default function OutletShow({
                                 </Link>
                             </div>
                             <div className="grid grid-cols-3 gap-2">
-                                <div className="rounded-lg border border-border bg-surface-muted p-2">
+                                <div className="rounded-xl bg-surface shadow-card-muted p-2">
                                     <div className="text-xs font-semibold text-text-subtle">Outstanding</div>
                                     <div className="mt-0.5 text-xs font-bold tabular-nums text-red-600">{formatCurrency(settlementSummary.outstanding)}</div>
                                 </div>
-                                <div className="rounded-lg border border-border bg-surface-muted p-2">
+                                <div className="rounded-xl bg-surface shadow-card-muted p-2">
                                     <div className="text-xs font-semibold text-text-subtle">Terlambat</div>
                                     <div className="mt-0.5 text-xs font-bold tabular-nums text-amber-600">{settlementSummary.overdue_count}</div>
                                 </div>
-                                <div className="rounded-lg border border-border bg-surface-muted p-2">
+                                <div className="rounded-xl bg-surface shadow-card-muted p-2">
                                     <div className="text-xs font-semibold text-text-subtle">Dibayar</div>
                                     <div className="mt-0.5 text-xs font-bold tabular-nums text-emerald-600">{formatCurrency(settlementSummary.paid_this_month)}</div>
                                 </div>
@@ -250,29 +250,29 @@ export default function OutletShow({
                         <div className="space-y-1.5">
                             <Link
                                 href={`/owner/inventories?outlet_id=${outlet.id}`}
-                                className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
+                                className="flex h-8 w-full items-center gap-2 rounded-xl bg-surface shadow-card px-2.5 text-xs font-semibold text-text transition-colors hover:bg-mint-wash"
                             >
                                 <RefreshCw className="h-3.5 w-3.5 text-text-subtle" aria-hidden="true" />
                                 Restock
                             </Link>
                             <Link
                                 href={`/owner/orders?outlet_id=${outlet.id}`}
-                                className="flex h-8 w-full items-center gap-2 rounded-lg border border-border bg-white px-2.5 text-xs font-semibold text-text transition-colors hover:bg-surface-muted"
+                                className="flex h-8 w-full items-center gap-2 rounded-xl bg-surface shadow-card px-2.5 text-xs font-semibold text-text transition-colors hover:bg-mint-wash"
                             >
                                 <ShoppingBag className="h-3.5 w-3.5 text-text-subtle" aria-hidden="true" />
                                 Lihat Pesanan
                             </Link>
                         </div>
                         <div className="mt-3 grid grid-cols-2 gap-2">
-                            <div className="rounded-lg border border-border bg-surface-muted p-2">
+                            <div className="rounded-xl bg-surface shadow-card-muted p-2">
                                 <div className="text-sm font-bold tabular-nums text-blue-600">{outlet.active_orders_count ?? 0}</div>
                                 <div className="text-xs font-medium text-text-subtle">Pesanan Aktif</div>
                             </div>
-                            <div className="rounded-lg border border-border bg-surface-muted p-2">
+                            <div className="rounded-xl bg-surface shadow-card-muted p-2">
                                 <div className="text-sm font-bold tabular-nums text-emerald-600">{activeDeliveriesCount ?? 0}</div>
                                 <div className="text-xs font-medium text-text-subtle">Pengiriman</div>
                             </div>
-                            <div className="rounded-lg border border-border bg-surface-muted p-2">
+                            <div className="rounded-xl bg-surface shadow-card-muted p-2">
                                 <div className="text-sm font-bold tabular-nums text-text">{outlet.today_orders_count ?? 0}</div>
                                 <div className="text-xs font-medium text-text-subtle">Hari Ini</div>
                             </div>

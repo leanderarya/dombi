@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { displayProductName } from '@/lib/display';
 import { formatCurrency } from '@/lib/format';
 import type { OutletPriceRow, PusatVariant } from './types';
 
@@ -48,7 +49,7 @@ export function GlobalPriceModal({ open, variant, onClose }: {
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle>Ubah Harga</DialogTitle>
-                    <DialogDescription>{variant.name}</DialogDescription>
+                    <DialogDescription>{displayProductName(variant)}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-3">
                     <div>

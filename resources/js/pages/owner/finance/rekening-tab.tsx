@@ -112,7 +112,7 @@ return;
             ) : (
                 <div className="space-y-2" aria-label="Daftar rekening pembayaran">
                     {accounts.map((account) => (
-                        <div key={account.id} className="rounded-lg border border-border bg-surface p-4 transition-colors hover:bg-surface-muted sm:flex sm:items-center sm:justify-between sm:gap-4">
+                        <div key={account.id} className="rounded-xl bg-surface shadow-card p-4 transition-colors hover:bg-mint-wash sm:flex sm:items-center sm:justify-between sm:gap-4">
                             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
                                 <span className="font-bold text-text">{account.bank_name}</span>
                                 <span className="tabular-nums text-sm text-text-muted">{account.account_number}</span>

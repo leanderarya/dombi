@@ -55,7 +55,7 @@ export default function OwnerOrdersIndex({
             subtitle="Kelola semua pesanan dari semua outlet"
         >
             {/* KPI Strip - Moved to top */}
-            <OwnerKpiStrip items={[
+            <OwnerKpiStrip cols={4} items={[
                 { label: 'Total', value: stats?.total_today ?? 0, sublabel: (stats?.total_today ?? 0) > 0 ? 'Hari ini' : undefined, sublabelColor: 'text-blue-600' },
                 { label: 'Tindakan', value: stats?.pending ?? 0, sublabel: (stats?.pending ?? 0) > 0 ? 'Perlu assign kurir' : undefined, sublabelColor: 'text-amber-600' },
                 { label: 'Selesai', value: stats?.completed_today ?? 0 },
@@ -78,7 +78,7 @@ export default function OwnerOrdersIndex({
                     return (
                         <button key={sf.key} type="button" onClick={() => setFilter('status', sf.key)}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                                isActive ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}>
                             {sf.label}
                         </button>
@@ -111,10 +111,10 @@ export default function OwnerOrdersIndex({
                     description="Pesanan akan muncul di sini setelah pelanggan melakukan pemesanan"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
                     <table aria-label="Daftar pesanan" className="w-full min-w-[600px]">
                         <thead>
-                            <tr className="bg-surface-muted">
+                            <tr className="bg-surface-muted/50">
                                 <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Customer</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
@@ -128,7 +128,7 @@ export default function OwnerOrdersIndex({
                                 const s = getOrderStatus(order.status);
 
                                 return (
-                                    <tr key={order.id} className="border-t border-border transition-colors hover:bg-surface-muted">
+                                    <tr key={order.id} className="border-t border-border/20 transition-colors hover:bg-mint-wash">
                                         <td className="px-4 py-3 font-bold tabular-nums text-text">{order.order_code}</td>
                                         <td className="px-4 py-3 text-text-muted">{order.customer_name ?? '—'}</td>
                                         <td className="px-4 py-3 text-text-muted">{order.outlet?.name ?? '—'}</td>

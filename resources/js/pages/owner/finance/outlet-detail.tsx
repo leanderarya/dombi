@@ -93,7 +93,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
             <div className="grid gap-4 lg:grid-cols-3" aria-label="Detail tagihan outlet">
                 <div className="lg:col-span-2 space-y-4">
                     {summary.outstanding > 0 && (
-                        <div className="sticky top-0 z-20 flex gap-3 rounded-lg border border-border bg-white p-3" aria-label="Aksi tagihan">
+                        <div className="sticky top-0 z-20 flex gap-3 rounded-xl bg-surface shadow-card p-3" aria-label="Aksi tagihan">
                             <Button
                                 variant="outline"
                                 className="flex-1"
@@ -123,7 +123,7 @@ export default function OutletAccountStatement({ outlet, settlements, summary, u
                                     const overdueLabel = getOverdueLabel(s.due_date);
 
                                     return (
-                                        <div key={s.id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
+                                        <div key={s.id} className="rounded-xl bg-surface shadow-card p-4 transition-all duration-200">
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <div className="text-base font-bold tabular-nums text-text">{s.period_label}</div>

@@ -103,6 +103,7 @@ export default function OutletsIndex({ outlets }: any) {
             </OwnerFilterCard>
 
             <OwnerKpiStrip
+                cols={4}
                 items={[
                     { label: 'Total Outlet', value: totalOutlets, sublabel: 'Semua outlet', sublabelColor: 'text-text-subtle' },
                     { label: 'Aktif', value: activeOutlets, sublabel: 'Outlet aktif', sublabelColor: 'text-emerald-500' },
@@ -119,10 +120,10 @@ export default function OutletsIndex({ outlets }: any) {
                     action={{ label: '+ Tambah Outlet', href: '/owner/outlets/create' }}
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Daftar Outlet">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card" aria-label="Daftar Outlet">
                     <table className="w-full min-w-[600px]">
                         <thead>
-                            <tr className="bg-surface-muted">
+                            <tr className="bg-surface-muted/50">
                                 <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Lokasi</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</th>
@@ -138,7 +139,7 @@ export default function OutletsIndex({ outlets }: any) {
                                 return (
                                     <tr
                                         key={outlet.id}
-                                        className="cursor-pointer border-t border-border transition-colors hover:bg-surface-muted"
+                                        className="cursor-pointer border-t border-border/20 transition-colors hover:bg-mint-wash"
                                         onClick={() => router.visit(`/owner/outlets/${outlet.id}`)}
                                     >
                                         <td className="px-4 py-3">

@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { displayProductName } from '@/lib/display';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 export default function EditInventory({ inventory }: any) {
     const form = useForm({ current_stock: inventory.current_stock, minimum_stock: inventory.minimum_stock, notes: '' });
 
-    const variantName = inventory.variant?.name ?? inventory.product?.name ?? '-';
+    const variantName = displayProductName(inventory.variant);
     const familyName = inventory.variant?.family?.name ?? '';
 
     return (

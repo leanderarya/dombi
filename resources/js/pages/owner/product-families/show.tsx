@@ -25,6 +25,7 @@ interface Variant {
     selling_price: number;
     center_stock: number;
     is_active: boolean;
+    image: string | null;
     order_items_count: number;
 }
 
@@ -33,6 +34,7 @@ interface Family {
     name: string;
     brand: string | null;
     description: string | null;
+    image: string | null;
     is_active: boolean;
     variants: Variant[];
 }
@@ -140,10 +142,19 @@ export default function ProductFamilyShow({ family }: Props) {
 
     const cancelForm = useCallback(() => { setShowVariantForm(false); setEditingVariant(null); variantForm.reset(); }, [variantForm]);
 
-    const handleUpdateFamily = (e: React.FormEvent) => { e.preventDefault(); familyForm.put(`/owner/product-families/${family.id}`, { onSuccess: () => setShowFamilyEdit(false) }); };
+    const handleUpdateFamily = (e: React.FormEvent) => {
+        e.preventDefault();
+        familyForm.put(`/owner/product-families/${family.id}`, {
+            onSuccess: () => { setShowFamilyEdit(false); },
+            onError: (errors) => { familyForm.setErrors(errors); },
+        });
+    };
     const handleDeleteFamily = () => { router.delete(`/owner/product-families/${family.id}`, { onSuccess: () => setDeleteFamilyDialog(false) }); };
     const handleDeleteVariant = () => { if (deleteId) { router.delete(`/owner/variants/${deleteId}`, { onSuccess: () => setDeleteId(null) }); } };
-    const handleCreateVariant = (e: React.FormEvent) => { e.preventDefault(); variantForm.post(`/owner/product-families/${family.id}/variants`, { onSuccess: () => { variantForm.reset(); setShowVariantForm(false); } }); };
+    const handleCreateVariant = (e: React.FormEvent) => {
+        e.preventDefault();
+        variantForm.post(`/owner/product-families/${family.id}/variants`, { onSuccess: () => { variantForm.reset(); setShowVariantForm(false); } });
+    };
     const handleUpdateVariant = (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingVariant) return;
@@ -182,7 +193,7 @@ export default function ProductFamilyShow({ family }: Props) {
             }
         >
             {family.description && (
-                <div className="mb-4 rounded-lg border border-border bg-white p-4">
+                <div className="mb-4 rounded-xl bg-surface shadow-card p-4">
                     <p className="text-sm text-slate-600">{family.description}</p>
                 </div>
             )}
@@ -199,7 +210,7 @@ export default function ProductFamilyShow({ family }: Props) {
             <div className="mb-4 flex flex-wrap items-center gap-2" role="group">
                 {FILTERS.map((f) => (
                     <button key={f.key} type="button" onClick={() => setVariantFilter(f.key)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${variantFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'}`}>
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${variantFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}>
                         {f.label}
                     </button>
                 ))}
@@ -220,7 +231,7 @@ export default function ProductFamilyShow({ family }: Props) {
                     )}
 
                     {/* Table */}
-                    <div className="overflow-x-auto rounded-lg border border-border bg-white">
+                    <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b border-border bg-surface-muted/50 text-left">
@@ -229,6 +240,9 @@ export default function ProductFamilyShow({ family }: Props) {
                                     </th>
                                     <th className="cursor-pointer select-none px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-text-muted" onClick={() => toggleSort('name')}>
                                         Nama<SortMarker col="name" />
+                                    </th>
+                                    <th className="px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-text-muted">
+                                        Gambar
                                     </th>
                                     <th className="cursor-pointer select-none px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-text-muted" onClick={() => toggleSort('center_price')}>
                                         HPP<SortMarker col="center_price" />
@@ -253,9 +267,16 @@ export default function ProductFamilyShow({ family }: Props) {
                                     const isSelected = selectedIds.has(v.id);
 
                                     return (
-                                        <tr key={v.id} className={`transition-colors hover:bg-surface-muted/30 ${!v.is_active ? 'opacity-50' : ''} ${isSelected ? 'bg-blue-50/50' : ''}`}>
+                                        <tr key={v.id} className={`transition-colors hover:bg-mint-wash/30 ${!v.is_active ? 'opacity-50' : ''} ${isSelected ? 'bg-blue-50/50' : ''}`}>
                                             <td className="px-3 py-3">
                                                 <input type="checkbox" checked={isSelected} onChange={() => toggleSelect(v.id)} className="h-3.5 w-3.5 rounded border-zinc-300 accent-primary" />
+                                            </td>
+                                            <td className="px-3 py-3">
+                                                {(v.image || family.image) ? (
+                                                    <img src={(v.image ?? family.image) ? `/storage/${v.image ?? family.image}` : undefined} alt={v.name} className="h-8 w-8 rounded object-cover" />
+                                                ) : (
+                                                    <span className="text-xs text-text-muted">—</span>
+                                                )}
                                             </td>
                                             <td className="px-3 py-3">
                                                 <div className="font-semibold text-text">{v.name}</div>
@@ -272,11 +293,11 @@ export default function ProductFamilyShow({ family }: Props) {
                                             <td className="px-3 py-3 text-right text-sm tabular-nums text-text">{v.center_stock}</td>
                                             <td className="px-3 py-3">
                                                 <div className="flex items-center justify-center gap-0.5">
-                                                    <button type="button" onClick={() => duplicate(v)} title="Duplikat" className="rounded p-1 text-text-subtle hover:bg-surface-muted hover:text-text"><Copy className="h-3.5 w-3.5" /></button>
-                                                    <button type="button" onClick={() => router.patch(`/owner/variants/${v.id}/toggle`, {}, { preserveScroll: true })} title={v.is_active ? 'Nonaktifkan' : 'Aktifkan'} className="rounded p-1 text-text-subtle hover:bg-surface-muted hover:text-text">
+                                                    <button type="button" onClick={() => duplicate(v)} title="Duplikat" className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"><Copy className="h-3.5 w-3.5" /></button>
+                                                    <button type="button" onClick={() => router.patch(`/owner/variants/${v.id}/toggle`, {}, { preserveScroll: true })} title={v.is_active ? 'Nonaktifkan' : 'Aktifkan'} className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text">
                                                         {v.is_active ? <ToggleRight className="h-3.5 w-3.5 text-primary" /> : <ToggleLeft className="h-3.5 w-3.5" />}
                                                     </button>
-                                                    <button type="button" onClick={() => startEdit(v)} title="Edit" className="rounded p-1 text-text-subtle hover:bg-surface-muted hover:text-text"><Pencil className="h-3.5 w-3.5" /></button>
+                                                    <button type="button" onClick={() => startEdit(v)} title="Edit" className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"><Pencil className="h-3.5 w-3.5" /></button>
                                                     <button type="button" onClick={() => setDeleteId(v.id)} title="Hapus" className="rounded p-1 text-text-subtle hover:bg-red-50 hover:text-red-600"><Trash2 className="h-3.5 w-3.5" /></button>
                                                 </div>
                                             </td>
@@ -309,7 +330,12 @@ export default function ProductFamilyShow({ family }: Props) {
 
             <Dialog open={showVariantForm || editingVariant !== null} onOpenChange={(open) => { if (!open) cancelForm(); }}>
                 <DialogContent className="sm:max-w-lg">
-                    <VariantForm form={variantForm} editing={!!editingVariant} onSubmit={editingVariant ? handleUpdateVariant : handleCreateVariant} onCancel={cancelForm} />
+                    <VariantForm
+                        form={variantForm}
+                        editing={!!editingVariant}
+                        onSubmit={editingVariant ? handleUpdateVariant : handleCreateVariant}
+                        onCancel={cancelForm}
+                    />
                 </DialogContent>
             </Dialog>
 

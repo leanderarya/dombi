@@ -44,8 +44,8 @@ export default function OutletList({ outlets, selectedId, onSelect }: Props) {
                             className={cn(
                                 'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-150',
                                 selectedId === o.id
-                                    ? 'bg-primary-light ring-1 ring-primary/20'
-                                    : 'hover:bg-surface-muted'
+                                    ? 'bg-mint-wash ring-1 ring-primary/20'
+                                    : 'hover:bg-mint-wash/50'
                             )}
                         >
                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted">

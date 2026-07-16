@@ -123,7 +123,7 @@ params.set('outlet_id', String(filters.outlet_id));
                         className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                             period === p.key
                                 ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                                : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                         }`}
                     >
                         {p.label}
@@ -147,7 +147,7 @@ params.set('outlet_id', String(filters.outlet_id));
                         />
 
                         <div className="space-y-2" aria-label="Ringkasan laporan">
-                            <div className="rounded-lg border border-border bg-white p-5">
+                            <div className="rounded-xl bg-surface shadow-card p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
                                     <ClipboardList className="h-4 w-4 text-text-subtle" aria-hidden="true" />
                                     Total Pesanan
@@ -155,7 +155,7 @@ params.set('outlet_id', String(filters.outlet_id));
                                 <div className="mt-2 text-3xl font-bold text-text">{summary.totalOrders}</div>
                                 <div className="mt-1 flex items-center gap-1 text-xs font-medium text-text-subtle">Pesanan</div>
                             </div>
-                            <div className="rounded-lg border border-border bg-white p-5">
+                            <div className="rounded-xl bg-surface shadow-card p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
                                     <DollarSign className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                                     Pendapatan
@@ -163,7 +163,7 @@ params.set('outlet_id', String(filters.outlet_id));
                                 <div className="mt-2 text-3xl font-bold text-text">{formatCurrency(summary.totalRevenue)}</div>
                                 <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">Total pendapatan</div>
                             </div>
-                            <div className="rounded-lg border border-border bg-white p-5">
+                            <div className="rounded-xl bg-surface shadow-card p-5">
                                 <div className="flex items-center gap-2 text-xs text-text-muted">
                                     <CheckCircle className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                                     Selesai
@@ -173,14 +173,14 @@ params.set('outlet_id', String(filters.outlet_id));
                             </div>
                         </div>
 
-                        <div className="rounded-lg border border-border bg-white">
+                        <div className="rounded-xl bg-surface shadow-card">
                             <button type="button" onClick={() => setSecondaryOpen(!secondaryOpen)} className="flex w-full items-center justify-between p-3">
                                 <div className="text-xs font-medium text-text-muted">Detail Lainnya</div>
                                 <ChevronDown className={`h-3.5 w-3.5 text-text-muted transition-transform ${secondaryOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
                             </button>
                             {secondaryOpen && (
                                 <div className="space-y-2 border-t border-border px-3 pb-3 pt-2" aria-label="Detail tambahan laporan">
-                                    <div className="rounded-lg border border-border bg-white p-5">
+                                    <div className="rounded-xl bg-surface shadow-card p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
                                             <XCircle className="h-4 w-4 text-red-500" aria-hidden="true" />
                                             Dibatalkan
@@ -188,7 +188,7 @@ params.set('outlet_id', String(filters.outlet_id));
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.cancelledOrders}</div>
                                         <div className="mt-1 flex items-center gap-1 text-xs font-medium text-red-500">Dibatalkan</div>
                                     </div>
-                                    <div className="rounded-lg border border-border bg-white p-5">
+                                    <div className="rounded-xl bg-surface shadow-card p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
                                             <Truck className="h-4 w-4 text-emerald-500" aria-hidden="true" />
                                             Pengiriman Berhasil
@@ -196,7 +196,7 @@ params.set('outlet_id', String(filters.outlet_id));
                                         <div className="mt-2 text-3xl font-bold text-text">{summary.completedDeliveries}</div>
                                         <div className="mt-1 flex items-center gap-1 text-xs font-medium text-emerald-500">Pengiriman selesai</div>
                                     </div>
-                                    <div className="rounded-lg border border-border bg-white p-5">
+                                    <div className="rounded-xl bg-surface shadow-card p-5">
                                         <div className="flex items-center gap-2 text-xs text-text-muted">
                                             <XCircle className="h-4 w-4 text-red-500" aria-hidden="true" />
                                             Pengiriman Gagal

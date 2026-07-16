@@ -9,6 +9,7 @@ import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
+import { displayProductName } from '@/lib/display';
 import { formatCurrency } from '@/lib/format';
 
 const reasonOptions = [
@@ -43,7 +44,7 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
         if (sortKey === key) { setSortDir((d) => (d === 'asc' ? 'desc' : 'asc')); } else { setSortKey(key); setSortDir('asc'); }
     };
 
-    if (!variants || !stats) return <div className="h-20 animate-pulse rounded-lg border border-border bg-white" />;
+    if (!variants || !stats) return <div className="h-20 animate-pulse rounded-lg border border-border bg-surface" />;
 
     const filtered = useMemo(() => {
         let list = variants.filter(Boolean);
@@ -70,7 +71,7 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
 
     return (
         <>
-            <OwnerKpiStrip items={[
+            <OwnerKpiStrip cols={4} items={[
                 { label: 'Total Variant', value: stats.total_variants },
                 { label: 'Total Stok', value: `${stats.total_stock} pcs` },
                 { label: 'Stok Habis', value: stats.zero_stock, sublabel: stats.zero_stock > 0 ? 'Perlu tindakan' : undefined, sublabelColor: 'text-red-500' },
@@ -88,7 +89,7 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
             <div className="mb-4 flex flex-wrap items-center gap-2" role="group">
                 {STOCK_FILTERS.map((f) => (
                     <button key={f.key} type="button" onClick={() => setStockFilter(f.key)}
-                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'}`}>
+                        className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${stockFilter === f.key ? 'bg-emerald-50 text-emerald-600 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}>
                         {f.label}
                     </button>
                 ))}
@@ -97,10 +98,10 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
             {sorted.length === 0 ? (
                 <EmptyState title="Tidak ada produk ditemukan" description="Coba ubah kata kunci pencarian" />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
                     <table className="w-full min-w-[600px]" aria-label="Stok Pusat">
                         <thead>
-                            <tr className="bg-surface-muted">
+                            <tr className="bg-surface-muted/50">
                                 <SortableTh label="Produk / SKU" active={sortKey === 'name'} dir={sortDir} onClick={() => toggleSort('name')} />
                                 <SortableTh label="Stok" active={sortKey === 'center_stock'} dir={sortDir} align="right" onClick={() => toggleSort('center_stock')} />
                                 <SortableTh label="HPP" active={sortKey === 'center_price'} dir={sortDir} align="right" onClick={() => toggleSort('center_price')} />
@@ -114,10 +115,9 @@ export default function CentralStockTab({ variants, stats }: { variants?: any[];
                                 const isLow = v.center_stock > 0 && v.center_stock <= 10;
 
                                 return (
-                                    <tr key={v.id} className="border-t border-border transition-colors hover:bg-surface-muted">
+                                    <tr key={v.id} className="border-t border-border/20 transition-colors hover:bg-mint-wash">
                                         <td className="px-3 py-3">
-                                            {v.family_name && <span className="text-text-subtle">{v.family_name} </span>}
-                                            <span className="font-bold text-text">{v.name}</span>
+                                            <span className="font-bold text-text">{displayProductName(v)}</span>
                                             {v.sku && <span className="ml-1 text-xs text-text-muted">{v.sku}</span>}
                                         </td>
                                         <td className={`px-3 py-3 text-right font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}>
