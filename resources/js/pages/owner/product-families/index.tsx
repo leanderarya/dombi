@@ -1,14 +1,12 @@
 import { router, useForm } from '@inertiajs/react';
-import { Package, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Package, Pencil, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
-import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
-import StatusBadge from '@/components/ui/status-badge';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Variant {
@@ -22,6 +20,7 @@ interface Family {
     name: string;
     brand: string | null;
     description: string | null;
+    image: string | null;
     is_active: boolean;
     variants_count: number;
     variants: Variant[];
@@ -31,8 +30,17 @@ interface Props {
     families: Family[];
 }
 
+const statusFilters = [
+    { key: 'all', label: 'Semua' },
+    { key: 'active', label: 'Aktif' },
+    { key: 'inactive', label: 'Nonaktif' },
+] as const;
+
+type FilterKey = (typeof statusFilters)[number]['key'];
+
 export default function ProductFamiliesIndex({ families }: Props) {
     const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState<FilterKey>('all');
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -45,13 +53,21 @@ export default function ProductFamiliesIndex({ families }: Props) {
 
     if (families === undefined || families === null) {
         return (
-            <OwnerPageShell title="Product Families" subtitle="Kelola kelompok produk dan variant">
+            <OwnerPageShell title="Produk" subtitle="Kelola kelompok produk dan variant susu kambing Anda">
                 <SkeletonPage />
             </OwnerPageShell>
         );
     }
 
     const filteredFamilies = families.filter((f) => {
+        if (statusFilter === 'active' && !f.is_active) {
+            return false;
+        }
+
+        if (statusFilter === 'inactive' && f.is_active) {
+            return false;
+        }
+
         if (!search) {
             return true;
         }
@@ -102,93 +118,160 @@ export default function ProductFamiliesIndex({ families }: Props) {
 
     return (
         <OwnerPageShell
-            title="Product Families"
-            subtitle="Kelola kelompok produk dan variant"
+            title="Produk"
+            subtitle="Kelola kelompok produk dan variant susu kambing Anda"
             headerRight={
                 <Button onClick={() => {
- reset(); setEditingId(null); setShowForm(true); 
-}}>
+                    reset();
+                    setEditingId(null);
+                    setShowForm(true);
+                }}>
                     <Plus className="h-4 w-4 mr-1" aria-hidden="true" />
-                    Tambah
+                    Tambah Produk
                 </Button>
             }
         >
-            <OwnerFilterCard
-                searchPlaceholder="Cari product family..."
-                searchValue={search}
-                onSearch={setSearch}
-            />
+            {/* Search + Filter Chips */}
+            <div className="flex items-center gap-3 mb-6">
+                <Input
+                    type="text"
+                    placeholder="Cari produk..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-64"
+                />
+                <div className="flex items-center gap-2">
+                    {statusFilters.map((f) => (
+                        <button
+                            key={f.key}
+                            onClick={() => setStatusFilter(f.key)}
+                            className={`px-4 py-1.5 rounded-full text-[12px] font-medium transition-all ${
+                                statusFilter === f.key
+                                    ? 'bg-primary text-white'
+                                    : 'bg-surface-container text-text-muted hover:bg-mint-wash'
+                            }`}
+                        >
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
 
             {filteredFamilies.length === 0 ? (
                 <EmptyState
                     icon={<Package className="h-8 w-8 text-text-subtle" />}
-                    title={search ? 'Tidak ditemukan' : 'Belum ada product family'}
-                    description={search ? 'Coba kata kunci lain' : 'Tambah product family pertama Anda'}
+                    title={search || statusFilter !== 'all' ? 'Tidak ditemukan' : 'Belum ada produk'}
+                    description={search || statusFilter !== 'all' ? 'Coba kata kunci atau filter lain' : 'Tambah produk pertama Anda'}
                 />
             ) : (
-                <div className="space-y-2" aria-label="Daftar Product Family">
-                    {filteredFamilies.map((family) => (
-                        <div key={family.id} className="rounded-lg border border-border bg-white p-4 transition-all duration-200">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-bold text-text">{family.name}</span>
-                                    {!family.is_active && (
-                                        <StatusBadge variant="neutral" size="sm">Nonaktif</StatusBadge>
-                                    )}
-                                    <span className="text-xs text-text-muted">{family.variants_count} variant</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <Button variant="ghost" size="icon" aria-label={`Edit ${family.name}`} onClick={() => handleEdit(family)}>
-                                        <Pencil className="h-3.5 w-3.5" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" aria-label={`Hapus ${family.name}`} onClick={() => setDeleteId(family.id)}>
-                                        <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                                    </Button>
-                                </div>
-                            </div>
+                <div className="bg-surface rounded-xl overflow-hidden shadow-card" aria-label="Daftar Product Family">
+                    <table className="w-full text-left border-collapse">
+                        <thead>
+                            <tr className="bg-surface-muted/50 border-b border-border/30">
+                                <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Produk</th>
+                                <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Gambar</th>
+                                <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Merek</th>
+                                <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Varian</th>
+                                <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-text-muted">Status</th>
+                                <th className="px-6 py-4 text-[11px] font-semibold uppercase tracking-wider text-text-muted text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/20">
+                            {filteredFamilies.map((family) => (
+                                <tr key={family.id} className="hover:bg-mint-wash transition-colors group">
+                                    {/* Produk */}
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-lg bg-mint-wash flex items-center justify-center text-primary">
+                                                <Package className="h-4 w-4" />
+                                            </div>
+                                            <span className="text-sm font-semibold text-text">{family.name}</span>
+                                        </div>
+                                    </td>
 
-                            <div className="mt-1.5 flex items-center justify-between">
-                                <div className="min-w-0 flex-1">
-                                    <div className="text-xs text-text-muted">
-                                        {[family.brand, family.description].filter(Boolean).join(' · ') || '-'}
-                                    </div>
-                                    <div className="mt-1.5 flex flex-wrap gap-1">
-                                        {family.variants.slice(0, 4).map((v) => (
-                                            <span
-                                                key={v.id}
-                                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
-                                                    v.is_active ? 'bg-primary-light text-primary' : 'bg-surface-muted text-text-muted'
-                                                }`}
-                                            >
-                                                {v.name}
-                                            </span>
-                                        ))}
-                                        {family.variants_count > 4 && (
-                                            <span className="inline-flex rounded-full bg-surface-muted px-2 py-0.5 text-xs font-medium text-text-muted">
-                                                +{family.variants_count - 4}
-                                            </span>
+                                    {/* Gambar */}
+                                    <td className="px-6 py-4">
+                                        {family.image ? (
+                                            <img src={`/storage/${family.image}`} alt={family.name} className="h-10 w-10 rounded object-cover" />
+                                        ) : (
+                                            <span className="text-xs text-text-muted">—</span>
                                         )}
-                                    </div>
-                                </div>
-                                <Button
-                                    variant="link"
-                                    size="sm"
-                                    onClick={() => router.get(`/owner/product-families/${family.id}`)}
-                                    className="ml-3 shrink-0"
-                                >
-                                    Kelola →
-                                </Button>
-                            </div>
-                        </div>
-                    ))}
+                                    </td>
+
+                                    {/* Merek */}
+                                    <td className="px-6 py-4 text-sm text-text-muted">
+                                        {family.brand || '-'}
+                                    </td>
+
+                                    {/* Varian */}
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {family.variants.slice(0, 3).map((v) => (
+                                                <span
+                                                    key={v.id}
+                                                    className={`px-2 py-0.5 text-[11px] rounded-full ${
+                                                        v.is_active
+                                                            ? 'bg-white border border-primary/10 text-primary'
+                                                            : 'bg-surface-muted text-text-muted'
+                                                    }`}
+                                                >
+                                                    {v.name}
+                                                </span>
+                                            ))}
+                                            {family.variants_count > 3 && (
+                                                <span className="px-2 py-0.5 bg-surface-muted text-text-muted text-[11px] rounded-full">
+                                                    +{family.variants_count - 3} lagi
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+
+                                    {/* Status */}
+                                    <td className="px-6 py-4">
+                                        {family.is_active ? (
+                                            <span className="bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-[11px] font-bold">AKTIF</span>
+                                        ) : (
+                                            <span className="bg-surface-muted text-text-muted px-2.5 py-0.5 rounded-full text-[11px] font-bold">NONAKTIF</span>
+                                        )}
+                                    </td>
+
+                                    {/* Aksi */}
+                                    <td className="px-6 py-4 text-right">
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => router.get(`/owner/product-families/${family.id}`)}
+                                                className="text-primary font-semibold text-xs hover:underline flex items-center gap-0.5"
+                                            >
+                                                Kelola <ChevronRight className="h-3 w-3" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleEdit(family)}
+                                                className="p-1.5 text-text-muted hover:text-primary transition-colors"
+                                                aria-label={`Edit ${family.name}`}
+                                            >
+                                                <Pencil className="h-3.5 w-3.5" />
+                                            </button>
+                                            <button
+                                                onClick={() => setDeleteId(family.id)}
+                                                className="p-1.5 text-text-muted hover:text-red-600 transition-colors"
+                                                aria-label={`Hapus ${family.name}`}
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             )}
 
             <Dialog open={showForm} onOpenChange={setShowForm}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{editingId ? 'Edit Product Family' : 'Tambah Product Family'}</DialogTitle>
-                        <DialogDescription>{editingId ? 'Perbarui data product family.' : 'Tambah product family baru.'}</DialogDescription>
+                        <DialogTitle>{editingId ? 'Edit Produk' : 'Tambah Produk'}</DialogTitle>
+                        <DialogDescription>{editingId ? 'Perbarui data produk.' : 'Tambah produk baru.'}</DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit}>
                         <div className="space-y-3">
@@ -199,14 +282,14 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                 onChange={(e) => setData('name', e.target.value)}
                                 required
                                 error={errors.name}
-                                placeholder="Domilk Premium"
+                                placeholder="Dombi Classic"
                             />
                             <Input
                                 label="Brand"
                                 type="text"
                                 value={data.brand}
                                 onChange={(e) => setData('brand', e.target.value)}
-                                placeholder="Domilk"
+                                placeholder="Dombi"
                             />
                             <Textarea
                                 label="Deskripsi"
@@ -229,8 +312,8 @@ export default function ProductFamiliesIndex({ families }: Props) {
             <Dialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Hapus Product Family</DialogTitle>
-                        <DialogDescription>Yakin ingin menghapus product family ini? Tindakan ini tidak dapat dibatalkan.</DialogDescription>
+                        <DialogTitle>Hapus Produk</DialogTitle>
+                        <DialogDescription>Yakin ingin menghapus produk ini? Tindakan ini tidak dapat dibatalkan.</DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteId(null)}>Batal</Button>

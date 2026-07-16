@@ -110,7 +110,7 @@ return;
                     description="Tambah tier untuk mengatur tarif pengiriman berdasarkan jarak"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-surface" aria-label="Daftar tier pengiriman">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card" aria-label="Daftar tier pengiriman">
                     <table className="w-full min-w-[500px] text-sm">
                         <thead>
                             <tr className="bg-surface-muted text-xs font-medium text-text-muted">
@@ -125,7 +125,7 @@ return;
                             {tiers.map((tier) => (
                                 <tr
                                     key={tier.id}
-                                    className={`border-t border-border transition-colors hover:bg-surface-muted ${!tier.is_active ? 'opacity-50' : ''}`}
+                                    className={`border-t border-border/20 transition-colors hover:bg-mint-wash ${!tier.is_active ? 'opacity-50' : ''}`}
                                 >
                                     <td className="px-4 py-3">
                                         <GripVertical className="h-4 w-4 text-text-subtle" aria-hidden="true" />
@@ -164,7 +164,7 @@ return;
                 </div>
             )}
 
-            <div className="mt-4 rounded-lg border border-border bg-white p-4" aria-label="Cara kerja tier">
+            <div className="mt-4 rounded-xl bg-surface shadow-card p-4" aria-label="Cara kerja tier">
                 <h3 className="text-xs font-medium text-text-subtle">Cara Kerja</h3>
                 <ul className="mt-2 space-y-1.5 text-xs text-text-muted">
                     <li>Tier diurutkan berdasarkan jarak (sort_order). Sistem mencocokkan dari tier pertama.</li>

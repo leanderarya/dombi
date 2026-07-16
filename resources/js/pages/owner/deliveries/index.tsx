@@ -48,7 +48,7 @@ export default function OwnerDeliveriesIndex({
             subtitle="Kelola pengiriman dari semua outlet"
         >
             {/* KPI Strip */}
-            <OwnerKpiStrip items={[
+            <OwnerKpiStrip cols={4} items={[
                 { label: 'Total', value: stats.total_today, sublabel: (stats.total_today ?? 0) > 0 ? 'Hari ini' : undefined, sublabelColor: 'text-blue-600' },
                 { label: 'Aktif', value: stats.active, sublabel: (stats.active ?? 0) > 0 ? 'Sedang berjalan' : undefined, sublabelColor: 'text-blue-600' },
                 { label: 'Selesai', value: stats.completed_today },
@@ -71,7 +71,7 @@ export default function OwnerDeliveriesIndex({
                     return (
                         <button key={opt.value} type="button" onClick={() => setFilter('status', opt.value)}
                             className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
-                                isActive ? colorMap[opt.value] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'
+                                isActive ? colorMap[opt.value] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}>
                             {opt.label}
                         </button>
@@ -104,10 +104,10 @@ export default function OwnerDeliveriesIndex({
                     description="Pengiriman akan muncul di sini setelah kurir di-assign ke pesanan"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
                     <table aria-label="Daftar pengiriman" className="w-full min-w-[600px]">
                         <thead>
-                            <tr className="bg-surface-muted">
+                            <tr className="bg-surface-muted/50">
                                 <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kurir</th>
@@ -121,7 +121,7 @@ export default function OwnerDeliveriesIndex({
                                 const isActive = ['delivering', 'picked_up'].includes(d.status);
 
                                 return (
-                                    <tr key={d.id} className="border-t border-border transition-colors hover:bg-surface-muted">
+                                    <tr key={d.id} className="border-t border-border/20 transition-colors hover:bg-mint-wash">
                                         <td className="px-4 py-3 font-bold tabular-nums text-text">{d.order?.order_code ?? '-'}</td>
                                         <td className="px-4 py-3 text-text-muted">{d.order?.outlet?.name ?? '-'}</td>
                                         <td className="px-4 py-3 text-text-muted">{d.courier?.name ?? 'Belum ada kurir'}</td>
