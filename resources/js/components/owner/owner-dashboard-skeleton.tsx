@@ -14,9 +14,9 @@ export default function OwnerDashboardSkeleton() {
             <SkeletonKpiGrid count={3} />
 
             {/* 2-column grid: Actions + Stok Kritis */}
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-10">
                 {/* Butuh Tindakan */}
-                <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
+                <div className="lg:col-span-7 rounded-xl bg-surface p-4 shadow-card space-y-3">
                     <Skeleton className="h-4 w-28" />
                     <div className="space-y-2">
                         <Skeleton className="h-12 w-full rounded-lg" />
@@ -26,7 +26,7 @@ export default function OwnerDashboardSkeleton() {
                 </div>
 
                 {/* Stok Kritis */}
-                <div className="rounded-lg border border-border bg-surface p-4 space-y-3">
+                <div className="lg:col-span-3 rounded-xl bg-surface p-4 shadow-card space-y-3">
                     <Skeleton className="h-4 w-24" />
                     <div className="space-y-2">
                         <Skeleton className="h-12 w-full rounded-lg" />

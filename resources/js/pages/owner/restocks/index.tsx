@@ -1,6 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
-import RestockCreateModal from '@/components/owner/restock-create-modal';
-import { CheckCircle2, Plus, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
@@ -9,15 +8,12 @@ import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
-import { Input } from '@/components/ui/input';
 import Pagination from '@/components/ui/pagination';
-import { Select } from '@/components/ui/select';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
-import StockLevelBadge from '@/components/ui/stock-level-badge';
 import { Textarea } from '@/components/ui/textarea';
-import { formatCurrency, formatDate } from '@/lib/format';
-import { calculateStockStatus } from '@/lib/stock';
+import { displayProductName } from '@/lib/display';
+import { formatDate } from '@/lib/format';
 
 const statusFilters = [
     { key: '', label: 'Semua' },
@@ -25,6 +21,8 @@ const statusFilters = [
     { key: 'preparing', label: 'Disiapkan' },
     { key: 'shipped', label: 'Dikirim' },
     { key: 'completed', label: 'Selesai' },
+    { key: 'rejected', label: 'Ditolak' },
+    { key: 'cancelled', label: 'Dibatalkan' },
 ];
 
 const colorMap: Record<string, string> = {
@@ -33,6 +31,8 @@ const colorMap: Record<string, string> = {
     preparing: 'text-purple-600 bg-purple-50 ring-purple-200',
     shipped: 'text-indigo-600 bg-indigo-50 ring-indigo-200',
     completed: 'text-emerald-600 bg-emerald-50 ring-emerald-200',
+    rejected: 'text-red-600 bg-red-50 ring-red-200',
+    cancelled: 'text-gray-600 bg-gray-50 ring-gray-200',
 };
 
 type SortKey = 'id' | 'outlet' | 'items' | 'date';
@@ -42,7 +42,6 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
     const [approveModal, setApproveModal] = useState<any>(null);
     const [rejectModal, setRejectModal] = useState<any>(null);
-    const [createModal, setCreateModal] = useState(false);
     const [loadingDetail, setLoadingDetail] = useState(false);
 
     const toggleSort = (key: SortKey) => {
@@ -87,11 +86,8 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
         <OwnerPageShell
             title="Restocks"
             subtitle="Kelola permintaan restock dari outlet"
-            headerRight={
-                <Button onClick={() => setCreateModal(true)}><Plus className="mr-1.5 h-4 w-4" />Buat Restock</Button>
-            }
         >
-            <OwnerKpiStrip items={[
+            <OwnerKpiStrip cols={4} items={[
                 { label: 'Menunggu', value: requestedCount, sublabel: requestedCount > 0 ? 'Perlu ditinjau' : undefined, sublabelColor: 'text-amber-600' },
                 { label: 'Disiapkan', value: preparingCount },
                 { label: 'Dikirim', value: shippedCount },
@@ -104,7 +100,7 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
 
                     return (
                         <button key={sf.key} type="button" onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${isActive ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-surface-muted'}`}>
+                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${isActive ? colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}>
                             {sf.label}
                         </button>
                     );
@@ -126,10 +122,10 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
             {restocks.data.length === 0 ? (
                 <EmptyState title="Tidak ada restock" description="Permintaan restock akan muncul di sini setelah diajukan outlet" />
             ) : (
-                <div className="overflow-x-auto rounded-lg border border-border bg-surface">
+                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
                     <table className="w-full min-w-[600px]" aria-label="Daftar Restock">
                         <thead>
-                            <tr className="bg-surface-muted">
+                            <tr className="bg-surface-muted/50">
                                 <SortableTh label="Kode" active={sortKey === 'id'} dir={sortDir} onClick={() => toggleSort('id')} />
                                 <SortableTh label="Outlet" active={sortKey === 'outlet'} dir={sortDir} onClick={() => toggleSort('outlet')} />
                                 <th className="px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-text-muted">Status</th>
@@ -140,7 +136,7 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
                         </thead>
                         <tbody>
                             {sorted.map((r: any) => (
-                                <tr key={r.id} className="border-t border-border transition-colors hover:bg-surface-muted">
+                                <tr key={r.id} className="border-t border-border/20 transition-colors hover:bg-mint-wash">
                                     <td className="px-3 py-3 font-bold tabular-nums text-text">#{r.id}</td>
                                     <td className="px-3 py-3 text-text-muted">{r.outlet?.name ?? '—'}</td>
                                     <td className="px-3 py-3"><StatusBadge status={r.status} size="sm" /></td>
@@ -171,8 +167,6 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
                 onSuccess={() => setApproveModal(null)}
             />
 
-            {/* Create Modal */}
-            <RestockCreateModal open={createModal} outlets={outlets} onClose={() => setCreateModal(false)} onSuccess={() => setCreateModal(false)} />
         </OwnerPageShell>
     );
 }
@@ -181,6 +175,7 @@ export default function OwnerRestocksIndex({ restocks, filters, outlets }: any) 
 function RestockActionModal({ restock, onClose, onSuccess }: { restock: any; onClose: () => void; onSuccess: () => void }) {
     const [detail, setDetail] = useState<any>(null);
     const [inventories, setInventories] = useState<any[]>([]);
+    const [centralStock, setCentralStock] = useState<Record<number, number>>({});
     const [loading, setLoading] = useState(false);
     const [showReject, setShowReject] = useState(false);
 
@@ -198,6 +193,7 @@ function RestockActionModal({ restock, onClose, onSuccess }: { restock: any; onC
             .then(data => {
                 setDetail(data.restock);
                 setInventories(data.inventories ?? []);
+                setCentralStock(data.centralStock ?? {});
                 approveForm.setData({
                     owner_notes: data.restock.owner_notes ?? '',
                     items: (data.restock.items ?? []).map((item: any) => ({
@@ -242,17 +238,20 @@ function RestockActionModal({ restock, onClose, onSuccess }: { restock: any; onC
                                         <th className="py-1.5 text-left font-medium">Produk</th>
                                         <th className="py-1.5 text-right font-medium">Diminta</th>
                                         <th className="py-1.5 text-right font-medium">Disetujui</th>
+                                        <th className="py-1.5 text-right font-medium">Stok Gudang</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {isRequested
                                         ? approveForm.data.items.map((item: any, i: number) => {
                                             const detailItem = detail?.items?.[i];
-                                            const inv = inventories.find((inv: any) => inv.product_variant_id === detailItem?.product_variant_id);
+                                            const stockVal = centralStock[detailItem?.product_variant_id];
+                                            const approvedQty = item.approved_quantity ?? 0;
+                                            const stockWarning = stockVal !== undefined && stockVal < approvedQty;
 
                                             return (
                                                 <tr key={i} className="border-t border-border/30">
-                                                    <td className="py-2 font-medium text-text">{detailItem?.variant?.name ?? detailItem?.product?.name ?? '-'}</td>
+                                                    <td className="py-2 font-medium text-text">{displayProductName(detailItem?.variant)}</td>
                                                     <td className="py-2 text-right tabular-nums text-text-muted">{detailItem?.requested_quantity}</td>
                                                     <td className="py-2 text-right">
                                                         <input type="number" min={0}
@@ -265,27 +264,30 @@ function RestockActionModal({ restock, onClose, onSuccess }: { restock: any; onC
                                                             className="h-7 w-16 rounded border border-border px-1.5 text-right text-xs font-semibold outline-none focus:border-primary"
                                                         />
                                                     </td>
+                                                    <td className={`py-2 text-right tabular-nums ${stockWarning ? 'font-semibold text-red-600' : 'text-text-muted'}`}>
+                                                        {stockVal ?? '—'}
+                                                    </td>
                                                 </tr>
                                             );
                                         })
-                                        : (detail?.items ?? []).map((item: any) => (
+                                        : (detail?.items ?? []).map((item: any) => {
+                                            const stockVal = centralStock[item.product_variant_id];
+                                            const approvedQty = item.approved_quantity ?? 0;
+                                            const stockWarning = stockVal !== undefined && stockVal < approvedQty;
+
+                                            return (
                                             <tr key={item.id} className="border-t border-border/30">
-                                                <td className="py-2 font-medium text-text">{item.variant?.name ?? item.product?.name ?? '-'}</td>
+                                                <td className="py-2 font-medium text-text">{displayProductName(item.variant)}</td>
                                                 <td className="py-2 text-right tabular-nums text-text-muted">{item.requested_quantity}</td>
                                                 <td className="py-2 text-right tabular-nums font-semibold">{item.approved_quantity ?? '—'}</td>
+                                                <td className={`py-2 text-right tabular-nums ${stockWarning ? 'font-semibold text-red-600' : 'text-text-muted'}`}>
+                                                    {stockVal ?? '—'}
+                                                </td>
                                             </tr>
-                                        ))}
+                                            );
+                                        })}
                                 </tbody>
                             </table>
-
-                            {detail?.distribution && (
-                                <div className="rounded-lg border border-border bg-surface-muted p-3 text-sm">
-                                    <span className="font-semibold">Distribusi #{detail.distribution.id}</span>
-                                    {' '}&middot;{' '}
-                                    <StatusBadge status={detail.distribution.status} size="sm" />
-                                    {detail.distribution.sent_at && <span className="ml-2 text-text-muted">Dikirim {formatDate(detail.distribution.sent_at)}</span>}
-                                </div>
-                            )}
 
                             {isRequested && (
                                 <Textarea
