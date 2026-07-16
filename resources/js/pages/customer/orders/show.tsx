@@ -1,15 +1,17 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { AlertCircle, AlertTriangle, CheckCircle2, ChevronLeft, Clock, MapPin, Navigation, Package, Phone, RotateCcw, Share2, Store, UserCheck, XCircle } from 'lucide-react';
+import { AlertCircle, AlertTriangle, CheckCircle2, Clock, Package, Phone, RotateCcw, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import OrderHeader from '@/components/customer/order/order-header';
+import OrderInfoCard from '@/components/customer/order/order-info-card';
+import StatusGuidanceCard from '@/components/customer/order/status-guidance-card';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import Dialog from '@/components/ui/dialog';
 import StatusBadge from '@/components/ui/status-badge';
-import { useCountdown } from '@/hooks/use-countdown';
-import { useOrderCancel, useOrderPay, useOrderReport, useShareTracking } from '@/hooks/use-order-actions';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { useOrderCancel, useOrderPay, useOrderReport } from '@/hooks/use-order-actions';
+import { formatCurrency } from '@/lib/format';
 import { useOrderRecovery } from '@/lib/order-recovery';
 import { usePolling } from '@/lib/use-polling';
 
@@ -60,17 +62,14 @@ export default function OrderShow({ order, cancellationReasons = [], isConfirmat
     const isCancellable = CANCELLABLE_STATUSES.includes(order.status);
     const hasPaymentIssue = order.payment_status === 'failed' || order.payment_status === 'expired';
     const trackingUrl = order.tracking_url ?? (order.recovery_token ? `${window.location.origin}/track/${order.recovery_token}` : null);
-    const countdown = useCountdown(order.confirmation_expires_at);
 
     const { pay, loading: payLoading } = useOrderPay(order.id);
     const { cancel, error: cancelError, setError: setCancelError } = useOrderCancel(order.id, isConfirmation, order.recovery_token, isPickup);
     const { report, error: reportError, setError: setReportError } = useOrderReport(order.id);
-    const handleShare = useShareTracking(trackingUrl);
-
+    const cancelForm = useForm({ reason: '', note: '' });
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [cancelLast4Hp, setCancelLast4Hp] = useState('');
     const [reportSheetOpen, setReportSheetOpen] = useState(false);
-    const cancelForm = useForm({ reason: '', note: '' });
     const reportForm = useForm({ type: '', notes: '' });
 
     useEffect(() => {
@@ -93,13 +92,26 @@ addOrder(order.customer_phone, order.order_code);
             <Head title={`Pesanan ${order.order_code}`} />
             <OfflineBanner />
 
-            <OrderHeader order={order} isConfirmation={isConfirmation} onShare={trackingUrl ? handleShare : undefined} />
+            <OrderHeader
+                orderCode={order.order_code}
+                orderedAt={order.ordered_at}
+                trackingUrl={trackingUrl}
+                isConfirmation={isConfirmation}
+            />
 
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
                 {hasPaymentIssue && <PaymentIssueBanner isFailed={order.payment_status === 'failed'} onPay={pay} loading={payLoading} />}
 
                 <StatusBadgeSection order={order} hasPaymentIssue={hasPaymentIssue} isPickup={isPickup} />
-                <StatusGuidanceCard order={order} isPickup={isPickup} countdown={countdown} />
+                <StatusGuidanceCard
+                    status={order.status}
+                    paymentStatus={order.payment_status}
+                    isPickup={isPickup}
+                    confirmationExpiresAt={order.confirmation_expires_at}
+                    outletPhone={order.outlet?.phone}
+                    outletLatitude={order.outlet?.latitude}
+                    outletLongitude={order.outlet?.longitude}
+                />
 
                 {isPickup && order.status === 'ready_for_pickup' && <OrderQRCard orderCode={order.order_code} />}
                 {order.status === 'completed' && <CompletedHero orderId={order.id} />}
@@ -108,7 +120,21 @@ addOrder(order.customer_phone, order.order_code);
                     <OrderTimeline currentStatus={order.status} histories={order.status_histories} fulfillmentType={order.fulfillment_type} defaultCollapsed />
                 </div>
 
-                <OrderInfoCard order={order} isPickup={isPickup} />
+                <OrderInfoCard
+                    items={order.items}
+                    subtotal={order.subtotal}
+                    deliveryFee={order.delivery_fee ?? 0}
+                    total={order.total}
+                    isPickup={isPickup}
+                    paymentMethod={order.payment_method}
+                    outlet={order.outlet}
+                    delivery={order.delivery}
+                    customerAddress={order.customer_address}
+                    customerAddressDetail={order.customer_address_detail}
+                    latitude={order.latitude}
+                    longitude={order.longitude}
+                    fulfillmentType={order.fulfillment_type}
+                />
 
                 <StatusBanner order={order} />
 
@@ -158,47 +184,6 @@ addOrder(order.customer_phone, order.order_code);
 
 /* ─── Sub-components ───────────────────────────────────────── */
 
-function OrderHeader({ order, isConfirmation, onShare }: { order: any; isConfirmation: boolean; onShare?: () => void }) {
-    return (
-        <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur pt-safe">
-            <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
-                <button
-                    type="button"
-                    onClick={() => {
-                        if (isConfirmation) {
-window.location.href = '/customer/orders';
-} else if (window.history.length > 1) {
-window.history.back();
-} else {
-window.location.href = '/customer/orders';
-}
-                    }}
-                    className="flex h-11 w-11 items-center justify-center rounded-lg text-text active:opacity-80"
-                    aria-label="Kembali"
-                >
-                    <ChevronLeft className="h-5 w-5" />
-                </button>
-                <div className="text-center">
-                    <div className="text-sm font-semibold text-text">{order.order_code}</div>
-                    {order.ordered_at && <div className="text-[11px] text-text-muted">{formatDate(order.ordered_at)}</div>}
-                </div>
-                {onShare ? (
-                    <button
-                        type="button"
-                        onClick={onShare}
-                        className="flex h-11 w-11 items-center justify-center rounded-lg text-emerald-600 active:bg-emerald-50"
-                        aria-label="Bagikan lacak pesanan"
-                    >
-                        <Share2 className="h-5 w-5" />
-                    </button>
-                ) : (
-                    <div className="h-11 w-11" />
-                )}
-            </div>
-        </header>
-    );
-}
-
 function PaymentIssueBanner({ isFailed, onPay, loading }: { isFailed: boolean; onPay: () => void; loading: boolean }) {
     return (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
@@ -228,181 +213,7 @@ function StatusBadgeSection({ order, hasPaymentIssue, isPickup }: { order: any; 
     );
 }
 
-function StatusGuidanceCard({ order, isPickup, countdown }: { order: any; isPickup: boolean; countdown: { minutes: number; seconds: number; expired: boolean; totalSeconds: number } }) {
-    const isPendingUnpaid = order.status === 'pending_confirmation' && order.payment_status !== 'paid';
-    const isPaymentFailed = order.payment_status === 'failed' || order.payment_status === 'expired';
-    const guidanceKey = order.status === 'ready_for_pickup' && !isPickup ? 'ready_for_pickup_delivery' : isPendingUnpaid ? (isPaymentFailed ? 'pending_confirmation_payment_failed' : 'pending_confirmation_unpaid') : order.status;
-    const guidance = STATUS_GUIDANCE[guidanceKey];
-
-    if (!guidance) {
-return null;
-}
-
-    const isPickupReady = order.status === 'ready_for_pickup' && order.outlet?.latitude && order.outlet?.longitude;
-    const showCountdown = order.status === 'pending_confirmation' && !isPendingUnpaid && !countdown.expired && countdown.totalSeconds > 0;
-
-    return (
-        <div className="mt-3 rounded-xl border border-border bg-white p-3">
-            <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                    <div className="text-xs font-semibold text-text">{guidance.description}</div>
-                    {showCountdown && (
-                        <div className="mt-1 flex items-center gap-1.5">
-                            <Clock className="h-3 w-3 text-amber-600" />
-                            <span className="text-xs font-bold tabular-nums text-amber-700">{String(countdown.minutes).padStart(2, '0')}:{String(countdown.seconds).padStart(2, '0')}</span>
-                        </div>
-                    )}
-                    {guidance.nextStep && <div className="mt-0.5 text-[11px] text-text-muted">{guidance.nextStep}</div>}
-                </div>
-                {guidance.cta && (
-                    <div className="shrink-0">
-                        {isPickupReady && guidance.cta.action === 'navigate' ? (
-                            <a href={`${MAPS_LINK}${order.outlet.latitude},${order.outlet.longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80">
-                                <MapPin className="h-3.5 w-3.5" />{guidance.cta.label}
-                            </a>
-                        ) : guidance.cta.action === 'wa_outlet' && order.outlet?.phone ? (
-                            <a href={`${WA_LINK}${order.outlet.phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80">
-                                <Phone className="h-3.5 w-3.5" />{guidance.cta.label}
-                            </a>
-                        ) : guidance.cta.href ? (
-                            <Link href={guidance.cta.href} className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80">{guidance.cta.label}</Link>
-                        ) : null}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-function CompletedHero({ orderId }: { orderId: number }) {
-    return (
-        <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-100 p-6 text-center">
-            <div className="flex justify-center"><div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100"><CheckCircle2 className="h-8 w-8 text-emerald-600" /></div></div>
-            <h2 className="mt-4 text-lg font-bold text-text">Pesanan Selesai!</h2>
-            <p className="mt-1 text-sm text-text-muted">Terima kasih sudah pesan di Dombi 🎉</p>
-            <Link href={`/customer/orders/${orderId}/restore-cart`} className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-8 text-sm font-bold text-white active:opacity-80">
-                <RotateCcw className="h-4 w-4" />Pesan Lagi
-            </Link>
-        </div>
-    );
-}
-
-
-function OrderInfoCard({ order, isPickup }: { order: any; isPickup: boolean }) {
-    return (
-        <div className="mt-4 rounded-xl border border-border bg-white divide-y divide-border/50">
-            {/* Items */}
-            <div className="p-3">
-                <div className="flex items-center gap-2 mb-2">
-                    <Package className="h-3.5 w-3.5 text-text-subtle" />
-                    <span className="text-[11px] text-text-subtle">Pesanan</span>
-                </div>
-                <div className="space-y-1">
-                    {order.items.map((item: any, i: number) => (
-                        <div key={i} className="flex items-center justify-between text-xs">
-                            <div className="min-w-0">
-                                <span className="text-text">{item.product_name}</span>
-                                <span className="ml-1 text-[10px] text-text-subtle">x{item.quantity}</span>
-                            </div>
-                            <span className="shrink-0 font-medium tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
-                        </div>
-                    ))}
-                </div>
-                <div className="mt-2 border-t border-border/50 pt-2 space-y-1">
-                    <SummaryRow label="Metode" value={isPickup ? 'Ambil di Outlet' : 'Kirim ke Alamat'} />
-                    <SummaryRow label="Pembayaran" value={order.payment_method} />
-                    {Number(order.delivery_fee) > 0 && <SummaryRow label="Ongkir" value={formatCurrency(order.delivery_fee)} />}
-                    <div className="flex items-center justify-between text-xs font-semibold text-text pt-1 border-t border-border/50">
-                        <span>Total</span>
-                        <span className="tabular-nums">{formatCurrency(order.total)}</span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Outlet */}
-            {order.outlet && (
-                <div className="p-3">
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                                <Store className="h-3.5 w-3.5 text-text-subtle" />
-                                <span className="text-xs font-semibold text-text truncate">{order.outlet.name}</span>
-                            </div>
-                            {order.outlet.address && <div className="mt-0.5 text-[11px] text-text-muted line-clamp-1">{order.outlet.address}</div>}
-                        </div>
-                        <div className="flex shrink-0 gap-1.5">
-                            {order.outlet.latitude && order.outlet.longitude && (
-                                <a href={`${MAPS_LINK}${order.outlet.latitude},${order.outlet.longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1 rounded-lg bg-primary px-2.5 text-[11px] font-bold text-white active:opacity-80">
-                                    <Navigation className="h-3 w-3" />Navigasi
-                                </a>
-                            )}
-                            {order.outlet.phone && (
-                                <a href={`${WA_LINK}${order.outlet.phone.replace(/^0/, '62')}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 text-[11px] font-semibold text-text active:opacity-80">
-                                    <Phone className="h-3 w-3" />WA
-                                </a>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Delivery address */}
-            {!isPickup && order.customer_address && (
-                <div className="p-3">
-                    <div className="flex items-start gap-1.5">
-                        <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-text-subtle" />
-                        <div className="min-w-0 flex-1">
-                            <div className="line-clamp-2 text-xs text-text">{order.customer_address}</div>
-                            {order.customer_address_detail && <div className="text-[10px] text-text-muted mt-0.5">{order.customer_address_detail}</div>}
-                            {order.latitude && order.longitude && (
-                                <a href={`https://www.google.com/maps?q=${order.latitude},${order.longitude}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1 text-[11px] font-medium text-primary active:opacity-80">
-                                    <MapPin className="h-3 w-3" />Buka di Maps
-                                </a>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Courier */}
-            {order.delivery?.courier && (
-                <div className="p-3">
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-muted"><UserCheck className="h-3.5 w-3.5 text-text-muted" /></div>
-                        <div>
-                            <div className="text-[10px] text-text-subtle">Kurir</div>
-                            <div className="text-xs font-semibold text-text">{order.delivery.courier.name}</div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Failed delivery */}
-            {order.delivery?.failed_reason && (
-                <div className="p-3 bg-amber-50">
-                    <div className="flex items-center gap-1.5">
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
-                        <span className="text-xs font-semibold text-amber-700">Pengiriman Gagal: {order.delivery.failed_reason}</span>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
-function SummaryRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
-    return (
-        <div className="flex items-center justify-between text-[10px] text-text-muted">
-            <span>{label}</span>
-            <span className={`font-medium ${accent ? 'text-emerald-600' : 'text-text'}`}>{value}</span>
-        </div>
-    );
-}
-
 function StatusBanner({ order }: { order: any }) {
-    const status = order.status;
-    const reason = order.rejection_reason ?? order.cancellation_reason;
-    const note = order.rejection_note ?? order.cancellation_note;
 
     if (status === 'rejected_by_outlet' && reason) {
         return <ReasonBanner icon={<XCircle className="h-4 w-4 text-red-500" />} title="Pesanan Ditolak Outlet" reason={reason} note={note} />;

@@ -480,8 +480,8 @@ class CheckoutController extends Controller
                     'gateway_fee' => $feeResult['gateway_fee'],
                     'is_absorbed' => $feeResult['customer_fee'] === 0.0 && $feeResult['gateway_fee'] > 0,
                     'description' => $feeResult['customer_fee'] === 0.0 && $feeResult['gateway_fee'] > 0
-                        ? 'Biaya admin Rp 0 (ditanggung Dombi)'
-                        : 'Biaya admin ditanggung pembeli',
+                        ? 'Biaya Layanan Rp 0'
+                        : 'Biaya layanan ditanggung pembeli',
                 ];
             })
             ->values()
