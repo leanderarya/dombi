@@ -60,7 +60,7 @@ export default function OutletRestocksIndex({ restocks, filters, families, inven
                                 <StatusBadge status={restock.status} />
                             </div>
                             <div className="mt-1.5 text-xs text-text-muted">
-                                {restock.items?.length ?? 0} item · {restock.distribution?.status ?? 'Menunggu'}
+                                {restock.items?.length ?? 0} item
                             </div>
                             <div className="mt-1 text-xs text-text-subtle">
                                 {new Date(restock.created_at).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}

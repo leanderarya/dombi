@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dombi-v1';
+const CACHE_NAME = 'dombi-v2';
 const OFFLINE_URL = '/offline';
 const VERSION_URL = '/api/version';
 

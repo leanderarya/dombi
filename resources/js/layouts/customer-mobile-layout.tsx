@@ -18,11 +18,23 @@ interface Props extends PropsWithChildren {
     hideTopBar?: boolean;
     hideCartBar?: boolean;
     hideBottomNav?: boolean;
+    keepBottomNavVisible?: boolean;
 }
 
-export default function CustomerMobileLayout({ children, activeOrder, topAddress, customerName, footerSlot, hideTopBar = false, hideCartBar = false, hideBottomNav = false }: Props) {
+export default function CustomerMobileLayout({
+    children,
+    activeOrder,
+    topAddress,
+    customerName,
+    footerSlot,
+    hideTopBar = false,
+    hideCartBar = false,
+    hideBottomNav = false,
+    keepBottomNavVisible = false,
+}: Props) {
     useFlashToast();
-    const { visible } = useHideOnScroll();
+    const { visible: scrollVisible } = useHideOnScroll();
+    const visible = keepBottomNavVisible ? true : scrollVisible;
     const { totalItems } = useCart();
 
     const showCartBar = !hideCartBar && !footerSlot && !activeOrder && totalItems > 0;
@@ -39,7 +51,12 @@ export default function CustomerMobileLayout({ children, activeOrder, topAddress
                     {children}
                 </main>
 
-                {footerSlot ?? (activeOrder ? <ActiveOrderBar order={activeOrder} /> : showCartBar ? <FloatingCartBar bottomNavVisible={visible} /> : null)}
+                {footerSlot ??
+                    (activeOrder ? (
+                        <ActiveOrderBar order={activeOrder} bottomNavVisible={visible} />
+                    ) : showCartBar ? (
+                        <FloatingCartBar bottomNavVisible={visible} />
+                    ) : null)}
                 {!hideBottomNav && <CustomerBottomNav visible={visible} />}
             </div>
         </FavoritesProvider>

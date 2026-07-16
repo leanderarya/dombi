@@ -71,7 +71,7 @@ export default function BottomSheet({ open, onClose, title, children, maxHeight 
     // Portal to body — avoids containing-block issues
     return createPortal(
         <div className="fixed inset-0 z-50 flex items-end justify-center" role="dialog" aria-modal="true">
-            <div className="absolute inset-0 bg-slate-950/40" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/15 backdrop-blur-[2px]" onClick={onClose} />
             <div
                 ref={sheetRef}
                 className="relative flex w-full max-w-lg flex-col rounded-t-3xl bg-white pb-safe"
