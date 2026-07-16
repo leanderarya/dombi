@@ -1,8 +1,8 @@
 # Dombi — Progress Roadmap
 
 **Updated:** 2026-07-16
-**Current Branch:** `payment-hardening-track-a` (17 commits ahead of `main`)
-**Status:** `main` is production-stable; `payment-hardening-track-a` has unmerged payment + refund + UI work
+**Current Branch:** `main`
+**Status:** `main` is production-stable; all Phase 5 work merged
 
 ---
 
@@ -14,7 +14,7 @@
 | Payment integration (DOKU) | ✅ Done |
 | Refund system | ✅ Done |
 | Phase 1–4 (ROADMAP.md) | ✅ Done |
-| Phase 5 Outlet Features | ⏳ 50% — analytics & reports pages exist, missing CSV export & charts |
+| Phase 5 Outlet Features | ✅ Done — recharts line + bar charts, CSV export with loading state |
 | Phase 6 Owner Analytics | ⏳ 70% — KPI cards + charts done, missing ReportController & CSV export |
 | Phase 7 Courier Routing | ❌ Not started |
 | Phase 8 UI/UX Polish | 🔄 In progress — customer side ~70%, owner desktop ~60%, courier ~0% |
@@ -127,9 +127,9 @@ e490d60 — Manual refund columns (proof, refunded_by, reject_reason)
 ### Phase 5: Outlet Features
 | Task | Status |
 |------|--------|
-| Sales Report CSV export | ❌ `ReportController` not created |
-| Performance Analytics (charts, KPI) | ⚠️ Pages exist at `outlet/analytics/index.tsx`, missing chart library integration |
+| Sales Report CSV export | ✅ Done — loading spinner, all period filters |
 
+| Performance Analytics (charts, KPI) | ✅ Done — recharts LineChart + BarChart |
 ### Phase 6: Owner Analytics
 | Task | Status |
 |------|--------|
