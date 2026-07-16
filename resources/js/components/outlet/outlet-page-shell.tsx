@@ -7,9 +7,15 @@ interface Props extends PropsWithChildren {
     hasStickyBar?: boolean;
 }
 
-export default function OutletPageShell({ children, noGap, hasStickyBar }: Props) {
+export default function OutletPageShell({
+    children,
+    noGap,
+    hasStickyBar,
+}: Props) {
     return (
-        <div className={`mt-4 ${noGap ? '' : 'space-y-4'} ${hasStickyBar ? 'pb-[calc(6rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(2rem+env(safe-area-inset-bottom,0))]'}`}>
+        <div
+            className={`mt-4 ${noGap ? '' : 'space-y-4'} ${hasStickyBar ? 'pb-[calc(6rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(2rem+env(safe-area-inset-bottom,0))]'}`}
+        >
             {children}
         </div>
     );

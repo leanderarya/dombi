@@ -9,7 +9,8 @@ const content = {
     'no-orders': {
         icon: Package,
         title: 'Yuk pesan susu kambing favoritmu',
-        description: 'Belum ada pesanan aktif saat ini. Mulai pesan dan nikmati kesegarannya!',
+        description:
+            'Belum ada pesanan aktif saat ini. Mulai pesan dan nikmati kesegarannya!',
         showCta: true,
         ctaLabel: 'Lihat Menu',
         ctaHref: '/customer/products',
@@ -33,7 +34,14 @@ const content = {
 };
 
 export default function EmptyOrderState({ type = 'no-orders' }: Props) {
-    const { icon: Icon, title, description, showCta, ctaLabel, ctaHref } = content[type];
+    const {
+        icon: Icon,
+        title,
+        description,
+        showCta,
+        ctaLabel,
+        ctaHref,
+    } = content[type];
 
     return (
         <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-white py-12 text-center shadow-sm">
@@ -41,7 +49,10 @@ export default function EmptyOrderState({ type = 'no-orders' }: Props) {
             <p className="mt-3 text-sm font-semibold text-text">{title}</p>
             <p className="mt-1 text-xs text-text-muted">{description}</p>
             {showCta && (
-                <Link href={ctaHref ?? '/customer/checkout'} className="mt-4 flex min-h-10 items-center rounded-lg bg-emerald-700 px-5 text-sm font-semibold text-white active:bg-emerald-800">
+                <Link
+                    href={ctaHref ?? '/customer/checkout'}
+                    className="mt-4 flex min-h-10 items-center rounded-lg bg-emerald-700 px-5 text-sm font-semibold text-white active:bg-emerald-800"
+                >
                     {ctaLabel ?? 'Pesan Sekarang'}
                 </Link>
             )}

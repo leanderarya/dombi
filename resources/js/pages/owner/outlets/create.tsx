@@ -23,7 +23,11 @@ export default function CreateOutlet({ existingOutlets }: any) {
     const form = useForm(emptyOutletForm);
 
     return (
-        <OwnerPageShell title="Tambah Outlet" subtitle="Pilih lokasi pada peta, lalu isi informasi outlet" backHref="/owner/outlets">
+        <OwnerPageShell
+            title="Tambah Outlet"
+            subtitle="Pilih lokasi pada peta, lalu isi informasi outlet"
+            backHref="/owner/outlets"
+        >
             <OutletFormSheet
                 mode="create"
                 form={form}

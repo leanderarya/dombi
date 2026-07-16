@@ -23,19 +23,38 @@ createInertiaApp({
                     </CartConfirmationProvider>
                 </FavoritesProvider>
                 <Toaster position="top-center" richColors closeButton />
-                {(props.initialPage.props.dev as Record<string, unknown>)?.isLocal && (
+                {(props.initialPage.props.dev as Record<string, unknown>)
+                    ?.isLocal && (
                     <DevToolbar
-                        currentRole={(props.initialPage.props.dev as Record<string, unknown>).currentRole as string | null}
-                        env={(props.initialPage.props.dev as Record<string, unknown>).env as string}
+                        currentRole={
+                            (
+                                props.initialPage.props.dev as Record<
+                                    string,
+                                    unknown
+                                >
+                            ).currentRole as string | null
+                        }
+                        env={
+                            (
+                                props.initialPage.props.dev as Record<
+                                    string,
+                                    unknown
+                                >
+                            ).env as string
+                        }
                     />
                 )}
-            </>
+            </>,
         );
     },
 });
 
 // Register service worker for PWA
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator && import.meta.env.PROD) {
+if (
+    typeof window !== 'undefined' &&
+    'serviceWorker' in navigator &&
+    import.meta.env.PROD
+) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js').catch(() => {
             // SW registration failed - non-critical
@@ -44,6 +63,9 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator && import.meta
 }
 
 // Detect standalone PWA mode
-if (typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches) {
+if (
+    typeof window !== 'undefined' &&
+    window.matchMedia('(display-mode: standalone)').matches
+) {
     document.documentElement.classList.add('pwa-standalone');
 }

@@ -42,7 +42,10 @@ class CustomerLocationStore {
 
     save(location: CustomerLocation): void {
         const wasUsed = this.location?.used_for_order ?? false;
-        this.location = { ...location, used_for_order: wasUsed || location.used_for_order === true };
+        this.location = {
+            ...location,
+            used_for_order: wasUsed || location.used_for_order === true,
+        };
         this.persist();
         this.notify();
     }
@@ -69,7 +72,7 @@ class CustomerLocationStore {
 
     private persist(): void {
         try {
-            if (! this.location) {
+            if (!this.location) {
                 for (const key of STORAGE_KEYS) {
                     localStorage.removeItem(key);
                 }
@@ -90,17 +93,17 @@ class CustomerLocationStore {
             for (const key of STORAGE_KEYS) {
                 const stored = localStorage.getItem(key);
 
-                if (! stored) {
+                if (!stored) {
                     continue;
                 }
 
                 const parsed = JSON.parse(stored) as CustomerLocation | null;
 
                 if (
-                    parsed
-                    && typeof parsed.latitude === 'number'
-                    && typeof parsed.longitude === 'number'
-                    && typeof parsed.timestamp === 'number'
+                    parsed &&
+                    typeof parsed.latitude === 'number' &&
+                    typeof parsed.longitude === 'number' &&
+                    typeof parsed.timestamp === 'number'
                 ) {
                     this.location = parsed;
 
@@ -142,14 +145,21 @@ export function useCustomerLocation() {
     }, []);
 
     const summary = useMemo(() => {
-        if (! location) {
+        if (!location) {
             return null;
         }
 
-        return [location.village, location.district].filter(Boolean).join(', ') || location.address_line || null;
+        return (
+            [location.village, location.district].filter(Boolean).join(', ') ||
+            location.address_line ||
+            null
+        );
     }, [location]);
 
-    const hasUsedLocation = useMemo(() => location?.used_for_order === true, [location]);
+    const hasUsedLocation = useMemo(
+        () => location?.used_for_order === true,
+        [location],
+    );
 
     return {
         location,
@@ -161,9 +171,13 @@ export function useCustomerLocation() {
     };
 }
 
-export async function syncCustomerLocationDraft(location: CustomerLocation): Promise<void> {
+export async function syncCustomerLocationDraft(
+    location: CustomerLocation,
+): Promise<void> {
     try {
-        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        const token = document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content');
 
         const response = await fetch('/customer/location', {
             method: 'POST',

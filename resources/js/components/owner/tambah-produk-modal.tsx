@@ -17,7 +17,12 @@ interface Props {
     onSuccess: () => void;
 }
 
-export default function TambahProdukModal({ open, onClose, outletId, onSuccess }: Props) {
+export default function TambahProdukModal({
+    open,
+    onClose,
+    outletId,
+    onSuccess,
+}: Props) {
     const [products, setProducts] = useState<AvailableProduct[]>([]);
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [search, setSearch] = useState('');
@@ -39,7 +44,7 @@ export default function TambahProdukModal({ open, onClose, outletId, onSuccess }
         fetch(`/owner/outlets/${outletId}/products/available`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
         })
-            .then((res) => res.ok ? res.json() : [])
+            .then((res) => (res.ok ? res.json() : []))
             .then(setProducts)
             .catch(() => setProducts([]))
             .finally(() => setLoading(false));
@@ -78,7 +83,10 @@ export default function TambahProdukModal({ open, onClose, outletId, onSuccess }
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
                 },
                 body: JSON.stringify({
                     variant_ids: Array.from(selected),
@@ -108,11 +116,19 @@ export default function TambahProdukModal({ open, onClose, outletId, onSuccess }
 
         const q = search.toLowerCase();
 
-        return p.name.toLowerCase().includes(q) || p.family_name.toLowerCase().includes(q);
+        return (
+            p.name.toLowerCase().includes(q) ||
+            p.family_name.toLowerCase().includes(q)
+        );
     });
 
     return (
-        <OwnerModalShell open={open} onClose={onClose} title="Tambah Produk Outlet" maxWidth="max-w-lg">
+        <OwnerModalShell
+            open={open}
+            onClose={onClose}
+            title="Tambah Produk Outlet"
+            maxWidth="max-w-lg"
+        >
             {/* Search */}
             <div className="border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3">
@@ -126,19 +142,29 @@ export default function TambahProdukModal({ open, onClose, outletId, onSuccess }
                     />
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                    <button type="button" onClick={selectAll} className="text-xs font-semibold text-emerald-700 hover:text-emerald-800">
+                    <button
+                        type="button"
+                        onClick={selectAll}
+                        className="text-xs font-semibold text-emerald-700 hover:text-emerald-800"
+                    >
                         Pilih Semua ({filtered.length})
                     </button>
-                    <span className="text-xs text-slate-500">{selected.size} dipilih</span>
+                    <span className="text-xs text-slate-500">
+                        {selected.size} dipilih
+                    </span>
                 </div>
             </div>
 
             {/* Product list */}
             <div className="flex-1 overflow-y-auto py-2">
                 {loading ? (
-                    <div className="py-8 text-center text-xs text-slate-400">Memuat produk...</div>
+                    <div className="py-8 text-center text-xs text-slate-400">
+                        Memuat produk...
+                    </div>
                 ) : filtered.length === 0 ? (
-                    <div className="py-8 text-center text-xs text-slate-400">Semua produk sudah ditambahkan.</div>
+                    <div className="py-8 text-center text-xs text-slate-400">
+                        Semua produk sudah ditambahkan.
+                    </div>
                 ) : (
                     <div className="space-y-1">
                         {filtered.map((p) => (
@@ -157,8 +183,13 @@ export default function TambahProdukModal({ open, onClose, outletId, onSuccess }
                                     className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                                 />
                                 <div className="min-w-0 flex-1">
-                                    <div className="text-sm font-medium text-slate-900">{p.name}</div>
-                                    <div className="text-xs text-slate-500">{p.family_name} · {formatCurrency(p.selling_price)}</div>
+                                    <div className="text-sm font-medium text-slate-900">
+                                        {p.name}
+                                    </div>
+                                    <div className="text-xs text-slate-500">
+                                        {p.family_name} ·{' '}
+                                        {formatCurrency(p.selling_price)}
+                                    </div>
                                 </div>
                             </label>
                         ))}
@@ -169,7 +200,9 @@ export default function TambahProdukModal({ open, onClose, outletId, onSuccess }
             {/* Footer */}
             <div className="border-t border-slate-200 pt-3">
                 <div className="mb-3 flex items-center gap-3">
-                    <label className="text-xs font-semibold text-slate-600">Stok Awal</label>
+                    <label className="text-xs font-semibold text-slate-600">
+                        Stok Awal
+                    </label>
                     <input
                         type="number"
                         value={initialStock}
@@ -179,9 +212,17 @@ export default function TambahProdukModal({ open, onClose, outletId, onSuccess }
                     />
                     <span className="text-xs text-slate-400">pcs</span>
                 </div>
-                {error && <p className="mb-2 text-xs font-medium text-red-600">{error}</p>}
+                {error && (
+                    <p className="mb-2 text-xs font-medium text-red-600">
+                        {error}
+                    </p>
+                )}
                 <div className="flex gap-3">
-                    <button type="button" onClick={onClose} className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="flex-1 rounded-lg border border-slate-200 bg-white py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+                    >
                         Batal
                     </button>
                     <button
@@ -190,7 +231,9 @@ export default function TambahProdukModal({ open, onClose, outletId, onSuccess }
                         disabled={saving || selected.size === 0}
                         className="flex-[2] rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
                     >
-                        {saving ? 'Menambahkan...' : `Tambahkan ${selected.size} Produk`}
+                        {saving
+                            ? 'Menambahkan...'
+                            : `Tambahkan ${selected.size} Produk`}
                     </button>
                 </div>
             </div>

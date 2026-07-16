@@ -41,8 +41,8 @@ export function useHeroSlides(intervalMs = 5000) {
 
     useEffect(() => {
         if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-return;
-}
+            return;
+        }
 
         const timer = setInterval(() => {
             setIndex((prev) => (prev + 1) % HERO_SLIDES.length);
@@ -51,5 +51,10 @@ return;
         return () => clearInterval(timer);
     }, [intervalMs]);
 
-    return { slides: HERO_SLIDES, index, setIndex, current: HERO_SLIDES[index] };
+    return {
+        slides: HERO_SLIDES,
+        index,
+        setIndex,
+        current: HERO_SLIDES[index],
+    };
 }

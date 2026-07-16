@@ -48,14 +48,29 @@ const periods = [
     { key: 'month', label: 'Bulan Ini' },
 ];
 
-export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], period = 'today', insight }: Props) {
+export function DashboardTab({
+    kpis,
+    outletRevenue = [],
+    topProducts = [],
+    period = 'today',
+    insight,
+}: Props) {
     const [insightDismissed, setInsightDismissed] = useState(false);
 
     const handlePeriodChange = (newPeriod: string) => {
-        router.get('/owner/analytics', { period: newPeriod, tab: 'dashboard' }, { preserveState: true });
+        router.get(
+            '/owner/analytics',
+            { period: newPeriod, tab: 'dashboard' },
+            { preserveState: true },
+        );
     };
 
-    const periodLabel = period === 'today' ? 'hari ini' : period === 'week' ? 'minggu lalu' : 'bulan lalu';
+    const periodLabel =
+        period === 'today'
+            ? 'hari ini'
+            : period === 'week'
+              ? 'minggu lalu'
+              : 'bulan lalu';
 
     if (!kpis) {
         return <SkeletonPage />;
@@ -63,7 +78,11 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
 
     return (
         <div className="space-y-4">
-            <div className="flex flex-wrap gap-2 overflow-x-auto scrollbar-none" role="group" aria-label="Filter periode">
+            <div
+                className="scrollbar-none flex flex-wrap gap-2 overflow-x-auto"
+                role="group"
+                aria-label="Filter periode"
+            >
                 {periods.map((p) => (
                     <button
                         key={p.key}
@@ -72,7 +91,7 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                         className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                             period === p.key
                                 ? 'bg-primary/10 text-primary ring-primary/20'
-                                : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
+                                : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
                         }`}
                     >
                         {p.label}
@@ -81,10 +100,24 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
             </div>
 
             {insight && !insightDismissed && (
-                <div className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary-light p-3" role="alert">
-                    <TrendingUp className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
-                    <p className="flex-1 text-xs font-medium text-primary">{insight}</p>
-                    <Button variant="ghost" size="icon" onClick={() => setInsightDismissed(true)} className="h-10 w-10 shrink-0 text-primary/60 hover:text-primary" aria-label="Tutup insight">
+                <div
+                    className="flex items-center gap-3 rounded-lg border border-primary/20 bg-primary-light p-3"
+                    role="alert"
+                >
+                    <TrendingUp
+                        className="h-4 w-4 shrink-0 text-primary"
+                        aria-hidden="true"
+                    />
+                    <p className="flex-1 text-xs font-medium text-primary">
+                        {insight}
+                    </p>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setInsightDismissed(true)}
+                        className="h-10 w-10 shrink-0 text-primary/60 hover:text-primary"
+                        aria-label="Tutup insight"
+                    >
                         <X className="h-3.5 w-3.5" />
                     </Button>
                 </div>
@@ -99,7 +132,9 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                         sublabel: kpis.total_revenue_trend
                             ? `${kpis.total_revenue_trend.positive ? '+' : ''}${kpis.total_revenue_trend.value}% vs ${periodLabel}`
                             : undefined,
-                        sublabelColor: kpis.total_revenue_trend?.positive ? 'text-emerald-600' : 'text-red-500',
+                        sublabelColor: kpis.total_revenue_trend?.positive
+                            ? 'text-emerald-600'
+                            : 'text-red-500',
                     },
                     {
                         label: 'Total Orders',
@@ -107,7 +142,9 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                         sublabel: kpis.total_orders_trend
                             ? `${kpis.total_orders_trend.positive ? '+' : ''}${kpis.total_orders_trend.value}% vs ${periodLabel}`
                             : undefined,
-                        sublabelColor: kpis.total_orders_trend?.positive ? 'text-emerald-600' : 'text-red-500',
+                        sublabelColor: kpis.total_orders_trend?.positive
+                            ? 'text-emerald-600'
+                            : 'text-red-500',
                     },
                     {
                         label: 'Active Outlets',
@@ -115,14 +152,21 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                         sublabel: kpis.active_outlets_trend
                             ? `${kpis.active_outlets_trend.positive ? '+' : ''}${kpis.active_outlets_trend.value}% vs ${periodLabel}`
                             : undefined,
-                        sublabelColor: kpis.active_outlets_trend?.positive ? 'text-emerald-600' : 'text-red-500',
+                        sublabelColor: kpis.active_outlets_trend?.positive
+                            ? 'text-emerald-600'
+                            : 'text-red-500',
                     },
                 ]}
             />
 
             <div className="grid gap-4 lg:grid-cols-2">
-                <div className="rounded-xl bg-surface shadow-card p-4" aria-label="Perbandingan Outlet">
-                    <div className="mb-3 text-xs font-medium text-text-muted">Perbandingan Outlet</div>
+                <div
+                    className="rounded-xl bg-surface p-4 shadow-card"
+                    aria-label="Perbandingan Outlet"
+                >
+                    <div className="mb-3 text-xs font-medium text-text-muted">
+                        Perbandingan Outlet
+                    </div>
                     {outletRevenue.length === 0 ? (
                         <EmptyState title="Belum ada data" />
                     ) : (
@@ -131,21 +175,32 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                                 <Link
                                     key={item.outlet_id}
                                     href={`/owner/outlets/${item.outlet_id}`}
-                                    className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-mint-wash"
+                                    className="hover:bg-mint-wash -m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors"
                                 >
                                     <div>
-                                        <div className="text-sm font-medium text-text">{item.outlet.name}</div>
-                                        <div className="text-xs text-text-muted">{item.orders} orders</div>
+                                        <div className="text-sm font-medium text-text">
+                                            {item.outlet.name}
+                                        </div>
+                                        <div className="text-xs text-text-muted">
+                                            {item.orders} orders
+                                        </div>
                                     </div>
-                                    <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(item.revenue)}</div>
+                                    <div className="text-sm font-semibold text-text tabular-nums">
+                                        {formatCurrency(item.revenue)}
+                                    </div>
                                 </Link>
                             ))}
                         </div>
                     )}
                 </div>
 
-                <div className="rounded-xl bg-surface shadow-card p-4" aria-label="Produk Terlaris">
-                    <div className="mb-3 text-xs font-medium text-text-muted">Produk Terlaris</div>
+                <div
+                    className="rounded-xl bg-surface p-4 shadow-card"
+                    aria-label="Produk Terlaris"
+                >
+                    <div className="mb-3 text-xs font-medium text-text-muted">
+                        Produk Terlaris
+                    </div>
                     {topProducts.length === 0 ? (
                         <EmptyState title="Belum ada data" />
                     ) : (
@@ -154,18 +209,24 @@ export function DashboardTab({ kpis, outletRevenue = [], topProducts = [], perio
                                 <Link
                                     key={product.product_name}
                                     href={`/owner/inventories?product=${encodeURIComponent(product.product_name)}`}
-                                    className="-m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors hover:bg-mint-wash"
+                                    className="hover:bg-mint-wash -m-1.5 flex items-center justify-between rounded-lg p-1.5 transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
                                             {index + 1}
                                         </span>
                                         <div>
-                                            <div className="text-sm font-medium text-text">{product.product_name}</div>
-                                            <div className="text-xs text-text-muted">{product.total_qty} unit</div>
+                                            <div className="text-sm font-medium text-text">
+                                                {product.product_name}
+                                            </div>
+                                            <div className="text-xs text-text-muted">
+                                                {product.total_qty} unit
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="text-sm font-semibold tabular-nums text-text">{formatCurrency(product.total_revenue)}</div>
+                                    <div className="text-sm font-semibold text-text tabular-nums">
+                                        {formatCurrency(product.total_revenue)}
+                                    </div>
                                 </Link>
                             ))}
                         </div>

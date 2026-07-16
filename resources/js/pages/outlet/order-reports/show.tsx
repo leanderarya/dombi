@@ -22,8 +22,12 @@ export default function OutletOrderReportShow({ report }: any) {
     const [respondMode, setRespondMode] = useState(false);
     const form = useForm({ resolution_notes: '' });
     const isPending = report.status === 'pending';
-    const isFinal = report.status === 'resolved' || report.status === 'rejected';
-    const reportStatus = statusLabels[report.status] ?? { label: report.status, variant: 'neutral' };
+    const isFinal =
+        report.status === 'resolved' || report.status === 'rejected';
+    const reportStatus = statusLabels[report.status] ?? {
+        label: report.status,
+        variant: 'neutral',
+    };
 
     const handleRespond = () => {
         router.put(`/outlet/order-reports/${report.id}`, form.data, {
@@ -32,21 +36,34 @@ export default function OutletOrderReportShow({ report }: any) {
     };
 
     return (
-        <OutletLayout title={`Laporan #${report.id}`} backHref="/outlet/order-reports">
+        <OutletLayout
+            title={`Laporan #${report.id}`}
+            backHref="/outlet/order-reports"
+        >
             <Head title={`Laporan #${report.id}`} />
 
             {/* Status */}
             <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-white p-4">
                 <div>
-                    <div className="text-sm font-semibold text-text">{report.order?.order_code ?? `Order #${report.order_id}`}</div>
-                    <div className="mt-0.5 text-xs text-text-muted">{formatDate(report.created_at)}</div>
+                    <div className="text-sm font-semibold text-text">
+                        {report.order?.order_code ??
+                            `Order #${report.order_id}`}
+                    </div>
+                    <div className="mt-0.5 text-xs text-text-muted">
+                        {formatDate(report.created_at)}
+                    </div>
                 </div>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-                    reportStatus.variant === 'success' ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200' :
-                    reportStatus.variant === 'danger' ? 'bg-red-50 text-red-700 ring-1 ring-red-200' :
-                    reportStatus.variant === 'info' ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200' :
-                    'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
-                }`}>
+                <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
+                        reportStatus.variant === 'success'
+                            ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                            : reportStatus.variant === 'danger'
+                              ? 'bg-red-50 text-red-700 ring-1 ring-red-200'
+                              : reportStatus.variant === 'info'
+                                ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200'
+                                : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200'
+                    }`}
+                >
                     {reportStatus.label}
                 </span>
             </div>
@@ -57,11 +74,15 @@ export default function OutletOrderReportShow({ report }: any) {
                 <div className="mt-2 space-y-2 text-sm">
                     <div className="flex justify-between">
                         <span className="text-text-muted">Jenis</span>
-                        <span className="font-medium text-text">{typeLabels[report.type] ?? report.type}</span>
+                        <span className="font-medium text-text">
+                            {typeLabels[report.type] ?? report.type}
+                        </span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-text-muted">Customer</span>
-                        <span className="font-medium text-text">{report.customer?.name}</span>
+                        <span className="font-medium text-text">
+                            {report.customer?.name}
+                        </span>
                     </div>
                     {report.notes && (
                         <div className="mt-2">
@@ -79,7 +100,9 @@ export default function OutletOrderReportShow({ report }: any) {
                     <div className="mt-2 space-y-2 text-sm">
                         <div className="flex justify-between">
                             <span className="text-text-muted">Total</span>
-                            <span className="font-medium text-text">{formatCurrency(report.order.total)}</span>
+                            <span className="font-medium text-text">
+                                {formatCurrency(report.order.total)}
+                            </span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-text-muted">Status</span>
@@ -93,9 +116,13 @@ export default function OutletOrderReportShow({ report }: any) {
             {isFinal && (
                 <div className="mt-4 rounded-xl border border-border bg-white p-4">
                     <div className="text-[13px] text-text-subtle">Resolusi</div>
-                    <div className="mt-2 text-sm text-text">{report.resolution_notes ?? '-'}</div>
+                    <div className="mt-2 text-sm text-text">
+                        {report.resolution_notes ?? '-'}
+                    </div>
                     {report.resolver && (
-                        <div className="mt-2 text-xs text-text-muted">Oleh: {report.resolver.name}</div>
+                        <div className="mt-2 text-xs text-text-muted">
+                            Oleh: {report.resolver.name}
+                        </div>
                     )}
                 </div>
             )}
@@ -116,11 +143,15 @@ export default function OutletOrderReportShow({ report }: any) {
             {/* Respond Form */}
             {respondMode && (
                 <div className="mt-4 rounded-xl border border-border bg-white p-4">
-                    <div className="text-[13px] text-text-subtle">Tanggapi Laporan</div>
+                    <div className="text-[13px] text-text-subtle">
+                        Tanggapi Laporan
+                    </div>
                     <div className="mt-3">
                         <textarea
                             value={form.data.resolution_notes}
-                            onChange={(e) => form.setData('resolution_notes', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('resolution_notes', e.target.value)
+                            }
                             placeholder="Jelaskan tindakan yang akan diambil..."
                             className="min-h-24 w-full rounded-lg border border-border px-3 py-2 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
@@ -129,8 +160,9 @@ export default function OutletOrderReportShow({ report }: any) {
                         <button
                             type="button"
                             onClick={() => {
- setRespondMode(false); form.reset(); 
-}}
+                                setRespondMode(false);
+                                form.reset();
+                            }}
                             className="flex h-11 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
                         >
                             Batal
@@ -141,7 +173,9 @@ export default function OutletOrderReportShow({ report }: any) {
                             disabled={form.processing}
                             className="flex h-11 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                         >
-                            {form.processing ? 'Mengirim...' : 'Kirim Tanggapan'}
+                            {form.processing
+                                ? 'Mengirim...'
+                                : 'Kirim Tanggapan'}
                         </button>
                     </div>
                 </div>
@@ -150,7 +184,10 @@ export default function OutletOrderReportShow({ report }: any) {
             {/* Info for already investigating */}
             {!isPending && !isFinal && (
                 <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
-                    <div className="text-sm text-text-muted">Laporan sedang ditinjau. Owner akan menentukan resolusi akhir.</div>
+                    <div className="text-sm text-text-muted">
+                        Laporan sedang ditinjau. Owner akan menentukan resolusi
+                        akhir.
+                    </div>
                 </div>
             )}
         </OutletLayout>

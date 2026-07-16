@@ -1,4 +1,9 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
@@ -12,7 +17,13 @@ interface Props {
     onClose: () => void;
 }
 
-export default function RefundProofModal({ orderId, orderCode, expectedAmount, open, onClose }: Props) {
+export default function RefundProofModal({
+    orderId,
+    orderCode,
+    expectedAmount,
+    open,
+    onClose,
+}: Props) {
     const [amount, setAmount] = useState(String(expectedAmount));
     const [reason, setReason] = useState('');
     const [proof, setProof] = useState<File | null>(null);
@@ -27,7 +38,10 @@ export default function RefundProofModal({ orderId, orderCode, expectedAmount, o
         fd.append('proof', proof);
         router.post(`/owner/refunds/${orderId}/mark-refunded`, fd, {
             forceFormData: true,
-            onFinish: () => { setBusy(false); onClose(); },
+            onFinish: () => {
+                setBusy(false);
+                onClose();
+            },
         });
     };
 
@@ -38,13 +52,33 @@ export default function RefundProofModal({ orderId, orderCode, expectedAmount, o
                     <DialogTitle>Refund {orderCode}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-3">
-                    <label className="text-xs text-text-muted">Nominal refund (Rp)</label>
-                    <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} />
+                    <label className="text-xs text-text-muted">
+                        Nominal refund (Rp)
+                    </label>
+                    <Input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                    />
                     <label className="text-xs text-text-muted">Alasan</label>
-                    <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Sudah transfer manual" />
-                    <label className="text-xs text-text-muted">Bukti transfer</label>
-                    <input type="file" accept="image/*" onChange={(e) => setProof(e.target.files?.[0] ?? null)} />
-                    <Button disabled={busy || !proof} onClick={submit} className="w-full">
+                    <Input
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        placeholder="Sudah transfer manual"
+                    />
+                    <label className="text-xs text-text-muted">
+                        Bukti transfer
+                    </label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setProof(e.target.files?.[0] ?? null)}
+                    />
+                    <Button
+                        disabled={busy || !proof}
+                        onClick={submit}
+                        className="w-full"
+                    >
                         {busy ? 'Menyimpan...' : 'Tandai Refund'}
                     </Button>
                 </div>

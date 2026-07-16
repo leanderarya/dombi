@@ -45,13 +45,16 @@ export default function CreateCourier() {
                             label="Nomor WhatsApp *"
                             type="tel"
                             value={form.data.phone}
-                            onChange={(e) => form.setData('phone', e.target.value)}
+                            onChange={(e) =>
+                                form.setData('phone', e.target.value)
+                            }
                             placeholder="08xxxxxxxxxx"
                             error={form.errors.phone}
                             required
                         />
                         <p className="mt-1 text-xs text-text-muted">
-                            Tautan undangan akan ditampilkan setelah kurir dibuat
+                            Tautan undangan akan ditampilkan setelah kurir
+                            dibuat
                         </p>
                     </div>
 
@@ -63,7 +66,8 @@ export default function CreateCourier() {
                         <div className="flex gap-2">
                             {vehicleTypes.map((vt) => {
                                 const Icon = vt.icon;
-                                const isSelected = form.data.vehicle_type === vt.value;
+                                const isSelected =
+                                    form.data.vehicle_type === vt.value;
 
                                 return (
                                     <button
@@ -79,31 +83,42 @@ export default function CreateCourier() {
                                             'flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-semibold transition-all',
                                             isSelected
                                                 ? 'border-primary bg-primary/5 text-primary ring-1 ring-primary/20'
-                                                : 'border-border bg-surface text-text-muted hover:bg-mint-wash',
+                                                : 'hover:bg-mint-wash border-border bg-surface text-text-muted',
                                         )}
                                     >
-                                        <Icon className="h-4 w-4" aria-hidden="true" />
+                                        <Icon
+                                            className="h-4 w-4"
+                                            aria-hidden="true"
+                                        />
                                         {vt.label}
                                     </button>
                                 );
                             })}
                         </div>
                         {form.errors.vehicle_type && (
-                            <p className="mt-1 text-xs text-red-500">{form.errors.vehicle_type}</p>
+                            <p className="mt-1 text-xs text-red-500">
+                                {form.errors.vehicle_type}
+                            </p>
                         )}
                     </div>
 
                     {/* Vehicle Plate */}
-                    {form.data.vehicle_type && form.data.vehicle_type !== 'bicycle' && (
-                        <Input
-                            label="Plat Nomor"
-                            type="text"
-                            value={form.data.vehicle_plate}
-                            onChange={(e) => form.setData('vehicle_plate', e.target.value)}
-                            placeholder="AB 1234 CD"
-                            error={form.errors.vehicle_plate}
-                        />
-                    )}
+                    {form.data.vehicle_type &&
+                        form.data.vehicle_type !== 'bicycle' && (
+                            <Input
+                                label="Plat Nomor"
+                                type="text"
+                                value={form.data.vehicle_plate}
+                                onChange={(e) =>
+                                    form.setData(
+                                        'vehicle_plate',
+                                        e.target.value,
+                                    )
+                                }
+                                placeholder="AB 1234 CD"
+                                error={form.errors.vehicle_plate}
+                            />
+                        )}
 
                     {/* Submit */}
                     <div className="flex items-center gap-3 pt-2">

@@ -3,18 +3,20 @@ import * as React from 'react';
 type IconProps = React.SVGProps<SVGSVGElement>;
 
 function createFillIcon(path: string, displayName: string) {
-    const Comp = React.forwardRef<SVGSVGElement, IconProps>(({ className, ...props }, ref) => (
-        <svg
-            ref={ref}
-            viewBox="0 0 256 256"
-            fill="currentColor"
-            aria-hidden="true"
-            className={className}
-            {...props}
-        >
-            <path d={path} />
-        </svg>
-    ));
+    const Comp = React.forwardRef<SVGSVGElement, IconProps>(
+        ({ className, ...props }, ref) => (
+            <svg
+                ref={ref}
+                viewBox="0 0 256 256"
+                fill="currentColor"
+                aria-hidden="true"
+                className={className}
+                {...props}
+            >
+                <path d={path} />
+            </svg>
+        ),
+    );
     Comp.displayName = displayName;
     return Comp;
 }

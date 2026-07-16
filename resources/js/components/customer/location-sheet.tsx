@@ -1,8 +1,20 @@
-import { CheckCircle2, ChevronDown, LocateFixed, MapPin, Plus, Search, Star, X } from 'lucide-react';
+import {
+    CheckCircle2,
+    ChevronDown,
+    LocateFixed,
+    MapPin,
+    Plus,
+    Search,
+    Star,
+    X,
+} from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
-import { syncCustomerLocationDraft, useCustomerLocation } from '@/lib/customer-location';
+import {
+    syncCustomerLocationDraft,
+    useCustomerLocation,
+} from '@/lib/customer-location';
 import type { CustomerLocation } from '@/lib/customer-location';
 import { reverseGeocode } from '@/lib/geocoding';
 
@@ -48,7 +60,12 @@ type LocationDraft = {
     delivery_notes?: string;
 };
 
-export default function LocationSheet({ open, onClose, onLocationSaved, isLoggedIn = true }: Props) {
+export default function LocationSheet({
+    open,
+    onClose,
+    onLocationSaved,
+    isLoggedIn = true,
+}: Props) {
     const { location, saveLocation } = useCustomerLocation();
     const [mode, setMode] = useState<SheetMode>('options');
     const [loadingCurrent, setLoadingCurrent] = useState(false);
@@ -64,14 +81,17 @@ export default function LocationSheet({ open, onClose, onLocationSaved, isLogged
     // Fetch saved addresses from server
     const fetchAddresses = useCallback(async () => {
         if (!isLoggedIn) {
-return;
-}
+            return;
+        }
 
         setLoadingAddresses(true);
 
         try {
             const res = await fetch('/customer/addresses/api', {
-                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                headers: {
+                    Accept: 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
                 credentials: 'same-origin',
             });
 
@@ -112,7 +132,10 @@ return;
                 setGpsAccuracy(position.coords.accuracy);
 
                 try {
-                    const result = await reverseGeocode(position.coords.latitude, position.coords.longitude);
+                    const result = await reverseGeocode(
+                        position.coords.latitude,
+                        position.coords.longitude,
+                    );
                     const nextLocation: CustomerLocation = {
                         address_line: result.formatted_address,
                         province: result.province,
@@ -155,10 +178,14 @@ return;
 
                 switch (geoError.code) {
                     case geoError.PERMISSION_DENIED:
-                        setError('Izin lokasi ditolak. Silakan pilih lokasi manual di peta.');
+                        setError(
+                            'Izin lokasi ditolak. Silakan pilih lokasi manual di peta.',
+                        );
                         break;
                     case geoError.POSITION_UNAVAILABLE:
-                        setError('Lokasi tidak tersedia. Coba lagi atau pilih manual.');
+                        setError(
+                            'Lokasi tidak tersedia. Coba lagi atau pilih manual.',
+                        );
                         break;
                     case geoError.TIMEOUT:
                         setError('Waktu pencarian lokasi habis. Coba lagi.');
@@ -196,8 +223,8 @@ return;
 
     async function confirmManualLocation() {
         if (!draft || draft.latitude === null || draft.longitude === null) {
-return;
-}
+            return;
+        }
 
         const finalized = toCustomerLocation(draft);
         saveLocation(finalized);
@@ -213,8 +240,8 @@ return;
 
     async function handleSaveAddress() {
         if (!draft || draft.latitude === null || draft.longitude === null) {
-return;
-}
+            return;
+        }
 
         setSaving(true);
 
@@ -225,7 +252,10 @@ return;
                     'Content-Type': 'application/json',
                     Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
                 },
                 credentials: 'same-origin',
                 body: JSON.stringify({
@@ -248,11 +278,14 @@ return;
     }
 
     if (!open) {
-return null;
-}
+        return null;
+    }
 
     return createPortal(
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+        <div
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+            onClick={onClose}
+        >
             <div
                 className="flex max-h-[90vh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-[0_-16px_40px_rgba(15,23,42,0.16)]"
                 onClick={(e) => e.stopPropagation()}
@@ -262,9 +295,15 @@ return null;
                     <div className="mx-auto h-1.5 w-10 rounded-full bg-border" />
                     <div className="mt-3 flex items-center justify-between">
                         <h2 className="text-[15px] font-semibold text-text">
-                            {mode === 'save' ? 'Simpan Alamat?' : 'Tentukan Lokasi Anda'}
+                            {mode === 'save'
+                                ? 'Simpan Alamat?'
+                                : 'Tentukan Lokasi Anda'}
                         </h2>
-                        <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-full text-text-subtle active:bg-zinc-100">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-text-subtle active:bg-zinc-100"
+                        >
                             <X className="h-4 w-4" />
                         </button>
                     </div>
@@ -272,7 +311,6 @@ return null;
 
                 {/* Body */}
                 <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-5">
-
                     {/* MODE: OPTIONS */}
                     {mode === 'options' && (
                         <div className="mt-2 space-y-2">
@@ -281,16 +319,21 @@ return null;
                                 type="button"
                                 onClick={handleUseCurrentLocation}
                                 disabled={loadingCurrent}
-                                className="flex h-14 w-full items-center gap-3.5 rounded-xl border border-border bg-white px-4 transition-all active:opacity-80 active:bg-zinc-50 disabled:opacity-60"
+                                className="flex h-14 w-full items-center gap-3.5 rounded-xl border border-border bg-white px-4 transition-all active:bg-zinc-50 active:opacity-80 disabled:opacity-60"
                             >
                                 <LocateFixed className="h-5 w-5 shrink-0 text-primary" />
                                 <div className="flex-1 text-left">
                                     <span className="text-sm font-semibold text-text">
-                                        {loadingCurrent ? 'Mengambil lokasi...' : 'Gunakan Lokasi Saya'}
+                                        {loadingCurrent
+                                            ? 'Mengambil lokasi...'
+                                            : 'Gunakan Lokasi Saya'}
                                     </span>
-                                    {gpsAccuracy !== null && !loadingCurrent && (
-                                        <AccuracyBadge accuracy={gpsAccuracy} />
-                                    )}
+                                    {gpsAccuracy !== null &&
+                                        !loadingCurrent && (
+                                            <AccuracyBadge
+                                                accuracy={gpsAccuracy}
+                                            />
+                                        )}
                                 </div>
                             </button>
 
@@ -298,24 +341,37 @@ return null;
                             {isLoggedIn && savedAddresses.length > 0 && (
                                 <>
                                     <div className="h-px bg-border" />
-                                    <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle px-1">
+                                    <div className="px-1 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                                         Alamat Tersimpan
                                     </div>
                                     {savedAddresses.map((addr) => (
                                         <button
                                             key={addr.id}
                                             type="button"
-                                            onClick={() => handleSelectSavedAddress(addr)}
-                                            className="flex h-14 w-full items-center gap-3 rounded-xl border border-border bg-white px-4 transition-all active:opacity-80 active:bg-zinc-50"
+                                            onClick={() =>
+                                                handleSelectSavedAddress(addr)
+                                            }
+                                            className="flex h-14 w-full items-center gap-3 rounded-xl border border-border bg-white px-4 transition-all active:bg-zinc-50 active:opacity-80"
                                         >
                                             <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
                                             <div className="min-w-0 flex-1 text-left">
                                                 <div className="flex items-center gap-1.5">
-                                                    <span className="text-sm font-semibold text-text">{addr.label}</span>
-                                                    {addr.is_default && <Star className="h-3 w-3 fill-amber-400 text-amber-400" />}
+                                                    <span className="text-sm font-semibold text-text">
+                                                        {addr.label}
+                                                    </span>
+                                                    {addr.is_default && (
+                                                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                                    )}
                                                 </div>
-                                                <div className="text-[11px] text-text-muted truncate">
-                                                    {[addr.village, addr.district, addr.city].filter(Boolean).join(', ') || addr.address_line}
+                                                <div className="truncate text-[11px] text-text-muted">
+                                                    {[
+                                                        addr.village,
+                                                        addr.district,
+                                                        addr.city,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(', ') ||
+                                                        addr.address_line}
                                                 </div>
                                             </div>
                                         </button>
@@ -328,18 +384,24 @@ return null;
                             <button
                                 type="button"
                                 onClick={() => setMode('manual')}
-                                className="flex h-14 w-full items-center gap-3.5 rounded-xl border border-border bg-white px-4 transition-all active:opacity-80 active:bg-zinc-50"
+                                className="flex h-14 w-full items-center gap-3.5 rounded-xl border border-border bg-white px-4 transition-all active:bg-zinc-50 active:opacity-80"
                             >
                                 <Search className="h-5 w-5 shrink-0 text-text-muted" />
-                                <span className="text-sm font-semibold text-text">Cari Alamat Manual</span>
+                                <span className="text-sm font-semibold text-text">
+                                    Cari Alamat Manual
+                                </span>
                             </button>
 
                             {error && (
-                                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">{error}</div>
+                                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">
+                                    {error}
+                                </div>
                             )}
 
                             {loadingAddresses && (
-                                <div className="text-center text-xs text-text-muted py-2">Memuat alamat tersimpan...</div>
+                                <div className="py-2 text-center text-xs text-text-muted">
+                                    Memuat alamat tersimpan...
+                                </div>
                             )}
                         </div>
                     )}
@@ -347,42 +409,93 @@ return null;
                     {/* MODE: MANUAL */}
                     {mode === 'manual' && (
                         <div className="mt-2 space-y-4">
-                            <button type="button" onClick={() => setMode('options')} className="flex items-center gap-1.5 text-xs font-semibold text-text-muted active:text-text">
-                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            <button
+                                type="button"
+                                onClick={() => setMode('options')}
+                                className="flex items-center gap-1.5 text-xs font-semibold text-text-muted active:text-text"
+                            >
+                                <svg
+                                    className="h-3.5 w-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M15 19l-7-7 7-7"
+                                    />
                                 </svg>
                                 Kembali
                             </button>
 
                             <LocationSearchPanel
-                                value={draft ?? {
-                                    address_line: '',
-                                    address_detail: '',
-                                    province: '',
-                                    city: '',
-                                    district: '',
-                                    village: '',
-                                    postal_code: '',
-                                    latitude: null,
-                                    longitude: null,
-                                    accuracy: null,
-                                    timestamp: Date.now(),
-                                }}
-                                onChange={(next) => setDraft((current) => ({
-                                    address_line: next.address_line ?? current?.address_line ?? '',
-                                    address_detail: next.address_detail ?? current?.address_detail ?? '',
-                                    province: next.province ?? current?.province ?? '',
-                                    city: next.city ?? current?.city ?? '',
-                                    district: next.district ?? current?.district ?? '',
-                                    village: next.village ?? current?.village ?? '',
-                                    postal_code: next.postal_code ?? current?.postal_code ?? '',
-                                    latitude: next.latitude ?? current?.latitude ?? null,
-                                    longitude: next.longitude ?? current?.longitude ?? null,
-                                    accuracy: next.accuracy ?? current?.accuracy ?? null,
-                                    timestamp: next.timestamp ?? current?.timestamp ?? Date.now(),
-                                    landmark: next.landmark ?? current?.landmark,
-                                    delivery_notes: next.delivery_notes ?? current?.delivery_notes,
-                                }))}
+                                value={
+                                    draft ?? {
+                                        address_line: '',
+                                        address_detail: '',
+                                        province: '',
+                                        city: '',
+                                        district: '',
+                                        village: '',
+                                        postal_code: '',
+                                        latitude: null,
+                                        longitude: null,
+                                        accuracy: null,
+                                        timestamp: Date.now(),
+                                    }
+                                }
+                                onChange={(next) =>
+                                    setDraft((current) => ({
+                                        address_line:
+                                            next.address_line ??
+                                            current?.address_line ??
+                                            '',
+                                        address_detail:
+                                            next.address_detail ??
+                                            current?.address_detail ??
+                                            '',
+                                        province:
+                                            next.province ??
+                                            current?.province ??
+                                            '',
+                                        city: next.city ?? current?.city ?? '',
+                                        district:
+                                            next.district ??
+                                            current?.district ??
+                                            '',
+                                        village:
+                                            next.village ??
+                                            current?.village ??
+                                            '',
+                                        postal_code:
+                                            next.postal_code ??
+                                            current?.postal_code ??
+                                            '',
+                                        latitude:
+                                            next.latitude ??
+                                            current?.latitude ??
+                                            null,
+                                        longitude:
+                                            next.longitude ??
+                                            current?.longitude ??
+                                            null,
+                                        accuracy:
+                                            next.accuracy ??
+                                            current?.accuracy ??
+                                            null,
+                                        timestamp:
+                                            next.timestamp ??
+                                            current?.timestamp ??
+                                            Date.now(),
+                                        landmark:
+                                            next.landmark ?? current?.landmark,
+                                        delivery_notes:
+                                            next.delivery_notes ??
+                                            current?.delivery_notes,
+                                    }))
+                                }
                                 savedLocation={location}
                                 showSavedLocation={false}
                             />
@@ -390,8 +503,12 @@ return null;
                             <button
                                 type="button"
                                 onClick={confirmManualLocation}
-                                disabled={!draft || draft.latitude === null || draft.longitude === null}
-                                className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white transition-all active:opacity-80 active:bg-primary-hover disabled:bg-border"
+                                disabled={
+                                    !draft ||
+                                    draft.latitude === null ||
+                                    draft.longitude === null
+                                }
+                                className="flex h-12 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white transition-all active:bg-primary-hover active:opacity-80 disabled:bg-border"
                             >
                                 Simpan Lokasi
                             </button>
@@ -401,27 +518,54 @@ return null;
                     {/* MODE: SAVE AS ADDRESS */}
                     {mode === 'save' && (
                         <div className="mt-2 space-y-4">
-                            <button type="button" onClick={() => {
- onClose(); 
-}} className="flex items-center gap-1.5 text-xs font-semibold text-text-muted active:text-text">
-                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    onClose();
+                                }}
+                                className="flex items-center gap-1.5 text-xs font-semibold text-text-muted active:text-text"
+                            >
+                                <svg
+                                    className="h-3.5 w-3.5"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M15 19l-7-7 7-7"
+                                    />
                                 </svg>
                                 Lewati
                             </button>
 
                             {/* Preview */}
                             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-                                <div className="flex items-center gap-2 mb-2">
+                                <div className="mb-2 flex items-center gap-2">
                                     <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                                    <span className="text-sm font-semibold text-emerald-800">Lokasi Terdeteksi</span>
-                                    {gpsAccuracy !== null && <AccuracyBadge accuracy={gpsAccuracy} />}
+                                    <span className="text-sm font-semibold text-emerald-800">
+                                        Lokasi Terdeteksi
+                                    </span>
+                                    {gpsAccuracy !== null && (
+                                        <AccuracyBadge accuracy={gpsAccuracy} />
+                                    )}
                                 </div>
-                                <div className="text-sm text-emerald-900 font-medium">
-                                    {draft?.address_line || [draft?.village, draft?.district].filter(Boolean).join(', ')}
+                                <div className="text-sm font-medium text-emerald-900">
+                                    {draft?.address_line ||
+                                        [draft?.village, draft?.district]
+                                            .filter(Boolean)
+                                            .join(', ')}
                                 </div>
-                                <div className="text-[11px] text-emerald-700 mt-0.5">
-                                    {[draft?.village, draft?.district, draft?.city].filter(Boolean).join(', ')}
+                                <div className="mt-0.5 text-[11px] text-emerald-700">
+                                    {[
+                                        draft?.village,
+                                        draft?.district,
+                                        draft?.city,
+                                    ]
+                                        .filter(Boolean)
+                                        .join(', ')}
                                 </div>
                             </div>
 
@@ -429,27 +573,40 @@ return null;
                             {canAdd ? (
                                 <>
                                     <div>
-                                        <label className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">Label Alamat (opsional)</label>
+                                        <label className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                            Label Alamat (opsional)
+                                        </label>
                                         <div className="mt-2 flex gap-2">
-                                            {['Rumah', 'Kantor', 'Kos'].map((label) => (
-                                                <button
-                                                    key={label}
-                                                    type="button"
-                                                    onClick={() => setSaveLabel(saveLabel === label ? '' : label)}
-                                                    className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
-                                                        saveLabel === label
-                                                            ? 'bg-primary text-white'
-                                                            : 'border border-border text-text-muted active:bg-zinc-50'
-                                                    }`}
-                                                >
-                                                    {label}
-                                                </button>
-                                            ))}
+                                            {['Rumah', 'Kantor', 'Kos'].map(
+                                                (label) => (
+                                                    <button
+                                                        key={label}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setSaveLabel(
+                                                                saveLabel ===
+                                                                    label
+                                                                    ? ''
+                                                                    : label,
+                                                            )
+                                                        }
+                                                        className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-all ${
+                                                            saveLabel === label
+                                                                ? 'bg-primary text-white'
+                                                                : 'border border-border text-text-muted active:bg-zinc-50'
+                                                        }`}
+                                                    >
+                                                        {label}
+                                                    </button>
+                                                ),
+                                            )}
                                         </div>
                                         <input
                                             type="text"
                                             value={saveLabel}
-                                            onChange={(e) => setSaveLabel(e.target.value)}
+                                            onChange={(e) =>
+                                                setSaveLabel(e.target.value)
+                                            }
                                             placeholder="Atau ketik label sendiri..."
                                             className="mt-2 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                                             maxLength={20}
@@ -463,7 +620,9 @@ return null;
                                             disabled={saving}
                                             className="flex h-12 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                                         >
-                                            {saving ? 'Menyimpan...' : 'Simpan Alamat'}
+                                            {saving
+                                                ? 'Menyimpan...'
+                                                : 'Simpan Alamat'}
                                         </button>
                                         <button
                                             type="button"
@@ -474,14 +633,16 @@ return null;
                                         </button>
                                     </div>
 
-                                    <p className="text-[11px] text-text-subtle text-center">
-                                        {savedAddresses.length}/5 alamat tersimpan
+                                    <p className="text-center text-[11px] text-text-subtle">
+                                        {savedAddresses.length}/5 alamat
+                                        tersimpan
                                     </p>
                                 </>
                             ) : (
                                 <>
                                     <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                                        Alamat tersimpan penuh (5/5). Hapus alamat lama untuk menambah baru.
+                                        Alamat tersimpan penuh (5/5). Hapus
+                                        alamat lama untuk menambah baru.
                                     </div>
                                     <button
                                         type="button"
@@ -494,7 +655,9 @@ return null;
                             )}
 
                             {error && (
-                                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">{error}</div>
+                                <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-700">
+                                    {error}
+                                </div>
                             )}
                         </div>
                     )}
@@ -519,7 +682,9 @@ function AccuracyBadge({ accuracy }: { accuracy: number }) {
     };
 
     return (
-        <span className={`ml-2 inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold ${colors[level]}`}>
+        <span
+            className={`ml-2 inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold ${colors[level]}`}
+        >
             {labels[level]} ({Math.round(accuracy)}m)
         </span>
     );
@@ -527,8 +692,8 @@ function AccuracyBadge({ accuracy }: { accuracy: number }) {
 
 function toDraft(location: CustomerLocation | null): LocationDraft | null {
     if (!location) {
-return null;
-}
+        return null;
+    }
 
     return {
         address_line: location.address_line ?? '',

@@ -21,13 +21,28 @@ export default function CheckoutPayment({ draft, summary }: any) {
     const [processing, setProcessing] = useState(false);
     const [paymentExpanded, setPaymentExpanded] = useState(false);
     const [stockWarnings, setStockWarnings] = useState<string[]>([]);
-    const [adjustmentModal, setAdjustmentModal] = useState<{ warnings: string[]; adjustments: any[] } | null>(null);
+    const [adjustmentModal, setAdjustmentModal] = useState<{
+        warnings: string[];
+        adjustments: any[];
+    } | null>(null);
     const paymentOptions = summary.payment_options ?? [];
-    const [paymentMethod, setPaymentMethod] = useState(paymentOptions[0]?.value ?? 'qris');
-    const selectedOption = paymentOptions.find((option: any) => option.value === paymentMethod) ?? paymentOptions[0];
-    const paymentFee = selectedOption?.customer_fee ?? Math.round((summary.subtotal ?? 0) * (selectedOption?.fee_rate ?? 0) * 100) / 100;
-    const total = (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
-    const deliveryBlocked = isDelivery && !!summary.delivery_quote && summary.delivery_quote.is_serviceable === false;
+    const [paymentMethod, setPaymentMethod] = useState(
+        paymentOptions[0]?.value ?? 'qris',
+    );
+    const selectedOption =
+        paymentOptions.find((option: any) => option.value === paymentMethod) ??
+        paymentOptions[0];
+    const paymentFee =
+        selectedOption?.customer_fee ??
+        Math.round(
+            (summary.subtotal ?? 0) * (selectedOption?.fee_rate ?? 0) * 100,
+        ) / 100;
+    const total =
+        (summary.subtotal ?? 0) + (summary.delivery_fee ?? 0) + paymentFee;
+    const deliveryBlocked =
+        isDelivery &&
+        !!summary.delivery_quote &&
+        summary.delivery_quote.is_serviceable === false;
     const ctaLabel = `Bayar ${formatCurrency(total)}`;
 
     // Guard: redirect to cart if no items
@@ -43,7 +58,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
             try {
                 const res = await fetch('/customer/checkout/validate-stock', {
                     headers: {
-                        'Accept': 'application/json',
+                        Accept: 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                     },
                 });
@@ -76,9 +91,12 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
                 },
                 body: JSON.stringify({ payment_method: paymentMethod }),
             });
@@ -91,7 +109,9 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     router.visit('/customer/cart', {
                         only: [],
                         onError: () => {
-                            setSubmitError('Semua produk dalam pesanan sudah habis');
+                            setSubmitError(
+                                'Semua produk dalam pesanan sudah habis',
+                            );
                         },
                     });
 
@@ -110,10 +130,15 @@ export default function CheckoutPayment({ draft, summary }: any) {
             }
 
             if (!response.ok) {
-                const errorMsg = data.message || data.errors
-                    ? Object.values(data.errors ?? {}).flat()[0]
-                    : 'Terjadi kesalahan. Silakan coba lagi.';
-                setSubmitError(typeof errorMsg === 'string' ? errorMsg : 'Terjadi kesalahan. Silakan coba lagi.');
+                const errorMsg =
+                    data.message || data.errors
+                        ? Object.values(data.errors ?? {}).flat()[0]
+                        : 'Terjadi kesalahan. Silakan coba lagi.';
+                setSubmitError(
+                    typeof errorMsg === 'string'
+                        ? errorMsg
+                        : 'Terjadi kesalahan. Silakan coba lagi.',
+                );
                 setProcessing(false);
 
                 return;
@@ -143,17 +168,25 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json',
+                    Accept: 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
                 },
-                body: JSON.stringify({ payment_method: paymentMethod, confirm_adjusted: true }),
+                body: JSON.stringify({
+                    payment_method: paymentMethod,
+                    confirm_adjusted: true,
+                }),
             });
 
             const data = await response.json();
 
             if (!response.ok) {
-                setSubmitError(data.message || 'Terjadi kesalahan. Silakan coba lagi.');
+                setSubmitError(
+                    data.message || 'Terjadi kesalahan. Silakan coba lagi.',
+                );
                 setProcessing(false);
 
                 return;
@@ -231,26 +264,44 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     className="flex min-h-11 w-full items-center justify-between text-left active:opacity-80"
                 >
                     <div>
-                        <div className="text-[13px] text-text-subtle">Pesanan</div>
+                        <div className="text-[13px] text-text-subtle">
+                            Pesanan
+                        </div>
                         <div className="mt-0.5 text-sm font-semibold text-text">
-                            {draft?.items?.length ?? 0} Produk · {formatCurrency(summary.subtotal)}
+                            {draft?.items?.length ?? 0} Produk ·{' '}
+                            {formatCurrency(summary.subtotal)}
                         </div>
                     </div>
-                    {itemsExpanded ? <ChevronUp className="h-4 w-4 text-text-muted" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
+                    {itemsExpanded ? (
+                        <ChevronUp className="h-4 w-4 text-text-muted" />
+                    ) : (
+                        <ChevronDown className="h-4 w-4 text-text-muted" />
+                    )}
                 </button>
 
                 {itemsExpanded && (
                     <div className="mt-3 space-y-2 border-t border-border pt-3">
                         {(draft?.items ?? []).map((item: any) => (
-                            <div key={item.product_variant_id} className="flex items-start justify-between gap-3 text-sm">
+                            <div
+                                key={item.product_variant_id}
+                                className="flex items-start justify-between gap-3 text-sm"
+                            >
                                 <div className="min-w-0">
-                                    <span className="font-medium text-text">{item.name}</span>
+                                    <span className="font-medium text-text">
+                                        {item.name}
+                                    </span>
                                     {item.variant_name && (
-                                        <span className="ml-1 text-xs text-text-subtle">{item.variant_name}</span>
+                                        <span className="ml-1 text-xs text-text-subtle">
+                                            {item.variant_name}
+                                        </span>
                                     )}
-                                    <span className="ml-1 text-xs text-text-muted">x{item.quantity}</span>
+                                    <span className="ml-1 text-xs text-text-muted">
+                                        x{item.quantity}
+                                    </span>
                                 </div>
-                                <span className="shrink-0 font-medium tabular-nums text-text">{formatCurrency(item.subtotal)}</span>
+                                <span className="shrink-0 font-medium text-text tabular-nums">
+                                    {formatCurrency(item.subtotal)}
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -264,17 +315,34 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 {isDelivery && summary.delivery_quote?.outlet && (
                     <div className="mt-2 flex items-center justify-between text-sm">
                         <div>
-                            <div className="font-semibold text-text">{summary.delivery_quote.outlet.name}</div>
-                            <div className="text-xs text-text-muted">{formatDistance(Number(summary.delivery_quote.distance_km ?? 0))} · Kurir Dombi</div>
+                            <div className="font-semibold text-text">
+                                {summary.delivery_quote.outlet.name}
+                            </div>
+                            <div className="text-xs text-text-muted">
+                                {formatDistance(
+                                    Number(
+                                        summary.delivery_quote.distance_km ?? 0,
+                                    ),
+                                )}{' '}
+                                · Kurir Dombi
+                            </div>
                         </div>
-                        <span className="font-bold tabular-nums text-text">{formatCurrency(summary.delivery_fee)}</span>
+                        <span className="font-bold text-text tabular-nums">
+                            {formatCurrency(summary.delivery_fee)}
+                        </span>
                     </div>
                 )}
 
                 {isDelivery && draft?.location && (
                     <div className="mt-2 text-xs text-text-muted">
                         <MapPin className="mr-1 inline h-3 w-3 align-text-bottom" />
-                        {[draft.location.village, draft.location.district, draft.location.city].filter(Boolean).join(', ') || draft.location.address_line}
+                        {[
+                            draft.location.village,
+                            draft.location.district,
+                            draft.location.city,
+                        ]
+                            .filter(Boolean)
+                            .join(', ') || draft.location.address_line}
                     </div>
                 )}
 
@@ -282,8 +350,12 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     <div className="mt-2 flex items-center gap-2 text-sm">
                         <Store className="h-4 w-4 shrink-0 text-text-subtle" />
                         <div>
-                            <div className="font-semibold text-text">{draft.pickup_outlet.name}</div>
-                            <div className="text-xs text-text-muted">{draft.pickup_outlet.address}</div>
+                            <div className="font-semibold text-text">
+                                {draft.pickup_outlet.name}
+                            </div>
+                            <div className="text-xs text-text-muted">
+                                {draft.pickup_outlet.address}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -291,8 +363,10 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
             {/* Pembayaran */}
             <section className="mt-4 rounded-xl border border-border bg-white p-4">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-[13px] text-text-subtle">Metode Pembayaran</span>
+                <div className="mb-2 flex items-center justify-between">
+                    <span className="text-[13px] text-text-subtle">
+                        Metode Pembayaran
+                    </span>
                     <button
                         type="button"
                         onClick={() => setPaymentExpanded(!paymentExpanded)}
@@ -305,14 +379,19 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 {/* Selected payment */}
                 <div className="flex items-center justify-between rounded-xl bg-surface-muted px-4 py-3">
                     <div>
-                        <div className="text-sm font-semibold text-text">{selectedOption?.label ?? 'QRIS'}</div>
+                        <div className="text-sm font-semibold text-text">
+                            {selectedOption?.label ?? 'QRIS'}
+                        </div>
                         <div className="mt-0.5 text-xs text-text-muted">
-                            {selectedOption?.description ?? 'Scan QR untuk membayar'}
+                            {selectedOption?.description ??
+                                'Scan QR untuk membayar'}
                         </div>
                     </div>
                     {paymentFee > 0 && (
                         <div className="text-sm font-bold tabular-nums">
-                            <span className="text-text-muted">+ {formatCurrency(paymentFee)}</span>
+                            <span className="text-text-muted">
+                                + {formatCurrency(paymentFee)}
+                            </span>
                         </div>
                     )}
                 </div>
@@ -321,9 +400,17 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 {paymentExpanded && (
                     <div className="mt-2 space-y-2">
                         {paymentOptions
-                            .filter((option: any) => option.value !== paymentMethod)
+                            .filter(
+                                (option: any) => option.value !== paymentMethod,
+                            )
                             .map((option: any) => {
-                                const optFee = option.customer_fee ?? Math.round((summary.subtotal ?? 0) * (option.fee_rate ?? 0) * 100) / 100;
+                                const optFee =
+                                    option.customer_fee ??
+                                    Math.round(
+                                        (summary.subtotal ?? 0) *
+                                            (option.fee_rate ?? 0) *
+                                            100,
+                                    ) / 100;
                                 return (
                                     <button
                                         key={option.value}
@@ -335,19 +422,28 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                         className="flex w-full items-center justify-between rounded-xl border border-border px-4 py-3 text-left transition-all active:opacity-80"
                                     >
                                         <div>
-                                            <div className="text-sm font-medium text-text">{option.label}</div>
-                                            <div className="mt-0.5 text-[11px] text-text-subtle">{option.description}</div>
+                                            <div className="text-sm font-medium text-text">
+                                                {option.label}
+                                            </div>
+                                            <div className="mt-0.5 text-[11px] text-text-subtle">
+                                                {option.description}
+                                            </div>
                                         </div>
                                         {optFee > 0 && (
                                             <div className="text-xs font-bold tabular-nums">
-                                                <span className="text-text-muted">+ {formatCurrency(optFee)}</span>
+                                                <span className="text-text-muted">
+                                                    + {formatCurrency(optFee)}
+                                                </span>
                                             </div>
                                         )}
                                     </button>
                                 );
                             })}
-                        <div className="text-[11px] text-text-muted px-1 pt-1">
-                            *Subtotal &lt; Rp 500rb: QRIS/Transfer/E-Wallet Biaya Layanan Rp 0. Kartu Kredit selalu dikenakan biaya layanan. Threshold dari subtotal saja (tanpa ongkir).
+                        <div className="px-1 pt-1 text-[11px] text-text-muted">
+                            *Subtotal &lt; Rp 500rb: QRIS/Transfer/E-Wallet
+                            Biaya Layanan Rp 0. Kartu Kredit selalu dikenakan
+                            biaya layanan. Threshold dari subtotal saja (tanpa
+                            ongkir).
                         </div>
                     </div>
                 )}
@@ -356,13 +452,30 @@ export default function CheckoutPayment({ draft, summary }: any) {
             {/* Total Card */}
             <section className="mt-4 rounded-xl bg-primary px-4 py-3 text-white">
                 <div className="space-y-1">
-                    <SummaryRow label="Subtotal" value={formatCurrency(summary.subtotal)} />
-                    {summary.delivery_fee > 0 && <SummaryRow label="Ongkir" value={formatCurrency(summary.delivery_fee)} />}
-                    <SummaryRow label="Biaya Layanan" value={paymentFee > 0 ? formatCurrency(paymentFee) : 'Rp 0'} />
+                    <SummaryRow
+                        label="Subtotal"
+                        value={formatCurrency(summary.subtotal)}
+                    />
+                    {summary.delivery_fee > 0 && (
+                        <SummaryRow
+                            label="Ongkir"
+                            value={formatCurrency(summary.delivery_fee)}
+                        />
+                    )}
+                    <SummaryRow
+                        label="Biaya Layanan"
+                        value={
+                            paymentFee > 0 ? formatCurrency(paymentFee) : 'Rp 0'
+                        }
+                    />
                 </div>
-                <div className="mt-2 border-t border-white/20 pt-2 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-white">Total</span>
-                    <span className="text-lg font-bold tabular-nums text-white">{formatCurrency(total)}</span>
+                <div className="mt-2 flex items-center justify-between border-t border-white/20 pt-2">
+                    <span className="text-sm font-semibold text-white">
+                        Total
+                    </span>
+                    <span className="text-lg font-bold text-white tabular-nums">
+                        {formatCurrency(total)}
+                    </span>
                 </div>
                 {deliveryBlocked && (
                     <div className="mt-2">
@@ -380,12 +493,16 @@ export default function CheckoutPayment({ draft, summary }: any) {
                 <section className="mt-4 rounded-xl border border-border bg-white p-4">
                     <div className="text-[13px] text-text-subtle">Pemesan</div>
                     <div className="mt-1 text-sm font-semibold text-text">
-                        {draft?.customer?.customer_name} · {draft?.customer?.phone_number}
+                        {draft?.customer?.customer_name} ·{' '}
+                        {draft?.customer?.phone_number}
                     </div>
                     <div className="mt-2 border-t border-border pt-2">
-                        <div className="text-[13px] text-text-subtle">Penerima</div>
+                        <div className="text-[13px] text-text-subtle">
+                            Penerima
+                        </div>
                         <div className="mt-1 text-sm font-semibold text-text">
-                            {draft.customer.recipient_name} · {draft.customer.recipient_phone ?? '-'}
+                            {draft.customer.recipient_name} ·{' '}
+                            {draft.customer.recipient_phone ?? '-'}
                         </div>
                     </div>
                 </section>
@@ -393,12 +510,26 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
             {/* Adjustment Confirmation Modal */}
             {adjustmentModal && (
-                <Dialog open={!!adjustmentModal} onClose={() => setAdjustmentModal(null)} title="Stok Berubah">
-                    <p className="text-sm text-zinc-600 mb-3">Beberapa produk dalam pesanan Anda mengalami perubahan stok:</p>
-                    <ul className="space-y-2 mb-4">
-                        {adjustmentModal.warnings.map((w: string, i: number) => (
-                            <li key={i} className="text-sm text-zinc-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">{w}</li>
-                        ))}
+                <Dialog
+                    open={!!adjustmentModal}
+                    onClose={() => setAdjustmentModal(null)}
+                    title="Stok Berubah"
+                >
+                    <p className="mb-3 text-sm text-zinc-600">
+                        Beberapa produk dalam pesanan Anda mengalami perubahan
+                        stok:
+                    </p>
+                    <ul className="mb-4 space-y-2">
+                        {adjustmentModal.warnings.map(
+                            (w: string, i: number) => (
+                                <li
+                                    key={i}
+                                    className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-zinc-800"
+                                >
+                                    {w}
+                                </li>
+                            ),
+                        )}
                     </ul>
                     <div className="flex gap-2">
                         <button
@@ -429,7 +560,9 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
     return (
         <div className="flex items-center justify-between text-xs">
             <span className="text-white/60">{label}</span>
-            <span className="font-medium tabular-nums text-white/90">{value}</span>
+            <span className="font-medium text-white/90 tabular-nums">
+                {value}
+            </span>
         </div>
     );
 }

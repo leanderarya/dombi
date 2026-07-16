@@ -60,14 +60,20 @@ function StatCard({
     bgColor: string;
 }) {
     return (
-        <div className="rounded-xl bg-surface shadow-card p-4">
+        <div className="rounded-xl bg-surface p-4 shadow-card">
             <div className="flex items-center gap-2">
-                <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${bgColor}`}>
+                <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg ${bgColor}`}
+                >
                     <Icon className={`h-4 w-4 ${color}`} />
                 </div>
                 <div>
-                    <div className="text-xs font-medium text-text-muted">{label}</div>
-                    <div className="text-xl font-bold tabular-nums text-text">{value}</div>
+                    <div className="text-xs font-medium text-text-muted">
+                        {label}
+                    </div>
+                    <div className="text-xl font-bold text-text tabular-nums">
+                        {value}
+                    </div>
                 </div>
             </div>
         </div>

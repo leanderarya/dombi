@@ -22,35 +22,41 @@ export default function OutletRestockShow({ restock }: any) {
 
     const handleCancel = () => {
         setCancelling(true);
-        router.post(`/outlet/restocks/${restock.id}/cancel`, {}, {
-            onFinish: () => {
-                setCancelling(false);
-                setShowCancelDialog(false);
+        router.post(
+            `/outlet/restocks/${restock.id}/cancel`,
+            {},
+            {
+                onFinish: () => {
+                    setCancelling(false);
+                    setShowCancelDialog(false);
+                },
             },
-        });
+        );
     };
 
     return (
         <OutletLayout
             title={`Restock #${restock.id}`}
             backHref="/outlet/restocks"
-            actionBarSlot={canConfirmReceived ? (
-                <StickyActionBar
-                    actions={[
-                        showForm
-                            ? {
-                                  label: 'Konfirmasi Diterima',
-                                  variant: 'primary',
-                                  onClick: handleConfirmReceived,
-                              }
-                            : {
-                                  label: 'Konfirmasi Diterima',
-                                  variant: 'primary',
-                                  onClick: () => setShowForm(true),
-                              },
-                    ]}
-                />
-            ) : undefined}
+            actionBarSlot={
+                canConfirmReceived ? (
+                    <StickyActionBar
+                        actions={[
+                            showForm
+                                ? {
+                                      label: 'Konfirmasi Diterima',
+                                      variant: 'primary',
+                                      onClick: handleConfirmReceived,
+                                  }
+                                : {
+                                      label: 'Konfirmasi Diterima',
+                                      variant: 'primary',
+                                      onClick: () => setShowForm(true),
+                                  },
+                        ]}
+                    />
+                ) : undefined
+            }
         >
             <Head title={`Restock #${restock.id}`} />
 
@@ -74,9 +80,19 @@ export default function OutletRestockShow({ restock }: any) {
             <SectionCard label="Item Restock">
                 <div className="mt-2 space-y-2">
                     {restock.items.map((item: any) => (
-                        <div key={item.id} className="flex justify-between text-sm">
-                            <span className="font-medium">{item.product?.name ?? item.variant?.name ?? '-'}</span>
-                            <span className="text-text-muted">Diminta: {item.requested_quantity} / Disetujui: {item.approved_quantity ?? '-'}</span>
+                        <div
+                            key={item.id}
+                            className="flex justify-between text-sm"
+                        >
+                            <span className="font-medium">
+                                {item.product?.name ??
+                                    item.variant?.name ??
+                                    '-'}
+                            </span>
+                            <span className="text-text-muted">
+                                Diminta: {item.requested_quantity} / Disetujui:{' '}
+                                {item.approved_quantity ?? '-'}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -87,17 +103,25 @@ export default function OutletRestockShow({ restock }: any) {
                 <div className="mt-2 space-y-2 text-sm">
                     <div>
                         <span className="text-text-muted">Catatan Outlet:</span>
-                        <span className="ml-2 text-text">{restock.notes ?? '-'}</span>
+                        <span className="ml-2 text-text">
+                            {restock.notes ?? '-'}
+                        </span>
                     </div>
                     <div>
                         <span className="text-text-muted">Catatan Owner:</span>
-                        <span className="ml-2 text-text">{restock.owner_notes ?? '-'}</span>
+                        <span className="ml-2 text-text">
+                            {restock.owner_notes ?? '-'}
+                        </span>
                     </div>
                 </div>
                 {restock.rejected_reason && (
                     <div className="mt-3 flex items-start gap-2 rounded-lg border border-border bg-surface-muted p-3">
-                        <StatusBadge variant="danger" size="sm">Ditolak</StatusBadge>
-                        <span className="text-sm text-text">{restock.rejected_reason}</span>
+                        <StatusBadge variant="danger" size="sm">
+                            Ditolak
+                        </StatusBadge>
+                        <span className="text-sm text-text">
+                            {restock.rejected_reason}
+                        </span>
                     </div>
                 )}
             </SectionCard>
@@ -107,14 +131,22 @@ export default function OutletRestockShow({ restock }: any) {
                 <SectionCard label="Info Penerimaan">
                     {restock.received_notes && (
                         <div className="mt-2">
-                            <span className="text-sm text-text-muted">Catatan Penerimaan:</span>
-                            <p className="mt-1 text-sm text-text">{restock.received_notes}</p>
+                            <span className="text-sm text-text-muted">
+                                Catatan Penerimaan:
+                            </span>
+                            <p className="mt-1 text-sm text-text">
+                                {restock.received_notes}
+                            </p>
                         </div>
                     )}
                     {restock.damage_notes && (
                         <div className="mt-2">
-                            <span className="text-sm text-text-muted">Catatan Kerusakan:</span>
-                            <p className="mt-1 text-sm text-text">{restock.damage_notes}</p>
+                            <span className="text-sm text-text-muted">
+                                Catatan Kerusakan:
+                            </span>
+                            <p className="mt-1 text-sm text-text">
+                                {restock.damage_notes}
+                            </p>
                         </div>
                     )}
                 </SectionCard>
@@ -125,10 +157,14 @@ export default function OutletRestockShow({ restock }: any) {
                 <SectionCard label="Catatan Penerimaan">
                     <div className="mt-2 space-y-3">
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-text">Catatan Penerimaan</label>
+                            <label className="mb-1 block text-sm font-medium text-text">
+                                Catatan Penerimaan
+                            </label>
                             <textarea
                                 value={receivedNotes}
-                                onChange={(e) => setReceivedNotes(e.target.value)}
+                                onChange={(e) =>
+                                    setReceivedNotes(e.target.value)
+                                }
                                 placeholder="Opsional: kondisi barang saat diterima"
                                 maxLength={500}
                                 rows={2}
@@ -136,7 +172,9 @@ export default function OutletRestockShow({ restock }: any) {
                             />
                         </div>
                         <div>
-                            <label className="mb-1 block text-sm font-medium text-text">Catatan Kerusakan</label>
+                            <label className="mb-1 block text-sm font-medium text-text">
+                                Catatan Kerusakan
+                            </label>
                             <textarea
                                 value={damageNotes}
                                 onChange={(e) => setDamageNotes(e.target.value)}
@@ -153,11 +191,17 @@ export default function OutletRestockShow({ restock }: any) {
             {/* Cancel Confirmation Dialog */}
             {showCancelDialog && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/40" onClick={() => setShowCancelDialog(false)} />
+                    <div
+                        className="absolute inset-0 bg-black/40"
+                        onClick={() => setShowCancelDialog(false)}
+                    />
                     <div className="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-                        <h3 className="text-lg font-bold text-text">Batalkan Request?</h3>
+                        <h3 className="text-lg font-bold text-text">
+                            Batalkan Request?
+                        </h3>
                         <p className="mt-2 text-sm text-text-muted">
-                            Request restock #{restock.id} akan dibatalkan. Tindakan ini tidak dapat diurungkan.
+                            Request restock #{restock.id} akan dibatalkan.
+                            Tindakan ini tidak dapat diurungkan.
                         </p>
                         <div className="mt-6 flex gap-2">
                             <button

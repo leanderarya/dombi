@@ -10,7 +10,10 @@ interface Props {
     action?: { label: string; onClick: () => void };
 }
 
-const STYLES: Record<Variant, { container: string; icon: string; title: string; message: string }> = {
+const STYLES: Record<
+    Variant,
+    { container: string; icon: string; title: string; message: string }
+> = {
     error: {
         container: 'border-red-200 bg-red-50',
         icon: 'text-red-600',
@@ -37,16 +40,28 @@ const ICONS: Record<Variant, typeof XCircle> = {
     info: Info,
 };
 
-export default function NoticeBanner({ variant, title, message, onDismiss, action }: Props) {
+export default function NoticeBanner({
+    variant,
+    title,
+    message,
+    onDismiss,
+    action,
+}: Props) {
     const style = STYLES[variant];
     const Icon = ICONS[variant];
 
     return (
-        <div className={`flex items-start gap-3 rounded-xl border ${style.container} p-4`}>
+        <div
+            className={`flex items-start gap-3 rounded-xl border ${style.container} p-4`}
+        >
             <Icon className={`mt-0.5 h-5 w-5 shrink-0 ${style.icon}`} />
             <div className="min-w-0 flex-1">
-                <p className={`text-sm font-semibold ${style.title}`}>{title}</p>
-                {message && <p className={`mt-1 text-xs ${style.message}`}>{message}</p>}
+                <p className={`text-sm font-semibold ${style.title}`}>
+                    {title}
+                </p>
+                {message && (
+                    <p className={`mt-1 text-xs ${style.message}`}>{message}</p>
+                )}
                 {action && (
                     <button
                         type="button"

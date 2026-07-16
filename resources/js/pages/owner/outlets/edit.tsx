@@ -23,7 +23,11 @@ export default function EditOutlet({ outlet, existingOutlets }: any) {
     });
 
     return (
-        <OwnerPageShell title="Edit Outlet" subtitle={outlet.name} backHref="/owner/outlets">
+        <OwnerPageShell
+            title="Edit Outlet"
+            subtitle={outlet.name}
+            backHref="/owner/outlets"
+        >
             <OutletFormSheet
                 mode="edit"
                 outlet={outlet}

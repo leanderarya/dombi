@@ -13,7 +13,15 @@ interface Props {
     initialHours: HoursData[];
 }
 
-const DAY_NAMES = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const DAY_NAMES = [
+    'Minggu',
+    'Senin',
+    'Selasa',
+    'Rabu',
+    'Kamis',
+    'Jumat',
+    'Sabtu',
+];
 
 const DEFAULT_HOURS: HoursData[] = Array.from({ length: 7 }, (_, i) => ({
     day_of_week: i,
@@ -22,11 +30,14 @@ const DEFAULT_HOURS: HoursData[] = Array.from({ length: 7 }, (_, i) => ({
     is_closed: false,
 }));
 
-export default function OperatingHoursManager({ outletId, initialHours }: Props) {
+export default function OperatingHoursManager({
+    outletId,
+    initialHours,
+}: Props) {
     const [hours, setHours] = useState<HoursData[]>(() => {
         if (initialHours.length === 0) {
-return DEFAULT_HOURS;
-}
+            return DEFAULT_HOURS;
+        }
 
         const map = new Map(initialHours.map((h) => [h.day_of_week, h]));
 
@@ -37,7 +48,9 @@ return DEFAULT_HOURS;
     const [saved, setSaved] = useState(false);
 
     const updateDay = (index: number, field: keyof HoursData, value: any) => {
-        setHours((prev) => prev.map((h, i) => i === index ? { ...h, [field]: value } : h));
+        setHours((prev) =>
+            prev.map((h, i) => (i === index ? { ...h, [field]: value } : h)),
+        );
         setSaved(false);
     };
 
@@ -46,15 +59,21 @@ return DEFAULT_HOURS;
         setError(null);
 
         try {
-            const res = await fetch(`/owner/outlets/${outletId}/operating-hours`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+            const res = await fetch(
+                `/owner/outlets/${outletId}/operating-hours`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN':
+                            document
+                                .querySelector('meta[name="csrf-token"]')
+                                ?.getAttribute('content') ?? '',
+                    },
+                    body: JSON.stringify({ hours }),
                 },
-                body: JSON.stringify({ hours }),
-            });
+            );
 
             const data = await res.json();
 
@@ -74,12 +93,16 @@ return DEFAULT_HOURS;
         <div className="space-y-3">
             {hours.map((h, index) => (
                 <div key={h.day_of_week} className="flex items-center gap-3">
-                    <span className="w-16 text-sm font-medium text-slate-700">{DAY_NAMES[h.day_of_week]}</span>
+                    <span className="w-16 text-sm font-medium text-slate-700">
+                        {DAY_NAMES[h.day_of_week]}
+                    </span>
                     <label className="flex items-center gap-1.5">
                         <input
                             type="checkbox"
                             checked={!h.is_closed}
-                            onChange={(e) => updateDay(index, 'is_closed', !e.target.checked)}
+                            onChange={(e) =>
+                                updateDay(index, 'is_closed', !e.target.checked)
+                            }
                             className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                         />
                         <span className="text-xs text-slate-500">Buka</span>
@@ -89,14 +112,26 @@ return DEFAULT_HOURS;
                             <input
                                 type="time"
                                 value={h.open_time}
-                                onChange={(e) => updateDay(index, 'open_time', e.target.value)}
+                                onChange={(e) =>
+                                    updateDay(
+                                        index,
+                                        'open_time',
+                                        e.target.value,
+                                    )
+                                }
                                 className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
                             />
                             <span className="text-xs text-slate-400">-</span>
                             <input
                                 type="time"
                                 value={h.close_time}
-                                onChange={(e) => updateDay(index, 'close_time', e.target.value)}
+                                onChange={(e) =>
+                                    updateDay(
+                                        index,
+                                        'close_time',
+                                        e.target.value,
+                                    )
+                                }
                                 className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm"
                             />
                         </>
@@ -107,8 +142,14 @@ return DEFAULT_HOURS;
                 </div>
             ))}
 
-            {error && <p className="text-xs font-medium text-red-600">{error}</p>}
-            {saved && <p className="text-xs font-medium text-emerald-600">Tersimpan.</p>}
+            {error && (
+                <p className="text-xs font-medium text-red-600">{error}</p>
+            )}
+            {saved && (
+                <p className="text-xs font-medium text-emerald-600">
+                    Tersimpan.
+                </p>
+            )}
 
             <button
                 type="button"

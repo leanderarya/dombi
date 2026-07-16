@@ -35,7 +35,10 @@ export function usePolling(intervalMs: number = 30000, only: string[] = []) {
         return () => {
             window.removeEventListener('online', handleOnline);
             window.removeEventListener('offline', handleOffline);
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            document.removeEventListener(
+                'visibilitychange',
+                handleVisibilityChange,
+            );
         };
     }, [handleOnline, handleOffline, handleVisibilityChange]);
 

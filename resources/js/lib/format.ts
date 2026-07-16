@@ -11,8 +11,8 @@ export function formatCurrency(value: number | string): string {
 
 export function formatDistance(km: number | null | undefined): string {
     if (km === null || km === undefined) {
-return '-';
-}
+        return '-';
+    }
 
     return `${km.toFixed(1)} km`;
 }
@@ -30,23 +30,25 @@ export function formatDate(value?: string | null) {
 
 export function formatDeliveryAge(minutes: number | null | undefined): string {
     if (minutes === null || minutes === undefined) {
-return '-';
-}
+        return '-';
+    }
 
     if (minutes < 1) {
-return 'Baru saja';
-}
+        return 'Baru saja';
+    }
 
     if (minutes < 60) {
-return `${minutes} menit`;
-}
+        return `${minutes} menit`;
+    }
 
     const hours = Math.floor(minutes / 60);
     const remainMins = minutes % 60;
 
     if (hours < 24) {
-return remainMins > 0 ? `${hours} jam ${remainMins} menit` : `${hours} jam`;
-}
+        return remainMins > 0
+            ? `${hours} jam ${remainMins} menit`
+            : `${hours} jam`;
+    }
 
     const days = Math.floor(hours / 24);
 
@@ -55,8 +57,8 @@ return remainMins > 0 ? `${hours} jam ${remainMins} menit` : `${hours} jam`;
 
 export function formatRelativeDate(value?: string | null): string {
     if (!value) {
-return '-';
-}
+        return '-';
+    }
 
     const now = new Date();
     const date = new Date(value);
@@ -64,44 +66,47 @@ return '-';
     const diffMinutes = Math.floor(diffMs / 60000);
 
     if (diffMinutes < 1) {
-return 'Baru saja';
-}
+        return 'Baru saja';
+    }
 
     if (diffMinutes < 60) {
-return `${diffMinutes} menit lalu`;
-}
+        return `${diffMinutes} menit lalu`;
+    }
 
     const diffHours = Math.floor(diffMinutes / 60);
 
     if (diffHours < 24) {
-return `${diffHours} jam lalu`;
-}
+        return `${diffHours} jam lalu`;
+    }
 
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffDays < 7) {
-return `${diffDays} hari lalu`;
-}
+        return `${diffDays} hari lalu`;
+    }
 
     const diffWeeks = Math.floor(diffDays / 7);
 
     if (diffWeeks < 5) {
-return `${diffWeeks} minggu lalu`;
-}
+        return `${diffWeeks} minggu lalu`;
+    }
 
     const diffMonths = Math.floor(diffDays / 30);
 
     if (diffMonths < 12) {
-return `${diffMonths} bulan lalu`;
-}
+        return `${diffMonths} bulan lalu`;
+    }
 
     return `${Math.floor(diffDays / 365)} tahun lalu`;
 }
 
-export function formatMarginPercent(margin: number, sellingPrice: number): string {
+export function formatMarginPercent(
+    margin: number,
+    sellingPrice: number,
+): string {
     if (sellingPrice <= 0) {
-return '(0%)';
-}
+        return '(0%)';
+    }
 
     const pct = (margin / sellingPrice) * 100;
 

@@ -30,7 +30,10 @@ export type PlaceSuggestion = ForwardGeocodeResult & {
 const searchCache = new Map<string, PlaceSuggestion[]>();
 const reverseCache = new Map<string, ReverseGeocodeResult>();
 
-export async function searchPlaces(query: string, signal?: AbortSignal): Promise<PlaceSuggestion[]> {
+export async function searchPlaces(
+    query: string,
+    signal?: AbortSignal,
+): Promise<PlaceSuggestion[]> {
     const normalized = query.trim().toLowerCase();
 
     if (normalized.length < 3) {
@@ -49,12 +52,15 @@ export async function searchPlaces(query: string, signal?: AbortSignal): Promise
         countrycodes: 'id',
     });
 
-    const response = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
-        headers: { Accept: 'application/json' },
-        signal,
-    });
+    const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`,
+        {
+            headers: { Accept: 'application/json' },
+            signal,
+        },
+    );
 
-    if (! response.ok) {
+    if (!response.ok) {
         throw new Error('Forward geocoding failed');
     }
 
@@ -62,7 +68,11 @@ export async function searchPlaces(query: string, signal?: AbortSignal): Promise
     const suggestions = payload
         .filter((item) => item.lat && item.lon)
         .map((item, index) => mapSuggestion(item, normalized, index))
-        .sort((left, right) => rankSuggestion(left, normalized) - rankSuggestion(right, normalized))
+        .sort(
+            (left, right) =>
+                rankSuggestion(left, normalized) -
+                rankSuggestion(right, normalized),
+        )
         .slice(0, 5);
 
     searchCache.set(normalized, suggestions);
@@ -70,17 +80,24 @@ export async function searchPlaces(query: string, signal?: AbortSignal): Promise
     return suggestions;
 }
 
-export async function searchAddress(query: string, signal?: AbortSignal): Promise<ForwardGeocodeResult | null> {
+export async function searchAddress(
+    query: string,
+    signal?: AbortSignal,
+): Promise<ForwardGeocodeResult | null> {
     const first = (await searchPlaces(query, signal))[0];
 
-    if (! first) {
+    if (!first) {
         return null;
     }
 
     return first;
 }
 
-export async function reverseGeocode(latitude: number, longitude: number, signal?: AbortSignal): Promise<ReverseGeocodeResult> {
+export async function reverseGeocode(
+    latitude: number,
+    longitude: number,
+    signal?: AbortSignal,
+): Promise<ReverseGeocodeResult> {
     const cacheKey = `${latitude.toFixed(5)},${longitude.toFixed(5)}`;
 
     if (reverseCache.has(cacheKey)) {
@@ -95,10 +112,13 @@ export async function reverseGeocode(latitude: number, longitude: number, signal
         addressdetails: '1',
     });
 
-    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?${params.toString()}`, {
-        headers: { Accept: 'application/json' },
-        signal,
-    });
+    const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?${params.toString()}`,
+        {
+            headers: { Accept: 'application/json' },
+            signal,
+        },
+    );
 
     if (!response.ok) {
         throw new Error('Reverse geocoding failed');
@@ -117,22 +137,52 @@ function mapAddress(payload: NominatimResponse): ReverseGeocodeResult {
 
     return {
         formatted_address: payload.display_name ?? '',
-        kelurahan: firstValue(address, ['suburb', 'village', 'hamlet', 'neighbourhood', 'quarter', 'city_district']),
-        kecamatan: firstValue(address, ['district', 'county', 'municipality', 'city_district']),
-        city: firstValue(address, ['city', 'town', 'regency', 'county', 'municipality']),
+        kelurahan: firstValue(address, [
+            'suburb',
+            'village',
+            'hamlet',
+            'neighbourhood',
+            'quarter',
+            'city_district',
+        ]),
+        kecamatan: firstValue(address, [
+            'district',
+            'county',
+            'municipality',
+            'city_district',
+        ]),
+        city: firstValue(address, [
+            'city',
+            'town',
+            'regency',
+            'county',
+            'municipality',
+        ]),
         province: firstValue(address, ['state', 'province', 'region']),
         postal_code: firstValue(address, ['postcode']),
     };
 }
 
-function firstValue(source: Record<string, string | undefined>, keys: string[]): string {
+function firstValue(
+    source: Record<string, string | undefined>,
+    keys: string[],
+): string {
     return keys.map((key) => source[key]).find(Boolean) ?? '';
 }
 
-function mapSuggestion(payload: NominatimResponse, normalizedQuery: string, index: number): PlaceSuggestion {
+function mapSuggestion(
+    payload: NominatimResponse,
+    normalizedQuery: string,
+    index: number,
+): PlaceSuggestion {
     const address = mapAddress(payload);
-    const title = extractTitle(payload.display_name ?? '', address.formatted_address);
-    const subtitle = [address.kelurahan, address.kecamatan, address.city].filter(Boolean).join(', ');
+    const title = extractTitle(
+        payload.display_name ?? '',
+        address.formatted_address,
+    );
+    const subtitle = [address.kelurahan, address.kecamatan, address.city]
+        .filter(Boolean)
+        .join(', ');
 
     return {
         ...address,
@@ -151,7 +201,10 @@ function extractTitle(displayName: string, fallback: string): string {
     return firstSegment || fallback || 'Lokasi';
 }
 
-function rankSuggestion(suggestion: PlaceSuggestion, normalizedQuery: string): number {
+function rankSuggestion(
+    suggestion: PlaceSuggestion,
+    normalizedQuery: string,
+): number {
     const title = suggestion.title.toLowerCase();
     const subtitle = suggestion.subtitle.toLowerCase();
     const exactPrefix = title.startsWith(normalizedQuery) ? 0 : 1;
@@ -159,5 +212,10 @@ function rankSuggestion(suggestion: PlaceSuggestion, normalizedQuery: string): n
     const subtitleContains = subtitle.includes(normalizedQuery) ? 0 : 1;
     const importanceScore = 1 - Math.min(suggestion.importance || 0, 1);
 
-    return exactPrefix * 100 + titleContains * 10 + subtitleContains * 5 + importanceScore;
+    return (
+        exactPrefix * 100 +
+        titleContains * 10 +
+        subtitleContains * 5 +
+        importanceScore
+    );
 }

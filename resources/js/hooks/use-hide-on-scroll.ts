@@ -11,8 +11,8 @@ export function useHideOnScroll(threshold = 10) {
 
         const handleScroll = () => {
             if (ticking.current) {
-return;
-}
+                return;
+            }
 
             ticking.current = true;
 

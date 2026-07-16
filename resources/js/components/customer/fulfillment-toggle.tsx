@@ -4,7 +4,11 @@ interface Props {
     deliveryDisabled?: boolean;
 }
 
-export default function FulfillmentToggle({ value, onChange, deliveryDisabled }: Props) {
+export default function FulfillmentToggle({
+    value,
+    onChange,
+    deliveryDisabled,
+}: Props) {
     return (
         <div className="relative mx-4 flex justify-center">
             <div className="flex rounded-full bg-white/20 p-1">
@@ -27,8 +31,8 @@ export default function FulfillmentToggle({ value, onChange, deliveryDisabled }:
                         value === 'delivery'
                             ? 'bg-white text-primary shadow-sm'
                             : deliveryDisabled
-                                ? 'text-white/40'
-                                : 'text-white/70'
+                              ? 'text-white/40'
+                              : 'text-white/70'
                     }`}
                 >
                     Delivery

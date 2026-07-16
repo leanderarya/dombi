@@ -1,5 +1,17 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CheckCircle2, Clock, MapPin, MessageCircle, Navigation, Phone, RotateCcw, Share2, XCircle, AlertTriangle, UserCheck } from 'lucide-react';
+import {
+    CheckCircle2,
+    Clock,
+    MapPin,
+    MessageCircle,
+    Navigation,
+    Phone,
+    RotateCcw,
+    Share2,
+    XCircle,
+    AlertTriangle,
+    UserCheck,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import OrderHeader from '@/components/customer/order/order-header';
 import OrderInfoCard from '@/components/customer/order/order-info-card';
@@ -25,10 +37,29 @@ type TrackOrder = {
     confirmation_expires_at?: string | null;
     payment_status?: string | null;
     ordered_at?: string;
-    outlet?: { name: string; address?: string; phone?: string; operating_hours?: string; latitude?: number; longitude?: number };
-    items: { product_name: string; quantity: number; price: number; subtotal: number }[];
-    status_histories: { to_status: string; notes?: string | null; created_at?: string | null }[];
-    delivery?: { courier?: { name: string; phone?: string }; failed_reason?: string | null };
+    outlet?: {
+        name: string;
+        address?: string;
+        phone?: string;
+        operating_hours?: string;
+        latitude?: number;
+        longitude?: number;
+    };
+    items: {
+        product_name: string;
+        quantity: number;
+        price: number;
+        subtotal: number;
+    }[];
+    status_histories: {
+        to_status: string;
+        notes?: string | null;
+        created_at?: string | null;
+    }[];
+    delivery?: {
+        courier?: { name: string; phone?: string };
+        failed_reason?: string | null;
+    };
     customer_name?: string;
     customer_phone?: string;
     customer_address?: string;
@@ -44,7 +75,12 @@ type Props = {
     order: TrackOrder | null;
     found: boolean;
     cancellationReasons?: string[];
-    notifications?: { id: number; title: string; message: string; time_ago: string }[];
+    notifications?: {
+        id: number;
+        title: string;
+        message: string;
+        time_ago: string;
+    }[];
     canCancel?: boolean;
     canCreateAccount?: boolean;
     accountPhone?: string;
@@ -53,7 +89,15 @@ type Props = {
 
 const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
 
-export default function TrackPage({ order, found, cancellationReasons = [], canCancel = false, canCreateAccount = false, accountPhone, accountName }: Props) {
+export default function TrackPage({
+    order,
+    found,
+    cancellationReasons = [],
+    canCancel = false,
+    canCreateAccount = false,
+    accountPhone,
+    accountName,
+}: Props) {
     const { auth } = usePage().props as any;
     const isLoggedIn = !!auth?.user;
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
@@ -64,7 +108,13 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
     const [cancelLoading, setCancelLoading] = useState(false);
 
     // Auto-polling for non-terminal orders
-    const isTerminal = ['completed', 'cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'].includes(order?.status ?? '');
+    const isTerminal = [
+        'completed',
+        'cancelled_by_customer',
+        'cancelled_by_outlet',
+        'rejected_by_outlet',
+        'expired',
+    ].includes(order?.status ?? '');
     useEffect(() => {
         if (isTerminal || !order) return;
         const interval = setInterval(() => {
@@ -87,14 +137,17 @@ export default function TrackPage({ order, found, cancellationReasons = [], canC
         if (navigator.share) {
             navigator.share({ text }).catch(() => {});
         } else {
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+            window.open(
+                `https://wa.me/?text=${encodeURIComponent(text)}`,
+                '_blank',
+            );
         }
     }
 
     async function handleCancel() {
         if (!cancelReason || !order) {
-return;
-}
+            return;
+        }
 
         setCancelLoading(true);
         setCancelError(null);
@@ -108,7 +161,10 @@ return;
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
                 },
                 body: JSON.stringify({
                     reason: cancelReason,
@@ -145,40 +201,53 @@ return;
 
             {/* Content */}
             <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
-
                 {/* Status Badge */}
                 <div className="flex items-center justify-center">
                     {order.status === 'ready_for_pickup' && !isPickup ? (
                         <StatusBadge variant="info">Menunggu Kurir</StatusBadge>
                     ) : (
-                        <StatusBadge status={order.status === 'pending_confirmation' && order.payment_status !== 'paid' ? (order.payment_status === 'failed' || order.payment_status === 'expired' ? 'payment_failed' : 'pending_payment') : order.status} />
+                        <StatusBadge
+                            status={
+                                order.status === 'pending_confirmation' &&
+                                order.payment_status !== 'paid'
+                                    ? order.payment_status === 'failed' ||
+                                      order.payment_status === 'expired'
+                                        ? 'payment_failed'
+                                        : 'pending_payment'
+                                    : order.status
+                            }
+                        />
                     )}
                 </div>
 
                 {/* Payment Issue Banner */}
-                {order.status === 'pending_confirmation' && (order.payment_status === 'failed' || order.payment_status === 'expired') && (
-                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                        <div className="flex items-start gap-3">
-                            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
-                            <div>
-                                <div className="text-sm font-semibold text-red-800">
-                                    {order.payment_status === 'failed' ? 'Pembayaran Gagal' : 'Pembayaran Kadaluarsa'}
+                {order.status === 'pending_confirmation' &&
+                    (order.payment_status === 'failed' ||
+                        order.payment_status === 'expired') && (
+                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                            <div className="flex items-start gap-3">
+                                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
+                                <div>
+                                    <div className="text-sm font-semibold text-red-800">
+                                        {order.payment_status === 'failed'
+                                            ? 'Pembayaran Gagal'
+                                            : 'Pembayaran Kadaluarsa'}
+                                    </div>
+                                    <div className="mt-1 text-xs text-red-600">
+                                        {order.payment_status === 'failed'
+                                            ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar ulang.'
+                                            : 'Batas waktu pembayaran telah habis. Silakan coba bayar ulang.'}
+                                    </div>
+                                    <Link
+                                        href={`/customer/orders/confirm/${order.order_code}`}
+                                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80"
+                                    >
+                                        Bayar Ulang
+                                    </Link>
                                 </div>
-                                <div className="mt-1 text-xs text-red-600">
-                                    {order.payment_status === 'failed'
-                                        ? 'Pembayaran tidak berhasil diproses. Silakan coba bayar ulang.'
-                                        : 'Batas waktu pembayaran telah habis. Silakan coba bayar ulang.'}
-                                </div>
-                                <Link
-                                    href={`/customer/orders/confirm/${order.order_code}`}
-                                    className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-red-600 text-sm font-bold text-white active:opacity-80"
-                                >
-                                    Bayar Ulang
-                                </Link>
                             </div>
                         </div>
-                    </div>
-                )}
+                    )}
 
                 {/* What's Next Guidance */}
                 <StatusGuidanceCard
@@ -198,14 +267,18 @@ return;
 
                 {/* Completed Hero */}
                 {order.status === 'completed' && (
-                    <div className="mt-4 rounded-xl bg-emerald-50 border border-emerald-100 p-6 text-center">
+                    <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-6 text-center">
                         <div className="flex justify-center">
                             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
                                 <CheckCircle2 className="h-8 w-8 text-emerald-600" />
                             </div>
                         </div>
-                        <h2 className="mt-4 text-lg font-bold text-text">Pesanan Selesai!</h2>
-                        <p className="mt-1 text-sm text-text-muted">Terima kasih sudah pesan di Dombi 🎉</p>
+                        <h2 className="mt-4 text-lg font-bold text-text">
+                            Pesanan Selesai!
+                        </h2>
+                        <p className="mt-1 text-sm text-text-muted">
+                            Terima kasih sudah pesan di Dombi 🎉
+                        </p>
                     </div>
                 )}
 
@@ -251,48 +324,77 @@ return;
                 />
 
                 {/* Rejection / Cancellation */}
-                {order.status === 'rejected_by_outlet' && order.rejection_reason && (
-                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                        <div className="flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-red-500" />
-                            <div className="text-[13px] text-red-600">Pesanan Ditolak Outlet</div>
+                {order.status === 'rejected_by_outlet' &&
+                    order.rejection_reason && (
+                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                            <div className="flex items-center gap-2">
+                                <XCircle className="h-4 w-4 text-red-500" />
+                                <div className="text-[13px] text-red-600">
+                                    Pesanan Ditolak Outlet
+                                </div>
+                            </div>
+                            <div className="mt-2 text-sm font-semibold text-red-800">
+                                {order.rejection_reason}
+                            </div>
+                            {order.rejection_note && (
+                                <div className="mt-1 text-xs text-red-700">
+                                    {order.rejection_note}
+                                </div>
+                            )}
                         </div>
-                        <div className="mt-2 text-sm font-semibold text-red-800">{order.rejection_reason}</div>
-                        {order.rejection_note && <div className="mt-1 text-xs text-red-700">{order.rejection_note}</div>}
-                    </div>
-                )}
+                    )}
 
-                {order.status === 'cancelled_by_customer' && order.cancellation_reason && (
-                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                        <div className="flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-red-500" />
-                            <div className="text-[13px] text-red-600">Pesanan Dibatalkan</div>
+                {order.status === 'cancelled_by_customer' &&
+                    order.cancellation_reason && (
+                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                            <div className="flex items-center gap-2">
+                                <XCircle className="h-4 w-4 text-red-500" />
+                                <div className="text-[13px] text-red-600">
+                                    Pesanan Dibatalkan
+                                </div>
+                            </div>
+                            <div className="mt-2 text-sm font-semibold text-red-800">
+                                {order.cancellation_reason}
+                            </div>
+                            {order.cancellation_note && (
+                                <div className="mt-1 text-xs text-red-700">
+                                    {order.cancellation_note}
+                                </div>
+                            )}
                         </div>
-                        <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
-                        {order.cancellation_note && <div className="mt-1 text-xs text-red-700">{order.cancellation_note}</div>}
-                    </div>
-                )}
+                    )}
 
-                {order.status === 'cancelled_by_outlet' && order.cancellation_reason && (
-                    <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-                        <div className="flex items-center gap-2">
-                            <XCircle className="h-4 w-4 text-red-500" />
-                            <div className="text-[13px] text-red-600">Dibatalkan Outlet</div>
+                {order.status === 'cancelled_by_outlet' &&
+                    order.cancellation_reason && (
+                        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                            <div className="flex items-center gap-2">
+                                <XCircle className="h-4 w-4 text-red-500" />
+                                <div className="text-[13px] text-red-600">
+                                    Dibatalkan Outlet
+                                </div>
+                            </div>
+                            <div className="mt-2 text-sm font-semibold text-red-800">
+                                {order.cancellation_reason}
+                            </div>
                         </div>
-                        <div className="mt-2 text-sm font-semibold text-red-800">{order.cancellation_reason}</div>
-                    </div>
-                )}
+                    )}
 
                 {order.status === 'failed_delivery' && (
                     <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4">
                         <div className="flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-amber-600" />
-                            <div className="text-[13px] text-amber-700">Pengiriman Gagal</div>
+                            <div className="text-[13px] text-amber-700">
+                                Pengiriman Gagal
+                            </div>
                         </div>
                         {order.delivery?.failed_reason && (
-                            <div className="mt-1.5 text-sm font-medium text-amber-900">{order.delivery.failed_reason}</div>
+                            <div className="mt-1.5 text-sm font-medium text-amber-900">
+                                {order.delivery.failed_reason}
+                            </div>
                         )}
-                        <div className="mt-2 text-sm text-amber-800">Silakan hubungi outlet untuk bantuan.</div>
+                        <div className="mt-2 text-sm text-amber-800">
+                            Silakan hubungi outlet untuk bantuan.
+                        </div>
                         {order.outlet?.phone && (
                             <a
                                 href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
@@ -311,9 +413,14 @@ return;
                     <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
                         <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-text-muted" />
-                            <div className="text-[13px] text-text">Pesanan Kadaluarsa</div>
+                            <div className="text-[13px] text-text">
+                                Pesanan Kadaluarsa
+                            </div>
                         </div>
-                        <div className="mt-2 text-sm text-text-muted">Outlet tidak memberikan konfirmasi dalam batas waktu.</div>
+                        <div className="mt-2 text-sm text-text-muted">
+                            Outlet tidak memberikan konfirmasi dalam batas
+                            waktu.
+                        </div>
                         <Link
                             href="/customer/home"
                             className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
@@ -325,22 +432,26 @@ return;
                 )}
 
                 {/* Pay Now / Retry Button — unpaid pending orders (including failed payment) */}
-                {order.status === 'pending_confirmation'
-                    && order.payment_status !== 'paid' && (
-                    <div className="mt-4">
-                        <Link
-                            href={`/customer/orders/confirm/${order.order_code}`}
-                            className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
-                        >
-                            {order.payment_status === 'failed' || order.payment_status === 'expired' ? 'Bayar Ulang' : 'Bayar Sekarang'}
-                        </Link>
-                        <p className="mt-2 text-center text-[11px] text-text-subtle">
-                            {order.payment_status === 'failed' || order.payment_status === 'expired'
-                                ? 'Pembayaran sebelumnya gagal. Coba bayar ulang.'
-                                : 'Selesaikan pembayaran untuk melanjutkan pesanan'}
-                        </p>
-                    </div>
-                )}
+                {order.status === 'pending_confirmation' &&
+                    order.payment_status !== 'paid' && (
+                        <div className="mt-4">
+                            <Link
+                                href={`/customer/orders/confirm/${order.order_code}`}
+                                className="flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 text-sm font-bold text-white active:opacity-80"
+                            >
+                                {order.payment_status === 'failed' ||
+                                order.payment_status === 'expired'
+                                    ? 'Bayar Ulang'
+                                    : 'Bayar Sekarang'}
+                            </Link>
+                            <p className="mt-2 text-center text-[11px] text-text-subtle">
+                                {order.payment_status === 'failed' ||
+                                order.payment_status === 'expired'
+                                    ? 'Pembayaran sebelumnya gagal. Coba bayar ulang.'
+                                    : 'Selesaikan pembayaran untuk melanjutkan pesanan'}
+                            </p>
+                        </div>
+                    )}
 
                 {/* Cancel Button — authenticated users */}
                 {isCancellable && canCancel && (
@@ -361,8 +472,12 @@ return;
                 {/* Login CTA for cancel — guest users */}
                 {isCancellable && !canCancel && !isLoggedIn && (
                     <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4 text-center">
-                        <div className="text-sm font-medium text-text">Ingin membatalkan pesanan?</div>
-                        <div className="mt-1 text-xs text-text-muted">Masuk atau buat akun untuk mengelola pesanan Anda.</div>
+                        <div className="text-sm font-medium text-text">
+                            Ingin membatalkan pesanan?
+                        </div>
+                        <div className="mt-1 text-xs text-text-muted">
+                            Masuk atau buat akun untuk mengelola pesanan Anda.
+                        </div>
                         <a
                             href={`/oauth/google?redirect=${encodeURIComponent(`/track/${order.recovery_token}`)}`}
                             className="mt-3 inline-flex h-11 items-center justify-center rounded-xl bg-primary px-6 text-sm font-bold text-white active:opacity-80"
@@ -379,9 +494,12 @@ return;
                             <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                             <div className="flex-1 space-y-2">
                                 <div>
-                                    <h3 className="text-sm font-medium text-amber-900">Verifikasi HP untuk kelola pesanan</h3>
+                                    <h3 className="text-sm font-medium text-amber-900">
+                                        Verifikasi HP untuk kelola pesanan
+                                    </h3>
                                     <p className="text-xs text-amber-700">
-                                        Verifikasi nomor HP Anda untuk dapat membatalkan dan mengelola pesanan ini.
+                                        Verifikasi nomor HP Anda untuk dapat
+                                        membatalkan dan mengelola pesanan ini.
                                     </p>
                                 </div>
                                 <a
@@ -417,7 +535,10 @@ return;
 
                 {/* Account Promotion */}
                 {canCreateAccount && accountPhone && (
-                    <AccountPromotionBanner phone={accountPhone} name={accountName} />
+                    <AccountPromotionBanner
+                        phone={accountPhone}
+                        name={accountName}
+                    />
                 )}
 
                 {/* Branding */}
@@ -428,23 +549,39 @@ return;
             </main>
 
             {/* Cancel Dialog */}
-            <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)} title="Batalkan Pesanan">
-                <p className="text-sm text-text-muted">Pesanan yang dibatalkan tidak dapat dipulihkan.</p>
+            <Dialog
+                open={cancelDialogOpen}
+                onClose={() => setCancelDialogOpen(false)}
+                title="Batalkan Pesanan"
+            >
+                <p className="text-sm text-text-muted">
+                    Pesanan yang dibatalkan tidak dapat dipulihkan.
+                </p>
 
                 {isPickup && (
                     <div className="mt-4">
-                        <label className="text-xs font-medium text-text-subtle">4 digit terakhir nomor HP</label>
+                        <label className="text-xs font-medium text-text-subtle">
+                            4 digit terakhir nomor HP
+                        </label>
                         <input
                             type="text"
                             inputMode="numeric"
                             pattern="\d{4}"
                             maxLength={4}
                             value={cancelLast4Hp}
-                            onChange={(e) => setCancelLast4Hp(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                            onChange={(e) =>
+                                setCancelLast4Hp(
+                                    e.target.value
+                                        .replace(/\D/g, '')
+                                        .slice(0, 4),
+                                )
+                            }
                             placeholder="Contoh: 1234"
                             className="mt-1 w-full rounded-lg border border-border px-3 py-2.5 text-sm text-text tabular-nums placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20"
                         />
-                        <p className="mt-1 text-[11px] text-text-subtle">Untuk keamanan pembatalan pesanan pickup</p>
+                        <p className="mt-1 text-[11px] text-text-subtle">
+                            Untuk keamanan pembatalan pesanan pickup
+                        </p>
                     </div>
                 )}
 
@@ -476,7 +613,11 @@ return;
                     </div>
                 )}
 
-                {cancelError && <p className="mt-2 text-sm font-medium text-red-600">{cancelError}</p>}
+                {cancelError && (
+                    <p className="mt-2 text-sm font-medium text-red-600">
+                        {cancelError}
+                    </p>
+                )}
 
                 <div className="mt-4 flex gap-2">
                     <button
@@ -493,7 +634,11 @@ return;
                     <button
                         type="button"
                         onClick={handleCancel}
-                        disabled={!cancelReason || cancelLoading || (isPickup && cancelLast4Hp.length !== 4)}
+                        disabled={
+                            !cancelReason ||
+                            cancelLoading ||
+                            (isPickup && cancelLast4Hp.length !== 4)
+                        }
                         className="flex h-12 flex-1 items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:bg-surface-muted disabled:text-text-subtle"
                     >
                         {cancelLoading ? 'Membatalkan...' : 'Ya, Batalkan'}
@@ -512,9 +657,17 @@ function NotFoundState() {
                 <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-surface-muted">
                     <XCircle className="h-8 w-8 text-text-subtle" />
                 </div>
-                <h1 className="mt-4 text-lg font-semibold text-text">Pesanan Tidak Ditemukan</h1>
-                <p className="mt-2 text-sm text-text-muted">Kode pelacakan tidak valid atau pesanan sudah tidak tersedia.</p>
-                <a href="/customer/home" className="mt-6 flex min-h-11 items-center rounded-xl bg-primary px-6 text-sm font-bold text-white active:opacity-80">
+                <h1 className="mt-4 text-lg font-semibold text-text">
+                    Pesanan Tidak Ditemukan
+                </h1>
+                <p className="mt-2 text-sm text-text-muted">
+                    Kode pelacakan tidak valid atau pesanan sudah tidak
+                    tersedia.
+                </p>
+                <a
+                    href="/customer/home"
+                    className="mt-6 flex min-h-11 items-center rounded-xl bg-primary px-6 text-sm font-bold text-white active:opacity-80"
+                >
                     Kembali ke Beranda
                 </a>
             </div>
@@ -522,7 +675,13 @@ function NotFoundState() {
     );
 }
 
-function AccountPromotionBanner({ phone, name }: { phone: string; name?: string }) {
+function AccountPromotionBanner({
+    phone,
+    name,
+}: {
+    phone: string;
+    name?: string;
+}) {
     const [showForm, setShowForm] = useState(false);
     const [formName, setFormName] = useState(name ?? '');
     const [password, setPassword] = useState('');
@@ -543,9 +702,17 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
                 },
-                body: JSON.stringify({ phone, name: formName, password, password_confirmation: passwordConfirmation }),
+                body: JSON.stringify({
+                    phone,
+                    name: formName,
+                    password,
+                    password_confirmation: passwordConfirmation,
+                }),
             });
 
             const data = await response.json();
@@ -566,7 +733,8 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
         <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4">
             <div className="text-[13px] text-emerald-600">Buat Akun</div>
             <div className="mt-2 text-sm text-emerald-800">
-                Buat akun untuk melacak pesanan, menyimpan alamat, dan memesan lebih mudah.
+                Buat akun untuk melacak pesanan, menyimpan alamat, dan memesan
+                lebih mudah.
             </div>
 
             {!showForm ? (
@@ -580,11 +748,17 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
             ) : (
                 <form onSubmit={handleSubmit} className="mt-3 space-y-3">
                     <div>
-                        <label className="text-xs font-medium text-emerald-700">Nomor HP (terverifikasi)</label>
-                        <div className="mt-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text">{maskedPhone}</div>
+                        <label className="text-xs font-medium text-emerald-700">
+                            Nomor HP (terverifikasi)
+                        </label>
+                        <div className="mt-1 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text">
+                            {maskedPhone}
+                        </div>
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-emerald-700">Nama</label>
+                        <label className="text-xs font-medium text-emerald-700">
+                            Nama
+                        </label>
                         <input
                             type="text"
                             value={formName}
@@ -595,7 +769,9 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-emerald-700">Password</label>
+                        <label className="text-xs font-medium text-emerald-700">
+                            Password
+                        </label>
                         <input
                             type="password"
                             value={password}
@@ -606,18 +782,26 @@ function AccountPromotionBanner({ phone, name }: { phone: string; name?: string 
                         />
                     </div>
                     <div>
-                        <label className="text-xs font-medium text-emerald-700">Konfirmasi Password</label>
+                        <label className="text-xs font-medium text-emerald-700">
+                            Konfirmasi Password
+                        </label>
                         <input
                             type="password"
                             value={passwordConfirmation}
-                            onChange={(e) => setPasswordConfirmation(e.target.value)}
+                            onChange={(e) =>
+                                setPasswordConfirmation(e.target.value)
+                            }
                             required
                             minLength={8}
                             className="mt-1 w-full rounded-lg border border-emerald-200 bg-white px-3 py-2 text-sm text-text focus:border-emerald-400 focus:ring-1 focus:ring-emerald-200"
                         />
                     </div>
 
-                    {error && <p className="text-sm font-medium text-red-600">{error}</p>}
+                    {error && (
+                        <p className="text-sm font-medium text-red-600">
+                            {error}
+                        </p>
+                    )}
 
                     <button
                         type="submit"

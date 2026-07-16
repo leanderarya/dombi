@@ -20,26 +20,42 @@ interface Props {
     className?: string;
 }
 
-export default function OwnerKpiCard({ label, value, icon, trend, color, highlight, className }: Props) {
+export default function OwnerKpiCard({
+    label,
+    value,
+    icon,
+    trend,
+    color,
+    highlight,
+    className,
+}: Props) {
     return (
-        <div className={cn(
-            'group rounded-lg p-2.5 transition-colors duration-150 hover:bg-surface-muted',
-            highlight && 'ring-1 ring-danger/20 bg-danger/5',
-            className
-        )}>
+        <div
+            className={cn(
+                'group rounded-lg p-2.5 transition-colors duration-150 hover:bg-surface-muted',
+                highlight && 'bg-danger/5 ring-1 ring-danger/20',
+                className,
+            )}
+        >
             <div className="flex items-center gap-2">
                 {icon && (
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-muted transition-colors group-hover:bg-primary-light lg:h-9 lg:w-9">
                         {icon}
                     </div>
                 )}
-                <div className="text-xs font-medium text-text-muted">{label}</div>
+                <div className="text-xs font-medium text-text-muted">
+                    {label}
+                </div>
             </div>
-            <div className={`mt-1 text-base font-bold tabular-nums tracking-tight ${color ? colorClasses[color] : 'text-text'}`}>
+            <div
+                className={`mt-1 text-base font-bold tracking-tight tabular-nums ${color ? colorClasses[color] : 'text-text'}`}
+            >
                 {value}
             </div>
             {trend && (
-                <div className="mt-1.5 text-xs font-medium text-text-subtle">{trend}</div>
+                <div className="mt-1.5 text-xs font-medium text-text-subtle">
+                    {trend}
+                </div>
             )}
         </div>
     );

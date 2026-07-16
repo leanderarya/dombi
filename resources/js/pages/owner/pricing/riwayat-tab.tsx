@@ -25,7 +25,10 @@ const actionLabels: Record<string, string> = {
     reset: 'Reset',
 };
 
-const actionVariants: Record<string, 'success' | 'warning' | 'info' | 'neutral'> = {
+const actionVariants: Record<
+    string,
+    'success' | 'warning' | 'info' | 'neutral'
+> = {
     update: 'info',
     bulk_update: 'warning',
     copy: 'neutral',
@@ -33,7 +36,11 @@ const actionVariants: Record<string, 'success' | 'warning' | 'info' | 'neutral'>
     reset: 'neutral',
 };
 
-export function RiwayatTab({ logs, actionFilter, outlets }: {
+export function RiwayatTab({
+    logs,
+    actionFilter,
+    outlets,
+}: {
     logs?: PaginatedLogs;
     actionFilter?: string;
     outlets?: OutletData[];
@@ -41,20 +48,28 @@ export function RiwayatTab({ logs, actionFilter, outlets }: {
     const [outletFilter, setOutletFilter] = useState('');
 
     const handleFilterChange = (key: string) => {
-        router.get('/owner/pricing', {
-            tab: 'riwayat',
-            ...(key ? { action: key } : {}),
-            ...(outletFilter ? { outlet_id: outletFilter } : {}),
-        }, { preserveState: true, replace: true });
+        router.get(
+            '/owner/pricing',
+            {
+                tab: 'riwayat',
+                ...(key ? { action: key } : {}),
+                ...(outletFilter ? { outlet_id: outletFilter } : {}),
+            },
+            { preserveState: true, replace: true },
+        );
     };
 
     const handleOutletChange = (outletId: string) => {
         setOutletFilter(outletId);
-        router.get('/owner/pricing', {
-            tab: 'riwayat',
-            ...(actionFilter ? { action: actionFilter } : {}),
-            ...(outletId ? { outlet_id: outletId } : {}),
-        }, { preserveState: true, replace: true });
+        router.get(
+            '/owner/pricing',
+            {
+                tab: 'riwayat',
+                ...(actionFilter ? { action: actionFilter } : {}),
+                ...(outletId ? { outlet_id: outletId } : {}),
+            },
+            { preserveState: true, replace: true },
+        );
     };
 
     if (!logs) {
@@ -63,13 +78,21 @@ export function RiwayatTab({ logs, actionFilter, outlets }: {
 
     return (
         <div>
-            <div className="mb-4 flex flex-wrap gap-2 overflow-x-auto scrollbar-none" role="group" aria-label="Filter aksi harga">
+            <div
+                className="mb-4 scrollbar-none flex flex-wrap gap-2 overflow-x-auto"
+                role="group"
+                aria-label="Filter aksi harga"
+            >
                 {ACTION_FILTERS.map((f) => (
                     <Button
                         key={f.key}
                         type="button"
                         size="sm"
-                        variant={(actionFilter ?? '') === f.key ? 'secondary' : 'ghost'}
+                        variant={
+                            (actionFilter ?? '') === f.key
+                                ? 'secondary'
+                                : 'ghost'
+                        }
                         onClick={() => handleFilterChange(f.key)}
                     >
                         {f.label}
@@ -86,7 +109,9 @@ export function RiwayatTab({ logs, actionFilter, outlets }: {
                     >
                         <option value="">Semua Outlet</option>
                         {outlets.map((o) => (
-                            <option key={o.id} value={o.id}>{o.name}</option>
+                            <option key={o.id} value={o.id}>
+                                {o.name}
+                            </option>
                         ))}
                     </select>
                 </div>
@@ -97,44 +122,89 @@ export function RiwayatTab({ logs, actionFilter, outlets }: {
                     <EmptyState title="Belum ada riwayat perubahan harga." />
                 ) : (
                     logs.data.map((log) => (
-                        <div key={log.id} className="rounded-xl bg-surface shadow-card p-4 transition-all duration-200">
+                        <div
+                            key={log.id}
+                            className="rounded-xl bg-surface p-4 shadow-card transition-all duration-200"
+                        >
                             <div className="flex items-start justify-between">
                                 <div>
-                                    <div className="text-sm font-bold text-text">{log.product}</div>
+                                    <div className="text-sm font-bold text-text">
+                                        {log.product}
+                                    </div>
                                     <div className="mt-1">
-                                        <StatusBadge variant={actionVariants[log.action] ?? 'neutral'} size="sm">
-                                            {actionLabels[log.action] ?? log.action}
+                                        <StatusBadge
+                                            variant={
+                                                actionVariants[log.action] ??
+                                                'neutral'
+                                            }
+                                            size="sm"
+                                        >
+                                            {actionLabels[log.action] ??
+                                                log.action}
                                         </StatusBadge>
                                     </div>
                                 </div>
-                                <span className="text-sm font-bold tabular-nums text-primary">{formatCurrency(log.new_price)}</span>
+                                <span className="text-sm font-bold text-primary tabular-nums">
+                                    {formatCurrency(log.new_price)}
+                                </span>
                             </div>
                             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
-                                {log.outlet !== 'Global' && <span>{log.outlet}</span>}
-                                {log.outlet !== 'Global' && <span className="text-text-subtle">&middot;</span>}
+                                {log.outlet !== 'Global' && (
+                                    <span>{log.outlet}</span>
+                                )}
+                                {log.outlet !== 'Global' && (
+                                    <span className="text-text-subtle">
+                                        &middot;
+                                    </span>
+                                )}
                                 <span>{formatDate(log.created_at)}</span>
-                                <span className="text-text-subtle">&middot;</span>
+                                <span className="text-text-subtle">
+                                    &middot;
+                                </span>
                                 <span>{log.changed_by}</span>
                                 {log.old_price != null && (
                                     <>
-                                        <span className="text-text-subtle">&middot;</span>
+                                        <span className="text-text-subtle">
+                                            &middot;
+                                        </span>
                                         <span>
-                                            <span className="line-through text-text-muted">{formatCurrency(log.old_price)}</span>
+                                            <span className="text-text-muted line-through">
+                                                {formatCurrency(log.old_price)}
+                                            </span>
                                             {' → '}
-                                            <span className={
-                                                log.new_price > log.old_price
-                                                    ? 'font-semibold text-emerald-600'
-                                                    : log.new_price < log.old_price
-                                                        ? 'font-semibold text-red-600'
-                                                        : ''
-                                            }>
+                                            <span
+                                                className={
+                                                    log.new_price >
+                                                    log.old_price
+                                                        ? 'font-semibold text-emerald-600'
+                                                        : log.new_price <
+                                                            log.old_price
+                                                          ? 'font-semibold text-red-600'
+                                                          : ''
+                                                }
+                                            >
                                                 {formatCurrency(log.new_price)}
                                             </span>
-                                            {log.new_price !== log.old_price && (
-                                                <span className={`ml-1 text-xs font-medium ${
-                                                    log.new_price > log.old_price ? 'text-emerald-600' : 'text-red-600'
-                                                }`}>
-                                                    ({log.new_price > log.old_price ? '+' : ''}{formatCurrency(log.new_price - log.old_price)})
+                                            {log.new_price !==
+                                                log.old_price && (
+                                                <span
+                                                    className={`ml-1 text-xs font-medium ${
+                                                        log.new_price >
+                                                        log.old_price
+                                                            ? 'text-emerald-600'
+                                                            : 'text-red-600'
+                                                    }`}
+                                                >
+                                                    (
+                                                    {log.new_price >
+                                                    log.old_price
+                                                        ? '+'
+                                                        : ''}
+                                                    {formatCurrency(
+                                                        log.new_price -
+                                                            log.old_price,
+                                                    )}
+                                                    )
                                                 </span>
                                             )}
                                         </span>
@@ -146,7 +216,9 @@ export function RiwayatTab({ logs, actionFilter, outlets }: {
                 )}
             </div>
 
-            {logs.links && logs.links.length > 3 && <Pagination links={logs.links} />}
+            {logs.links && logs.links.length > 3 && (
+                <Pagination links={logs.links} />
+            )}
         </div>
     );
 }

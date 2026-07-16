@@ -17,12 +17,17 @@ export function getStockLabel(
     }
 }
 
-export function getStockStatusLabel(status: StockStatus, availableStock?: number): string {
+export function getStockStatusLabel(
+    status: StockStatus,
+    availableStock?: number,
+): string {
     switch (status) {
         case 'out_of_stock':
             return 'Stok Habis';
         case 'low':
-            return availableStock !== undefined ? `Stok Rendah (${availableStock})` : 'Stok Rendah';
+            return availableStock !== undefined
+                ? `Stok Rendah (${availableStock})`
+                : 'Stok Rendah';
         case 'available':
             return 'Sehat';
         default:

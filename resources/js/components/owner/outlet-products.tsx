@@ -1,4 +1,12 @@
-import { MoreHorizontal, Package, Plus, Search, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
+import {
+    MoreHorizontal,
+    Package,
+    Plus,
+    Search,
+    ToggleLeft,
+    ToggleRight,
+    Trash2,
+} from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { formatCurrency } from '@/lib/format';
@@ -26,7 +34,9 @@ export default function OutletProducts({ outletId }: Props) {
     const [products, setProducts] = useState<ProductItem[]>([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
-    const [restockTarget, setRestockTarget] = useState<ProductItem | null>(null);
+    const [restockTarget, setRestockTarget] = useState<ProductItem | null>(
+        null,
+    );
     const [addOpen, setAddOpen] = useState(false);
 
     const fetchProducts = useCallback(async () => {
@@ -36,23 +46,32 @@ export default function OutletProducts({ outletId }: Props) {
             });
 
             if (res.ok) {
-setProducts(await res.json());
-}
-        } catch { /* non-critical */ } finally {
+                setProducts(await res.json());
+            }
+        } catch {
+            /* non-critical */
+        } finally {
             setLoading(false);
         }
     }, [outletId]);
 
     useEffect(() => {
- fetchProducts(); 
-}, [fetchProducts]);
+        fetchProducts();
+    }, [fetchProducts]);
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+    const csrfToken =
+        document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') ?? '';
 
     const apiCall = async (url: string, method: string, body?: any) => {
         const res = await fetch(url, {
             method,
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrfToken },
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': csrfToken,
+            },
             body: body ? JSON.stringify(body) : undefined,
         });
 
@@ -60,33 +79,58 @@ setProducts(await res.json());
     };
 
     const handleToggle = async (variantId: number) => {
-        if (await apiCall(`/owner/outlets/${outletId}/products/${variantId}/toggle`, 'PUT')) {
-            setProducts((prev) => prev.map((p) => p.variant_id === variantId ? { ...p, is_active: !p.is_active } : p));
+        if (
+            await apiCall(
+                `/owner/outlets/${outletId}/products/${variantId}/toggle`,
+                'PUT',
+            )
+        ) {
+            setProducts((prev) =>
+                prev.map((p) =>
+                    p.variant_id === variantId
+                        ? { ...p, is_active: !p.is_active }
+                        : p,
+                ),
+            );
         }
     };
 
     const handleRemove = async (variantId: number) => {
         if (!confirm('Nonaktifkan produk ini dari outlet?')) {
-return;
-}
+            return;
+        }
 
-        if (await apiCall(`/owner/outlets/${outletId}/products/${variantId}`, 'DELETE')) {
-            setProducts((prev) => prev.filter((p) => p.variant_id !== variantId));
+        if (
+            await apiCall(
+                `/owner/outlets/${outletId}/products/${variantId}`,
+                'DELETE',
+            )
+        ) {
+            setProducts((prev) =>
+                prev.filter((p) => p.variant_id !== variantId),
+            );
         }
     };
 
     const filtered = products.filter((p) => {
         if (!search) {
-return true;
-}
+            return true;
+        }
 
         const q = search.toLowerCase();
 
-        return p.name.toLowerCase().includes(q) || p.family_name.toLowerCase().includes(q);
+        return (
+            p.name.toLowerCase().includes(q) ||
+            p.family_name.toLowerCase().includes(q)
+        );
     });
 
     if (loading) {
-        return <div className="py-6 text-center text-xs text-slate-400">Memuat produk...</div>;
+        return (
+            <div className="py-6 text-center text-xs text-slate-400">
+                Memuat produk...
+            </div>
+        );
     }
 
     return (
@@ -117,8 +161,12 @@ return true;
             {products.length === 0 && (
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 py-10 text-center">
                     <Package className="mb-3 h-10 w-10 text-slate-300" />
-                    <div className="text-sm font-semibold text-slate-700">Belum ada produk outlet</div>
-                    <div className="mt-1 text-xs text-slate-500">Tambahkan produk pertama untuk outlet ini.</div>
+                    <div className="text-sm font-semibold text-slate-700">
+                        Belum ada produk outlet
+                    </div>
+                    <div className="mt-1 text-xs text-slate-500">
+                        Tambahkan produk pertama untuk outlet ini.
+                    </div>
                     <button
                         type="button"
                         onClick={() => setAddOpen(true)}
@@ -136,36 +184,62 @@ return true;
                     <table className="w-full text-sm">
                         <thead>
                             <tr className="border-b border-slate-100 bg-slate-50">
-                                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Produk</th>
-                                <th className="px-3 py-2.5 text-left font-medium text-slate-500">Status</th>
-                                <th className="px-3 py-2.5 text-right font-medium text-slate-500">Harga Jual</th>
-                                <th className="px-3 py-2.5 text-right font-medium text-slate-500">Stok</th>
-                                <th className="px-3 py-2.5 text-right font-medium text-slate-500">Aksi</th>
+                                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                                    Produk
+                                </th>
+                                <th className="px-3 py-2.5 text-left font-medium text-slate-500">
+                                    Status
+                                </th>
+                                <th className="px-3 py-2.5 text-right font-medium text-slate-500">
+                                    Harga Jual
+                                </th>
+                                <th className="px-3 py-2.5 text-right font-medium text-slate-500">
+                                    Stok
+                                </th>
+                                <th className="px-3 py-2.5 text-right font-medium text-slate-500">
+                                    Aksi
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.map((p) => (
-                                <tr key={p.variant_id} className="border-b border-slate-50 last:border-0">
+                                <tr
+                                    key={p.variant_id}
+                                    className="border-b border-slate-50 last:border-0"
+                                >
                                     <td className="px-3 py-2.5">
-                                        <div className="font-medium text-slate-900">{p.name}</div>
-                                        <div className="text-xs text-slate-500">{p.family_name}</div>
+                                        <div className="font-medium text-slate-900">
+                                            {p.name}
+                                        </div>
+                                        <div className="text-xs text-slate-500">
+                                            {p.family_name}
+                                        </div>
                                     </td>
                                     <td className="px-3 py-2.5">
                                         <StatusBadge active={p.is_active} />
                                     </td>
-                                    <td className="px-3 py-2.5 text-right tabular-nums text-slate-700">
+                                    <td className="px-3 py-2.5 text-right text-slate-700 tabular-nums">
                                         {formatCurrency(p.selling_price)}
                                     </td>
                                     <td className="px-3 py-2.5 text-right">
-                                        <StockBadge status={p.stock_status} stock={p.available_stock} />
+                                        <StockBadge
+                                            status={p.stock_status}
+                                            stock={p.available_stock}
+                                        />
                                     </td>
                                     <td className="px-3 py-2.5 text-right">
                                         <ActionMenu
                                             variantId={p.variant_id}
                                             isActive={p.is_active}
-                                            onRestock={() => setRestockTarget(p)}
-                                            onToggle={() => handleToggle(p.variant_id)}
-                                            onRemove={() => handleRemove(p.variant_id)}
+                                            onRestock={() =>
+                                                setRestockTarget(p)
+                                            }
+                                            onToggle={() =>
+                                                handleToggle(p.variant_id)
+                                            }
+                                            onRemove={() =>
+                                                handleRemove(p.variant_id)
+                                            }
                                         />
                                     </td>
                                 </tr>
@@ -199,10 +273,18 @@ return true;
 
 function StatusBadge({ active }: { active: boolean }) {
     return (
-        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
-            active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'
-        }`}>
-            {active ? <ToggleRight className="h-3 w-3" /> : <ToggleLeft className="h-3 w-3" />}
+        <span
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold ${
+                active
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-slate-100 text-slate-500'
+            }`}
+        >
+            {active ? (
+                <ToggleRight className="h-3 w-3" />
+            ) : (
+                <ToggleLeft className="h-3 w-3" />
+            )}
             {active ? 'Aktif' : 'Nonaktif'}
         </span>
     );
@@ -224,13 +306,21 @@ function StockBadge({ status, stock }: { status: string; stock: number }) {
     };
 
     return (
-        <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${styles[variant]}`}>
+        <span
+            className={`rounded-full px-2 py-0.5 text-xs font-bold ${styles[variant]}`}
+        >
             {stock} · {statusLabel[status] ?? status}
         </span>
     );
 }
 
-function ActionMenu({ variantId, isActive, onRestock, onToggle, onRemove }: {
+function ActionMenu({
+    variantId,
+    isActive,
+    onRestock,
+    onToggle,
+    onRemove,
+}: {
     variantId: number;
     isActive: boolean;
     onRestock: () => void;
@@ -255,18 +345,21 @@ function ActionMenu({ variantId, isActive, onRestock, onToggle, onRemove }: {
 
     useEffect(() => {
         if (!open) {
-return;
-}
+            return;
+        }
 
         const handler = (e: MouseEvent) => {
-            if (triggerRef.current && !triggerRef.current.contains(e.target as Node)) {
+            if (
+                triggerRef.current &&
+                !triggerRef.current.contains(e.target as Node)
+            ) {
                 setOpen(false);
             }
         };
         const escHandler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-setOpen(false);
-}
+                setOpen(false);
+            }
         };
         document.addEventListener('click', handler);
         document.addEventListener('keydown', escHandler);
@@ -287,42 +380,46 @@ setOpen(false);
             >
                 <MoreHorizontal className="h-4 w-4" />
             </button>
-            {open && createPortal(
-                <div
-                    className="fixed z-[100] min-w-[180px] rounded-lg border border-slate-200 bg-white py-1"
-                    style={{ top: pos.top, right: pos.right }}
-                >
-                    <button
-                        type="button"
-                        onClick={() => {
- onRestock(); setOpen(false); 
-}}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+            {open &&
+                createPortal(
+                    <div
+                        className="fixed z-[100] min-w-[180px] rounded-lg border border-slate-200 bg-white py-1"
+                        style={{ top: pos.top, right: pos.right }}
                     >
-                        Restock
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
- onToggle(); setOpen(false); 
-}}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
-                    >
-                        {isActive ? 'Nonaktifkan' : 'Aktifkan'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
- onRemove(); setOpen(false); 
-}}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
-                    >
-                        <Trash2 className="h-3.5 w-3.5" />
-                        Hapus dari Outlet
-                    </button>
-                </div>,
-                document.body
-            )}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onRestock();
+                                setOpen(false);
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                        >
+                            Restock
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onToggle();
+                                setOpen(false);
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-50"
+                        >
+                            {isActive ? 'Nonaktifkan' : 'Aktifkan'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onRemove();
+                                setOpen(false);
+                            }}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50"
+                        >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Hapus dari Outlet
+                        </button>
+                    </div>,
+                    document.body,
+                )}
         </>
     );
 }
