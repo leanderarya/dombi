@@ -20,6 +20,9 @@ class OutletInventory extends Model
         return [
             'last_restock_at' => 'datetime',
             'is_active' => 'boolean',
+            'current_stock' => 'integer',
+            'reserved_stock' => 'integer',
+            'minimum_stock' => 'integer',
         ];
     }
 

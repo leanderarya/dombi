@@ -168,7 +168,7 @@ class RestockService
                 $after = (int) $variant->fresh()->center_stock;
 
                 StockMovement::create([
-                    'outlet_id' => $request->outlet_id,
+                    'outlet_id' => null,
                     'product_id' => $item->product_id,
                     'product_variant_id' => $item->product_variant_id,
                     'type' => 'distribution_out',
