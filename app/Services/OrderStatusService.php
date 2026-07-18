@@ -58,91 +58,17 @@ class OrderStatusService
         private readonly SettlementGeneratorService $settlementGeneratorService,
     ) {}
 
+    /**
+     * @deprecated Use transition() instead. This method will be removed in Phase 9.
+     */
     public function updateStatus(Order $order, string $status, ?User $actor = null, ?string $reason = null): Order
     {
-        return DB::transaction(function () use ($order, $status, $actor, $reason): Order {
-            $order = Order::query()->lockForUpdate()->with('items')->findOrFail($order->id);
-            $fromStatus = $order->status;
-
-            if (! $this->canTransition($fromStatus, $status)) {
-                throw ValidationException::withMessages([
-                    'status' => "Status order tidak bisa diubah dari {$fromStatus} ke {$status}.",
-                ]);
-            }
-
-            // Fulfillment-aware guard: prevent pickup orders from entering delivery-only statuses
-            if ($order->isPickup() && in_array($status, [
-                Order::STATUS_PICKED_UP,
-                Order::STATUS_DELIVERING,
-            ], true)) {
-                throw ValidationException::withMessages([
-                    'status' => 'Pesanan pickup tidak dapat masuk ke status pengiriman.',
-                ]);
-            }
-
-            if (in_array($status, ['cancelled_by_outlet', 'cancelled_by_customer', 'rejected_by_outlet'], true)) {
-                $this->inventoryService->releaseReservedStock($order);
-            }
-
-            $updateData = ['status' => $status];
-
-            if ($status === 'confirmed') {
-                $updateData['confirmed_at'] = now();
-                $updateData['confirmed_by'] = $actor?->id;
-            }
-
-            if ($status === 'cancelled_by_outlet') {
-                if (! $reason || ! in_array($reason, self::OUTLET_CANCELLATION_REASONS, true)) {
-                    throw ValidationException::withMessages([
-                        'reason' => 'Alasan pembatalan wajib dipilih.',
-                    ]);
-                }
-                $updateData['cancelled_at'] = now();
-                $updateData['cancelled_by'] = $actor?->id;
-                $updateData['cancellation_reason'] = $reason;
-            }
-
-            if ($status === Order::STATUS_COMPLETED) {
-                $updateData['completed_at'] = now();
-            }
-
-            $order->update($updateData);
-
-            $historyData = [
-                'from_status' => $fromStatus,
-                'to_status' => $status,
-                'notes' => $status === 'cancelled_by_outlet'
-                    ? "Order dibatalkan outlet. Alasan: {$reason}"
-                    : $this->statusNote($status, $order),
-                'changed_by' => $actor?->id,
-                'changed_by_type' => $actor?->role ?? 'system',
-                'created_at' => now(),
-            ];
-
-            if ($status === 'cancelled_by_outlet' && $reason) {
-                $historyData['reason'] = $reason;
-            }
-
-            $order->statusHistories()->create($historyData);
-
-            // Fire notifications based on status
-            $this->fireStatusNotifications($order, $fromStatus, $status);
-
-            // Record settlement payable when order is completed
-            if ($status === 'completed') {
-                $this->inventoryService->completeOrderStock($order);
-                $this->settlementService->recordSale($order);
-                // Generate or update weekly settlement for this outlet — use completed_at for correct week
-                if ($order->outlet_id) {
-                    $outlet = Outlet::find($order->outlet_id);
-                    if ($outlet) {
-                        $this->settlementGeneratorService->generateForOutlet($outlet, $order->completed_at ?? now());
-                    }
-                }
-            }
-
-            return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
-        });
+        return $this->transition($order, $status, [
+            'actor_id' => $actor?->id,
+            'actor_type' => $actor?->role ?? 'system',
+            'reason' => $reason,
+            'notes' => $this->statusNote($status, $order),
+        ]);
     }
 
     public function rejectOrder(Order $order, string $reason, ?string $note, User $actor): Order
@@ -368,6 +294,16 @@ class OrderStatusService
      */
     private function handleSideEffects(Order $order, string $from, string $to, array $ctx): void
     {
+        // Re-reserve stock when retrying from failed delivery
+        if ($from === 'failed_delivery' && $to === 'preparing') {
+            $items = $order->items->map(fn ($item) => [
+                'product_variant_id' => $item->product_variant_id,
+                'product_id' => $item->product_id,
+                'quantity' => $item->quantity,
+            ])->all();
+            $this->inventoryService->reserveStock($order->outlet_id, $items, $order);
+        }
+
         // Stock release on cancellation/expiration/rejection
         if (in_array($to, ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired', 'failed_delivery'], true)) {
             $this->inventoryService->releaseReservedStock($order);
