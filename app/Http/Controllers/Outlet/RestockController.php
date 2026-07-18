@@ -93,6 +93,6 @@ class RestockController extends Controller
         $validated = $request->validated();
         $restockService->confirmReceived($restockRequest, $request->user(), $validated['received_notes'] ?? null, $validated['damage_notes'] ?? null);
 
-        return redirect()->back()->with('success', 'Stok diterima dan inventory diperbarui.');
+        return redirect()->route('outlet.inventory')->with('success', 'Stok diterima dan inventory diperbarui.');
     }
 }
