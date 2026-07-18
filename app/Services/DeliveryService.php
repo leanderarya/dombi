@@ -29,8 +29,17 @@ class DeliveryService
             ]);
         }
 
+        if ($order->fulfillment_type === 'delivery_ojol') {
+            throw ValidationException::withMessages([
+                'courier_id' => 'Pesanan delivery Ojol tidak bisa di-assign ke kurir internal.',
+            ]);
+        }
+
         return DB::transaction(function () use ($order, $courier, $assignedBy, $overrideCapacity, $overrideReason): Delivery {
             $order = Order::query()->lockForUpdate()->with('delivery')->findOrFail($order->id);
+
+            // Lock courier row to prevent race condition on capacity check
+            User::query()->where('id', $courier->id)->lockForUpdate()->firstOrFail();
 
             if ($order->status !== 'ready_for_pickup') {
                 throw ValidationException::withMessages([
