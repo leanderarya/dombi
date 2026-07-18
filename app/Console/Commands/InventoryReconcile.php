@@ -109,26 +109,28 @@ class InventoryReconcile extends Command
     {
         $hasMovements = StockMovement::query()
             ->where('product_variant_id', $variantId)
-            ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out', 'stock_adjustment', 'initial_stock'])
+            ->whereNull('outlet_id')
+            ->whereIn('type', ['initial_stock', 'stock_adjustment'])
             ->exists();
 
-        // If no center movements exist, treat stored value as baseline
         if (! $hasMovements) {
-            return null; // null = no check possible
+            return null;
         }
 
-        $movements = StockMovement::query()
+        // Baseline: initial_stock + stock_adjustment where outlet_id IS NULL (center)
+        $baseline = (int) StockMovement::query()
             ->where('product_variant_id', $variantId)
-            ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out', 'stock_adjustment', 'initial_stock'])
-            ->orderBy('id')
-            ->get();
+            ->whereNull('outlet_id')
+            ->whereIn('type', ['initial_stock', 'stock_adjustment'])
+            ->sum('quantity');
 
-        $stock = 0;
-        foreach ($movements as $m) {
-            $stock += (int) $m->quantity;
-        }
+        // Transfers: distribution_out (negative), return_in (+), exchange_out (-) — affect center regardless of outlet_id
+        $transfers = (int) StockMovement::query()
+            ->where('product_variant_id', $variantId)
+            ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out'])
+            ->sum('quantity');
 
-        return max(0, $stock);
+        return max(0, $baseline + $transfers);
     }
 
     private function fixCenterStock(ProductVariant $variant, int $expected): void
