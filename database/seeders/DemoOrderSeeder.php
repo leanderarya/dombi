@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
@@ -14,8 +15,8 @@ class DemoOrderSeeder extends Seeder
 {
     public function run(): void
     {
-        $customer = User::where('role', 'customer')->first();
-        abort_unless($customer, 500, 'No customer user found. Run OutletSeeder first.');
+        $customer = Customer::first();
+        abort_unless($customer, 500, 'No customer found. Run OutletSeeder first.');
 
         $outlets = Outlet::whereIn('id', [1, 2])->get();
         abort_if($outlets->isEmpty(), 500, 'No outlets found. Run OutletSeeder first.');
