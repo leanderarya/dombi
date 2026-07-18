@@ -23,6 +23,7 @@ export default function OutletInventory({
     outlet,
     inventories,
     families,
+    centerStocks = {},
 }: any) {
     const [showRestock, setShowRestock] = useState(false);
     const [search, setSearch] = useState('');
@@ -380,8 +381,24 @@ function InventoryRow({ item, compact }: { item: any; compact?: boolean }) {
                                   : 'Sehat'}
                         </StatusBadge>
                     </div>
-                    <div className="mt-0.5 text-[11px] text-text-subtle">
-                        Tersedia: {available} · Min: {item.minimum_stock}
+                    <div className="mt-0.5 flex items-center gap-2 text-[11px] text-text-subtle">
+                        <span>
+                            Tersedia: {available} · Min: {item.minimum_stock}
+                        </span>
+                        {centerStocks[item.product_variant_id] !==
+                            undefined && (
+                            <span
+                                className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                                    (centerStocks[item.product_variant_id] ??
+                                        0) <= 0
+                                        ? 'bg-red-50 text-red-600'
+                                        : 'bg-surface-muted text-text-muted'
+                                }`}
+                            >
+                                Pusat:{' '}
+                                {centerStocks[item.product_variant_id] ?? 0}
+                            </span>
+                        )}
                     </div>
                 </div>
                 <button

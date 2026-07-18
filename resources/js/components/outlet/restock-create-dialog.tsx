@@ -36,7 +36,8 @@ export default function RestockCreateDialog({
     onClose,
 }: Props) {
     const form = useForm({
-        items: [{ variant_id: '', quantity: 1, notes: '' }],
+        items: [{ product_variant_id: '', requested_quantity: 1 }],
+        notes: '',
     });
 
     // Build options from families → variants
@@ -69,8 +70,13 @@ export default function RestockCreateDialog({
         return null;
     }
 
-    const selectedCount = form.data.items.filter((i) => i.variant_id).length;
-    const totalQty = form.data.items.reduce((sum, i) => sum + i.quantity, 0);
+    const selectedCount = form.data.items.filter(
+        (i: any) => i.product_variant_id,
+    ).length;
+    const totalQty = form.data.items.reduce(
+        (sum: number, i: any) => sum + (i.requested_quantity ?? 0),
+        0,
+    );
 
     return createPortal(
         <div
@@ -105,9 +111,9 @@ export default function RestockCreateDialog({
                         <CustomSelect
                             label="Produk"
                             options={variantOptions}
-                            value={form.data.items[0]?.variant_id ?? ''}
+                            value={form.data.items[0]?.product_variant_id ?? ''}
                             onChange={(v: string) =>
-                                updateItem(0, 'variant_id', v)
+                                updateItem(0, 'product_variant_id', v)
                             }
                             placeholder="Pilih produk"
                             searchable
@@ -123,12 +129,13 @@ export default function RestockCreateDialog({
                                     type="button"
                                     onClick={() => {
                                         const current =
-                                            form.data.items[0]?.quantity ?? 1;
+                                            form.data.items[0]
+                                                ?.requested_quantity ?? 1;
 
                                         if (current > 1) {
                                             updateItem(
                                                 0,
-                                                'quantity',
+                                                'requested_quantity',
                                                 current - 1,
                                             );
                                         }
@@ -140,11 +147,14 @@ export default function RestockCreateDialog({
                                 <input
                                     type="number"
                                     min="1"
-                                    value={form.data.items[0]?.quantity ?? 1}
+                                    value={
+                                        form.data.items[0]
+                                            ?.requested_quantity ?? 1
+                                    }
                                     onChange={(e) =>
                                         updateItem(
                                             0,
-                                            'quantity',
+                                            'requested_quantity',
                                             Math.max(
                                                 1,
                                                 parseInt(e.target.value) || 1,
@@ -157,8 +167,13 @@ export default function RestockCreateDialog({
                                     type="button"
                                     onClick={() => {
                                         const current =
-                                            form.data.items[0]?.quantity ?? 1;
-                                        updateItem(0, 'quantity', current + 1);
+                                            form.data.items[0]
+                                                ?.requested_quantity ?? 1;
+                                        updateItem(
+                                            0,
+                                            'requested_quantity',
+                                            current + 1,
+                                        );
                                     }}
                                     className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-text-muted transition-colors hover:bg-surface-muted"
                                 >
@@ -175,9 +190,9 @@ export default function RestockCreateDialog({
                                 <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
                             </summary>
                             <textarea
-                                value={form.data.items[0]?.notes ?? ''}
+                                value={(form.data as any).notes ?? ''}
                                 onChange={(e) =>
-                                    updateItem(0, 'notes', e.target.value)
+                                    form.setData('notes' as any, e.target.value)
                                 }
                                 placeholder="Catatan opsional"
                                 rows={2}

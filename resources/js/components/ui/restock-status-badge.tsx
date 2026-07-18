@@ -6,6 +6,8 @@ const styles: Record<string, string> = {
     preparing: 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/10',
     shipped: 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-600/10',
     completed: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-600/10',
+    cancelled: 'bg-slate-50 text-slate-600 ring-1 ring-inset ring-slate-600/10',
+    approved: 'bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/10',
 };
 
 export default function RestockStatusBadge({ status }: { status: string }) {

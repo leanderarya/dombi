@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\OutletInventory;
 use App\Models\ProductFamily;
+use App\Models\ProductVariant;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,8 @@ class InventoryController extends Controller
             ->orderBy('name')
             ->get();
 
+        $centerStocks = ProductVariant::pluck('center_stock', 'id');
+
         return Inertia::render('outlet/inventory', [
             'outlet' => $outlet,
             'inventories' => OutletInventory::with(['variant.family', 'product'])
@@ -30,6 +33,7 @@ class InventoryController extends Controller
                 ->orderBy('product_variant_id')
                 ->get(),
             'families' => $families,
+            'centerStocks' => $centerStocks,
         ]);
     }
 

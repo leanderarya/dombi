@@ -79,9 +79,10 @@ function buildProductGroups(outletSections: any[]) {
             entry.outlets.push(enriched);
 
             const stock = item.current_stock ?? 0;
+            const available = stock - (item.reserved_stock ?? 0);
             entry.totalStock += stock;
-            if (stock <= 2) entry.criticalCount++;
-            else if (stock <= (item.minimum_stock ?? 0)) entry.lowCount++;
+            if (available <= 0) entry.criticalCount++;
+            else if (available <= (item.minimum_stock ?? 0)) entry.lowCount++;
             else entry.healthyCount++;
 
             map.set(variantId, entry);
