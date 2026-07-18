@@ -32,7 +32,7 @@ class AssignCourierRequest extends FormRequest
         return [
             'courier_id' => [
                 'required',
-                Rule::exists('users', 'id')->where('role', 'courier')->where('is_active', true),
+                Rule::exists('users', 'id')->where('role', 'courier')->where('is_active', true)->where('is_online', true),
             ],
         ];
     }
