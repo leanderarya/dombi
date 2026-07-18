@@ -5,7 +5,6 @@ import {
     QrCode,
     Box,
     Truck,
-    PackagePlus,
     ShoppingBag,
     BarChart3,
     FileText,
@@ -72,12 +71,6 @@ const navGroups: NavGroup[] = [
                 label: 'Pengiriman',
                 icon: <Truck className="h-5 w-5" />,
                 badgeKey: 'deliveries',
-            },
-            {
-                href: '/outlet/restocks',
-                label: 'Restock',
-                icon: <PackagePlus className="h-5 w-5" />,
-                badgeKey: 'restocks',
             },
             {
                 href: '/outlet/offline-sales',
