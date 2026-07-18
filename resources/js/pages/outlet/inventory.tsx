@@ -16,6 +16,7 @@ import BottomSheet from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
+import RestockStatusBadge from '@/components/ui/restock-status-badge';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
@@ -189,7 +190,7 @@ export default function OutletInventory({
                         <div className="space-y-2">
                             {filteredCriticalFamilies.map(
                                 ([familyId, group]) => (
-                                    <FamilyGroup key={familyId} group={group} centerStocks={centerStocks} />
+                                    <FamilyGroup key={familyId} group={group} centerStocks={centerStocks} activeRestocks={activeRestocks} onDetail={() => {}} />
                                 ),
                             )}
                         </div>
@@ -211,7 +212,7 @@ export default function OutletInventory({
                         <div className="space-y-2">
                             {filteredLowStockFamilies.map(
                                 ([familyId, group]) => (
-                                    <FamilyGroup key={familyId} group={group} centerStocks={centerStocks} />
+                                    <FamilyGroup key={familyId} group={group} centerStocks={centerStocks} activeRestocks={activeRestocks} onDetail={() => {}} />
                                 ),
                             )}
                         </div>
@@ -249,6 +250,8 @@ export default function OutletInventory({
                                             key={familyId}
                                             group={group}
                                             centerStocks={centerStocks}
+                                            activeRestocks={activeRestocks}
+                                            onDetail={() => {}}
                                         />
                                     ),
                                 )}
@@ -265,7 +268,7 @@ export default function OutletInventory({
                         </h2>
                         <div className="space-y-2">
                             {filteredNoFamilyItems.map((item: any) => (
-                                <InventoryRow key={item.id} item={item} centerStocks={centerStocks} />
+                                <InventoryRow key={item.id} item={item} centerStocks={centerStocks} activeRestock={activeRestocks[item.product_variant_id]} onDetail={() => {}} />
                             ))}
                         </div>
                     </div>
@@ -305,7 +308,7 @@ export default function OutletInventory({
     );
 }
 
-function FamilyGroup({ group, centerStocks = {} }: { group: { family: any; items: any[] }; centerStocks?: Record<string | number, number> }) {
+function FamilyGroup({ group, centerStocks = {}, activeRestocks = {}, onDetail }: { group: { family: any; items: any[] }; centerStocks?: Record<string | number, number>; activeRestocks?: Record<string | number, any>; onDetail?: (item: any) => void }) {
     return (
         <div className="overflow-hidden rounded-xl border border-border bg-white">
             <div className="border-b border-border bg-surface-muted px-4 py-2">
@@ -315,7 +318,7 @@ function FamilyGroup({ group, centerStocks = {} }: { group: { family: any; items
             </div>
             <div className="divide-y divide-border">
                 {group.items.map((item: any) => (
-                    <InventoryRow key={item.id} item={item} compact centerStocks={centerStocks} />
+                    <InventoryRow key={item.id} item={item} compact centerStocks={centerStocks} activeRestock={activeRestocks[item.product_variant_id]} onDetail={onDetail} />
                 ))}
             </div>
         </div>
@@ -360,7 +363,7 @@ function SummaryCell({
     );
 }
 
-function InventoryRow({ item, compact, centerStocks = {} }: { item: any; compact?: boolean; centerStocks?: Record<string | number, number> }) {
+function InventoryRow({ item, compact, centerStocks = {}, activeRestock, onDetail }: { item: any; compact?: boolean; centerStocks?: Record<string | number, number>; activeRestock?: any; onDetail?: (item: any) => void }) {
     const [showOpname, setShowOpname] = useState(false);
     const available = item.current_stock - item.reserved_stock;
     const displayName = item.variant?.name ?? item.product?.name ?? '-';
@@ -400,6 +403,12 @@ function InventoryRow({ item, compact, centerStocks = {} }: { item: any; compact
                             >
                                 Pusat:{' '}
                                 {centerStocks[item.product_variant_id] ?? 0}
+                            </span>
+                        )}
+                        {activeRestock && (
+                            <span className="flex items-center gap-1">
+                                <RestockStatusBadge status={activeRestock.status} />
+                                <span className="text-[10px] text-text-subtle">· {activeRestock.requested_qty} pcs</span>
                             </span>
                         )}
                     </div>
