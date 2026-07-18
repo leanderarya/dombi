@@ -182,6 +182,26 @@ class RestockService
                     'notes' => 'Distribution shipped to outlet',
                     'created_by' => $owner->id,
                 ]);
+
+                $outletInventory = OutletInventory::query()
+                    ->where('outlet_id', $request->outlet_id)
+                    ->where('product_variant_id', $item->product_variant_id)
+                    ->first();
+
+                StockMovement::create([
+                    'outlet_id' => $request->outlet_id,
+                    'product_variant_id' => $item->product_variant_id,
+                    'type' => 'in_transit',
+                    'quantity' => $quantity,
+                    'before_stock' => $outletInventory?->current_stock ?? 0,
+                    'after_stock' => $outletInventory?->current_stock ?? 0,
+                    'before_reserved' => 0,
+                    'after_reserved' => 0,
+                    'reference_type' => RestockRequest::class,
+                    'reference_id' => $request->id,
+                    'notes' => 'In transit from center',
+                    'created_by' => $owner->id,
+                ]);
             }
 
             $request->update([
