@@ -22,5 +22,8 @@ class DatabaseSeeder extends Seeder
 
         // 5. Outlet inventory + stock movements
         $this->call(OutletInventorySeeder::class);
+
+        // 6. Payment accounts for settlement
+        $this->call(PaymentAccountSeeder::class);
     }
 }

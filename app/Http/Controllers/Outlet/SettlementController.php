@@ -93,7 +93,13 @@ class SettlementController extends Controller
             ->latest('payment_date')
             ->first();
 
-        // Summary
+        // Units sold from completed orders in period
+        $unitsSold = 0;
+        if ($orderIds->isNotEmpty()) {
+            $unitsSold = (int) OrderItem::whereIn('order_id', $orderIds)->sum('quantity');
+        }
+
+        // Summary (no dead fields)
         $summary = [
             'gross_revenue' => $totalSales + $totalDeliveryFee,
             'sales_amount' => $totalSales,
@@ -102,9 +108,8 @@ class SettlementController extends Controller
             'outlet_margin' => (float) $outletMargin,
             'settled_amount' => $totalPaid,
             'outstanding_amount' => $totalOutstanding,
-            'units_sold' => 0,
+            'units_sold' => $unitsSold,
             'orders_count' => $orderIds->count(),
-            'top_products' => [],
         ];
 
         $reconciliation = [
@@ -121,22 +126,35 @@ class SettlementController extends Controller
             ] : null,
         ];
 
-        // Weekly settlement timeline
-        $timeline = $settlements->map(fn ($s) => [
-            'id' => $s->id,
-            'type' => 'settlement',
-            'amount' => (float) $s->amount_due,
-            'center_share' => (float) $s->amount_due,
-            'outlet_margin' => 0,
-            'period_label' => $s->period_label,
-            'period_start' => $s->period_start->toDateString(),
-            'period_end' => $s->period_end->toDateString(),
-            'due_date' => $s->due_date->toDateString(),
-            'status' => $s->status,
-            'outstanding' => (float) $s->outstanding_amount,
-            'notes' => "Settlement {$s->period_label}",
-            'created_at' => $s->created_at->toISOString(),
-        ]);
+        // Weekly settlement timeline with per-period margin
+        $timeline = $settlements->map(function ($s) use ($outlet) {
+            // Margin for this specific week
+            $weekOrderIds = Order::where('outlet_id', $outlet->id)
+                ->where('status', 'completed')
+                ->whereDate('completed_at', '>=', $s->period_start->toDateString())
+                ->whereDate('completed_at', '<=', $s->period_end->toDateString())
+                ->pluck('id');
+
+            $weekMargin = $weekOrderIds->isNotEmpty()
+                ? (float) OrderItem::whereIn('order_id', $weekOrderIds)->sum(DB::raw('outlet_margin_snapshot * quantity'))
+                : 0;
+
+            return [
+                'id' => $s->id,
+                'type' => 'settlement',
+                'amount' => (float) $s->amount_due,
+                'center_share' => (float) $s->amount_due,
+                'outlet_margin' => $weekMargin,
+                'period_label' => $s->period_label,
+                'period_start' => $s->period_start->toDateString(),
+                'period_end' => $s->period_end->toDateString(),
+                'due_date' => $s->due_date->toDateString(),
+                'status' => $s->status,
+                'outstanding' => (float) $s->outstanding_amount,
+                'notes' => "Settlement {$s->period_label}",
+                'created_at' => $s->created_at->toISOString(),
+            ];
+        });
 
         return Inertia::render('outlet/settlement', [
             'summary' => $summary,
@@ -158,6 +176,7 @@ class SettlementController extends Controller
         return match ($period) {
             'all' => [null, null],
             'month' => [now()->startOfMonth(), now()->endOfMonth()],
+            'week' => [now()->startOfWeek(), now()->endOfWeek()],
             'custom' => [
                 Carbon::parse($request->string('from', now()->startOfMonth()->toDateString())),
                 Carbon::parse($request->string('to', now()->toDateString()))->endOfDay(),

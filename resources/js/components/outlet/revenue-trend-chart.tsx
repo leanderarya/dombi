@@ -109,7 +109,11 @@ export default function RevenueTrendChart({ data }: RevenueTrendChartProps) {
                     axisLine={false}
                     width={45}
                 />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip
+                    content={<ChartTooltip />}
+                    trigger="click"
+                    cursor={{ stroke: '#059669', strokeDasharray: '3 3' }}
+                />
                 <Area
                     type="monotone"
                     dataKey="revenue"

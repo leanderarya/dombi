@@ -147,7 +147,10 @@ export default function OutletAnalytics({
                     <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                         Produk Terlaris
                     </div>
-                    <div className="w-full" style={{ height: 220 }}>
+                    <div
+                        className="w-full [&_*:focus]:outline-none"
+                        style={{ height: 220 }}
+                    >
                         <TopProductsChart data={topProducts} />
                     </div>
                 </div>
@@ -156,7 +159,10 @@ export default function OutletAnalytics({
                     <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                         Trend Revenue
                     </div>
-                    <div className="w-full" style={{ height: 220 }}>
+                    <div
+                        className="w-full [&_*:focus]:outline-none"
+                        style={{ height: 220 }}
+                    >
                         <RevenueTrendChart data={dailyRevenue} />
                     </div>
                 </div>
