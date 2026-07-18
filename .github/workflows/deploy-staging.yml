@@ -93,7 +93,8 @@ jobs:
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
-            php artisan storage:link --force || true
+            # Storage link (ln -sf because exec() disabled on shared hosting)
+            ln -sf storage/app/public public/storage
 
             # Permissions
             chmod -R 755 storage/ bootstrap/cache/

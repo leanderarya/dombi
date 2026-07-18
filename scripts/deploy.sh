@@ -22,8 +22,8 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Storage link
-php artisan storage:link --force 2>/dev/null || true
+# Storage link (ln -sf because exec() disabled on shared hosting)
+ln -sf storage/app/public public/storage
 
 # Restart queue workers
 php artisan queue:restart 2>/dev/null || true
