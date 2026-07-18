@@ -1,0 +1,133 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: |
+          composer install --optimize-autoloader --no-dev --no-interaction
+          npm ci
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Prepare deploy artifact
+        run: |
+          tar czf deploy.tar.gz \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.github' \
+            --exclude='tests' \
+            --exclude='docs' \
+            --exclude='.env' \
+            --exclude='.env.example' \
+            --exclude='.env.staging.example' \
+            --exclude='.env.production.example' \
+            --exclude='deploy.tar.gz' \
+            .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build
+          path: deploy.tar.gz
+          retention-days: 3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-build
+
+      - name: Upload to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_USERNAME }}
+          password: ${{ secrets.HOSTINGER_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          source: "deploy.tar.gz"
+          target: "${{ secrets.HOSTINGER_PRODUCTION_PATH }}/deploy.tar.gz"
+
+      - name: Extract and deploy on server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_USERNAME }}
+          password: ${{ secrets.HOSTINGER_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_PORT }}
+          script: |
+            set -e
+
+            DEPLOY_DIR="${{ secrets.HOSTINGER_PRODUCTION_PATH }}"
+            BACKUP_DIR="/home/${{ secrets.HOSTINGER_USERNAME }}/backups/prod_$(date +%Y%m%d_%H%M%S)"
+
+            # Backup current .env and storage
+            mkdir -p "$BACKUP_DIR"
+            cp "$DEPLOY_DIR/.env" "$BACKUP_DIR/.env" 2>/dev/null || true
+            cp -r "$DEPLOY_DIR/storage/app" "$BACKUP_DIR/storage_app" 2>/dev/null || true
+
+            # Maintenance mode
+            cd "$DEPLOY_DIR" && php artisan down --render='errors::503' 2>/dev/null || true
+
+            # Extract new code (preserving .env and storage)
+            cd "$DEPLOY_DIR"
+            tar xzf deploy.tar.gz --overwrite
+            rm -f deploy.tar.gz
+
+            # Restore .env
+            cp "$BACKUP_DIR/.env" "$DEPLOY_DIR/.env" 2>/dev/null || true
+
+            # Install dependencies
+            composer install --optimize-autoloader --no-dev --no-interaction
+
+            # Database migrations
+            php artisan migrate --force
+
+            # Cache optimization
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:cache
+
+            # Storage link
+            php artisan storage:link --force || true
+
+            # Restart queue
+            php artisan queue:restart 2>/dev/null || true
+
+            # Fix permissions
+            chmod -R 755 storage/ bootstrap/cache/
+
+            # Disable maintenance mode
+            php artisan up
+
+            echo "=== Production deploy complete ==="
