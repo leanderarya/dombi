@@ -87,7 +87,10 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
     });
     const rejectForm = useForm({ rejected_reason: '' });
     const inventoryByProduct = new Map(
-        (inventories ?? []).map((item: any) => [item.product_id, item]),
+        (inventories ?? []).map((item: any) => [
+            item.product_variant_id ?? item.product_id,
+            item,
+        ]),
     );
     const timeline = restock ? buildTimeline(restock) : [];
     const statusCfg = STATUS_CONFIG[restock?.status] ?? STATUS_CONFIG.requested;

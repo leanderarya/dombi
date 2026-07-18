@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+/**
+ * @deprecated Use ProductFamily & ProductVariant instead. This model is kept for legacy
+ * data compatibility and will be removed in Phase 9. New code must use product_variant_id.
+ */
 class Product extends Model
 {
     use HasFactory, SoftDeletes;

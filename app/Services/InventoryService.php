@@ -385,6 +385,12 @@ class InventoryService
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            if ($actualCount < $inventory->reserved_stock) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'actual_count' => "Stok aktual ({$actualCount}) tidak boleh kurang dari stok dipesan ({$inventory->reserved_stock}).",
+                ]);
+            }
+
             $before = $inventory->current_stock;
             $inventory->update(['current_stock' => $actualCount]);
 
@@ -400,6 +406,10 @@ class InventoryService
                 'notes' => $notes ?? "Stock opname: {$before} → {$actualCount}",
                 'created_by' => Auth::id(),
             ]);
+
+            // Notify low stock after opname if applicable
+            $inventory->refresh();
+            $this->checkAndNotifyLowStock($outletId, $inventory, $variantId);
         });
     }
 

@@ -16,8 +16,8 @@ class ApproveRestockRequest extends FormRequest
         return [
             'items' => ['required', 'array', 'min:1'],
             'items.*.restock_request_item_id' => ['required', 'integer', 'exists:restock_request_items,id'],
-            'items.*.approved_quantity' => ['required', 'integer', 'min:0'],
-            'owner_notes' => ['nullable', 'string'],
+            'items.*.approved_quantity' => ['required', 'integer', 'min:0', 'max:100000'],
+            'owner_notes' => ['nullable', 'string', 'max:500'],
         ];
     }
 

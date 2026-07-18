@@ -320,7 +320,9 @@ export default function CentralStockTab({
                                 router.patch(
                                     `/owner/inventories/central-stock/${editModal.id}`,
                                     {
-                                        center_stock: parseInt(newStock),
+                                        center_stock: isNaN(parseInt(newStock))
+                                            ? editModal?.center_stock
+                                            : parseInt(newStock),
                                         reason: reason || undefined,
                                     },
                                     {

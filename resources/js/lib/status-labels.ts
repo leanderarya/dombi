@@ -48,6 +48,7 @@ const DELIVERY_STATUSES: Record<string, StatusConfig> = {
 };
 
 // ─── RESTOCK STATUSES ──────────────────────────────────────────
+// Note: 'approved' legacy — now maps to 'preparing'. Keep for backwards compat.
 
 const RESTOCK_STATUSES: Record<string, StatusConfig> = {
     requested: { label: 'Diminta', variant: 'warning' },
@@ -57,6 +58,7 @@ const RESTOCK_STATUSES: Record<string, StatusConfig> = {
     received: { label: 'Diterima', variant: 'success' },
     rejected: { label: 'Ditolak', variant: 'danger' },
     completed: { label: 'Selesai', variant: 'success' },
+    cancelled: { label: 'Dibatalkan', variant: 'neutral' },
 };
 
 // ─── DISTRIBUTION STATUSES ─────────────────────────────────────

@@ -109,7 +109,7 @@ class InventoryReconcile extends Command
     {
         $hasMovements = StockMovement::query()
             ->where('product_variant_id', $variantId)
-            ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out'])
+            ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out', 'stock_adjustment', 'initial_stock'])
             ->exists();
 
         // If no center movements exist, treat stored value as baseline
@@ -119,7 +119,7 @@ class InventoryReconcile extends Command
 
         $movements = StockMovement::query()
             ->where('product_variant_id', $variantId)
-            ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out'])
+            ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out', 'stock_adjustment', 'initial_stock'])
             ->orderBy('id')
             ->get();
 
@@ -228,6 +228,7 @@ class InventoryReconcile extends Command
             ->whereIn('type', [
                 'initial_stock',
                 'stock_adjustment',
+                'stock_opname',
                 'restock_in',
                 'order_completed',
                 'return_out',
