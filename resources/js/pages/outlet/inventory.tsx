@@ -30,6 +30,7 @@ export default function OutletInventory({
 }: any) {
     const [showRestock, setShowRestock] = useState(false);
     const [search, setSearch] = useState('');
+    const [detailItem, setDetailItem] = useState<any>(null);
     const familyGroups = new Map<number, { family: any; items: any[] }>();
     const noFamilyItems: any[] = [];
 
@@ -190,7 +191,13 @@ export default function OutletInventory({
                         <div className="space-y-2">
                             {filteredCriticalFamilies.map(
                                 ([familyId, group]) => (
-                                    <FamilyGroup key={familyId} group={group} centerStocks={centerStocks} activeRestocks={activeRestocks} onDetail={() => {}} />
+                                    <FamilyGroup
+                                        key={familyId}
+                                        group={group}
+                                        centerStocks={centerStocks}
+                                        activeRestocks={activeRestocks}
+                                        onDetail={setDetailItem}
+                                    />
                                 ),
                             )}
                         </div>
@@ -212,7 +219,13 @@ export default function OutletInventory({
                         <div className="space-y-2">
                             {filteredLowStockFamilies.map(
                                 ([familyId, group]) => (
-                                    <FamilyGroup key={familyId} group={group} centerStocks={centerStocks} activeRestocks={activeRestocks} onDetail={() => {}} />
+                                    <FamilyGroup
+                                        key={familyId}
+                                        group={group}
+                                        centerStocks={centerStocks}
+                                        activeRestocks={activeRestocks}
+                                        onDetail={setDetailItem}
+                                    />
                                 ),
                             )}
                         </div>
@@ -251,7 +264,7 @@ export default function OutletInventory({
                                             group={group}
                                             centerStocks={centerStocks}
                                             activeRestocks={activeRestocks}
-                                            onDetail={() => {}}
+                                            onDetail={setDetailItem}
                                         />
                                     ),
                                 )}
@@ -268,7 +281,17 @@ export default function OutletInventory({
                         </h2>
                         <div className="space-y-2">
                             {filteredNoFamilyItems.map((item: any) => (
-                                <InventoryRow key={item.id} item={item} centerStocks={centerStocks} activeRestock={activeRestocks[item.product_variant_id]} onDetail={() => {}} />
+                                <InventoryRow
+                                    key={item.id}
+                                    item={item}
+                                    centerStocks={centerStocks}
+                                    activeRestock={
+                                        activeRestocks[
+                                            item.product_variant_id
+                                        ]
+                                    }
+                                    onDetail={setDetailItem}
+                                />
                             ))}
                         </div>
                     </div>
@@ -304,7 +327,120 @@ export default function OutletInventory({
                 families={families}
                 inventories={inventories}
             />
+
+            <VariantDetailSheet
+                item={detailItem}
+                centerStocks={centerStocks}
+                activeRestocks={activeRestocks}
+                recentRestocks={recentRestocks}
+                open={!!detailItem}
+                onClose={() => setDetailItem(null)}
+            />
         </OutletLayout>
+    );
+}
+
+function VariantDetailSheet({
+    item,
+    centerStocks,
+    activeRestocks,
+    recentRestocks,
+    open,
+    onClose,
+}: {
+    item: any;
+    centerStocks: any;
+    activeRestocks: any;
+    recentRestocks: any[];
+    open: boolean;
+    onClose: () => void;
+}) {
+    if (!item) return null;
+    const available = item.current_stock - item.reserved_stock;
+    const center = centerStocks[item.product_variant_id] ?? 0;
+    const active = activeRestocks[item.product_variant_id];
+    const history = recentRestocks
+        .filter((r: any) =>
+            r.items?.some(
+                (i: any) => i.product_variant_id === item.product_variant_id,
+            ),
+        )
+        .slice(0, 3);
+    return (
+        <BottomSheet
+            open={open}
+            onClose={onClose}
+            title={item.variant?.name ?? 'Detail Stok'}
+        >
+            <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-lg bg-surface-muted p-3 text-center">
+                        <div className="text-lg font-bold">
+                            {item.current_stock}
+                        </div>
+                        <div className="text-[10px] text-text-subtle">
+                            Current
+                        </div>
+                    </div>
+                    <div className="rounded-lg bg-surface-muted p-3 text-center">
+                        <div className="text-lg font-bold">{available}</div>
+                        <div className="text-[10px] text-text-subtle">
+                            Tersedia
+                        </div>
+                    </div>
+                    <div className="rounded-lg bg-surface-muted p-3 text-center">
+                        <div className="text-lg font-bold">{center}</div>
+                        <div className="text-[10px] text-text-subtle">
+                            Pusat
+                        </div>
+                    </div>
+                </div>
+                {active && (
+                    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                        <div className="text-xs font-semibold">
+                            Restock Aktif
+                        </div>
+                        <div className="mt-1 flex items-center gap-2">
+                            <RestockStatusBadge status={active.status} />
+                            <span className="text-xs">
+                                {active.requested_qty} pcs ·{' '}
+                                {new Date(active.created_at).toLocaleDateString(
+                                    'id-ID',
+                                )}
+                            </span>
+                        </div>
+                    </div>
+                )}
+                <div>
+                    <div className="mb-2 text-xs font-semibold">
+                        Riwayat Restock Variant
+                    </div>
+                    {history.length === 0 ? (
+                        <p className="text-xs text-text-muted">
+                            Belum ada riwayat
+                        </p>
+                    ) : (
+                        <div className="space-y-2">
+                            {history.map((r: any) => (
+                                <div
+                                    key={r.id}
+                                    className="flex items-center justify-between rounded-lg border border-border p-2 text-xs"
+                                >
+                                    <span>
+                                        #{r.id} · {r.status}
+                                    </span>
+                                    <span className="text-text-subtle">
+                                        {new Date(
+                                            r.created_at,
+                                        ).toLocaleDateString('id-ID')}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </BottomSheet>
     );
 }
 
@@ -372,7 +508,8 @@ function InventoryRow({ item, compact, centerStocks = {}, activeRestock, onDetai
     return (
         <>
             <div
-                className={`group flex items-center justify-between ${compact ? 'px-4 py-2.5' : 'rounded-xl border border-border bg-white p-3'} transition-all hover:bg-surface-muted`}
+                onClick={() => onDetail?.(item)}
+                className={`group flex cursor-pointer items-center justify-between ${compact ? 'px-4 py-2.5' : 'rounded-xl border border-border bg-white p-3'} transition-all hover:bg-surface-muted`}
             >
                 <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
@@ -415,7 +552,10 @@ function InventoryRow({ item, compact, centerStocks = {}, activeRestock, onDetai
                 </div>
                 <button
                     type="button"
-                    onClick={() => setShowOpname(true)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowOpname(true);
+                    }}
                     className="ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-text-subtle transition-colors active:bg-surface-muted active:text-primary"
                     title="Stock Opname"
                 >
