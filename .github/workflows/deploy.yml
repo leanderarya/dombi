@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           port: 21
-          server-dir: /domains/app.dombicenter.com/
+          server-dir: /domains/dombicenter.com/public_html/app/
           exclude: |
             **/.git*
             **/.git*/**
