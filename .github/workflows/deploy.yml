@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -29,9 +29,9 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - name: Install & Build
+      - name: Install dependencies & Build
         run: |
-          composer install --optimize-autoloader --no-dev --no-interaction
+          composer install --no-dev --no-interaction --optimize-autoloader
           npm ci
           npm run build
 
@@ -47,6 +47,7 @@ jobs:
             **/.git*
             **/.git*/**
             **/node_modules/**
+            **/vendor/**
             **/tests/**
             **/docs/**
             **/.env
@@ -62,6 +63,7 @@ jobs:
             **/.phpunit.cache/**
             **/storage/logs/**
             **/storage/framework/sessions/**
+            **/storage/framework/cache/**
             **/storage/framework/views/**
             .editorconfig
             .eslintrc.cjs
@@ -76,3 +78,7 @@ jobs:
             README.md
             DESIGN.md
             STITCH_PROMPTS.md
+            skills-lock.json
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
+            package-lock.json
