@@ -24,6 +24,8 @@ export default function OutletInventory({
     inventories,
     families,
     centerStocks = {},
+    activeRestocks = {} as Record<string | number, any>,
+    recentRestocks = [] as any[],
 }: any) {
     const [showRestock, setShowRestock] = useState(false);
     const [search, setSearch] = useState('');
