@@ -18,7 +18,7 @@ class SettlementSendReminders extends Command
         $tomorrow = Carbon::tomorrow();
 
         $settlements = Settlement::query()
-            ->where('due_date', $tomorrow)
+            ->whereIn('due_date', [Carbon::today(), $tomorrow])
             ->whereNotIn('status', [Settlement::STATUS_PAID])
             ->where(function ($query) {
                 $query->whereNull('last_invoice_sent_at')

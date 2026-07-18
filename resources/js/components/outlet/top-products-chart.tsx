@@ -74,7 +74,11 @@ export default function TopProductsChart({ data }: TopProductsChartProps) {
                     axisLine={false}
                     width={130}
                 />
-                <Tooltip content={<ChartTooltip />} />
+                <Tooltip
+                    content={<ChartTooltip />}
+                    trigger="click"
+                    cursor={{ fill: '#059669', fillOpacity: 0.08 }}
+                />
                 <Bar
                     dataKey="total_qty"
                     fill="#059669"

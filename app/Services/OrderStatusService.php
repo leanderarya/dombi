@@ -132,11 +132,11 @@ class OrderStatusService
             if ($status === 'completed') {
                 $this->inventoryService->completeOrderStock($order);
                 $this->settlementService->recordSale($order);
-                // Generate or update weekly settlement for this outlet
+                // Generate or update weekly settlement for this outlet — use completed_at for correct week
                 if ($order->outlet_id) {
                     $outlet = Outlet::find($order->outlet_id);
                     if ($outlet) {
-                        $this->settlementGeneratorService->generateForOutlet($outlet, now());
+                        $this->settlementGeneratorService->generateForOutlet($outlet, $order->completed_at ?? now());
                     }
                 }
             }
@@ -260,7 +260,7 @@ class OrderStatusService
             if ($order->outlet_id) {
                 $outlet = Outlet::find($order->outlet_id);
                 if ($outlet) {
-                    $this->settlementGeneratorService->generateForOutlet($outlet, now());
+                    $this->settlementGeneratorService->generateForOutlet($outlet, $order->completed_at ?? now());
                 }
             }
 
@@ -387,7 +387,7 @@ class OrderStatusService
             if ($order->outlet_id) {
                 $outlet = Outlet::find($order->outlet_id);
                 if ($outlet) {
-                    $this->settlementGeneratorService->generateForOutlet($outlet, now());
+                    $this->settlementGeneratorService->generateForOutlet($outlet, $order->completed_at ?? now());
                 }
             }
         }

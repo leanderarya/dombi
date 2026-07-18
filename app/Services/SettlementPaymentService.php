@@ -155,7 +155,11 @@ class SettlementPaymentService
             }
         }
 
-        // If remaining > 0 after all settlements are covered, it's overpayment on the last one
-        // (already handled by recalculateStatus → overpaid_amount)
+        // If remaining > 0 after all settlements are covered, save as overpayment on last settlement
+        if ($remaining > 0 && $unpaidSettlements->isNotEmpty()) {
+            $last = $unpaidSettlements->last();
+            $last->overpaid_amount = (float) $last->overpaid_amount + $remaining;
+            $last->recalculateStatus();
+        }
     }
 }
