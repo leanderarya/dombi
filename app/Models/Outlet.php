@@ -36,11 +36,6 @@ class Outlet extends Model
         return $query->where('status', 'active');
     }
 
-    public function scopeOperational(Builder $query): Builder
-    {
-        return $query->where('status', 'active');
-    }
-
     public function scopeVisible(Builder $query): Builder
     {
         return $query->where('status', '!=', 'archived');

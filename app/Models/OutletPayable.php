@@ -9,7 +9,7 @@ class OutletPayable extends Model
 {
     protected $fillable = [
         'outlet_id', 'order_id', 'type', 'amount',
-        'center_share', 'outlet_margin', 'reference_type', 'reference_id', 'notes', 'created_by',
+        'center_share', 'outlet_margin', 'notes', 'created_by',
         'due_date', 'paid_amount', 'remaining_amount',
     ];
 

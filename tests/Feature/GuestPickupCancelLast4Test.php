@@ -23,7 +23,7 @@ class GuestPickupCancelLast4Test extends TestCase
         ])->assertOk()->assertJson(['success' => true]);
 
         $order->refresh();
-        $this->assertSame(Order::CANCELLED_BY_CUSTOMER, $order->status);
+        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $order->status);
     }
 
     public function test_guest_cannot_cancel_pickup_with_wrong_last4(): void
@@ -86,7 +86,7 @@ class GuestPickupCancelLast4Test extends TestCase
         ])->assertOk()->assertJson(['success' => true]);
 
         $order->refresh();
-        $this->assertSame(Order::CANCELLED_BY_CUSTOMER, $order->status);
+        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $order->status);
     }
 
     public function test_last4_hp_normalizes_phone_with_formatting(): void
@@ -100,7 +100,7 @@ class GuestPickupCancelLast4Test extends TestCase
         ])->assertOk()->assertJson(['success' => true]);
 
         $order->refresh();
-        $this->assertSame(Order::CANCELLED_BY_CUSTOMER, $order->status);
+        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $order->status);
     }
 
     public function test_cancel_response_is_generic_on_failure(): void
