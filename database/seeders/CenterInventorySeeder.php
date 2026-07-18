@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\ProductVariant;
+use App\Models\StockMovement;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class CenterInventorySeeder extends Seeder
@@ -20,6 +22,7 @@ class CenterInventorySeeder extends Seeder
 
     public function run(): void
     {
+        $owner = User::where('role', 'owner')->first();
         $variants = ProductVariant::where('is_active', true)->get();
 
         if ($variants->isEmpty()) {
@@ -34,6 +37,27 @@ class CenterInventorySeeder extends Seeder
             $variant->update([
                 'center_stock' => $stock,
             ]);
+
+            // Create initial_stock movement for center if none exists — needed for reconcile baseline
+            $hasMovement = StockMovement::whereNull('outlet_id')
+                ->where('product_variant_id', $variant->id)
+                ->where('type', 'initial_stock')
+                ->exists();
+
+            if (! $hasMovement) {
+                StockMovement::create([
+                    'outlet_id' => null,
+                    'product_variant_id' => $variant->id,
+                    'type' => 'initial_stock',
+                    'quantity' => $stock,
+                    'before_stock' => 0,
+                    'after_stock' => $stock,
+                    'before_reserved' => 0,
+                    'after_reserved' => 0,
+                    'notes' => 'Stok awal pusat untuk '.$variant->full_name,
+                    'created_by' => $owner?->id,
+                ]);
+            }
         }
 
         $this->command->info("CenterInventorySeeder: Updated center_stock for {$variants->count()} variants.");
