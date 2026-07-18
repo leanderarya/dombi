@@ -81,16 +81,6 @@ class Order extends Model
         self::FULFILLMENT_DELIVERY_OJOL,
     ];
 
-    public const PENDING_CONFIRMATION = self::STATUS_PENDING_CONFIRMATION;
-
-    public const REJECTED = self::STATUS_REJECTED_BY_OUTLET;
-
-    public const CANCELLED_BY_CUSTOMER = self::STATUS_CANCELLED_BY_CUSTOMER;
-
-    public const FAILED_DELIVERY = self::STATUS_FAILED_DELIVERY;
-
-    public const EXPIRED = self::STATUS_EXPIRED;
-
     protected $fillable = [
         'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'recovery_token', 'status', 'fulfillment_type',
         'subtotal', 'delivery_fee', 'payment_method', 'payment_fee', 'total', 'customer_name', 'customer_phone',
@@ -196,17 +186,17 @@ class Order extends Model
 
     public function isRejected(): bool
     {
-        return $this->status === self::REJECTED;
+        return $this->status === self::STATUS_REJECTED_BY_OUTLET;
     }
 
     public function isCancelledByCustomer(): bool
     {
-        return $this->status === self::CANCELLED_BY_CUSTOMER;
+        return $this->status === self::STATUS_CANCELLED_BY_CUSTOMER;
     }
 
     public function isExpired(): bool
     {
-        return $this->status === self::EXPIRED;
+        return $this->status === self::STATUS_EXPIRED;
     }
 
     public function isConfirmationOverdue(): bool

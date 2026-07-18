@@ -38,7 +38,7 @@ class GuestFlowTest extends TestCase
         $response->assertOk()->assertJson(['success' => true]);
 
         $order->refresh();
-        $this->assertSame(Order::CANCELLED_BY_CUSTOMER, $order->status);
+        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $order->status);
     }
 
     public function test_guest_cannot_cancel_completed_order(): void
@@ -132,8 +132,8 @@ class GuestFlowTest extends TestCase
         // Both should be cancelled
         $guestOrder->refresh();
         $customerOrder->refresh();
-        $this->assertSame(Order::CANCELLED_BY_CUSTOMER, $guestOrder->status);
-        $this->assertSame(Order::CANCELLED_BY_CUSTOMER, $customerOrder->status);
+        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $guestOrder->status);
+        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $customerOrder->status);
     }
 
     private function createOutlet(): Outlet

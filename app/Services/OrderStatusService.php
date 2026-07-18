@@ -97,7 +97,7 @@ class OrderStatusService
             $this->inventoryService->releaseReservedStock($order);
 
             $order->update([
-                'status' => Order::REJECTED,
+                'status' => Order::STATUS_REJECTED_BY_OUTLET,
                 'rejected_at' => now(),
                 'rejected_by' => $actor->id,
                 'rejection_reason' => $reason,
@@ -106,7 +106,7 @@ class OrderStatusService
 
             $order->statusHistories()->create([
                 'from_status' => Order::STATUS_PENDING_CONFIRMATION,
-                'to_status' => Order::REJECTED,
+                'to_status' => Order::STATUS_REJECTED_BY_OUTLET,
                 'notes' => "Pesanan ditolak outlet. Alasan: {$reason}",
                 'reason' => $reason,
                 'changed_by' => $actor->id,
