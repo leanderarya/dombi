@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\CourierProfile;
 use App\Models\Outlet;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -76,13 +77,21 @@ class OutletSeeder extends Seeder
         $banyumanikUser->update(['outlet_id' => $banyumanik->id]);
 
         // ── Courier ────────────────────────────────────────────────
-        User::updateOrCreate(['email' => 'courier@example.com'], [
+        $courierUser = User::updateOrCreate(['email' => 'courier@example.com'], [
             'name' => 'Kurir Dombi',
             'password' => $password,
             'role' => 'courier',
             'phone' => '083100000001',
             'is_active' => true,
             'must_change_password' => false,
+        ]);
+
+        CourierProfile::updateOrCreate(['user_id' => $courierUser->id], [
+            'invitation_status' => 'accepted',
+            'invited_at' => now(),
+            'accepted_at' => now(),
+            'total_deliveries' => 0,
+            'rating' => 5.00,
         ]);
 
         // ── Test Customer ─────────────────────────────────────────
