@@ -109,25 +109,36 @@ class InventoryReconcile extends Command
     {
         $hasMovements = StockMovement::query()
             ->where('product_variant_id', $variantId)
-            ->whereNull('outlet_id')
-            ->whereIn('type', ['initial_stock', 'stock_adjustment'])
+            ->where(function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereNull('outlet_id')
+                        ->whereIn('type', ['initial_stock', 'stock_adjustment']);
+                })->orWhereIn('type', ['distribution_out', 'return_in', 'exchange_out']);
+            })
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
+            })
             ->exists();
 
         if (! $hasMovements) {
             return null;
         }
 
-        // Baseline: initial_stock + stock_adjustment where outlet_id IS NULL (center)
         $baseline = (int) StockMovement::query()
             ->where('product_variant_id', $variantId)
             ->whereNull('outlet_id')
             ->whereIn('type', ['initial_stock', 'stock_adjustment'])
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
+            })
             ->sum('quantity');
 
-        // Transfers: distribution_out (negative), return_in (+), exchange_out (-) — affect center regardless of outlet_id
         $transfers = (int) StockMovement::query()
             ->where('product_variant_id', $variantId)
             ->whereIn('type', ['distribution_out', 'return_in', 'exchange_out'])
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
+            })
             ->sum('quantity');
 
         return max(0, $baseline + $transfers);
@@ -237,6 +248,9 @@ class InventoryReconcile extends Command
                 'exchange_in',
                 'delivery_returned',
             ])
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
+            })
             ->orderBy('id')
             ->get();
 
@@ -394,18 +408,23 @@ class InventoryReconcile extends Command
 
     private function computeTotalExpectedStock(int $variantId, ?int $outletFilter): ?int
     {
-        // Check if any movements exist at all
         $hasMovements = StockMovement::query()
             ->where('product_variant_id', $variantId)
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
+            })
             ->exists();
 
         if (! $hasMovements) {
-            return null; // No movements = can't compute expected
+            return null;
         }
 
-        // All movements affect total inventory
         $query = StockMovement::query()
-            ->where('product_variant_id', $variantId);
+            ->where('product_variant_id', $variantId)
+            ->where(function ($q) {
+                $q->whereNull('notes')->orWhere('notes', 'NOT LIKE', '%reconciliation correction%');
+            })
+            ->whereNotIn('type', ['order_reserved', 'order_cancelled', 'in_transit']);
 
         if ($outletFilter) {
             $query->where(function ($q) use ($outletFilter) {

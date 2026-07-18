@@ -272,6 +272,8 @@ class InventoryService
             'after_stock' => $newStock,
             'before_reserved' => $inventory->reserved_stock,
             'after_reserved' => $inventory->reserved_stock,
+            'reference_type' => OutletInventory::class,
+            'reference_id' => $inventory->id,
             'notes' => $notes,
             'created_by' => Auth::id(),
         ]);
@@ -325,6 +327,8 @@ class InventoryService
                 'after_stock' => $variant->fresh()->center_stock,
                 'before_reserved' => 0,
                 'after_reserved' => 0,
+                'reference_type' => OutletInventory::class,
+                'reference_id' => $inventory->id,
                 'notes' => $notes ?? 'Quick restock to outlet #'.$outletId,
                 'created_by' => $userId,
             ]);
@@ -338,6 +342,8 @@ class InventoryService
                 'after_stock' => $inventory->fresh()->current_stock,
                 'before_reserved' => $inventory->reserved_stock,
                 'after_reserved' => $inventory->reserved_stock,
+                'reference_type' => OutletInventory::class,
+                'reference_id' => $inventory->id,
                 'notes' => $notes ?? 'Quick restock from center',
                 'created_by' => $userId,
             ]);
@@ -368,6 +374,8 @@ class InventoryService
                 'after_stock' => $newStock,
                 'before_reserved' => 0,
                 'after_reserved' => 0,
+                'reference_type' => ProductVariant::class,
+                'reference_id' => $variantId,
                 'notes' => $notes ?? 'Manual adjustment by owner',
                 'created_by' => Auth::id(),
             ]);
@@ -403,6 +411,8 @@ class InventoryService
                 'after_stock' => $actualCount,
                 'before_reserved' => $inventory->reserved_stock,
                 'after_reserved' => $inventory->reserved_stock,
+                'reference_type' => OutletInventory::class,
+                'reference_id' => $inventory->id,
                 'notes' => $notes ?? "Stock opname: {$before} → {$actualCount}",
                 'created_by' => Auth::id(),
             ]);
