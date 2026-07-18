@@ -267,7 +267,7 @@ class DeliveryService
     public function confirmReturn(Delivery $delivery, User $outletUser, ?string $note = null): Delivery
     {
         return DB::transaction(function () use ($delivery, $outletUser, $note): Delivery {
-            $delivery = Delivery::query()->lockForUpdate()->findOrFail($delivery->id);
+            $delivery = Delivery::query()->lockForUpdate()->with('order.items')->findOrFail($delivery->id);
 
             if ($delivery->return_status !== 'returning_to_outlet') {
                 throw ValidationException::withMessages([
@@ -281,6 +281,39 @@ class DeliveryService
                 'return_confirmed_at' => now(),
                 'return_notes' => $note ?? $delivery->return_notes,
             ]);
+
+            // Audit trail: delivery_returned movement per item
+            // Note: current_stock was never decremented (only reserved was released on fail),
+            // so before_stock == after_stock. The movement is for audit/history purposes.
+            $order = $delivery->order;
+            if ($order) {
+                foreach ($order->items as $item) {
+                    if (! $item->product_variant_id) {
+                        continue;
+                    }
+
+                    $inventory = \App\Models\OutletInventory::query()
+                        ->where('outlet_id', $order->outlet_id)
+                        ->where('product_variant_id', $item->product_variant_id)
+                        ->first();
+
+                    \App\Models\StockMovement::create([
+                        'outlet_id' => $order->outlet_id,
+                        'product_id' => $item->product_id,
+                        'product_variant_id' => $item->product_variant_id,
+                        'type' => 'delivery_returned',
+                        'quantity' => $item->quantity,
+                        'before_stock' => $inventory?->current_stock ?? 0,
+                        'after_stock' => $inventory?->current_stock ?? 0,
+                        'before_reserved' => $inventory?->reserved_stock ?? 0,
+                        'after_reserved' => $inventory?->reserved_stock ?? 0,
+                        'reference_type' => \App\Models\Delivery::class,
+                        'reference_id' => $delivery->id,
+                        'notes' => 'Pengiriman dikembalikan ke outlet untuk Order #' . $order->id,
+                        'created_by' => $outletUser->id,
+                    ]);
+                }
+            }
 
             $this->recordHistory($delivery, 'returning_to_outlet', 'returned_to_outlet', $outletUser, 'outlet', $note ?? 'Outlet mengkonfirmasi penerimaan barang kembali.');
 
