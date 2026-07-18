@@ -83,6 +83,7 @@ class SettlementGeneratorService
             $settlement->save();
             $this->notificationService->notifySettlementGenerated($settlement);
         } else {
+            $settlement = Settlement::lockForUpdate()->find($settlement->id);
             $settlement->recalculateStatus();
         }
 
