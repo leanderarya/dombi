@@ -29,7 +29,7 @@ class ReportController extends Controller
 
         $orderIds = (clone $orders)->pluck('id');
         $itemStats = OrderItem::whereIn('order_id', $orderIds)
-            ->selectRaw('COALESCE(SUM(subtotal), 0) as total_revenue, COALESCE(SUM(quantity), 0) as total_items')
+            ->selectRaw('COALESCE(SUM(subtotal), 0) as total_revenue, COALESCE(SUM(quantity), 0) as total_items, COALESCE(SUM(outlet_margin_snapshot * quantity), 0) as total_margin')
             ->first();
 
         return Inertia::render('outlet/reports/index', [
@@ -38,6 +38,7 @@ class ReportController extends Controller
                 'total_orders' => $totalOrders,
                 'total_revenue' => (float) ($itemStats->total_revenue ?? 0),
                 'total_items' => (int) ($itemStats->total_items ?? 0),
+                'total_margin' => (float) ($itemStats->total_margin ?? 0),
                 'date_from' => $from->format('Y-m-d'),
                 'date_to' => $to->format('Y-m-d'),
             ],
@@ -57,17 +58,38 @@ class ReportController extends Controller
 
         return response()->streamDownload(function () use ($outlet, $from, $to): void {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Tanggal', 'Order Code', 'Produk', 'Variant', 'Qty', 'Harga', 'Subtotal', 'Margin']);
+
+            // BOM UTF-8 for Excel compatibility
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            // Header metadata
+            fputcsv($handle, ['Outlet', $outlet->name]);
+            fputcsv($handle, ['Periode', $from->format('d/m/Y').' - '.$to->format('d/m/Y')]);
+            fputcsv($handle, ['Tanggal Export', now()->format('d/m/Y H:i')]);
+            fputcsv($handle, []);
+
+            // Column headers
+            fputcsv($handle, ['Tanggal', 'Order Code', 'Produk', 'Variant', 'Qty', 'Harga Satuan', 'Subtotal', 'Margin']);
+
+            $totalPenjualan = 0;
+            $totalMargin = 0;
+            $totalQty = 0;
+            $totalOrders = 0;
 
             Order::where('outlet_id', $outlet->id)
                 ->where('status', 'completed')
                 ->whereBetween('completed_at', [$from, $to])
                 ->with('items')
                 ->latest('completed_at')
-                ->chunk(200, function ($orders) use ($handle): void {
+                ->chunk(200, function ($orders) use ($handle, &$totalPenjualan, &$totalMargin, &$totalQty, &$totalOrders): void {
                     foreach ($orders as $order) {
+                        $totalOrders++;
                         foreach ($order->items as $item) {
                             $margin = (float) $item->outlet_margin_snapshot * $item->quantity;
+                            $totalPenjualan += (float) $item->subtotal;
+                            $totalMargin += $margin;
+                            $totalQty += (int) $item->quantity;
+
                             fputcsv($handle, [
                                 $order->completed_at->format('d/m/Y'),
                                 $order->order_code,
@@ -82,9 +104,17 @@ class ReportController extends Controller
                     }
                 });
 
+            // Summary footer
+            fputcsv($handle, []);
+            fputcsv($handle, ['RINGKASAN']);
+            fputcsv($handle, ['Total Pesanan', $totalOrders]);
+            fputcsv($handle, ['Total Item Terjual', $totalQty]);
+            fputcsv($handle, ['Total Penjualan', $totalPenjualan]);
+            fputcsv($handle, ['Total Margin', $totalMargin]);
+
             fclose($handle);
         }, $filename, [
-            'Content-Type' => 'text/csv',
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
     }
 

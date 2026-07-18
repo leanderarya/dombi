@@ -10,6 +10,7 @@ interface Preview {
     total_orders: number;
     total_revenue: number;
     total_items: number;
+    total_margin: number;
     date_from: string;
     date_to: string;
 }
@@ -133,8 +134,8 @@ export default function OutletReports({ outlet, preview }: Props) {
                         <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                             Ringkasan Laporan
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
-                            <div className="text-center">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-lg bg-surface-muted p-3 text-center">
                                 <div className="text-lg font-bold text-text tabular-nums">
                                     {preview.total_orders}
                                 </div>
@@ -142,7 +143,7 @@ export default function OutletReports({ outlet, preview }: Props) {
                                     Pesanan
                                 </div>
                             </div>
-                            <div className="text-center">
+                            <div className="rounded-lg bg-surface-muted p-3 text-center">
                                 <div className="text-lg font-bold text-text tabular-nums">
                                     {preview.total_items}
                                 </div>
@@ -150,12 +151,20 @@ export default function OutletReports({ outlet, preview }: Props) {
                                     Item
                                 </div>
                             </div>
-                            <div className="text-center">
-                                <div className="text-lg font-bold text-text tabular-nums">
+                            <div className="rounded-lg bg-emerald-50 p-3 text-center">
+                                <div className="text-lg font-bold text-emerald-700 tabular-nums">
                                     {formatCurrency(preview.total_revenue)}
                                 </div>
-                                <div className="text-[10px] text-text-subtle">
-                                    Revenue
+                                <div className="text-[10px] text-emerald-600">
+                                    Total Penjualan
+                                </div>
+                            </div>
+                            <div className="rounded-lg bg-amber-50 p-3 text-center">
+                                <div className="text-lg font-bold text-amber-700 tabular-nums">
+                                    {formatCurrency(preview.total_margin)}
+                                </div>
+                                <div className="text-[10px] text-amber-600">
+                                    Total Margin
                                 </div>
                             </div>
                         </div>
