@@ -74,6 +74,12 @@ class ProductCatalogSeeder extends Seeder
 
                 $variantName = $variantData['flavor'].' '.$variantData['size'];
 
+                // Prefix brand to avoid duplicate names across families
+                // e.g., "Biogoat Original 250ml" vs "Domilk Original 250ml"
+                if ($family->brand && $variantData['flavor'] === 'Original') {
+                    $variantName = $family->brand.' '.$variantData['flavor'].' '.$variantData['size'];
+                }
+
                 ProductVariant::updateOrCreate(
                     ['sku' => $sku],
                     [
