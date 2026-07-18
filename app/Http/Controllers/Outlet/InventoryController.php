@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OutletInventory;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
+use App\Models\RestockRequest;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,34 @@ class InventoryController extends Controller
 
         $centerStocks = ProductVariant::pluck('center_stock', 'id');
 
+        $activeRequests = RestockRequest::where('outlet_id', $outlet->id)
+            ->whereIn('status', ['requested', 'preparing', 'shipped'])
+            ->with('items')
+            ->latest()
+            ->get();
+
+        $activeMap = [];
+        foreach ($activeRequests as $req) {
+            foreach ($req->items as $item) {
+                $vid = $item->product_variant_id;
+                if (!isset($activeMap[$vid])) {
+                    $activeMap[$vid] = [
+                        'id' => $req->id,
+                        'status' => $req->status,
+                        'requested_qty' => $item->requested_quantity,
+                        'approved_qty' => $item->approved_quantity ?? 0,
+                        'created_at' => $req->created_at->toIsoString(),
+                    ];
+                }
+            }
+        }
+
+        $recentRestocks = RestockRequest::where('outlet_id', $outlet->id)
+            ->with(['items.variant.family'])
+            ->latest()
+            ->limit(10)
+            ->get();
+
         return Inertia::render('outlet/inventory', [
             'outlet' => $outlet,
             'inventories' => OutletInventory::with(['variant.family', 'product'])
@@ -34,6 +63,8 @@ class InventoryController extends Controller
                 ->get(),
             'families' => $families,
             'centerStocks' => $centerStocks,
+            'activeRestocks' => $activeMap,
+            'recentRestocks' => $recentRestocks,
         ]);
     }
 
