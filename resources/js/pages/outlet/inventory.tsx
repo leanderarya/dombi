@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
     CheckCircle,
@@ -317,6 +317,49 @@ export default function OutletInventory({
                             onClick: () => setShowRestock(true),
                         }}
                     />
+                )}
+
+                {recentRestocks.length > 0 && (
+                    <div className="mt-6 rounded-xl border border-border bg-white p-4">
+                        <div className="mb-3 flex items-center justify-between">
+                            <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">
+                                Riwayat Restock
+                            </div>
+                            <Link
+                                href="/outlet/restocks"
+                                className="text-[11px] font-semibold text-primary"
+                            >
+                                Lihat Semua →
+                            </Link>
+                        </div>
+                        <div className="space-y-2">
+                            {recentRestocks.slice(0, 5).map((r: any) => (
+                                <Link
+                                    key={r.id}
+                                    href={`/outlet/restocks/${r.id}`}
+                                    className="flex items-center justify-between rounded-lg border border-border p-3 hover:bg-surface-muted"
+                                >
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-medium">
+                                                #{r.id}
+                                            </span>
+                                            <RestockStatusBadge
+                                                status={r.status}
+                                            />
+                                        </div>
+                                        <div className="mt-0.5 text-[11px] text-text-subtle">
+                                            {new Date(
+                                                r.created_at,
+                                            ).toLocaleDateString('id-ID')}{' '}
+                                            · {r.items?.length ?? 0} item
+                                        </div>
+                                    </div>
+                                    <ChevronDown className="h-4 w-4 rotate-[-90deg] text-text-subtle" />
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
                 )}
             </OutletPageShell>
 
