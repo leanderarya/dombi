@@ -40,6 +40,12 @@ yarn-error.log
 .DS_Store
 docs/archive/
 
+# Android
+/android/app/build/
+/android/.gradle/
+/android/capacitor-cordova-android-plugins/build/
+*.apk
+
 
 # Claude Code
 .agents/
