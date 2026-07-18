@@ -19,7 +19,6 @@ class Delivery extends Model
 
     public const RESOLUTION_TRANSITIONS = [
         'failed' => ['retry_delivery', 'returned_to_outlet', 'cancelled_and_released'],
-        'retry_delivery' => ['returned_to_outlet', 'cancelled_and_released'],
         'returned_to_outlet' => ['cancelled_and_released'],
     ];
 
