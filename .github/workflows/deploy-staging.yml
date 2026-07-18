@@ -15,14 +15,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+          coverage: none
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
 
-      - name: Build frontend
+      - name: Install dependencies & Build
         run: |
+          composer install --no-dev --no-interaction --optimize-autoloader
           npm ci
           npm run build
 
@@ -73,15 +81,3 @@ jobs:
             pnpm-lock.yaml
             pnpm-workspace.yaml
             package-lock.json
-
-      - name: Post-deploy (composer + migrate + cache)
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          port: 21
-          server-dir: /domains/dombicenter.com/public_html/staging/
-          local-dir: ./deploy-trigger/
-          exclude: |
-            **/*
