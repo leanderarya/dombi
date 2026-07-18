@@ -22,7 +22,6 @@ interface SettlementSummary {
     outstanding_amount: number;
     units_sold: number;
     orders_count: number;
-    top_products: unknown[];
 }
 
 interface Reconciliation {
@@ -83,6 +82,7 @@ interface Props {
 
 const periods = [
     { key: 'all', label: 'Semua' },
+    { key: 'week', label: 'Minggu Ini' },
     { key: 'month', label: 'Bulan Ini' },
 ];
 
@@ -262,6 +262,14 @@ export default function OutletSettlement({
                         }
                         title="Belum ada penjualan"
                         description="Belum ada penjualan pada periode ini."
+                    />
+                )}
+
+                {/* No Settlement but has sales */}
+                {!hasTimeline && hasSales && (
+                    <EmptyState
+                        title="Belum ada settlement"
+                        description="Settlement akan dibuat otomatis setiap minggu berdasarkan penjualan."
                     />
                 )}
 
@@ -584,6 +592,7 @@ function PaymentSheet({
         reference_number: '',
         payment_date: new Date().toISOString().split('T')[0],
         notes: '',
+        proof_image: null as File | null,
     });
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -669,6 +678,26 @@ function PaymentSheet({
                     {errors.payment_date && (
                         <p className="mt-1 text-xs text-red-600">
                             {errors.payment_date}
+                        </p>
+                    )}
+                </div>
+
+                <div>
+                    <label className="mb-1.5 block text-xs font-semibold text-text">
+                        Bukti Transfer
+                    </label>
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                            const file = e.target.files?.[0] ?? null;
+                            setData('proof_image', file);
+                        }}
+                        className="w-full rounded-lg border border-border px-3 py-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
+                    />
+                    {errors.proof_image && (
+                        <p className="mt-1 text-xs text-red-600">
+                            {errors.proof_image}
                         </p>
                     )}
                 </div>

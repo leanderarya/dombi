@@ -51,8 +51,6 @@ class Settlement extends Model
     // Status constants
     const STATUS_GENERATED = 'generated';
 
-    const STATUS_PENDING = 'pending';
-
     const STATUS_DUE_TODAY = 'due_today';
 
     const STATUS_OVERDUE = 'overdue';
@@ -89,17 +87,13 @@ class Settlement extends Model
 
     public function isOverdue(): bool
     {
-        return $this->status === self::STATUS_OVERDUE;
+        return in_array($this->status, [self::STATUS_OVERDUE, self::STATUS_PARTIAL], true)
+            && $this->due_date->isPast();
     }
 
     public function isOverpaid(): bool
     {
         return (float) $this->overpaid_amount > 0;
-    }
-
-    public function getRemainingAmountAttribute(): float
-    {
-        return max(0, (float) $this->amount_due - (float) $this->paid_amount);
     }
 
     public function getOutstandingAmountAttribute(): float
@@ -152,7 +146,11 @@ class Settlement extends Model
         } else {
             $this->overpaid_amount = 0;
             if ($totalCredited > 0) {
-                $this->status = self::STATUS_PARTIAL;
+                if ($this->due_date->isPast()) {
+                    $this->status = self::STATUS_OVERDUE;
+                } else {
+                    $this->status = self::STATUS_PARTIAL;
+                }
             } elseif ($this->due_date->isToday()) {
                 $this->status = self::STATUS_DUE_TODAY;
             } elseif ($this->due_date->isPast()) {
