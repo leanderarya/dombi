@@ -187,7 +187,7 @@ export default function OutletInventory({
                         <div className="space-y-2">
                             {filteredCriticalFamilies.map(
                                 ([familyId, group]) => (
-                                    <FamilyGroup key={familyId} group={group} />
+                                    <FamilyGroup key={familyId} group={group} centerStocks={centerStocks} />
                                 ),
                             )}
                         </div>
@@ -209,7 +209,7 @@ export default function OutletInventory({
                         <div className="space-y-2">
                             {filteredLowStockFamilies.map(
                                 ([familyId, group]) => (
-                                    <FamilyGroup key={familyId} group={group} />
+                                    <FamilyGroup key={familyId} group={group} centerStocks={centerStocks} />
                                 ),
                             )}
                         </div>
@@ -246,6 +246,7 @@ export default function OutletInventory({
                                         <FamilyGroup
                                             key={familyId}
                                             group={group}
+                                            centerStocks={centerStocks}
                                         />
                                     ),
                                 )}
@@ -302,7 +303,7 @@ export default function OutletInventory({
     );
 }
 
-function FamilyGroup({ group }: { group: { family: any; items: any[] } }) {
+function FamilyGroup({ group, centerStocks = {} }: { group: { family: any; items: any[] }; centerStocks?: Record<string | number, number> }) {
     return (
         <div className="overflow-hidden rounded-xl border border-border bg-white">
             <div className="border-b border-border bg-surface-muted px-4 py-2">
