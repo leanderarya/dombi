@@ -81,6 +81,15 @@ Schedule::command('deliveries:auto-confirm-return')
     ->onOneServer()
     ->appendOutputTo(storage_path('logs/auto-confirm-return.log'));
 
+// ─── RESTOCK STUCK CHECK ────────────────────────────────────────────
+
+Schedule::command('restock:check-stuck')
+    ->daily()
+    ->at('08:30')
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->appendOutputTo(storage_path('logs/restock-stuck.log'));
+
 // ─── SCHEDULER HEARTBEAT ────────────────────────────────────────────
 
 Schedule::call(function () {

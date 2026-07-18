@@ -42,6 +42,7 @@ class RestockController extends Controller
                 ['value' => 'shipped', 'label' => 'Shipped'],
                 ['value' => 'completed', 'label' => 'Completed'],
                 ['value' => 'rejected', 'label' => 'Rejected'],
+                ['value' => 'cancelled', 'label' => 'Cancelled'],
             ],
         ]);
     }
