@@ -2,14 +2,13 @@
 set -e
 
 DEPLOY_DIR="${1:-.}"
-APP_ENV="${2:-production}"
 
 cd "$DEPLOY_DIR"
 
-echo "=== Deploying Dombi ($APP_ENV) ==="
+echo "=== Deploying Dombi ==="
 
 # Maintenance mode
-php artisan down --render='errors::503' 2>/dev/null || true
+php artisan down 2>/dev/null || true
 
 # Install dependencies
 composer install --optimize-autoloader --no-dev --no-interaction
@@ -22,11 +21,8 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# Storage link (ln -sf because exec() disabled on shared hosting)
+# Storage link
 ln -sf storage/app/public public/storage
-
-# Restart queue workers
-php artisan queue:restart 2>/dev/null || true
 
 # Fix permissions
 chmod -R 755 storage/ bootstrap/cache/
