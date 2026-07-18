@@ -205,6 +205,10 @@ class DeliveryService
             $courier->recordActivity();
             $this->recordHistory($delivery, 'delivering', 'completed', $courier, 'courier', 'Pengiriman selesai.');
 
+            if ($courier->courierProfile) {
+                $courier->courierProfile->incrementDeliveries();
+            }
+
             $this->notificationService->notifyDeliveryCompleted($delivery);
 
             return $delivery->fresh(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier']);
