@@ -10,56 +10,69 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Deploy to Hostinger production via SSH
-        uses: appleboy/ssh-action@v1
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
         with:
-          host: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_USERNAME }}
-          password: ${{ secrets.HOSTINGER_PASSWORD }}
-          port: ${{ secrets.HOSTINGER_PORT }}
-          script: |
-            set -e
+          php-version: "8.3"
+          tools: composer:v2
+          coverage: none
 
-            DEPLOY_DIR="${{ secrets.HOSTINGER_PRODUCTION_PATH }}"
-            BACKUP_DIR="/home/${{ secrets.HOSTINGER_USERNAME }}/backups/prod_$(date +%Y%m%d_%H%M%S)"
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
 
-            # Backup .env
-            mkdir -p "$BACKUP_DIR"
-            cp "$DEPLOY_DIR/.env" "$BACKUP_DIR/.env" 2>/dev/null || true
+      - name: Install & Build
+        run: |
+          composer install --optimize-autoloader --no-dev --no-interaction
+          npm ci
+          npm run build
 
-            # Maintenance mode
-            cd "$DEPLOY_DIR" && php artisan down 2>/dev/null || true
-
-            # Pull latest code
-            git fetch origin main
-            git checkout main
-            git reset --hard origin/main
-
-            # Restore .env
-            cp "$BACKUP_DIR/.env" "$DEPLOY_DIR/.env" 2>/dev/null || true
-
-            # Install dependencies
-            composer install --optimize-autoloader --no-dev --no-interaction
-
-            # Database migrations
-            php artisan migrate --force
-
-            # Cache optimization
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:cache
-
-            # Storage link
-            ln -sf storage/app/public public/storage
-
-            # Permissions
-            chmod -R 755 storage/ bootstrap/cache/
-
-            # Disable maintenance mode
-            php artisan up
-
-            echo "=== Production deploy complete ==="
+      - name: Deploy via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          port: 21
+          server-dir: /domains/app.dombicenter.com/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            **/docs/**
+            **/.env
+            **/.env.example
+            **/.env.staging.example
+            **/.env.production.example
+            **/.github/**
+            **/.agents/**
+            **/.claude/**
+            **/.superpowers/**
+            **/.opencode/**
+            **/.codex/**
+            **/.phpunit.cache/**
+            **/storage/logs/**
+            **/storage/framework/sessions/**
+            **/storage/framework/views/**
+            .editorconfig
+            .eslintrc.cjs
+            .npmrc
+            .prettierrc
+            .prettierignore
+            phpunit.xml
+            pint.json
+            tsconfig.json
+            vite.config.ts
+            vitest.config.ts
+            README.md
+            DESIGN.md
+            STITCH_PROMPTS.md
