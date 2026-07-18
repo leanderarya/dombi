@@ -262,7 +262,7 @@ export default function OutletInventory({
                         </h2>
                         <div className="space-y-2">
                             {filteredNoFamilyItems.map((item: any) => (
-                                <InventoryRow key={item.id} item={item} />
+                                <InventoryRow key={item.id} item={item} centerStocks={centerStocks} />
                             ))}
                         </div>
                     </div>
@@ -312,7 +312,7 @@ function FamilyGroup({ group }: { group: { family: any; items: any[] } }) {
             </div>
             <div className="divide-y divide-border">
                 {group.items.map((item: any) => (
-                    <InventoryRow key={item.id} item={item} compact />
+                    <InventoryRow key={item.id} item={item} compact centerStocks={centerStocks} />
                 ))}
             </div>
         </div>
@@ -357,7 +357,7 @@ function SummaryCell({
     );
 }
 
-function InventoryRow({ item, compact }: { item: any; compact?: boolean }) {
+function InventoryRow({ item, compact, centerStocks = {} }: { item: any; compact?: boolean; centerStocks?: Record<string | number, number> }) {
     const [showOpname, setShowOpname] = useState(false);
     const available = item.current_stock - item.reserved_stock;
     const displayName = item.variant?.name ?? item.product?.name ?? '-';
