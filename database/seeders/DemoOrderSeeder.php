@@ -53,7 +53,7 @@ class DemoOrderSeeder extends Seeder
                 'order_code' => 'DEMO-' . $now->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
                 'recovery_token' => Str::random(8),
                 'status' => 'completed',
-                'fulfillment_type' => 'delivery',
+                'fulfillment_type' => 'delivery_dombi',
                 'subtotal' => $subtotal,
                 'delivery_fee' => $fee,
                 'total' => $total,
