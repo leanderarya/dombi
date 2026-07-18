@@ -10,17 +10,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: "8.3"
-          tools: composer:v2
-          coverage: none
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -28,9 +21,8 @@ jobs:
           node-version: "22"
           cache: npm
 
-      - name: Install & Build
+      - name: Build frontend
         run: |
-          composer install --optimize-autoloader --no-dev --no-interaction
           npm ci
           npm run build
 
@@ -41,11 +33,12 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           port: 21
-          server-dir: /domains/staging.dombicenter.com/
+          server-dir: /domains/dombicenter.com/public_html/staging/
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
+            **/vendor/**
             **/tests/**
             **/docs/**
             **/.env
@@ -61,6 +54,7 @@ jobs:
             **/.phpunit.cache/**
             **/storage/logs/**
             **/storage/framework/sessions/**
+            **/storage/framework/cache/**
             **/storage/framework/views/**
             .editorconfig
             .eslintrc.cjs
@@ -75,3 +69,19 @@ jobs:
             README.md
             DESIGN.md
             STITCH_PROMPTS.md
+            skills-lock.json
+            pnpm-lock.yaml
+            pnpm-workspace.yaml
+            package-lock.json
+
+      - name: Post-deploy (composer + migrate + cache)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.HOSTINGER_HOST }}
+          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
+          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
+          port: 21
+          server-dir: /domains/dombicenter.com/public_html/staging/
+          local-dir: ./deploy-trigger/
+          exclude: |
+            **/*
