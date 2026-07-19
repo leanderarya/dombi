@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'track/*/cancel',
             'payment/doku/notify',
+            'oauth/exchange-token',
         ]);
 
         $middleware->alias([

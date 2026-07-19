@@ -195,6 +195,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
     // Google OAuth
     Route::get('/oauth/google', [SocialAuthController::class, 'redirect'])->name('google.redirect');
     Route::get('/oauth/google/callback', [SocialAuthController::class, 'callback'])->name('google.callback');
+    Route::post('/oauth/exchange-token', [SocialAuthController::class, 'exchangeToken'])->name('oauth.exchange-token');
 
     Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
         ->middleware('auth')
