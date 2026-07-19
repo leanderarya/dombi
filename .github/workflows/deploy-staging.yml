@@ -10,74 +10,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
         with:
-          php-version: "8.3"
-          tools: composer:v2
-          coverage: none
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-
-      - name: Install dependencies & Build
-        run: |
-          composer install --no-dev --no-interaction --optimize-autoloader
-          npm ci
-          npm run build
-
-      - name: Deploy via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.HOSTINGER_HOST }}
-          username: ${{ secrets.HOSTINGER_FTP_USERNAME }}
-          password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
-          port: 21
-          server-dir: /domains/dombicenter.com/public_html/staging/
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
-            **/vendor/**
-            **/tests/**
-            **/docs/**
-            **/.env
-            **/.env.example
-            **/.env.staging.example
-            **/.env.production.example
-            **/.github/**
-            **/.agents/**
-            **/.claude/**
-            **/.superpowers/**
-            **/.opencode/**
-            **/.codex/**
-            **/.phpunit.cache/**
-            **/storage/logs/**
-            **/storage/framework/sessions/**
-            **/storage/framework/cache/**
-            **/storage/framework/views/**
-            .editorconfig
-            .eslintrc.cjs
-            .npmrc
-            .prettierrc
-            .prettierignore
-            phpunit.xml
-            pint.json
-            tsconfig.json
-            vite.config.ts
-            vitest.config.ts
-            README.md
-            DESIGN.md
-            STITCH_PROMPTS.md
-            skills-lock.json
-            pnpm-lock.yaml
-            pnpm-workspace.yaml
-            package-lock.json
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          key: ${{ secrets.HOSTINGER_SSH_KEY }}
+          port: 22
+          script: |
+            cd domains/dombicenter.com/public_html/staging
+            git pull origin develop
+            composer install --no-dev --no-interaction --optimize-autoloader
+            php artisan config:clear
+            php artisan route:clear
+            php artisan cache:clear
+            php artisan view:clear
