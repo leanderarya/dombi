@@ -62,7 +62,7 @@ export default function ProductFamiliesIndex({ families }: Props) {
         return (
             <OwnerPageShell
                 title="Produk"
-                subtitle="Kelola kelompok produk dan variant susu kambing Anda"
+                subtitle="Kelola kelompok produk dan variant Anda"
             >
                 <SkeletonPage />
             </OwnerPageShell>
@@ -132,7 +132,7 @@ export default function ProductFamiliesIndex({ families }: Props) {
     return (
         <OwnerPageShell
             title="Produk"
-            subtitle="Kelola kelompok produk dan variant susu kambing Anda"
+            subtitle="Kelola kelompok produk dan variant Anda"
             headerRight={
                 <Button
                     onClick={() => {

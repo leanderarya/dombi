@@ -32,7 +32,7 @@ export default function About() {
                     </div>
                     <h2 className="mt-3 text-lg font-bold text-text">Dombi</h2>
                     <p className="mt-0.5 text-xs text-text-subtle">
-                        Distribusi Susu Kambing
+                        Belanja Harian
                     </p>
                 </section>
 
@@ -40,14 +40,14 @@ export default function About() {
                 <section className="mt-6">
                     <div className="rounded-xl border border-border bg-white p-4">
                         <p className="text-sm leading-relaxed text-text-muted">
-                            Dombi adalah aplikasi distribusi susu kambing yang
+                            Dombi adalah aplikasi belanja kebutuhan harian yang
                             membantu pelanggan melakukan pemesanan dengan cepat,
                             mudah, dan terintegrasi dengan outlet terdekat.
                         </p>
                         <p className="mt-3 text-sm leading-relaxed text-text-muted">
                             Kami menghubungkan pelanggan langsung dengan
-                            jaringan outlet distribusi untuk memastikan produk
-                            susu kambing segar sampai ke tangan kamu dalam waktu
+                            jaringan outlet distribusi untuk memastikan
+                            produk kebutuhan sampai ke tangan kamu dalam waktu
                             singkat.
                         </p>
                     </div>
@@ -62,7 +62,7 @@ export default function About() {
                         <ValueCard
                             icon={<Milk className="h-5 w-5 text-text-muted" />}
                             title="Kesegaran"
-                            description="Produk susu kambing segar langsung dari peternakan terpercaya."
+                            description="Produk kebutuhan harian langsung dari sumber terpercaya."
                         />
                         <ValueCard
                             icon={<Zap className="h-5 w-5 text-text-muted" />}

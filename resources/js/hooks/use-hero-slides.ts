@@ -11,7 +11,7 @@ export interface HeroSlide {
 
 const HERO_SLIDES: HeroSlide[] = [
     {
-        title: 'Susu Kambing Segar',
+        title: 'Belanja Harian',
         subtitle: 'Kualitas terbaik langsung dari Dombi',
         cta: 'Pesan Sekarang',
         ctaHref: '/customer/products',
