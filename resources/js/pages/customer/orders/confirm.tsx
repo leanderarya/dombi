@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import Dialog from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/format';
+import { copyToClipboard } from '@/lib/clipboard';
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
@@ -122,43 +123,14 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
         return () => clearInterval(timer);
     }, [order.confirmation_expires_at, paymentStatus]);
 
-    const handleCopy = useCallback(() => {
-        // Try modern Clipboard API first
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard
-                .writeText(order.order_code)
-                .then(() => {
-                    setCopied(true);
-                    setTimeout(() => setCopied(false), 2000);
-                })
-                .catch(() => {
-                    // Fallback for iOS/older browsers
-                    fallbackCopy(order.order_code);
-                });
-        } else {
-            fallbackCopy(order.order_code);
-        }
-
-        function fallbackCopy(text: string) {
-            const textarea = document.createElement('textarea');
-            textarea.value = text;
-            textarea.style.position = 'fixed';
-            textarea.style.left = '-9999px';
-            textarea.style.top = '-9999px';
-            textarea.style.opacity = '0';
-            document.body.appendChild(textarea);
-            textarea.focus();
-            textarea.select();
-            textarea.setSelectionRange(0, text.length);
-            try {
-                document.execCommand('copy');
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            } catch {
-                // Last resort: show the code for manual copy
-                alert(`Kode pesanan: ${text}\n\nSalin kode ini secara manual.`);
-            }
-            document.body.removeChild(textarea);
+    const handleCopy = useCallback(async () => {
+        try {
+            await copyToClipboard(order.order_code);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Last resort: show the code for manual copy
+            alert(`Kode pesanan: ${order.order_code}\n\nSalin kode ini secara manual.`);
         }
     }, [order.order_code]);
 

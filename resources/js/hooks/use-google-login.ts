@@ -15,7 +15,7 @@ export function useGoogleLogin() {
                 const result = await GoogleSignIn.signIn();
 
                 if (!result.idToken) {
-                    alert('Login gagal: tidak mendapat token.');
+                    alert('Login gagal: tidak mendapat token dari Google.');
                     return;
                 }
 
@@ -28,16 +28,27 @@ export function useGoogleLogin() {
                     body: JSON.stringify({ id_token: result.idToken }),
                 });
 
-                const data = await res.json();
+                const text = await res.text();
+                let data: any;
+
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    alert('Login gagal: response bukan JSON.\n' + text.substring(0, 200));
+                    return;
+                }
 
                 if (data.success) {
                     router.visit(data.redirect || '/customer/home');
                 } else {
-                    alert('Login gagal: ' + (data.error || 'Unknown error'));
+                    alert(
+                        'Login gagal: ' +
+                            (data.error || JSON.stringify(data)),
+                    );
                 }
             } catch (err: any) {
                 console.error('Google Sign-In error:', err);
-                alert('Login gagal: ' + (err?.message || err));
+                alert('Login gagal: ' + (err?.message || JSON.stringify(err)));
             }
         } else {
             window.location.href = '/oauth/google';

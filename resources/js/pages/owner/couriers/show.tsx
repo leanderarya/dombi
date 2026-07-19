@@ -26,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { copyToClipboard } from '@/lib/clipboard';
 
 export default function CourierShow({
     courier,
@@ -206,10 +207,8 @@ export default function CourierShow({
                                         <Button
                                             variant="outline"
                                             size="sm"
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(
-                                                    inviteUrl,
-                                                );
+                                            onClick={async () => {
+                                                await copyToClipboard(inviteUrl);
                                             }}
                                         >
                                             <Copy
@@ -220,15 +219,13 @@ export default function CourierShow({
                                         </Button>
                                         <Button
                                             size="sm"
-                                            onClick={() => {
+                                            onClick={async () => {
                                                 const text = `Undangan kurir Dombi: ${inviteUrl}`;
 
                                                 if (navigator.share) {
-                                                    navigator.share({ text });
+                                                    await navigator.share({ text });
                                                 } else {
-                                                    navigator.clipboard.writeText(
-                                                        text,
-                                                    );
+                                                    await copyToClipboard(text);
                                                 }
                                             }}
                                         >
