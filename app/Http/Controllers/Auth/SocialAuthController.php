@@ -178,6 +178,128 @@ class SocialAuthController extends Controller
     }
 
     /**
+     * Native Google Sign-In: verify ID token and create session.
+     */
+    public function googleToken(Request $request): JsonResponse
+    {
+        $idToken = $request->input('id_token');
+
+        if (! $idToken) {
+            return response()->json(['error' => 'ID token required.'], 422);
+        }
+
+        // Verify ID token with Google
+        $googleUser = $this->verifyGoogleIdToken($idToken);
+
+        if (! $googleUser) {
+            return response()->json(['error' => 'Invalid ID token.'], 401);
+        }
+
+        $email = $googleUser['email'];
+        $googleId = $googleUser['sub'];
+        $name = $googleUser['name'] ?? $email;
+        $avatar = $googleUser['picture'] ?? null;
+
+        // 1. Find existing user by Google provider
+        $user = User::where('provider', 'google')
+            ->where('provider_id', $googleId)
+            ->first();
+
+        // 2. Find existing user by email
+        if (! $user) {
+            $user = User::where('email', $email)->first();
+
+            if ($user) {
+                if (! $user->hasGoogleAccount() && $user->password !== null) {
+                    return response()->json(['error' => 'Akun dengan email ini sudah ada. Silakan login dengan password.'], 409);
+                }
+
+                $user->forceFill([
+                    'provider' => 'google',
+                    'provider_id' => $googleId,
+                    'avatar' => $avatar,
+                    'email_verified_at' => now(),
+                ])->save();
+            }
+        }
+
+        // 3. Create new user if not found
+        if (! $user) {
+            $user = User::create([
+                'name' => $name,
+                'email' => $email,
+                'password' => bcrypt(Str::random(64)),
+                'role' => 'customer',
+                'is_active' => true,
+                'provider' => 'google',
+                'provider_id' => $googleId,
+                'avatar' => $avatar,
+                'email_verified_at' => now(),
+            ]);
+        }
+
+        // 4. Login
+        auth()->login($user, remember: true);
+
+        // 5. Guarantee Customer record
+        Customer::firstOrCreate(
+            ['user_id' => $user->id],
+            ['name' => $user->name, 'email' => $user->email, 'is_registered' => true],
+        );
+
+        // 6. Set session
+        $request->session()->put('login_at', now()->timestamp);
+        $request->session()->put('last_activity_at', now()->timestamp);
+        $request->session()->forget('guest_mode');
+
+        return response()->json([
+            'success' => true,
+            'redirect' => route('customer.home'),
+        ]);
+    }
+
+    /**
+     * Verify Google ID token by calling Google's tokeninfo endpoint.
+     */
+    private function verifyGoogleIdToken(string $idToken): ?array
+    {
+        try {
+            $url = 'https://oauth2.googleapis.com/tokeninfo?id_token='.urlencode($idToken);
+            $response = file_get_contents($url);
+
+            if ($response === false) {
+                return null;
+            }
+
+            $claims = json_decode($response, true);
+
+            if (! $claims || isset($claims['error'])) {
+                return null;
+            }
+
+            // Verify audience (must match our client ID)
+            $clientId = config('services.google.client_id');
+            if (($claims['aud'] ?? '') !== $clientId) {
+                return null;
+            }
+
+            // Verify issuer
+            if (! in_array($claims['iss'] ?? '', ['accounts.google.com', 'https://accounts.google.com'])) {
+                return null;
+            }
+
+            // Map sub to id for consistency
+            $claims['id'] = $claims['sub'];
+
+            return $claims;
+        } catch (\Exception $e) {
+            logger()->warning('Google ID token verification failed', ['error' => $e->getMessage()]);
+
+            return null;
+        }
+    }
+
+    /**
      * Show phone verification page for post-Google-login.
      */
     public function showVerifyPhone(Request $request): Response|RedirectResponse
