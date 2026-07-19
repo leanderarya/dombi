@@ -20,6 +20,13 @@ else
 fi
 
 SERVER_URL="${CAP_SERVER_URL:-https://staging.dombicenter.com}"
+
+# Start path: customer → home (/), internal → login (/login)
+if [ "$APP_TYPE" = "customer" ]; then
+    START_PATH=""
+else
+    START_PATH="/login"
+fi
 JAVA_BASE="android/app/src/main/java"
 
 # Determine other package to clean
@@ -64,9 +71,69 @@ sed -i '' "s|<string name=\"package_name\">[^<]*</string>|<string name=\"package
 sed -i '' "s|<string name=\"custom_url_scheme\">[^<]*</string>|<string name=\"custom_url_scheme\">$APP_ID</string>|" android/app/src/main/res/values/strings.xml
 
 echo "6. Syncing to Android..."
-CAP_APP_ID="$APP_ID" CAP_APP_NAME="$APP_NAME" CAP_SERVER_URL="$SERVER_URL" npx cap sync android
+CAP_APP_ID="$APP_ID" CAP_APP_NAME="$APP_NAME" CAP_SERVER_URL="$SERVER_URL" CAP_START_PATH="$START_PATH" npx cap sync android
 
 echo "7. Building APK (clean)..."
+
+# ── Ensure Java 17+ (AGP requirement) ──────────────────
+find_java17() {
+    # 1. Already Java 17+ ?
+    if java -version 2>&1 | grep -qE '"(1[7-9]|[2-9][0-9])\.'; then
+        return 0
+    fi
+    # 2. Common Homebrew / system locations
+    for p in \
+        /opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home \
+        /opt/homebrew/opt/openjdk@17/libexec/openjdk.jdk/Contents/Home \
+        /opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home \
+        /opt/homebrew/Cellar/openjdk@21/*/libexec/openjdk.jdk/Contents/Home \
+        /opt/homebrew/Cellar/openjdk@17/*/libexec/openjdk.jdk/Contents/Home \
+        /opt/homebrew/Cellar/openjdk/*/libexec/openjdk.jdk/Contents/Home \
+        /Library/Java/JavaVirtualMachines/openjdk@21/Contents/Home \
+        /Library/Java/JavaVirtualMachines/openjdk@17/Contents/Home \
+        /Library/Java/JavaVirtualMachines/openjdk-21*.jdk/Contents/Home \
+        /Library/Java/JavaVirtualMachines/openjdk-17*.jdk/Contents/Home \
+        /Library/Java/JavaVirtualMachines/jdk-21*.jdk/Contents/Home \
+        /Library/Java/JavaVirtualMachines/jdk-17*.jdk/Contents/Home; do
+        # Expand glob
+        for j in $p; do
+            if [ -x "$j/bin/java" ] && "$j/bin/java" -version 2>&1 | grep -qE '"(1[7-9]|[2-9][0-9])\.'; then
+                echo "   Found Java 17+ at $j"
+                export JAVA_HOME="$j"
+                export PATH="$JAVA_HOME/bin:$PATH"
+                return 0
+            fi
+        done
+    done
+    # 3. Try /usr/libexec/java_home -v 17 on macOS
+    if command -v /usr/libexec/java_home >/dev/null 2>&1; then
+        JH17=$(/usr/libexec/java_home -v 17 2>/dev/null || true)
+        if [ -n "$JH17" ] && [ -x "$JH17/bin/java" ]; then
+            echo "   Found Java 17+ via java_home: $JH17"
+            export JAVA_HOME="$JH17"
+            export PATH="$JAVA_HOME/bin:$PATH"
+            return 0
+        fi
+        JH21=$(/usr/libexec/java_home -v 21 2>/dev/null || true)
+        if [ -n "$JH21" ] && [ -x "$JH21/bin/java" ]; then
+            echo "   Found Java 21 via java_home: $JH21"
+            export JAVA_HOME="$JH21"
+            export PATH="$JAVA_HOME/bin:$PATH"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+if ! find_java17; then
+    echo "❌ Java 17+ required but not found."
+    echo "   Current: $(java -version 2>&1 | head -1)"
+    echo "   Install: brew install openjdk@17  OR  brew install openjdk@21"
+    echo "   Then re-run this script."
+    exit 1
+fi
+
+echo "   Using: $(java -version 2>&1 | head -1) | JAVA_HOME=$JAVA_HOME"
 cd android && ./gradlew clean assembleDebug
 cd ..
 
