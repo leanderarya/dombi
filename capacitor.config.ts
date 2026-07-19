@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
     appName: process.env.CAP_APP_NAME || 'Dombi',
     webDir: 'public/build',
     server: {
-        url: process.env.CAP_SERVER_URL || 'https://staging.dombicenter.com',
+        url:
+            (process.env.CAP_SERVER_URL || 'https://staging.dombicenter.com') +
+            (process.env.CAP_START_PATH || ''),
         cleartext: false,
         androidScheme: 'https',
     },
