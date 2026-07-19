@@ -429,7 +429,9 @@ select:focus {
     font-size: 0.8125rem !important;
     font-weight: 600 !important;
     min-height: 44px !important;
-    transition: all 150ms !important;
+    transition:
+        transform 150ms ease, opacity 150ms ease,
+        background-color 150ms ease !important;
 }
 
 .dombi-swal-confirm:active {
@@ -446,7 +448,9 @@ select:focus {
     font-size: 0.8125rem !important;
     font-weight: 600 !important;
     min-height: 44px !important;
-    transition: all 150ms !important;
+    transition:
+        transform 150ms ease, opacity 150ms ease,
+        background-color 150ms ease !important;
 }
 
 .dombi-swal-confirm-destructive:active {
@@ -462,7 +466,9 @@ select:focus {
     font-size: 0.8125rem !important;
     font-weight: 600 !important;
     min-height: 44px !important;
-    transition: all 150ms !important;
+    transition:
+        transform 150ms ease, opacity 150ms ease,
+        background-color 150ms ease !important;
 }
 
 .dombi-swal-cancel:active {
@@ -641,9 +647,34 @@ select:focus {
     animation: chartDraw 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Spring transition — tactile feedback */
+/* ─── GPU Acceleration & Performance ────────────────────── */
+
+/* GPU layer promotion — apply to cards, modals, sheets */
+.gpu-accel {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    contain: layout style paint;
+}
+
+/* Product grid: skip rendering off-screen cards */
+.product-grid > * {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 220px;
+}
+
+/* Spring transition — tactile feedback, adaptive for touch */
 .spring-transition {
-    transition: all 200ms cubic-bezier(0.22, 1, 0.36, 1);
+    transition:
+        transform 200ms cubic-bezier(0.22, 1, 0.36, 1),
+        opacity 200ms ease;
+}
+
+@media (pointer: coarse) {
+    .spring-transition {
+        transition:
+            transform 150ms ease-out,
+            opacity 150ms ease-out;
+    }
 }
 
 /* Reduced motion */
