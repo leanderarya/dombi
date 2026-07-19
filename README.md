@@ -1,150 +1,76 @@
-# Dombi Task Master
+# Dombi
 
-A local-first, asynchronous task orchestration system for autonomous code agents.
+[![Deploy Staging](https://github.com/leanderarya/dombi/actions/workflows/deploy-staging.yml/badge.svg)](https://github.com/leanderarya/dombi/actions/workflows/deploy-staging.yml)
 
-## Features
+Operational commerce platform untuk distribusi produk segar harian.
 
-- **Task Management**: Create, update, and track tasks with full lifecycle management
-- **Execution Planning**: Automatic plan generation with risk assessment
-- **Sandbox Execution**: Isolated execution environments using Docker
-- **Quality Gates**: Configurable quality checks (tests, lint, type checking)
-- **Terminal UI**: Rich terminal interface for task monitoring
-- **MCP Integration**: Model Context Protocol server for Codex integration
-- **Local-First**: All data stored locally, no external dependencies
+## Tech Stack
 
-## Quick Start
+- **Backend:** Laravel 13, PHP 8.3, MySQL 8
+- **Frontend:** React 19, TypeScript, Tailwind CSS v4, Inertia.js
+- **Mobile:** Capacitor (Android)
+- **Payment:** DOKU (QRIS, Transfer, VA)
+- **Auth:** Google OAuth + session-based
+- **Maps:** Leaflet + OpenStreetMap
+- **Monitoring:** Sentry
 
-### 1. Initialize Task Master
+## Roles
 
-```bash
-python -m src.cli.main init
-```
-
-### 2. Create a Task
-
-```bash
-python -m src.cli.main create "Fix the login bug" --priority high
-```
-
-### 3. List Tasks
-
-```bash
-python -m src.cli.main list
-```
-
-### 4. View Task Details
-
-```bash
-python -m src.cli.main show <task-id>
-```
-
-### 5. Check System Status
-
-```bash
-python -m src.cli.main status
-```
-
-## CLI Commands
-
-| Command | Description |
-|---------|-------------|
-| `init` | Initialize Task Master in current repository |
-| `create` | Create a new task |
-| `list` | List all tasks |
-| `show` | Show task details |
-| `run` | Run a task |
-| `cancel` | Cancel a running task |
-| `status` | Show system status |
-| `tui` | Launch terminal UI |
-
-## Architecture
-
-### Core Components
-
-- **Models** (`src/core/models.py`): Data models for tasks, results, environments
-- **Storage** (`src/core/storage.py`): Local state storage with JSON files
-- **Planner** (`src/core/planner.py`): Task planning and risk assessment
-- **Executor** (`src/cli/executor.py`): Task execution in sandbox environments
-- **Quality Gates** (`src/cli/quality_gates.py`): Configurable quality checks
-- **Context Gatherer** (`src/cli/context_gatherer.py`): Repository context collection
-
-### Sandbox System
-
-- **Manager** (`src/sandbox/manager.py`): Sandbox lifecycle management
-- **Docker Runtime** (`src/sandbox/docker_runtime.py`): Docker-based execution
-
-### User Interfaces
-
-- **CLI** (`src/cli/main.py`): Command-line interface
-- **TUI** (`src/cli/tui/`): Terminal user interface using Textual
-- **MCP Server** (`src/mcp/server.py`): Model Context Protocol integration
-
-## Configuration
-
-Task Master uses a JSON configuration file at `.task-master/config.json`:
-
-```json
-{
-  "version": "1.0.0",
-  "storage_dir": ".task-master",
-  "log_level": "INFO",
-  "max_concurrent_tasks": 5,
-  "default_priority": "medium",
-  "quality_gates": {
-    "test": {"required": true},
-    "lint": {"required": false},
-    "typecheck": {"required": false}
-  }
-}
-```
-
-## Quality Gates
-
-Quality gates are configurable checks that run after task execution:
-
-- **test**: Run test suite (required by default)
-- **lint**: Run linter (optional)
-- **typecheck**: Run type checker (optional)
-- **security**: Run security checks (custom)
+| Role | Description |
+|------|-------------|
+| **Customer** | Belanja produk via app Android / PWA |
+| **Outlet** | Kelola pesanan, stok, restock, settlement |
+| **Owner** | Kelola produk, outlet, pricing, keuangan, kurir |
+| **Courier** | Antar pesanan ke customer |
 
 ## Development
 
-### Running Tests
+```bash
+# Clone
+git clone https://github.com/leanderarya/dombi.git
+cd dombi
+
+# Install dependencies
+composer install
+npm install
+
+# Setup environment
+cp .env.example .env
+php artisan key:generate
+
+# Database
+php artisan migrate
+php artisan db:seed
+
+# Build frontend
+npm run dev
+
+# Run server
+php artisan serve
+```
+
+## Testing
 
 ```bash
-python -c "
-import asyncio
-from src.core.models import Task
-from src.core.storage import StateStore
+# Run all tests
+php artisan test
 
-async def test():
-    store = StateStore('.test')
-    task = Task(id='test', description='Test task')
-    await store.store_task(task)
-    retrieved = await store.get_task('test')
-    assert retrieved is not None
-    print('✅ Tests passed')
-
-asyncio.run(test())
-"
+# Run specific test suite
+php artisan test --testsuite=Feature
 ```
 
-### Adding Custom Quality Gates
+## Deployment
 
-```python
-from src.cli.quality_gates import QualityGate, QualityGateRunner
+Auto-deploy to staging on push to `develop` branch via GitHub Actions.
 
-gate = QualityGate(
-    name='custom',
-    command='echo "Custom check"',
-    description='Custom quality check',
-    required=False,
-)
+**Staging:** https://staging.dombicenter.com
 
-runner = QualityGateRunner({})
-runner.add_gate(gate)
-```
+## Documentation
+
+- [Testing Guide](docs/TESTING.md) - Comprehensive testing guide for all roles
+- [Product Images](docs/PRODUCT-IMAGES.md) - Image management guide
+- [DOKU Payment](docs/doku-payment.md) - Payment integration docs
 
 ## License
 
-MIT License
+Proprietary - Dombi Team
