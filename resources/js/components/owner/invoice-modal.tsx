@@ -2,6 +2,7 @@ import { Copy, Check, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import OwnerModalShell from '@/components/owner/owner-modal-shell';
 import { formatCurrency } from '@/lib/format';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface UnpaidItem {
     id: number;
@@ -40,7 +41,7 @@ export default function InvoiceModal({
 
     const handleCopy = async () => {
         try {
-            await navigator.clipboard.writeText(message);
+            await copyToClipboard(message);
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         } catch {
