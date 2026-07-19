@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { copyToClipboard } from '@/lib/clipboard';
 
 type Provisioning = {
     outlet_name: string;
@@ -30,7 +31,7 @@ export default function OutletProvisioningSummary({
     ].join('\n');
 
     const copyCredentials = async () => {
-        await navigator.clipboard.writeText(credentials);
+        await copyToClipboard(credentials);
         setCopied(true);
     };
 
