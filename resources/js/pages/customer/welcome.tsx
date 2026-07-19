@@ -1,49 +1,13 @@
-import { Head, router } from '@inertiajs/react';
-import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
-import { Capacitor } from '@capacitor/core';
+import { Head } from '@inertiajs/react';
+import { useGoogleLogin } from '@/hooks/use-google-login';
 import { useState } from 'react';
-
-const WEB_CLIENT_ID = '732242789854-7kvv13nq10hnkovq9j0ji9nrbmdku3oh.apps.googleusercontent.com';
 
 export default function Welcome() {
     const [loading, setLoading] = useState(false);
-    const isNative = Capacitor.isNativePlatform();
+    const { login } = useGoogleLogin();
 
     const handleGoogleLogin = async () => {
-        if (isNative) {
-            // Android: native Google Sign-In
-            try {
-                await GoogleSignIn.initialize({ clientId: WEB_CLIENT_ID });
-                const result = await GoogleSignIn.signIn();
-
-                if (!result.idToken) {
-                    console.error('No ID token received');
-                    return;
-                }
-
-                const response = await fetch('/api/auth/google-token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ id_token: result.idToken }),
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    router.visit(data.redirect || '/customer/home');
-                } else {
-                    console.error('Login failed:', data.error);
-                }
-            } catch (err) {
-                console.error('Google Sign-In failed:', err);
-            }
-        } else {
-            // Web/PWA: normal OAuth redirect
-            window.location.href = '/oauth/google';
-        }
+        await login();
     };
 
     const handleGuestMode = () => {
