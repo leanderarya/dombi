@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'track/*/cancel',
             'payment/doku/notify',
             'oauth/exchange-token',
+            'api/auth/google-token',
         ]);
 
         $middleware->alias([
