@@ -38,16 +38,7 @@ export default function Home({ customerName, activeOrders }: any) {
     const showPhoneBanner =
         isLoggedIn && !auth?.user?.customer?.phone && !phoneBannerDismissed;
 
-    // Block swipe-back on iOS PWA — push dummy entry so back returns to home
-    useEffect(() => {
-        window.history.pushState(null, '', window.location.href);
-        const onPopState = () => {
-            window.history.pushState(null, '', window.location.href);
-        };
-        window.addEventListener('popstate', onPopState);
-
-        return () => window.removeEventListener('popstate', onPopState);
-    }, []);
+    // Back navigation handled by NavigationProvider
 
     const handleDelivery = () => {
         if (!isLoggedIn) {
