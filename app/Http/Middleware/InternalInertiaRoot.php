@@ -18,6 +18,7 @@ class InternalInertiaRoot extends Middleware
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
+                'outlet_provisioning' => fn () => $request->session()->get('outlet_provisioning'),
             ],
         ]);
     }
