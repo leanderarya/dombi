@@ -1,7 +1,7 @@
 {
-    "name": "Dombi - Distribusi Susu Kambing",
+    "name": "Dombi - Belanja Kebutuhan Harian",
     "short_name": "Dombi",
-    "description": "Aplikasi operasional distribusi susu kambing berbasis outlet",
+    "description": "Aplikasi operasional belanja kebutuhan harian",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#f8f7f2",

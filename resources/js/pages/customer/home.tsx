@@ -180,7 +180,7 @@ function GreetingCard({
                     </div>
                     <div className="mt-1 text-xs text-text-muted">
                         {isLoggedIn
-                            ? 'Yuk pesan susu kambing segar hari ini.'
+                            ? 'Yuk belanja kebutuhanmu hari ini.'
                             : 'Masuk untuk pengalaman penuh.'}
                     </div>
                 </div>
@@ -298,8 +298,8 @@ function ExploreGrid({
         {
             icon: <ShoppingBagFill className="h-5 w-5 text-primary" />,
             bg: 'bg-primary-light',
-            title: 'Produk Segar',
-            subtitle: 'Susu kambing pilihan',
+            title: 'Produk',
+            subtitle: 'Produk pilihan untukmu',
             href: '/customer/products',
         },
         {

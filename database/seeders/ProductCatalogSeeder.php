@@ -41,7 +41,7 @@ class ProductCatalogSeeder extends Seeder
                 'name' => 'Biogoat',
                 'brand' => 'Biogoat',
                 'description' => 'Susu kambing biogoat berkualitas tinggi',
-                'image' => 'https://images.unsplash.com/photo-1587334274328-64186a80aaee?w=400&h=400&fit=crop&q=80',
+                'image' => null,
                 'variants' => [
                     ['flavor' => 'Original', 'size' => '250ml', 'center_price' => 11000, 'selling_price' => 13000],
                     ['flavor' => 'Original', 'size' => '1L', 'center_price' => 38000, 'selling_price' => 45000],

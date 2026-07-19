@@ -83,15 +83,15 @@ export default function Welcome() {
                 <h1 className="text-center text-[1.75rem] leading-tight font-bold tracking-tight text-text">
                     Pengalaman Terbaik
                     <br />
-                    Menikmati Susu Kambing
+                    Belanja Kebutuhan Harian
                 </h1>
             </div>
 
             {/* SECTION 4 — SUBTITLE */}
             <div className="px-8 pt-3">
                 <p className="text-center text-sm leading-relaxed text-text-muted">
-                    Nikmati susu kambing segar dan produk olahan berkualitas
-                    langsung dari Dombi.
+                    Nikmati belanja kebutuhan harian berkualitas langsung
+                    dari Dombi.
                 </p>
             </div>
 
