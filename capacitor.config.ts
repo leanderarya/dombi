@@ -10,6 +10,10 @@ const config: CapacitorConfig = {
             (process.env.CAP_START_PATH || ''),
         cleartext: false,
         androidScheme: 'https',
+        allowNavigation: [
+            'accounts.google.com',
+            'oauth.google.com',
+        ],
     },
     plugins: {
         Camera: {
