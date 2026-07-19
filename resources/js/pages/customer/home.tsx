@@ -9,6 +9,7 @@ import {
 } from '@/components/icons/phosphor-fill';
 import { useEffect, useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
+import { useGoogleLogin } from '@/hooks/use-google-login';
 import { useHeroSlides } from '@/hooks/use-hero-slides';
 import { useNearestOutlet } from '@/hooks/use-nearest-outlet';
 import { usePickupFlow } from '@/hooks/use-pickup-flow';
@@ -169,6 +170,8 @@ function GreetingCard({
     customerName: string;
     auth: any;
 }) {
+    const { login } = useGoogleLogin();
+
     return (
         <div className="relative z-20 mx-4 -mt-8 rounded-2xl bg-white px-5 py-4 shadow-[0_2px_8px_rgba(0,0,0,0.08)]">
             <div className="flex items-center justify-between">
@@ -185,12 +188,13 @@ function GreetingCard({
                     </div>
                 </div>
                 {!isLoggedIn && (
-                    <a
-                        href="/oauth/google"
+                    <button
+                        type="button"
+                        onClick={login}
                         className="shrink-0 rounded-full border-2 border-primary px-4 py-2 text-xs font-bold text-primary active:bg-primary-light"
                     >
                         Masuk
-                    </a>
+                    </button>
                 )}
             </div>
         </div>
@@ -294,6 +298,8 @@ function ExploreGrid({
     nearestOutlet: { name: string } | null;
     isLoggedIn: boolean;
 }) {
+    const { login } = useGoogleLogin();
+
     const cards: ExploreCard[] = [
         {
             icon: <ShoppingBagFill className="h-5 w-5 text-primary" />,
@@ -316,7 +322,8 @@ function ExploreGrid({
             subtitle: isLoggedIn
                 ? 'Lihat pesanan sebelumnya'
                 : 'Login untuk melihat',
-            href: isLoggedIn ? '/customer/orders' : '/oauth/google',
+            href: isLoggedIn ? '/customer/orders' : undefined,
+            onClick: isLoggedIn ? undefined : login,
         },
         {
             icon: <ChatCircleFill className="h-5 w-5 text-purple-600" />,
@@ -333,6 +340,31 @@ function ExploreGrid({
             <h2 className="fore-section-header">Jelajahi Dombi</h2>
             <div className="mt-3 grid grid-cols-2 gap-3">
                 {cards.map((card) => {
+                    if (card.onClick) {
+                        return (
+                            <button
+                                key={card.title}
+                                type="button"
+                                onClick={card.onClick}
+                                className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
+                            >
+                                <div
+                                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${card.bg} shadow-inner`}
+                                >
+                                    {card.icon}
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="text-xs font-bold text-text">
+                                        {card.title}
+                                    </div>
+                                    <div className="mt-0.5 text-[11px] leading-relaxed text-text-muted">
+                                        {card.subtitle}
+                                    </div>
+                                </div>
+                            </button>
+                        );
+                    }
+
                     const Tag = card.isButton ? 'a' : Link;
                     const extra = card.isButton
                         ? { target: '_blank', rel: 'noopener noreferrer' }
@@ -341,7 +373,7 @@ function ExploreGrid({
                     return (
                         <Tag
                             key={card.title}
-                            href={card.href}
+                            href={card.href!}
                             {...extra}
                             className="group flex items-start gap-3 rounded-xl bg-white p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_4px_12px_rgba(0,0,0,0.03)] transition-all duration-200 active:opacity-80"
                         >
