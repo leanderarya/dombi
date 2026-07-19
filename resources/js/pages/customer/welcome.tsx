@@ -1,8 +1,63 @@
-import { Head } from '@inertiajs/react';
-import { useState } from 'react';
+import { Head, router } from '@inertiajs/react';
+import { Browser } from '@capacitor/browser';
+import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { useState, useEffect } from 'react';
 
 export default function Welcome() {
     const [loading, setLoading] = useState(false);
+    const isNative = Capacitor.isNativePlatform();
+
+    // Handle OAuth callback from Chrome Custom Tab (Android)
+    useEffect(() => {
+        if (!isNative) return;
+
+        const handleAppUrlOpen = async (data: { url: string }) => {
+            if (data.url.includes('com.dombi.customer://auth')) {
+                const url = new URL(data.url);
+                const token = url.searchParams.get('token');
+
+                if (token) {
+                    try {
+                        const response = await fetch('/oauth/exchange-token', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ token }),
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            router.visit(result.redirect || '/customer/home');
+                        }
+                    } catch (err) {
+                        console.error('Token exchange failed:', err);
+                    }
+                }
+            }
+        };
+
+        const listener = App.addListener('appUrlOpen', handleAppUrlOpen);
+
+        return () => {
+            listener.then((l) => l.remove());
+        };
+    }, [isNative]);
+
+    const handleGoogleLogin = async () => {
+        if (isNative) {
+            // Android: open OAuth in Chrome Custom Tab
+            await Browser.open({
+                url: window.location.origin + '/oauth/google?platform=android',
+            });
+        } else {
+            // Web/PWA: normal redirect
+            window.location.href = '/oauth/google';
+        }
+    };
 
     const handleGuestMode = () => {
         setLoading(true);
@@ -102,8 +157,9 @@ export default function Welcome() {
             <div className="px-6 pt-4 pb-[calc(2rem+env(safe-area-inset-bottom,0))]">
                 <div className="mx-auto max-w-sm space-y-3">
                     {/* Primary: Google Login */}
-                    <a
-                        href="/oauth/google"
+                    <button
+                        type="button"
+                        onClick={handleGoogleLogin}
                         className="flex h-14 w-full items-center justify-center gap-3 rounded-full bg-emerald-600 text-sm font-bold text-white shadow-lg shadow-emerald-200/50 transition-all active:bg-emerald-700 active:opacity-80"
                     >
                         <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -125,7 +181,7 @@ export default function Welcome() {
                             />
                         </svg>
                         Masuk dengan Google
-                    </a>
+                    </button>
 
                     {/* Secondary: Guest */}
                     <button

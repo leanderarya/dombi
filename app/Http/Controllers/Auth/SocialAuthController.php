@@ -11,6 +11,7 @@ use App\Services\GuestOrderMerger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -29,6 +30,11 @@ class SocialAuthController extends Controller
             if (str_starts_with($redirect, '/') && ! str_starts_with($redirect, '//')) {
                 $request->session()->put('redirect_after_login', $redirect);
             }
+        }
+
+        // Track platform for mobile OAuth flow
+        if ($request->query('platform') === 'android') {
+            $request->session()->put('oauth_platform', 'android');
         }
 
         return Socialite::driver('google')
@@ -119,7 +125,56 @@ class SocialAuthController extends Controller
         // 7. Redirect to intended destination or home (phone is optional)
         $redirectUrl = $request->session()->pull('redirect_after_login', route('customer.home'));
 
+        // Mobile app: return one-time token via custom URL scheme
+        if ($request->session()->get('oauth_platform') === 'android') {
+            $request->session()->forget('oauth_platform');
+            $token = Str::random(64);
+            Cache::put("auth_token:{$token}", $user->id, now()->addMinutes(5));
+
+            return redirect('com.dombi.customer://auth?token='.$token);
+        }
+
         return redirect($redirectUrl)->with('success', 'Berhasil login.');
+    }
+
+    /**
+     * Exchange one-time token for session (mobile OAuth flow).
+     */
+    public function exchangeToken(Request $request): JsonResponse
+    {
+        $token = $request->input('token');
+
+        if (! $token) {
+            return response()->json(['error' => 'Token required.'], 422);
+        }
+
+        $userId = Cache::pull("auth_token:{$token}");
+
+        if (! $userId) {
+            return response()->json(['error' => 'Token invalid or expired.'], 401);
+        }
+
+        $user = User::find($userId);
+
+        if (! $user || ! $user->is_active) {
+            return response()->json(['error' => 'User not found.'], 401);
+        }
+
+        auth()->login($user, remember: true);
+
+        Customer::firstOrCreate(
+            ['user_id' => $user->id],
+            ['name' => $user->name, 'email' => $user->email, 'is_registered' => true],
+        );
+
+        $request->session()->put('login_at', now()->timestamp);
+        $request->session()->put('last_activity_at', now()->timestamp);
+        $request->session()->forget('guest_mode');
+
+        return response()->json([
+            'success' => true,
+            'redirect' => route('customer.home'),
+        ]);
     }
 
     /**
