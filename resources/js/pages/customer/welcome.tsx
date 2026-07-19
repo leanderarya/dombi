@@ -1,60 +1,47 @@
 import { Head, router } from '@inertiajs/react';
-import { Browser } from '@capacitor/browser';
-import { App } from '@capacitor/app';
+import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 import { Capacitor } from '@capacitor/core';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+
+const WEB_CLIENT_ID = '732242789854-7kvv13nq10hnkovq9j0ji9nrbmdku3oh.apps.googleusercontent.com';
 
 export default function Welcome() {
     const [loading, setLoading] = useState(false);
     const isNative = Capacitor.isNativePlatform();
 
-    // Handle OAuth callback from Chrome Custom Tab (Android)
-    useEffect(() => {
-        if (!isNative) return;
-
-        const handleAppUrlOpen = async (data: { url: string }) => {
-            if (data.url.includes('com.dombi.customer://auth')) {
-                const url = new URL(data.url);
-                const token = url.searchParams.get('token');
-
-                if (token) {
-                    try {
-                        const response = await fetch('/oauth/exchange-token', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify({ token }),
-                        });
-
-                        const result = await response.json();
-
-                        if (result.success) {
-                            router.visit(result.redirect || '/customer/home');
-                        }
-                    } catch (err) {
-                        console.error('Token exchange failed:', err);
-                    }
-                }
-            }
-        };
-
-        const listener = App.addListener('appUrlOpen', handleAppUrlOpen);
-
-        return () => {
-            listener.then((l) => l.remove());
-        };
-    }, [isNative]);
-
     const handleGoogleLogin = async () => {
         if (isNative) {
-            // Android: open OAuth in Chrome Custom Tab
-            await Browser.open({
-                url: window.location.origin + '/oauth/google?platform=android',
-            });
+            // Android: native Google Sign-In
+            try {
+                await GoogleSignIn.initialize({ clientId: WEB_CLIENT_ID });
+                const result = await GoogleSignIn.signIn();
+
+                if (!result.idToken) {
+                    console.error('No ID token received');
+                    return;
+                }
+
+                const response = await fetch('/api/auth/google-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ id_token: result.idToken }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    router.visit(data.redirect || '/customer/home');
+                } else {
+                    console.error('Login failed:', data.error);
+                }
+            } catch (err) {
+                console.error('Google Sign-In failed:', err);
+            }
         } else {
-            // Web/PWA: normal redirect
+            // Web/PWA: normal OAuth redirect
             window.location.href = '/oauth/google';
         }
     };
