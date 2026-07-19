@@ -9,6 +9,7 @@ import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 import { useCart } from '@/lib/use-cart';
 import FavoritesProvider from '@/providers/favorites-provider';
+import { NavigationProvider } from '@/providers/navigation-provider';
 
 interface Props extends PropsWithChildren {
     activeOrder?: any;
@@ -43,33 +44,35 @@ export default function CustomerMobileLayout({
 
     return (
         <FavoritesProvider>
-            <div className="min-h-dvh bg-background text-text">
-                <CustomerLocationBootstrap />
-                <OfflineBanner />
-                {!hideTopBar && (
-                    <CustomerTopBar
-                        addressOverride={topAddress}
-                        customerName={customerName}
-                    />
-                )}
-
-                <main
-                    className={`mx-auto max-w-lg px-4 ${hideTopBar ? '' : 'pt-5'} ${hasFloatingBar ? 'pb-[calc(10rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(5.5rem+env(safe-area-inset-bottom,0))]'}`}
-                >
-                    {children}
-                </main>
-
-                {footerSlot ??
-                    (activeOrder ? (
-                        <ActiveOrderBar
-                            order={activeOrder}
-                            bottomNavVisible={visible}
+            <NavigationProvider rootUrl="/customer/home">
+                <div className="min-h-dvh bg-background text-text">
+                    <CustomerLocationBootstrap />
+                    <OfflineBanner />
+                    {!hideTopBar && (
+                        <CustomerTopBar
+                            addressOverride={topAddress}
+                            customerName={customerName}
                         />
-                    ) : showCartBar ? (
-                        <FloatingCartBar bottomNavVisible={visible} />
-                    ) : null)}
-                {!hideBottomNav && <CustomerBottomNav visible={visible} />}
-            </div>
+                    )}
+
+                    <main
+                        className={`mx-auto max-w-lg px-4 ${hideTopBar ? '' : 'pt-5'} ${hasFloatingBar ? 'pb-[calc(10rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(5.5rem+env(safe-area-inset-bottom,0))]'}`}
+                    >
+                        {children}
+                    </main>
+
+                    {footerSlot ??
+                        (activeOrder ? (
+                            <ActiveOrderBar
+                                order={activeOrder}
+                                bottomNavVisible={visible}
+                            />
+                        ) : showCartBar ? (
+                            <FloatingCartBar bottomNavVisible={visible} />
+                        ) : null)}
+                    {!hideBottomNav && <CustomerBottomNav visible={visible} />}
+                </div>
+            </NavigationProvider>
         </FavoritesProvider>
     );
 }

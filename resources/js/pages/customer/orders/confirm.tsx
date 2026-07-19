@@ -13,12 +13,14 @@ import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import Dialog from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/format';
 import { copyToClipboard } from '@/lib/clipboard';
+import { useNavigation } from '@/providers/navigation-provider';
 
 type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
 
 export default function ConfirmPage({ order, isLoggedIn }: any) {
+    const nav = useNavigation();
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
         const s = order.payment_status;
         if (s === 'paid' || s === 'failed' || s === 'expired') return s;
@@ -36,18 +38,11 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
     const pollStart = useRef(Date.now());
     const submitLock = useRef(false);
 
-    // Push state so browser Back doesn't return to payment gateway
+    // Prune navigation stack after successful payment
+    // so back from confirm goes to orders, not back through checkout
     useEffect(() => {
-        window.history.pushState(null, '', window.location.href);
-        const onPop = () => {
-            // Redirect to safe page instead of going back to payment gateway
-            window.location.href = isLoggedIn
-                ? '/customer/orders'
-                : '/customer/home';
-        };
-        window.addEventListener('popstate', onPop);
-        return () => window.removeEventListener('popstate', onPop);
-    }, [isLoggedIn]);
+        nav.pruneToRoot();
+    }, [nav]);
 
     // Poll payment status as webhook fallback (max 5 min)
     useEffect(() => {
