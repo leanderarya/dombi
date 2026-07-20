@@ -50,6 +50,7 @@ class CustomerOutletController extends Controller
                 'phone' => $outlet->phone,
                 'distance_km' => $distanceKm,
                 'stock_available' => $hasStock,
+                'is_open' => $outlet->isOpen(),
             ];
         });
 
