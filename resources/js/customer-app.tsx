@@ -47,6 +47,18 @@ const PushInit = () => {
       }
     })();
 
+    // Listen for SW navigation messages (iOS PWA notification tap)
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'NAVIGATE' && event.data?.url) {
+        import('@inertiajs/react').then(({ router }) => router.visit(event.data.url));
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+    cleanup = (() => {
+      const prev = cleanup;
+      return () => { prev?.(); navigator.serviceWorker.removeEventListener('message', handleMessage); };
+    })();
+
     return () => { cleanup?.(); };
   }, []);
 

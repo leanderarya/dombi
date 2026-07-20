@@ -1,6 +1,6 @@
-import { createInertiaApp } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
-import { Component, type ReactNode } from 'react';
+import { Component, useEffect, type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import DevToolbar from '@/components/dev-toolbar';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
@@ -36,6 +36,17 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
 
 const PushInit = () => {
   usePushSubscription();
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'NAVIGATE' && event.data?.url) {
+        router.visit(event.data.url);
+      }
+    };
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
+  }, []);
+
   return null;
 };
 
