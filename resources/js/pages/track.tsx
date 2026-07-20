@@ -397,13 +397,13 @@ export default function TrackPage({
                         </div>
                         {order.outlet?.phone && (
                             <a
-                                href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
+                                href={`https://wa.me/62${String(order.outlet.phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:opacity-80"
                             >
                                 <Phone className="h-4 w-4" />
-                                Hubungi WhatsApp
+                                Hubungi Outlet
                             </a>
                         )}
                     </div>
@@ -521,13 +521,13 @@ export default function TrackPage({
                         </div>
                         {order.outlet?.phone && (
                             <a
-                                href={`https://wa.me/${order.outlet.phone.replace(/^0/, '62')}`}
+                                href={`https://wa.me/62${String(order.outlet.phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80"
                             >
                                 <Phone className="h-3.5 w-3.5" />
-                                WhatsApp Outlet
+                                Hubungi Outlet via WA
                             </a>
                         )}
                     </div>
