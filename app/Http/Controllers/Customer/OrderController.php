@@ -412,6 +412,13 @@ class OrderController extends Controller
         // Store restored items in session cart for checkout
         session()->put('checkout.cart', $result['items']);
 
+        session()->forget([
+            'checkout.location',
+            'checkout.fulfillment_type',
+            'checkout.delivery_fee',
+            'checkout.delivery_quote',
+        ]);
+
         // Build flash message
         $itemCount = count($result['items']);
         $message = $itemCount === 1
