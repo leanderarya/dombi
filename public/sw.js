@@ -68,7 +68,9 @@ self.addEventListener('fetch', (event) => {
 });
 
 self.addEventListener('push', (event) => {
-  const data = event.data?.json() ?? { title: 'Dombi', body: '' };
+  let data;
+  try { data = event.data?.json(); } catch { data = null; }
+  data = data ?? { title: 'Dombi', body: '' };
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,

@@ -15,6 +15,8 @@ const PushInit = () => {
   usePushSubscription();
 
   useEffect(() => {
+    let cleanup: (() => void) | null = null;
+
     (async () => {
       try {
         const { PushNotifications } = await import('@capacitor/push-notifications');
@@ -23,7 +25,7 @@ const PushInit = () => {
 
         await PushNotifications.register();
 
-        PushNotifications.addListener('registration', (token) => {
+        const regListener = PushNotifications.addListener('registration', (token) => {
           fetch('/push/fcm-token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() },
@@ -31,14 +33,21 @@ const PushInit = () => {
           });
         });
 
-        PushNotifications.addListener('pushNotificationActionPerformed', (notif) => {
+        const actionListener = PushNotifications.addListener('pushNotificationActionPerformed', (notif) => {
           const url = notif.notification.data?.url;
           if (url) window.location.href = url;
         });
+
+        cleanup = () => {
+          regListener.remove();
+          actionListener.remove();
+        };
       } catch {
         // Not running in Capacitor — skip native push
       }
     })();
+
+    return () => { cleanup?.(); };
   }, []);
 
   return null;
