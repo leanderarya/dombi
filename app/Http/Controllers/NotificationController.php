@@ -44,13 +44,25 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        $count = Notification::query()
+        $query = Notification::query()
             ->where('user_type', $user->role)
-            ->where('user_id', $user->id)
-            ->unread()
-            ->count();
+            ->where('user_id', $user->id);
 
-        return response()->json(['unread_count' => $count]);
+        $unreadCount = (clone $query)->unread()->count();
+
+        $response = ['unread_count' => $unreadCount];
+
+        if ($request->filled('since_id')) {
+            $latest = (clone $query)
+                ->where('id', '>', $request->integer('since_id'))
+                ->latest()
+                ->limit(5)
+                ->get(['id', 'title', 'message', 'entity_type', 'entity_id']);
+
+            $response['latest'] = $latest;
+        }
+
+        return response()->json($response);
     }
 
     public function markAsRead(Request $request, Notification $notification): JsonResponse
