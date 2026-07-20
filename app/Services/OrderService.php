@@ -203,6 +203,12 @@ class OrderService
                 ->find((int) $payload['selected_outlet_id']);
 
             if ($selectedOutlet && $this->outletAssignmentService->outletHasEnoughStock($selectedOutlet, $items)) {
+                if (! $selectedOutlet->isOpen()) {
+                    throw ValidationException::withMessages([
+                        'selected_outlet_id' => 'Outlet sedang tutup. Pesanan dapat dibuat pada jam operasional.',
+                    ]);
+                }
+
                 return collect([$selectedOutlet]);
             }
 
