@@ -66,3 +66,32 @@ self.addEventListener('fetch', (event) => {
         );
     }
 });
+
+self.addEventListener('push', (event) => {
+  const data = event.data?.json() ?? { title: 'Dombi', body: '' };
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/favicon.png',
+      badge: '/badge.png',
+      data: { url: data.url },
+      tag: data.tag,
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => {
+      const existing = cs.find((c) => {
+        const cUrl = c.url.endsWith('/') ? c.url : c.url + '/';
+        const tUrl = url.endsWith('/') ? url : url + '/';
+        return cUrl === tUrl;
+      });
+      if (existing) { existing.focus(); return; }
+      clients.openWindow(url);
+    })
+  );
+});
