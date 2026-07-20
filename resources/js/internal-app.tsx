@@ -75,7 +75,12 @@ createInertiaApp({
             <ErrorBoundary>
                 <PushInit />
                 <App {...props} />
-                <Toaster position="top-center" richColors closeButton />
+                <Toaster
+                  position="top-center"
+                  richColors
+                  closeButton
+                  style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
+                />
                 {(props.initialPage.props.dev as Record<string, unknown>)
                     ?.isLocal && (
                     <DevToolbar
