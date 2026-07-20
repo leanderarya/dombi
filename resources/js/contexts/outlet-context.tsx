@@ -20,6 +20,8 @@ export type OutletOption = {
     phone?: string | null;
     distance_km?: number | null;
     stock_available: boolean;
+    is_open?: boolean;
+    next_open?: string | null;
 };
 
 type OutletContextValue = {
