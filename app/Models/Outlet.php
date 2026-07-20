@@ -68,6 +68,26 @@ class Outlet extends Model
         return $this->status === 'active';
     }
 
+    public function isOpen(): bool
+    {
+        $today = now()->toDateString();
+        $hasHoliday = $this->holidays()
+            ->where('start_date', '<=', $today)
+            ->where('end_date', '>=', $today)
+            ->exists();
+        if ($hasHoliday) {
+            return false;
+        }
+
+        $currentDay = (int) now()->format('w');
+        $hours = $this->operatingHours()->where('day_of_week', $currentDay)->first();
+        if (! $hours || $hours->is_closed) {
+            return false;
+        }
+
+        return $hours->isOpenAt(now()->format('H:i:s'));
+    }
+
     // ─── Relationships ─────────────────────────────────────
 
     public function inventories(): HasMany
