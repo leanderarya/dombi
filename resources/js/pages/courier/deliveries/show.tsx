@@ -148,7 +148,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
 
     const whatsappCustomer = () => {
         if (recipientPhone) {
-            const phone = recipientPhone.replace(/^0/, '62');
+            const phone = '62' + String(recipientPhone).replace(/\D/g, '').replace(/^(?:0|62)/, '');
             window.open(`https://wa.me/${phone}`, '_blank');
         }
     };
