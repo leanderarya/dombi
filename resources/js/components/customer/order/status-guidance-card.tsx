@@ -1,9 +1,9 @@
 import { Link } from '@inertiajs/react';
 import { Clock, MapPin, Phone } from 'lucide-react';
 import { useCountdown } from '@/hooks/use-countdown';
+import { waLinkWithMessage } from '@/lib/wa';
 
 const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
-const WA_LINK = 'https://wa.me/';
 
 const STATUS_GUIDANCE: Record<
     string,
@@ -75,6 +75,9 @@ interface Props {
     outletPhone?: string | null;
     outletLatitude?: number | null;
     outletLongitude?: number | null;
+    outletName?: string;
+    customerName?: string;
+    orderCode?: string;
 }
 
 export default function StatusGuidanceCard({
@@ -85,6 +88,9 @@ export default function StatusGuidanceCard({
     outletPhone,
     outletLatitude,
     outletLongitude,
+    outletName,
+    customerName,
+    orderCode,
 }: Props) {
     const countdown = useCountdown(confirmationExpiresAt);
     const isPendingUnpaid =
@@ -148,13 +154,21 @@ export default function StatusGuidanceCard({
                         ) : guidance.cta.action === 'wa_outlet' &&
                           outletPhone ? (
                             <a
-                                href={`${WA_LINK}62${String(outletPhone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`}
+                                href={waLinkWithMessage(outletPhone, {
+                                    order_code: orderCode ?? '',
+                                    customer_name: customerName,
+                                    outlet_name: outletName,
+                                })}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     window.open(
-                                        `${WA_LINK}62${String(outletPhone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`,
+                                        waLinkWithMessage(outletPhone, {
+                                            order_code: orderCode ?? '',
+                                            customer_name: customerName,
+                                            outlet_name: outletName,
+                                        }),
                                         '_blank',
                                         'noopener,noreferrer',
                                     );

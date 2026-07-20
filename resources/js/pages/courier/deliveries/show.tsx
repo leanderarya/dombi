@@ -20,6 +20,7 @@ import StickyActionBar from '@/components/ui/sticky-action-bar';
 import CourierLayout from '@/layouts/courier-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
 import { isDifferentRecipient, getContactPhone } from '@/lib/recipient';
+import { normalizePhone } from '@/lib/wa';
 
 interface DeliveryData {
     id: number;
@@ -148,8 +149,7 @@ export default function CourierDeliveryShow({ delivery }: Props) {
 
     const whatsappCustomer = () => {
         if (recipientPhone) {
-            const phone = '62' + String(recipientPhone).replace(/\D/g, '').replace(/^(?:0|62)/, '');
-            window.open(`https://wa.me/${phone}`, '_blank');
+            window.open(`https://wa.me/${normalizePhone(recipientPhone)}`, '_blank');
         }
     };
 

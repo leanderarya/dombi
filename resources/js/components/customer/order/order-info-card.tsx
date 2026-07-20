@@ -9,9 +9,9 @@ import {
     UserCheck,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/format';
+import { waLinkWithMessage } from '@/lib/wa';
 
 const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
-const WA_LINK = 'https://wa.me/';
 
 interface OrderItem {
     product_name: string;
@@ -53,6 +53,8 @@ interface Props {
     latitude?: number | null;
     longitude?: number | null;
     fulfillmentType?: string;
+    customerName?: string;
+    orderCode?: string;
 }
 
 export default function OrderInfoCard({
@@ -69,6 +71,8 @@ export default function OrderInfoCard({
     latitude,
     longitude,
     fulfillmentType,
+    customerName,
+    orderCode,
 }: Props) {
     return (
         <div className="mt-4 divide-y divide-border/50 rounded-xl border border-border bg-white">
@@ -157,13 +161,23 @@ export default function OrderInfoCard({
                             )}
                             {outlet.phone && (
                                 <a
-                                    href={`${WA_LINK}62${String(outlet.phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`}
+                                    href={waLinkWithMessage(outlet.phone, {
+                                        order_code: orderCode ?? '',
+                                        customer_name: customerName,
+                                        outlet_name: outlet.name,
+                                        total,
+                                    })}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => {
                                         e.preventDefault();
                                         window.open(
-                                            `${WA_LINK}62${String(outlet.phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`,
+                                            waLinkWithMessage(outlet.phone, {
+                                                order_code: orderCode ?? '',
+                                                customer_name: customerName,
+                                                outlet_name: outlet.name,
+                                                total,
+                                            }),
                                             '_blank',
                                             'noopener,noreferrer',
                                         );

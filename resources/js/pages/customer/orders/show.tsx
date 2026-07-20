@@ -19,6 +19,7 @@ import OfflineBanner from '@/components/shared/offline-banner';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import Dialog from '@/components/ui/dialog';
 import StatusBadge from '@/components/ui/status-badge';
+import { waLinkWithMessage } from '@/lib/wa';
 import {
     useOrderCancel,
     useOrderPay,
@@ -105,7 +106,6 @@ const STATUS_GUIDANCE: Record<
 };
 
 const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
-const WA_LINK = 'https://wa.me/';
 
 /* ─── Main ─────────────────────────────────────────────────── */
 
@@ -211,6 +211,9 @@ export default function OrderShow({
                     outletPhone={order.outlet?.phone}
                     outletLatitude={order.outlet?.latitude}
                     outletLongitude={order.outlet?.longitude}
+                    outletName={order.outlet?.name}
+                    customerName={order.customer_name}
+                    orderCode={order.order_code}
                 />
 
                 {isPickup && order.status === 'ready_for_pickup' && (
@@ -243,6 +246,8 @@ export default function OrderShow({
                     latitude={order.latitude}
                     longitude={order.longitude}
                     fulfillmentType={order.fulfillment_type}
+                    customerName={order.customer_name}
+                    orderCode={order.order_code}
                 />
 
                 <StatusBanner order={order} />
@@ -253,7 +258,12 @@ export default function OrderShow({
                             onClick={() => setCancelDialogOpen(true)}
                         />
                     ) : !isTerminal ? (
-                        <NonCancellableNotice phone={order.outlet?.phone} />
+                        <NonCancellableNotice
+                            phone={order.outlet?.phone}
+                            outletName={order.outlet?.name}
+                            customerName={order.customer_name}
+                            orderCode={order.order_code}
+                        />
                     ) : order.status !== 'completed' ? (
                         <ReorderLink orderId={order.id} />
                     ) : null}
@@ -472,7 +482,17 @@ function CancelButton({ onClick }: { onClick: () => void }) {
     );
 }
 
-function NonCancellableNotice({ phone }: { phone?: string }) {
+function NonCancellableNotice({
+    phone,
+    outletName,
+    customerName,
+    orderCode,
+}: {
+    phone?: string;
+    outletName?: string;
+    customerName?: string;
+    orderCode?: string;
+}) {
     return (
         <div className="flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2">
             <span className="text-[11px] text-text-muted">
@@ -480,13 +500,21 @@ function NonCancellableNotice({ phone }: { phone?: string }) {
             </span>
             {phone && (
                 <a
-                    href={`${WA_LINK}62${String(phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`}
+                    href={waLinkWithMessage(phone, {
+                        order_code: orderCode ?? '',
+                        customer_name: customerName,
+                        outlet_name: outletName,
+                    })}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => {
                         e.preventDefault();
                         window.open(
-                            `${WA_LINK}62${String(phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`,
+                            waLinkWithMessage(phone, {
+                                order_code: orderCode ?? '',
+                                customer_name: customerName,
+                                outlet_name: outletName,
+                            }),
                             '_blank',
                             'noopener,noreferrer',
                         );
