@@ -8,10 +8,15 @@ use App\Services\PushNotificationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 
 class PushNotificationJob implements ShouldQueue
 {
     use Dispatchable, Queueable;
+
+    public $tries = 3;
+
+    public $backoff = [5, 15];
 
     public function __construct(
         public ?User $user,
