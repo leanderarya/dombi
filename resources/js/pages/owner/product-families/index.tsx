@@ -1,6 +1,7 @@
 import { router, useForm } from '@inertiajs/react';
 import { Package, Pencil, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import {
@@ -95,18 +96,26 @@ export default function ProductFamiliesIndex({ families }: Props) {
 
         if (editingId) {
             put(`/owner/product-families/${editingId}`, {
+                preserveScroll: true,
                 onSuccess: () => {
+                    toast.success('Berhasil diperbarui');
                     reset();
                     setShowForm(false);
                     setEditingId(null);
                 },
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             });
         } else {
             post('/owner/product-families', {
+                preserveScroll: true,
                 onSuccess: () => {
+                    toast.success('Berhasil ditambahkan');
                     reset();
                     setShowForm(false);
                 },
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             });
         }
     };
@@ -124,7 +133,12 @@ export default function ProductFamiliesIndex({ families }: Props) {
     const handleDelete = () => {
         if (deleteId) {
             router.delete(`/owner/product-families/${deleteId}`, {
-                onSuccess: () => setDeleteId(null),
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Berhasil dihapus');
+                    setDeleteId(null);
+                },
+                onError: () => toast.error('Gagal menghapus'),
             });
         }
     };

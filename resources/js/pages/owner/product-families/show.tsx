@@ -9,6 +9,7 @@ import {
     ToggleRight,
 } from 'lucide-react';
 import { useState, useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
 import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -234,10 +235,13 @@ export default function ProductFamilyShow({ family }: Props) {
     const handleUpdateFamily = (e: React.FormEvent) => {
         e.preventDefault();
         familyForm.put(`/owner/product-families/${family.id}`, {
+            preserveScroll: true,
             onSuccess: () => {
+                toast.success('Berhasil diperbarui');
                 setShowFamilyEdit(false);
             },
             onError: (errors) => {
+                toast.error(Object.values(errors).flat().join(', '));
                 Object.entries(errors as Record<string, string>).forEach(
                     ([key, value]) =>
                         familyForm.setError(
@@ -250,33 +254,51 @@ export default function ProductFamilyShow({ family }: Props) {
     };
     const handleDeleteFamily = () => {
         router.delete(`/owner/product-families/${family.id}`, {
-            onSuccess: () => setDeleteFamilyDialog(false),
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Berhasil dihapus');
+                setDeleteFamilyDialog(false);
+            },
+            onError: () => toast.error('Gagal menghapus'),
         });
     };
     const handleDeleteVariant = () => {
         if (deleteId) {
             router.delete(`/owner/variants/${deleteId}`, {
-                onSuccess: () => setDeleteId(null),
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Berhasil dihapus');
+                    setDeleteId(null);
+                },
+                onError: () => toast.error('Gagal menghapus'),
             });
         }
     };
     const handleCreateVariant = (e: React.FormEvent) => {
         e.preventDefault();
         variantForm.post(`/owner/product-families/${family.id}/variants`, {
+            preserveScroll: true,
             onSuccess: () => {
+                toast.success('Berhasil ditambahkan');
                 variantForm.reset();
                 setShowVariantForm(false);
             },
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
     const handleUpdateVariant = (e: React.FormEvent) => {
         e.preventDefault();
         if (!editingVariant) return;
         variantForm.put(`/owner/variants/${editingVariant.id}`, {
+            preserveScroll: true,
             onSuccess: () => {
+                toast.success('Berhasil diperbarui');
                 variantForm.reset();
                 setEditingVariant(null);
             },
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -598,6 +620,16 @@ export default function ProductFamilyShow({ family }: Props) {
                                                                 {},
                                                                 {
                                                                     preserveScroll: true,
+                                                                    onSuccess: () =>
+                                                                        toast.success(
+                                                                            v.is_active
+                                                                                ? 'Berhasil dinonaktifkan'
+                                                                                : 'Berhasil diaktifkan',
+                                                                        ),
+                                                                    onError: () =>
+                                                                        toast.error(
+                                                                            'Gagal mengubah status',
+                                                                        ),
                                                                 },
                                                             )
                                                         }
@@ -761,11 +793,19 @@ export default function ProductFamilyShow({ family }: Props) {
                             bulkForm.post(
                                 `/owner/product-families/${family.id}/variants/bulk-update`,
                                 {
+                                    preserveScroll: true,
                                     onSuccess: () => {
+                                        toast.success('Berhasil diperbarui');
                                         bulkForm.reset();
                                         setBulkModalOpen(false);
                                         setSelectedIds(new Set());
                                     },
+                                    onError: (errors) =>
+                                        toast.error(
+                                            Object.values(errors)
+                                                .flat()
+                                                .join(', '),
+                                        ),
                                 },
                             );
                         }}
