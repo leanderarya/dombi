@@ -28,6 +28,16 @@ class NotificationService
 
     public const ORDER_CANCELLED = 'order.cancelled';
 
+    public const ORDER_PREPARING = 'order.preparing';
+
+    public const ORDER_READY_FOR_PICKUP = 'order.ready_for_pickup';
+
+    public const ORDER_PICKED_UP = 'order.picked_up';
+
+    public const ORDER_DELIVERING = 'order.delivering';
+
+    public const ORDER_COMPLETED = 'order.completed';
+
     // Delivery notifications
     public const COURIER_ASSIGNED = 'delivery.courier_assigned';
 
@@ -204,6 +214,91 @@ class NotificationService
                 title: 'Pesanan Kadaluarsa',
                 message: "Pesanan {$order->order_code} kadaluarsa karena tidak dikonfirmasi.",
                 data: ['order_id' => $order->id, 'order_code' => $order->order_code]
+            );
+        }
+    }
+
+    public function notifyOrderPreparing(Order $order): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::ORDER_PREPARING,
+                title: 'Pesanan Disiapkan',
+                message: "Pesanan {$order->order_code} sedang disiapkan outlet.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyOrderReadyForPickup(Order $order): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::ORDER_READY_FOR_PICKUP,
+                title: 'Pesanan Siap Diambil',
+                message: "Pesanan {$order->order_code} sudah siap diambil.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyOrderPickedUp(Order $order): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::ORDER_PICKED_UP,
+                title: 'Pesanan Diambil Kurir',
+                message: "Pesanan {$order->order_code} telah diambil kurir.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyOrderDelivering(Order $order): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::ORDER_DELIVERING,
+                title: 'Pesanan Dalam Perjalanan',
+                message: "Pesanan {$order->order_code} sedang dalam perjalanan.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyOrderCompleted(Order $order): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::ORDER_COMPLETED,
+                title: 'Pesanan Selesai',
+                message: "Pesanan {$order->order_code} telah selesai.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
             );
         }
     }
