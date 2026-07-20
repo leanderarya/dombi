@@ -70,7 +70,8 @@ class Outlet extends Model
 
     public function isOpen(): bool
     {
-        $today = now()->toDateString();
+        $local = now('Asia/Jakarta');
+        $today = $local->toDateString();
         $hasHoliday = $this->holidays()
             ->where('start_date', '<=', $today)
             ->where('end_date', '>=', $today)
@@ -79,13 +80,13 @@ class Outlet extends Model
             return false;
         }
 
-        $currentDay = (int) now()->format('w');
+        $currentDay = (int) $local->format('w');
         $hours = $this->operatingHours()->where('day_of_week', $currentDay)->first();
         if (! $hours || $hours->is_closed) {
             return false;
         }
 
-        return $hours->isOpenAt(now()->format('H:i:s'));
+        return $hours->isOpenAt($local->format('H:i:s'));
     }
 
     // ─── Relationships ─────────────────────────────────────

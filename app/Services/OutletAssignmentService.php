@@ -26,7 +26,8 @@ class OutletAssignmentService
             ->get();
 
         // Filter out holidays
-        $today = now()->toDateString();
+        $local = now('Asia/Jakarta');
+        $today = $local->toDateString();
         $outlets = $outlets->reject(function (Outlet $outlet) use ($today) {
             return $outlet->holidays()
                 ->where('start_date', '<=', $today)
@@ -35,8 +36,8 @@ class OutletAssignmentService
         });
 
         // Filter out closed hours
-        $currentTime = now()->format('H:i:s');
-        $currentDay = (int) now()->format('w'); // 0=Sunday
+        $currentTime = $local->format('H:i:s');
+        $currentDay = (int) $local->format('w'); // 0=Sunday
         $outlets = $outlets->reject(function (Outlet $outlet) use ($currentTime, $currentDay) {
             $hours = $outlet->operatingHours()->where('day_of_week', $currentDay)->first();
             if ($hours && $hours->is_closed) {
