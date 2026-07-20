@@ -158,7 +158,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
         );
     }, [order.id, cancelReason]);
 
-    const handlePay = useCallback(() => {
+    const handlePay = useCallback((method?: string) => {
         if (submitLock.current || payLoading) return;
         submitLock.current = true;
         setPayLoading(true);
@@ -178,6 +178,14 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
             csrfInput.name = '_token';
             csrfInput.value = csrf;
             form.appendChild(csrfInput);
+
+            if (method) {
+                const methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = 'payment_method';
+                methodInput.value = method;
+                form.appendChild(methodInput);
+            }
 
             document.body.appendChild(form);
             form.submit();
@@ -382,7 +390,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                             <>
                                 {paymentStatus === 'failed' && (
                                     <button
-                                        onClick={handlePay}
+                                        onClick={() => handlePay()}
                                         disabled={payLoading}
                                         className="min-h-12 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white shadow-sm active:opacity-80 disabled:opacity-50"
                                     >
@@ -395,6 +403,42 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                                             'Bayar Sekarang'
                                         )}
                                     </button>
+                                )}
+                                {(paymentStatus === 'failed' ||
+                                    paymentStatus === 'expired') && (
+                                    <div className="space-y-2">
+                                        <p className="text-center text-xs font-medium text-slate-500">
+                                            Atau pilih metode pembayaran lain
+                                        </p>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {[
+                                                { key: 'qris', label: 'QRIS' },
+                                                {
+                                                    key: 'transfer',
+                                                    label: 'Transfer Bank',
+                                                },
+                                                {
+                                                    key: 'ewallet',
+                                                    label: 'E-Wallet',
+                                                },
+                                                {
+                                                    key: 'credit_card',
+                                                    label: 'Kartu Kredit',
+                                                },
+                                            ].map((m) => (
+                                                <button
+                                                    key={m.key}
+                                                    onClick={() =>
+                                                        handlePay(m.key)
+                                                    }
+                                                    disabled={payLoading}
+                                                    className="min-h-11 rounded-xl border border-emerald-200 bg-white text-xs font-bold text-emerald-700 active:opacity-80 disabled:opacity-50"
+                                                >
+                                                    {m.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
                                 )}
                                 <button
                                     onClick={() =>

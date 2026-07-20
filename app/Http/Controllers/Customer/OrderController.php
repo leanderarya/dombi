@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -166,8 +167,16 @@ class OrderController extends Controller
      * Create DOKU payment for a confirmed order and redirect to payment page.
      * Accessible by: logged-in customer, recovered guest, OR fresh checkout guest (CSRF-protected).
      */
-    public function pay(Order $order): RedirectResponse
+    public function pay(Request $request, Order $order): RedirectResponse
     {
+        $validated = $request->validate([
+            'payment_method' => ['nullable', 'string', Rule::in(array_keys(config('doku.methods')))],
+        ]);
+
+        if (($validated['payment_method'] ?? null) && $order->payment_method !== $validated['payment_method']) {
+            $order->update(['payment_method' => $validated['payment_method']]);
+        }
+
         // Ownership verification — permissive for checkout flow
         $user = auth()->user();
         if ($user) {
