@@ -1,6 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export type PushState = 'active' | 'denied' | 'unsupported' | 'loading';
+
+const CSRF_TOKEN =
+  typeof document !== 'undefined'
+    ? document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? ''
+    : '';
 
 function urlBase64ToUint8Array(base64String: string): BufferSource {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -9,11 +14,37 @@ function urlBase64ToUint8Array(base64String: string): BufferSource {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
-function getCsrfToken(): string {
-  return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+async function doSubscribe(): Promise<boolean> {
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const existing = await registration.pushManager.getSubscription();
+    if (existing) return true;
+
+    const vapidKey = document.querySelector('meta[name="vapid-public-key"]')?.getAttribute('content');
+    if (!vapidKey) return false;
+
+    const subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidKey),
+    });
+
+    const res = await fetch('/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF_TOKEN },
+      body: JSON.stringify(subscription.toJSON()),
+    });
+
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
-export function usePushSubscription(): { pushState: PushState } {
+/**
+ * Auto-subscribe on mount when permission is already granted.
+ * For `default` state (iOS PWA), we DON'T auto-prompt — caller must invoke `requestEnable()` on user gesture.
+ */
+export function usePushSubscription(): { pushState: PushState; requestEnable: () => Promise<boolean> } {
   const [pushState, setPushState] = useState<PushState>('loading');
 
   useEffect(() => {
@@ -27,51 +58,32 @@ export function usePushSubscription(): { pushState: PushState } {
       return;
     }
 
-    if (Notification.permission === 'default') {
-      Notification.requestPermission().then((perm) => {
-        if (perm !== 'granted') {
-          setPushState('denied');
-          return;
-        }
-        subscribe();
-      });
+    if (Notification.permission === 'granted') {
+      doSubscribe().then((ok) => setPushState(ok ? 'active' : 'denied'));
       return;
     }
 
-    subscribe();
-
-    async function subscribe() {
-      try {
-        const registration = await navigator.serviceWorker.ready;
-        const existing = await registration.pushManager.getSubscription();
-        if (existing) {
-          setPushState('active');
-          return;
-        }
-
-        const vapidKey = document.querySelector('meta[name="vapid-public-key"]')?.getAttribute('content');
-        if (!vapidKey) {
-          setPushState('unsupported');
-          return;
-        }
-
-        const subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidKey),
-        });
-
-        await fetch('/push/subscribe', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() },
-          body: JSON.stringify(subscription.toJSON()),
-        });
-
-        setPushState('active');
-      } catch {
-        setPushState('denied');
-      }
-    }
+    // default — wait for user gesture
+    setPushState('loading');
   }, []);
 
-  return { pushState };
+  const requestEnable = useCallback(async (): Promise<boolean> => {
+    if (pushState === 'active') return true;
+    if (pushState === 'unsupported') return false;
+
+    let perm = Notification.permission;
+    if (perm === 'default') {
+      perm = await Notification.requestPermission();
+    }
+    if (perm !== 'granted') {
+      setPushState('denied');
+      return false;
+    }
+
+    const ok = await doSubscribe();
+    setPushState(ok ? 'active' : 'denied');
+    return ok;
+  }, [pushState]);
+
+  return { pushState, requestEnable };
 }
