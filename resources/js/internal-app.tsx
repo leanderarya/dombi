@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { Component, type ReactNode } from 'react';
 import { Toaster } from 'sonner';
 import DevToolbar from '@/components/dev-toolbar';
+import { usePushSubscription } from '@/hooks/use-push-subscription';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
 
@@ -33,6 +34,11 @@ class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boole
     }
 }
 
+const PushInit = () => {
+  usePushSubscription();
+  return null;
+};
+
 createInertiaApp({
     title: (title) =>
         title ? `${title} - ${appName} Admin` : `${appName} Admin`,
@@ -56,6 +62,7 @@ createInertiaApp({
         const root = createRoot(el!);
         root.render(
             <ErrorBoundary>
+                <PushInit />
                 <App {...props} />
                 <Toaster position="top-center" richColors closeButton />
                 {(props.initialPage.props.dev as Record<string, unknown>)
