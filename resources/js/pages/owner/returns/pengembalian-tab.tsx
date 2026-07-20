@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import { Button } from '@/components/ui/button';
@@ -50,7 +51,11 @@ export default function PengembalianTab({
         router.post(
             `/owner/returns/${id}/approve`,
             {},
-            { preserveScroll: true },
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Disetujui'),
+                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            },
         );
     };
 
