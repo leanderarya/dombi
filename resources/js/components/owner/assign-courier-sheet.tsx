@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import CustomSelect from '@/components/ui/custom-select';
 import {
@@ -31,7 +32,12 @@ export default function AssignCourierSheet({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         form.post(`/owner/orders/${order.id}/assign-courier`, {
-            onSuccess: () => onClose(),
+            preserveScroll: true,
+            onSuccess: () => {
+                onClose();
+                toast.success('Kurir ditugaskan');
+            },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 

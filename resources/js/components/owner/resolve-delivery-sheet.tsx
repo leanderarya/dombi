@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { Package, TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -75,7 +76,12 @@ export default function ResolveDeliverySheet({
         }
 
         form.post(`/owner/deliveries/${delivery.id}/resolve`, {
-            onSuccess: () => onClose(),
+            preserveScroll: true,
+            onSuccess: () => {
+                onClose();
+                toast.success('Pengiriman diselesaikan');
+            },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     }
 
