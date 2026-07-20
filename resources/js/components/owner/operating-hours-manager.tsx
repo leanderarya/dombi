@@ -1,5 +1,6 @@
 import { Clock, Save } from 'lucide-react';
 import { useState } from 'react';
+import { toastMutation } from '@/lib/toast-mutation';
 
 interface HoursData {
     day_of_week: number;
@@ -44,49 +45,43 @@ export default function OperatingHoursManager({
         return DEFAULT_HOURS.map((d) => map.get(d.day_of_week) ?? d);
     });
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [saved, setSaved] = useState(false);
 
     const updateDay = (index: number, field: keyof HoursData, value: any) => {
         setHours((prev) =>
             prev.map((h, i) => (i === index ? { ...h, [field]: value } : h)),
         );
-        setSaved(false);
     };
 
     const handleSave = async () => {
         setSaving(true);
-        setError(null);
-
-        try {
-            const res = await fetch(
-                `/owner/outlets/${outletId}/operating-hours`,
-                {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document
-                                .querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute('content') ?? '',
+        await toastMutation(
+            async () => {
+                const res = await fetch(
+                    `/owner/outlets/${outletId}/operating-hours`,
+                    {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN':
+                                document
+                                    .querySelector('meta[name="csrf-token"]')
+                                    ?.getAttribute('content') ?? '',
+                        },
+                        body: JSON.stringify({ hours }),
                     },
-                    body: JSON.stringify({ hours }),
-                },
-            );
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                setError(data.error ?? 'Gagal menyimpan.');
-            } else {
-                setSaved(true);
-            }
-        } catch {
-            setError('Gagal menyimpan. Periksa koneksi Anda.');
-        } finally {
-            setSaving(false);
-        }
+                );
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error ?? 'Gagal menyimpan.');
+                return data;
+            },
+            {
+                loading: 'Menyimpan jam operasional...',
+                success: 'Jam operasional tersimpan',
+                error: 'Gagal menyimpan jam operasional',
+            },
+        );
+        setSaving(false);
     };
 
     return (
@@ -142,13 +137,8 @@ export default function OperatingHoursManager({
                 </div>
             ))}
 
-            {error && (
-                <p className="text-xs font-medium text-red-600">{error}</p>
-            )}
-            {saved && (
-                <p className="text-xs font-medium text-emerald-600">
-                    Tersimpan.
-                </p>
+            {saving && (
+                <p className="text-xs font-medium text-amber-600">Menyimpan...</p>
             )}
 
             <button
