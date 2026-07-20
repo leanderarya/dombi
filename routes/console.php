@@ -95,3 +95,10 @@ Schedule::command('restock:check-stuck')
 Schedule::call(function () {
     SchedulerHeartbeat::record();
 })->everyMinute()->name('scheduler-heartbeat');
+
+// ─── QUEUE WORKER ────────────────────────────────────────────────────
+
+Schedule::command('queue:work --tries=3 --stop-when-empty')
+    ->everyMinute()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/queue-work.log'));
