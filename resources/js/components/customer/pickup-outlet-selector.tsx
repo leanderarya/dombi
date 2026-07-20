@@ -17,6 +17,8 @@ type OutletOption = {
     phone?: string | null;
     distance_km?: number | null;
     stock_available: boolean;
+    is_open?: boolean;
+    next_open?: string | null;
 };
 
 type Props = {
@@ -192,6 +194,11 @@ export default function PickupOutletSelector({
                             <div className="mt-0.5 line-clamp-1 text-[11px] text-text-muted">
                                 {selectedOutlet.address}
                             </div>
+                            {selectedOutlet.is_open === false && (
+                                <span className="mt-1 inline-flex items-center rounded bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
+                                    Sedang Tutup{selectedOutlet.next_open ? ` • Buka ${selectedOutlet.next_open}` : ''}
+                                </span>
+                            )}
                         </div>
                         <div className="shrink-0 text-right">
                             {selectedOutlet.distance_km !== null &&
@@ -237,9 +244,14 @@ export default function PickupOutletSelector({
                                                 onSelect(outlet.id);
                                                 setExpanded(false);
                                             }}
+                                            disabled={outlet.is_open === false}
                                             className={`flex w-full items-center justify-between border-b border-border px-4 py-3 text-left last:border-b-0 active:bg-surface-muted ${
                                                 outlet.id === selectedOutletId
                                                     ? 'bg-emerald-50'
+                                                    : ''
+                                            } ${
+                                                outlet.is_open === false
+                                                    ? 'cursor-not-allowed opacity-50'
                                                     : ''
                                             }`}
                                         >
@@ -250,6 +262,11 @@ export default function PickupOutletSelector({
                                                 <div className="truncate text-[10px] text-text-muted">
                                                     {outlet.address}
                                                 </div>
+                                                {outlet.is_open === false && (
+                                                    <span className="mt-0.5 inline-flex items-center rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
+                                                        Sedang Tutup{outlet.next_open ? ` • Buka ${outlet.next_open}` : ''}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="ml-3 flex shrink-0 items-center gap-2">
                                                 <div className="text-right">
