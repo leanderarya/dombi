@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'confirmation_timeout_minutes' => env('ORDER_CONFIRMATION_TIMEOUT_MINUTES', 15),
+    'confirmation_timeout_minutes' => env('ORDER_CONFIRMATION_TIMEOUT_MINUTES', 30),
 
     // Minutes given to customer to retry payment after a failed/expired attempt.
     // Resets confirmation_expires_at so the order doesn't expire immediately.
