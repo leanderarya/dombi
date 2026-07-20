@@ -87,7 +87,28 @@ class RecommendOutletService
             'kecamatan' => $outlet->kecamatan,
             'phone' => $outlet->phone,
             'distance_km' => $distanceKm,
+            'is_open' => $outlet->isOpen(),
+            'next_open' => $this->getNextOpenTime($outlet),
             'stock_available' => true,
         ];
+    }
+
+    private function getNextOpenTime(\App\Models\Outlet $outlet): ?string
+    {
+        $today = (int) now()->format('w');
+        $hours = $outlet->operatingHours()->where('day_of_week', $today)->first();
+        if ($hours && !$hours->is_closed) {
+            return $hours->open_time;
+        }
+
+        for ($i = 1; $i <= 7; $i++) {
+            $day = ($today + $i) % 7;
+            $next = $outlet->operatingHours()->where('day_of_week', $day)->first();
+            if ($next && !$next->is_closed) {
+                return now()->addDays($i)->format('l') . ' ' . $next->open_time;
+            }
+        }
+
+        return null;
     }
 }
