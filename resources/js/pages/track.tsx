@@ -22,6 +22,7 @@ import OfflineBanner from '@/components/shared/offline-banner';
 import Dialog from '@/components/ui/dialog';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
+import { waLinkWithMessage } from '@/lib/wa';
 
 type TrackOrder = {
     id: number;
@@ -397,7 +398,12 @@ export default function TrackPage({
                         </div>
                         {order.outlet?.phone && (
                             <a
-                                href={`https://wa.me/62${String(order.outlet.phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`}
+                                href={waLinkWithMessage(order.outlet.phone, {
+                                    order_code: order.order_code,
+                                    customer_name: order.customer_name,
+                                    outlet_name: order.outlet?.name,
+                                    total: order.total,
+                                })}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:opacity-80"
@@ -521,7 +527,12 @@ export default function TrackPage({
                         </div>
                         {order.outlet?.phone && (
                             <a
-                                href={`https://wa.me/62${String(order.outlet.phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`}
+                                href={waLinkWithMessage(order.outlet.phone, {
+                                    order_code: order.order_code,
+                                    customer_name: order.customer_name,
+                                    outlet_name: order.outlet?.name,
+                                    total: order.total,
+                                })}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80"
