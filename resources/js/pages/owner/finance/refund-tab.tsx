@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { RefreshCw, CheckCircle, XCircle } from 'lucide-react';
 import OwnerLayout from '@/layouts/owner-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
@@ -31,7 +32,10 @@ export default function RefundTab({ refunds }: Props) {
 
     const handleReject = (orderId: number) => {
         if (confirm('Tolak refund ini?')) {
-            router.post(`/owner/refunds/${orderId}/reject`);
+            router.post(`/owner/refunds/${orderId}/reject`, {}, {
+                onSuccess: () => toast.success('Refund ditolak'),
+                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            });
         }
     };
 
