@@ -92,7 +92,11 @@ self.addEventListener('notificationclick', (event) => {
         const tUrl = url.endsWith('/') ? url : url + '/';
         return cUrl === tUrl;
       });
-      if (existing) { existing.focus(); return; }
+      if (existing) {
+        existing.focus();
+        existing.postMessage({ type: 'NAVIGATE', url });
+        return;
+      }
       clients.openWindow(url);
     })
   );
