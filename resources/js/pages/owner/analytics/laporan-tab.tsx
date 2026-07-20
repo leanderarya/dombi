@@ -36,10 +36,10 @@ interface Props {
 
 const statusLabels: Record<string, string> = {
     pending: 'Tertunda',
-    confirmed: 'Dikonfirmasi',
+    confirmed: 'Diterima',
     preparing: 'Disiapkan',
     ready_for_pickup: 'Siap',
-    delivering: 'Dikirim',
+    delivering: 'Dalam Pengiriman',
     completed: 'Selesai',
     cancelled: 'Dibatalkan',
     failed: 'Gagal',
