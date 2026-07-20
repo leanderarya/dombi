@@ -8,6 +8,7 @@ import {
     XCircle,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
@@ -78,7 +79,9 @@ export default function OwnerExchangesShow({ exchange }: any) {
             onSuccess: () => {
                 setShowApprove(false);
                 approveForm.reset();
+                toast.success('Disetujui');
             },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -87,7 +90,17 @@ export default function OwnerExchangesShow({ exchange }: any) {
             onSuccess: () => {
                 setShowReject(false);
                 rejectForm.reset();
+                toast.success('Ditolak');
             },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+        });
+    };
+
+    const handleMarkShipped = () => {
+        router.post(`/owner/exchanges/${exchange.id}/mark-shipped`, {}, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Dikirim'),
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -248,11 +261,7 @@ export default function OwnerExchangesShow({ exchange }: any) {
                             <Button
                                 size="sm"
                                 className="mt-4 w-full"
-                                onClick={() =>
-                                    router.post(
-                                        `/owner/exchanges/${exchange.id}/mark-shipped`,
-                                    )
-                                }
+                                onClick={handleMarkShipped}
                             >
                                 <Truck
                                     className="mr-1 h-3.5 w-3.5"
@@ -469,7 +478,14 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                 router.post(
                                     `/owner/exchanges/${exchange.id}/complete`,
                                     {},
-                                    { onSuccess: () => setShowComplete(false) },
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => {
+                                            setShowComplete(false);
+                                            toast.success('Selesai');
+                                        },
+                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                    },
                                 )
                             }
                         >

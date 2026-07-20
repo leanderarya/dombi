@@ -1,6 +1,7 @@
 import { useForm, router } from '@inertiajs/react';
 import { CheckCircle2, Clock, Package, XCircle } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
@@ -68,7 +69,9 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             onSuccess: () => {
                 setShowApprove(false);
                 approveForm.reset();
+                toast.success('Disetujui');
             },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -77,16 +80,26 @@ export default function OwnerReturnsShow({ return: ret }: any) {
             onSuccess: () => {
                 setShowReject(false);
                 rejectForm.reset();
+                toast.success('Ditolak');
             },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
     const handleMarkReceived = () => {
-        router.post(`/owner/returns/${ret.id}/mark-received`);
+        router.post(`/owner/returns/${ret.id}/mark-received`, {}, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Diterima'),
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+        });
     };
 
     const handleComplete = () => {
-        router.post(`/owner/returns/${ret.id}/complete`);
+        router.post(`/owner/returns/${ret.id}/complete`, {}, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Selesai'),
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+        });
     };
 
     return (
