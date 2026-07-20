@@ -2,17 +2,16 @@ import { useEffect } from 'react';
 
 /**
  * Lock iOS swipe-back gesture on main nav pages.
- * Pushes a dummy history state so swipe-back hits a dead end.
+ * Prevents horizontal swipe from triggering browser navigation
+ * by applying touch-action: pan-y to body (vertical scroll only).
  */
 export function useLockSwipeBack() {
     useEffect(() => {
-        window.history.pushState(null, '', window.location.href);
+        const prev = document.body.style.touchAction;
+        document.body.style.touchAction = 'pan-y';
 
-        const onPopState = () => {
-            window.history.pushState(null, '', window.location.href);
+        return () => {
+            document.body.style.touchAction = prev;
         };
-        window.addEventListener('popstate', onPopState);
-
-        return () => window.removeEventListener('popstate', onPopState);
     }, []);
 }
