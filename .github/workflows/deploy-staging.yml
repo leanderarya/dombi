@@ -13,7 +13,20 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy via SSH
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy code via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.HOSTINGER_SSH_HOST }}
@@ -28,3 +41,14 @@ jobs:
             php artisan route:clear
             php artisan cache:clear
             php artisan view:clear
+
+      - name: Upload built assets via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.HOSTINGER_SSH_HOST }}
+          username: ${{ secrets.HOSTINGER_SSH_USER }}
+          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          port: ${{ secrets.HOSTINGER_SSH_PORT }}
+          source: "public/build/*"
+          target: "domains/dombicenter.com/public_html/staging/"
+          strip_components: 0
