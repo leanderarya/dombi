@@ -19,8 +19,16 @@ interface LatestNotif {
 
 export default function NotificationBell({ unreadCount: initialCount, onClick }: Props) {
   const [unreadCount, setUnreadCount] = useState(initialCount ?? 0);
-  const { pushState } = usePushSubscription();
+  const { pushState, requestEnable } = usePushSubscription();
   const lastIdRef = useRef<number>(0);
+
+  const handleClick = () => {
+    if (pushState === 'loading') {
+      requestEnable();
+      return;
+    }
+    onClick?.();
+  };
 
   useEffect(() => {
     if (initialCount !== undefined) {
@@ -60,18 +68,28 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
   }, [initialCount, pushState]);
 
   return (
-    <button
-      onClick={onClick}
-      className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors active:bg-surface-muted"
-      aria-label="Notifikasi"
-    >
-      <Bell className="h-5 w-5" strokeWidth={1.5} />
-      {unreadCount > 0 && (
-        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
-          {unreadCount > 99 ? '99+' : unreadCount}
-        </span>
+    <div className="relative">
+      <button
+        onClick={handleClick}
+        className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors active:bg-surface-muted"
+        aria-label="Notifikasi"
+      >
+        <Bell className="h-5 w-5" strokeWidth={1.5} />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
+      </button>
+      {pushState === 'loading' && (
+        <button
+          onClick={requestEnable}
+          className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-medium text-primary"
+        >
+          Aktifkan Notifikasi
+        </button>
       )}
-    </button>
+    </div>
   );
 }
 
