@@ -11,7 +11,6 @@
     <meta name="apple-mobile-web-app-title" content="Dombi">
     <link rel="manifest" href="/manifest.json">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="apple-touch-startup-image" href="/splash/iphone-startup.png">
 
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/customer-app.tsx'])

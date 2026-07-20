@@ -12,7 +12,6 @@ import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { PENDING_PHONE_KEY } from '@/lib/constants';
 import { useOrderRecovery } from '@/lib/order-recovery';
 import { usePolling } from '@/lib/use-polling';
-import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -71,7 +70,6 @@ const filterOptions = [
 type ViewState = 'recovered' | 'empty';
 
 export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
-    useLockSwipeBack();
     const { phone, maskedPhone, saveRecovery, clearRecovery } =
         useOrderRecovery();
     const [filter, setFilter] = useState('all');

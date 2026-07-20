@@ -9,8 +9,8 @@ import {
 import { useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import { useGoogleLogin } from '@/hooks/use-google-login';
-import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import { useHeroSlides } from '@/hooks/use-hero-slides';
+import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import { useNearestOutlet } from '@/hooks/use-nearest-outlet';
 import { usePickupFlow } from '@/hooks/use-pickup-flow';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
@@ -35,10 +35,11 @@ export default function Home({ customerName, activeOrders }: any) {
     );
 
     const activeOrder = activeOrders?.[0] ?? null;
-    const showPhoneBanner =
-        isLoggedIn && !auth?.user?.customer?.phone && !phoneBannerDismissed;
 
     useLockSwipeBack();
+
+    const showPhoneBanner =
+        isLoggedIn && !auth?.user?.customer?.phone && !phoneBannerDismissed;
 
     const handleDelivery = () => {
         if (!isLoggedIn) {
