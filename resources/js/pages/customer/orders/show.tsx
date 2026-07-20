@@ -483,6 +483,14 @@ function NonCancellableNotice({ phone }: { phone?: string }) {
                     href={`${WA_LINK}${phone.replace(/^0/, '62')}`}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={(e) => {
+                        e.preventDefault();
+                        window.open(
+                            `${WA_LINK}${phone.replace(/^0/, '62')}`,
+                            '_blank',
+                            'noopener,noreferrer',
+                        );
+                    }}
                     className="flex items-center gap-1 text-[11px] font-semibold text-primary active:opacity-80"
                 >
                     <Phone className="h-3 w-3" />

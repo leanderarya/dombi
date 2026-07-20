@@ -151,6 +151,14 @@ export default function StatusGuidanceCard({
                                 href={`${WA_LINK}${outletPhone.replace(/^0/, '62')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    window.open(
+                                        `${WA_LINK}${outletPhone.replace(/^0/, '62')}`,
+                                        '_blank',
+                                        'noopener,noreferrer',
+                                    );
+                                }}
                                 className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white active:opacity-80"
                             >
                                 <Phone className="h-3.5 w-3.5" />
