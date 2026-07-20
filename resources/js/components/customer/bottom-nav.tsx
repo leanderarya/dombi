@@ -35,7 +35,7 @@ export default function CustomerBottomNav({ visible = true }: Props) {
                             key={item.href}
                             href={item.href}
                             replace={item.href === '/customer/home'}
-                            className={`flex flex-col items-center justify-center gap-0.5 text-xs ${
+                            className={`flex flex-col items-center justify-center gap-0.5 text-xs active:scale-95 transition-transform ${
                                 active
                                     ? 'font-bold text-primary'
                                     : 'font-medium text-zinc-400'

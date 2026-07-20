@@ -50,5 +50,11 @@ if (
         navigator.serviceWorker.register('/sw.js').catch(() => {
             // SW registration failed - non-critical
         });
+
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (confirm('Update tersedia. Muat ulang?')) {
+                window.location.reload();
+            }
+        });
     });
 }
