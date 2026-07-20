@@ -3,13 +3,13 @@ import {
     ChatCircleFill,
     MapPinFill,
     PackageFill,
-    ShoppingBagFill,
     StorefrontFill,
     TruckFill,
 } from '@/components/icons/phosphor-fill';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import { useGoogleLogin } from '@/hooks/use-google-login';
+import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import { useHeroSlides } from '@/hooks/use-hero-slides';
 import { useNearestOutlet } from '@/hooks/use-nearest-outlet';
 import { usePickupFlow } from '@/hooks/use-pickup-flow';
@@ -38,7 +38,7 @@ export default function Home({ customerName, activeOrders }: any) {
     const showPhoneBanner =
         isLoggedIn && !auth?.user?.customer?.phone && !phoneBannerDismissed;
 
-    // Back navigation handled by NavigationProvider
+    useLockSwipeBack();
 
     const handleDelivery = () => {
         if (!isLoggedIn) {
@@ -292,13 +292,6 @@ function ExploreGrid({
     const { login } = useGoogleLogin();
 
     const cards: ExploreCard[] = [
-        {
-            icon: <ShoppingBagFill className="h-5 w-5 text-primary" />,
-            bg: 'bg-primary-light',
-            title: 'Produk',
-            subtitle: 'Produk pilihan untukmu',
-            href: '/customer/products',
-        },
         {
             icon: <MapPinFill className="h-5 w-5 text-blue-600" />,
             bg: 'bg-blue-50',
