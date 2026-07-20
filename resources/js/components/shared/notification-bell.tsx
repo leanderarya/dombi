@@ -1,7 +1,6 @@
 import { router } from '@inertiajs/react';
-import { Bell } from 'lucide-react';
+import { Bell, CheckCircle2, Clock, Package, XCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
 
 interface Props {
@@ -21,6 +20,10 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
   const [unreadCount, setUnreadCount] = useState(initialCount ?? 0);
   const { pushState, requestEnable } = usePushSubscription();
   const lastIdRef = useRef<number>(0);
+  const toastTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  // Cleanup toast timers on unmount
+  useEffect(() => () => toastTimers.current.forEach(clearTimeout), []);
 
   const handleClick = () => {
     if (pushState === 'loading') {
@@ -38,21 +41,16 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
 
     const fetchCount = async () => {
       try {
-        const params = pushState !== 'active' && lastIdRef.current > 0 ? `?since_id=${lastIdRef.current}` : '';
+        const params = lastIdRef.current > 0 ? `?since_id=${lastIdRef.current}` : '';
         const res = await fetch(`/notifications/unread-count${params}`);
         if (!res.ok) return;
         const data = await res.json();
         setUnreadCount(data.unread_count);
 
-        if (pushState !== 'active' && data.latest?.length) {
+        if (data.latest?.length) {
           for (const notif of data.latest as LatestNotif[]) {
             if (notif.id <= lastIdRef.current) continue;
-            toast(notif.title, {
-              description: notif.message,
-              action: notif.entity_type
-                ? { label: 'Buka', onClick: () => router.visit(getEntityUrl(notif.entity_type!, notif.entity_id!)) }
-                : undefined,
-            });
+            showOrderToast(notif.title, notif.message, notif.entity_type, notif.entity_id);
           }
           const ids = data.latest.map((n: LatestNotif) => n.id);
           if (ids.length) lastIdRef.current = Math.max(...ids);
@@ -65,7 +63,7 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
     fetchCount();
     const interval = setInterval(fetchCount, 30000);
     return () => clearInterval(interval);
-  }, [initialCount, pushState]);
+  }, [initialCount]);
 
   return (
     <div className="relative">
@@ -99,4 +97,50 @@ function getEntityUrl(type: string, id: number): string {
     delivery: `/courier/deliveries/${id}`,
   };
   return map[type] || '/';
+}
+
+/* ─── In-app Toast ─────────────────────────────────────────── */
+
+function toastIcon(type?: string | null) {
+  switch (type) {
+    case 'order':
+      return <Package className="h-4 w-4 text-emerald-600" />;
+    default:
+      return <Bell className="h-4 w-4 text-emerald-600" />;
+  }
+}
+
+function showOrderToast(title: string, message: string, entityType: string | null, entityId: number | null) {
+  // Use dynamic import to avoid circular deps with sonner
+  import('sonner').then(({ toast }) => {
+    toast.custom(
+      (t) => (
+        <div
+          className="flex items-center gap-3 rounded-xl border border-border bg-white px-4 py-3 shadow-lg"
+          style={{ animation: 'toastSlideIn 0.3s ease-out' }}
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+            {toastIcon(entityType)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-semibold text-text">{title}</div>
+            <div className="mt-0.5 line-clamp-2 text-xs text-text-muted">{message}</div>
+          </div>
+          {entityType && entityId && (
+            <button
+              type="button"
+              onClick={() => {
+                toast.dismiss(t);
+                router.visit(getEntityUrl(entityType, entityId));
+              }}
+              className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+            >
+              Buka
+            </button>
+          )}
+        </div>
+      ),
+      { duration: 5000, position: 'top-center', style: { top: 'calc(env(safe-area-inset-top, 0px) + 8px)' } },
+    );
+  });
 }

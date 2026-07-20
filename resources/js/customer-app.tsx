@@ -90,7 +90,12 @@ createInertiaApp({
         <CartConfirmationProvider>
           <App {...props} />
         </CartConfirmationProvider>
-        <Toaster position="top-center" richColors closeButton />
+        <Toaster
+          position="top-center"
+          richColors
+          closeButton
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
+        />
         <PushInit />
       </>,
     );
