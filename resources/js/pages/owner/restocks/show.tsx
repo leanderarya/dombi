@@ -1,4 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
 import {
     CheckCircle2,
     XCircle,
@@ -368,6 +369,12 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 onClick={() =>
                                     router.post(
                                         `/owner/restocks/${restock.id}/mark-shipped`,
+                                        {},
+                                        {
+                                            preserveScroll: true,
+                                            onSuccess: () => toast.success('Dikirim'),
+                                            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                        },
                                     )
                                 }
                             >
@@ -473,7 +480,14 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                             onClick={() =>
                                 approveForm.post(
                                     `/owner/restocks/${restock.id}/approve`,
-                                    { onSuccess: () => setShowApprove(false) },
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => {
+                                            setShowApprove(false);
+                                            toast.success('Restock disetujui');
+                                        },
+                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                    },
                                 )
                             }
                             disabled={approveForm.processing}
@@ -524,10 +538,13 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                 rejectForm.post(
                                     `/owner/restocks/${restock.id}/reject`,
                                     {
+                                        preserveScroll: true,
                                         onSuccess: () => {
                                             setShowReject(false);
                                             rejectForm.reset();
+                                            toast.success('Restock ditolak');
                                         },
+                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
                                     },
                                 )
                             }

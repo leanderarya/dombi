@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { displayProductName } from '@/lib/display';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
@@ -37,7 +38,11 @@ export default function EditInventory({ inventory }: any) {
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        form.put(`/owner/inventories/${inventory.id}`);
+                        form.put(`/owner/inventories/${inventory.id}`, {
+                            preserveScroll: true,
+                            onSuccess: () => toast.success('Stok diperbarui'),
+                            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                        });
                     }}
                     className="space-y-4"
                 >

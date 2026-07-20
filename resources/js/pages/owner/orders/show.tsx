@@ -1,4 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { ChevronDown, ChevronUp, MapPin, Truck } from 'lucide-react';
 import { useState } from 'react';
 import OrderStatusChip from '@/components/owner/order-status-chip';
@@ -297,6 +298,11 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 e.preventDefault();
                                 form.post(
                                     `/owner/orders/${order.id}/assign-courier`,
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => toast.success('Kurir ditugaskan'),
+                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                    },
                                 );
                             }}
                             aria-label="Form assign kurir"

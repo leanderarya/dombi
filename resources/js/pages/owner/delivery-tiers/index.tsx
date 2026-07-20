@@ -1,4 +1,5 @@
 import { router, useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { Edit2, GripVertical, Plus, Trash2, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -75,10 +76,13 @@ export default function DeliveryTiersIndex({
 
     const handleAddSubmit = () => {
         addForm.post('/owner/delivery-tiers', {
+            preserveScroll: true,
             onSuccess: () => {
                 setAddDialogOpen(false);
                 addForm.reset();
+                toast.success('Tier ongkir disimpan');
             },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -88,20 +92,34 @@ export default function DeliveryTiersIndex({
         }
 
         editForm.put(`/owner/delivery-tiers/${editingTier.id}`, {
-            onSuccess: () => setEditingTier(null),
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditingTier(null);
+                toast.success('Tier ongkir disimpan');
+            },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
     const handleDelete = () => {
         if (deleteId) {
             router.delete(`/owner/delivery-tiers/${deleteId}`, {
-                onSuccess: () => setDeleteId(null),
+                preserveScroll: true,
+                onSuccess: () => {
+                    setDeleteId(null);
+                    toast.success('Tier ongkir disimpan');
+                },
+                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
             });
         }
     };
 
     const handleToggle = (tierId: number) => {
-        router.patch(`/owner/delivery-tiers/${tierId}/toggle`);
+        router.patch(`/owner/delivery-tiers/${tierId}/toggle`, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Tier ongkir disimpan'),
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+        });
     };
 
     return (
