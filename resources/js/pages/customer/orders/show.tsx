@@ -220,8 +220,17 @@ export default function OrderShow({
                     <OrderQRCard orderCode={order.order_code} />
                 )}
                 {order.status === 'completed' && (
-                    <div className="rounded-lg bg-success/10 p-4 text-center text-sm font-medium text-success">
-                        Pesanan selesai. Terima kasih telah berbelanja.
+                    <div className="rounded-lg bg-success/10 p-4 text-center">
+                        <p className="text-sm font-medium text-success">
+                            Pesanan selesai. Terima kasih telah berbelanja.
+                        </p>
+                        <Link
+                            href={`/customer/orders/${order.id}/restore-cart`}
+                            className="mt-3 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-6 text-xs font-bold text-white active:opacity-80"
+                        >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Beli Lagi
+                        </Link>
                     </div>
                 )}
 
