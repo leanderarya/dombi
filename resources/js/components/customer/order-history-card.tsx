@@ -147,13 +147,17 @@ export default function OrderHistoryCard({ order }: Props) {
                     {itemCount} item · {formatCurrency(order.total)}
                 </div>
                 {order.status === 'completed' && (
-                    <span className="rounded-full border-2 border-primary px-4 py-1.5 text-xs font-bold text-primary">
+                    <Link
+                        href={`/customer/orders/${order.id}/restore-cart`}
+                        className="flex items-center gap-1.5 rounded-full border-2 border-primary px-4 py-1.5 text-xs font-bold text-primary active:opacity-80"
+                    >
+                        <RotateCcw className="h-3.5 w-3.5" />
                         Beli Lagi
-                    </span>
+                    </Link>
                 )}
                 {order.status === 'expired' && (
                     <Link
-                        href="/customer/home"
+                        href={`/customer/orders/${order.id}/restore-cart`}
                         className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-text-muted active:opacity-80"
                     >
                         <RotateCcw className="h-3 w-3" />
