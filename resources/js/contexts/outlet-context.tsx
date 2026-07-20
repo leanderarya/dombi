@@ -157,12 +157,39 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         }
 
         // No saved outlet or saved outlet no longer exists — auto-pick nearest
-        autoSave(outlets[0].id);
+        const nearest = outlets[0];
+        autoSave(nearest.id);
+
+        // Sync to PHP session
+        fetch('/customer/select-outlet', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN':
+                    document.querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute('content') ?? '',
+            },
+            body: JSON.stringify({ outlet_id: nearest.id }),
+        }).catch(() => {});
     }, [outlets, outletId, autoSelected, autoSave]);
 
     const selectManual = useCallback(
         (outlet: OutletOption) => {
             save(outlet.id);
+            // Sync to PHP session so CartController knows the selected outlet
+            fetch('/customer/select-outlet', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN':
+                        document
+                            .querySelector('meta[name="csrf-token"]')
+                            ?.getAttribute('content') ?? '',
+                },
+                body: JSON.stringify({ outlet_id: outlet.id }),
+            }).catch(() => {
+                // Non-critical — fallback to checkout session
+            });
         },
         [save],
     );
