@@ -1,4 +1,5 @@
 import { Link, router, useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
 import {
     Bike,
     Car,
@@ -59,12 +60,21 @@ export default function CourierShow({
     }
 
     const handleToggleActive = () => {
-        toggleForm.put(`/owner/couriers/${courier.id}`);
+        toggleForm.put(`/owner/couriers/${courier.id}`, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Status kurir diperbarui'),
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+        });
     };
 
     const handleDelete = () => {
         router.delete(`/owner/couriers/${courier.id}`, {
-            onFinish: () => setShowDeleteConfirm(false),
+            preserveScroll: true,
+            onSuccess: () => {
+                setShowDeleteConfirm(false);
+                toast.success('Kurir dihapus');
+            },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 

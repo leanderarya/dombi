@@ -1,4 +1,5 @@
 import { Link, router } from '@inertiajs/react';
+import { toast } from 'sonner';
 import {
     Clock,
     DollarSign,
@@ -85,7 +86,12 @@ export default function OutletShow({
             `/owner/outlets/${outlet.id}/archive`,
             {},
             {
-                onFinish: () => setShowArchiveConfirm(false),
+                preserveScroll: true,
+                onSuccess: () => {
+                    setShowArchiveConfirm(false);
+                    toast.success('Outlet diarsipkan');
+                },
+                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
             },
         );
     };

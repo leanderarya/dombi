@@ -1,4 +1,5 @@
 import { useForm } from '@inertiajs/react';
+import { toast } from 'sonner';
 import OutletFormSheet from '@/components/owner/outlet-form-sheet';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { emptyOutletForm } from './create';
@@ -35,7 +36,11 @@ export default function EditOutlet({ outlet, existingOutlets }: any) {
                 existingOutlets={existingOutlets ?? []}
                 submit={(event) => {
                     event.preventDefault();
-                    form.put(`/owner/outlets/${outlet.id}`);
+                    form.put(`/owner/outlets/${outlet.id}`, {
+                        preserveScroll: true,
+                        onSuccess: () => toast.success('Outlet diperbarui'),
+                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                    });
                 }}
             />
         </OwnerPageShell>

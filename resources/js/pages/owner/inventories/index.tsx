@@ -144,7 +144,9 @@ export default function InventoriesIndex({
             onSuccess: () => {
                 setEditItem(null);
                 editForm.reset();
+                toast.success('Stok diperbarui');
             },
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
