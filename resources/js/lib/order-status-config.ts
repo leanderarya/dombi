@@ -21,7 +21,7 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
         className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
     },
     confirmed: {
-        label: 'Dikonfirmasi',
+        label: 'Diterima',
         className: `${BADGE_BASE} bg-emerald-50 text-emerald-700`,
     },
     preparing: {
@@ -37,7 +37,7 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
         className: `${BADGE_BASE} bg-purple-50 text-purple-700`,
     },
     delivering: {
-        label: 'Dikirim',
+        label: 'Dalam Pengiriman',
         className: `${BADGE_BASE} bg-purple-50 text-purple-700`,
     },
 
@@ -47,22 +47,22 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
         className: `${BADGE_BASE} bg-emerald-50 text-emerald-700`,
     },
     cancelled_by_customer: {
-        label: 'Dibatalkan',
+        label: 'Dibatalkan Customer',
         className: `${BADGE_BASE} bg-red-50 text-red-700`,
         reason: 'Dibatalkan oleh Anda',
     },
     cancelled_by_outlet: {
-        label: 'Dibatalkan',
+        label: 'Dibatalkan Outlet',
         className: `${BADGE_BASE} bg-red-50 text-red-700`,
         reason: 'Dibatalkan oleh outlet',
     },
     rejected_by_outlet: {
-        label: 'Ditolak',
+        label: 'Ditolak Outlet',
         className: `${BADGE_BASE} bg-red-50 text-red-700`,
         reason: 'Ditolak oleh outlet',
     },
     failed_delivery: {
-        label: 'Gagal',
+        label: 'Pengiriman Gagal',
         className: `${BADGE_BASE} bg-amber-50 text-amber-700`,
         reason: 'Pengiriman gagal',
     },
