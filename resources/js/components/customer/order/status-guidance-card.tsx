@@ -148,13 +148,13 @@ export default function StatusGuidanceCard({
                         ) : guidance.cta.action === 'wa_outlet' &&
                           outletPhone ? (
                             <a
-                                href={`${WA_LINK}${outletPhone.replace(/^0/, '62')}`}
+                                href={`${WA_LINK}62${String(outletPhone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     window.open(
-                                        `${WA_LINK}${outletPhone.replace(/^0/, '62')}`,
+                                        `${WA_LINK}62${String(outletPhone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`,
                                         '_blank',
                                         'noopener,noreferrer',
                                     );

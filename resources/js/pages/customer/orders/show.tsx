@@ -480,13 +480,13 @@ function NonCancellableNotice({ phone }: { phone?: string }) {
             </span>
             {phone && (
                 <a
-                    href={`${WA_LINK}${phone.replace(/^0/, '62')}`}
+                    href={`${WA_LINK}62${String(phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => {
                         e.preventDefault();
                         window.open(
-                            `${WA_LINK}${phone.replace(/^0/, '62')}`,
+                            `${WA_LINK}62${String(phone).replace(/\D/g, '').replace(/^(?:0|62)/, '')}`,
                             '_blank',
                             'noopener,noreferrer',
                         );
