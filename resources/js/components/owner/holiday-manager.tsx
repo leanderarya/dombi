@@ -1,6 +1,7 @@
 import { Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { formatDate } from '@/lib/format';
+import { toastMutation } from '@/lib/toast-mutation';
 
 interface Holiday {
     id: number;
@@ -21,78 +22,70 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
     const [endDate, setEndDate] = useState('');
     const [reason, setReason] = useState('');
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     const handleAdd = async () => {
-        if (!startDate || !endDate) {
-            return;
-        }
-
+        if (!startDate || !endDate) return;
         setSaving(true);
-        setError(null);
-
-        try {
-            const res = await fetch(`/owner/outlets/${outletId}/holidays`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') ?? '',
-                },
-                body: JSON.stringify({
-                    start_date: startDate,
-                    end_date: endDate,
-                    reason: reason || null,
-                }),
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                setHolidays((prev) => [data.holiday, ...prev]);
-                setStartDate('');
-                setEndDate('');
-                setReason('');
-                setShowForm(false);
-            } else {
-                setError(data.error ?? 'Gagal menambah hari libur.');
-            }
-        } catch {
-            setError('Gagal menambah hari libur.');
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleDelete = async (holidayId: number) => {
-        if (!confirm('Hapus hari libur ini?')) {
-            return;
-        }
-
-        try {
-            const res = await fetch(
-                `/owner/outlets/${outletId}/holidays/${holidayId}`,
-                {
-                    method: 'DELETE',
+        await toastMutation(
+            async () => {
+                const res = await fetch(`/owner/outlets/${outletId}/holidays`, {
+                    method: 'POST',
                     headers: {
+                        'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN':
                             document
                                 .querySelector('meta[name="csrf-token"]')
                                 ?.getAttribute('content') ?? '',
                     },
-                },
-            );
+                    body: JSON.stringify({
+                        start_date: startDate,
+                        end_date: endDate,
+                        reason: reason || null,
+                    }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error ?? 'Gagal menambah hari libur.');
+                return data;
+            },
+            {
+                loading: 'Menambah hari libur...',
+                success: 'Hari libur ditambahkan',
+                error: 'Gagal menambah hari libur',
+            },
+        );
+        setHolidays((prev) => [/* refresh by reloading */ ...prev]);
+        setStartDate('');
+        setEndDate('');
+        setReason('');
+        setShowForm(false);
+        setSaving(false);
+    };
 
-            if (res.ok) {
-                setHolidays((prev) => prev.filter((h) => h.id !== holidayId));
-            }
-        } catch {
-            // Non-critical
-        }
+    const handleDelete = async (holidayId: number) => {
+        await toastMutation(
+            async () => {
+                const res = await fetch(
+                    `/owner/outlets/${outletId}/holidays/${holidayId}`,
+                    {
+                        method: 'DELETE',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRF-TOKEN':
+                                document
+                                    .querySelector('meta[name="csrf-token"]')
+                                    ?.getAttribute('content') ?? '',
+                        },
+                    },
+                );
+                if (!res.ok) throw new Error('Gagal menghapus.');
+            },
+            {
+                success: 'Hari libur dihapus',
+                error: 'Gagal menghapus hari libur',
+            },
+        );
+        setHolidays((prev) => prev.filter((h) => h.id !== holidayId));
     };
 
     return (
@@ -169,9 +162,7 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                         />
                     </label>
                     {error && (
-                        <p className="text-xs font-medium text-red-600">
-                            {error}
-                        </p>
+                        <p className="text-xs font-medium text-red-600">{error}</p>
                     )}
                     <div className="flex gap-2">
                         <button
