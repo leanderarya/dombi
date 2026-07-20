@@ -17,8 +17,9 @@ export default function PushBanner({ variant, onDismiss }: Props) {
     return localStorage.getItem(LS_KEY) === 'true';
   });
 
-  // Hide when active
-  if (pushState === 'active' || pushState === 'unsupported' || dismissed) return null;
+  // Hide when active (home variant) or unsupported
+  if (pushState === 'unsupported') return null;
+  if ((pushState === 'active' && variant === 'home') || dismissed) return null;
 
   const handleEnable = async () => {
     const ok = await requestEnable();
