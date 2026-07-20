@@ -72,8 +72,13 @@ export default function OutletSheet({ open, onClose }: Props) {
                                     key={outlet.id}
                                     type="button"
                                     onClick={() => handleSelect(outlet)}
+                                    disabled={outlet.is_open === false}
                                     className={`flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors active:bg-surface-muted ${
                                         isSelected ? 'bg-emerald-50' : ''
+                                    } ${
+                                        outlet.is_open === false
+                                            ? 'cursor-not-allowed opacity-50'
+                                            : ''
                                     }`}
                                 >
                                     {/* Check indicator */}
@@ -97,6 +102,11 @@ export default function OutletSheet({ open, onClose }: Props) {
                                         <div className="truncate text-[11px] text-text-muted">
                                             {outlet.address}
                                         </div>
+                                        {outlet.is_open === false && (
+                                            <span className="mt-0.5 inline-flex items-center rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
+                                                Sedang Tutup{outlet.next_open ? ` • Buka ${outlet.next_open}` : ''}
+                                            </span>
+                                        )}
                                     </div>
 
                                     {/* Distance + stock */}
