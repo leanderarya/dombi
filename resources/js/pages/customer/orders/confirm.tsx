@@ -20,7 +20,7 @@ type PaymentStatus = 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled';
 
 const POLL_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes max polling
 
-export default function ConfirmPage({ order, isLoggedIn }: any) {
+export default function ConfirmPage({ order, isLoggedIn, cancellationReasons = [] }: any) {
     const nav = useNavigation();
     const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => {
         const s = order.payment_status;
@@ -129,14 +129,6 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
             alert(`Kode pesanan: ${order.order_code}\n\nSalin kode ini secara manual.`);
         }
     }, [order.order_code]);
-
-    const CANCEL_REASONS = [
-        'Salah Pesan',
-        'Ingin Mengubah Pesanan',
-        'Alamat Salah',
-        'Tidak Jadi Membeli',
-        'Lainnya',
-    ];
 
     const handleCancel = useCallback(() => {
         if (!cancelReason) return;
@@ -549,7 +541,7 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                         Pesanan yang dibatalkan tidak dapat dipulihkan.
                     </p>
                     <div className="mt-4 space-y-2">
-                        {CANCEL_REASONS.map((reason) => (
+                        {cancellationReasons.map((reason: string) => (
                             <button
                                 key={reason}
                                 type="button"
