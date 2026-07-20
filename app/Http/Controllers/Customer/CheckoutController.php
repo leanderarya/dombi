@@ -326,7 +326,7 @@ class CheckoutController extends Controller
             'address_id' => ['nullable', 'integer', Rule::exists('customer_addresses', 'id')],
             'latitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-90,90'],
             'longitude' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'numeric', 'between:-180,180'],
-            'address_line' => [$isDelivery && ! $hasExistingLocation ? 'required' : 'nullable', 'nullable', 'string', 'max:1000'],
+            'address_line' => [$isDelivery ? 'required' : 'nullable', 'nullable', 'string', 'max:1000'],
             'address_detail' => ['nullable', 'string', 'max:500'],
             'province' => ['nullable', 'string', 'max:255'],
             'city' => ['nullable', 'string', 'max:255'],
