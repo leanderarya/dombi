@@ -160,6 +160,14 @@ export default function OrderInfoCard({
                                     href={`${WA_LINK}${outlet.phone.replace(/^0/, '62')}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        window.open(
+                                            `${WA_LINK}${outlet.phone.replace(/^0/, '62')}`,
+                                            '_blank',
+                                            'noopener,noreferrer',
+                                        );
+                                    }}
                                     className="inline-flex h-8 items-center gap-1 rounded-lg border border-border px-2.5 text-[11px] font-semibold text-text active:opacity-80"
                                 >
                                     <Phone className="h-3 w-3" />
