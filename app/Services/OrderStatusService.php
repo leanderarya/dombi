@@ -394,6 +394,11 @@ class OrderStatusService
             'rejected_by_outlet' => $this->notificationService->notifyOrderRejected($order, $order->rejection_reason ?? 'Ditolak outlet'),
             'cancelled_by_customer', 'cancelled_by_outlet' => $this->notificationService->notifyOrderCancelled($order),
             'expired' => $this->notificationService->notifyOrderExpired($order),
+            'preparing' => $this->notificationService->notifyOrderPreparing($order),
+            'ready_for_pickup' => $this->notificationService->notifyOrderReadyForPickup($order),
+            'picked_up' => $this->notificationService->notifyOrderPickedUp($order),
+            'delivering' => $this->notificationService->notifyOrderDelivering($order),
+            'completed' => $this->notificationService->notifyOrderCompleted($order),
             default => null,
         };
     }
