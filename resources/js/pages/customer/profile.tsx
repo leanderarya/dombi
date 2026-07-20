@@ -3,10 +3,8 @@ import { HelpCircle, Info, LogOut, MapPin, Package } from 'lucide-react';
 import { useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import LoginDialog from '@/components/customer/login-dialog';
-import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 
 export default function Profile({ defaultAddress }: any) {
-    useLockSwipeBack();
     const { auth, appVersion } = usePage<any>().props;
     const user = auth?.user;
     const isLoggedIn = !!auth?.user;

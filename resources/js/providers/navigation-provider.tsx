@@ -1,7 +1,5 @@
-import { createContext, useContext, useEffect, type ReactNode } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { App } from '@capacitor/app';
-import { useNavigationHistory } from '@/hooks/use-navigation-history';
+import { createContext, useContext, type ReactNode } from 'react';
+import { router } from '@inertiajs/react';
 
 interface NavigationContextValue {
     back: () => void;
@@ -19,31 +17,23 @@ export function useNavigation(): NavigationContextValue {
 
 export function NavigationProvider({
     children,
-    rootUrl,
+    rootUrl = '/customer/home',
 }: {
     children: ReactNode;
     rootUrl?: string;
 }) {
-    const nav = useNavigationHistory(rootUrl);
+    const back = () => {
+        if (window.history.length > 1) {
+            window.history.back();
+        }
+    };
 
-    useEffect(() => {
-        if (!Capacitor.isNativePlatform()) return;
-
-        const listener = App.addListener('backButton', () => {
-            if (nav.stackSize() <= 1) {
-                App.exitApp();
-            } else {
-                nav.back();
-            }
-        });
-
-        return () => {
-            listener.then((l) => l.remove());
-        };
-    }, [nav]);
+    const pruneToRoot = () => {
+        router.visit(rootUrl, { replace: true });
+    };
 
     return (
-        <NavigationContext.Provider value={{ back: nav.back, pruneToRoot: nav.pruneToRoot }}>
+        <NavigationContext.Provider value={{ back, pruneToRoot }}>
             {children}
         </NavigationContext.Provider>
     );

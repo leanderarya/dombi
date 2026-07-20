@@ -58,3 +58,18 @@ if (
         });
     });
 }
+
+// Global offline navigation — redirect to /offline when connectivity lost
+if (typeof window !== 'undefined') {
+    let onOfflinePage = false;
+
+    window.addEventListener('offline', () => {
+        if (onOfflinePage) return;
+        onOfflinePage = true;
+        window.location.href = '/offline';
+    });
+
+    window.addEventListener('online', () => {
+        onOfflinePage = false;
+    });
+}
