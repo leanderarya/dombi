@@ -11,6 +11,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import Dialog from '@/components/ui/dialog';
+import PushBanner from '@/components/shared/push-banner';
 import { formatCurrency } from '@/lib/format';
 import { copyToClipboard } from '@/lib/clipboard';
 import { useNavigation } from '@/providers/navigation-provider';
@@ -302,6 +303,12 @@ export default function ConfirmPage({ order, isLoggedIn }: any) {
                                 </div>
                             )}
                     </div>
+
+                    {paymentStatus === 'paid' && isLoggedIn && (
+                      <div className="mt-4">
+                        <PushBanner variant="confirm" />
+                      </div>
+                    )}
 
                     {/* Error Message */}
                     {payError && (
