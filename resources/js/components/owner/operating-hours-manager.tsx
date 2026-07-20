@@ -40,7 +40,11 @@ export default function OperatingHoursManager({
             return DEFAULT_HOURS;
         }
 
-        const map = new Map(initialHours.map((h) => [h.day_of_week, h]));
+        const map = new Map(initialHours.map((h) => [h.day_of_week, {
+            ...h,
+            open_time: h.open_time.substring(0, 5),
+            close_time: h.close_time.substring(0, 5),
+        }]));
 
         return DEFAULT_HOURS.map((d) => map.get(d.day_of_week) ?? d);
     });
