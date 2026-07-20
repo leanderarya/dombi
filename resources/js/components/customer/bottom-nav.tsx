@@ -2,7 +2,6 @@ import { Link, usePage } from '@inertiajs/react';
 
 const navItems = [
     { href: '/customer/home', label: 'Beranda', icon: HomeIcon },
-    { href: '/customer/products', label: 'Produk', icon: GridIcon },
     { href: '/customer/orders', label: 'Pesanan', icon: OrdersIcon },
     { href: '/customer/profile', label: 'Akun', icon: UserIcon },
 ];
@@ -22,7 +21,7 @@ export default function CustomerBottomNav({ visible = true }: Props) {
                 transition: 'bottom 200ms ease',
             }}
         >
-            <div className="mx-auto grid h-14 max-w-lg grid-cols-4">
+            <div className="mx-auto grid h-14 max-w-lg grid-cols-3">
                 {navItems.map((item) => {
                     const active =
                         url === item.href ||
