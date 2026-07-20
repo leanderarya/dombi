@@ -220,7 +220,9 @@ export default function OrderShow({
                     <OrderQRCard orderCode={order.order_code} />
                 )}
                 {order.status === 'completed' && (
-                    <CompletedHero orderId={order.id} />
+                    <div className="rounded-lg bg-success/10 p-4 text-center text-sm font-medium text-success">
+                        Pesanan selesai. Terima kasih telah berbelanja.
+                    </div>
                 )}
 
                 <div className="mt-4">
