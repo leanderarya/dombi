@@ -1,56 +1,84 @@
+import { router } from '@inertiajs/react';
 import { Bell } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { usePushSubscription, type PushState } from '@/hooks/use-push-subscription';
 
 interface Props {
-    unreadCount?: number;
-    onClick?: () => void;
+  unreadCount?: number;
+  onClick?: () => void;
 }
 
-export default function NotificationBell({
-    unreadCount: initialCount,
-    onClick,
-}: Props) {
-    const [unreadCount, setUnreadCount] = useState(initialCount ?? 0);
+interface LatestNotif {
+  id: number;
+  title: string;
+  message: string;
+  entity_type: string | null;
+  entity_id: number | null;
+}
 
-    useEffect(() => {
-        if (initialCount !== undefined) {
-            setUnreadCount(initialCount);
+export default function NotificationBell({ unreadCount: initialCount, onClick }: Props) {
+  const [unreadCount, setUnreadCount] = useState(initialCount ?? 0);
+  const { pushState } = usePushSubscription();
+  const [lastId, setLastId] = useState<number>(0);
 
-            return;
+  useEffect(() => {
+    if (initialCount !== undefined) {
+      setUnreadCount(initialCount);
+      return;
+    }
+
+    const fetchCount = async () => {
+      try {
+        const params = pushState !== 'active' && lastId > 0 ? `?since_id=${lastId}` : '';
+        const res = await fetch(`/notifications/unread-count${params}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setUnreadCount(data.unread_count);
+
+        if (pushState !== 'active' && data.latest?.length) {
+          for (const notif of data.latest as LatestNotif[]) {
+            if (notif.id <= lastId) continue;
+            toast(notif.title, {
+              description: notif.message,
+              action: notif.entity_type
+                ? { label: 'Buka', onClick: () => router.visit(getEntityUrl(notif.entity_type!, notif.entity_id!)) }
+                : undefined,
+            });
+          }
+          const ids = data.latest.map((n: LatestNotif) => n.id);
+          if (ids.length) setLastId(Math.max(...ids));
         }
+      } catch {
+        // silently fail
+      }
+    };
 
-        // Poll for unread count every 30 seconds
-        const fetchCount = async () => {
-            try {
-                const res = await fetch('/notifications/unread-count');
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, [initialCount, pushState]);
 
-                if (res.ok) {
-                    const data = await res.json();
-                    setUnreadCount(data.unread_count);
-                }
-            } catch {
-                // Silently fail
-            }
-        };
+  return (
+    <button
+      onClick={onClick}
+      className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors active:bg-surface-muted"
+      aria-label="Notifikasi"
+    >
+      <Bell className="h-5 w-5" strokeWidth={1.5} />
+      {unreadCount > 0 && (
+        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+          {unreadCount > 99 ? '99+' : unreadCount}
+        </span>
+      )}
+    </button>
+  );
+}
 
-        fetchCount();
-        const interval = setInterval(fetchCount, 30000);
-
-        return () => clearInterval(interval);
-    }, [initialCount]);
-
-    return (
-        <button
-            onClick={onClick}
-            className="relative flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors active:bg-surface-muted"
-            aria-label="Notifikasi"
-        >
-            <Bell className="h-5 w-5" strokeWidth={1.5} />
-            {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
-                    {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-            )}
-        </button>
-    );
+function getEntityUrl(type: string, id: number): string {
+  const map: Record<string, string> = {
+    order: `/customer/orders/${id}`,
+    delivery: `/courier/deliveries/${id}`,
+  };
+  return map[type] || '/';
 }
