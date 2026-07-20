@@ -13,6 +13,7 @@ use App\Http\Controllers\Customer\CheckoutController as CustomerCheckoutControll
 use App\Http\Controllers\Customer\CustomerOutletController;
 use App\Http\Controllers\Customer\CustomerProductApiController;
 use App\Http\Controllers\Customer\FavoriteController;
+use App\Http\Controllers\CustomerOfflineController;
 use App\Http\Controllers\Customer\GuestOrderRecoveryController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
@@ -92,6 +93,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
     }
 
     Route::get('/track/{token}', TrackController::class)->middleware('throttle:track')->name('track');
+    Route::get('/offline', [\App\Http\Controllers\CustomerOfflineController::class, 'index'])->name('offline');
 
     // Customer routes
     Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->group(function (): void {

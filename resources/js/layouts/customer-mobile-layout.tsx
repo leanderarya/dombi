@@ -56,6 +56,7 @@ export default function CustomerMobileLayout({
                     )}
 
                     <main
+                        data-page
                         className={`mx-auto max-w-lg px-4 ${hideTopBar ? '' : 'pt-5'} ${hasFloatingBar ? 'pb-[calc(10rem+env(safe-area-inset-bottom,0))]' : 'pb-[calc(5.5rem+env(safe-area-inset-bottom,0))]'}`}
                     >
                         {children}
