@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { router } from '@inertiajs/react';
+import { toast } from 'sonner';
 
 interface Props {
     orderId: number;
@@ -38,6 +39,8 @@ export default function RefundProofModal({
         fd.append('proof', proof);
         router.post(`/owner/refunds/${orderId}/mark-refunded`, fd, {
             forceFormData: true,
+            onSuccess: () => toast.success('Refund berhasil'),
+            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
             onFinish: () => {
                 setBusy(false);
                 onClose();
