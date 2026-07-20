@@ -36,36 +36,32 @@ export default function PushBanner({ variant, onDismiss }: Props) {
 
   if (variant === 'home') {
     return (
-      <div className="relative rounded-xl border border-border bg-white p-3">
+      <div className="mt-4 flex items-center gap-3 rounded-xl bg-white/80 px-3 py-2.5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] backdrop-blur">
+        <Bell className="h-4 w-4 shrink-0 text-primary" />
+        {pushState === 'denied' ? (
+          <p className="min-w-0 flex-1 text-xs text-text-muted">
+            Notifikasi dimatikan
+          </p>
+        ) : (
+          <p className="min-w-0 flex-1 text-xs text-text-muted">
+            Aktifkan notifikasi untuk info pesanan
+          </p>
+        )}
+        {pushState !== 'denied' && (
+          <button
+            onClick={handleEnable}
+            className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+          >
+            Aktifkan
+          </button>
+        )}
         <button
           onClick={handleDismiss}
-          className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full text-text-muted hover:bg-surface-muted"
+          className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-text-subtle active:bg-surface-muted"
           aria-label="Tutup"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5" />
         </button>
-        <div className="flex items-start gap-3 pr-6">
-          <Bell className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
-          <div className="min-w-0 flex-1">
-            {pushState === 'denied' ? (
-              <p className="text-sm font-medium text-text">
-                Notifikasi dimatikan
-              </p>
-            ) : (
-              <>
-                <p className="text-sm font-medium text-text">
-                  Dapatkan info pesanan real-time
-                </p>
-                <button
-                  onClick={handleEnable}
-                  className="mt-2 inline-flex min-h-9 items-center rounded-lg bg-primary px-4 text-xs font-bold text-white active:opacity-80"
-                >
-                  Aktifkan Notifikasi
-                </button>
-              </>
-            )}
-          </div>
-        </div>
       </div>
     );
   }
