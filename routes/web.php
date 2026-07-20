@@ -25,7 +25,7 @@ use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\DevRoleSwitcherController;
 use App\Http\Controllers\DokuPaymentController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PushController;
+use App\Http\Controllers\PushController as UnifiedPushController;
 use App\Http\Controllers\Outlet\AnalyticsController as OutletAnalyticsController;
 use App\Http\Controllers\Outlet\DashboardController;
 use App\Http\Controllers\Outlet\DeliveryController as OutletDeliveryController;
@@ -216,9 +216,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 
         // Push subscriptions
-        Route::post('/push/subscribe', [PushController::class, 'subscribe'])->name('push.subscribe');
-        Route::post('/push/fcm-token', [PushController::class, 'fcmToken'])->name('push.fcm-token');
-        Route::delete('/push/subscribe', [PushController::class, 'unsubscribe'])->name('push.unsubscribe');
+        Route::post('/push/subscribe', [UnifiedPushController::class, 'subscribe'])->name('push.subscribe');
+        Route::post('/push/fcm-token', [UnifiedPushController::class, 'fcmToken'])->name('push.fcm-token');
+        Route::delete('/push/subscribe', [UnifiedPushController::class, 'unsubscribe'])->name('push.unsubscribe');
     });
 
     Route::get('/dashboard', DashboardRedirectController::class)
