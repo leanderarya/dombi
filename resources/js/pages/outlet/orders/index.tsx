@@ -12,19 +12,19 @@ import { getOrderStatus } from '@/lib/status-labels';
 
 const operationalFilters = [
     { key: '', label: 'Semua' },
-    { key: 'pending_confirmation', label: 'Menunggu' },
+    { key: 'pending_confirmation', label: 'Menunggu Konfirmasi' },
     { key: 'confirmed', label: 'Diterima' },
     { key: 'preparing', label: 'Disiapkan' },
     { key: 'ready_for_pickup', label: 'Siap Ambil' },
-    { key: 'delivering', label: 'Dikirim' },
+    { key: 'delivering', label: 'Dalam Pengiriman' },
 ];
 
 const historyFilters = [
     { key: '', label: 'Semua' },
     { key: 'completed', label: 'Selesai' },
-    { key: 'cancelled_by_outlet', label: 'Dibatalkan' },
-    { key: 'rejected_by_outlet', label: 'Ditolak' },
-    { key: 'failed_delivery', label: 'Gagal' },
+    { key: 'cancelled_by_outlet', label: 'Dibatalkan Outlet' },
+    { key: 'rejected_by_outlet', label: 'Ditolak Outlet' },
+    { key: 'failed_delivery', label: 'Pengiriman Gagal' },
     { key: 'expired', label: 'Kadaluarsa' },
 ];
 
