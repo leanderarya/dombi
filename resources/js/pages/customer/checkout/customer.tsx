@@ -250,6 +250,7 @@ export default function CheckoutCustomer({
           form.data.phone_number.trim().length >= 9 &&
           !!form.data.latitude &&
           !!form.data.longitude &&
+          form.data.address_line?.trim().length >= 5 &&
           (!!deliveryQuote?.is_serviceable || !hasKnownLocation)
         : form.data.customer_name.trim().length >= 3 &&
           form.data.phone_number.trim().length >= 9 &&
