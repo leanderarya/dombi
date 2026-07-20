@@ -10,7 +10,7 @@ import MobileRoleLayout from '@/components/ui/mobile-role-layout';
 import PageHeader from '@/components/ui/page-header';
 import { useOrderAlert } from '@/hooks/use-order-alert';
 import { useOutletBadges } from '@/hooks/use-outlet-badges';
-import { usePushNotification } from '@/hooks/use-push-notification';
+import { usePushSubscription } from '@/hooks/use-push-subscription';
 
 interface Props extends PropsWithChildren {
     title?: string;
@@ -41,7 +41,7 @@ export default function OutletLayout({
     const [navOpen, setNavOpen] = useState(false);
     const { pendingCount } = useOrderAlert();
     const { badgeCounts } = useOutletBadges();
-    usePushNotification();
+    usePushSubscription();
 
     const rightSlot = headerRight ?? (
         <NotificationBell onClick={() => setNotificationOpen(true)} />
