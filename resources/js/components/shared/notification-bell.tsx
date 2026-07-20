@@ -1,8 +1,8 @@
 import { router } from '@inertiajs/react';
 import { Bell } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { usePushSubscription, type PushState } from '@/hooks/use-push-subscription';
+import { usePushSubscription } from '@/hooks/use-push-subscription';
 
 interface Props {
   unreadCount?: number;
@@ -20,7 +20,7 @@ interface LatestNotif {
 export default function NotificationBell({ unreadCount: initialCount, onClick }: Props) {
   const [unreadCount, setUnreadCount] = useState(initialCount ?? 0);
   const { pushState } = usePushSubscription();
-  const [lastId, setLastId] = useState<number>(0);
+  const lastIdRef = useRef<number>(0);
 
   useEffect(() => {
     if (initialCount !== undefined) {
@@ -30,7 +30,7 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
 
     const fetchCount = async () => {
       try {
-        const params = pushState !== 'active' && lastId > 0 ? `?since_id=${lastId}` : '';
+        const params = pushState !== 'active' && lastIdRef.current > 0 ? `?since_id=${lastIdRef.current}` : '';
         const res = await fetch(`/notifications/unread-count${params}`);
         if (!res.ok) return;
         const data = await res.json();
@@ -38,7 +38,7 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
 
         if (pushState !== 'active' && data.latest?.length) {
           for (const notif of data.latest as LatestNotif[]) {
-            if (notif.id <= lastId) continue;
+            if (notif.id <= lastIdRef.current) continue;
             toast(notif.title, {
               description: notif.message,
               action: notif.entity_type
@@ -47,7 +47,7 @@ export default function NotificationBell({ unreadCount: initialCount, onClick }:
             });
           }
           const ids = data.latest.map((n: LatestNotif) => n.id);
-          if (ids.length) setLastId(Math.max(...ids));
+          if (ids.length) lastIdRef.current = Math.max(...ids);
         }
       } catch {
         // silently fail
