@@ -2,13 +2,7 @@ name: linter
 
 on:
   push:
-    branches:
-      - develop
-      - main
-  pull_request:
-    branches:
-      - develop
-      - main
+    branches: [never]
 
 permissions:
   contents: write
