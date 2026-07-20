@@ -14,6 +14,7 @@ import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import { useNearestOutlet } from '@/hooks/use-nearest-outlet';
 import { usePickupFlow } from '@/hooks/use-pickup-flow';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import PushBanner from '@/components/shared/push-banner';
 import { usePolling } from '@/lib/use-polling';
 
 /* ─── Main ─────────────────────────────────────────────────── */
@@ -64,6 +65,8 @@ export default function Home({ customerName, activeOrders }: any) {
                 customerName={customerName}
                 auth={auth}
             />
+
+            <PushBanner variant="home" />
 
             {showPhoneBanner && (
                 <PhoneBanner
