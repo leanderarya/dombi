@@ -1,48 +1,30 @@
 import { useEffect } from 'react';
 
 /**
- * Lock iOS swipe-back gesture on main nav pages.
+ * Lock swipe-back on main nav pages (Beranda, Pesanan, Akun).
  *
- * Three-layer approach to prevent browser-level swipe navigation:
- * 1. overscroll-behavior-x: none on <html> — prevents overscroll navigation
- * 2. touch-action: pan-y on <body> — horizontal touch ignored
- * 3. Left-edge overlay — captures touchstart on left 20px before browser intercept
+ * Uses history.pushState trap — the proven approach for PWA.
+ * Minimizes flash by hiding content during the popstate → re-push cycle.
+ * Total delay: ~16ms (1 frame), imperceptible to user.
  */
 export function useLockSwipeBack() {
     useEffect(() => {
-        const html = document.documentElement;
-        const body = document.body;
+        history.pushState(null, '', location.href);
 
-        // Layer 1: overscroll-behavior
-        const prevOverscroll = html.style.overscrollBehaviorX;
-        html.style.overscrollBehaviorX = 'none';
+        const onPopState = () => {
+            // Hide content immediately — prevents flash of previous page
+            document.body.style.visibility = 'hidden';
 
-        // Layer 2: touch-action
-        const prevTouchAction = body.style.touchAction;
-        body.style.touchAction = 'pan-y';
+            // Re-push state to cancel the back navigation
+            history.pushState(null, '', location.href);
 
-        // Layer 3: left-edge overlay (captures swipe gesture before browser)
-        const overlay = document.createElement('div');
-        overlay.setAttribute('data-swipe-lock', '');
-        Object.assign(overlay.style, {
-            position: 'fixed',
-            top: '0',
-            left: '0',
-            width: '25px',
-            height: '100%',
-            zIndex: '9999',
-            touchAction: 'none',
-            background: 'transparent',
-        });
-        // Prevent touch events from propagating to browser
-        overlay.addEventListener('touchstart', (e) => e.stopPropagation(), { passive: false });
-        overlay.addEventListener('touchmove', (e) => e.stopPropagation(), { passive: false });
-        body.appendChild(overlay);
-
-        return () => {
-            html.style.overscrollBehaviorX = prevOverscroll;
-            body.style.touchAction = prevTouchAction;
-            overlay.remove();
+            // Restore visibility on next frame (~16ms)
+            requestAnimationFrame(() => {
+                document.body.style.visibility = '';
+            });
         };
+
+        window.addEventListener('popstate', onPopState);
+        return () => window.removeEventListener('popstate', onPopState);
     }, []);
 }

@@ -15,6 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          tools: composer:v2
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -23,6 +29,7 @@ jobs:
 
       - name: Build frontend
         run: |
+          composer install --no-dev --no-interaction --optimize-autoloader
           npm ci
           npm run build
 
