@@ -1,8 +1,10 @@
 {
+    "id": "/customer/home",
     "name": "Dombi - Belanja Kebutuhan Harian",
     "short_name": "Dombi",
     "description": "Aplikasi operasional belanja kebutuhan harian",
-    "start_url": "/",
+    "start_url": "/customer/home",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#f8f7f2",
     "theme_color": "#047857",
@@ -19,6 +21,20 @@
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Pesanan Saya",
+            "short_name": "Pesanan",
+            "url": "/customer/orders",
+            "icons": [{"src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png"}]
+        },
+        {
+            "name": "Profil",
+            "short_name": "Profil",
+            "url": "/customer/profile",
+            "icons": [{"src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png"}]
         }
     ]
 }
