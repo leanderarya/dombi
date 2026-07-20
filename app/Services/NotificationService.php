@@ -13,8 +13,7 @@ use App\Models\ReturnRequest;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Models\User;
-use App\Notifications\LowStockNotification;
-use App\Notifications\NewOrderNotification;
+use App\Jobs\PushNotificationJob;
 
 class NotificationService
 {
@@ -143,9 +142,6 @@ class NotificationService
                 entityType: 'order',
                 entityId: $order->id
             );
-
-            // Send web push notification
-            $outletUser->notify(new NewOrderNotification($order));
         }
     }
 
@@ -512,14 +508,6 @@ class NotificationService
                 entityId: $outletId
             );
 
-            // Send web push notification to outlet
-            $outletUser->notify(new LowStockNotification(
-                productName: $productName,
-                available: $available,
-                minimum: $minimum,
-                outletId: $outletId,
-                isCritical: $isCritical,
-            ));
         }
 
         // Notify owners
@@ -1091,7 +1079,7 @@ class NotificationService
         ?int $entityId = null
     ): ?Notification {
         try {
-            return Notification::create([
+            $notification = Notification::create([
                 'user_type' => $userType,
                 'user_id' => $userId,
                 'customer_id' => $customerId,
@@ -1102,6 +1090,38 @@ class NotificationService
                 'entity_type' => $entityType,
                 'entity_id' => $entityId,
             ]);
+
+            // Dispatch push notification
+            if ($userId) {
+                $user = User::find($userId);
+                if ($user) {
+                    dispatch(new PushNotificationJob(
+                        user: $user,
+                        customer: null,
+                        title: $title,
+                        body: $message,
+                        data: [
+                            'entity_type' => $entityType,
+                            'entity_id' => $entityId,
+                            'url' => $this->getPushUrl($entityType, $entityId),
+                        ],
+                    ));
+                }
+            } elseif ($customerId) {
+                dispatch(new PushNotificationJob(
+                    user: null,
+                    customer: Customer::find($customerId),
+                    title: $title,
+                    body: $message,
+                    data: [
+                        'entity_type' => $entityType,
+                        'entity_id' => $entityId,
+                        'url' => $this->getPushUrl($entityType, $entityId),
+                    ],
+                ));
+            }
+
+            return $notification;
         } catch (\Throwable $e) {
             \Log::error("Failed to create notification: {$e->getMessage()}", [
                 'type' => $type,
@@ -1114,5 +1134,19 @@ class NotificationService
 
             return null;
         }
+    }
+
+    private function getPushUrl(?string $entityType, ?int $entityId): string
+    {
+        return match ($entityType) {
+            'order' => $entityId ? "/customer/orders/{$entityId}" : '/customer/orders',
+            'outlet' => '/outlet/orders',
+            'restock_request' => '/outlet/restocks',
+            'return_request' => '/outlet/returns',
+            'exchange_request' => '/outlet/exchanges',
+            'delivery' => '/courier/deliveries',
+            'settlement_payment' => '/owner/finance',
+            default => '/',
+        };
     }
 }
