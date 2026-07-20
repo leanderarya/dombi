@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { toast } from 'sonner';
 import { DollarSign, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import PaymentHistoryCard from '@/components/owner/finance/payment-history-card';
@@ -70,6 +71,10 @@ export default function PembayaranTab({
             `/owner/finance/settlement-payments/${verifyTargetId}/verify`,
             {},
             {
+                onSuccess: () => {
+                    toast.success('Pembayaran diverifikasi');
+                },
+                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
                 onFinish: () => {
                     setProcessing(false);
                     setVerifyTargetId(null);
@@ -92,9 +97,11 @@ export default function PembayaranTab({
                 },
                 {
                     onSuccess: () => {
+                        toast.success('Pembayaran ditolak');
                         setRejectingId(null);
                         setRejectReason('');
                     },
+                    onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
                     onFinish: () => setProcessing(false),
                 },
             );
@@ -115,6 +122,8 @@ export default function PembayaranTab({
             '/owner/finance/settlement-payments/bulk-verify',
             {},
             {
+                onSuccess: () => toast.success('Berhasil'),
+                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
                 onFinish: () => setBatchVerifying(false),
             },
         );
