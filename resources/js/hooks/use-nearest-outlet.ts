@@ -39,15 +39,20 @@ export function useNearestOutlet() {
                     );
                     const data = await res.json();
 
-                    if (data.recommended) {
+                    // Pick nearest open outlet
+                    const allOutlets = data.alternatives ?? [];
+                    const openOutlets = allOutlets.filter((o: any) => o.is_open !== false);
+                    const pick = openOutlets[0] ?? data.recommended;
+
+                    if (pick) {
                         setOutlet({
-                            id: data.recommended.id ?? null,
-                            name: data.recommended.name,
-                            distance_km: data.recommended.distance_km,
+                            id: pick.id ?? null,
+                            name: pick.name,
+                            distance_km: pick.distance_km,
                         });
 
-                        if (data.recommended.id) {
-                            autoSave(data.recommended.id);
+                        if (pick.id) {
+                            autoSave(pick.id);
                         }
                     }
                 } catch {
