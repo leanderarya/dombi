@@ -125,9 +125,9 @@ function ProductsInner() {
     return (
         <>
             <div className="min-h-dvh bg-background" ref={scrollRef}>
-                {/* ── Sticky header ── */}
-                <div className="sticky top-0 z-20 bg-primary">
-                    <div className="px-4 pt-safe pb-4">
+                {/* ── Green header ── */}
+                <div className="bg-primary">
+                    <div className="px-4 pt-safe pb-10">
                         <ForeGreenHeader
                             title="Produk"
                             backHref="/customer/home"
@@ -146,8 +146,8 @@ function ProductsInner() {
                 </div>
 
                 {/* ── White section ── */}
-                <div className="relative z-10 rounded-t-[1.5rem] bg-white">
-                    <div className="px-4 pt-4 pb-[calc(10rem+env(safe-area-inset-bottom,0))]">
+                <div className="relative z-10 -mt-8 rounded-t-[1.5rem] bg-white">
+                    <div className="px-4 pt-6 pb-[calc(10rem+env(safe-area-inset-bottom,0))]">
                         <div className="mb-3">
                             <StoreLocationCard />
                         </div>
