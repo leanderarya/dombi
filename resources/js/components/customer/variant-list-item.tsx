@@ -51,6 +51,7 @@ const VariantListItem = memo(function VariantListItem({
 
     const isFav = isFavorite(variant.id);
     const isOutOfStock = variant.stock_status === 'out_of_stock';
+    const isOutletClosed = selectedOutlet?.is_open === false;
     const showMulaiDari = variantCount > 1;
 
     const productHref = (() => {
@@ -127,7 +128,7 @@ const VariantListItem = memo(function VariantListItem({
     return (
         <Link
             href={productHref}
-            className={`flex items-center gap-3.5 p-3 transition-colors active:bg-surface-muted ${isOutOfStock ? 'opacity-50' : ''}`}
+            className={`flex items-center gap-3.5 p-3 transition-colors active:bg-surface-muted ${isOutOfStock || isOutletClosed ? 'opacity-50' : ''}`}
         >
             {/* Image */}
             <div className="relative shrink-0">
@@ -205,25 +206,23 @@ const VariantListItem = memo(function VariantListItem({
                     <button
                         type="button"
                         onClick={handleQuickAdd}
-                        disabled={adding || isOutOfStock}
+                        disabled={adding || isOutOfStock || isOutletClosed}
                         className={`flex h-10 w-10 items-center justify-center rounded-full transition-all active:opacity-80 disabled:opacity-40 ${
-                            isOutOfStock
+                            isOutOfStock || isOutletClosed
                                 ? 'bg-surface-muted text-text-muted'
                                 : 'bg-primary text-white active:bg-primary-hover'
                         }`}
                         aria-label={
-                            isOutOfStock ? 'Habis' : 'Tambah ke keranjang'
+                            isOutOfStock ? 'Habis' : isOutletClosed ? 'Outlet Tutup' : 'Tambah ke keranjang'
                         }
                     >
                         {isOutOfStock ? (
-                            <svg
-                                className="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                            >
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                                 <path strokeLinecap="round" d="M18 12H6" />
+                            </svg>
+                        ) : isOutletClosed ? (
+                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                         ) : (
                             <svg
