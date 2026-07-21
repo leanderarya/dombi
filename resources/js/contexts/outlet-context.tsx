@@ -104,31 +104,28 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         return () => controller.abort();
     }, [location?.latitude, location?.longitude, fetchKey]);
 
-    // Auto-select logic: manual pick → auto nearest → fallback
+    // Auto-select logic: manual pick → nearest open → fallback
     const selectedOutlet = useMemo(() => {
         if (outlets.length === 0) {
             return null;
         }
 
+        const openOutlets = outlets.filter((o) => o.is_open !== false);
+
         // User manually picked an outlet — keep it (even if GPS changes)
         if (!autoSelected && outletId !== null) {
             const saved = outlets.find((o) => o.id === outletId);
-
-            if (saved) {
+            if (saved && saved.is_open !== false) {
                 return saved;
             }
+            // If saved outlet is closed, fall through to nearest open
         }
 
-        // Auto-select nearest (first in sorted list) or fallback to saved
-        if (outletId !== null) {
-            const saved = outlets.find((o) => o.id === outletId);
+        // Auto-select nearest open outlet
+        const nearestOpen = openOutlets[0];
+        if (nearestOpen) return nearestOpen;
 
-            if (saved) {
-                return saved;
-            }
-        }
-
-        // Fallback to nearest
+        // If everything closed, fallback to nearest (user will see Tutup label)
         return outlets[0];
     }, [outlets, outletId, autoSelected]);
 
@@ -156,8 +153,9 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
             return;
         }
 
-        // No saved outlet or saved outlet no longer exists — auto-pick nearest
-        const nearest = outlets[0];
+        // No saved outlet or saved outlet no longer exists — auto-pick nearest open
+        const openOutlets = outlets.filter((o) => o.is_open !== false);
+        const nearest = openOutlets[0] ?? outlets[0];
         autoSave(nearest.id);
 
         // Sync to PHP session
