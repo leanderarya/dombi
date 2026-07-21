@@ -81,8 +81,15 @@ export default function StoreLocationCard() {
                     <Store className="h-4 w-4 text-primary" />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-bold text-text">
-                        {selectedOutlet.name}
+                    <div className="flex items-center gap-2">
+                        <div className="truncate text-sm font-bold text-text">
+                            {selectedOutlet.name}
+                        </div>
+                        {selectedOutlet.is_open === false && (
+                            <span className="shrink-0 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
+                                Tutup
+                            </span>
+                        )}
                     </div>
                     <div className="text-[11px] text-text-muted">
                         {distanceText ? (
