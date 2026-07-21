@@ -107,23 +107,25 @@ export default function OutletSheet({ open, onClose }: Props) {
                                                     </span>
                                                 )}
                                             <span className={`ml-auto shrink-0 text-[10px] font-semibold ${
-                                                outlet.stock_available
-                                                    ? 'text-emerald-600'
-                                                    : 'text-amber-600'
+                                                outlet.is_open === false
+                                                    ? 'text-red-600'
+                                                    : outlet.stock_available
+                                                        ? 'text-emerald-600'
+                                                        : 'text-amber-600'
                                             }`}>
-                                                {outlet.stock_available
-                                                    ? 'Tersedia'
-                                                    : 'Terbatas'}
+                                                {outlet.is_open === false
+                                                    ? 'Tutup'
+                                                    : outlet.stock_available
+                                                        ? 'Tersedia'
+                                                        : 'Terbatas'}
                                             </span>
                                         </div>
                                         <div className="truncate text-[11px] text-text-subtle">
                                             {outlet.address}
+                                            {outlet.is_open === false && outlet.next_open && (
+                                                <span className="ml-1 text-red-500">• Buka {outlet.next_open}</span>
+                                            )}
                                         </div>
-                                        {outlet.is_open === false && (
-                                            <span className="mt-0.5 inline-flex items-center rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
-                                                Sedang Tutup{outlet.next_open ? ` • Buka ${outlet.next_open}` : ''}
-                                            </span>
-                                        )}
                                     </div>
                                 </button>
                             );
