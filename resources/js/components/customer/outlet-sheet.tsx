@@ -122,10 +122,12 @@ export default function OutletSheet({ open, onClose }: Props) {
                                         </div>
                                         <div className="truncate text-[11px] text-text-subtle">
                                             {outlet.address}
-                                            {outlet.is_open === false && outlet.next_open && (
-                                                <span className="ml-1 text-red-500">• Buka {outlet.next_open}</span>
-                                            )}
                                         </div>
+                                        {outlet.is_open === false && (
+                                            <div className="mt-0.5 text-[11px] font-medium text-red-600">
+                                                Tutup{outlet.next_open ? ` • Buka ${outlet.next_open}` : ''}
+                                            </div>
+                                        )}
                                     </div>
                                 </button>
                             );
