@@ -66,11 +66,16 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
                 `/customer/checkout/pickup-outlets?latitude=${latitude}&longitude=${longitude}`,
             );
             const data = await res.json();
-            outletName = data.recommended?.name ?? null;
+
+            // Pick nearest open outlet
+            const allOutlets = data.alternatives ?? [];
+            const openOutlets = allOutlets.filter((o: any) => o.is_open !== false);
+            const pick = openOutlets[0] ?? data.recommended;
+            outletName = pick?.name ?? null;
 
             // Save recommended outlet to store so products page uses same outlet
-            if (data.recommended?.id) {
-                autoSave(data.recommended.id);
+            if (pick?.id) {
+                autoSave(pick.id);
             }
         } catch {
             // silent
