@@ -73,7 +73,7 @@ export default function OutletSheet({ open, onClose }: Props) {
                                     type="button"
                                     onClick={() => handleSelect(outlet)}
                                     disabled={outlet.is_open === false}
-                                    className={`flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors active:bg-surface-muted ${
+                                    className={`flex w-full items-center gap-2.5 px-4 py-3 text-left transition-colors active:bg-surface-muted ${
                                         isSelected ? 'bg-emerald-50' : ''
                                     } ${
                                         outlet.is_open === false
@@ -83,23 +83,40 @@ export default function OutletSheet({ open, onClose }: Props) {
                                 >
                                     {/* Check indicator */}
                                     <div
-                                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                                        className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${
                                             isSelected
                                                 ? 'border-emerald-600 bg-emerald-600'
                                                 : 'border-border'
                                         }`}
                                     >
                                         {isSelected && (
-                                            <Check className="h-3 w-3 text-white" />
+                                            <Check className="h-2.5 w-2.5 text-white" />
                                         )}
                                     </div>
 
-                                    {/* Outlet info */}
+                                    {/* Outlet info + distance inline */}
                                     <div className="min-w-0 flex-1">
-                                        <div className="truncate text-sm font-semibold text-text">
-                                            {outlet.name}
+                                        <div className="flex items-center gap-2">
+                                            <span className="truncate text-sm font-semibold text-text">
+                                                {outlet.name}
+                                            </span>
+                                            {outlet.distance_km !== null &&
+                                                outlet.distance_km !== undefined && (
+                                                    <span className="shrink-0 text-[11px] text-text-muted tabular-nums">
+                                                        {outlet.distance_km.toFixed(1)} km
+                                                    </span>
+                                                )}
+                                            <span className={`ml-auto shrink-0 text-[10px] font-semibold ${
+                                                outlet.stock_available
+                                                    ? 'text-emerald-600'
+                                                    : 'text-amber-600'
+                                            }`}>
+                                                {outlet.stock_available
+                                                    ? 'Tersedia'
+                                                    : 'Terbatas'}
+                                            </span>
                                         </div>
-                                        <div className="truncate text-[11px] text-text-muted">
+                                        <div className="truncate text-[11px] text-text-subtle">
                                             {outlet.address}
                                         </div>
                                         {outlet.is_open === false && (
@@ -107,31 +124,6 @@ export default function OutletSheet({ open, onClose }: Props) {
                                                 Sedang Tutup{outlet.next_open ? ` • Buka ${outlet.next_open}` : ''}
                                             </span>
                                         )}
-                                    </div>
-
-                                    {/* Distance + stock */}
-                                    <div className="shrink-0 text-right">
-                                        {outlet.distance_km !== null &&
-                                            outlet.distance_km !==
-                                                undefined && (
-                                                <div className="text-xs font-medium text-text-muted tabular-nums">
-                                                    {outlet.distance_km.toFixed(
-                                                        1,
-                                                    )}{' '}
-                                                    km
-                                                </div>
-                                            )}
-                                        <div
-                                            className={`text-[10px] font-semibold ${
-                                                outlet.stock_available
-                                                    ? 'text-emerald-600'
-                                                    : 'text-amber-600'
-                                            }`}
-                                        >
-                                            {outlet.stock_available
-                                                ? 'Tersedia'
-                                                : 'Terbatas'}
-                                        </div>
                                     </div>
                                 </button>
                             );
