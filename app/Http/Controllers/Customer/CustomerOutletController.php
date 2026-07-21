@@ -51,6 +51,7 @@ class CustomerOutletController extends Controller
                 'distance_km' => $distanceKm,
                 'stock_available' => $hasStock,
                 'is_open' => $outlet->isOpen(),
+                'next_open' => $outlet->nextOpenTime(),
             ];
         });
 

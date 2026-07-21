@@ -89,6 +89,26 @@ class Outlet extends Model
         return $hours->isOpenAt($local->format('H:i:s'));
     }
 
+    public function nextOpenTime(): ?string
+    {
+        $local = now('Asia/Jakarta');
+        $today = (int) $local->format('w');
+        $hours = $this->operatingHours()->where('day_of_week', $today)->first();
+        if ($hours && !$hours->is_closed) {
+            return substr($hours->open_time, 0, 5);
+        }
+
+        for ($i = 1; $i <= 7; $i++) {
+            $day = ($today + $i) % 7;
+            $next = $this->operatingHours()->where('day_of_week', $day)->first();
+            if ($next && !$next->is_closed) {
+                return now('Asia/Jakarta')->addDays($i)->locale('id')->isoFormat('dddd') . ' ' . substr($next->open_time, 0, 5);
+            }
+        }
+
+        return null;
+    }
+
     // ─── Relationships ─────────────────────────────────────
 
     public function inventories(): HasMany
