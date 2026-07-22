@@ -79,6 +79,8 @@ class OwnerDashboardDecisionCenterTest extends TestCase
         Settlement::create([
             'outlet_id' => $context['outletA']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 180000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -88,6 +90,8 @@ class OwnerDashboardDecisionCenterTest extends TestCase
         Settlement::create([
             'outlet_id' => $context['outletB']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 280000,
             'amount_due' => 250000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -123,6 +127,8 @@ class OwnerDashboardDecisionCenterTest extends TestCase
         Settlement::create([
             'outlet_id' => $context['outletA']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 110000,
             'amount_due' => 100000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -132,6 +138,8 @@ class OwnerDashboardDecisionCenterTest extends TestCase
         Settlement::create([
             'outlet_id' => $context['outletB']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 235000,
             'amount_due' => 220000,
             'due_date' => now()->addDays(7)->toDateString(),
