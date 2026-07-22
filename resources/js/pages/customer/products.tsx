@@ -1,11 +1,13 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Search, Store, ThumbsUp, Truck } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import CollapsedOutletBar from '@/components/customer/collapsed-outlet-bar';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
 import FulfillmentToggle from '@/components/customer/fulfillment-toggle';
+import OutletSheet from '@/components/customer/outlet-sheet';
 import SizeSelectorSheet from '@/components/customer/size-selector-sheet';
 import StoreLocationCard from '@/components/customer/store-location-card';
 import VariantListItem from '@/components/customer/variant-list-item';
@@ -65,6 +67,20 @@ function ProductsInner() {
         flavor: string;
         family: string;
     }>({ variants: [], flavor: '', family: '' });
+
+    const sentinelRef = useRef<HTMLDivElement>(null);
+    const [showBar, setShowBar] = useState(false);
+    const [barSheetOpen, setBarSheetOpen] = useState(false);
+
+    useEffect(() => {
+        if (!sentinelRef.current) return;
+        const observer = new IntersectionObserver(
+            ([entry]) => setShowBar(!entry.isIntersecting),
+            { threshold: 0 },
+        );
+        observer.observe(sentinelRef.current);
+        return () => observer.disconnect();
+    }, []);
 
     useFlashToast();
     const { visible } = useHideOnScroll();
@@ -142,6 +158,7 @@ function ProductsInner() {
                                 ? 'Ambil di outlet tanpa antre'
                                 : 'Diantar ke alamat Anda'}
                         </p>
+                        <div ref={sentinelRef} className="h-px" />
                     </div>
                 </div>
 
@@ -265,6 +282,19 @@ function ProductsInner() {
             {totalItems > 0 && <FloatingCartBar bottomNavVisible={visible} />}
             <CustomerBottomNav visible={visible} />
             <FulfillmentOverlay state={overlayState} target={overlayTarget} />
+            <CollapsedOutletBar
+                show={showBar}
+                outlet={selectedOutlet}
+                fulfillmentType={fulfillmentType}
+                onOpenSheet={() => setBarSheetOpen(true)}
+            />
+            <OutletSheet
+                open={barSheetOpen}
+                onClose={() => setBarSheetOpen(false)}
+                fulfillmentType={fulfillmentType}
+                onFulfillmentChange={switchTo}
+                deliveryDisabled={!isLoggedIn}
+            />
         </>
     );
 }
