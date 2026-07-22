@@ -78,7 +78,7 @@ class SettlementExportTest extends TestCase
         $this->assertStringContainsString('Outlet', $csv);
         $this->assertStringContainsString('Periode', $csv);
         $this->assertStringContainsString('Jatuh Tempo', $csv);
-        $this->assertStringContainsString('Total Tagihan', $csv);
+        $this->assertStringContainsString('Kewajiban', $csv);
         $this->assertStringContainsString('Sudah Dibayar', $csv);
         $this->assertStringContainsString('Sisa', $csv);
         $this->assertStringContainsString('Status', $csv);
