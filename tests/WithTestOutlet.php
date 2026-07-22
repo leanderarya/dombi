@@ -13,7 +13,7 @@ trait WithTestOutlet
 
         OutletOperatingHours::factory()->create([
             'outlet_id' => $outlet->id,
-            'day_of_week' => now()->dayOfWeek,
+            'day_of_week' => (int) now('Asia/Jakarta')->format('w'),
             'open_time' => '00:00',
             'close_time' => '23:59',
             'is_closed' => false,
