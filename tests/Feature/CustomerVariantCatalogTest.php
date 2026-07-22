@@ -106,7 +106,8 @@ class CustomerVariantCatalogTest extends TestCase
         ])
             ->assertOk()
             ->assertJson([
-                'success' => true,
+                'success' => false,
+                'error' => 'Stok produk ini sudah habis',
             ]);
     }
 

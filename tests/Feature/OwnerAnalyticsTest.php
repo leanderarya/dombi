@@ -213,7 +213,7 @@ class OwnerAnalyticsTest extends TestCase
                 ->has('topProducts', 2)
                 ->where('topProducts.0.product_name', 'Biogoat 1L')
                 ->where('topProducts.0.total_qty', '3')
-                ->where('topProducts.0.total_revenue', 165000)
+                ->where('topProducts.0.total_revenue', '165000.00')
                 ->where('topProducts.1.product_name', 'Domilk Coffee 250ml')
                 ->where('topProducts.1.total_qty', '5')
                 ->where('topProducts.1.total_revenue', 150000)
