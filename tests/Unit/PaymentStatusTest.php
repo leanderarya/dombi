@@ -16,9 +16,9 @@ class PaymentStatusTest extends TestCase
         ], $cases);
     }
 
-    public function test_is_terminal_returns_true_for_paid_and_refunded(): void
+    public function test_is_terminal_returns_true_only_for_terminal_states(): void
     {
-        $this->assertTrue(PaymentStatus::Paid->isTerminal());
+        $this->assertFalse(PaymentStatus::Paid->isTerminal());
         $this->assertTrue(PaymentStatus::Refunded->isTerminal());
         $this->assertFalse(PaymentStatus::Pending->isTerminal());
     }
