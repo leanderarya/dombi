@@ -8,6 +8,7 @@ import {
     useState,
 } from 'react';
 import type { ReactNode } from 'react';
+import { usePage } from '@inertiajs/react';
 import { registerOutletClosedHandler } from '@/lib/api';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { useOutletStore } from '@/lib/outlet-store';
@@ -32,6 +33,7 @@ type OutletContextValue = {
     loading: boolean;
     error: string | null;
     retry: () => void;
+    markCurrentOutletClosed: () => void;
 };
 
 const OutletContext = createContext<OutletContextValue | null>(null);
@@ -47,7 +49,7 @@ export function useOutlet(): OutletContextValue {
 }
 
 export default function OutletProvider({ children }: { children: ReactNode }) {
-    const { outletId, autoSelected, save, autoSave, clear } = useOutletStore();
+    const { outletId, autoSelected, save, autoSave } = useOutletStore();
     const { location } = useCustomerLocation();
     const [outlets, setOutlets] = useState<OutletOption[]>([]);
     const [loading, setLoading] = useState(true);
@@ -198,13 +200,25 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const markCurrentOutletClosed = useCallback(() => {
-        clear();
-        retry();
-    }, [clear, retry]);
+        setOutlets(prev =>
+            prev.map(o =>
+                o.id === selectedOutlet?.id ? { ...o, is_open: false } : o
+            )
+        );
+    }, [selectedOutlet?.id]);
 
     useEffect(() => {
         registerOutletClosedHandler(markCurrentOutletClosed);
     }, [markCurrentOutletClosed]);
+
+    // Watch for Inertia session errors (checkout/order routes redirect with outlet_closed)
+    const { errors } = usePage().props;
+
+    useEffect(() => {
+        if (errors?.outlet_closed) {
+            markCurrentOutletClosed();
+        }
+    }, [errors?.outlet_closed, markCurrentOutletClosed]);
 
     const value = useMemo<OutletContextValue>(
         () => ({
@@ -214,8 +228,9 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
             loading,
             error,
             retry,
+            markCurrentOutletClosed,
         }),
-        [selectedOutlet, selectManual, outlets, loading, error, retry],
+        [selectedOutlet, selectManual, outlets, loading, error, retry, markCurrentOutletClosed],
     );
 
     return (
