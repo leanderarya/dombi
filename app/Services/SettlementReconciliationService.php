@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Delivery;
+use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
@@ -62,6 +64,19 @@ class SettlementReconciliationService
             ->latest('payment_date')
             ->first();
 
+        // Courier cost aggregation
+        $totalDeliveryFee = (float) Order::where('outlet_id', $outletId)
+            ->where('status', Order::STATUS_COMPLETED)
+            ->sum('delivery_fee');
+
+        $eksternalCost = (float) Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outletId))
+            ->where('courier_type', 'eksternal')
+            ->sum('courier_cost');
+
+        $eksternalCount = (int) Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outletId))
+            ->where('courier_type', 'eksternal')
+            ->count();
+
         return [
             'center_share' => $centerShare,
             'sales_amount' => $salesAmount,
@@ -77,6 +92,10 @@ class SettlementReconciliationService
                 'amount' => (float) $lastPayment->amount,
                 'reference' => $lastPayment->reference_number,
             ] : null,
+            'total_delivery_fee' => $totalDeliveryFee,
+            'eksternal_courier_cost' => $eksternalCost,
+            'eksternal_delivery_count' => $eksternalCount,
+            'net_delivery_income' => $totalDeliveryFee - $eksternalCost,
         ];
     }
 
