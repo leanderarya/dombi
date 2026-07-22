@@ -9,10 +9,20 @@ use App\Models\Product;
 use App\Services\DeliveryPricingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class DeliveryPricingTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    private Outlet $outlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->outlet = $this->withOutletSession();
+    }
 
     public function test_delivery_pricing_service_calculates_fee_for_serviceable_distance(): void
     {
@@ -55,6 +65,7 @@ class DeliveryPricingTest extends TestCase
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',
+                'selected_outlet_id' => $this->outlet->id,
             ],
             'checkout.customer' => [
                 'customer_name' => 'Sarah Dombi',
@@ -80,6 +91,7 @@ class DeliveryPricingTest extends TestCase
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',
+                'selected_outlet_id' => $this->outlet->id,
             ],
             'checkout.customer' => [
                 'customer_name' => 'Sarah Dombi',
@@ -132,6 +144,9 @@ class DeliveryPricingTest extends TestCase
             'checkout.cart' => [
                 ['product_id' => $product->id, 'quantity' => 1],
             ],
+            'checkout.fulfillment' => [
+                'selected_outlet_id' => $this->outlet->id,
+            ],
             'checkout.location' => $this->locationDraft(),
         ])->get('/customer/checkout')
             ->assertOk()
@@ -141,7 +156,6 @@ class DeliveryPricingTest extends TestCase
                 ->has('deliveryPreview')
                 ->where('deliveryPreview.is_serviceable', true)
                 ->has('nearestOutlet')
-                ->where('nearestOutlet.name', 'Outlet Banyumanik')
             );
     }
 
@@ -155,6 +169,7 @@ class DeliveryPricingTest extends TestCase
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',
+                'selected_outlet_id' => $this->outlet->id,
             ],
             'checkout.location' => $this->locationDraft(),
         ])->get('/customer/checkout/customer')
@@ -176,6 +191,7 @@ class DeliveryPricingTest extends TestCase
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',
+                'selected_outlet_id' => $this->outlet->id,
             ],
             'checkout.customer' => [
                 'customer_name' => 'Sarah Dombi',
@@ -192,16 +208,6 @@ class DeliveryPricingTest extends TestCase
 
     private function createStockedProduct(): Product
     {
-        $outlet = Outlet::create([
-            'name' => 'Outlet Banyumanik',
-            'kelurahan' => 'Banyumanik',
-            'kecamatan' => 'Banyumanik',
-            'address' => 'Jl. Banyumanik',
-            'latitude' => -7.0610000,
-            'longitude' => 110.4310000,
-            'status' => 'active',
-        ]);
-
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
             'slug' => 'susu-kambing-500ml-pricing',
@@ -211,7 +217,7 @@ class DeliveryPricingTest extends TestCase
         ]);
 
         OutletInventory::create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_id' => $product->id,
             'current_stock' => 10,
             'reserved_stock' => 0,

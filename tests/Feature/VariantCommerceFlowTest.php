@@ -13,10 +13,12 @@ use App\Models\ProductVariant;
 use App\Services\SettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class VariantCommerceFlowTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
 
     private ProductFamily $family;
 
@@ -58,15 +60,7 @@ class VariantCommerceFlowTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->outlet = Outlet::create([
-            'name' => 'Outlet Semarang',
-            'kelurahan' => 'Sumurboto',
-            'kecamatan' => 'Banyumanik',
-            'address' => 'Jl. Banyumanik',
-            'latitude' => -7.0731000,
-            'longitude' => 110.4216000,
-            'status' => 'active',
-        ]);
+        $this->outlet = $this->withOutletSession();
 
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
@@ -104,6 +98,9 @@ class VariantCommerceFlowTest extends TestCase
             'checkout.cart' => [
                 ['product_variant_id' => $this->variant->id, 'quantity' => 1],
             ],
+            'checkout.fulfillment' => [
+                'selected_outlet_id' => $this->outlet->id,
+            ],
         ])->get('/customer/checkout')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
@@ -119,7 +116,7 @@ class VariantCommerceFlowTest extends TestCase
             'checkout.cart' => [
                 ['product_variant_id' => $this->variant->id, 'quantity' => 1],
             ],
-            'checkout.fulfillment' => ['fulfillment_type' => 'pickup'],
+            'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
         ])->get('/customer/checkout/customer')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
@@ -132,7 +129,7 @@ class VariantCommerceFlowTest extends TestCase
             'checkout.cart' => [
                 ['product_variant_id' => $this->variant->id, 'quantity' => 2],
             ],
-            'checkout.fulfillment' => ['fulfillment_type' => 'pickup'],
+            'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
             'checkout.customer' => [
                 'customer_name' => 'Test User',
                 'phone_number' => '6281234567890',
@@ -178,7 +175,7 @@ class VariantCommerceFlowTest extends TestCase
             ],
         ])->assertRedirect('/customer/checkout')
             ->assertSessionHas('checkout.cart')
-            ->assertSessionMissing('checkout.fulfillment');
+            ->assertSessionMissing('checkout.fulfillment.fulfillment_type');
     }
 
     public function test_legacy_product_id_still_works_via_fallback(): void

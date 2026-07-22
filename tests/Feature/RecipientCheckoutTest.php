@@ -12,10 +12,12 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class RecipientCheckoutTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
 
     private Product $product;
 
@@ -58,15 +60,7 @@ class RecipientCheckoutTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->outlet = Outlet::create([
-            'name' => 'Outlet Test',
-            'kelurahan' => 'Sumurboto',
-            'kecamatan' => 'Banyumanik',
-            'address' => 'Jl. Banyumanik',
-            'latitude' => -7.0731000,
-            'longitude' => 110.4216000,
-            'status' => 'active',
-        ]);
+        $this->outlet = $this->withOutletSession();
 
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
@@ -99,7 +93,7 @@ class RecipientCheckoutTest extends TestCase
             'checkout.cart' => [
                 ['product_variant_id' => $this->variant->id, 'quantity' => 2],
             ],
-            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi'],
+            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi', 'selected_outlet_id' => $this->outlet->id],
         ]);
 
         $this->get('/customer/checkout/customer')
@@ -120,7 +114,7 @@ class RecipientCheckoutTest extends TestCase
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',
-                'selected_outlet_id' => null,
+                'selected_outlet_id' => $this->outlet->id,
             ],
             'checkout.customer' => [
                 'customer_name' => 'Budi Santoso',
@@ -163,7 +157,7 @@ class RecipientCheckoutTest extends TestCase
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',
-                'selected_outlet_id' => null,
+                'selected_outlet_id' => $this->outlet->id,
             ],
             'checkout.customer' => [
                 'customer_name' => 'Budi Santoso',
@@ -201,7 +195,7 @@ class RecipientCheckoutTest extends TestCase
     public function test_guest_delivery_requires_login(): void
     {
         $this->session([
-            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi'],
+            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi', 'selected_outlet_id' => $this->outlet->id],
         ]);
 
         $this->post('/customer/checkout/customer', [
