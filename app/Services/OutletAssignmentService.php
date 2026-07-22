@@ -69,14 +69,24 @@ class OutletAssignmentService
                 }
             }
 
-            return $this->outletHasEnoughStock($outlet, $items);
+            return $this->outletHasEnoughStock($outlet, $items, false);
         });
     }
 
-    public function outletHasEnoughStock(Outlet $outlet, array $items): bool
+    public function outletHasEnoughStock(Outlet $outlet, array $items, bool $lockForUpdate = false): bool
     {
-        // Only check active inventories
-        $inventories = $outlet->inventories->where('is_active', true)->keyBy('product_variant_id');
+        $inventories = null;
+
+        if ($lockForUpdate) {
+            $inventories = \App\Models\OutletInventory::query()
+                ->where('outlet_id', $outlet->id)
+                ->where('is_active', true)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('product_variant_id');
+        } else {
+            $inventories = $outlet->inventories->where('is_active', true)->keyBy('product_variant_id');
+        }
 
         foreach ($items as $item) {
             $variantId = (int) ($item['product_variant_id'] ?? 0);
