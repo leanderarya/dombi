@@ -65,6 +65,11 @@ class CourierProfile extends Model
             ->withPivot('assigned_at');
     }
 
+    public function outlet(): BelongsTo
+    {
+        return $this->belongsTo(Outlet::class);
+    }
+
     public function nominatedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'nominated_by');
