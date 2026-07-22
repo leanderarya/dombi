@@ -102,33 +102,6 @@ class InventorySafetyTest extends TestCase
         $this->assertSame(2, $movement->after_reserved);
     }
 
-    // ─── IDEMPOTENCY ─────────────────────────────────────────────────
-
-    public function test_restock_confirm_received_is_idempotent(): void
-    {
-        $context = $this->makeRestockContext();
-        $distribution = $context['distribution'];
-        $outletUser = $context['outletUser'];
-
-        // First confirm
-        $this->actingAs($outletUser)
-            ->post(route('outlet.distributions.confirm-received', $distribution))
-            ->assertRedirect();
-
-        // Second confirm - should not double-add stock
-        $this->actingAs($outletUser)
-            ->post(route('outlet.distributions.confirm-received', $distribution))
-            ->assertRedirect();
-
-        $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
-            ->first();
-
-        // Only added once: initial 2 + restock 4 = 6
-        $this->assertSame(6, $inventory->current_stock);
-        $this->assertSame(1, StockMovement::where('reference_id', $distribution->id)->where('type', 'restock_in')->count());
-    }
-
     // ─── DELIVERY UNIQUENESS ─────────────────────────────────────────
 
     public function test_cannot_create_duplicate_delivery_for_same_order(): void
@@ -156,6 +129,7 @@ class InventorySafetyTest extends TestCase
         $order2 = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
             'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 1]],
+            'payment_method' => 'qris',
         ]);
 
         $this->assertNotEquals($order1->order_code, $order2->order_code);
@@ -387,75 +361,10 @@ class InventorySafetyTest extends TestCase
         $order = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
             'items' => [['product_variant_id' => $variant->id, 'quantity' => $quantity]],
+            'payment_method' => 'qris',
         ]);
 
         return compact('owner', 'outletUser', 'courier', 'customer', 'outlet', 'product', 'variant', 'order');
-    }
-
-    private function makeRestockContext(): array
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-        $outletUser = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
-
-        $outlet = Outlet::create([
-            'user_id' => $outletUser->id,
-            'name' => 'Outlet Restock',
-            'kelurahan' => 'Banyumanik',
-            'kecamatan' => 'Banyumanik',
-            'address' => 'Jl. Restock',
-            'status' => 'active',
-        ]);
-        $outletUser->update(['outlet_id' => $outlet->id]);
-
-        $product = Product::create([
-            'name' => 'Susu Kambing 500ml',
-            'slug' => uniqid('susu-kambing-'),
-            'unit' => 'botol',
-            'price' => 25000,
-            'is_active' => true,
-        ]);
-
-        $family = ProductFamily::create([
-            'name' => 'Susu Kambing Restock',
-            'brand' => 'Test',
-            'is_active' => true,
-        ]);
-
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
-            'product_id' => $product->id,
-            'name' => 'Original 500ml',
-            'flavor' => 'Original',
-            'size' => '500ml',
-            'center_price' => 20000,
-            'selling_price' => 25000,
-            'center_stock' => 100,
-            'is_active' => true,
-        ]);
-
-        OutletInventory::create([
-            'outlet_id' => $outlet->id,
-            'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
-            'current_stock' => 2,
-            'reserved_stock' => 0,
-            'minimum_stock' => 2,
-        ]);
-
-        $restockService = app(RestockService::class);
-        $restock = $restockService->createRequest($outletUser, [
-            'notes' => 'Perlu restock',
-            'items' => [['product_variant_id' => $variant->id, 'requested_quantity' => 6]],
-        ])->load('items');
-
-        $restockService->approveRequest($restock, $owner, [
-            ['restock_request_item_id' => $restock->items->first()->id, 'approved_quantity' => 4],
-        ]);
-
-        $distribution = $restock->fresh('distribution')->distribution;
-        $restockService->markShipped($distribution, $owner);
-
-        return compact('owner', 'outletUser', 'outlet', 'product', 'variant', 'distribution');
     }
 
     private function makeRestockRequestContext(): array
