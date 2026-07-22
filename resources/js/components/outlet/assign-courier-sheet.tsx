@@ -17,6 +17,7 @@ interface NearestCourier {
 interface Props {
     outletId: number;
     orderId: number;
+    deliveryFee: number;
     open: boolean;
     onClose: () => void;
 }
@@ -24,6 +25,7 @@ interface Props {
 export default function AssignCourierSheet({
     outletId,
     orderId,
+    deliveryFee,
     open,
     onClose,
 }: Props) {
@@ -32,6 +34,16 @@ export default function AssignCourierSheet({
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const form = useForm({ courier_id: '' });
+
+    const [courierType, setCourierType] = useState<'dombi' | 'eksternal'>('dombi');
+    const [externalName, setExternalName] = useState('');
+    const [externalPhone, setExternalPhone] = useState('');
+    const [externalPlate, setExternalPlate] = useState('');
+    const [courierCost, setCourierCost] = useState('');
+
+    const costNum = parseFloat(courierCost) || 0;
+    const margin = deliveryFee - costNum;
+    const isLoss = margin < 0;
 
     useEffect(() => {
         if (open) {
@@ -91,11 +103,20 @@ export default function AssignCourierSheet({
     }
 
     function handleSubmit() {
-        if (!selectedCourier) {
-            return;
+        if (courierType === 'dombi') {
+            if (!selectedCourier) return;
+            form.transform(() => ({ courier_id: String(selectedCourier), courier_type: 'dombi' }));
+        } else {
+            if (!externalName || !courierCost) return;
+            form.transform(() => ({
+                courier_type: 'eksternal',
+                external_courier_name: externalName,
+                external_courier_phone: externalPhone,
+                external_plate_number: externalPlate,
+                courier_cost: courierCost,
+            }));
         }
 
-        form.transform(() => ({ courier_id: String(selectedCourier) }));
         form.post(`/outlet/orders/${orderId}/assign-courier`, {
             onSuccess: () => onClose(),
             preserveScroll: true,
@@ -158,7 +179,30 @@ export default function AssignCourierSheet({
                         </p>
                     </div>
 
+                    {/* Tab Switch */}
+                    <div className="mt-3 flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+                        <button
+                            type="button"
+                            onClick={() => setCourierType('dombi')}
+                            className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
+                                courierType === 'dombi' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                            }`}
+                        >
+                            Kurir Dombi
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setCourierType('eksternal')}
+                            className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
+                                courierType === 'eksternal' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                            }`}
+                        >
+                            Gojek / Grab
+                        </button>
+                    </div>
+
                     {/* Content */}
+                    {courierType === 'dombi' ? (
                     <div className="mt-4">
                         {loading ? (
                             <div className="flex items-center justify-center py-8">
@@ -299,6 +343,73 @@ export default function AssignCourierSheet({
                             </>
                         )}
                     </div>
+                    ) : (
+                    <div className="mt-4 space-y-3">
+                        <div>
+                            <label className="text-xs font-semibold text-slate-500">Nama Kurir</label>
+                            <input
+                                type="text"
+                                value={externalName}
+                                onChange={e => setExternalName(e.target.value)}
+                                className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                placeholder="Nama driver Gojek/Grab"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <div className="flex-1">
+                                <label className="text-xs font-semibold text-slate-500">No. HP</label>
+                                <input
+                                    type="text"
+                                    value={externalPhone}
+                                    onChange={e => setExternalPhone(e.target.value)}
+                                    className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                    placeholder="0812..."
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <label className="text-xs font-semibold text-slate-500">Plat</label>
+                                <input
+                                    type="text"
+                                    value={externalPlate}
+                                    onChange={e => setExternalPlate(e.target.value)}
+                                    className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                    placeholder="B 1234 ABC"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-xs font-semibold text-slate-500">Biaya Ongkir (Gojek)</label>
+                            <input
+                                type="number"
+                                value={courierCost}
+                                onChange={e => setCourierCost(e.target.value)}
+                                className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                placeholder="25000"
+                                min={0}
+                            />
+                        </div>
+
+                        {costNum > 0 && (
+                            <div className={`rounded-lg border p-3 ${isLoss ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50'}`}>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-600">Ongkir Customer</span>
+                                    <span className="font-semibold">Rp {deliveryFee.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-slate-600">Biaya Gojek</span>
+                                    <span className="font-semibold">Rp {costNum.toLocaleString()}</span>
+                                </div>
+                                <div className={`mt-1 flex justify-between border-t pt-1 text-sm font-bold ${isLoss ? 'text-red-600' : 'text-emerald-600'}`}>
+                                    <span>Selisih</span>
+                                    <span>{isLoss ? '⚠️' : '✅'} Rp {Math.abs(margin).toLocaleString()} {isLoss ? 'RUGI' : 'UNTUNG'}</span>
+                                </div>
+                                {isLoss && (
+                                    <p className="mt-2 text-xs text-red-600">Pengiriman ini merugi. Lanjutkan?</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                    )}
 
                     {form.errors.courier_id && (
                         <p className="mt-2 text-xs text-red-600">
@@ -319,7 +430,9 @@ export default function AssignCourierSheet({
                             type="button"
                             onClick={handleSubmit}
                             disabled={
-                                !selectedCourier || form.processing || loading
+                                courierType === 'dombi'
+                                    ? !selectedCourier || form.processing || loading
+                                    : !externalName || !courierCost || form.processing
                             }
                             className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white transition-all duration-150 active:bg-emerald-800 active:opacity-80 disabled:bg-slate-300"
                         >
