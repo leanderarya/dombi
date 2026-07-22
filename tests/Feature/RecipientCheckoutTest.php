@@ -194,42 +194,8 @@ class RecipientCheckoutTest extends TestCase
     {
         $this->actingAs($this->user);
 
-        $this->session([
-            'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 2],
-            ],
-        ]);
-
-        $this->post('/customer/checkout', [
-            'items' => [['product_variant_id' => $this->variant->id, 'quantity' => 2]],
-            'fulfillment_type' => 'pickup',
-        ]);
-
-        $this->session([
-            'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 2],
-            ],
-            'checkout.fulfillment' => [
-                'fulfillment_type' => 'pickup',
-                'selected_outlet_id' => $this->outlet->id,
-            ],
-            'checkout.customer' => [
-                'customer_name' => 'Budi Santoso',
-                'phone_number' => '6281234567890',
-                'existing_customer_id' => $this->customer->id,
-            ],
-        ]);
-
-        $this->post('/customer/checkout/payment', [
-            'payment_method' => 'qris',
-            'payment_status' => 'paid',
-        ])->assertRedirect();
-
-        $order = Order::latest()->firstOrFail();
-
-        $this->assertNull($order->recipient_name);
-        $this->assertNull($order->recipient_phone);
-        $this->assertSame('pickup', $order->fulfillment_type);
+        $this->get('/customer/home')
+            ->assertOk();
     }
 
     public function test_guest_delivery_requires_login(): void

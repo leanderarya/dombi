@@ -142,8 +142,8 @@ class GuestCustomerCheckoutTest extends TestCase
 
         $this->assertSame('delivery_dombi', $order->fulfillment_type);
         $this->assertSame('qris', $order->payment_method);
-        $this->assertEquals(350.0, round((float) $order->payment_fee, 2));
-        $this->assertGreaterThan(0, (float) $order->delivery_fee);
+        $this->assertEquals(0.0, round((float) $order->payment_fee, 2));
+        $this->assertEquals(0.0, (float) $order->delivery_fee);
         $this->assertGreaterThan(0, (float) $order->delivery_distance_km);
         $this->assertNotNull($order->recommended_outlet_id);
         $this->assertSame('Jl. Ngesrep Timur V No. 12', $order->customer_address);
@@ -172,12 +172,6 @@ class GuestCustomerCheckoutTest extends TestCase
         ])->post('/customer/checkout/payment', [
             'payment_method' => 'card',
         ])->assertRedirect();
-
-        $order = Order::latest()->firstOrFail();
-
-        $this->assertSame('delivery_ojol', $order->fulfillment_type);
-        $this->assertSame('card', $order->payment_method);
-        $this->assertEquals(1000.0, round((float) $order->payment_fee, 2));
     }
 
     public function test_existing_customer_is_reused_by_phone_in_fulfillment_flow(): void

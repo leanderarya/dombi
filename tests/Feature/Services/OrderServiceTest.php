@@ -4,7 +4,7 @@ namespace Tests\Feature\Services;
 
 use App\Exceptions\StockAdjustedException;
 use App\Models\Customer;
-use App\Models\OperatingHour;
+use App\Models\OutletOperatingHours;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
@@ -24,7 +24,7 @@ class OrderServiceTest extends TestCase
         $customer = Customer::factory()->create(['user_id' => $user->id]);
         $outlet = Outlet::factory()->create();
         foreach (range(0, 6) as $day) {
-            OperatingHour::create([
+            OutletOperatingHours::create([
                 'outlet_id' => $outlet->id,
                 'day_of_week' => $day,
                 'open_time' => '00:00',
@@ -73,7 +73,7 @@ class OrderServiceTest extends TestCase
         $customer = Customer::factory()->create(['user_id' => $user->id]);
         $outlet = Outlet::factory()->create();
         foreach (range(0, 6) as $day) {
-            OperatingHour::create([
+            OutletOperatingHours::create([
                 'outlet_id' => $outlet->id,
                 'day_of_week' => $day,
                 'open_time' => '00:00',
@@ -114,7 +114,7 @@ class OrderServiceTest extends TestCase
         $customer = Customer::factory()->create(['user_id' => $user->id]);
         $outlet = Outlet::factory()->create();
         foreach (range(0, 6) as $day) {
-            OperatingHour::create([
+            OutletOperatingHours::create([
                 'outlet_id' => $outlet->id,
                 'day_of_week' => $day,
                 'open_time' => '00:00',
