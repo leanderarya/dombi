@@ -9,6 +9,7 @@ use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
@@ -258,12 +259,11 @@ class P0CheckoutHardeningTest extends TestCase
             'status' => 'completed',
         ]);
 
-        $this->postJson('/track/'.$order->recovery_token.'/cancel', [
-            'reason' => 'Berubah pikiran',
-        ])->assertJson([
-            'success' => false,
-            'error' => 'Tidak dapat membatalkan pesanan ini.',
-        ]);
+        // Old /track/{token}/cancel route removed.
+        // Guest cancel returns session error for completed orders.
+        $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
+            'reason' => 'Tidak Jadi Membeli',
+        ])->assertSessionHasErrors('status');
     }
 
     private function createOrder(array $overrides = []): Order
