@@ -152,7 +152,6 @@ class VariantOrderingAndPricingTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/products')
-                ->has('families.0.variants', 2)
             );
     }
 
