@@ -52,6 +52,11 @@ class Delivery extends Model
         'return_confirmed_by',
         'return_confirmed_at',
         'return_notes',
+        'external_courier_name',
+        'external_courier_phone',
+        'external_plate_number',
+        'courier_cost',
+        'courier_type',
     ];
 
     protected function casts(): array
@@ -63,6 +68,7 @@ class Delivery extends Model
             'resolved_at' => 'datetime',
             'rejected_at' => 'datetime',
             'return_confirmed_at' => 'datetime',
+            'courier_cost' => 'decimal:2',
         ];
     }
 
