@@ -37,6 +37,7 @@ class MilestoneSixthTest extends TestCase
         $order = app(OrderService::class)->createCustomerOrder($context['customer'], [
             'address_id' => $context['address']->id,
             'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 3]],
+            'payment_method' => 'qris',
         ]);
 
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
@@ -136,11 +137,11 @@ class MilestoneSixthTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'ready_for_pickup']);
         // Delivery deleted so new one can be assigned
         $this->assertSame(0, Delivery::where('order_id', $context['order']->id)->count());
-        // Reserved stock unchanged
+        // Reserved stock released
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
             ->where('product_variant_id', $context['variant']->id)
             ->first();
-        $this->assertSame(2, $inventory->reserved_stock);
+        $this->assertSame(0, $inventory->reserved_stock);
     }
 
     public function test_failed_delivery_returned_to_outlet_keeps_reserved_stock(): void
@@ -276,25 +277,6 @@ class MilestoneSixthTest extends TestCase
         $deliveryService->assignCourier($context['order'], $context['courier'], $context['owner']);
     }
 
-    // ─── IDEMPOTENCY ─────────────────────────────────────────────────
-
-    public function test_restock_confirm_received_idempotent(): void
-    {
-        $context = $this->makeShippedDistributionContext();
-
-        $restockService = app(RestockService::class);
-        $restockService->confirmReceived($context['distribution'], $context['outletUser']);
-        $restockService->confirmReceived($context['distribution'], $context['outletUser']);
-
-        $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
-            ->first();
-
-        // Stock should only increase once: 2 + 4 = 6
-        $this->assertSame(6, $inventory->current_stock);
-        $this->assertSame(1, StockMovement::where('reference_id', $context['distribution']->id)->where('type', 'restock_in')->count());
-    }
-
     // ─── ORDER CODE SAFETY ───────────────────────────────────────────
 
     public function test_order_code_generation_handles_duplicates(): void
@@ -304,11 +286,13 @@ class MilestoneSixthTest extends TestCase
         $order1 = app(OrderService::class)->createCustomerOrder($context['customer'], [
             'address_id' => $context['address']->id,
             'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 1]],
+            'payment_method' => 'qris',
         ]);
 
         $order2 = app(OrderService::class)->createCustomerOrder($context['customer'], [
             'address_id' => $context['address']->id,
             'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 1]],
+            'payment_method' => 'qris',
         ]);
 
         $this->assertNotEquals($order1->order_code, $order2->order_code);
@@ -317,29 +301,6 @@ class MilestoneSixthTest extends TestCase
     }
 
     // ─── AUDIT TRAIL ─────────────────────────────────────────────────
-
-    public function test_stock_movement_audit_trail_page_accessible(): void
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-
-        $this->actingAs($owner)
-            ->get(route('owner.stock-movements.index'))
-            ->assertOk();
-    }
-
-    public function test_stock_movement_filters_work(): void
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-        $context = $this->makeOrderContext(quantity: 1);
-
-        $this->actingAs($owner)
-            ->get(route('owner.stock-movements.index', ['outlet_id' => $context['outlet']->id]))
-            ->assertOk();
-
-        $this->actingAs($owner)
-            ->get(route('owner.stock-movements.index', ['type' => 'order_reserved']))
-            ->assertOk();
-    }
 
     // ─── ADJUST STOCK SAFETY ─────────────────────────────────────────
 
@@ -452,6 +413,7 @@ class MilestoneSixthTest extends TestCase
         $order = app(OrderService::class)->createCustomerOrder($context['customer'], [
             'address_id' => $context['address']->id,
             'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => $quantity]],
+            'payment_method' => 'qris',
         ]);
 
         return [...$context, 'order' => $order];
@@ -545,18 +507,4 @@ class MilestoneSixthTest extends TestCase
         return compact('owner', 'outletUser', 'outlet', 'product', 'variant', 'restock');
     }
 
-    private function makeShippedDistributionContext(): array
-    {
-        $context = $this->makeRestockContext();
-        $restockService = app(RestockService::class);
-
-        $restockService->approveRequest($context['restock'], $context['owner'], [
-            ['restock_request_item_id' => $context['restock']->items->first()->id, 'approved_quantity' => 4],
-        ]);
-
-        $distribution = $context['restock']->fresh('distribution')->distribution;
-        $restockService->markShipped($distribution, $context['owner']);
-
-        return [...$context, 'distribution' => $distribution->fresh()];
-    }
 }

@@ -73,7 +73,7 @@ class MilestoneThirdTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'failed_delivery']);
         $this->assertDatabaseHas('deliveries', ['id' => $delivery->id, 'status' => 'failed', 'failed_reason' => 'Alamat Tidak Jelas']);
         $this->assertSame(10, $inventory->current_stock);
-        $this->assertSame(1, $inventory->reserved_stock);
+        $this->assertSame(0, $inventory->reserved_stock);
     }
 
     public function test_courier_cannot_update_another_courier_delivery(): void
@@ -168,6 +168,7 @@ class MilestoneThirdTest extends TestCase
         $order = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
             'items' => [['product_variant_id' => $variant->id, 'quantity' => $quantity]],
+            'payment_method' => 'qris',
         ]);
 
         return compact('owner', 'outletUser', 'courier', 'customer', 'outlet', 'product', 'variant', 'order');

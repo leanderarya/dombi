@@ -22,6 +22,8 @@ class SettlementReminderTest extends TestCase
             'outlet_id' => $outlet->id,
             'due_date' => Carbon::tomorrow(),
             'status' => Settlement::STATUS_PENDING,
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
         ]);
 
         $this->artisan('settlement:send-reminders')
@@ -47,6 +49,8 @@ class SettlementReminderTest extends TestCase
             'outlet_id' => $outlet->id,
             'due_date' => Carbon::tomorrow(),
             'status' => Settlement::STATUS_PAID,
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
         ]);
 
         $this->artisan('settlement:send-reminders')
@@ -64,6 +68,8 @@ class SettlementReminderTest extends TestCase
             'outlet_id' => $outlet->id,
             'due_date' => Carbon::tomorrow(),
             'status' => Settlement::STATUS_PENDING,
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'last_invoice_sent_at' => now(),
         ]);
 

@@ -70,8 +70,8 @@ class MilestoneNinthTest extends TestCase
         $outlet = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
 
         $this->actingAs($outlet)->get('/owner/dashboard')->assertRedirect('/outlet/dashboard');
-        $this->actingAs($outlet)->get('/owner/reports')->assertRedirect('/outlet/dashboard');
-        $this->actingAs($outlet)->get('/owner/stock-movements')->assertRedirect('/outlet/dashboard');
+        $this->actingAs($outlet)->get('/owner/reports')->assertNotFound();
+        $this->actingAs($outlet)->get('/owner/stock-movements')->assertNotFound();
     }
 
     public function test_courier_cannot_access_outlet_routes(): void

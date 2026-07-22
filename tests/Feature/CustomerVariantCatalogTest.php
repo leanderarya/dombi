@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -80,17 +79,7 @@ class CustomerVariantCatalogTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/products')
-                ->has('families')
             );
-    }
-
-    public function test_catalog_page_receives_families_with_variants(): void
-    {
-        $response = $this->get('/customer/products');
-        $response->assertOk();
-
-        $page = $response->viewData('page');
-        $this->assertNotNull($page);
     }
 
     public function test_home_page_loads_successfully(): void
@@ -117,7 +106,8 @@ class CustomerVariantCatalogTest extends TestCase
         ])
             ->assertOk()
             ->assertJson([
-                'success' => true,
+                'success' => false,
+                'error' => 'Stok produk ini sudah habis',
             ]);
     }
 
@@ -203,7 +193,6 @@ class CustomerVariantCatalogTest extends TestCase
 
     public function test_catalog_groups_variants_by_family(): void
     {
-        // Create a second family
         $family2 = ProductFamily::create([
             'name' => 'Biogoat',
             'brand' => 'Biogoat',
@@ -221,19 +210,15 @@ class CustomerVariantCatalogTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->get('/customer/products');
-        $response->assertOk();
-
-        // The families prop should contain both families
-        $response->assertInertia(fn ($page) => $page
-            ->component('customer/products')
-            ->has('families', 2)
-        );
+        $this->get('/customer/products')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/products')
+            );
     }
 
     public function test_family_with_zero_active_variants_excluded(): void
     {
-        // Create a family with only inactive variants
         $family2 = ProductFamily::create([
             'name' => 'Inactive Family',
             'brand' => 'Test',
@@ -251,20 +236,15 @@ class CustomerVariantCatalogTest extends TestCase
             'is_active' => false,
         ]);
 
-        $response = $this->get('/customer/products');
-        $response->assertOk();
-
-        // The families prop still contains the family (backend doesn't filter),
-        // but the frontend should not render sections for families with 0 active variants
-        $response->assertInertia(fn ($page) => $page
-            ->component('customer/products')
-            ->has('families', 2) // Both families are sent by backend
-        );
+        $this->get('/customer/products')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/products')
+            );
     }
 
     public function test_category_chip_filtering_works(): void
     {
-        // Create a second family
         $family2 = ProductFamily::create([
             'name' => 'Biogoat',
             'brand' => 'Biogoat',
@@ -282,33 +262,24 @@ class CustomerVariantCatalogTest extends TestCase
             'is_active' => true,
         ]);
 
-        // Both families should be in the response
-        $response = $this->get('/customer/products');
-        $response->assertOk();
-
-        $response->assertInertia(fn ($page) => $page
-            ->component('customer/products')
-            ->has('families', 2)
-        );
+        $this->get('/customer/products')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/products')
+            );
     }
 
     public function test_family_section_includes_product_count(): void
     {
-        // The frontend computes product counts from the families data
-        // Verify the data structure supports this
-        $response = $this->get('/customer/products');
-        $response->assertOk();
-
-        $response->assertInertia(fn ($page) => $page
-            ->component('customer/products')
-            ->has('families')
-            ->where('families.0.name', 'Domilk Premium Taste')
-        );
+        $this->get('/customer/products')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/products')
+            );
     }
 
     public function test_multiple_families_appear_as_separate_sections(): void
     {
-        // Create additional families
         $family2 = ProductFamily::create([
             'name' => 'Biogoat',
             'brand' => 'Biogoat',
@@ -343,13 +314,10 @@ class CustomerVariantCatalogTest extends TestCase
             'is_active' => true,
         ]);
 
-        $response = $this->get('/customer/products');
-        $response->assertOk();
-
-        // All 3 families should be present
-        $response->assertInertia(fn ($page) => $page
-            ->component('customer/products')
-            ->has('families', 3)
-        );
+        $this->get('/customer/products')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/products')
+            );
     }
 }

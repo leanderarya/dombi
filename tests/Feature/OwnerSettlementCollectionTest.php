@@ -51,6 +51,8 @@ class OwnerSettlementCollectionTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->subDays(3)->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
             'due_date' => now()->addDays(4)->toDateString(),
@@ -71,6 +73,8 @@ class OwnerSettlementCollectionTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->subDays(10)->toDateString(),
+            'period_start' => now()->subDays(17)->toDateString(),
+            'period_end' => now()->subDays(3)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
             'due_date' => now()->subDays(3)->toDateString(),
@@ -95,6 +99,8 @@ class OwnerSettlementCollectionTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->subDays(3)->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
             'due_date' => now()->addDays(4)->toDateString(),
@@ -117,6 +123,8 @@ class OwnerSettlementCollectionTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->subDays(14)->toDateString(),
+            'period_start' => now()->subDays(21)->toDateString(),
+            'period_end' => now()->subDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
             'due_date' => now()->subDays(7)->toDateString(),
