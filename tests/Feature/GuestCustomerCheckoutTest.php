@@ -91,7 +91,7 @@ class GuestCustomerCheckoutTest extends TestCase
         $order = Order::latest()->firstOrFail();
 
         $this->assertSame('pickup', $order->fulfillment_type);
-        $this->assertSame('cod', $order->payment_method);
+        $this->assertSame('qris', $order->payment_method);
         $this->assertSame(0.0, (float) $order->delivery_fee);
         $this->assertSame(0.0, (float) $order->payment_fee);
         $this->assertSame(50000.0, (float) $order->total);
@@ -264,7 +264,7 @@ class GuestCustomerCheckoutTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('customer/checkout/payment')
                 ->where('summary.subtotal', 50000)
-                ->where('summary.payment_options.0.value', 'cod')
+                ->where('summary.payment_options.0.value', 'qris')
             );
     }
 

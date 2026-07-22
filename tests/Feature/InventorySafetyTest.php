@@ -20,6 +20,7 @@ use App\Services\OrderService;
 use App\Services\OrderStatusService;
 use App\Services\RestockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Exceptions\InvalidOrderTransitionException;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
@@ -217,7 +218,7 @@ class InventorySafetyTest extends TestCase
         $orderStatusService = app(OrderStatusService::class);
 
         // Cannot go from pending directly to ready_for_pickup
-        $this->expectException(ValidationException::class);
+        $this->expectException(InvalidOrderTransitionException::class);
         $orderStatusService->updateStatus($context['order'], 'ready_for_pickup', $context['outletUser']);
     }
 
