@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\ProductVariant;
 use Illuminate\Http\JsonResponse;
@@ -27,17 +26,6 @@ class CartController extends Controller
 
         // Get outlet from session
         $outletId = session('checkout.fulfillment.selected_outlet_id');
-
-        // Validate outlet is open
-        if ($outletId) {
-            $outlet = Outlet::find($outletId);
-            if (! $outlet || ! $outlet->isOpen()) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Outlet sedang tutup. Silakan pilih outlet lain.',
-                ], 422);
-            }
-        }
 
         // Get available stock from outlet inventory
         $inventory = OutletInventory::where('product_variant_id', $variant->id)
