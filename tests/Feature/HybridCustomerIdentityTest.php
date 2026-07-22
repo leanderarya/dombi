@@ -10,10 +10,20 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class HybridCustomerIdentityTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    private Outlet $outlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->outlet = $this->withOutletSession();
+    }
 
     // ─── CUSTOMER MODEL TESTS ───────────────────────────────────────
 
@@ -363,16 +373,6 @@ class HybridCustomerIdentityTest extends TestCase
 
     private function createStockedProduct(): Product
     {
-        $outlet = Outlet::create([
-            'name' => 'Outlet Test',
-            'kelurahan' => 'Test',
-            'kecamatan' => 'Test',
-            'address' => 'Jl. Test',
-            'latitude' => -7.0731000,
-            'longitude' => 110.4216000,
-            'status' => 'active',
-        ]);
-
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
             'slug' => 'susu-kambing-500ml-'.uniqid(),
@@ -382,7 +382,7 @@ class HybridCustomerIdentityTest extends TestCase
         ]);
 
         OutletInventory::create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_id' => $product->id,
             'current_stock' => 10,
             'reserved_stock' => 0,
@@ -394,6 +394,7 @@ class HybridCustomerIdentityTest extends TestCase
 
     private function seedCheckoutDraft(array $session): self
     {
+        $session['checkout.fulfillment']['selected_outlet_id'] = $this->outlet->id;
         return $this->withSession($session);
     }
 }

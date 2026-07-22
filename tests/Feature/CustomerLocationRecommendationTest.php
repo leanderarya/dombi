@@ -10,10 +10,18 @@ use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class CustomerLocationRecommendationTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withOutletSession();
+    }
 
     public function test_customer_location_can_be_stored_in_checkout_draft(): void
     {
