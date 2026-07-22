@@ -193,7 +193,7 @@ class GuestReorderAccessTest extends TestCase
         $this->postJson('/customer/orders/recovery', [
             'phone' => '+6281234567890',
             'recovery_token' => $order->recovery_token,
-        ])->assertRedirect();
+        ])->assertOk();
 
         // Should be able to reorder
         $this->get('/customer/orders/'.$order->id.'/restore-cart')
