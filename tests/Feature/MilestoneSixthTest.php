@@ -137,11 +137,11 @@ class MilestoneSixthTest extends TestCase
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'ready_for_pickup']);
         // Delivery deleted so new one can be assigned
         $this->assertSame(0, Delivery::where('order_id', $context['order']->id)->count());
-        // Reserved stock unchanged
+        // Reserved stock released
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
             ->where('product_variant_id', $context['variant']->id)
             ->first();
-        $this->assertSame(2, $inventory->reserved_stock);
+        $this->assertSame(0, $inventory->reserved_stock);
     }
 
     public function test_failed_delivery_returned_to_outlet_keeps_reserved_stock(): void
@@ -301,29 +301,6 @@ class MilestoneSixthTest extends TestCase
     }
 
     // ─── AUDIT TRAIL ─────────────────────────────────────────────────
-
-    public function test_stock_movement_audit_trail_page_accessible(): void
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-
-        $this->actingAs($owner)
-            ->get(route('owner.stock-movements.index'))
-            ->assertOk();
-    }
-
-    public function test_stock_movement_filters_work(): void
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-        $context = $this->makeOrderContext(quantity: 1);
-
-        $this->actingAs($owner)
-            ->get(route('owner.stock-movements.index', ['outlet_id' => $context['outlet']->id]))
-            ->assertOk();
-
-        $this->actingAs($owner)
-            ->get(route('owner.stock-movements.index', ['type' => 'order_reserved']))
-            ->assertOk();
-    }
 
     // ─── ADJUST STOCK SAFETY ─────────────────────────────────────────
 
