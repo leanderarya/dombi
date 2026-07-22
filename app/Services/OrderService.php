@@ -157,7 +157,7 @@ class OrderService
             'subtotal' => $subtotal,
             'delivery_fee' => $deliveryFee,
             'delivery_distance_km' => $deliveryDistance,
-            'payment_method' => $payload['payment_method'],
+            'payment_method' => $payload['payment_method'] ?? 'qris',
             'payment_fee' => $paymentFee,
             'gateway_fee' => $gatewayFee,
             'absorbed_fee' => $absorbedFee,
