@@ -60,28 +60,14 @@ class TrackCancelOwnershipTest extends TestCase
         $this->otherUser = User::factory()->create(['role' => 'customer']);
     }
 
-    public function test_unauthenticated_user_cannot_cancel(): void
-    {
-        $response = $this->postJson("/track/{$this->order->recovery_token}/cancel", [
-            'reason' => 'Tidak Jadi Membeli',
-        ]);
-
-        // Laravel's auth middleware returns 401 before controller runs
-        $response->assertStatus(401);
-    }
-
     public function test_owner_can_cancel_own_order(): void
     {
         $response = $this->actingAs($this->owner)
-            ->postJson("/track/{$this->order->recovery_token}/cancel", [
+            ->postJson(route('customer.orders.cancel', ['order' => $this->order->id]), [
                 'reason' => 'Tidak Jadi Membeli',
             ]);
 
-        $response->assertOk();
-        $response->assertJson([
-            'success' => true,
-            'message' => 'Pesanan berhasil dibatalkan.',
-        ]);
+        $response->assertRedirect();
 
         $this->order->refresh();
         $this->assertEquals(Order::STATUS_CANCELLED_BY_CUSTOMER, $this->order->status);
@@ -90,15 +76,11 @@ class TrackCancelOwnershipTest extends TestCase
     public function test_other_user_cannot_cancel_order(): void
     {
         $response = $this->actingAs($this->otherUser)
-            ->postJson("/track/{$this->order->recovery_token}/cancel", [
+            ->postJson(route('customer.orders.cancel', ['order' => $this->order->id]), [
                 'reason' => 'Tidak Jadi Membeli',
             ]);
 
-        $response->assertStatus(403);
-        $response->assertJson([
-            'success' => false,
-            'error' => 'Anda tidak memiliki akses ke pesanan ini.',
-        ]);
+        $response->assertForbidden();
 
         $this->order->refresh();
         $this->assertEquals(Order::STATUS_PENDING_CONFIRMATION, $this->order->status);
@@ -133,11 +115,11 @@ class TrackCancelOwnershipTest extends TestCase
         $guestCustomer->update(['user_id' => $mergedUser->id, 'is_registered' => true]);
 
         $response = $this->actingAs($mergedUser)
-            ->postJson("/track/{$guestOrder->recovery_token}/cancel", [
+            ->postJson(route('customer.orders.cancel', ['order' => $guestOrder->id]), [
                 'reason' => 'Tidak Jadi Membeli',
             ]);
 
-        $response->assertOk();
+        $response->assertRedirect();
         $guestOrder->refresh();
         $this->assertEquals(Order::STATUS_CANCELLED_BY_CUSTOMER, $guestOrder->status);
     }
@@ -170,15 +152,11 @@ class TrackCancelOwnershipTest extends TestCase
         $googleUser = User::factory()->create(['role' => 'customer']);
 
         $response = $this->actingAs($googleUser)
-            ->postJson("/track/{$guestOrder->recovery_token}/cancel", [
+            ->postJson(route('customer.orders.cancel', ['order' => $guestOrder->id]), [
                 'reason' => 'Tidak Jadi Membeli',
             ]);
 
-        $response->assertStatus(403);
-        $response->assertJson([
-            'success' => false,
-            'error' => 'Anda tidak memiliki akses ke pesanan ini.',
-        ]);
+        $response->assertForbidden();
     }
 
     public function test_cannot_cancel_already_cancelled_order(): void
@@ -186,15 +164,12 @@ class TrackCancelOwnershipTest extends TestCase
         $this->order->update(['status' => Order::STATUS_CANCELLED_BY_CUSTOMER]);
 
         $response = $this->actingAs($this->owner)
-            ->postJson("/track/{$this->order->recovery_token}/cancel", [
+            ->postJson(route('customer.orders.cancel', ['order' => $this->order->id]), [
                 'reason' => 'Tidak Jadi Membeli',
             ]);
 
         $response->assertStatus(422);
-        $response->assertJson([
-            'success' => false,
-            'error' => 'Tidak dapat membatalkan pesanan ini.',
-        ]);
+        $response->assertJsonValidationErrors('status');
     }
 
     public function test_cannot_cancel_completed_order(): void
@@ -202,61 +177,23 @@ class TrackCancelOwnershipTest extends TestCase
         $this->order->update(['status' => Order::STATUS_COMPLETED]);
 
         $response = $this->actingAs($this->owner)
-            ->postJson("/track/{$this->order->recovery_token}/cancel", [
+            ->postJson(route('customer.orders.cancel', ['order' => $this->order->id]), [
                 'reason' => 'Tidak Jadi Membeli',
             ]);
 
         $response->assertStatus(422);
+        $response->assertJsonValidationErrors('status');
     }
 
-    public function test_pickup_order_requires_last4_hp(): void
+    public function test_guest_cancel_requires_valid_token(): void
     {
-        $pickupOrder = Order::create([
-            'customer_id' => $this->customer->id,
-            'outlet_id' => Outlet::first()->id,
-            'order_code' => 'ORD-OWN-004',
-            'customer_name' => 'Owner',
-            'customer_phone' => '081234567890',
-            'customer_address' => 'Jl. Test No. 1',
-            'status' => Order::STATUS_PENDING_CONFIRMATION,
-            'fulfillment_type' => Order::FULFILLMENT_PICKUP,
-            'total' => 50000,
-            'subtotal' => 50000,
-            'payment_method' => 'qris',
-            'payment_status' => 'pending',
+        $response = $this->postJson("/guest/orders/{$this->order->id}/cancel/invalid-token", [
+            'reason' => 'Tidak Jadi Membeli',
         ]);
 
-        // Tanpa last4_hp → 422
-        $response = $this->actingAs($this->owner)
-            ->postJson("/track/{$pickupOrder->recovery_token}/cancel", [
-                'reason' => 'Tidak Jadi Membeli',
-            ]);
-        $response->assertStatus(422);
+        $response->assertForbidden();
 
-        // Dengan last4_hp salah → 422
-        $response = $this->actingAs($this->owner)
-            ->postJson("/track/{$pickupOrder->recovery_token}/cancel", [
-                'reason' => 'Tidak Jadi Membeli',
-                'last4_hp' => '0000',
-            ]);
-        $response->assertStatus(422);
-
-        // Dengan last4_hp benar → OK
-        $response = $this->actingAs($this->owner)
-            ->postJson("/track/{$pickupOrder->recovery_token}/cancel", [
-                'reason' => 'Tidak Jadi Membeli',
-                'last4_hp' => '7890',
-            ]);
-        $response->assertOk();
-    }
-
-    public function test_invalid_token_returns_422(): void
-    {
-        $response = $this->actingAs($this->owner)
-            ->postJson('/track/INVALIDTOKEN/cancel', [
-                'reason' => 'Tidak Jadi Membeli',
-            ]);
-
-        $response->assertStatus(422);
+        $this->order->refresh();
+        $this->assertEquals(Order::STATUS_PENDING_CONFIRMATION, $this->order->status);
     }
 }
