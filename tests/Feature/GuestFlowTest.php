@@ -30,12 +30,11 @@ class GuestFlowTest extends TestCase
     {
         $order = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
-        $response = $this->postJson('/track/'.$order->recovery_token.'/cancel', [
+        $response = $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
             'reason' => 'Salah Pesan',
-            'last4_hp' => '6789',
         ]);
 
-        $response->assertOk()->assertJson(['success' => true]);
+        $response->assertRedirect();
 
         $order->refresh();
         $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $order->status);
@@ -45,9 +44,9 @@ class GuestFlowTest extends TestCase
     {
         $order = $this->createOrder(['status' => Order::STATUS_COMPLETED]);
 
-        $this->post('/track/'.$order->recovery_token.'/cancel', [
+        $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
             'reason' => 'Salah Pesan',
-        ])->assertJson(['success' => false]);
+        ])->assertSessionHasErrors('status');
     }
 
     public function test_guest_cancel_does_not_require_auth(): void
@@ -55,10 +54,9 @@ class GuestFlowTest extends TestCase
         $order = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
 
         // No actingAs() — pure guest
-        $this->post('/track/'.$order->recovery_token.'/cancel', [
+        $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
             'reason' => 'Salah Pesan',
-            'last4_hp' => '6789',
-        ])->assertJson(['success' => true]);
+        ])->assertRedirect();
     }
 
     public function test_invalid_token_returns_not_found(): void
@@ -113,10 +111,9 @@ class GuestFlowTest extends TestCase
 
         // Guest cancel
         $guestOrder = $this->createOrder(['status' => Order::STATUS_PENDING_CONFIRMATION]);
-        $this->post('/track/'.$guestOrder->recovery_token.'/cancel', [
+        $this->post("/guest/orders/{$guestOrder->id}/cancel/{$guestOrder->guest_token}", [
             'reason' => 'Salah Pesan',
-            'last4_hp' => '6789',
-        ])->assertJson(['success' => true]);
+        ])->assertRedirect();
 
         // Customer cancel
         $customerOrder = $this->createOrder([
