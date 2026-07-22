@@ -82,7 +82,7 @@ class Order extends Model
     ];
 
     protected $fillable = [
-        'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'recovery_token', 'status', 'fulfillment_type',
+        'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'recovery_token', 'guest_token', 'status', 'fulfillment_type',
         'subtotal', 'delivery_fee', 'payment_method', 'payment_fee', 'total', 'customer_name', 'customer_phone',
         'payment_status', 'doku_order_id', 'paid_at',
         'recipient_name', 'recipient_phone',
@@ -106,6 +106,9 @@ class Order extends Model
         static::creating(function (Order $order): void {
             if (empty($order->recovery_token)) {
                 $order->recovery_token = static::generateRecoveryToken();
+            }
+            if (empty($order->guest_token)) {
+                $order->guest_token = \Illuminate\Support\Str::random(32);
             }
             if (empty($order->confirmation_expires_at) && $order->status === self::STATUS_PENDING_CONFIRMATION) {
                 $outlet = $order->outlet_id ? \App\Models\Outlet::find($order->outlet_id) : null;
