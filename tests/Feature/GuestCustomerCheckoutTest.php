@@ -9,10 +9,20 @@ use App\Models\OutletInventory;
 use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class GuestCustomerCheckoutTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    private Outlet $outlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->outlet = $this->withOutletSession();
+    }
 
     public function test_guest_can_open_fulfillment_based_checkout_pages(): void
     {
@@ -53,7 +63,7 @@ class GuestCustomerCheckoutTest extends TestCase
             ],
         ])->assertRedirect('/customer/checkout')
             ->assertSessionHas('checkout.cart.0.product_id', $product->id)
-            ->assertSessionMissing('checkout.fulfillment');
+            ->assertSessionMissing('checkout.fulfillment.fulfillment_type');
     }
 
     public function test_customer_checkout_step_hides_ojol_by_rejecting_it_as_a_public_option(): void
@@ -212,6 +222,7 @@ class GuestCustomerCheckoutTest extends TestCase
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',
+                'selected_outlet_id' => $this->outlet->id,
             ],
         ])->post('/customer/checkout/customer', [
             'customer_name' => 'Sarah Dombi',
@@ -230,6 +241,7 @@ class GuestCustomerCheckoutTest extends TestCase
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',
+                'selected_outlet_id' => $this->outlet->id,
             ],
             'checkout.location' => $this->locationDraft(),
         ])->post('/customer/checkout/customer', [
@@ -248,6 +260,7 @@ class GuestCustomerCheckoutTest extends TestCase
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'pickup',
+                'selected_outlet_id' => $this->outlet->id,
             ],
             'checkout.customer' => [
                 'customer_name' => 'Sarah Dombi',
@@ -274,16 +287,6 @@ class GuestCustomerCheckoutTest extends TestCase
 
     private function createStockedProduct(): Product
     {
-        $outlet = Outlet::create([
-            'name' => 'Outlet Banyumanik',
-            'kelurahan' => 'Banyumanik',
-            'kecamatan' => 'Banyumanik',
-            'address' => 'Jl. Banyumanik',
-            'latitude' => -7.0731000,
-            'longitude' => 110.4216000,
-            'status' => 'active',
-        ]);
-
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
             'slug' => 'susu-kambing-500ml',
@@ -293,7 +296,7 @@ class GuestCustomerCheckoutTest extends TestCase
         ]);
 
         OutletInventory::create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_id' => $product->id,
             'current_stock' => 10,
             'reserved_stock' => 0,
@@ -322,6 +325,7 @@ class GuestCustomerCheckoutTest extends TestCase
 
     private function seedCheckoutDraft(array $session): self
     {
+        $session['checkout.fulfillment']['selected_outlet_id'] = $this->outlet->id;
         return $this->withSession($session);
     }
 }
