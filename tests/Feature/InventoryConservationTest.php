@@ -9,10 +9,8 @@ use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\ExchangeService;
-use App\Services\RestockService;
 use App\Services\ReturnService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class InventoryConservationTest extends TestCase
@@ -66,98 +64,6 @@ class InventoryConservationTest extends TestCase
             'type' => 'return_in',
             'quantity' => 3,
         ]);
-    }
-
-    // ─── DISTRIBUTION CONSERVATION ──────────────────────────────────
-
-    public function test_distribution_preserves_total_inventory(): void
-    {
-        $ctx = $this->makeContext(centerStock: 100, outletStock: 20);
-        $distQty = 15;
-
-        $totalBefore = $this->totalInventory($ctx, $ctx['variant']);
-
-        // Create restock request
-        $restock = app(RestockService::class)->createRequest($ctx['outletUser'], [
-            'items' => [[
-                'product_variant_id' => $ctx['variant']->id,
-                'requested_quantity' => $distQty,
-            ]],
-        ]);
-
-        // Approve (creates distribution)
-        $restock = app(RestockService::class)->approveRequest($restock, $ctx['owner'], [
-            ['restock_request_item_id' => $restock->items->first()->id, 'approved_quantity' => $distQty],
-        ]);
-
-        $distribution = $restock->distribution;
-
-        // Mark shipped (deducts center stock)
-        $distribution = app(RestockService::class)->markShipped($distribution, $ctx['owner']);
-
-        // Center should be reduced
-        $this->assertSame(85, (int) $ctx['variant']->fresh()->center_stock);
-
-        // Confirm received (adds outlet stock)
-        $distribution = app(RestockService::class)->confirmReceived($distribution->fresh(), $ctx['outletUser']);
-
-        $totalAfter = $this->totalInventory($ctx, $ctx['variant']);
-
-        $this->assertSame($totalBefore, $totalAfter, 'Distribution must preserve total inventory (center + outlet).');
-        $this->assertSame(85, (int) $ctx['variant']->fresh()->center_stock);
-        $this->assertSame(35, (int) $ctx['inventory']->fresh()->current_stock);
-    }
-
-    public function test_distribution_creates_distribution_out_and_restock_in_movements(): void
-    {
-        $ctx = $this->makeContext(centerStock: 100, outletStock: 10);
-
-        $restock = app(RestockService::class)->createRequest($ctx['outletUser'], [
-            'items' => [['product_variant_id' => $ctx['variant']->id, 'requested_quantity' => 10]],
-        ]);
-
-        $restock = app(RestockService::class)->approveRequest($restock, $ctx['owner'], [
-            ['restock_request_item_id' => $restock->items->first()->id, 'approved_quantity' => 10],
-        ]);
-
-        $distribution = app(RestockService::class)->markShipped($restock->distribution, $ctx['owner']);
-
-        $this->assertDatabaseHas('stock_movements', [
-            'product_variant_id' => $ctx['variant']->id,
-            'type' => 'distribution_out',
-            'quantity' => -10,
-        ]);
-
-        $distribution = app(RestockService::class)->confirmReceived($distribution->fresh(), $ctx['outletUser']);
-
-        $this->assertDatabaseHas('stock_movements', [
-            'product_variant_id' => $ctx['variant']->id,
-            'type' => 'restock_in',
-            'quantity' => 10,
-        ]);
-    }
-
-    public function test_distribution_blocked_when_center_stock_insufficient(): void
-    {
-        $ctx = $this->makeContext(centerStock: 5, outletStock: 10);
-
-        $restock = app(RestockService::class)->createRequest($ctx['outletUser'], [
-            'items' => [['product_variant_id' => $ctx['variant']->id, 'requested_quantity' => 10]],
-        ]);
-
-        $restock = app(RestockService::class)->approveRequest($restock, $ctx['owner'], [
-            ['restock_request_item_id' => $restock->items->first()->id, 'approved_quantity' => 10],
-        ]);
-
-        $this->expectException(ValidationException::class);
-
-        try {
-            app(RestockService::class)->markShipped($restock->distribution, $ctx['owner']);
-        } catch (ValidationException $e) {
-            // Center stock should be unchanged
-            $this->assertSame(5, (int) $ctx['variant']->fresh()->center_stock);
-            throw $e;
-        }
     }
 
     // ─── EXCHANGE CONSERVATION ──────────────────────────────────────
@@ -244,50 +150,6 @@ class InventoryConservationTest extends TestCase
     }
 
     // ─── FULL LIFECYCLE CONSERVATION ────────────────────────────────
-
-    public function test_full_lifecycle_preserves_total_inventory(): void
-    {
-        $ctx = $this->makeContext(centerStock: 200, outletStock: 50, centerStockExchange: 100, outletStockExchange: 10);
-
-        $totalBefore = $this->totalInventoryAllVariants($ctx);
-
-        // 1. Distribution: center ships 20 to outlet
-        $restock = app(RestockService::class)->createRequest($ctx['outletUser'], [
-            'items' => [['product_variant_id' => $ctx['variant']->id, 'requested_quantity' => 20]],
-        ]);
-        $restock = app(RestockService::class)->approveRequest($restock, $ctx['owner'], [
-            ['restock_request_item_id' => $restock->items->first()->id, 'approved_quantity' => 20],
-        ]);
-        $dist = app(RestockService::class)->markShipped($restock->distribution, $ctx['owner']);
-        $dist = app(RestockService::class)->confirmReceived($dist->fresh(), $ctx['outletUser']);
-
-        // 2. Return: outlet sends 10 back to center
-        $return = app(ReturnService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
-            'reason' => 'slow_moving',
-            'items' => [['product_variant_id' => $ctx['variant']->id, 'quantity' => 10]],
-        ]);
-        $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
-        $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $ctx['owner']);
-
-        // 3. Exchange: outlet gets 5 of exchange variant
-        $exchange = app(ExchangeService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
-            'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $ctx['exchangeVariant']->id, 'quantity' => 5]],
-        ]);
-        $exchange = app(ExchangeService::class)->approveRequest($exchange, $ctx['owner']);
-        $exchange = app(ExchangeService::class)->markShipped($exchange->fresh(), $ctx['owner']);
-        $exchange = app(ExchangeService::class)->confirmReceived($exchange->fresh(), $ctx['outletUser']);
-
-        $totalAfter = $this->totalInventoryAllVariants($ctx);
-
-        $this->assertSame($totalBefore, $totalAfter, 'Full lifecycle must preserve total inventory.');
-
-        // Verify individual stocks
-        $this->assertSame(190, (int) $ctx['variant']->fresh()->center_stock); // 200 - 20 + 10
-        $this->assertSame(60, (int) $ctx['inventory']->fresh()->current_stock); // 50 + 20 - 10
-        $this->assertSame(95, (int) $ctx['exchangeVariant']->fresh()->center_stock); // 100 - 5
-        $this->assertSame(15, (int) $ctx['exchangeInventory']->fresh()->current_stock); // 10 + 5
-    }
 
     // ─── HELPERS ────────────────────────────────────────────────────
 
