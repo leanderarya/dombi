@@ -91,8 +91,6 @@ class RecipientCheckoutTest extends TestCase
         ]);
     }
 
-    // ─── DELIVERY RECIPIENT PREFILLED ────────────────────────────
-
     public function test_delivery_recipient_prefilled_from_account(): void
     {
         $this->actingAs($this->user);
@@ -112,13 +110,10 @@ class RecipientCheckoutTest extends TestCase
             );
     }
 
-    // ─── DELIVERY RECIPIENT SAVES TO ORDER ───────────────────────
-
     public function test_delivery_recipient_saves_to_order_not_profile(): void
     {
         $this->actingAs($this->user);
 
-        // Set up full checkout session
         $this->session([
             'checkout.cart' => [
                 ['product_variant_id' => $this->variant->id, 'quantity' => 2],
@@ -141,7 +136,6 @@ class RecipientCheckoutTest extends TestCase
             ],
         ]);
 
-        // Submit order
         $this->post('/customer/checkout/payment', [
             'payment_method' => 'qris',
             'payment_status' => 'paid',
@@ -149,20 +143,15 @@ class RecipientCheckoutTest extends TestCase
 
         $order = Order::latest()->firstOrFail();
 
-        // Recipient saved to order
         $this->assertSame('Siti Rahayu', $order->recipient_name);
         $this->assertSame('6289876543210', $order->recipient_phone);
 
-        // Customer name is still pemesan
         $this->assertSame('Budi Santoso', $order->customer_name);
 
-        // Profile NOT overwritten
         $this->customer->refresh();
         $this->assertSame('Budi Santoso', $this->customer->name);
         $this->assertSame('6281234567890', $this->customer->phone);
     }
-
-    // ─── DELIVERY RECIPIENT FALLS BACK TO ORDERER ────────────────
 
     public function test_delivery_recipient_falls_back_to_orderer_when_empty(): void
     {
@@ -180,7 +169,6 @@ class RecipientCheckoutTest extends TestCase
                 'customer_name' => 'Budi Santoso',
                 'phone_number' => '6281234567890',
                 'existing_customer_id' => $this->customer->id,
-                // No recipient_name/recipient_phone
             ],
             'checkout.location' => [
                 'latitude' => -7.0500000,
@@ -196,21 +184,16 @@ class RecipientCheckoutTest extends TestCase
 
         $order = Order::latest()->firstOrFail();
 
-        // Recipient is null (fallback to customer in display logic)
         $this->assertNull($order->recipient_name);
         $this->assertNull($order->recipient_phone);
 
-        // Customer name is still pemesan
         $this->assertSame('Budi Santoso', $order->customer_name);
     }
-
-    // ─── PICKUP FLOW UNCHANGED ───────────────────────────────────
 
     public function test_pickup_flow_unchanged(): void
     {
         $this->actingAs($this->user);
 
-        // Skip to payment via storeIndex auto-fill (pickup + logged in + phone)
         $this->session([
             'checkout.cart' => [
                 ['product_variant_id' => $this->variant->id, 'quantity' => 2],
@@ -222,7 +205,6 @@ class RecipientCheckoutTest extends TestCase
             'fulfillment_type' => 'pickup',
         ]);
 
-        // Should skip to payment (no customer step for pickup + auth + phone)
         $this->session([
             'checkout.cart' => [
                 ['product_variant_id' => $this->variant->id, 'quantity' => 2],
@@ -245,13 +227,10 @@ class RecipientCheckoutTest extends TestCase
 
         $order = Order::latest()->firstOrFail();
 
-        // Pickup has no recipient
         $this->assertNull($order->recipient_name);
         $this->assertNull($order->recipient_phone);
         $this->assertSame('pickup', $order->fulfillment_type);
     }
-
-    // ─── GUEST DELIVERY REQUIRES LOGIN ───────────────────────────
 
     public function test_guest_delivery_requires_login(): void
     {
