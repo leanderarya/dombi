@@ -20,7 +20,6 @@ class CourierProfileTest extends TestCase
     {
         parent::setUp();
         $this->owner = User::factory()->create(['role' => 'owner']);
-        $this->outletStaff = User::factory()->create(['role' => 'outlet']);
         $this->outlet = Outlet::create([
             'name' => 'Test Outlet',
             'address' => 'Jl. Test',
@@ -28,12 +27,17 @@ class CourierProfileTest extends TestCase
             'kecamatan' => 'Test',
             'status' => 'active',
         ]);
+
+        $this->outletStaff = User::factory()->create([
+            'role' => 'outlet',
+            'outlet_id' => $this->outlet->id,
+        ]);
     }
 
     public function test_outlet_can_nominate_courier(): void
     {
         $response = $this->actingAs($this->outletStaff)
-            ->post("/outlet/couriers/nominate", [
+            ->post("/outlet/my-couriers/nominate", [
                 'name' => 'Bambang',
                 'phone' => '081234567890',
             ]);
