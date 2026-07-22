@@ -13,10 +13,18 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class GuestReorderAccessTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withOutletSession();
+    }
 
     // ─── GUEST RECOVERED ORDER CAN REORDER ─────────────────────────
 

@@ -9,10 +9,20 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class GuestCheckoutRegisteredPhoneTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    private Outlet $outlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->outlet = $this->withOutletSession();
+    }
 
     public function test_guest_cannot_checkout_with_registered_phone(): void
     {
@@ -37,7 +47,7 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
         ])->post('/customer/checkout/customer', [
             'customer_name' => 'Guest User',
             'phone_number' => '6281234567890',
-            'selected_outlet_id' => Outlet::first()->id,
+            'selected_outlet_id' => $this->outlet->id,
         ]);
 
         $response->assertSessionHasErrors('phone_number');
@@ -56,7 +66,7 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
         ]);
 
         $product = $this->createStockedProduct();
-        $outlet = Outlet::first();
+        $outlet = $this->outlet;
 
         $response = $this->seedCheckoutDraft([
             'checkout.cart' => [
@@ -78,7 +88,7 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
     public function test_guest_can_checkout_with_new_phone(): void
     {
         $product = $this->createStockedProduct();
-        $outlet = Outlet::first();
+        $outlet = $this->outlet;
 
         $response = $this->seedCheckoutDraft([
             'checkout.cart' => [
@@ -109,7 +119,7 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
         ]);
 
         $product = $this->createStockedProduct();
-        $outlet = Outlet::first();
+        $outlet = $this->outlet;
 
         $response = $this->actingAs($user)
             ->seedCheckoutDraft([
@@ -143,7 +153,7 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
         ]);
 
         $product = $this->createStockedProduct();
-        $outlet = Outlet::first();
+        $outlet = $this->outlet;
 
         $response = $this->actingAs($user)
             ->seedCheckoutDraft([
@@ -167,16 +177,6 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
 
     private function createStockedProduct(): Product
     {
-        $outlet = Outlet::create([
-            'name' => 'Outlet Test',
-            'kelurahan' => 'Test',
-            'kecamatan' => 'Test',
-            'address' => 'Jl. Test',
-            'latitude' => -7.0731000,
-            'longitude' => 110.4216000,
-            'status' => 'active',
-        ]);
-
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
             'slug' => 'susu-kambing-500ml-'.uniqid(),
@@ -186,7 +186,7 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
         ]);
 
         OutletInventory::create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_id' => $product->id,
             'current_stock' => 10,
             'reserved_stock' => 0,
@@ -198,6 +198,7 @@ class GuestCheckoutRegisteredPhoneTest extends TestCase
 
     private function seedCheckoutDraft(array $session): self
     {
+        $session['checkout.fulfillment']['selected_outlet_id'] = $this->outlet->id;
         return $this->withSession($session);
     }
 }
