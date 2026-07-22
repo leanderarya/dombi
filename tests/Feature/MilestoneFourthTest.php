@@ -69,7 +69,7 @@ class MilestoneFourthTest extends TestCase
                 ->where('statusOptions.2.value', 'shipped')
                 ->where('statusOptions.3.value', 'completed')
                 ->where('statusOptions.4.value', 'rejected')
-                ->missing('statusOptions.5')
+                ->where('statusOptions.5.value', 'cancelled')
             );
     }
 

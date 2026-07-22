@@ -16,6 +16,7 @@ class DeliveryTierTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        DeliveryTier::query()->delete();
         $this->owner = User::factory()->create(['role' => 'owner']);
     }
 
