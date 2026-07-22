@@ -1,8 +1,8 @@
 # Dombi - Product Requirements Document (PRD)
 
-**Version:** 1.0
-**Date:** 2026-06-16
-**Status:** Draft
+**Version:** 2.0
+**Date:** 2026-07-22
+**Status:** Production Ready
 
 ---
 
@@ -17,9 +17,13 @@
 - Design: Mobile-first, Tailwind CSS
 
 **Status Saat Ini:**
-- 511 tests passing
+- 791 tests passing, 0 failures, 0 errors
 - 38 models, 26 services, 100+ UI components
 - 4 user roles dengan 60+ halaman
+- Push notification: VAPID + FCM integrated for all roles
+- Operating hours: WIB timezone, holiday schedule, outlet isOpen validation
+- Courier management: Dombi (Pusat + Outlet) + Eksternal (Gojek/Grab), cost tracking
+- Settlement: junction table FK, manual allocation UI, financial guardrails
 
 ---
 
@@ -275,4 +279,4 @@
 
 ---
 
-*Generated: 2026-06-16 | 511 tests passing | TypeScript clean | Build successful*
+*Generated: 2026-07-22 | 791 tests passing | 0 failures | Build successful*
