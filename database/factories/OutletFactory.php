@@ -16,6 +16,8 @@ class OutletFactory extends Factory
             'kelurahan' => $this->faker->citySuffix(),
             'kecamatan' => $this->faker->citySuffix(),
             'address' => $this->faker->streetAddress(),
+            'latitude' => -7.0731000,
+            'longitude' => 110.4216000,
             'status' => 'active',
         ];
     }
