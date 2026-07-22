@@ -30,10 +30,15 @@ class AssignCourierRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'courier_type' => ['required', 'in:dombi,eksternal'],
             'courier_id' => [
-                'required',
+                'required_if:courier_type,dombi',
                 Rule::exists('users', 'id')->where('role', 'courier')->where('is_active', true)->where('is_online', true),
             ],
+            'external_courier_name' => ['required_if:courier_type,eksternal', 'string', 'max:100'],
+            'external_courier_phone' => ['nullable', 'string', 'max:20'],
+            'external_plate_number' => ['nullable', 'string', 'max:20'],
+            'courier_cost' => ['required_if:courier_type,eksternal', 'numeric', 'min:0'],
         ];
     }
 }
