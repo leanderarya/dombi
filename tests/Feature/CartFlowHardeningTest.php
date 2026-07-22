@@ -115,10 +115,9 @@ class CartFlowHardeningTest extends TestCase
                 'item' => [
                     'product_variant_id' => $this->variant->id,
                     'quantity' => 2,
-                    'name' => 'Domilk Premium Taste',
-                    'variant_name' => 'Coffee 1L',
+                    'available_stock' => 50,
+                    'max_quantity' => 50,
                 ],
-                'cart_count' => 2,
             ]);
     }
 
@@ -191,12 +190,28 @@ class CartFlowHardeningTest extends TestCase
         $this->postJson('/customer/cart/add', [
             'product_variant_id' => $this->variant->id,
             'quantity' => 2,
-        ])->assertJson(['cart_count' => 2]);
+        ])->assertJson([
+            'success' => true,
+            'item' => [
+                'product_variant_id' => $this->variant->id,
+                'quantity' => 2,
+                'available_stock' => 50,
+                'max_quantity' => 50,
+            ],
+        ]);
 
         $this->postJson('/customer/cart/add', [
             'product_variant_id' => $this->variant->id,
             'quantity' => 3,
-        ])->assertJson(['cart_count' => 5]);
+        ])->assertJson([
+            'success' => true,
+            'item' => [
+                'product_variant_id' => $this->variant->id,
+                'quantity' => 3,
+                'available_stock' => 50,
+                'max_quantity' => 50,
+            ],
+        ]);
     }
 
     // ─── VALIDATION ─────────────────────────────────────────────────
