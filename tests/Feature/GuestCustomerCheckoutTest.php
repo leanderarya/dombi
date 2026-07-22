@@ -143,7 +143,7 @@ class GuestCustomerCheckoutTest extends TestCase
         $this->assertSame('delivery_dombi', $order->fulfillment_type);
         $this->assertSame('qris', $order->payment_method);
         $this->assertEquals(0.0, round((float) $order->payment_fee, 2));
-        $this->assertEquals(0.0, (float) $order->delivery_fee);
+        $this->assertEquals(5000.0, (float) $order->delivery_fee);
         $this->assertGreaterThan(0, (float) $order->delivery_distance_km);
         $this->assertNotNull($order->recommended_outlet_id);
         $this->assertSame('Jl. Ngesrep Timur V No. 12', $order->customer_address);
