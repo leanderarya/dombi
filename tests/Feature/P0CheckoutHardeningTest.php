@@ -13,10 +13,12 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class P0CheckoutHardeningTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
 
     private Product $product;
 
@@ -57,15 +59,7 @@ class P0CheckoutHardeningTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->outlet = Outlet::create([
-            'name' => 'Outlet Test',
-            'kelurahan' => 'Sumurboto',
-            'kecamatan' => 'Banyumanik',
-            'address' => 'Jl. Banyumanik No. 123',
-            'latitude' => -7.0731000,
-            'longitude' => 110.4216000,
-            'status' => 'active',
-        ]);
+        $this->outlet = $this->withOutletSession();
 
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
