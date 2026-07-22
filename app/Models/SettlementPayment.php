@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SettlementPayment extends Model
 {
@@ -30,6 +31,11 @@ class SettlementPayment extends Model
     public const STATUS_VERIFIED = 'verified';
 
     public const STATUS_REJECTED = 'rejected';
+
+    public function allocations(): HasMany
+    {
+        return $this->hasMany(SettlementPaymentAllocation::class);
+    }
 
     public function outlet(): BelongsTo
     {
