@@ -10,20 +10,29 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class CheckoutControllerTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    private Outlet $outlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->outlet = $this->withOutletSession();
+    }
 
     public function test_validate_stock_returns_items_with_stock_info(): void
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $outlet = Outlet::factory()->create();
         $variant = ProductVariant::factory()->create();
 
         OutletInventory::factory()->create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_variant_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 3,
@@ -54,11 +63,10 @@ class CheckoutControllerTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $outlet = Outlet::factory()->create();
         $variant = ProductVariant::factory()->create();
 
         OutletInventory::factory()->create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_variant_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 8,
@@ -91,7 +99,6 @@ class CheckoutControllerTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $outlet = Outlet::factory()->create(['status' => 'active']);
 
         $family = ProductFamily::create(['name' => 'Susu Kambing Original', 'is_active' => true]);
         $variant = ProductVariant::factory()->create([
@@ -102,7 +109,7 @@ class CheckoutControllerTest extends TestCase
         ]);
 
         OutletInventory::factory()->create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_variant_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 8,
@@ -113,7 +120,7 @@ class CheckoutControllerTest extends TestCase
         $this->actingAs($user)
             ->session([
                 'checkout.cart' => [['product_variant_id' => $variant->id, 'quantity' => 5]],
-                'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $outlet->id],
+                'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
                 'checkout.customer' => ['customer_name' => 'Test', 'phone_number' => '6281234567890'],
             ])
             ->postJson('/customer/checkout/payment', ['payment_method' => 'qris'])
@@ -131,11 +138,10 @@ class CheckoutControllerTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $outlet = Outlet::factory()->create();
         $variant = ProductVariant::factory()->create();
 
         OutletInventory::factory()->create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_variant_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 10,
