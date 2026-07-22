@@ -125,8 +125,19 @@ class OrderController extends Controller
 
     public function assignCourier(AssignCourierRequest $request, Order $order, DeliveryService $deliveryService): RedirectResponse
     {
-        $courier = User::findOrFail($request->integer('courier_id'));
-        $deliveryService->assignCourier($order, $courier, $request->user());
+        $courierType = $request->validated('courier_type');
+        $courier = $courierType === 'dombi' ? User::findOrFail($request->integer('courier_id')) : null;
+
+        $deliveryService->assignCourier(
+            order: $order,
+            courier: $courier,
+            assignedBy: $request->user(),
+            courierType: $courierType,
+            externalName: $request->validated('external_courier_name'),
+            externalPhone: $request->validated('external_courier_phone'),
+            externalPlate: $request->validated('external_plate_number'),
+            courierCost: $request->float('courier_cost'),
+        );
 
         return redirect()->route('outlet.orders.show', $order)->with('success', 'Kurir berhasil di-assign.');
     }
