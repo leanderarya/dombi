@@ -21,8 +21,22 @@ class DeliveryService
         private readonly NotificationService $notificationService,
     ) {}
 
-    public function assignCourier(Order $order, User $courier, User $assignedBy, bool $overrideCapacity = false, ?string $overrideReason = null): Delivery
-    {
+    public function assignCourier(
+        Order $order,
+        ?User $courier,
+        User $assignedBy,
+        bool $overrideCapacity = false,
+        ?string $overrideReason = null,
+        ?string $courierType = 'dombi',
+        ?string $externalName = null,
+        ?string $externalPhone = null,
+        ?string $externalPlate = null,
+        ?float $courierCost = null,
+    ): Delivery {
+        if ($courierType === 'eksternal') {
+            return $this->assignEksternal($order, $assignedBy, $externalName, $externalPhone, $externalPlate, $courierCost);
+        }
+
         if ($order->fulfillment_type === 'pickup') {
             throw ValidationException::withMessages([
                 'courier_id' => 'Pesanan pickup tidak memerlukan kurir.',
@@ -112,6 +126,38 @@ class DeliveryService
             $this->notificationService->notifyCourierAssigned($delivery);
 
             return $delivery->load(['order.outlet', 'order.items.product', 'courier', 'assignedBy']);
+        });
+    }
+
+    private function assignEksternal(Order $order, User $actor, ?string $externalName, ?string $externalPhone, ?string $externalPlate, ?float $courierCost): Delivery
+    {
+        return DB::transaction(function () use ($order, $actor, $externalName, $externalPhone, $externalPlate, $courierCost): Delivery {
+            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+
+            if ($order->status !== 'ready_for_pickup') {
+                throw ValidationException::withMessages([
+                    'courier_id' => 'Pesanan harus dalam status siap diambil.',
+                ]);
+            }
+
+            $delivery = Delivery::create([
+                'order_id' => $order->id,
+                'courier_id' => null,
+                'courier_type' => 'eksternal',
+                'status' => 'delivering',
+                'external_courier_name' => $externalName,
+                'external_courier_phone' => $externalPhone,
+                'external_plate_number' => $externalPlate,
+                'courier_cost' => $courierCost,
+                'assigned_by' => $actor->id,
+                'assigned_at' => now(),
+            ]);
+
+            $this->orderStatusService->updateStatus($order, Order::STATUS_DELIVERING);
+
+            $this->recordHistory($delivery, null, 'delivering', $actor, 'outlet', 'Kurir eksternal (Gojek/Grab).');
+
+            return $delivery->load(['order.outlet', 'order.items.product', 'assignedBy']);
         });
     }
 
