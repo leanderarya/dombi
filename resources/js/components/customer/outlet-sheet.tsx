@@ -36,6 +36,7 @@ export default function OutletSheet({
                         value={fulfillmentType}
                         onChange={onFulfillmentChange}
                         deliveryDisabled={deliveryDisabled}
+                        variant="white"
                     />
                     <p className="mt-2 text-center text-[11px] text-text-muted">
                         {fulfillmentType === 'pickup'
