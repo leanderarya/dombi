@@ -57,7 +57,7 @@ class SettlementPaymentService
                 'verified_at' => now(),
             ]);
 
-            $this->fifoAllocate($payment->outlet_id, (float) $payment->amount);
+            $this->fifoAllocate($payment->outlet_id, (float) $payment->amount, $payment->id);
         });
 
         $payment->load('outlet');
@@ -129,7 +129,7 @@ class SettlementPaymentService
      * Oldest settlement first. Updates paid_amount and recalculates status.
      * Must be called inside a DB transaction with proper locking.
      */
-    public function fifoAllocate(int $outletId, float $amount): void
+    public function fifoAllocate(int $outletId, float $amount, ?int $settlementPaymentId = null): void
     {
         $remaining = $amount;
 
@@ -152,6 +152,14 @@ class SettlementPaymentService
                 $settlement->paid_amount = (float) $settlement->paid_amount + $allocate;
                 $settlement->recalculateStatus();
                 $remaining -= $allocate;
+
+                if ($settlementPaymentId) {
+                    \App\Models\SettlementPaymentAllocation::create([
+                        'settlement_payment_id' => $settlementPaymentId,
+                        'settlement_id' => $settlement->id,
+                        'allocated_amount' => $allocate,
+                    ]);
+                }
             }
         }
 
@@ -160,6 +168,14 @@ class SettlementPaymentService
             $last = $unpaidSettlements->last();
             $last->overpaid_amount = (float) $last->overpaid_amount + $remaining;
             $last->recalculateStatus();
+
+            if ($settlementPaymentId) {
+                \App\Models\SettlementPaymentAllocation::create([
+                    'settlement_payment_id' => $settlementPaymentId,
+                    'settlement_id' => $last->id,
+                    'allocated_amount' => $remaining,
+                ]);
+            }
         }
     }
 }

@@ -312,7 +312,7 @@ class FinanceSettlementController extends Controller
             ]);
 
             // FIFO allocate to unpaid settlements
-            $paymentService->fifoAllocate($outlet->id, (float) $validated['amount']);
+            $paymentService->fifoAllocate($outlet->id, (float) $validated['amount'], $payment->id);
 
             return $payment;
         });
