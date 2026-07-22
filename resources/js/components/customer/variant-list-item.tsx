@@ -4,6 +4,7 @@ import { memo, useState } from 'react';
 import ProductImage from '@/components/customer/product-image';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutlet } from '@/contexts/outlet-context';
+import { mutationFetch } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
 import { useFavorites } from '@/lib/use-favorites';
@@ -80,7 +81,7 @@ const VariantListItem = memo(function VariantListItem({
         e.preventDefault();
         e.stopPropagation();
 
-        if (adding || isOutOfStock) {
+        if (adding || isOutOfStock || isOutletClosed) {
             return;
         }
 
@@ -97,18 +98,15 @@ const VariantListItem = memo(function VariantListItem({
             const token = document
                 .querySelector('meta[name="csrf-token"]')
                 ?.getAttribute('content');
-            await fetch('/customer/cart/add', {
+            await mutationFetch('/customer/cart/add', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
                     ...(token ? { 'X-CSRF-TOKEN': token } : {}),
                 },
                 body: JSON.stringify({
                     product_variant_id: variant.id,
                     quantity: 1,
                 }),
-                credentials: 'same-origin',
             });
         } catch {
             // Frontend cart already updated

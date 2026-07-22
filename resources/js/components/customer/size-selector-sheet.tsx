@@ -3,6 +3,8 @@ import Dialog from '@/components/ui/dialog';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
+import { useOutlet } from '@/contexts/outlet-context';
+import { mutationFetch } from '@/lib/api';
 
 interface Variant {
     id: number;
@@ -38,6 +40,8 @@ export default function SizeSelectorSheet({
     const [maxQuantity, setMaxQuantity] = useState<number>(999);
 
     const cart = useCart();
+    const { selectedOutlet } = useOutlet();
+    const isOutletClosed = selectedOutlet?.is_open === false;
 
     const sortedVariants = useMemo(() => {
         return [...variants].sort(
@@ -64,7 +68,7 @@ export default function SizeSelectorSheet({
     const isAtMaxQuantity = quantity >= effectiveMax;
 
     const handleAdd = async () => {
-        if (!selectedVariant || adding || isOutOfStock) {
+        if (!selectedVariant || adding || isOutOfStock || isOutletClosed) {
             return;
         }
 
@@ -75,18 +79,15 @@ export default function SizeSelectorSheet({
             const token = document
                 .querySelector('meta[name="csrf-token"]')
                 ?.getAttribute('content');
-            const response = await fetch('/customer/cart/add', {
+            const response = await mutationFetch('/customer/cart/add', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
                     ...(token ? { 'X-CSRF-TOKEN': token } : {}),
                 },
                 body: JSON.stringify({
                     product_variant_id: selectedVariant.id,
                     quantity,
                 }),
-                credentials: 'same-origin',
             });
             const data = await response.json();
 
@@ -206,14 +207,16 @@ export default function SizeSelectorSheet({
 
                         <button
                             onClick={handleAdd}
-                            disabled={adding || isOutOfStock}
+                            disabled={adding || isOutOfStock || isOutletClosed}
                             className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-bold text-white shadow-sm active:bg-emerald-700 disabled:opacity-60"
                         >
-                            {isOutOfStock
-                                ? 'Habis'
-                                : adding
-                                  ? 'Menambahkan...'
-                                  : 'Tambah'}
+                            {isOutletClosed
+                                ? 'Tutup'
+                                : isOutOfStock
+                                  ? 'Habis'
+                                  : adding
+                                    ? 'Menambahkan...'
+                                    : 'Tambah'}
                         </button>
                     </div>
                 )}
