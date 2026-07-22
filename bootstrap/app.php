@@ -3,6 +3,7 @@
 use App\Exceptions\RegisteredPhoneException;
 use App\Http\Middleware\AllowCustomerOrRecoveredGuest;
 use App\Http\Middleware\AllowGuestOrCustomer;
+use App\Http\Middleware\CheckStoreOpen;
 use App\Http\Middleware\CustomerInertiaRoot;
 use App\Http\Middleware\DevOnly;
 use App\Http\Middleware\EnforceSessionPolicy;
@@ -44,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'password.changed' => EnsurePasswordIsChanged::class,
             'enforce.session' => EnforceSessionPolicy::class,
             'dev' => DevOnly::class,
+            'store.open' => CheckStoreOpen::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
