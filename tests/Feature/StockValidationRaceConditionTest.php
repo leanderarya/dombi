@@ -85,7 +85,7 @@ class StockValidationRaceConditionTest extends TestCase
             $adjustCount++;
         }
 
-        $this->assertEquals(1, $successCount, 'Stock exhaustion prevents double sell');
+$this->assertEquals(1, $successCount, 'Stock exhaustion prevents double sell');
 
         // Verify no overselling
         $inventory = OutletInventory::where('outlet_id', $this->outlet->id)
