@@ -28,6 +28,8 @@ class SettlementExportTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->subDays(3)->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
             'due_date' => now()->addDays(4)->toDateString(),
@@ -57,6 +59,8 @@ class SettlementExportTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->subDays(3)->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
             'due_date' => now()->addDays(4)->toDateString(),
@@ -74,7 +78,7 @@ class SettlementExportTest extends TestCase
         $this->assertStringContainsString('Outlet', $csv);
         $this->assertStringContainsString('Periode', $csv);
         $this->assertStringContainsString('Jatuh Tempo', $csv);
-        $this->assertStringContainsString('Total Tagihan', $csv);
+        $this->assertStringContainsString('Kewajiban', $csv);
         $this->assertStringContainsString('Sudah Dibayar', $csv);
         $this->assertStringContainsString('Sisa', $csv);
         $this->assertStringContainsString('Status', $csv);
@@ -95,6 +99,8 @@ class SettlementExportTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->subDays(3)->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 160000,
             'due_date' => now()->addDays(4)->toDateString(),
@@ -104,6 +110,8 @@ class SettlementExportTest extends TestCase
         Settlement::create([
             'outlet_id' => $outlet2->id,
             'period_date' => now()->subDays(5)->toDateString(),
+            'period_start' => now()->subDays(12)->toDateString(),
+            'period_end' => now()->subDays(2)->toDateString(),
             'sales_amount' => 100000,
             'amount_due' => 80000,
             'paid_amount' => 80000,

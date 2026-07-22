@@ -49,6 +49,8 @@ class Settlement extends Model
     }
 
     // Status constants
+    const STATUS_PENDING = 'pending';
+
     const STATUS_GENERATED = 'generated';
 
     const STATUS_DUE_TODAY = 'due_today';
