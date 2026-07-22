@@ -6,10 +6,12 @@ use App\Models\ProductFamily;
 use App\Models\ProductVariant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class CustomerVariantCatalogTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
 
     private ProductFamily $family;
 
@@ -24,6 +26,7 @@ class CustomerVariantCatalogTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withOutletSession();
 
         $this->family = ProductFamily::create([
             'name' => 'Domilk Premium Taste',
