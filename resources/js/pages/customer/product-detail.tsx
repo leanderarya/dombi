@@ -5,6 +5,8 @@ import { getCsrfToken } from '@/lib/csrf';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
+import { useOutlet } from '@/contexts/outlet-context';
+import { mutationFetch } from '@/lib/api';
 
 /* ─── Types ────────────────────────────────────────────────── */
 
@@ -59,6 +61,7 @@ function findSoleFlavor(variants: Variant[]): string | null {
 function useAddToCart() {
     const cart = useCart();
     const { totalItems } = cart;
+    const { selectedOutlet } = useOutlet();
     const [adding, setAdding] = useState(false);
     const [added, setAdded] = useState(false);
     const [toast, setToast] = useState<{ name: string; qty: number } | null>(
@@ -66,11 +69,13 @@ function useAddToCart() {
     );
     const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+    const isOutletClosed = selectedOutlet?.is_open === false;
+
     useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
     const addToCart = useCallback(
         async (variant: Variant, qty: number, familyName: string) => {
-            if (adding || added) {
+            if (adding || added || isOutletClosed) {
                 return;
             }
 
@@ -78,18 +83,15 @@ function useAddToCart() {
             cart.addItem(variant.id, qty, variant.selling_price);
 
             try {
-                const res = await fetch('/customer/cart/add', {
+                const res = await mutationFetch('/customer/cart/add', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({
                         product_variant_id: variant.id,
                         quantity: qty,
                     }),
-                    credentials: 'same-origin',
                 });
                 await res.json();
             } catch {
@@ -103,7 +105,7 @@ function useAddToCart() {
             timers.current.push(setTimeout(() => setAdded(false), 1500));
             timers.current.push(setTimeout(() => setToast(null), 2500));
         },
-        [cart, adding, added],
+        [cart, adding, added, isOutletClosed],
     );
 
     return { addToCart, adding, added, toast, totalItems };
@@ -140,6 +142,8 @@ function ProductDetailInner({
     outletId?: number | null;
 }) {
     const { addToCart, adding, added, toast, totalItems } = useAddToCart();
+    const { selectedOutlet } = useOutlet();
+    const isOutletClosed = selectedOutlet?.is_open === false;
 
     const flavors = useMemo(
         () =>
@@ -221,7 +225,7 @@ function ProductDetailInner({
     );
 
     const handleAdd = () => {
-        if (!selectedVariant || isOutOfStock) {
+        if (!selectedVariant || isOutOfStock || isOutletClosed) {
             return;
         }
 
@@ -405,6 +409,7 @@ function ProductDetailInner({
                 {selectedVariant && (
                     <StickyCTA
                         isOutOfStock={isOutOfStock}
+                        isOutletClosed={isOutletClosed}
                         adding={adding}
                         added={added}
                         price={formatCurrency(
@@ -675,12 +680,14 @@ function CartButton({ outletId }: { outletId: number | null }) {
 
 function StickyCTA({
     isOutOfStock,
+    isOutletClosed,
     adding,
     added,
     price,
     onAdd,
 }: {
     isOutOfStock: boolean;
+    isOutletClosed: boolean;
     adding: boolean;
     added: boolean;
     price: string;
@@ -691,10 +698,27 @@ function StickyCTA({
             <div className="mx-auto max-w-lg px-4">
                 <button
                     onClick={onAdd}
-                    disabled={adding || isOutOfStock || added}
+                    disabled={adding || isOutOfStock || isOutletClosed || added}
                     className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold text-white shadow-sm transition-all duration-200 active:opacity-80 disabled:opacity-60 ${added ? 'bg-emerald-500' : 'bg-emerald-600'}`}
                 >
-                    {isOutOfStock ? (
+                    {isOutletClosed ? (
+                        <span className="flex items-center gap-1.5">
+                            <svg
+                                className="h-5 w-5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            Toko Tutup
+                        </span>
+                    ) : isOutOfStock ? (
                         <span>Habis</span>
                     ) : added ? (
                         <span className="flex items-center gap-1.5">
