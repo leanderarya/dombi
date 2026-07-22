@@ -13,10 +13,12 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class CartFlowHardeningTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
 
     private Product $product;
 
@@ -71,15 +73,7 @@ class CartFlowHardeningTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->outlet = Outlet::create([
-            'name' => 'Outlet Semarang',
-            'kelurahan' => 'Sumurboto',
-            'kecamatan' => 'Banyumanik',
-            'address' => 'Jl. Banyumanik',
-            'latitude' => -7.0731000,
-            'longitude' => 110.4216000,
-            'status' => 'active',
-        ]);
+        $this->outlet = $this->withOutletSession();
 
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,

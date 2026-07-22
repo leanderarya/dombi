@@ -9,20 +9,29 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class CartControllerTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    private Outlet $outlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->outlet = $this->withOutletSession();
+    }
 
     public function test_add_to_cart_returns_stock_info(): void
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $outlet = Outlet::factory()->create();
         $variant = ProductVariant::factory()->create();
 
         OutletInventory::factory()->create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_variant_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 3,
@@ -57,11 +66,10 @@ class CartControllerTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $outlet = Outlet::factory()->create();
         $variant = ProductVariant::factory()->create();
 
         OutletInventory::factory()->create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_variant_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 5,
@@ -90,11 +98,10 @@ class CartControllerTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $outlet = Outlet::factory()->create();
         $variant = ProductVariant::factory()->create();
 
         OutletInventory::factory()->create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_variant_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 10,
