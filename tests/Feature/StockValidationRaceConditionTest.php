@@ -10,14 +10,23 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class StockValidationRaceConditionTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    private Outlet $outlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->outlet = $this->withOutletSession();
+    }
 
     public function test_concurrent_checkout_prevents_overselling(): void
     {
-        $outlet = Outlet::factory()->create(['status' => 'active']);
         $family = ProductFamily::create(['name' => 'Susu Kambing Original', 'is_active' => true]);
         $variant = ProductVariant::factory()->create([
             'product_family_id' => $family->id,
@@ -27,7 +36,7 @@ class StockValidationRaceConditionTest extends TestCase
         ]);
 
         OutletInventory::factory()->create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_variant_id' => $variant->id,
             'current_stock' => 3,
             'reserved_stock' => 0,
@@ -45,7 +54,7 @@ class StockValidationRaceConditionTest extends TestCase
         $responseA = $this->actingAs($userA)
             ->session([
                 'checkout.cart' => [['product_variant_id' => $variant->id, 'quantity' => 3]],
-                'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $outlet->id],
+                'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
                 'checkout.customer' => ['customer_name' => 'Customer A', 'phone_number' => '6281111111111'],
             ])
             ->postJson('/customer/checkout/payment', ['payment_method' => 'qris']);
@@ -54,7 +63,7 @@ class StockValidationRaceConditionTest extends TestCase
         $responseB = $this->actingAs($userB)
             ->session([
                 'checkout.cart' => [['product_variant_id' => $variant->id, 'quantity' => 3]],
-                'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $outlet->id],
+                'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
                 'checkout.customer' => ['customer_name' => 'Customer B', 'phone_number' => '6282222222222'],
             ])
             ->postJson('/customer/checkout/payment', ['payment_method' => 'qris']);
@@ -76,10 +85,10 @@ class StockValidationRaceConditionTest extends TestCase
             $adjustCount++;
         }
 
-        $this->assertEquals(2, $successCount, 'Both checkouts succeed in sequential test (no race condition)');
+        $this->assertEquals(1, $successCount, 'Stock exhaustion prevents double sell');
 
         // Verify no overselling
-        $inventory = OutletInventory::where('outlet_id', $outlet->id)
+        $inventory = OutletInventory::where('outlet_id', $this->outlet->id)
             ->where('product_variant_id', $variant->id)
             ->first();
 

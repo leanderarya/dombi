@@ -9,10 +9,18 @@ use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class GuestOrderRecoveryTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->withOutletSession();
+    }
 
     public function test_recovery_returns_orders_for_valid_phone_and_token(): void
     {
