@@ -1,7 +1,7 @@
 # Store-Closed Browse-Only Design
 
 **Date:** 2026-07-22
-**Status:** Revised (v2 — content negotiation, single source of truth, reactive frontend)
+**Status:** Approved (v3 — Inertia 302 + withErrors, fetch 409 JSON)
 
 ## Goal
 
@@ -43,16 +43,16 @@ class CheckStoreOpen
 
     private function reject(Request $request, string $message): Response
     {
-        // API calls (fetch/AJAX/Inertia XHR) → JSON error
-        if ($request->expectsJson() || $request->header('X-Inertia')) {
+        // Raw fetch/AJAX (cart API) → 409 JSON
+        if ($request->expectsJson()) {
             return response()->json([
                 'error' => 'outlet_closed',
                 'message' => $message,
             ], 409);
         }
 
-        // Full page navigation → redirect with flash
-        return redirect()->back()->with('error', $message);
+        // Inertia XHR & full page nav → 302 redirect with errors bag
+        return redirect()->back()->withErrors(['outlet_closed' => $message]);
     }
 }
 ```
@@ -194,7 +194,28 @@ useEffect(() => {
 }, [markCurrentOutletClosed]);
 ```
 
-### 7. React: use `mutationFetch` in add-to-cart paths
+### 7. React: Inertia error listener
+
+**File:** `resources/js/contexts/outlet-context.tsx` (or main layout)
+
+Catch `outlet_closed` from Inertia page props when checkout/order routes redirect:
+
+```tsx
+import { usePage } from '@inertiajs/react';
+
+// Inside OutletProvider:
+const { errors } = usePage().props;
+
+useEffect(() => {
+    if (errors?.outlet_closed) {
+        markCurrentOutletClosed();
+    }
+}, [errors?.outlet_closed, markCurrentOutletClosed]);
+```
+
+This covers Inertia-driven routes (checkout, orders) where middleware returns 302 + `withErrors`.
+
+### 8. React: use `mutationFetch` in add-to-cart paths
 
 **Files:**
 - `resources/js/components/customer/variant-list-item.tsx`
@@ -203,7 +224,7 @@ useEffect(() => {
 
 Replace raw `fetch('/customer/cart/add', ...)` with `mutationFetch('/customer/cart/add', ...)`.
 
-### 8. React: product-detail.tsx
+### 9. React: product-detail.tsx
 
 - Read `isOutletClosed` from `useOutlet()` context (already reactive via step 5)
 - Add `isOutletClosed` guard to `handleAdd()`
@@ -219,7 +240,7 @@ const handleAdd = () => {
 };
 ```
 
-### 9. React: variant-list-item.tsx fix
+### 10. React: variant-list-item.tsx fix
 
 Add `isOutletClosed` to `handleQuickAdd` guard:
 
@@ -235,26 +256,36 @@ Button already has disabled state + clock icon + "Outlet Tutup" aria-label. Just
 
 ## Data Flow
 
+**Cart API (raw fetch):**
 ```
 User clicks "Add to Cart" on closed store
   → React: guard blocks (isOutletClosed === true, button disabled)
-  → If bypassed (devtools): fetch hits middleware
-  → Middleware: returns 409 { error: "outlet_closed", message: "..." }
+  → If bypassed: mutationFetch hits middleware
+  → Middleware: expectJson() → 409 { error: "outlet_closed" }
   → mutationFetch: catches 409, calls outletClosedHandler
-  → OutletContext: markCurrentOutletClosed() → sets is_open: false
-  → React: ALL components re-render, buttons disabled, labels change
+  → OutletContext: markCurrentOutletClosed() → is_open: false
+  → React: ALL components re-render, buttons disabled
+```
+
+**Checkout/Orders (Inertia):**
+```
+User navigates to checkout on closed store
+  → Middleware: X-Inertia header → 302 redirect withErrors(['outlet_closed' => ...])
+  → Inertia: receives redirect, re-renders previous page with errors prop
+  → OutletProvider: useEffect watches errors.outlet_closed → markCurrentOutletClosed()
+  → React: ALL components re-render, buttons disabled
 ```
 
 ## File Changes Summary
 
 | # | File | Action |
 |---|------|--------|
-| 1 | `app/Http/Middleware/CheckStoreOpen.php` | Create — content negotiation |
+| 1 | `app/Http/Middleware/CheckStoreOpen.php` | Create — content negotiation (409 JSON / 302 redirect) |
 | 2 | `bootstrap/app.php` | Register alias `store.open` |
 | 3 | `routes/web.php` | Group mutation routes under `store.open` |
 | 4 | `app/Http/Controllers/Customer/CartController.php` | Remove `isOpen()` guard (lines 29-40) |
 | 5 | `app/Http/Controllers/Customer/ProductController.php` | Pass `is_open` to view |
-| 6 | `resources/js/contexts/outlet-context.tsx` | Add `markCurrentOutletClosed()` |
+| 6 | `resources/js/contexts/outlet-context.tsx` | Add `markCurrentOutletClosed()` + Inertia error listener |
 | 7 | `resources/js/lib/api.ts` | Create — `mutationFetch` + handler registry |
 | 8 | `resources/js/pages/customer/product-detail.tsx` | Guard + button state + `mutationFetch` |
 | 9 | `resources/js/components/customer/variant-list-item.tsx` | Guard + `mutationFetch` |
