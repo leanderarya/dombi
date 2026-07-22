@@ -46,9 +46,9 @@ class DeliveryTierTest extends TestCase
 
     public function test_owner_can_update_delivery_tier(): void
     {
-        $tier = DeliveryTier::factory()->create();
+        $tier = DeliveryTier::create(['id' => 999, 'min_km' => 0, 'max_km' => 5, 'fee' => 10000, 'is_active' => true, 'sort_order' => 1]);
 
-        $response = $this->actingAs($this->owner)->put("/owner/delivery-tiers/{$tier->id}", [
+        $response = $this->actingAs($this->owner)->put('/owner/delivery-tiers/999', [
             'min_km' => 0,
             'max_km' => 7,
             'fee' => 12000,
@@ -57,27 +57,27 @@ class DeliveryTierTest extends TestCase
         ]);
 
         $response->assertRedirect('/owner/delivery-tiers');
-        $this->assertDatabaseHas('delivery_tiers', ['id' => $tier->id, 'max_km' => 7, 'fee' => 12000]);
+        $this->assertDatabaseHas('delivery_tiers', ['id' => 999, 'max_km' => 7, 'fee' => 12000]);
     }
 
     public function test_owner_can_delete_delivery_tier(): void
     {
-        $tier = DeliveryTier::factory()->create();
+        $tier = DeliveryTier::create(['id' => 998, 'min_km' => 0, 'max_km' => 5, 'fee' => 10000, 'is_active' => true, 'sort_order' => 1]);
 
-        $response = $this->actingAs($this->owner)->delete("/owner/delivery-tiers/{$tier->id}");
+        $response = $this->actingAs($this->owner)->delete('/owner/delivery-tiers/998');
 
         $response->assertRedirect('/owner/delivery-tiers');
-        $this->assertDatabaseMissing('delivery_tiers', ['id' => $tier->id]);
+        $this->assertDatabaseMissing('delivery_tiers', ['id' => 998]);
     }
 
     public function test_owner_can_toggle_tier_active_status(): void
     {
-        $tier = DeliveryTier::factory()->create(['is_active' => true]);
+        $tier = DeliveryTier::create(['id' => 997, 'min_km' => 0, 'max_km' => 5, 'fee' => 10000, 'is_active' => true, 'sort_order' => 1]);
 
-        $response = $this->actingAs($this->owner)->patch("/owner/delivery-tiers/{$tier->id}/toggle");
+        $response = $this->actingAs($this->owner)->patch('/owner/delivery-tiers/997/toggle');
 
         $response->assertRedirect('/owner/delivery-tiers');
-        $this->assertDatabaseHas('delivery_tiers', ['id' => $tier->id, 'is_active' => false]);
+        $this->assertDatabaseHas('delivery_tiers', ['id' => 997, 'is_active' => false]);
     }
 
     public function test_max_km_must_be_greater_than_min_km(): void
