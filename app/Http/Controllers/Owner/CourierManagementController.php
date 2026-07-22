@@ -63,6 +63,7 @@ class CourierManagementController extends Controller
 
         $user = User::create([
             'name' => 'Kurir ' . $profile->outlet?->name,
+            'email' => 'kurir' . random_int(100, 999) . '@dombi.test',
             'phone' => '08' . random_int(1000000000, 9999999999),
             'role' => 'courier',
             'is_active' => true,
