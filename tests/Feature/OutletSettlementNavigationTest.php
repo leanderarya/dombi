@@ -64,6 +64,7 @@ class OutletSettlementNavigationTest extends TestCase
     {
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
             'period_date' => now()->toDateString(),
             'period_start' => now()->subDays(7)->toDateString(),
             'period_end' => now()->addDays(7)->toDateString(),
@@ -73,6 +74,20 @@ class OutletSettlementNavigationTest extends TestCase
             'status' => Settlement::STATUS_GENERATED,
             'paid_amount' => 0,
             'adjustment_amount' => 0,
+        ]);
+
+        Order::create([
+            'outlet_id' => $this->context['outlet']->id,
+            'order_code' => 'DOMBI-SETTLE-'.strtoupper(uniqid()),
+            'status' => 'completed',
+            'completed_at' => now(),
+            'subtotal' => 200000,
+            'delivery_fee' => 0,
+            'total' => 200000,
+            'customer_name' => 'Test',
+            'customer_phone' => '08123456789',
+            'customer_address' => 'Jl. Test',
+            'ordered_at' => now(),
         ]);
 
         $this->actingAs($this->context['outletUser'])
@@ -157,6 +172,7 @@ class OutletSettlementNavigationTest extends TestCase
     {
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
             'period_date' => now()->toDateString(),
             'period_start' => now()->subDays(7)->toDateString(),
             'period_end' => now()->addDays(7)->toDateString(),
@@ -182,6 +198,7 @@ class OutletSettlementNavigationTest extends TestCase
     {
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
             'period_date' => now()->toDateString(),
             'period_start' => now()->subDays(7)->toDateString(),
             'period_end' => now()->addDays(7)->toDateString(),
@@ -214,6 +231,7 @@ class OutletSettlementNavigationTest extends TestCase
     {
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
             'period_date' => now()->toDateString(),
             'period_start' => now()->subDays(7)->toDateString(),
             'period_end' => now()->addDays(7)->toDateString(),
@@ -238,6 +256,7 @@ class OutletSettlementNavigationTest extends TestCase
     {
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
             'period_date' => now()->toDateString(),
             'period_start' => now()->subDays(7)->toDateString(),
             'period_end' => now()->addDays(7)->toDateString(),
@@ -270,6 +289,7 @@ class OutletSettlementNavigationTest extends TestCase
     {
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
             'period_date' => now()->toDateString(),
             'period_start' => now()->subDays(7)->toDateString(),
             'period_end' => now()->addDays(7)->toDateString(),
@@ -302,6 +322,7 @@ class OutletSettlementNavigationTest extends TestCase
     {
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
             'period_date' => now()->toDateString(),
             'period_start' => now()->subDays(7)->toDateString(),
             'period_end' => now()->addDays(7)->toDateString(),
@@ -329,6 +350,7 @@ class OutletSettlementNavigationTest extends TestCase
         // Create settlement - same data owner would see
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
+            'period_type' => 'weekly',
             'period_date' => now()->subDays(10)->toDateString(),
             'period_start' => now()->subDays(17)->toDateString(),
             'period_end' => now()->subDays(3)->toDateString(),

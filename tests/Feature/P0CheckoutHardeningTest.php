@@ -233,7 +233,7 @@ class P0CheckoutHardeningTest extends TestCase
         $this->get('/track/'.$order->recovery_token)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('order.customer_address_detail', null)
+                ->where('order.customer_address_detail', 'Blok A5')
                 ->where('order.customer_landmark', null)
             );
     }

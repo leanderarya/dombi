@@ -90,8 +90,6 @@ class RecipientCrudTest extends TestCase
         ]);
     }
 
-    // ─── RECIPIENT CAN BE SAVED AFTER ORDER OPT-IN ──────────────
-
     public function test_recipient_can_be_saved_after_order_optin(): void
     {
         $this->actingAs($this->user);
@@ -118,10 +116,8 @@ class RecipientCrudTest extends TestCase
         $this->assertSame($this->customer->id, $recipient->customer_id);
         $this->assertSame('Siti Rahayu', $recipient->name);
         $this->assertSame('6289876543210', $recipient->phone);
-        $this->assertTrue($recipient->is_default); // first recipient = default
+        $this->assertTrue($recipient->is_default);
     }
-
-    // ─── RECIPIENT NOT SAVED WITHOUT OPT-IN ─────────────────────
 
     public function test_recipient_not_saved_without_optin(): void
     {
@@ -144,8 +140,6 @@ class RecipientCrudTest extends TestCase
 
         $this->assertDatabaseCount('recipients', 0);
     }
-
-    // ─── SAVED RECIPIENT APPEARS IN SELECTOR ────────────────────
 
     public function test_saved_recipient_appears_in_selector(): void
     {
@@ -173,8 +167,6 @@ class RecipientCrudTest extends TestCase
             );
     }
 
-    // ─── DEFAULT RECIPIENT IS ACCOUNT OWNER ─────────────────────
-
     public function test_default_recipient_is_account_owner(): void
     {
         $this->actingAs($this->user);
@@ -191,8 +183,6 @@ class RecipientCrudTest extends TestCase
                 ->where('recipientDefaults.phone', '6281234567890')
             );
     }
-
-    // ─── RECIPIENT BELONGS TO CUSTOMER ONLY (IDOR) ──────────────
 
     public function test_recipient_belongs_to_customer_only(): void
     {
@@ -213,7 +203,6 @@ class RecipientCrudTest extends TestCase
 
         $this->actingAs($this->user);
 
-        // Cannot access other user's recipient
         $this->putJson("/customer/recipients/{$recipient->id}", [
             'name' => 'Hacked Name',
         ])->assertForbidden();
@@ -224,8 +213,6 @@ class RecipientCrudTest extends TestCase
         $recipient->refresh();
         $this->assertSame('Other Recipient', $recipient->name);
     }
-
-    // ─── RECIPIENT CRUD VIA API ─────────────────────────────────
 
     public function test_recipient_store_via_api(): void
     {
@@ -278,8 +265,6 @@ class RecipientCrudTest extends TestCase
 
         $this->assertDatabaseCount('recipients', 0);
     }
-
-    // ─── PICKUP FLOW UNCHANGED ──────────────────────────────────
 
     public function test_pickup_flow_unchanged(): void
     {
