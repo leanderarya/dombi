@@ -21,7 +21,9 @@ class SettlementReconciliationService
             ->where('period_type', 'weekly');
 
         // Center share = total amount_due across all weekly settlements
-        $centerShare = (float) (clone $settlementsQuery)->sum('amount_due');
+        $centerShare = (float) (clone $settlementsQuery)
+            ->where('status', '!=', Settlement::STATUS_PAID)
+            ->sum('amount_due');
 
         // Sales amount (products only, excluding delivery fee)
         $salesAmount = (float) (clone $settlementsQuery)->sum('sales_amount');
@@ -51,7 +53,7 @@ class SettlementReconciliationService
             ->sum('amount');
 
         // Outstanding = center_share - verified_payments + adjustments (adjustments can be negative for returns)
-        $outstanding = max(0, $centerShare - $verifiedPayments + $adjustments);
+        $outstanding = max(0, $centerShare - $verifiedPayments - $adjustments);
 
         // Last payment
         $lastPayment = SettlementPayment::query()
