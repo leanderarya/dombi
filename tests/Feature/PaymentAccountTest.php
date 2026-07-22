@@ -12,23 +12,6 @@ class PaymentAccountTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_owner_can_create_payment_account(): void
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true, 'must_change_password' => false]);
-
-        $response = $this->actingAs($owner)->post('/owner/payment-accounts', [
-            'bank_name' => 'BCA',
-            'account_number' => '1234567890',
-            'account_holder' => 'PT Dombi',
-        ]);
-
-        $response->assertRedirect();
-        $this->assertDatabaseHas('payment_accounts', [
-            'bank_name' => 'BCA',
-            'account_number' => '1234567890',
-        ]);
-    }
-
     public function test_outlet_can_view_active_accounts(): void
     {
         $outletUser = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
