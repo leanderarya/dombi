@@ -16,7 +16,7 @@ class OrderStatusService
         'pending_confirmation' => ['confirmed', 'rejected_by_outlet', 'cancelled_by_customer', 'expired'],
         'confirmed' => ['preparing', 'cancelled_by_outlet'],
         'preparing' => ['ready_for_pickup', 'cancelled_by_outlet'],
-        'ready_for_pickup' => ['picked_up', 'cancelled_by_outlet'],
+        'ready_for_pickup' => ['picked_up', 'delivering', 'cancelled_by_outlet'],
         'picked_up' => ['delivering'],
         'delivering' => ['completed', 'failed_delivery'],
         'completed' => [],

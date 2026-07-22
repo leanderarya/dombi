@@ -97,6 +97,8 @@ class DeliveryExternalCourierTest extends TestCase
 
     public function test_eksternal_delivery_can_be_marked_completed(): void
     {
+        $courier = User::factory()->create(['role' => 'courier']);
+
         $this->actingAs($this->outletStaff)
             ->post("/outlet/orders/{$this->order->id}/assign-courier", [
                 'courier_type' => 'eksternal',
@@ -105,9 +107,10 @@ class DeliveryExternalCourierTest extends TestCase
             ]);
 
         $delivery = Delivery::where('order_id', $this->order->id)->first();
+        $delivery->update(['courier_id' => $courier->id]);
 
-        $response = $this->actingAs($this->outletStaff)
-            ->post("/outlet/deliveries/{$delivery->id}/complete", []);
+        $response = $this->actingAs($courier)
+            ->post("/courier/deliveries/{$delivery->id}/complete", []);
 
         $response->assertRedirect();
         $delivery->refresh();
