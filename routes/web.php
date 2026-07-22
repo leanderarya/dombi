@@ -99,6 +99,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
 
     // Customer routes
     Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->group(function (): void {
+        // --- Read routes — no store-open check ---
         Route::get('/home', CustomerHomeController::class)->name('home');
         Route::post('/fulfillment-draft', [CustomerHomeController::class, 'setFulfillmentDraft'])->name('fulfillment-draft');
         Route::post('/location', [CustomerCheckoutController::class, 'storeLocationDraft'])->name('location.store');
@@ -108,27 +109,31 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
         Route::get('/products/api', [CustomerProductApiController::class, 'index'])->name('products.api');
         Route::get('/products/{family}', [CustomerProductController::class, 'show'])->name('products.show');
-        Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
-        Route::post('/cart/remove', [CartController::class, 'removeItem'])->name('cart.remove');
-        Route::post('/cart/quantity', [CartController::class, 'setQuantity'])->name('cart.quantity');
-        Route::post('/select-outlet', [CartController::class, 'selectOutlet'])->name('select-outlet');
-        Route::get('/checkout', [CustomerCheckoutController::class, 'index'])->name('checkout.index');
-        Route::post('/checkout', [CustomerCheckoutController::class, 'storeIndex'])->name('checkout.store');
-        Route::get('/checkout/customer', [CustomerCheckoutController::class, 'customer'])->name('checkout.customer');
-        Route::post('/checkout/customer', [CustomerCheckoutController::class, 'storeCustomer'])->name('checkout.customer.store');
-        Route::get('/checkout/customer-lookup', [CustomerCheckoutController::class, 'lookupCustomer'])->middleware('throttle:lookup')->name('checkout.customer.lookup');
-        Route::get('/checkout/login-prompt', fn () => Inertia::render('customer/checkout/login-prompt'))->name('checkout.login-prompt');
-        Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
-        Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->middleware('throttle:payment-submit')->name('checkout.process-payment');
-        Route::get('/checkout/validate-stock', [CustomerCheckoutController::class, 'validateStock'])->name('checkout.validate-stock');
-        Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
-        Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
-        Route::get('/orders/{order}/confirmation/{token}', [CustomerOrderController::class, 'confirmation'])->name('orders.confirmation');
-        Route::get('/orders/confirm/{orderCode}', [CustomerOrderController::class, 'confirm'])->name('orders.confirm');
-        Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
-        Route::post('/register', [AccountPromotionController::class, 'register'])->middleware('throttle:3,1')->name('register');
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
+
+        // --- Mutation routes — store-open checked ---
+        Route::middleware('store.open')->group(function (): void {
+            Route::post('/cart/add', [CartController::class, 'addItem'])->name('cart.add');
+            Route::post('/cart/remove', [CartController::class, 'removeItem'])->name('cart.remove');
+            Route::post('/cart/quantity', [CartController::class, 'setQuantity'])->name('cart.quantity');
+            Route::post('/select-outlet', [CartController::class, 'selectOutlet'])->name('select-outlet');
+            Route::get('/checkout', [CustomerCheckoutController::class, 'index'])->name('checkout.index');
+            Route::post('/checkout', [CustomerCheckoutController::class, 'storeIndex'])->name('checkout.store');
+            Route::get('/checkout/customer', [CustomerCheckoutController::class, 'customer'])->name('checkout.customer');
+            Route::post('/checkout/customer', [CustomerCheckoutController::class, 'storeCustomer'])->name('checkout.customer.store');
+            Route::get('/checkout/customer-lookup', [CustomerCheckoutController::class, 'lookupCustomer'])->middleware('throttle:lookup')->name('checkout.customer.lookup');
+            Route::get('/checkout/login-prompt', fn () => Inertia::render('customer/checkout/login-prompt'))->name('checkout.login-prompt');
+            Route::get('/checkout/payment', [CustomerCheckoutController::class, 'payment'])->name('checkout.payment');
+            Route::post('/checkout/payment', [CustomerCheckoutController::class, 'submit'])->middleware('throttle:payment-submit')->name('checkout.process-payment');
+            Route::get('/checkout/validate-stock', [CustomerCheckoutController::class, 'validateStock'])->name('checkout.validate-stock');
+            Route::get('/checkout/pickup-outlets', [CustomerCheckoutController::class, 'pickupOutlets'])->name('checkout.pickup-outlets');
+            Route::post('/orders', [CustomerOrderController::class, 'store'])->name('orders.store');
+            Route::get('/orders/{order}/confirmation/{token}', [CustomerOrderController::class, 'confirmation'])->name('orders.confirmation');
+            Route::get('/orders/confirm/{orderCode}', [CustomerOrderController::class, 'confirm'])->name('orders.confirm');
+            Route::post('/orders/recovery', GuestOrderRecoveryController::class)->middleware('throttle:recovery')->name('orders.recovery');
+            Route::post('/register', [AccountPromotionController::class, 'register'])->middleware('throttle:3,1')->name('register');
+        });
     });
 
     Route::middleware(['auth', 'role:customer'])->prefix('customer')->name('customer.')->group(function (): void {
