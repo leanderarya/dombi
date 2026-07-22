@@ -8,6 +8,7 @@ import {
     useState,
 } from 'react';
 import type { ReactNode } from 'react';
+import { registerOutletClosedHandler } from '@/lib/api';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { useOutletStore } from '@/lib/outlet-store';
 
@@ -46,7 +47,7 @@ export function useOutlet(): OutletContextValue {
 }
 
 export default function OutletProvider({ children }: { children: ReactNode }) {
-    const { outletId, autoSelected, save, autoSave } = useOutletStore();
+    const { outletId, autoSelected, save, autoSave, clear } = useOutletStore();
     const { location } = useCustomerLocation();
     const [outlets, setOutlets] = useState<OutletOption[]>([]);
     const [loading, setLoading] = useState(true);
@@ -195,6 +196,15 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
     const retry = useCallback(() => {
         setFetchKey((k) => k + 1);
     }, []);
+
+    const markCurrentOutletClosed = useCallback(() => {
+        clear();
+        retry();
+    }, [clear, retry]);
+
+    useEffect(() => {
+        registerOutletClosedHandler(markCurrentOutletClosed);
+    }, [markCurrentOutletClosed]);
 
     const value = useMemo<OutletContextValue>(
         () => ({
