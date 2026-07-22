@@ -4,6 +4,7 @@ namespace Tests\Feature\Services;
 
 use App\Exceptions\StockAdjustedException;
 use App\Models\Customer;
+use App\Models\OutletOperatingHours;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
@@ -22,6 +23,15 @@ class OrderServiceTest extends TestCase
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
         $outlet = Outlet::factory()->create();
+        foreach (range(0, 6) as $day) {
+            OutletOperatingHours::create([
+                'outlet_id' => $outlet->id,
+                'day_of_week' => $day,
+                'open_time' => '00:00',
+                'close_time' => '23:59',
+                'is_closed' => false,
+            ]);
+        }
         $variant = ProductVariant::factory()->create();
 
         OutletInventory::factory()->create([
@@ -62,6 +72,15 @@ class OrderServiceTest extends TestCase
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
         $outlet = Outlet::factory()->create();
+        foreach (range(0, 6) as $day) {
+            OutletOperatingHours::create([
+                'outlet_id' => $outlet->id,
+                'day_of_week' => $day,
+                'open_time' => '00:00',
+                'close_time' => '23:59',
+                'is_closed' => false,
+            ]);
+        }
         $variant = ProductVariant::factory()->create();
 
         OutletInventory::factory()->create([
@@ -94,6 +113,15 @@ class OrderServiceTest extends TestCase
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
         $outlet = Outlet::factory()->create();
+        foreach (range(0, 6) as $day) {
+            OutletOperatingHours::create([
+                'outlet_id' => $outlet->id,
+                'day_of_week' => $day,
+                'open_time' => '00:00',
+                'close_time' => '23:59',
+                'is_closed' => false,
+            ]);
+        }
         $variant = ProductVariant::factory()->create();
 
         OutletInventory::factory()->create([
