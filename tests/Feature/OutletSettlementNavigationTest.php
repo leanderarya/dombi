@@ -65,6 +65,8 @@ class OutletSettlementNavigationTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 200000,
             'amount_due' => 200000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -156,6 +158,8 @@ class OutletSettlementNavigationTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 100000,
             'amount_due' => 85000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -179,6 +183,8 @@ class OutletSettlementNavigationTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 100000,
             'amount_due' => 85000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -209,6 +215,8 @@ class OutletSettlementNavigationTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 100000,
             'amount_due' => 85000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -231,6 +239,8 @@ class OutletSettlementNavigationTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 100000,
             'amount_due' => 85000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -261,6 +271,8 @@ class OutletSettlementNavigationTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 100000,
             'amount_due' => 85000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -291,6 +303,8 @@ class OutletSettlementNavigationTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->toDateString(),
+            'period_start' => now()->subDays(7)->toDateString(),
+            'period_end' => now()->addDays(7)->toDateString(),
             'sales_amount' => 100000,
             'amount_due' => 85000,
             'due_date' => now()->addDays(7)->toDateString(),
@@ -316,6 +330,8 @@ class OutletSettlementNavigationTest extends TestCase
         Settlement::create([
             'outlet_id' => $this->context['outlet']->id,
             'period_date' => now()->subDays(10)->toDateString(),
+            'period_start' => now()->subDays(17)->toDateString(),
+            'period_end' => now()->subDays(3)->toDateString(),
             'sales_amount' => 100000,
             'amount_due' => 85000,
             'due_date' => now()->subDays(3)->toDateString(),
