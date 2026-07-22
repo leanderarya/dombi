@@ -14,6 +14,7 @@ use App\Http\Controllers\Customer\CustomerOutletController;
 use App\Http\Controllers\Customer\CustomerProductApiController;
 use App\Http\Controllers\Customer\FavoriteController;
 use App\Http\Controllers\CustomerOfflineController;
+use App\Http\Controllers\Customer\GuestOrderController;
 use App\Http\Controllers\Customer\GuestOrderRecoveryController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
@@ -172,8 +173,14 @@ Route::post('/customer/orders/{order}/pay', [CustomerOrderController::class, 'pa
 // Payment status polling — accessible to guest (same ownership check as pay)
 Route::get('/customer/orders/{order}/payment-status', [CustomerOrderController::class, 'paymentStatus'])->middleware('throttle:60,1')->name('orders.payment-status');
 
-// Cancel route — requires authentication to prevent unauthorized cancellation
-Route::post('/track/{token}/cancel', [TrackController::class, 'cancel'])->middleware(['auth', 'throttle:track-cancel'])->name('track.cancel');
+// Guest cancel — no auth, token-validated via GuestCancelOrderRequest
+Route::prefix('guest')->middleware(['throttle:guest-cancel'])->group(function () {
+    Route::get('/orders/{order}/cancel/{token}', [App\Http\Controllers\Customer\GuestOrderController::class, 'showCancelPage'])
+        ->name('guest.orders.cancel-page');
+    Route::post('/orders/{order}/cancel/{token}', [App\Http\Controllers\Customer\GuestOrderController::class, 'cancel'])
+        ->middleware('throttle:guest-cancel-token')
+        ->name('guest.orders.cancel');
+});
 
 // DOKU payment — no auth, signature-verified (called by DOKU servers)
 Route::match(['get', 'post'], '/payment/doku/notify', [DokuPaymentController::class, 'notify'])->name('doku.notify');
