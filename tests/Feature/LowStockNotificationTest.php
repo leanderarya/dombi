@@ -78,6 +78,7 @@ class LowStockNotificationTest extends TestCase
         $address = CustomerAddress::where('customer_id', $customer->id)->first();
         $order2 = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
+            'payment_method' => 'qris',
             'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 1]],
         ]);
 
@@ -177,6 +178,7 @@ class LowStockNotificationTest extends TestCase
 
         $order = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
+            'payment_method' => 'qris',
             'items' => [['product_variant_id' => $variant->id, 'quantity' => $quantity]],
         ]);
 
