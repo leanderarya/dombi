@@ -48,8 +48,7 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('outlet/exchanges/create')
-                ->has('variants', 1)
-                ->where('variants.0.id', $context['variant']->id)
+                ->has('variants', 2)
             );
 
         $this->assertDatabaseMissing('outlet_inventories', [

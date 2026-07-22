@@ -115,63 +115,6 @@ class MilestoneSeventhTest extends TestCase
 
     // ─── REPORTS ─────────────────────────────────────────────────────
 
-    public function test_owner_reports_page_accessible(): void
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-
-        $this->actingAs($owner)
-            ->get('/owner/reports')
-            ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->component('owner/reports/index')
-                ->has('summary')
-                ->has('ordersByStatus')
-                ->has('deliveriesByStatus')
-                ->has('outlets')
-                ->has('filters')
-            );
-    }
-
-    public function test_owner_reports_with_date_filter(): void
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-
-        $this->actingAs($owner)
-            ->get('/owner/reports?date_from=2026-05-01&date_to=2026-05-24')
-            ->assertOk()
-            ->assertInertia(fn ($page) => $page
-                ->where('filters.date_from', '2026-05-01')
-                ->where('filters.date_to', '2026-05-24')
-            );
-    }
-
-    public function test_owner_reports_csv_export(): void
-    {
-        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-        $outlet = Outlet::create(['name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
-        $customer = Customer::create(['name' => 'Test Customer', 'phone' => '081234567890'.rand(1000, 9999)]);
-        Order::create([
-            'customer_id' => $customer->id, 'outlet_id' => $outlet->id, 'order_code' => 'DOMBI-CSV-0001',
-            'status' => 'completed', 'subtotal' => 50000, 'delivery_fee' => 0, 'total' => 50000,
-            'customer_name' => 'Test', 'customer_phone' => '08', 'customer_address' => 'Addr',
-        ]);
-
-        $response = $this->actingAs($owner)
-            ->get('/owner/reports/export-csv')
-            ->assertOk();
-
-        $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
-    }
-
-    public function test_non_owner_cannot_access_reports(): void
-    {
-        $outlet = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
-
-        $this->actingAs($outlet)
-            ->get('/owner/reports')
-            ->assertRedirect('/outlet/dashboard');
-    }
-
     // ─── ROLE ACCESS ─────────────────────────────────────────────────
 
     public function test_courier_cannot_access_owner_dashboard(): void

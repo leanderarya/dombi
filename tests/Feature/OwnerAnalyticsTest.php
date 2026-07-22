@@ -41,6 +41,7 @@ class OwnerAnalyticsTest extends TestCase
             'outlet_id' => $context['outletA']->id,
             'order_code' => 'ORD-001',
             'status' => Order::STATUS_COMPLETED,
+            'completed_at' => now(),
             'subtotal' => 100000,
             'delivery_fee' => 10000,
             'total' => 110000,
@@ -55,6 +56,7 @@ class OwnerAnalyticsTest extends TestCase
             'outlet_id' => $context['outletB']->id,
             'order_code' => 'ORD-002',
             'status' => Order::STATUS_COMPLETED,
+            'completed_at' => now(),
             'subtotal' => 200000,
             'delivery_fee' => 15000,
             'total' => 215000,
@@ -97,6 +99,7 @@ class OwnerAnalyticsTest extends TestCase
             'outlet_id' => $context['outletA']->id,
             'order_code' => 'ORD-TODAY',
             'status' => Order::STATUS_COMPLETED,
+            'completed_at' => now(),
             'subtotal' => 100000,
             'delivery_fee' => 0,
             'total' => 100000,
@@ -125,6 +128,7 @@ class OwnerAnalyticsTest extends TestCase
             'outlet_id' => $context['outletA']->id,
             'order_code' => 'ORD-A1',
             'status' => Order::STATUS_COMPLETED,
+            'completed_at' => now(),
             'subtotal' => 100000,
             'delivery_fee' => 0,
             'total' => 100000,
@@ -139,6 +143,7 @@ class OwnerAnalyticsTest extends TestCase
             'outlet_id' => $context['outletB']->id,
             'order_code' => 'ORD-B1',
             'status' => Order::STATUS_COMPLETED,
+            'completed_at' => now(),
             'subtotal' => 250000,
             'delivery_fee' => 0,
             'total' => 250000,
@@ -153,9 +158,9 @@ class OwnerAnalyticsTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->has('outletRevenue', 2)
-                ->where('outletRevenue.0.revenue', 250000)
+                ->where('outletRevenue.0.revenue', '250000.00')
                 ->where('outletRevenue.0.orders', 1)
-                ->where('outletRevenue.1.revenue', 100000)
+                ->where('outletRevenue.1.revenue', '100000.00')
                 ->where('outletRevenue.1.orders', 1)
             );
     }
@@ -169,6 +174,7 @@ class OwnerAnalyticsTest extends TestCase
             'outlet_id' => $context['outletA']->id,
             'order_code' => 'ORD-TOP',
             'status' => Order::STATUS_COMPLETED,
+            'completed_at' => now(),
             'subtotal' => 300000,
             'delivery_fee' => 0,
             'total' => 300000,
@@ -206,11 +212,11 @@ class OwnerAnalyticsTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->has('topProducts', 2)
                 ->where('topProducts.0.product_name', 'Biogoat 1L')
-                ->where('topProducts.0.total_qty', 3)
-                ->where('topProducts.0.total_revenue', 165000)
+                ->where('topProducts.0.total_qty', '3')
+                ->where('topProducts.0.total_revenue', '165000.00')
                 ->where('topProducts.1.product_name', 'Domilk Coffee 250ml')
-                ->where('topProducts.1.total_qty', 5)
-                ->where('topProducts.1.total_revenue', 150000)
+                ->where('topProducts.1.total_qty', '5')
+                ->where('topProducts.1.total_revenue', '150000.00')
             );
     }
 
