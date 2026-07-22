@@ -10,17 +10,26 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class StockValidationE2ETest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
+
+    private Outlet $outlet;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->outlet = $this->withOutletSession();
+    }
 
     public function test_full_stock_validation_flow(): void
     {
         // Setup
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $outlet = Outlet::factory()->create(['status' => 'active']);
         $family = ProductFamily::create(['name' => 'Susu Kambing Original', 'is_active' => true]);
         $variant = ProductVariant::factory()->create([
             'product_family_id' => $family->id,
@@ -30,7 +39,7 @@ class StockValidationE2ETest extends TestCase
         ]);
 
         OutletInventory::factory()->create([
-            'outlet_id' => $outlet->id,
+            'outlet_id' => $this->outlet->id,
             'product_variant_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 5,
@@ -65,7 +74,7 @@ class StockValidationE2ETest extends TestCase
             ->assertJson(['valid' => true]);
 
         // Step 3: Stock reduced before submit (reserved goes 5 -> 8, so available = 10 - 8 = 2)
-        $inventory = OutletInventory::where('outlet_id', $outlet->id)
+        $inventory = OutletInventory::where('outlet_id', $this->outlet->id)
             ->where('product_variant_id', $variant->id)
             ->first();
         $inventory->update(['reserved_stock' => 8]);
@@ -74,7 +83,7 @@ class StockValidationE2ETest extends TestCase
         $response = $this->actingAs($user)
             ->session([
                 'checkout.cart' => [['product_variant_id' => $variant->id, 'quantity' => 5]],
-                'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $outlet->id],
+                'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
                 'checkout.customer' => ['customer_name' => 'Test', 'phone_number' => '6281234567890'],
             ])
             ->postJson('/customer/checkout/payment', ['payment_method' => 'qris']);
