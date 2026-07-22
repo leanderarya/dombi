@@ -319,6 +319,10 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('exchanges/{exchangeRequest}/mark-preparing', [OwnerExchangeController::class, 'markPreparing'])->name('exchanges.mark-preparing');
         Route::post('exchanges/{exchangeRequest}/mark-shipped', [OwnerExchangeController::class, 'markShipped'])->name('exchanges.mark-shipped');
         Route::post('exchanges/{exchangeRequest}/complete', [OwnerExchangeController::class, 'complete'])->name('exchanges.complete');
+        Route::get('couriers/management', [\App\Http\Controllers\Owner\CourierManagementController::class, 'index'])->name('couriers.management.index');
+        Route::post('couriers/{profile}/approve', [\App\Http\Controllers\Owner\CourierManagementController::class, 'approve'])->name('couriers.approve');
+        Route::post('couriers/{profile}/reject', [\App\Http\Controllers\Owner\CourierManagementController::class, 'reject'])->name('couriers.reject');
+        Route::put('couriers/{profile}/outlets', [\App\Http\Controllers\Owner\CourierManagementController::class, 'updateAssignments'])->name('couriers.outlets');
     });
 
     // Outlet routes
@@ -370,6 +374,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/analytics', [OutletAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/reports', [OutletReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/sales/export', [OutletReportController::class, 'export'])->name('reports.sales.export');
+        Route::get('/my-couriers', [\App\Http\Controllers\Outlet\MyCourierController::class, 'index'])->name('my-couriers.index');
+        Route::post('/my-couriers/nominate', [\App\Http\Controllers\Outlet\MyCourierController::class, 'nominate'])->name('my-couriers.nominate');
     });
 
     // Courier routes
