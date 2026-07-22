@@ -1,11 +1,12 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
 import { getCsrfToken } from '@/lib/csrf';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
-import { useOutlet } from '@/contexts/outlet-context';
+import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { mutationFetch } from '@/lib/api';
 
 /* ─── Types ────────────────────────────────────────────────── */
@@ -123,12 +124,15 @@ export default function ProductDetail({
     outletId?: number | null;
 }) {
     return (
-        <ProductDetailInner
-            key={family.id}
-            family={family}
-            otherFamilies={otherFamilies}
-            outletId={outletId}
-        />
+        <OutletProvider>
+            <CustomerLocationBootstrap />
+            <ProductDetailInner
+                key={family.id}
+                family={family}
+                otherFamilies={otherFamilies}
+                outletId={outletId}
+            />
+        </OutletProvider>
     );
 }
 
