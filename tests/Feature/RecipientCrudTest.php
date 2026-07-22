@@ -13,10 +13,12 @@ use App\Models\Recipient;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
+use Tests\WithTestOutlet;
 
 class RecipientCrudTest extends TestCase
 {
     use RefreshDatabase;
+    use WithTestOutlet;
 
     private User $user;
 
@@ -70,15 +72,7 @@ class RecipientCrudTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->outlet = Outlet::create([
-            'name' => 'Outlet Test',
-            'kelurahan' => 'Sumurboto',
-            'kecamatan' => 'Banyumanik',
-            'address' => 'Jl. Banyumanik',
-            'latitude' => -7.0731000,
-            'longitude' => 110.4216000,
-            'status' => 'active',
-        ]);
+        $this->outlet = $this->withOutletSession();
 
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
@@ -96,7 +90,7 @@ class RecipientCrudTest extends TestCase
 
         $this->session([
             'checkout.cart' => [['product_variant_id' => $this->variant->id, 'quantity' => 2]],
-            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi'],
+            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi', 'selected_outlet_id' => $this->outlet->id],
         ]);
 
         $this->post('/customer/checkout/customer', [
@@ -125,7 +119,7 @@ class RecipientCrudTest extends TestCase
 
         $this->session([
             'checkout.cart' => [['product_variant_id' => $this->variant->id, 'quantity' => 2]],
-            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi'],
+            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi', 'selected_outlet_id' => $this->outlet->id],
         ]);
 
         $this->post('/customer/checkout/customer', [
@@ -155,7 +149,7 @@ class RecipientCrudTest extends TestCase
 
         $this->session([
             'checkout.cart' => [['product_variant_id' => $this->variant->id, 'quantity' => 2]],
-            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi'],
+            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi', 'selected_outlet_id' => $this->outlet->id],
         ]);
 
         $this->get('/customer/checkout/customer')
@@ -173,7 +167,7 @@ class RecipientCrudTest extends TestCase
 
         $this->session([
             'checkout.cart' => [['product_variant_id' => $this->variant->id, 'quantity' => 2]],
-            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi'],
+            'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi', 'selected_outlet_id' => $this->outlet->id],
         ]);
 
         $this->get('/customer/checkout/customer')
