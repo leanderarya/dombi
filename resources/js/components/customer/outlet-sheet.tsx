@@ -1,4 +1,5 @@
 import { Check, MapPin } from 'lucide-react';
+import FulfillmentToggle from '@/components/customer/fulfillment-toggle';
 import Dialog from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useOutlet } from '@/contexts/outlet-context';
@@ -7,9 +8,18 @@ import type { OutletOption } from '@/contexts/outlet-context';
 interface Props {
     open: boolean;
     onClose: () => void;
+    fulfillmentType?: 'pickup' | 'delivery';
+    onFulfillmentChange?: (type: 'pickup' | 'delivery') => void;
+    deliveryDisabled?: boolean;
 }
 
-export default function OutletSheet({ open, onClose }: Props) {
+export default function OutletSheet({
+    open,
+    onClose,
+    fulfillmentType,
+    onFulfillmentChange,
+    deliveryDisabled,
+}: Props) {
     const { selectedOutlet, selectManual, outlets, loading, error, retry } =
         useOutlet();
 
@@ -19,7 +29,21 @@ export default function OutletSheet({ open, onClose }: Props) {
     };
 
     return (
-        <Dialog open={open} onClose={onClose} title="Pilih Outlet">
+        <Dialog open={open} onClose={onClose} title={fulfillmentType ? 'Outlet & Method' : 'Pilih Outlet'}>
+            {fulfillmentType && onFulfillmentChange && (
+                <div className="-mx-5 border-b border-border px-5 pb-3 pt-1">
+                    <FulfillmentToggle
+                        value={fulfillmentType}
+                        onChange={onFulfillmentChange}
+                        deliveryDisabled={deliveryDisabled}
+                    />
+                    <p className="mt-2 text-center text-[11px] text-text-muted">
+                        {fulfillmentType === 'pickup'
+                            ? 'Ambil di outlet tanpa antre'
+                            : 'Diantar ke alamat Anda'}
+                    </p>
+                </div>
+            )}
             <div className="-mx-5 -mb-4 space-y-1">
                 {/* Loading state */}
                 {loading && (
