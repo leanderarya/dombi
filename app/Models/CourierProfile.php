@@ -62,8 +62,7 @@ class CourierProfile extends Model
     public function assignedOutlets(): BelongsToMany
     {
         return $this->belongsToMany(Outlet::class, 'courier_outlet_assignments')
-            ->withPivot('assigned_at')
-            ->withTimestamps();
+            ->withPivot('assigned_at');
     }
 
     public function nominatedBy(): BelongsTo
