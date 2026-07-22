@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Outlet;
 use App\Models\ProductFamily;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -75,10 +76,17 @@ class ProductController extends Controller
             ->limit(4)
             ->get();
 
+        $isOpen = true;
+        if ($outletId) {
+            $outlet = Outlet::find($outletId);
+            $isOpen = $outlet?->isOpen() ?? true;
+        }
+
         return Inertia::render('customer/product-detail', [
             'family' => $family,
             'otherFamilies' => $otherFamilies,
             'outletId' => $outletId,
+            'is_open' => $isOpen,
         ]);
     }
 
