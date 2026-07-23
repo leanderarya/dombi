@@ -10,6 +10,7 @@ use App\Models\Settlement;
 use App\Models\SettlementAuditLog;
 use App\Models\SettlementPayment;
 use App\Services\SettlementPaymentService;
+use App\Services\SettlementReconciliationService;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -207,13 +208,27 @@ class FinanceSettlementController extends Controller
     /**
      * Per-outlet account statement.
      */
-    public function outletDetail(Outlet $outlet): Response
+    public function outletDetail(Outlet $outlet, SettlementReconciliationService $reconciliationService): Response
     {
         $settlements = Settlement::where('outlet_id', $outlet->id)
             ->where('period_type', 'weekly')
             ->with('outlet:id,name')
             ->orderBy('period_start', 'asc')
             ->get();
+
+        $reconciliation = $reconciliationService->getOutletReconciliation($outlet->id);
+
+        $deliveryStats = [
+            'dombi_count' => (int) ($reconciliation['dombi_delivery_count'] ?? 0),
+            'dombi_fee' => (float) ($reconciliation['dombi_delivery_fee'] ?? 0),
+            'dombi_net' => (float) ($reconciliation['dombi_net_income'] ?? 0),
+            'eksternal_count' => (int) ($reconciliation['eksternal_delivery_count'] ?? 0),
+            'eksternal_fee' => (float) ($reconciliation['eksternal_delivery_fee'] ?? 0),
+            'eksternal_cost' => (float) ($reconciliation['eksternal_courier_cost'] ?? 0),
+            'eksternal_net' => (float) ($reconciliation['eksternal_net_income'] ?? 0),
+            'total_fee' => (float) ($reconciliation['total_delivery_fee'] ?? 0),
+            'net_income' => (float) ($reconciliation['net_delivery_income'] ?? 0),
+        ];
 
         $unpaidSettlements = $settlements->filter(fn (Settlement $s) => $s->status !== Settlement::STATUS_PAID);
         $outstanding = $unpaidSettlements->sum(fn (Settlement $s) => (float) $s->outstanding_amount);
@@ -271,6 +286,7 @@ class FinanceSettlementController extends Controller
                 'display_status' => $displayStatus,
             ],
             'unpaidBreakdown' => $unpaidBreakdown,
+            'deliveryStats' => $deliveryStats,
         ]);
     }
 
