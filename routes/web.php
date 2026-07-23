@@ -245,6 +245,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/profile', OwnerProfileController::class)->name('profile');
         Route::resource('outlets', OwnerOutletController::class);
         Route::put('outlets/{outlet}/archive', [OwnerOutletController::class, 'archive'])->name('outlets.archive');
+        Route::post('outlets/{outlet}/reset-password', [OwnerOutletController::class, 'resetPassword'])
+            ->middleware('throttle:10,1')
+            ->name('outlets.reset-password');
         Route::get('outlets/{outlet}/operating-hours', [OutletOperatingHoursController::class, 'index'])->name('outlets.operating-hours.index');
         Route::put('outlets/{outlet}/operating-hours', [OutletOperatingHoursController::class, 'bulkUpdate'])->name('outlets.operating-hours.bulk-update');
         Route::post('outlets/{outlet}/holidays', [OutletHolidayController::class, 'store'])->name('outlets.holidays.store');
