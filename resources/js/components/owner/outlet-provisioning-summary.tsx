@@ -48,7 +48,7 @@ export default function OutletProvisioningSummary({
 
     return createPortal(
         <div
-            className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/40 px-0 lg:items-center lg:px-4"
+            className="fixed inset-0 z-[2000] flex items-end justify-center bg-slate-950/40 px-0 lg:items-center lg:px-4"
             role="dialog"
             aria-modal="true"
         >
