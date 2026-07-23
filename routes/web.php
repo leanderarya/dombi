@@ -247,7 +247,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/analytics', [OwnerAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/profile', OwnerProfileController::class)->name('profile');
         Route::resource('outlets', OwnerOutletController::class);
-        Route::get('outlets/{outlet}/edit', fn (Outlet $outlet) => redirect()->route('owner.outlets.show', $outlet))->name('outlets.edit');
         Route::put('outlets/{outlet}/archive', [OwnerOutletController::class, 'archive'])->name('outlets.archive');
         Route::post('outlets/{outlet}/reset-password', [OwnerOutletController::class, 'resetPassword'])
             ->middleware('throttle:10,1')
