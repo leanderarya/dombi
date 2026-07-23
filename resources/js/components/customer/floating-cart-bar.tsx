@@ -2,19 +2,40 @@ import { router } from '@inertiajs/react';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
 
+function getSelectedOutletId(): number | null {
+    try {
+        const raw = localStorage.getItem('dombi_selected_outlet');
+        if (!raw) return null;
+        const id = JSON.parse(raw);
+        return typeof id === 'number' ? id : null;
+    } catch {
+        return null;
+    }
+}
+
 export default function FloatingCartBar({
     bottomNavVisible = true,
 }: {
     bottomNavVisible?: boolean;
 }) {
-    const { totalItems, totalPrice } = useCart();
+    const { items, totalItems, totalPrice } = useCart();
 
     if (totalItems === 0) {
         return null;
     }
 
     const handleCheckout = () => {
-        router.get('/customer/checkout');
+        const payload: Record<string, unknown> = {
+            items: items.map((i) => ({
+                product_variant_id: i.product_variant_id,
+                quantity: i.quantity,
+            })),
+        };
+        const outletId = getSelectedOutletId();
+        if (outletId) {
+            payload.selected_outlet_id = outletId;
+        }
+        router.post('/customer/checkout', payload);
     };
 
     const bottom = bottomNavVisible
