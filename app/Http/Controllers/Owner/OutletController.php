@@ -57,6 +57,7 @@ class OutletController extends Controller
 
     public function show(Outlet $outlet): Response
     {
+        $outlet->load(['user:id,email,is_active,must_change_password,outlet_id']);
         $outlet->loadCount([
             'orders as active_orders_count' => fn ($query) => $query->whereIn('status', Order::ACTIVE_STATUSES),
             'orders as today_orders_count' => fn ($query) => $query->whereDate('created_at', today()),

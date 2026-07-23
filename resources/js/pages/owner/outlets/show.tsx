@@ -1,9 +1,8 @@
-import { Link, router } from '@inertiajs/react';
-import { toast } from 'sonner';
 import {
     Clock,
     DollarSign,
     History,
+    KeyRound,
     MapPin,
     Package,
     RefreshCw,
@@ -12,9 +11,12 @@ import {
     User,
 } from 'lucide-react';
 import { lazy, Suspense, useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
 import HolidayManager from '@/components/owner/holiday-manager';
 import OperatingHoursManager from '@/components/owner/operating-hours-manager';
 import OutletProducts from '@/components/owner/outlet-products';
+import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OutletStatusBadge from '@/components/owner/outlet-status-badge';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -49,6 +51,9 @@ export default function OutletShow({
             : null;
 
     const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+    const { flash } = usePage().props as any;
+    const [resetOpen, setResetOpen] = useState(false);
+    const user = outlet.user;
 
     if (!outlet) {
         return (
@@ -168,6 +173,39 @@ export default function OutletShow({
                                 )}
                             </div>
                         )}
+                    </div>
+
+                    <div
+                        className="rounded-lg border border-border p-4"
+                        aria-label="Akun Operasional"
+                    >
+                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
+                            <KeyRound className="h-3.5 w-3.5" aria-hidden="true" />
+                            Akun Operasional
+                        </div>
+                        <div className="space-y-1 text-xs">
+                            <div className="flex justify-between">
+                                <span className="text-text-muted">Email</span>
+                                <span className="font-medium text-text">{user?.email ?? '-'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-text-muted">Status</span>
+                                <span className="font-medium text-text">{user?.is_active ? 'Aktif' : 'Nonaktif'}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-text-muted">Wajib Ganti</span>
+                                <span className="font-medium text-text">{user?.must_change_password ? 'Ya' : 'Tidak'}</span>
+                            </div>
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-3"
+                            disabled={outlet.status === 'archived'}
+                            onClick={() => setResetOpen(true)}
+                        >
+                            <KeyRound className="h-4 w-4 mr-1" /> Reset Password
+                        </Button>
                     </div>
 
                     <div
@@ -530,6 +568,30 @@ export default function OutletShow({
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <Dialog open={resetOpen} onOpenChange={setResetOpen}>
+                <DialogContent className="z-[2000]" overlayClassName="z-[1999]">
+                    <DialogHeader>
+                        <DialogTitle>Reset password {outlet.name}?</DialogTitle>
+                        <DialogDescription>
+                            Akun akan logout paksa dan wajib ganti password saat login berikutnya. Password baru hanya tampil sekali.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setResetOpen(false)}>
+                            Batal
+                        </Button>
+                        <Button variant="destructive" onClick={() => {
+                            setResetOpen(false);
+                            router.post(route('owner.outlets.reset-password', outlet.id), {}, { preserveScroll: true });
+                        }}>
+                            Ya, Reset
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <OutletProvisioningSummary provisioning={flash?.outlet_provisioning} />
         </OwnerPageShell>
     );
 }
