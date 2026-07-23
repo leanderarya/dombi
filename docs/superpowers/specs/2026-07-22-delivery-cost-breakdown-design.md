@@ -14,43 +14,58 @@ Show Kurir Dombi vs Biaya Gojek/Grab breakdown in owner finance outlet-detail pa
 
 ## Design
 
-### 1. Backend — SettlementReconciliationService
+### 1. Backend — SettlementReconciliationService (Single-Pass Aggregation)
 
 **File:** `app/Services/SettlementReconciliationService.php`
 
-Extend `getOutletReconciliation(int $outletId)` to split delivery fee per courier_type:
+Replace 5 separate queries with single-pass conditional aggregation. No try-catch — if column missing, let QueryException crash. Fix deployment to run `php artisan migrate --force`.
 
 ```php
-// Existing:
-$totalDeliveryFee = sum delivery_fee where status completed
-$eksternalCost = sum courier_cost where courier_type = eksternal
-$eksternalCount = count where courier_type = eksternal
+use Illuminate\Support\Facades\DB;
+use App\Models\Order;
 
-// New:
-$dombiCount = count where courier_type = dombi
-$dombiFee = sum delivery_fee where courier_type = dombi
-$eksternalFee = sum delivery_fee where courier_type = eksternal
+$stats = DB::table('deliveries')
+    ->join('orders', 'deliveries.order_id', '=', 'orders.id')
+    ->where('orders.outlet_id', $outletId)
+    ->where('orders.status', Order::STATUS_COMPLETED)
+    ->selectRaw("
+        COUNT(CASE WHEN deliveries.courier_type = 'dombi' THEN 1 END) as dombi_count,
+        SUM(CASE WHEN deliveries.courier_type = 'dombi' THEN orders.delivery_fee ELSE 0 END) as dombi_fee,
+        COUNT(CASE WHEN deliveries.courier_type = 'eksternal' THEN 1 END) as eksternal_count,
+        SUM(CASE WHEN deliveries.courier_type = 'eksternal' THEN orders.delivery_fee ELSE 0 END) as eksternal_fee,
+        SUM(CASE WHEN deliveries.courier_type = 'eksternal' THEN deliveries.courier_cost ELSE 0 END) as eksternal_cost
+    ")
+    ->first();
 
-// Net:
-$dombiNet = $dombiFee (cost 0 for internal)
-$eksternalNet = $eksternalFee - $eksternalCost
-$netDeliveryIncome = $totalDeliveryFee - $eksternalCost (existing, keep)
+// Memory computation
+$dombiCount = (int) ($stats->dombi_count ?? 0);
+$dombiFee = (float) ($stats->dombi_fee ?? 0);
+$eksternalCount = (int) ($stats->eksternal_count ?? 0);
+$eksternalFee = (float) ($stats->eksternal_fee ?? 0);
+$eksternalCost = (float) ($stats->eksternal_cost ?? 0);
+
+$dombiNet = $dombiFee; // internal cost 0
+$eksternalNet = $eksternalFee - $eksternalCost;
+$totalDeliveryFee = $dombiFee + $eksternalFee;
+$netDeliveryIncome = $totalDeliveryFee - $eksternalCost;
 ```
 
-Return array add:
+Return array add same as before:
 ```php
-'dombi_delivery_count' => int,
-'dombi_delivery_fee' => float,
-'eksternal_delivery_fee' => float,
-'eksternal_courier_cost' => float (existing),
-'eksternal_delivery_count' => int (existing),
-'dombi_net_income' => float,
-'eksternal_net_income' => float,
-'total_delivery_fee' => float (existing),
-'net_delivery_income' => float (existing),
+'dombi_delivery_count' => $dombiCount,
+'dombi_delivery_fee' => $dombiFee,
+'eksternal_delivery_fee' => $eksternalFee,
+'eksternal_courier_cost' => $eksternalCost,
+'eksternal_delivery_count' => $eksternalCount,
+'dombi_net_income' => $dombiNet,
+'eksternal_net_income' => $eksternalNet,
+'total_delivery_fee' => $totalDeliveryFee,
+'net_delivery_income' => $netDeliveryIncome,
 ```
 
-Defensive: wrap new queries in try-catch same as existing courier aggregation (column may not exist on staging if migration pending). Fallback 0.
+Rationale: single DB round-trip, constant memory, saves CPU on shared hosting (no N+1). total_delivery_fee previously from Order sum now derived from delivery join — same source of truth (only completed orders with deliveries).
+
+Schema responsibility: remove try-catch. Deployment must run `php artisan migrate --force` before traffic.
 
 ### 2. Controller — FinanceSettlementController
 
