@@ -22,7 +22,7 @@ const STATUS_CONFIG: Record<string, StatusConfig> = {
     },
     confirmed: {
         label: 'Diterima',
-        className: `${BADGE_BASE} bg-emerald-50 text-emerald-700`,
+        className: `${BADGE_BASE} bg-blue-50 text-blue-700`,
     },
     preparing: {
         label: 'Disiapkan',
