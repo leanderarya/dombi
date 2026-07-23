@@ -583,7 +583,7 @@ export default function OutletShow({
                         </Button>
                         <Button variant="destructive" onClick={() => {
                             setResetOpen(false);
-                            router.post(route('owner.outlets.reset-password', outlet.id), {}, { preserveScroll: true });
+                            router.post(`/owner/outlets/${outlet.id}/reset-password`, {}, { preserveScroll: true });
                         }}>
                             Ya, Reset
                         </Button>
