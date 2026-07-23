@@ -82,7 +82,28 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
         }
 
         if (!outletName) {
-            outletName = 'Outlet Dombi';
+            // Fallback: fetch outlets without GPS, pick first open as real name
+            try {
+                const fallbackRes = await fetch('/customer/outlets');
+                const fallbackData = await fallbackRes.json();
+                const outlets = fallbackData.outlets ?? [];
+                const open = outlets.filter((o: any) => o.is_open !== false);
+                const pick = open[0] ?? outlets[0];
+                outletName = pick?.name ?? null;
+
+                if (pick?.id) {
+                    autoSave(pick.id);
+                }
+            } catch {
+                // final fallback still null, will show generic searching state
+            }
+        }
+
+        // If still no name, keep null to show generic loading state instead of fake name
+        // If you want brand fallback, use null and let overlay show searching
+        // For safety, if still null, use generic brand name without pretending it's specific
+        if (!outletName) {
+            outletName = null;
         }
 
         setState({ loading: true, error: null, foundOutletName: outletName });
