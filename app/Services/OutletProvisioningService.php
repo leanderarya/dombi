@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Outlet;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -74,5 +75,41 @@ class OutletProvisioningService
             ->implode('');
 
         return "DMB-{$token}";
+    }
+
+    public function resetOutletPassword(Outlet $outlet): array
+    {
+        $user = $outlet->user;
+        if (! $user) {
+            $user = User::where('outlet_id', $outlet->id)->first();
+        }
+        if (! $user) {
+            throw new ModelNotFoundException("Akun outlet tidak ditemukan untuk outlet ID {$outlet->id}");
+        }
+
+        return DB::transaction(function () use ($outlet, $user): array {
+            $newPassword = $this->generateTemporaryPassword();
+            $user->forceFill([
+                'password' => $newPassword, // cast 'hashed'
+                'must_change_password' => true,
+                'remember_token' => Str::random(60), // driver agnostic, invalidates remember-me
+            ])->save();
+
+            // Do NOT touch is_active
+
+            $credentials = [
+                'outlet_name' => $outlet->name,
+                'email' => $user->email,
+                'temporary_password' => $newPassword,
+                'must_change_password' => true,
+            ];
+
+            return [
+                'user' => $user->fresh(),
+                'outlet' => $outlet->fresh(),
+                'temporary_password' => $newPassword,
+                'credentials' => $credentials,
+            ];
+        });
     }
 }
