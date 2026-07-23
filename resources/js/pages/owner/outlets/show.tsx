@@ -5,16 +5,19 @@ import {
     KeyRound,
     MapPin,
     Package,
+    Pencil,
     RefreshCw,
     ShoppingBag,
     Trash2,
     User,
 } from 'lucide-react';
-import { lazy, Suspense, useState } from 'react';
+import { useState } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
-import HolidayManager from '@/components/owner/holiday-manager';
-import OperatingHoursManager from '@/components/owner/operating-hours-manager';
+import OutletInfoModal from '@/components/owner/outlet-info-modal';
+import OutletLocationModal from '@/components/owner/outlet-location-modal';
+import OutletScheduleModal from '@/components/owner/outlet-schedule-modal';
+import OutletStatusModal from '@/components/owner/outlet-status-modal';
 import OutletProducts from '@/components/owner/outlet-products';
 import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-summary';
 import OutletStatusBadge from '@/components/owner/outlet-status-badge';
@@ -33,10 +36,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency, formatDate } from '@/lib/format';
 
-const OutletLocationMap = lazy(
-    () => import('@/components/owner/outlet-location-map'),
-);
-
 export default function OutletShow({
     outlet,
     activeDeliveriesCount,
@@ -53,6 +52,10 @@ export default function OutletShow({
     const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
     const { flash } = usePage().props as any;
     const [resetOpen, setResetOpen] = useState(false);
+    const [infoModalOpen, setInfoModalOpen] = useState(false);
+    const [locationModalOpen, setLocationModalOpen] = useState(false);
+    const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+    const [statusModalOpen, setStatusModalOpen] = useState(false);
     const user = outlet.user;
 
     if (!outlet) {
@@ -109,15 +112,6 @@ export default function OutletShow({
             headerRight={
                 <div className="flex items-center gap-2">
                     <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                            router.visit(`/owner/outlets/${outlet.id}/edit`)
-                        }
-                    >
-                        Edit
-                    </Button>
-                    <Button
                         variant="danger"
                         size="sm"
                         onClick={() => setShowArchiveConfirm(true)}
@@ -134,8 +128,12 @@ export default function OutletShow({
                         className="rounded-lg border border-border p-4"
                         aria-label="Informasi Outlet"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Informasi Outlet
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="text-xs font-semibold text-text-subtle">Informasi Outlet</div>
+                            <button type="button" onClick={() => setInfoModalOpen(true)}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80">
+                                <Pencil className="h-3.5 w-3.5" />
+                            </button>
                         </div>
                         <h2 className="text-lg font-semibold text-text">
                             {outlet.name ?? '-'}
@@ -175,6 +173,8 @@ export default function OutletShow({
                         )}
                     </div>
 
+                    <OutletInfoModal outlet={outlet} open={infoModalOpen} onClose={() => setInfoModalOpen(false)} onSuccess={() => router.reload({ preserveScroll: true })} />
+
                     <div
                         className="rounded-lg border border-border p-4"
                         aria-label="Akun Operasional"
@@ -212,56 +212,52 @@ export default function OutletShow({
                         className="rounded-lg border border-border p-4"
                         aria-label="Lokasi"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Lokasi
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="text-xs font-semibold text-text-subtle">Lokasi</div>
+                            <button type="button" onClick={() => setLocationModalOpen(true)}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80">
+                                <Pencil className="h-3.5 w-3.5" />
+                            </button>
                         </div>
                         <p className="text-xs text-text-muted">
                             {outlet.kelurahan ?? '-'} &middot;{' '}
                             {outlet.kecamatan ?? '-'}
                             {outlet.city ? ` · ${outlet.city}` : ''}
                         </p>
-                        <div className="mt-2">
-                            <Suspense
-                                fallback={
-                                    <div className="shadow-card-muted flex h-40 items-center justify-center rounded-xl bg-surface text-xs font-semibold text-text-muted">
-                                        Memuat peta...
-                                    </div>
-                                }
-                            >
-                                <OutletLocationMap
-                                    value={location}
-                                    onChange={() => undefined}
-                                    readOnly
-                                />
-                            </Suspense>
-                        </div>
+                        {location && (
+                            <p className="mt-1 text-xs text-text-muted tabular-nums">
+                                {location.lat.toFixed(6)}, {location.lng.toFixed(6)}
+                            </p>
+                        )}
                     </div>
+
+                    <OutletLocationModal outlet={outlet} open={locationModalOpen} onClose={() => setLocationModalOpen(false)} onSuccess={() => router.reload({ preserveScroll: true })} />
 
                     <div
                         className="rounded-lg border border-border p-4"
                         aria-label="Jadwal Outlet"
                     >
-                        <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-text-subtle">
-                            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                            Jadwal Outlet
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                                <div className="text-xs font-semibold text-text-subtle">Jadwal Outlet</div>
+                            </div>
+                            <button type="button" onClick={() => setScheduleModalOpen(true)}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80">
+                                <Pencil className="h-3.5 w-3.5" />
+                            </button>
                         </div>
-                        <div className="mb-3 text-xs font-medium text-text-muted">
-                            Jam Operasional
-                        </div>
-                        <OperatingHoursManager
-                            outletId={outlet.id}
-                            initialHours={operatingHours ?? []}
-                        />
-                        <div className="mt-4 border-t border-border pt-3 text-xs font-medium text-text-muted">
-                            Hari Libur
-                        </div>
-                        <div className="mt-2">
-                            <HolidayManager
-                                outletId={outlet.id}
-                                initialHolidays={holidays ?? []}
-                            />
-                        </div>
+                        {operatingHours && operatingHours.length > 0 ? (
+                            <p className="text-xs text-text-muted">{operatingHours.length} hari operasional</p>
+                        ) : (
+                            <p className="text-xs text-text-muted">Jam operasional belum diatur</p>
+                        )}
+                        {holidays && holidays.length > 0 && (
+                            <p className="mt-1 text-xs text-text-muted">{holidays.length} hari libur tercatat</p>
+                        )}
                     </div>
+
+                    <OutletScheduleModal outletId={outlet.id} initialHours={operatingHours ?? []} initialHolidays={holidays ?? []} open={scheduleModalOpen} onClose={() => setScheduleModalOpen(false)} />
 
                     <div
                         className="rounded-lg border border-border p-4"
@@ -439,8 +435,12 @@ export default function OutletShow({
                         className="rounded-lg border border-border p-4"
                         aria-label="Status & Aksi"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Status & Aksi
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="text-xs font-semibold text-text-subtle">Status & Aksi</div>
+                            <button type="button" onClick={() => setStatusModalOpen(true)}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg text-text-muted hover:bg-surface-muted active:opacity-80">
+                                <Pencil className="h-3.5 w-3.5" />
+                            </button>
                         </div>
                         <div className="mb-3 flex items-center gap-2">
                             <OutletStatusBadge
@@ -516,6 +516,8 @@ export default function OutletShow({
                             </div>
                         </div>
                     </div>
+
+                    <OutletStatusModal outlet={outlet} open={statusModalOpen} onClose={() => setStatusModalOpen(false)} onSuccess={() => router.reload({ preserveScroll: true })} />
 
                     {outlet.delivery_radius_km && (
                         <div

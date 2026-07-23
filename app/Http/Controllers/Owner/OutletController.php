@@ -111,16 +111,9 @@ class OutletController extends Controller
         ]);
     }
 
-    public function edit(Outlet $outlet): Response
+    public function edit(Outlet $outlet): RedirectResponse
     {
-        return Inertia::render('owner/outlets/edit', [
-            'outlet' => $outlet,
-            'existingOutlets' => Outlet::where('status', 'active')
-                ->where('id', '!=', $outlet->id)
-                ->whereNotNull('latitude')
-                ->whereNotNull('longitude')
-                ->get(['id', 'name', 'latitude', 'longitude', 'address']),
-        ]);
+        return redirect()->route('owner.outlets.show', $outlet);
     }
 
     public function update(UpdateOutletRequest $request, Outlet $outlet, OutletAuditService $auditService): RedirectResponse
