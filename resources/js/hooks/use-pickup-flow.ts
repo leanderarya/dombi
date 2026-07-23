@@ -82,13 +82,46 @@ export function usePickupFlow(nearestOutlet: NearestOutlet | null) {
         }
 
         if (!outletName) {
-            // Fallback: fetch outlets without GPS, pick first open as real name
+            // Fallback: try stored customer location before giving up
             try {
-                const fallbackRes = await fetch('/customer/outlets');
+                // Try last known location from localStorage
+                let storedLat: number | null = null;
+                let storedLng: number | null = null;
+
+                try {
+                    for (const key of ['customer.location', 'dombi_customer_location']) {
+                        const raw = localStorage.getItem(key);
+                        if (!raw) continue;
+                        const parsed = JSON.parse(raw);
+                        if (typeof parsed.latitude === 'number' && typeof parsed.longitude === 'number') {
+                            storedLat = parsed.latitude;
+                            storedLng = parsed.longitude;
+                            break;
+                        }
+                    }
+                } catch {
+                    // ignore parse errors
+                }
+
+                let fallbackUrl = '/customer/outlets';
+                if (storedLat !== null && storedLng !== null) {
+                    fallbackUrl += `?latitude=${storedLat}&longitude=${storedLng}`;
+                }
+
+                const fallbackRes = await fetch(fallbackUrl);
                 const fallbackData = await fallbackRes.json();
                 const outlets = fallbackData.outlets ?? [];
                 const open = outlets.filter((o: any) => o.is_open !== false);
-                const pick = open[0] ?? outlets[0];
+                // When we have lat/lng (stored), outlets are distance-sorted, pick first open = true nearest
+                // When no lat/lng, don't auto-pick alphabetically — keep null to avoid fake Bangetayu
+                let pick = null;
+                if (storedLat !== null) {
+                    pick = open[0] ?? outlets[0];
+                } else {
+                    // No GPS and no stored location — don't guess, let products page handle selection
+                    pick = null;
+                }
+
                 outletName = pick?.name ?? null;
 
                 if (pick?.id) {

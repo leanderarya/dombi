@@ -16,29 +16,29 @@ class CheckStoreOpen
             ?? $request->input('outlet_id');
 
         if (! $outletId) {
-            return $this->reject($request, 'Pilih outlet terlebih dahulu.');
+            return $this->reject($request, 'Pilih outlet terlebih dahulu.', 'outlet_required');
         }
 
         $outlet = Outlet::find($outletId);
 
         if (! $outlet || ! $outlet->isOpen()) {
-            return $this->reject($request, 'Toko sedang tutup. Silakan kembali saat jam operasional.');
+            return $this->reject($request, 'Toko sedang tutup. Silakan kembali saat jam operasional.', 'outlet_closed');
         }
 
         return $next($request);
     }
 
-    private function reject(Request $request, string $message): Response
+    private function reject(Request $request, string $message, string $error = 'outlet_closed'): Response
     {
         // Raw fetch/AJAX (cart API) → 409 JSON
         if ($request->expectsJson()) {
             return response()->json([
-                'error' => 'outlet_closed',
+                'error' => $error,
                 'message' => $message,
             ], 409);
         }
 
         // Inertia XHR & full page nav → 302 redirect with errors bag
-        return redirect()->back()->withErrors(['outlet_closed' => $message]);
+        return redirect()->back()->withErrors([$error => $message]);
     }
 }

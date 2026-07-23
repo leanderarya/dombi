@@ -11,7 +11,7 @@ class RecommendOutletService
         private readonly OutletAssignmentService $outletAssignmentService,
     ) {}
 
-    public function recommend(?float $latitude, ?float $longitude, array $items): array
+    public function recommend(?float $latitude, ?float $longitude, array $items, bool $filterByRadius = false): array
     {
         // If no items, just return nearest outlets by distance
         if (count($items) === 0) {
@@ -30,7 +30,7 @@ class RecommendOutletService
             ];
         }
 
-        $candidateOutlets = $this->outletAssignmentService->findCandidateOutlets($latitude, $longitude, $items);
+        $candidateOutlets = $this->outletAssignmentService->findCandidateOutlets($latitude, $longitude, $items, $filterByRadius);
 
         $sorted = $this->sortOutlets($candidateOutlets, $latitude, $longitude)
             ->values()
@@ -45,7 +45,7 @@ class RecommendOutletService
 
     public function recommendForDelivery(?float $latitude, ?float $longitude, array $items): ?array
     {
-        $recommendation = $this->recommend($latitude, $longitude, $items);
+        $recommendation = $this->recommend($latitude, $longitude, $items, true);
 
         return $recommendation['recommended'] ?? null;
     }
