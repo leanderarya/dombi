@@ -40,9 +40,9 @@ class SettlementCourierCostTest extends TestCase
             'outlet_id' => $outlet->id,
             'order_code' => 'DOMBI-SET-002',
             'status' => Order::STATUS_COMPLETED,
-            'delivery_fee' => 15000,
+            'delivery_fee' => 10000,
             'subtotal' => 50000,
-            'total' => 65000,
+            'total' => 60000,
             'customer_name' => 'Test',
             'customer_phone' => '081234567890',
             'customer_address' => 'Jl. Test',
@@ -51,24 +51,29 @@ class SettlementCourierCostTest extends TestCase
 
         Delivery::create([
             'order_id' => $order1->id,
+            'courier_type' => 'dombi',
+            'status' => 'completed',
+        ]);
+
+        Delivery::create([
+            'order_id' => $order2->id,
             'courier_type' => 'eksternal',
             'status' => 'completed',
             'external_courier_name' => 'Gojek',
             'courier_cost' => 25000,
         ]);
 
-        Delivery::create([
-            'order_id' => $order2->id,
-            'courier_type' => 'dombi',
-            'status' => 'completed',
-        ]);
-
         $service = app(SettlementReconciliationService::class);
         $result = $service->getOutletReconciliation($outlet->id);
 
-        $this->assertEquals(30000, $result['total_delivery_fee']);
-        $this->assertEquals(25000, $result['eksternal_courier_cost']);
+        $this->assertEquals(1, $result['dombi_delivery_count']);
+        $this->assertEquals(15000, $result['dombi_delivery_fee']);
+        $this->assertEquals(15000, $result['dombi_net_income']);
         $this->assertEquals(1, $result['eksternal_delivery_count']);
-        $this->assertEquals(5000, $result['net_delivery_income']);
+        $this->assertEquals(10000, $result['eksternal_delivery_fee']);
+        $this->assertEquals(25000, $result['eksternal_courier_cost']);
+        $this->assertEquals(-15000, $result['eksternal_net_income']);
+        $this->assertEquals(25000, $result['total_delivery_fee']);
+        $this->assertEquals(0, $result['net_delivery_income']);
     }
 }
