@@ -66,6 +66,7 @@ export default function OutletAccountStatement({
     settlements,
     summary,
     unpaidBreakdown,
+    deliveryStats,
 }: any) {
     const [paymentOpen, setPaymentOpen] = useState(false);
     const [invoiceOpen, setInvoiceOpen] = useState(false);
@@ -286,13 +287,36 @@ export default function OutletAccountStatement({
                                 value={formatCurrency(summary.total_sales)}
                             />
                             <OwnerDetailRow
-                                label="Ongkos Kirim"
+                                label="Kurir Dombi"
                                 value={
-                                    <span className="text-blue-600">
-                                        {formatCurrency(
-                                            summary.total_delivery_fee,
-                                        )}
+                                    <span className="text-right">
+                                        <span>{deliveryStats?.dombi_count ?? 0} transaksi</span>
+                                        <span className="ml-2">{formatCurrency(deliveryStats?.dombi_fee ?? 0)}</span>
+                                        <span className="ml-2 text-emerald-600 font-semibold">
+                                            Net +{formatCurrency(deliveryStats?.dombi_net ?? 0)}
+                                        </span>
                                     </span>
+                                }
+                            />
+
+                            <OwnerDetailRow
+                                label="Biaya Gojek/Grab"
+                                value={
+                                    deliveryStats?.eksternal_count === 0 ? (
+                                        <span className="text-text-muted">Belum ada transaksi</span>
+                                    ) : (
+                                        <span className="text-right block">
+                                            <span>{deliveryStats.eksternal_count} transaksi</span>
+                                            <span className="ml-2">Fee {formatCurrency(deliveryStats.eksternal_fee)}</span>
+                                            <span className="ml-2">Cost {formatCurrency(deliveryStats.eksternal_cost)}</span>
+                                            <span className={`ml-2 font-semibold ${deliveryStats.eksternal_net < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                                                Net {deliveryStats.eksternal_net >= 0 ? '+' : ''}{formatCurrency(deliveryStats.eksternal_net)}
+                                            </span>
+                                            {deliveryStats.eksternal_net < 0 && (
+                                                <span className="ml-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-700">Rugi</span>
+                                            )}
+                                        </span>
+                                    )
                                 }
                             />
                             <OwnerDetailRow
