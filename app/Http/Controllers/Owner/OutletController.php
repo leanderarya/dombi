@@ -12,6 +12,7 @@ use App\Models\RestockRequest;
 use App\Models\Settlement;
 use App\Services\OutletAuditService;
 use App\Services\OutletProvisioningService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -145,5 +146,24 @@ class OutletController extends Controller
         $auditService->log($outlet, 'status', $oldStatus, 'archived', $request->user());
 
         return redirect()->route('owner.outlets.index')->with('success', 'Outlet berhasil diarsipkan.');
+    }
+
+    public function resetPassword(Request $request, Outlet $outlet, OutletProvisioningService $provisioning, OutletAuditService $auditService): RedirectResponse
+    {
+        if ($outlet->status === 'archived') {
+            return back()->withErrors(['outlet' => 'Outlet sudah diarsipkan, tidak bisa reset password.']);
+        }
+
+        try {
+            $result = $provisioning->resetOutletPassword($outlet);
+        } catch (ModelNotFoundException $e) {
+            return back()->withErrors(['user' => 'Akun outlet tidak ditemukan. Outlet ini belum memiliki akun operasional.']);
+        }
+
+        $auditService->log($outlet, 'password', '***', 'reset_by_owner:'.$request->user()->id, $request->user());
+
+        return back()
+            ->with('success', "Password outlet {$outlet->name} berhasil direset.")
+            ->with('outlet_provisioning', $result['credentials']);
     }
 }
