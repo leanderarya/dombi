@@ -92,34 +92,6 @@ export default function Help() {
                     </div>
                 </section>
 
-                {/* Operational Hours */}
-                <section className="mt-6">
-                    <h2 className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
-                        Jam Operasional
-                    </h2>
-                    <div className="mt-2 rounded-xl border border-border bg-white p-4">
-                        <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                                <span className="text-text-muted">
-                                    Senin – Sabtu
-                                </span>
-                                <span className="font-medium text-text">
-                                    07:00 – 20:00
-                                </span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-text-muted">Minggu</span>
-                                <span className="font-medium text-text">
-                                    08:00 – 17:00
-                                </span>
-                            </div>
-                        </div>
-                        <p className="mt-3 text-xs text-text-subtle">
-                            Pesanan di luar jam operasional akan diproses
-                            keesokan hari.
-                        </p>
-                    </div>
-                </section>
             </main>
         </div>
     );
