@@ -16,8 +16,10 @@ class CheckStoreOpen
             ?? $request->input('outlet_id')
             ?? $request->input('selected_outlet_id');
 
+        // Allow requests without outlet (e.g. add to cart before outlet auto-selected)
+        // Only block when an outlet is selected but closed.
         if (! $outletId) {
-            return $this->reject($request, 'Pilih outlet terlebih dahulu.', 'outlet_required');
+            return $next($request);
         }
 
         $outlet = Outlet::find($outletId);
