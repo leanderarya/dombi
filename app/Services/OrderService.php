@@ -220,7 +220,8 @@ class OrderService
         return $this->outletAssignmentService->findCandidateOutlets(
             $this->shouldUseDeliveryAddress($fulfillmentType) && $address?->latitude !== null ? (float) $address->latitude : null,
             $this->shouldUseDeliveryAddress($fulfillmentType) && $address?->longitude !== null ? (float) $address->longitude : null,
-            $items
+            $items,
+            $this->shouldUseDeliveryAddress($fulfillmentType)
         );
     }
 
@@ -237,7 +238,8 @@ class OrderService
         return $this->outletAssignmentService->findAvailableOutlet(
             $lat !== null ? (float) $lat : null,
             $lng !== null ? (float) $lng : null,
-            $builtItems
+            $builtItems,
+            $this->shouldUseDeliveryAddress($fulfillmentType)
         );
     }
 

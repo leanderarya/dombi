@@ -10,15 +10,15 @@ class OutletAssignmentService
 {
     use CalculatesDistance;
 
-    public function findAvailableOutlet(?float $lat, ?float $lng, array $items): ?Outlet
+    public function findAvailableOutlet(?float $lat, ?float $lng, array $items, bool $filterByRadius = false): ?Outlet
     {
-        return $this->findCandidateOutlets($lat, $lng, $items)->first();
+        return $this->findCandidateOutlets($lat, $lng, $items, $filterByRadius)->first();
     }
 
     /**
      * @return Collection<int, Outlet>
      */
-    public function findCandidateOutlets(?float $lat, ?float $lng, array $items): Collection
+    public function findCandidateOutlets(?float $lat, ?float $lng, array $items, bool $filterByRadius = false): Collection
     {
         $outlets = Outlet::query()
             ->active()
@@ -60,9 +60,9 @@ class OutletAssignmentService
         }
 
         // Filter by delivery radius (if applicable) and stock
-        return $outlets->filter(function (Outlet $outlet) use ($lat, $lng, $items) {
-            // Check delivery radius
-            if ($lat !== null && $lng !== null && $outlet->delivery_radius_km && $outlet->latitude && $outlet->longitude) {
+        return $outlets->filter(function (Outlet $outlet) use ($lat, $lng, $items, $filterByRadius) {
+            // Check delivery radius — only when explicitly requested (delivery, not pickup)
+            if ($filterByRadius && $lat !== null && $lng !== null && $outlet->delivery_radius_km && $outlet->latitude && $outlet->longitude) {
                 $distance = $this->calculateDistance($lat, $lng, (float) $outlet->latitude, (float) $outlet->longitude);
                 if ($distance > $outlet->delivery_radius_km) {
                     return false;
