@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Delivery;
 use App\Models\Order;
+use Illuminate\Support\Facades\DB;
 use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
@@ -64,27 +64,30 @@ class SettlementReconciliationService
             ->latest('payment_date')
             ->first();
 
-        // Courier cost aggregation (defensive: table may not have courier_cost column if migration pending)
-        $totalDeliveryFee = 0.0;
-        $eksternalCost = 0.0;
-        $eksternalCount = 0;
+        // Courier cost aggregation — single-pass conditional aggregation (no try-catch, let it crash if column missing)
+        $stats = DB::table('deliveries')
+            ->join('orders', 'deliveries.order_id', '=', 'orders.id')
+            ->where('orders.outlet_id', $outletId)
+            ->where('orders.status', Order::STATUS_COMPLETED)
+            ->selectRaw("
+                COUNT(CASE WHEN deliveries.courier_type = 'dombi' THEN 1 END) as dombi_count,
+                SUM(CASE WHEN deliveries.courier_type = 'dombi' THEN orders.delivery_fee ELSE 0 END) as dombi_fee,
+                COUNT(CASE WHEN deliveries.courier_type = 'eksternal' THEN 1 END) as eksternal_count,
+                SUM(CASE WHEN deliveries.courier_type = 'eksternal' THEN orders.delivery_fee ELSE 0 END) as eksternal_fee,
+                SUM(CASE WHEN deliveries.courier_type = 'eksternal' THEN deliveries.courier_cost ELSE 0 END) as eksternal_cost
+            ")
+            ->first();
 
-        try {
-            $totalDeliveryFee = (float) Order::where('outlet_id', $outletId)
-                ->where('status', Order::STATUS_COMPLETED)
-                ->sum('delivery_fee');
+        $dombiCount = (int) ($stats->dombi_count ?? 0);
+        $dombiFee = (float) ($stats->dombi_fee ?? 0);
+        $eksternalCount = (int) ($stats->eksternal_count ?? 0);
+        $eksternalFee = (float) ($stats->eksternal_fee ?? 0);
+        $eksternalCost = (float) ($stats->eksternal_cost ?? 0);
 
-            $eksternalCost = (float) Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outletId))
-                ->where('courier_type', 'eksternal')
-                ->sum('courier_cost');
-
-            $eksternalCount = (int) Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outletId))
-                ->where('courier_type', 'eksternal')
-                ->count();
-        } catch (\Throwable $e) {
-            // Column not found or other error — fallback to 0, log for debug
-            \Log::warning('SettlementReconciliation courier aggregation fallback: '.$e->getMessage());
-        }
+        $dombiNet = $dombiFee;
+        $eksternalNet = $eksternalFee - $eksternalCost;
+        $totalDeliveryFee = $dombiFee + $eksternalFee;
+        $netDeliveryIncome = $totalDeliveryFee - $eksternalCost;
 
         return [
             'center_share' => $centerShare,
@@ -102,9 +105,14 @@ class SettlementReconciliationService
                 'reference' => $lastPayment->reference_number,
             ] : null,
             'total_delivery_fee' => $totalDeliveryFee,
-            'eksternal_courier_cost' => $eksternalCost,
+            'dombi_delivery_count' => $dombiCount,
+            'dombi_delivery_fee' => $dombiFee,
+            'dombi_net_income' => $dombiNet,
             'eksternal_delivery_count' => $eksternalCount,
-            'net_delivery_income' => $totalDeliveryFee - $eksternalCost,
+            'eksternal_delivery_fee' => $eksternalFee,
+            'eksternal_courier_cost' => $eksternalCost,
+            'eksternal_net_income' => $eksternalNet,
+            'net_delivery_income' => $netDeliveryIncome,
         ];
     }
 
