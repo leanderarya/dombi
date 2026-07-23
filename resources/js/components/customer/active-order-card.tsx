@@ -296,7 +296,6 @@ export default function ActiveOrderCard({ order }: Props) {
                 orderId={order.id}
                 recoveryToken={order.recovery_token}
                 status={order.status}
-                clickable={false}
             >
                 {/* Header: Logo + Order code + Status badge + Date */}
                 <div className="flex items-start gap-3">
@@ -496,7 +495,7 @@ export default function ActiveOrderCard({ order }: Props) {
                         {!isPending && !hasPaymentIssue && (
                             <Link
                                 href={href}
-                                className="rounded-full border-2 border-border px-4 py-1.5 text-xs font-bold text-text-muted active:opacity-80"
+                                className="rounded-full border-2 border-primary px-4 py-1.5 text-xs font-bold text-primary active:opacity-80"
                             >
                                 Lacak Pesanan
                             </Link>
