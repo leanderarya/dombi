@@ -94,7 +94,7 @@ class OutletPasswordResetTest extends TestCase
         $user = User::factory()->create([
             'role' => 'outlet',
             'outlet_id' => $outlet->id,
-            'password' => 'old-password-123',
+            'password' => Hash::make('old-password-123'),
         ]);
         $outlet->update(['user_id' => $user->id]);
 
