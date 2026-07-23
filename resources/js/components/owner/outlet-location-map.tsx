@@ -128,6 +128,7 @@ export default function OutletLocationMap({
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
+                    <MapInvalidateSize />
                     <MapFitBounds
                         existingOutlets={existingOutlets}
                         position={marker}
@@ -343,6 +344,16 @@ function MapCenter({ position }: { position: LatLng | null }) {
             });
         }
     }, [map, position]);
+
+    return null;
+}
+
+function MapInvalidateSize() {
+    const map = useMap();
+
+    useEffect(() => {
+        setTimeout(() => map.invalidateSize(), 300);
+    }, [map]);
 
     return null;
 }
