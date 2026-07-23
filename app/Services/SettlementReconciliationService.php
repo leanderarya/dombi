@@ -64,18 +64,27 @@ class SettlementReconciliationService
             ->latest('payment_date')
             ->first();
 
-        // Courier cost aggregation
-        $totalDeliveryFee = (float) Order::where('outlet_id', $outletId)
-            ->where('status', Order::STATUS_COMPLETED)
-            ->sum('delivery_fee');
+        // Courier cost aggregation (defensive: table may not have courier_cost column if migration pending)
+        $totalDeliveryFee = 0.0;
+        $eksternalCost = 0.0;
+        $eksternalCount = 0;
 
-        $eksternalCost = (float) Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outletId))
-            ->where('courier_type', 'eksternal')
-            ->sum('courier_cost');
+        try {
+            $totalDeliveryFee = (float) Order::where('outlet_id', $outletId)
+                ->where('status', Order::STATUS_COMPLETED)
+                ->sum('delivery_fee');
 
-        $eksternalCount = (int) Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outletId))
-            ->where('courier_type', 'eksternal')
-            ->count();
+            $eksternalCost = (float) Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outletId))
+                ->where('courier_type', 'eksternal')
+                ->sum('courier_cost');
+
+            $eksternalCount = (int) Delivery::whereHas('order', fn ($q) => $q->where('outlet_id', $outletId))
+                ->where('courier_type', 'eksternal')
+                ->count();
+        } catch (\Throwable $e) {
+            // Column not found or other error — fallback to 0, log for debug
+            \Log::warning('SettlementReconciliation courier aggregation fallback: '.$e->getMessage());
+        }
 
         return [
             'center_share' => $centerShare,
