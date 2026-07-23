@@ -13,7 +13,8 @@ class CheckStoreOpen
     {
         $outletId = session('checkout.fulfillment.selected_outlet_id')
             ?? session('checkout.selected_outlet_id')
-            ?? $request->input('outlet_id');
+            ?? $request->input('outlet_id')
+            ?? $request->input('selected_outlet_id');
 
         if (! $outletId) {
             return $this->reject($request, 'Pilih outlet terlebih dahulu.', 'outlet_required');
