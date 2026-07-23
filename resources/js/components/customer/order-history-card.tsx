@@ -149,7 +149,7 @@ export default function OrderHistoryCard({ order }: Props) {
                 {order.status === 'completed' && (
                     <Link
                         href={`/customer/orders/${order.id}/restore-cart`}
-                        className="flex items-center gap-1.5 rounded-full border-2 border-primary px-4 py-1.5 text-xs font-bold text-primary active:opacity-80"
+                        className="flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-white active:opacity-80"
                     >
                         <RotateCcw className="h-3.5 w-3.5" />
                         Beli Lagi
