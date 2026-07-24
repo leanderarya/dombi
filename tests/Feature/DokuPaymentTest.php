@@ -20,7 +20,6 @@ class DokuPaymentTest extends TestCase
     {
         parent::setUp();
 
-        // Mock NotificationService so markOrderPaid side-effects don't fire
         $this->mock(NotificationService::class, function ($mock) {
             $mock->shouldReceive('notifyOrderConfirmed')->andReturnNull();
             $mock->shouldReceive('notifyOrderCreated')->andReturnNull();
@@ -118,7 +117,6 @@ class DokuPaymentTest extends TestCase
 
         $this->doku->handleWebhook($payload);
 
-        // Should remain paid, not double-process
         $this->assertEquals('paid', $order->fresh()->payment_status);
     }
 
@@ -129,5 +127,68 @@ class DokuPaymentTest extends TestCase
         $this->assertEquals('failed', $this->doku->mapStatus('FAILED'));
         $this->assertEquals('expired', $this->doku->mapStatus('EXPIRED'));
         $this->assertEquals('pending', $this->doku->mapStatus('UNKNOWN'));
+    }
+
+    public function test_redirect_ignores_unsigned_success_status(): void
+    {
+        $order = Order::factory()->create([
+            'order_code' => 'INV-001',
+            'payment_status' => 'pending',
+        ]);
+
+        Http::fake([
+            '*/orders/v1/status/*' => Http::response(null, 500),
+        ]);
+
+        $response = $this->get('/payment/doku/redirect?invoice_number=INV-001&status=SUCCESS');
+
+        $response->assertSessionHas('error', 'Status pembayaran belum dapat diverifikasi.');
+        $this->assertEquals('pending', $order->fresh()->payment_status);
+    }
+
+    public function test_redirect_ignores_unsigned_failed_status(): void
+    {
+        $order = Order::factory()->create([
+            'order_code' => 'INV-002',
+            'payment_status' => 'pending',
+        ]);
+
+        Http::fake([
+            '*/orders/v1/status/*' => Http::response(null, 500),
+        ]);
+
+        $response = $this->get('/payment/doku/redirect?invoice_number=INV-002&status=FAILED');
+
+        $response->assertSessionHas('error', 'Status pembayaran belum dapat diverifikasi.');
+        $this->assertEquals('pending', $order->fresh()->payment_status);
+    }
+
+    public function test_redirect_proceeds_on_verified_status_api(): void
+    {
+        $order = Order::factory()->create([
+            'order_code' => 'INV-003',
+            'doku_order_id' => 'INV-003',
+            'payment_status' => 'pending',
+        ]);
+        PaymentTransaction::create([
+            'order_id' => $order->id,
+            'doku_order_id' => 'INV-003',
+            'payment_method' => 'qris',
+            'amount' => $order->total,
+            'status' => 'pending',
+        ]);
+
+        Http::fake([
+            '*/checkout/v1/payment/INV-003' => Http::response([
+                'order' => ['invoice_number' => 'INV-003'],
+                'transaction' => ['status' => 'SUCCESS'],
+            ], 200),
+        ]);
+
+        $response = $this->get('/payment/doku/redirect?invoice_number=INV-003&status=SUCCESS');
+
+        $response->assertRedirect();
+        $this->assertEquals('paid', $order->fresh()->payment_status);
+        $this->assertNotNull($order->fresh()->paid_at);
     }
 }
