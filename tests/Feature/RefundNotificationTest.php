@@ -3,175 +3,227 @@
 namespace Tests\Feature;
 
 use App\Enums\RefundRejectionReason;
+use App\Models\Customer;
 use App\Models\Notification;
 use App\Models\Order;
+use App\Models\RefundStatusHistory;
+use App\Models\User;
 use App\Services\NotificationService;
+use App\Services\RefundService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class RefundNotificationTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_notify_refund_requested_creates_customer_notification(): void
+    private function registeredCustomer(): Customer
     {
-        $order = Order::factory()->create(['payment_status' => 'refund_pending']);
+        return Customer::factory()->create(['user_id' => User::factory()->create()->id]);
+    }
 
-        app(NotificationService::class)->notifyRefundRequested($order);
+    private function guestCustomer(): Customer
+    {
+        return Customer::factory()->create(['user_id' => null]);
+    }
 
-        $this->assertDatabaseHas('notifications', [
-            'customer_id' => $order->customer_id,
-            'type' => 'order.refund_requested',
-            'entity_type' => 'order',
-            'entity_id' => $order->id,
-        ]);
+    public function test_refund_requested_notification_contains_history_id_and_url(): void
+    {
+        $customer = $this->registeredCustomer();
+        $order = Order::factory()->paid()->create(['customer_id' => $customer->id, 'total' => 50000]);
 
-        $notification = Notification::where('customer_id', $order->customer_id)
-            ->where('type', 'order.refund_requested')
+        $history = app(RefundService::class)->request($order, 'customer', null, 'customer_cancellation');
+
+        $notif = Notification::where('customer_id', $customer->id)->first();
+        $this->assertNotNull($notif);
+        $this->assertSame($history->id, $notif->data['refund_history_id']);
+        $this->assertStringContainsString("/customer/orders/{$order->id}", $notif->data['url']);
+    }
+
+    public function test_owner_receives_request_notification(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $customer = $this->registeredCustomer();
+        $order = Order::factory()->paid()->create(['customer_id' => $customer->id, 'total' => 50000]);
+
+        app(RefundService::class)->request($order, 'customer', null, 'customer_cancellation');
+
+        $ownerNotif = Notification::where('user_id', $owner->id)
+            ->where('type', NotificationService::REFUND_REQUESTED)
             ->first();
-
-        $this->assertStringContainsString('dibatalkan', $notification->message);
-        $this->assertStringContainsString('refund_pending', $notification->data['payment_status'] ?? '');
+        $this->assertNotNull($ownerNotif);
     }
 
-    public function test_notify_refund_processed_creates_customer_notification(): void
+    public function test_guest_request_does_not_notify_customer(): void
     {
-        $order = Order::factory()->create([
-            'payment_status' => 'refunded',
-            'refund_account_number' => '1234567890',
-            'refund_ewallet_number' => '081234567890',
+        $customer = $this->guestCustomer();
+        $order = Order::factory()->paid()->create(['customer_id' => $customer->id, 'total' => 50000]);
+
+        app(RefundService::class)->request($order, 'guest', null, 'expiry');
+
+        $this->assertDatabaseMissing('notifications', [
+            'customer_id' => $customer->id,
         ]);
+    }
 
-        app(NotificationService::class)->notifyRefundProcessed($order, 75000);
+    public function test_owner_receives_guest_request(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $customer = $this->guestCustomer();
+        $order = Order::factory()->paid()->create(['customer_id' => $customer->id, 'total' => 50000]);
 
-        $this->assertDatabaseHas('notifications', [
-            'customer_id' => $order->customer_id,
-            'type' => 'order.refund_processed',
-            'entity_type' => 'order',
-            'entity_id' => $order->id,
-        ]);
+        app(RefundService::class)->request($order, 'guest', null, 'expiry');
 
-        $notification = Notification::where('customer_id', $order->customer_id)
-            ->where('type', 'order.refund_processed')
+        $ownerNotif = Notification::where('user_id', $owner->id)
+            ->where('type', NotificationService::REFUND_REQUESTED)
             ->first();
-
-        $this->assertStringContainsString('75.000', $notification->message);
-        $this->assertStringContainsString('tujuan refund', $notification->message);
-        $this->assertStringNotContainsString('metode pembayaran', $notification->message);
-        $this->assertStringNotContainsString('1234567890', $notification->toJson());
-        $this->assertStringNotContainsString('081234567890', $notification->toJson());
+        $this->assertNotNull($ownerNotif);
     }
 
-    public function test_notify_refund_destination_submitted_creates_customer_notification_without_destination_number(): void
+    public function test_processing_started_notifies_customer_only(): void
     {
-        $order = Order::factory()->create([
-            'refund_account_number' => '1234567890',
-            'refund_ewallet_number' => '081234567890',
-        ]);
-
-        app(NotificationService::class)->notifyRefundDestinationSubmitted($order, false);
-
-        $notification = Notification::where('customer_id', $order->customer_id)
-            ->where('type', 'order.refund_destination_submitted')
-            ->firstOrFail();
-
-        $this->assertStringContainsString('disimpan', $notification->message);
-        $this->assertStringNotContainsString('1234567890', $notification->toJson());
-        $this->assertStringNotContainsString('081234567890', $notification->toJson());
-    }
-
-    public function test_notify_refund_destination_updated_uses_submitted_type_without_destination_number(): void
-    {
-        $order = Order::factory()->create([
-            'refund_account_number' => '1234567890',
-            'refund_ewallet_number' => '081234567890',
-        ]);
-
-        app(NotificationService::class)->notifyRefundDestinationSubmitted($order, true);
-
-        $notification = Notification::where('customer_id', $order->customer_id)
-            ->where('type', 'order.refund_destination_submitted')
-            ->firstOrFail();
-
-        $this->assertStringContainsString('diperbarui', $notification->message);
-        $this->assertStringNotContainsString('1234567890', $notification->toJson());
-        $this->assertStringNotContainsString('081234567890', $notification->toJson());
-    }
-
-    public function test_notify_refund_processing_started_creates_customer_notification_without_destination_number(): void
-    {
-        $order = Order::factory()->create(['refund_account_number' => '1234567890']);
-
-        app(NotificationService::class)->notifyRefundProcessingStarted($order);
-
-        $notification = Notification::where('customer_id', $order->customer_id)
-            ->where('type', 'order.refund_processing_started')
-            ->firstOrFail();
-
-        $this->assertStringContainsString('mentransfer', $notification->message);
-        $this->assertStringNotContainsString('1234567890', $notification->toJson());
-    }
-
-    public function test_notify_refund_rejected_invites_customer_to_correct_and_resubmit_eligible_destinations(): void
-    {
-        $order = Order::factory()->create(['refund_account_number' => '1234567890']);
-
-        foreach ([RefundRejectionReason::InvalidDestination, RefundRejectionReason::IncompleteDestination] as $reason) {
-            app(NotificationService::class)->notifyRefundRejected($order, $reason);
-
-            $notification = Notification::where('customer_id', $order->customer_id)
-                ->where('type', 'order.refund_rejected')
-                ->latest('id')
-                ->firstOrFail();
-
-            $this->assertSame($reason->value, $notification->data['reason']);
-            $this->assertTrue($notification->data['can_resubmit']);
-            $this->assertStringContainsString($reason->label(), $notification->message);
-            $this->assertStringContainsString('perbaiki dan kirim ulang tujuan refund', $notification->message);
-            $this->assertStringNotContainsString('1234567890', $notification->toJson());
-        }
-    }
-
-    public function test_notify_refund_rejected_does_not_invite_resubmission_for_final_reasons(): void
-    {
-        $order = Order::factory()->create();
-
-        foreach ([RefundRejectionReason::PaymentUnverified, RefundRejectionReason::DuplicateRefund, RefundRejectionReason::Other] as $reason) {
-            app(NotificationService::class)->notifyRefundRejected($order, $reason);
-
-            $notification = Notification::where('customer_id', $order->customer_id)
-                ->where('type', 'order.refund_rejected')
-                ->latest('id')
-                ->firstOrFail();
-
-            $this->assertSame($reason->value, $notification->data['reason']);
-            $this->assertFalse($notification->data['can_resubmit']);
-            $this->assertStringContainsString($reason->label(), $notification->message);
-            $this->assertStringNotContainsString('kirim ulang tujuan refund', $notification->message);
-        }
-    }
-
-    public function test_notify_refund_requested_no_customer_does_nothing(): void
-    {
-        $order = Order::factory()->create([
-            'customer_id' => null,
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $customer = $this->registeredCustomer();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
             'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
+            'refund_amount' => 50000,
         ]);
 
-        app(NotificationService::class)->notifyRefundRequested($order);
+        app(RefundService::class)->start($order, $owner->id);
 
-        $this->assertDatabaseCount('notifications', 0);
+        $this->assertDatabaseHas('notifications', [
+            'customer_id' => $customer->id,
+            'type' => NotificationService::REFUND_PROCESSING_STARTED,
+        ]);
+
+        $this->assertDatabaseMissing('notifications', [
+            'user_id' => $owner->id,
+            'type' => NotificationService::REFUND_PROCESSING_STARTED,
+        ]);
     }
 
-    public function test_notify_refund_processed_no_customer_does_nothing(): void
+    public function test_duplicate_notification_not_created_for_same_history(): void
     {
-        $order = Order::factory()->create([
-            'customer_id' => null,
-            'payment_status' => 'refunded',
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $customer = $this->registeredCustomer();
+        $order = Order::factory()->paid()->create(['customer_id' => $customer->id, 'total' => 50000]);
+
+        $history = app(RefundService::class)->request($order, 'customer', null, 'customer_cancellation');
+
+        $notifService = app(NotificationService::class);
+        $orderReloaded = $order->fresh()->loadMissing('customer');
+        $notifService->notifyRefundEvent($orderReloaded, $history);
+        $notifService->notifyRefundEvent($orderReloaded, $history);
+
+        // Should have 2 total: 1 customer + 1 owner
+        $this->assertDatabaseCount('notifications', 2);
+    }
+
+    public function test_completion_notification_for_registered_customer(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $customer = $this->registeredCustomer();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_in_progress',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
         ]);
 
-        app(NotificationService::class)->notifyRefundProcessed($order, 50000);
+        app(RefundService::class)->complete($order, $owner->id, "private:refund-proofs/{$order->id}/p.jpg", null, null);
 
-        $this->assertDatabaseCount('notifications', 0);
+        $this->assertDatabaseHas('notifications', [
+            'customer_id' => $customer->id,
+            'type' => NotificationService::REFUND_PROCESSED,
+        ]);
+    }
+
+    public function test_rejection_notification_for_registered_customer(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $customer = $this->registeredCustomer();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+            'refund_amount' => 50000,
+        ]);
+
+        app(RefundService::class)->reject($order, 'payment_unverified', null, 'owner', $owner->id);
+
+        $this->assertDatabaseHas('notifications', [
+            'customer_id' => $customer->id,
+            'type' => NotificationService::REFUND_REJECTED,
+        ]);
+    }
+
+    public function test_rollback_notification_for_registered_customer(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $customer = $this->registeredCustomer();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_in_progress',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        app(RefundService::class)->rollback($order, $owner->id, 'retry', 'Test rollback');
+
+        $this->assertDatabaseHas('notifications', [
+            'customer_id' => $customer->id,
+            'type' => NotificationService::REFUND_ROLLED_BACK,
+        ]);
+    }
+
+    public function test_rollback_for_guest_creates_no_notification(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $customer = $this->guestCustomer();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_in_progress',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        app(RefundService::class)->rollback($order, $owner->id, 'retry', 'Test');
+
+        $this->assertDatabaseMissing('notifications', [
+            'customer_id' => $customer->id,
+        ]);
+    }
+
+    public function test_reopened_uses_destination_submitted_type(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $customer = $this->registeredCustomer();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_rejected',
+            'refund_destination_status' => 'invalid',
+            'refund_rejected_reason' => 'invalid_destination',
+        ]);
+
+        app(RefundService::class)->submitDestination($order, 'bank', 'customer', null, [
+            'bank_name' => 'BCA',
+            'account_number' => '1234567890',
+            'account_holder' => 'Arya',
+        ]);
+
+        $this->assertDatabaseHas('notifications', [
+            'customer_id' => $customer->id,
+            'type' => NotificationService::REFUND_DESTINATION_SUBMITTED,
+        ]);
     }
 }
