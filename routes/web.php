@@ -146,6 +146,8 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::post('/verify-phone', [SocialAuthController::class, 'verifyPhone'])->name('verify-phone');
 
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
+        Route::patch('orders/{order}/refund-destination', [CustomerOrderController::class, 'updateRefundDestination'])
+            ->name('orders.refund-destination.update');
         Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/orders/{order}/report', [OrderReportController::class, 'store'])->name('orders.report')->middleware('throttle:order-report');
         Route::get('/addresses', [CustomerAddressController::class, 'index'])->name('addresses.index');
