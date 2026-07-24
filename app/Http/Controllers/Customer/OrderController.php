@@ -3,17 +3,21 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Enums\PaymentStatus;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
+use App\Http\Requests\Customer\UpdateRefundDestinationRequest;
 use App\Models\Order;
 use App\Models\OrderReport;
 use App\Models\PaymentTransaction;
 use App\Services\DokuService;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
+use App\Services\PaymentStatusService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -341,6 +345,44 @@ class OrderController extends Controller
             'doku_order_id' => $order->doku_order_id,
             'paid_at' => $order->paid_at?->toISOString(),
         ]);
+    }
+
+    public function updateRefundDestination(
+        UpdateRefundDestinationRequest $request,
+        Order $order,
+        PaymentStatusService $payment,
+    ): RedirectResponse {
+        $saved = DB::transaction(function () use ($request, $order, $payment): bool {
+            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+
+            if ($order->payment_status === PaymentStatus::RefundRejected->value && ! $payment->reopenRefund($order)) {
+                return false;
+            }
+
+            if ($order->payment_status !== PaymentStatus::RefundPending->value) {
+                return false;
+            }
+
+            $destination = $request->validated();
+            $isBank = $destination['destination_type'] === 'bank';
+            $order->refund_destination_type = $destination['destination_type'];
+            $order->refund_bank_name = $isBank ? $destination['bank_name'] : null;
+            $order->refund_account_number = $isBank ? $destination['account_number'] : null;
+            $order->refund_account_holder = $isBank ? $destination['account_holder'] : null;
+            $order->refund_ewallet_provider = $isBank ? null : $destination['ewallet_provider'];
+            $order->refund_ewallet_number = $isBank ? null : $destination['ewallet_number'];
+            $order->refund_ewallet_holder = $isBank ? null : $destination['ewallet_holder'];
+            $order->refund_destination_submitted_at = now();
+            $order->save();
+
+            return true;
+        });
+
+        if (! $saved) {
+            return back()->with('error', 'Tujuan refund sudah tidak dapat diubah.');
+        }
+
+        return back()->with('success', 'Tujuan refund berhasil disimpan.');
     }
 
     public function cancel(CancelOrderRequest $request, Order $order, OrderStatusService $orderStatusService): RedirectResponse
