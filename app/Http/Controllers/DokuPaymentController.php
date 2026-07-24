@@ -134,17 +134,9 @@ class DokuPaymentController extends Controller
                         'doku_status_param' => $dokuStatus,
                     ]);
 
-                    // Fallback: use redirect status query param if available
-                    if ($dokuStatus && $order->payment_status !== 'paid') {
-                        $mappedStatus = $doku->mapStatus($dokuStatus);
-                        Log::info('Doku redirect: using fallback status from query param', [
-                            'order_id' => $order->id,
-                            'doku_status' => $dokuStatus,
-                            'mapped_status' => $mappedStatus,
-                        ]);
-                        $doku->processPaymentStatusChange($order, $mappedStatus);
-                        $order->refresh();
-                    }
+                    return redirect()->route('customer.orders.confirm', [
+                        'orderCode' => $order->order_code,
+                    ])->with('error', 'Status pembayaran belum dapat diverifikasi.');
                 }
 
                 return redirect()->route('customer.orders.confirm', [
