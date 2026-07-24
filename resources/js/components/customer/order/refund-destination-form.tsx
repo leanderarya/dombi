@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { Banknote, Smartphone } from 'lucide-react';
 import type { RefundDestinationType } from '@/types/refund';
 
 interface Props {
@@ -65,76 +66,149 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Method Toggle */}
             <div>
-                <Label>Metode Penerimaan</Label>
-                <div className="mt-1 flex gap-2">
+                <Label>Metode Penerimaan Dana</Label>
+                <div className="mt-1.5 flex gap-2">
                     <button
                         type="button"
                         onClick={() => setType('bank')}
-                        className={`min-h-11 flex-1 rounded-lg border px-3 py-2 text-xs font-semibold ${type === 'bank' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted'}`}
+                        className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
+                            type === 'bank'
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border text-text-muted'
+                        }`}
                     >
+                        <Banknote className="h-4 w-4" />
                         Transfer Bank
                     </button>
                     <button
                         type="button"
                         onClick={() => setType('ewallet')}
-                        className={`min-h-11 flex-1 rounded-lg border px-3 py-2 text-xs font-semibold ${type === 'ewallet' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted'}`}
+                        className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${
+                            type === 'ewallet'
+                                ? 'border-primary bg-primary/10 text-primary'
+                                : 'border-border text-text-muted'
+                        }`}
                     >
+                        <Smartphone className="h-4 w-4" />
                         E-Wallet
                     </button>
                 </div>
             </div>
 
-            {isBank ? (
-                <>
-                    <div>
-                        <Label htmlFor="bank_name">Nama Bank</Label>
-                        <Input id="bank_name" value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="BCA, Mandiri, BRI..." />
-                        {errors.bank_name && <p className="mt-0.5 text-[11px] text-red-500" role="alert">{errors.bank_name}</p>}
-                    </div>
-                    <div>
-                        <Label htmlFor="account_number">Nomor Rekening</Label>
-                        <Input id="account_number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="1234567890" />
-                        {errors.account_number && <p className="mt-0.5 text-[11px] text-red-500" role="alert">{errors.account_number}</p>}
-                    </div>
-                    <div>
-                        <Label htmlFor="account_holder">Nama Pemilik Rekening</Label>
-                        <Input id="account_holder" value={accountHolder} onChange={(e) => setAccountHolder(e.target.value)} placeholder="sesuai rekening" />
-                        {errors.account_holder && <p className="mt-0.5 text-[11px] text-red-500" role="alert">{errors.account_holder}</p>}
-                    </div>
-                </>
-            ) : (
-                <>
-                    <div>
-                        <Label htmlFor="ewallet_provider">Provider</Label>
-                        <Select
-                            id="ewallet_provider"
-                            value={ewalletProvider}
-                            onChange={(e) => setEwalletProvider(e.target.value)}
-                            options={[
-                                { value: 'GoPay', label: 'GoPay' },
-                                { value: 'OVO', label: 'OVO' },
-                                { value: 'DANA', label: 'DANA' },
-                                { value: 'ShopeePay', label: 'ShopeePay' },
-                                { value: 'LinkAja', label: 'LinkAja' },
-                            ]}
-                            placeholder="Pilih provider"
-                        />
-                        {errors.ewallet_provider && <p className="mt-0.5 text-[11px] text-red-500" role="alert">{errors.ewallet_provider}</p>}
-                    </div>
-                    <div>
-                        <Label htmlFor="ewallet_number">Nomor Terdaftar</Label>
-                        <Input id="ewallet_number" value={ewalletNumber} onChange={(e) => setEwalletNumber(e.target.value)} placeholder="081234567890" />
-                        {errors.ewallet_number && <p className="mt-0.5 text-[11px] text-red-500" role="alert">{errors.ewallet_number}</p>}
-                    </div>
-                    <div>
-                        <Label htmlFor="ewallet_holder">Nama Pemilik</Label>
-                        <Input id="ewallet_holder" value={ewalletHolder} onChange={(e) => setEwalletHolder(e.target.value)} placeholder="sesuai akun" />
-                        {errors.ewallet_holder && <p className="mt-0.5 text-[11px] text-red-500" role="alert">{errors.ewallet_holder}</p>}
-                    </div>
-                </>
-            )}
+            <div className="space-y-3">
+                {isBank ? (
+                    <>
+                        <div>
+                            <Label htmlFor="bank_name">Nama Bank</Label>
+                            <Input
+                                id="bank_name"
+                                value={bankName}
+                                onChange={(e) => setBankName(e.target.value)}
+                                placeholder="Contoh: BCA, Mandiri, BRI"
+                                className="min-h-11"
+                            />
+                            {errors.bank_name && (
+                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                    {errors.bank_name}
+                                </p>
+                            )}
+                        </div>
+                        <div>
+                            <Label htmlFor="account_number">Nomor Rekening</Label>
+                            <Input
+                                id="account_number"
+                                value={accountNumber}
+                                onChange={(e) => setAccountNumber(e.target.value)}
+                                placeholder="Masukkan nomor rekening"
+                                inputMode="numeric"
+                                className="min-h-11"
+                            />
+                            {errors.account_number && (
+                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                    {errors.account_number}
+                                </p>
+                            )}
+                        </div>
+                        <div>
+                            <Label htmlFor="account_holder">Nama Pemilik Rekening</Label>
+                            <Input
+                                id="account_holder"
+                                value={accountHolder}
+                                onChange={(e) => setAccountHolder(e.target.value)}
+                                placeholder="Sesuai dengan nama di rekening"
+                                className="min-h-11"
+                            />
+                            {errors.account_holder && (
+                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                    {errors.account_holder}
+                                </p>
+                            )}
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <div>
+                            <Label htmlFor="ewallet_provider">Provider E-Wallet</Label>
+                            <Select
+                                id="ewallet_provider"
+                                value={ewalletProvider}
+                                onChange={(e) => setEwalletProvider(e.target.value)}
+                                options={[
+                                    { value: 'GoPay', label: 'GoPay' },
+                                    { value: 'OVO', label: 'OVO' },
+                                    { value: 'DANA', label: 'DANA' },
+                                    { value: 'ShopeePay', label: 'ShopeePay' },
+                                    { value: 'LinkAja', label: 'LinkAja' },
+                                ]}
+                                placeholder="Pilih provider"
+                                className="min-h-11"
+                            />
+                            {errors.ewallet_provider && (
+                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                    {errors.ewallet_provider}
+                                </p>
+                            )}
+                        </div>
+                        <div>
+                            <Label htmlFor="ewallet_number">Nomor Terdaftar</Label>
+                            <Input
+                                id="ewallet_number"
+                                value={ewalletNumber}
+                                onChange={(e) => setEwalletNumber(e.target.value)}
+                                placeholder="Masukkan nomor HP terdaftar"
+                                inputMode="numeric"
+                                className="min-h-11"
+                            />
+                            <p className="mt-0.5 text-[11px] text-text-subtle">
+                                Nomor HP yang terdaftar di akun e-wallet
+                            </p>
+                            {errors.ewallet_number && (
+                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                    {errors.ewallet_number}
+                                </p>
+                            )}
+                        </div>
+                        <div>
+                            <Label htmlFor="ewallet_holder">Nama Pemilik Akun</Label>
+                            <Input
+                                id="ewallet_holder"
+                                value={ewalletHolder}
+                                onChange={(e) => setEwalletHolder(e.target.value)}
+                                placeholder="Sesuai dengan nama di akun"
+                                className="min-h-11"
+                            />
+                            {errors.ewallet_holder && (
+                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                    {errors.ewallet_holder}
+                                </p>
+                            )}
+                        </div>
+                    </>
+                )}
+            </div>
 
             <Button type="submit" disabled={processing} className="min-h-11 w-full">
                 {processing ? 'Menyimpan...' : 'Simpan Tujuan Refund'}

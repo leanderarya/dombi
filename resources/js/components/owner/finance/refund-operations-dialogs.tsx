@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Copy, Check } from 'lucide-react';
+import { Banknote, Check, Copy, Smartphone } from 'lucide-react';
 import { toast } from 'sonner';
 import type { OwnerRefundPayload, RefundDestinationType } from '@/types/refund';
 
@@ -102,18 +102,18 @@ export function GuestRefundDestinationDialog({ refund, open, onClose }: DialogPr
                     )}
                     <p className="text-xs text-text-muted">Gunakan hanya untuk proses refund order ini.</p>
                     <div>
-                        <Label>Metode Penerimaan</Label>
-                        <div className="mt-1 flex gap-2">
+                        <Label>Metode Penerimaan Dana</Label>
+                        <div className="mt-1.5 flex gap-2">
                             <button
                                 type="button"
                                 onClick={() => setType('bank')}
-                                className={`min-h-11 flex-1 rounded-lg border px-3 py-2 text-xs font-semibold ${type === 'bank' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted'}`}
-                            >Transfer Bank</button>
+                                className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${type === 'bank' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted'}`}
+                            ><Banknote className="h-4 w-4" /> Transfer Bank</button>
                             <button
                                 type="button"
                                 onClick={() => setType('ewallet')}
-                                className={`min-h-11 flex-1 rounded-lg border px-3 py-2 text-xs font-semibold ${type === 'ewallet' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted'}`}
-                            >E-Wallet</button>
+                                className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${type === 'ewallet' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted'}`}
+                            ><Smartphone className="h-4 w-4" /> E-Wallet</button>
                         </div>
                     </div>
                     {isBank ? (

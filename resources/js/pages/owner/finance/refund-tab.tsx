@@ -1,12 +1,30 @@
 import { Link, router } from '@inertiajs/react';
 import { toast } from 'sonner';
-import { RefreshCw, CheckCircle, XCircle, Play, Ban, ArrowLeft, ArrowRight, Undo2, Copy, Check } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/format';
 import { useState } from 'react';
+import {
+    ArrowLeft,
+    ArrowRight,
+    Ban,
+    Banknote,
+    Check,
+    CheckCircle,
+    ChevronDown,
+    ChevronUp,
+    Copy,
+    ExternalLink,
+    Play,
+    RefreshCw,
+    Smartphone,
+    Undo2,
+    User,
+    UserCheck,
+    XCircle,
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/format';
 import RefundCompletionModal from '@/components/owner/finance/refund-completion-modal';
 import RefundRejectionModal from '@/components/owner/finance/refund-rejection-modal';
 import { GuestRefundDestinationDialog, RefundRollbackDialog } from '@/components/owner/finance/refund-operations-dialogs';
-import type { OwnerRefundPayload, RefundPagination, RefundQueue, RefundQueueCounts } from '@/types/refund';
+import type { OwnerRefundPayload, RefundPagination, RefundQueue, RefundQueueCounts, RefundHistoryItem } from '@/types/refund';
 
 const QUEUE_LABELS: Record<RefundQueue, string> = {
     awaiting_customer: 'Menunggu Data Customer',
@@ -35,6 +53,7 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
     const [destinationOrder, setDestinationOrder] = useState<OwnerRefundPayload | null>(null);
     const [rollbackOrder, setRollbackOrder] = useState<OwnerRefundPayload | null>(null);
     const [copiedId, setCopiedId] = useState<number | null>(null);
+    const [expandedId, setExpandedId] = useState<number | null>(null);
 
     const handleStart = (orderId: number) => {
         router.post(`/owner/refunds/${orderId}/start`, {}, {
@@ -43,45 +62,61 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
         });
     };
 
-    const copyToClipboard = async (text: string, id: number, label: string) => {
+    const copyToClipboard = async (text: string, id: number) => {
         await navigator.clipboard.writeText(text);
         setCopiedId(id);
         setTimeout(() => setCopiedId(null), 2000);
     };
 
+    const activeCount = refundCounts.awaiting_customer + refundCounts.awaiting_guest + refundCounts.ready + refundCounts.in_progress + refundCounts.action_required;
+
     return (
         <>
             <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                    {QUEUE_ORDER.map((queue) => (
-                        <Link
-                            key={queue}
-                            href={`/owner/finance?tab=refund&filter=${queue}`}
-                            preserveState
-                            preserveScroll
-                            aria-current={refundFilter === queue ? 'page' : undefined}
-                            className={`min-h-11 rounded-lg border px-3 py-1.5 text-xs font-semibold ${
-                                refundFilter === queue
-                                    ? 'border-primary bg-primary/10 text-primary'
-                                    : 'border-border text-text-muted hover:bg-muted'
-                            }`}
-                        >
-                            {QUEUE_LABELS[queue]}
-                            {refundCounts[queue] > 0 && (
-                                <span className="ml-1.5 rounded-full bg-primary/20 px-1.5 py-0.5 text-[10px]">
-                                    {refundCounts[queue]}
-                                </span>
-                            )}
-                        </Link>
-                    ))}
+                {/* Queue filter tabs */}
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap gap-1.5">
+                        {QUEUE_ORDER.map((queue) => (
+                            <Link
+                                key={queue}
+                                href={`/owner/finance?tab=refund&filter=${queue}`}
+                                preserveState
+                                preserveScroll
+                                aria-current={refundFilter === queue ? 'page' : undefined}
+                                className={`inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
+                                    refundFilter === queue
+                                        ? 'border-primary bg-primary/10 text-primary shadow-sm'
+                                        : 'border-border text-text-muted hover:border-border-strong hover:text-text'
+                                }`}
+                            >
+                                {QUEUE_LABELS[queue]}
+                                {refundCounts[queue] > 0 && (
+                                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/15 px-1.5 text-[10px] font-bold text-primary">
+                                        {refundCounts[queue]}
+                                    </span>
+                                )}
+                            </Link>
+                        ))}
+                    </div>
+                    {activeCount > 0 && (
+                        <span className="hidden text-xs text-text-subtle sm:block">
+                            {activeCount} antrean aktif
+                        </span>
+                    )}
                 </div>
 
+                {/* Empty state */}
                 {refunds.data.length === 0 ? (
-                    <div className="rounded-xl border border-border bg-surface p-8 text-center">
-                        <CheckCircle className="mx-auto h-8 w-8 text-emerald-500" />
-                        <p className="mt-2 text-sm text-text-muted">
-                            Tidak ada refund di antrean ini
-                        </p>
+                    <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface p-10">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50">
+                            <CheckCircle className="h-6 w-6 text-emerald-500" />
+                        </span>
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-text">Tidak ada refund</p>
+                            <p className="mt-0.5 text-xs text-text-muted">
+                                Semua refund di antrean "{QUEUE_LABELS[refundFilter]}" sudah diproses.
+                            </p>
+                        </div>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -89,129 +124,201 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                             const {
                                 order_id, order_code, order_url, amount, destination,
                                 proof_url, transfer_reference, transfer_note,
-                                rejection, customer_kind, customer_name,
+                                rejection, customer_kind, customer_name, customer_phone,
                                 can_enter_destination, can_legacy_repair,
                                 can_start, can_reject, can_rollback, can_complete,
                                 queue_state, requested_at, submitted_at, started_at,
                                 completed_at, timeline, status_label,
                             } = refund;
 
+                            const isExpanded = expandedId === order_id;
+                            const isConfirming = startConfirm === order_id;
+
                             return (
-                                <div key={order_id} className="rounded-xl border border-border bg-surface p-4">
-                                    <div className="flex items-start justify-between gap-4">
+                                <div key={order_id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-sm">
+                                    {/* Header row */}
+                                    <div className="flex items-start justify-between gap-3 p-4 pb-3">
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center gap-2">
-                                                <Link href={order_url} className="text-sm font-semibold text-text hover:underline">
+                                                <Link
+                                                    href={order_url}
+                                                    className="truncate text-sm font-bold text-text hover:text-primary"
+                                                >
                                                     {order_code}
                                                 </Link>
-                                                <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
+                                                <span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium text-text-muted">
                                                     {status_label}
                                                 </span>
-                                                <span className="text-[10px] text-text-subtle">
-                                                    {customer_kind === 'guest' ? 'Guest' : customer_name}
-                                                </span>
                                             </div>
-                                            <div className="mt-1 text-sm font-bold tabular-nums">
+                                            <div className="mt-0.5 flex items-center gap-2 text-xs text-text-muted">
+                                                {customer_kind === 'guest' ? (
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <User className="h-3 w-3" /> Guest
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center gap-1">
+                                                        <UserCheck className="h-3 w-3" /> {customer_name}
+                                                    </span>
+                                                )}
+                                                {customer_phone && <span>· {customer_phone}</span>}
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-base font-bold tabular-nums text-text">
                                                 {formatCurrency(amount)}
                                             </div>
-
-                                            {/* Destination */}
-                                            {destination && (
-                                                <div className="mt-2 rounded-lg bg-muted p-2 text-xs">
-                                                    <p className="break-all">{destination.label} — {destination.holder}</p>
-                                                    <p className="font-mono break-all">{destination.number}</p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => copyToClipboard(destination.number, order_id, 'Nomor')}
-                                                        className="mt-1 inline-flex items-center gap-1 text-primary underline"
-                                                        aria-label={copiedId === order_id ? 'Nomor berhasil disalin' : 'Salin nomor rekening'}
-                                                    >
-                                                        {copiedId === order_id ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
-                                                        {copiedId === order_id ? 'Tersalin' : 'Salin'}
-                                                    </button>
-                                                </div>
-                                            )}
-
-                                            {/* Proof link */}
-                                            {proof_url && (
-                                                <a href={proof_url} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-xs text-primary underline">
-                                                    Lihat Bukti Transfer
-                                                </a>
-                                            )}
-
-                                            {/* Transfer reference */}
-                                            {transfer_reference && (
-                                                <p className="mt-1 text-xs text-text-muted">Ref: {transfer_reference}</p>
-                                            )}
-                                            {transfer_note && (
-                                                <p className="text-xs text-text-subtle">{transfer_note}</p>
-                                            )}
-
-                                            {/* Rejection */}
-                                            {rejection && (
-                                                <div className="mt-2 text-xs text-red-600">
-                                                    {rejection.label}
-                                                    {rejection.note && <>: {rejection.note}</>}
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="flex shrink-0 flex-col gap-2">
-                                            {can_enter_destination && (
-                                                <button
-                                                    onClick={() => setDestinationOrder(refund)}
-                                                    className="min-h-11 flex items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-semibold text-text-muted hover:bg-muted"
-                                                >
-                                                    Isi Tujuan
-                                                </button>
-                                            )}
-                                            {can_start && (
-                                                <>
-                                                    {startConfirm === order_id ? (
-                                                        <div className="flex flex-col gap-1">
-                                                            <button onClick={() => handleStart(order_id)} className="min-h-11 flex items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white">
-                                                                Konfirmasi Mulai
-                                                            </button>
-                                                            <button onClick={() => setStartConfirm(null)} className="min-h-11 flex items-center gap-1 rounded-lg border px-3 text-xs text-text-muted">
-                                                                Batal
-                                                            </button>
-                                                        </div>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => setStartConfirm(order_id)}
-                                                            className="min-h-11 flex items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white"
-                                                        >
-                                                            <Play className="h-3.5 w-3.5" /> Mulai
-                                                        </button>
-                                                    )}
-                                                </>
-                                            )}
-                                            {can_reject && (
-                                                <button
-                                                    onClick={() => setRejectionOrder(refund)}
-                                                    className="min-h-11 flex items-center gap-1.5 rounded-lg border border-red-300 px-3 text-xs font-semibold text-red-600"
-                                                >
-                                                    <Ban className="h-3.5 w-3.5" /> Tolak
-                                                </button>
-                                            )}
-                                            {can_rollback && (
-                                                <button
-                                                    onClick={() => setRollbackOrder(refund)}
-                                                    className="min-h-11 flex items-center gap-1.5 rounded-lg border border-amber-300 px-3 text-xs font-semibold text-amber-600"
-                                                >
-                                                    <Undo2 className="h-3.5 w-3.5" /> Rollback
-                                                </button>
-                                            )}
-                                            {can_complete && (
-                                                <button
-                                                    onClick={() => setCompletionOrder(refund)}
-                                                    className="min-h-11 flex items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white"
-                                                >
-                                                    <CheckCircle className="h-3.5 w-3.5" /> Selesai
-                                                </button>
-                                            )}
                                         </div>
                                     </div>
+
+                                    {/* Action buttons */}
+                                    <div className="flex flex-wrap gap-1.5 px-4 pb-3">
+                                        {can_enter_destination && (
+                                            <button
+                                                onClick={() => setDestinationOrder(refund)}
+                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-semibold text-text-muted hover:bg-muted"
+                                            >
+                                                <Banknote className="h-3.5 w-3.5" /> Isi Tujuan
+                                            </button>
+                                        )}
+                                        {can_start && !isConfirming && (
+                                            <button
+                                                onClick={() => setStartConfirm(order_id)}
+                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white hover:bg-primary-hover"
+                                            >
+                                                <Play className="h-3.5 w-3.5" /> Mulai
+                                            </button>
+                                        )}
+                                        {can_start && isConfirming && (
+                                            <div className="flex gap-1">
+                                                <button
+                                                    onClick={() => handleStart(order_id)}
+                                                    className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
+                                                >
+                                                    Konfirmasi
+                                                </button>
+                                                <button
+                                                    onClick={() => setStartConfirm(null)}
+                                                    className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-border px-3 text-xs text-text-muted hover:bg-muted"
+                                                >
+                                                    Batal
+                                                </button>
+                                            </div>
+                                        )}
+                                        {can_reject && (
+                                            <button
+                                                onClick={() => setRejectionOrder(refund)}
+                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-red-300 px-3 text-xs font-semibold text-red-600 hover:bg-red-50"
+                                            >
+                                                <Ban className="h-3.5 w-3.5" /> Tolak
+                                            </button>
+                                        )}
+                                        {can_rollback && (
+                                            <button
+                                                onClick={() => setRollbackOrder(refund)}
+                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-amber-300 px-3 text-xs font-semibold text-amber-600 hover:bg-amber-50"
+                                            >
+                                                <Undo2 className="h-3.5 w-3.5" /> Rollback
+                                            </button>
+                                        )}
+                                        {can_complete && (
+                                            <button
+                                                onClick={() => setCompletionOrder(refund)}
+                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white hover:bg-primary-hover"
+                                            >
+                                                <CheckCircle className="h-3.5 w-3.5" /> Selesai
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Expandable details */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setExpandedId(isExpanded ? null : order_id)}
+                                        className="flex w-full items-center justify-between border-t border-border px-4 py-2 text-xs font-medium text-text-muted hover:bg-surface-muted"
+                                    >
+                                        <span>Detail</span>
+                                        {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                                    </button>
+
+                                    {isExpanded && (
+                                        <div className="border-t border-border bg-surface-muted/50 px-4 py-3 space-y-3">
+                                            {/* Destination */}
+                                            {destination && (
+                                                <div>
+                                                    <p className="text-[11px] font-medium uppercase tracking-wider text-text-subtle">
+                                                        Tujuan Refund
+                                                    </p>
+                                                    <div className="mt-1 flex items-start gap-2.5 rounded-lg bg-surface p-2.5 text-xs">
+                                                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted">
+                                                            {destination.type === 'ewallet' ? <Smartphone className="h-3 w-3" /> : <Banknote className="h-3 w-3" />}
+                                                        </span>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="font-medium text-text">{destination.label}</p>
+                                                            <p className="text-text-muted">{destination.holder}</p>
+                                                            <p className="font-mono text-text-subtle break-all">{destination.number}</p>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => copyToClipboard(destination.number, order_id)}
+                                                            className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline shrink-0"
+                                                            aria-label={copiedId === order_id ? 'Tersalin' : 'Salin nomor'}
+                                                        >
+                                                            {copiedId === order_id ? (
+                                                                <><Check className="h-3 w-3" /> Tersalin</>
+                                                            ) : (
+                                                                <><Copy className="h-3 w-3" /> Salin</>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Proof & reference */}
+                                            {proof_url && (
+                                                <div>
+                                                    <p className="text-[11px] font-medium uppercase tracking-wider text-text-subtle">Bukti Transfer</p>
+                                                    <a
+                                                        href={proof_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-surface px-3 py-2 text-xs font-medium text-primary hover:underline"
+                                                    >
+                                                        <ExternalLink className="h-3.5 w-3.5" /> Lihat Bukti
+                                                    </a>
+                                                </div>
+                                            )}
+                                            {transfer_reference && (
+                                                <div className="text-xs text-text-muted">
+                                                    <span className="text-text-subtle">Referensi:</span> {transfer_reference}
+                                                </div>
+                                            )}
+                                            {transfer_note && (
+                                                <div className="text-xs text-text-subtle">Catatan: {transfer_note}</div>
+                                            )}
+
+                                            {/* Rejection info */}
+                                            {rejection && (
+                                                <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800">
+                                                    <p className="font-medium">{rejection.label}</p>
+                                                    {rejection.note && <p className="mt-0.5 text-red-600">{rejection.note}</p>}
+                                                </div>
+                                            )}
+
+                                            {/* Timeline */}
+                                            {timeline.length > 0 && (
+                                                <div>
+                                                    <p className="text-[11px] font-medium uppercase tracking-wider text-text-subtle">
+                                                        Riwayat ({timeline.length})
+                                                    </p>
+                                                    <div className="mt-1.5 space-y-1.5">
+                                                        {timeline.map((item) => (
+                                                            <TimelineItem key={item.id} item={item} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             );
                         })}
@@ -220,7 +327,7 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
 
                 {/* Pagination */}
                 {refunds.links && refunds.links.length > 3 && (
-                    <div className="flex items-center justify-center gap-2 mt-4">
+                    <div className="flex items-center justify-center gap-1.5">
                         {refunds.links.map((link, i) => {
                             if (!link.url) {
                                 return <span key={i} className="px-2 py-1 text-xs text-text-subtle">{link.label}</span>;
@@ -231,10 +338,10 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                                     href={link.url}
                                     preserveState
                                     preserveScroll
-                                    className={`rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                                    className={`inline-flex min-h-9 items-center justify-center rounded-lg border px-3 text-xs font-semibold transition-all ${
                                         link.active
-                                            ? 'border-primary bg-primary text-white'
-                                            : 'border-border text-text-muted hover:bg-muted'
+                                            ? 'border-primary bg-primary text-white shadow-sm'
+                                            : 'border-border text-text-muted hover:border-border-strong hover:text-text'
                                     }`}
                                 >
                                     {link.label.includes('Previous') || link.label.includes('Sebelumnya') ? (
@@ -283,5 +390,37 @@ export default function RefundTab({ refunds, refundCounts, refundFilter }: Props
                 onClose={() => setRollbackOrder(null)}
             />
         </>
+    );
+}
+
+const EVENT_LABELS: Record<string, string> = {
+    refund_requested: 'Refund diajukan',
+    destination_submitted: 'Tujuan refund disimpan',
+    destination_updated: 'Tujuan refund diperbarui',
+    guest_destination_submitted_by_owner: 'Tujuan refund oleh owner',
+    guest_destination_updated_by_owner: 'Tujuan refund diperbarui owner',
+    processing_started: 'Refund mulai diproses',
+    processing_rolled_back: 'Refund dikembalikan',
+    refund_rejected: 'Refund ditolak',
+    refund_reopened: 'Refund dibuka kembali',
+    refund_completed: 'Refund selesai',
+    refund_failed: 'Refund gagal',
+};
+
+function TimelineItem({ item }: { item: RefundHistoryItem }) {
+    return (
+        <div className="flex items-start gap-2">
+            <div className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-border-strong" />
+            <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-text">
+                    {EVENT_LABELS[item.event] ?? item.event}
+                </p>
+                {item.note && <p className="text-[11px] text-text-subtle">{item.note}</p>}
+                <p className="text-[11px] text-text-subtle">
+                    {item.created_at ? new Date(item.created_at).toLocaleString('id-ID') : ''}
+                    {item.actor_type && ` · ${item.actor_type}`}
+                </p>
+            </div>
+        </div>
     );
 }
