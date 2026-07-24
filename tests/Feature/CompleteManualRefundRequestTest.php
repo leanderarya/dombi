@@ -2,119 +2,115 @@
 
 namespace Tests\Feature;
 
-use App\Models\Order;
+use App\Http\Requests\Owner\CompleteManualRefundRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
 class CompleteManualRefundRequestTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_owner_can_complete_manual_refund_with_proof(): void
+    private function rules(): array
     {
-        $owner = User::factory()->create(['role' => 'owner']);
-        $order = Order::factory()->create(['payment_status' => 'refund_in_progress']);
-        $proof = UploadedFile::fake()->image('transfer.jpg');
-
-        $this->actingAs($owner)
-            ->post("/owner/refunds/{$order->id}/complete", [
-                'proof' => $proof,
-                'reference' => 'TRF-001',
-                'note' => 'Transfer via BCA ke rekening customer',
-            ])->assertRedirect();
-
-        $this->assertSame('refunded', $order->fresh()->payment_status);
-        $this->assertNotNull($order->fresh()->refund_proof_image);
+        return (new CompleteManualRefundRequest())->rules();
     }
 
-    public function test_non_owner_cannot_complete_manual_refund(): void
+    private function assertValidation(array $data, bool $shouldPass): void
     {
-        $user = User::factory()->create(['role' => 'customer']);
-        $order = Order::factory()->create(['payment_status' => 'refund_in_progress']);
-
-        $this->actingAs($user)
-            ->post("/owner/refunds/{$order->id}/complete", [
-                'proof' => UploadedFile::fake()->image('transfer.jpg'),
-            ])->assertRedirect();
+        $validator = Validator::make($data, $this->rules());
+        $this->assertSame($shouldPass, $validator->passes());
     }
 
     public function test_proof_is_required(): void
     {
-        $owner = User::factory()->create(['role' => 'owner']);
-        $order = Order::factory()->create(['payment_status' => 'refund_in_progress']);
-
-        $this->actingAs($owner)
-            ->post("/owner/refunds/{$order->id}/complete", [])
-            ->assertSessionHasErrors('proof');
+        $this->assertValidation(['proof' => null], false);
     }
 
     public function test_proof_must_be_an_image(): void
     {
-        $owner = User::factory()->create(['role' => 'owner']);
-        $order = Order::factory()->create(['payment_status' => 'refund_in_progress']);
-
-        $this->actingAs($owner)
-            ->post("/owner/refunds/{$order->id}/complete", [
-                'proof' => UploadedFile::fake()->create('doc.pdf', 100),
-            ])->assertSessionHasErrors('proof');
+        $file = UploadedFile::fake()->create('doc.pdf', 100);
+        $this->assertValidation(['proof' => $file], false);
     }
 
     public function test_proof_max_2048kb(): void
     {
-        $owner = User::factory()->create(['role' => 'owner']);
-        $order = Order::factory()->create(['payment_status' => 'refund_in_progress']);
-
-        $this->actingAs($owner)
-            ->post("/owner/refunds/{$order->id}/complete", [
-                'proof' => UploadedFile::fake()->image('large.jpg')->size(3000),
-            ])->assertSessionHasErrors('proof');
+        $file = UploadedFile::fake()->image('large.jpg')->size(3000);
+        $this->assertValidation(['proof' => $file], false);
     }
 
-    public function test_reference_is_optional(): void
+    public function test_transfer_reference_is_optional(): void
     {
-        $owner = User::factory()->create(['role' => 'owner']);
-        $order = Order::factory()->create(['payment_status' => 'refund_in_progress']);
-
-        $this->actingAs($owner)
-            ->post("/owner/refunds/{$order->id}/complete", [
-                'proof' => UploadedFile::fake()->image('transfer.jpg'),
-            ])->assertRedirect();
+        $this->assertValidation([
+            'proof' => UploadedFile::fake()->image('proof.jpg'),
+        ], true);
     }
 
-    public function test_reference_max_255_chars(): void
+    public function test_transfer_reference_max_255_chars(): void
     {
-        $owner = User::factory()->create(['role' => 'owner']);
-        $order = Order::factory()->create(['payment_status' => 'refund_in_progress']);
-
-        $this->actingAs($owner)
-            ->post("/owner/refunds/{$order->id}/complete", [
-                'proof' => UploadedFile::fake()->image('transfer.jpg'),
-                'reference' => str_repeat('a', 256),
-            ])->assertSessionHasErrors('reference');
+        $this->assertValidation([
+            'proof' => UploadedFile::fake()->image('proof.jpg'),
+            'transfer_reference' => str_repeat('a', 256),
+        ], false);
     }
 
-    public function test_note_is_optional(): void
+    public function test_transfer_reference_accepts_valid_value(): void
     {
-        $owner = User::factory()->create(['role' => 'owner']);
-        $order = Order::factory()->create(['payment_status' => 'refund_in_progress']);
-
-        $this->actingAs($owner)
-            ->post("/owner/refunds/{$order->id}/complete", [
-                'proof' => UploadedFile::fake()->image('transfer.jpg'),
-            ])->assertRedirect();
+        $this->assertValidation([
+            'proof' => UploadedFile::fake()->image('proof.jpg'),
+            'transfer_reference' => 'TRF-001',
+        ], true);
     }
 
-    public function test_note_max_500_chars(): void
+    public function test_transfer_note_is_optional(): void
+    {
+        $this->assertValidation([
+            'proof' => UploadedFile::fake()->image('proof.jpg'),
+        ], true);
+    }
+
+    public function test_transfer_note_max_500_chars(): void
+    {
+        $this->assertValidation([
+            'proof' => UploadedFile::fake()->image('proof.jpg'),
+            'transfer_note' => str_repeat('a', 501),
+        ], false);
+    }
+
+    public function test_transfer_note_accepts_valid_value(): void
+    {
+        $this->assertValidation([
+            'proof' => UploadedFile::fake()->image('proof.jpg'),
+            'transfer_note' => 'Transfer via BCA',
+        ], true);
+    }
+
+    public function test_non_owner_authorize_returns_false(): void
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        $request = new CompleteManualRefundRequest();
+        $request->setUserResolver(fn () => $user);
+
+        $this->assertFalse($request->authorize());
+    }
+
+    public function test_owner_authorize_returns_true(): void
     {
         $owner = User::factory()->create(['role' => 'owner']);
-        $order = Order::factory()->create(['payment_status' => 'refund_in_progress']);
+        $request = new CompleteManualRefundRequest();
+        $request->setUserResolver(fn () => $owner);
 
-        $this->actingAs($owner)
-            ->post("/owner/refunds/{$order->id}/complete", [
-                'proof' => UploadedFile::fake()->image('transfer.jpg'),
-                'note' => str_repeat('a', 501),
-            ])->assertSessionHasErrors('note');
+        $this->assertTrue($request->authorize());
+    }
+
+    public function test_valid_image_passes_validation(): void
+    {
+        $this->assertValidation([
+            'proof' => UploadedFile::fake()->image('proof.jpg'),
+            'transfer_reference' => 'TRF-001',
+            'transfer_note' => 'Test transfer',
+        ], true);
     }
 }

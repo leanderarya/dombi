@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Owner;
 
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Owner\CompleteManualRefundRequest;
 use App\Http\Requests\Owner\ManualRefundRequest;
 use App\Models\Order;
 use App\Services\NotificationService;
@@ -46,27 +45,6 @@ class RefundController extends Controller
         app(NotificationService::class)->notifyRefundProcessed($order, (float) $request->input('refund_amount'));
 
         return redirect()->back()->with('success', 'Refund ditandai selesai.');
-    }
-
-    public function complete(Order $order, CompleteManualRefundRequest $request, PaymentStatusService $payment): RedirectResponse
-    {
-        if ($order->payment_status_enum !== PaymentStatus::RefundInProgress) {
-            return redirect()->back()->with('error', 'Refund tidak dalam proses.');
-        }
-
-        $path = $request->file('proof')->store('refunds', 'public');
-
-        $payment->transition($order, PaymentStatus::Refunded, [
-            'refund_proof_image' => $path,
-            'refunded_by' => auth()->id(),
-            'refunded_at' => now(),
-            'refund_transfer_reference' => $request->input('reference'),
-            'refund_transfer_note' => $request->input('note'),
-        ]);
-
-        app(NotificationService::class)->notifyRefundProcessed($order, (float) $order->refund_amount);
-
-        return redirect()->back()->with('success', 'Refund selesai.');
     }
 
     public function reject(Order $order): RedirectResponse

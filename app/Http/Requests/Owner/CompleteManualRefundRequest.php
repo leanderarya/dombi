@@ -15,8 +15,8 @@ class CompleteManualRefundRequest extends FormRequest
     {
         return [
             'proof' => ['required', 'image', 'max:2048'],
-            'reference' => ['nullable', 'string', 'max:255'],
-            'note' => ['nullable', 'string', 'max:500'],
+            'transfer_reference' => ['nullable', 'string', 'max:255'],
+            'transfer_note' => ['nullable', 'string', 'max:500'],
         ];
     }
 }
