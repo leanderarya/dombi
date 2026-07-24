@@ -12,6 +12,7 @@ use App\Services\NotificationService;
 use App\Services\PaymentStatusService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -19,13 +20,37 @@ class RefundController extends Controller
 {
     public function index(): Response
     {
-        $orders = Order::refundable()
-            ->with(['outlet', 'customer'])
-            ->orderByDesc('refund_requested_at')
-            ->paginate(20);
+        $filter = request()->validate([
+            'filter' => ['nullable', Rule::in([
+                'awaiting_destination',
+                'ready',
+                'in_progress',
+                'completed',
+                'rejected',
+            ])],
+        ])['filter'] ?? 'ready';
+
+        $query = Order::refundable()
+            ->with(['outlet:id,name', 'customer:id,name']);
+
+        $query = match ($filter) {
+            'awaiting_destination' => $query
+                ->where('payment_status', PaymentStatus::RefundPending->value)
+                ->whereNull('refund_destination_submitted_at'),
+            'ready' => $query
+                ->where('payment_status', PaymentStatus::RefundPending->value)
+                ->whereNotNull('refund_destination_submitted_at'),
+            'in_progress' => $query->where('payment_status', PaymentStatus::RefundInProgress->value),
+            'completed' => $query->where('payment_status', PaymentStatus::Refunded->value),
+            'rejected' => $query->where('payment_status', PaymentStatus::RefundRejected->value),
+            default => $query,
+        };
+
+        $orders = $query->orderByDesc('refund_requested_at')->paginate(20)->withQueryString();
 
         return Inertia::render('owner/finance/refund-tab', [
             'refunds' => $orders,
+            'filter' => $filter,
         ]);
     }
 
