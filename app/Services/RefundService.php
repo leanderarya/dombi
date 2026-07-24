@@ -6,6 +6,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
 use App\Models\RefundStatusHistory;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use DomainException;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,9 @@ use Illuminate\Support\Str;
 
 class RefundService
 {
+    public function __construct(
+        private readonly NotificationService $notifications,
+    ) {}
     private const REQUEST_SOURCES = [
         'customer_cancellation',
         'outlet_rejection',
@@ -74,7 +78,7 @@ class RefundService
                 'refund_destination_status' => Order::REFUND_DESTINATION_MISSING,
             ]);
 
-            return RefundStatusHistory::create([
+            $history = RefundStatusHistory::create([
                 'order_id' => $locked->id,
                 'from_status' => $fromStatus,
                 'to_status' => PaymentStatus::RefundPending->value,
@@ -86,6 +90,10 @@ class RefundService
                     'source_entry_point' => $source,
                 ],
             ]);
+
+            DB::afterCommit(fn () => $this->notifications->notifyRefundEvent($history->order->loadMissing('customer'), $history));
+
+            return $history;
         });
     }
 
@@ -129,7 +137,7 @@ class RefundService
 
                 $locked->update($updateData);
 
-                return RefundStatusHistory::create([
+                $history = RefundStatusHistory::create([
                     'order_id' => $locked->id,
                     'from_status' => PaymentStatus::RefundRejected->value,
                     'to_status' => PaymentStatus::RefundPending->value,
@@ -138,6 +146,10 @@ class RefundService
                     'actor_id' => $actorId,
                     'metadata' => ['destination_type' => $destinationType],
                 ]);
+
+                DB::afterCommit(fn () => $this->notifications->notifyRefundEvent($history->order->loadMissing('customer'), $history));
+
+                return $history;
             }
 
             if ($locked->refund_destination_status === Order::REFUND_DESTINATION_MISSING) {
@@ -160,7 +172,7 @@ class RefundService
 
             $locked->update($updateData);
 
-            return RefundStatusHistory::create([
+            $history = RefundStatusHistory::create([
                 'order_id' => $locked->id,
                 'from_status' => $locked->payment_status,
                 'to_status' => $locked->payment_status,
@@ -169,6 +181,10 @@ class RefundService
                 'actor_id' => $actorId,
                 'metadata' => ['destination_type' => $destinationType],
             ]);
+
+            DB::afterCommit(fn () => $this->notifications->notifyRefundEvent($history->order->loadMissing('customer'), $history));
+
+            return $history;
         });
     }
 
@@ -199,7 +215,7 @@ class RefundService
                 'refund_started_by' => $ownerId,
             ]);
 
-            return RefundStatusHistory::create([
+            $history = RefundStatusHistory::create([
                 'order_id' => $locked->id,
                 'from_status' => PaymentStatus::RefundPending->value,
                 'to_status' => PaymentStatus::RefundInProgress->value,
@@ -208,6 +224,10 @@ class RefundService
                 'actor_id' => $ownerId,
                 'metadata' => ['destination_type' => $locked->refund_destination_type],
             ]);
+
+            DB::afterCommit(fn () => $this->notifications->notifyRefundEvent($history->order->loadMissing('customer'), $history));
+
+            return $history;
         });
     }
 
@@ -257,7 +277,7 @@ class RefundService
 
             $locked->update($updateData);
 
-            return RefundStatusHistory::create([
+            $history = RefundStatusHistory::create([
                 'order_id' => $locked->id,
                 'from_status' => PaymentStatus::RefundPending->value,
                 'to_status' => PaymentStatus::RefundRejected->value,
@@ -267,6 +287,10 @@ class RefundService
                 'reason_code' => $reason,
                 'note' => $note,
             ]);
+
+            DB::afterCommit(fn () => $this->notifications->notifyRefundEvent($history->order->loadMissing('customer'), $history));
+
+            return $history;
         });
     }
 
@@ -297,7 +321,7 @@ class RefundService
                     : Order::REFUND_DESTINATION_INVALID,
             ]);
 
-            return RefundStatusHistory::create([
+            $history = RefundStatusHistory::create([
                 'order_id' => $locked->id,
                 'from_status' => PaymentStatus::RefundInProgress->value,
                 'to_status' => PaymentStatus::RefundPending->value,
@@ -307,6 +331,10 @@ class RefundService
                 'note' => $trimmed,
                 'metadata' => ['rollback_mode' => $mode],
             ]);
+
+            DB::afterCommit(fn () => $this->notifications->notifyRefundEvent($history->order->loadMissing('customer'), $history));
+
+            return $history;
         });
     }
 
@@ -337,7 +365,7 @@ class RefundService
                 'refunded_at' => now(),
             ]);
 
-            return RefundStatusHistory::create([
+            $history = RefundStatusHistory::create([
                 'order_id' => $locked->id,
                 'from_status' => PaymentStatus::RefundInProgress->value,
                 'to_status' => PaymentStatus::Refunded->value,
@@ -349,6 +377,10 @@ class RefundService
                     'reference_present' => $transferReference !== null,
                 ],
             ]);
+
+            DB::afterCommit(fn () => $this->notifications->notifyRefundEvent($history->order->loadMissing('customer'), $history));
+
+            return $history;
         });
     }
 
