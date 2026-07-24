@@ -9,6 +9,7 @@ use App\Models\Order;
 use App\Services\NotificationService;
 use App\Services\PaymentStatusService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,13 +35,23 @@ class RefundController extends Controller
 
         $path = $request->file('proof')->store('refunds', 'public');
 
-        $payment->transition($order, PaymentStatus::Refunded, [
+        if (! $path) {
+            return redirect()->back()->with('error', 'Gagal menyimpan bukti refund.');
+        }
+
+        $transitioned = $payment->transition($order, PaymentStatus::Refunded, [
             'refund_amount' => $request->input('refund_amount'),
             'refund_reason' => $request->input('refund_reason'),
             'refund_proof_image' => $path,
             'refunded_by' => auth()->id(),
             'refunded_at' => now(),
         ]);
+
+        if (! $transitioned) {
+            Storage::disk('public')->delete($path);
+
+            return redirect()->back()->with('error', 'Refund gagal diproses. Coba lagi.');
+        }
 
         app(NotificationService::class)->notifyRefundProcessed($order, (float) $request->input('refund_amount'));
 
