@@ -1,11 +1,13 @@
 import { Link } from '@inertiajs/react';
-import { RotateCcw, Smartphone, Store } from 'lucide-react';
+import { RotateCcw, Smartphone, Store, RefreshCw } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/format';
 import {
     getOrderStatusConfig,
     isTerminalStatus,
 } from '@/lib/order-status-config';
 import OrderCardShell from './order-card-shell';
+import { normalizeOrderReason } from '@/lib/order-reasons';
+import type { CustomerRefundPayload } from '@/types/refund';
 
 interface OrderItem {
     product_name: string;
@@ -13,11 +15,18 @@ interface OrderItem {
     variant_name?: string;
 }
 
+interface RefundBadge {
+    payment_status: string;
+    status_label: string;
+    queue_state: string;
+}
+
 interface Props {
     order: {
         id: number;
         order_code: string;
         status: string;
+        payment_status?: string;
         fulfillment_type?: string;
         total: number | string;
         ordered_at?: string;
@@ -26,6 +35,7 @@ interface Props {
         items?: OrderItem[];
         customer_address?: string;
         recovery_token?: string;
+        refund?: RefundBadge | null;
     };
 }
 

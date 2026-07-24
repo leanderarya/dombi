@@ -52,6 +52,14 @@ const typeIcons: Record<string, ReactNode> = {
     'order.rejected': <CircleX className="h-5 w-5 text-red-600" />,
     'order.expired': <Clock className="h-5 w-5 text-amber-600" />,
     'order.cancelled': <Ban className="h-5 w-5 text-slate-500" />,
+    // Refund
+    'order.refund_requested': <Undo2 className="h-5 w-5 text-amber-600" />,
+    'order.refund_destination_submitted': <ClipboardList className="h-5 w-5 text-blue-600" />,
+    'order.refund_processing_started': <RefreshCw className="h-5 w-5 text-blue-600" />,
+    'order.refund_rolled_back': <Undo2 className="h-5 w-5 text-amber-600" />,
+    'order.refund_rejected': <CircleX className="h-5 w-5 text-red-600" />,
+    'order.refund_processed': <CircleCheck className="h-5 w-5 text-emerald-600" />,
+    'order.refund_failed': <TriangleAlert className="h-5 w-5 text-red-600" />,
     // Pengiriman
     'delivery.courier_assigned': <Truck className="h-5 w-5 text-blue-600" />,
     'delivery.picked_up': <Package className="h-5 w-5 text-emerald-600" />,
@@ -182,6 +190,12 @@ export default function NotificationSheet({
             onClose();
             onNavigate(type, data);
         }
+
+        // Navigate refund notifications by URL
+        if (data?.url && typeof data.url === 'string' && data.url.startsWith('/')) {
+            onClose();
+            router.visit(data.url);
+        }
     };
 
     const handleMarkAllAsRead = async () => {
@@ -273,7 +287,10 @@ export default function NotificationSheet({
                                                     {notification.title}
                                                 </span>
                                                 {!notification.read_at && (
-                                                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                                                    <>
+                                                        <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
+                                                        <span className="sr-only">Belum dibaca</span>
+                                                    </>
                                                 )}
                                             </div>
                                             <p className="mt-0.5 text-sm text-slate-600">

@@ -5,36 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import RefundDestinationForm from './refund-destination-form';
 import { AlertCircle, CheckCircle2, Clock, XCircle } from 'lucide-react';
-
-interface Destination {
-    type: string;
-    label: string | null;
-    holder: string | null;
-    masked_number: string | null;
-}
-
-interface Rejection {
-    reason: string;
-    note: string | null;
-}
-
-interface RefundData {
-    payment_status: string;
-    amount: number;
-    destination: Destination | null;
-    can_edit_destination: boolean;
-    can_resubmit: boolean;
-    rejection: Rejection | null;
-    proof_url: string | null;
-    transfer_reference: string | null;
-    transfer_note: string | null;
-    submitted_at: string | null;
-    started_at: string | null;
-    completed_at: string | null;
-}
+import type { CustomerRefundPayload } from '@/types/refund';
 
 interface Props {
-    refund: RefundData;
+    refund: CustomerRefundPayload;
 }
 
 export default function RefundStatusCard({ refund }: Props) {
@@ -51,6 +25,7 @@ export default function RefundStatusCard({ refund }: Props) {
         proof_url,
         transfer_reference,
         transfer_note,
+        order_id,
     } = refund;
 
     const fmtAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -65,10 +40,10 @@ export default function RefundStatusCard({ refund }: Props) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <p className="text-xs text-text-muted">
+                    <p className="text-xs text-text-muted" role="status">
                         Refund sebesar <strong>{fmtAmount}</strong> menunggu data tujuan transfer Anda.
                     </p>
-                    <RefundDestinationForm orderId={refund.payment_status ? 0 : 0} />
+                    <RefundDestinationForm orderId={order_id} />
                 </CardContent>
             </Card>
         );
@@ -84,15 +59,15 @@ export default function RefundStatusCard({ refund }: Props) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <p className="text-xs text-text-muted">Refund sebesar <strong>{fmtAmount}</strong> akan segera diproses.</p>
+                    <p className="text-xs text-text-muted" role="status">Refund sebesar <strong>{fmtAmount}</strong> akan segera diproses.</p>
                     <DestinationSummary dest={destination} />
                     {can_edit_destination && !editing && (
-                        <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Ubah Tujuan</Button>
+                        <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="min-h-11">Ubah Tujuan</Button>
                     )}
                     {editing && (
                         <RefundDestinationForm
-                            orderId={0}
-                            initialType={destination.type as 'bank' | 'ewallet'}
+                            orderId={order_id}
+                            initialType={destination.type}
                             initialLabel={destination.label ?? undefined}
                             initialHolder={destination.holder ?? undefined}
                             onSaved={() => setEditing(false)}
@@ -113,7 +88,7 @@ export default function RefundStatusCard({ refund }: Props) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <p className="text-xs text-text-muted">Refund sebesar <strong>{fmtAmount}</strong> sedang diproses oleh owner.</p>
+                    <p className="text-xs text-text-muted" role="status">Refund sebesar <strong>{fmtAmount}</strong> sedang diproses oleh owner.</p>
                     {destination && <DestinationSummary dest={destination} />}
                 </CardContent>
             </Card>
@@ -130,7 +105,7 @@ export default function RefundStatusCard({ refund }: Props) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <p className="text-xs text-text-muted">
+                    <p className="text-xs text-text-muted" role="status">
                         Refund sebesar <strong>{fmtAmount}</strong> telah ditransfer.
                     </p>
                     {proof_url && (
@@ -159,15 +134,15 @@ export default function RefundStatusCard({ refund }: Props) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <p className="text-xs text-red-600">{rejection?.reason}</p>
+                    <p className="text-xs text-red-600" role="alert">{rejection?.label || rejection?.code}</p>
                     {rejection?.note && <p className="text-xs text-text-muted">{rejection.note}</p>}
                     {!resubmitting && (
-                        <Button variant="outline" size="sm" onClick={() => setResubmitting(true)}>Perbaiki Data</Button>
+                        <Button variant="outline" size="sm" onClick={() => setResubmitting(true)} className="min-h-11">Perbaiki Data</Button>
                     )}
                     {resubmitting && (
                         <RefundDestinationForm
-                            orderId={0}
-                            initialType={destination?.type as 'bank' | 'ewallet' | undefined}
+                            orderId={order_id}
+                            initialType={destination?.type}
                             initialHolder={destination?.holder ?? undefined}
                             onSaved={() => setResubmitting(false)}
                         />
@@ -187,7 +162,7 @@ export default function RefundStatusCard({ refund }: Props) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                    <p className="text-xs text-red-600">{rejection?.reason}</p>
+                    <p className="text-xs text-red-600" role="alert">{rejection?.label || rejection?.code}</p>
                     {rejection?.note && <p className="text-xs text-text-muted">{rejection.note}</p>}
                     <p className="text-xs text-text-muted">Silakan hubungi customer service untuk bantuan lebih lanjut.</p>
                 </CardContent>
@@ -198,7 +173,16 @@ export default function RefundStatusCard({ refund }: Props) {
     return null;
 }
 
-function DestinationSummary({ dest }: { dest: Destination }) {
+interface DestProps {
+    dest: {
+        type: string;
+        label: string;
+        holder: string;
+        masked_number: string;
+    };
+}
+
+function DestinationSummary({ dest }: DestProps) {
     return (
         <div className="rounded-lg bg-muted p-2 text-xs text-text-muted">
             <p>{dest.label} — {dest.holder}</p>
