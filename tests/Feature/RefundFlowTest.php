@@ -34,6 +34,7 @@ class RefundFlowTest extends TestCase
         $order->refresh();
         $this->assertSame('cancelled_by_customer', $order->status);
         $this->assertSame('refund_pending', $order->payment_status);
+        $this->assertSame($order->total, $order->refund_amount);
         $this->assertNotNull($order->refund_requested_at);
     }
 
