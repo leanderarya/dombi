@@ -6,6 +6,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Order;
 use App\Models\RefundStatusHistory;
+use Carbon\Carbon;
 use DomainException;
 use Illuminate\Support\Facades\DB;
 
@@ -168,6 +169,121 @@ class RefundService
                 'metadata' => ['destination_type' => $destinationType],
             ]);
         });
+    }
+
+    public function start(Order $order, int $ownerId): RefundStatusHistory
+    {
+        return DB::transaction(function () use ($order, $ownerId) {
+            $locked = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($locked->payment_status !== PaymentStatus::RefundPending->value) {
+                throw new DomainException('Order ini tidak dalam antrean refund.');
+            }
+
+            if ($locked->refund_destination_status !== Order::REFUND_DESTINATION_VALID) {
+                throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+            }
+
+            if (! $this->isDestinationComplete($locked)) {
+                throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+            }
+
+            if ((float) $locked->refund_amount <= 0) {
+                throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+            }
+
+            $locked->update([
+                'payment_status' => PaymentStatus::RefundInProgress->value,
+                'refund_started_at' => now(),
+                'refund_started_by' => $ownerId,
+            ]);
+
+            return RefundStatusHistory::create([
+                'order_id' => $locked->id,
+                'from_status' => PaymentStatus::RefundPending->value,
+                'to_status' => PaymentStatus::RefundInProgress->value,
+                'event' => RefundStatusHistory::EVENT_PROCESSING_STARTED,
+                'actor_type' => 'owner',
+                'actor_id' => $ownerId,
+                'metadata' => ['destination_type' => $locked->refund_destination_type],
+            ]);
+        });
+    }
+
+    public function reject(Order $order, string $reason, ?string $note, string $actorType, ?int $actorId, bool $legacyRepair = false): RefundStatusHistory
+    {
+        return DB::transaction(function () use ($order, $reason, $note, $actorType, $actorId, $legacyRepair) {
+            $locked = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($locked->payment_status === PaymentStatus::RefundInProgress->value) {
+                throw new DomainException('Refund yang sedang diproses harus diselesaikan atau di-rollback.');
+            }
+
+            if ($locked->payment_status !== PaymentStatus::RefundPending->value) {
+                throw new DomainException('Order ini tidak dalam antrean refund.');
+            }
+
+            $isLegacyRepair = $legacyRepair
+                && $locked->refund_requested_at !== null
+                && $locked->refund_requested_at->lt(Carbon::create(2026, 7, 24, 1, 0, 0, config('app.timezone')));
+
+            if (! $isLegacyRepair && $locked->refund_destination_status !== Order::REFUND_DESTINATION_VALID) {
+                throw new DomainException('Tujuan refund belum lengkap atau tidak valid.');
+            }
+
+            if ($reason === RefundRejectionReason::Other->value && ($note === null || $note === '')) {
+                throw new DomainException('Catatan diperlukan untuk alasan ini.');
+            }
+
+            $marksDestinationInvalid = in_array($reason, [
+                RefundRejectionReason::InvalidDestination->value,
+                RefundRejectionReason::IncompleteDestination->value,
+            ], true);
+
+            $updateData = [
+                'payment_status' => PaymentStatus::RefundRejected->value,
+                'refund_rejected_reason' => $reason,
+                'refund_rejection_note' => $note,
+                'refund_rejected_at' => now(),
+                'refund_rejected_by' => $actorId,
+            ];
+
+            if ($marksDestinationInvalid) {
+                $updateData['refund_destination_status'] = Order::REFUND_DESTINATION_INVALID;
+            } elseif ($isLegacyRepair) {
+                $updateData['refund_destination_status'] = Order::REFUND_DESTINATION_VALID;
+            }
+
+            $locked->update($updateData);
+
+            return RefundStatusHistory::create([
+                'order_id' => $locked->id,
+                'from_status' => PaymentStatus::RefundPending->value,
+                'to_status' => PaymentStatus::RefundRejected->value,
+                'event' => RefundStatusHistory::EVENT_REFUND_REJECTED,
+                'actor_type' => $actorType,
+                'actor_id' => $actorId,
+                'reason_code' => $reason,
+                'note' => $note,
+            ]);
+        });
+    }
+
+    private function isDestinationComplete(Order $order): bool
+    {
+        if ($order->refund_destination_type === 'bank') {
+            return ! empty($order->refund_bank_name)
+                && ! empty($order->refund_account_number)
+                && ! empty($order->refund_account_holder);
+        }
+
+        if ($order->refund_destination_type === 'ewallet') {
+            return ! empty($order->refund_ewallet_provider)
+                && ! empty($order->refund_ewallet_number)
+                && ! empty($order->refund_ewallet_holder);
+        }
+
+        return false;
     }
 
     private function computeTrustedPaidAmount(Order $order): float

@@ -367,4 +367,281 @@ class RefundServiceTest extends TestCase
 
         $this->assertSame(['destination_type' => 'bank'], $history->metadata);
     }
+
+    public function test_start_transitions_to_in_progress(): void
+    {
+        $customer = $this->registeredCustomer();
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
+            'refund_amount' => 50000,
+        ]);
+
+        $service = app(RefundService::class);
+        $history = $service->start($order, $owner->id);
+
+        $order->refresh();
+        $this->assertSame('refund_in_progress', $order->payment_status);
+        $this->assertNotNull($order->refund_started_at);
+        $this->assertSame($owner->id, $order->refund_started_by);
+
+        $this->assertSame('processing_started', $history->event);
+        $this->assertSame('owner', $history->actor_type);
+        $this->assertSame($owner->id, $history->actor_id);
+        $this->assertEquals(['destination_type' => 'bank'], $history->metadata);
+    }
+
+    public function test_start_fails_when_destination_not_valid(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'missing',
+            'refund_amount' => 50000,
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Tujuan refund belum lengkap atau tidak valid.');
+
+        app(RefundService::class)->start($order, $owner->id);
+    }
+
+    public function test_start_fails_when_not_refund_pending(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Order ini tidak dalam antrean refund.');
+
+        app(RefundService::class)->start($order, $owner->id);
+    }
+
+    public function test_reject_transitions_to_rejected(): void
+    {
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+        ]);
+
+        $service = app(RefundService::class);
+        $history = $service->reject($order, 'payment_unverified', null, 'system', $admin->id);
+
+        $order->refresh();
+        $this->assertSame('refund_rejected', $order->payment_status);
+        $this->assertSame('payment_unverified', $order->refund_rejected_reason);
+        $this->assertNull($order->refund_rejection_note);
+        $this->assertNotNull($order->refund_rejected_at);
+        $this->assertSame($admin->id, $order->refund_rejected_by);
+
+        $this->assertSame('refund_rejected', $history->event);
+        $this->assertSame('payment_unverified', $history->reason_code);
+        $this->assertNull($history->note);
+    }
+
+    public function test_reject_fails_when_refund_in_progress(): void
+    {
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Refund yang sedang diproses harus diselesaikan atau di-rollback.');
+
+        app(RefundService::class)->reject($order, 'payment_unverified', null, 'system', $admin->id);
+    }
+
+    public function test_reject_requires_note_for_other_reason(): void
+    {
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Catatan diperlukan untuk alasan ini.');
+
+        app(RefundService::class)->reject($order, 'other', null, 'system', $admin->id);
+    }
+
+    public function test_reject_fails_when_destination_not_valid_without_legacy_gate(): void
+    {
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'missing',
+            'refund_requested_at' => now(),
+        ]);
+
+        $this->expectException(DomainException::class);
+
+        app(RefundService::class)->reject($order, 'payment_unverified', null, 'system', $admin->id);
+    }
+
+    public function test_reject_with_invalid_destination_reason_marks_destination_invalid(): void
+    {
+        $customer = $this->registeredCustomer();
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
+        ]);
+
+        $service = app(RefundService::class);
+        $history = $service->reject($order, 'invalid_destination', 'Wrong bank details', 'system', $admin->id);
+
+        $order->refresh();
+        $this->assertSame('invalid', $order->refund_destination_status);
+        $this->assertSame('invalid_destination', $order->refund_rejected_reason);
+        $this->assertSame('Wrong bank details', $order->refund_rejection_note);
+
+        $this->assertSame('refund_rejected', $history->event);
+        $this->assertSame('invalid_destination', $history->reason_code);
+        $this->assertSame('Wrong bank details', $history->note);
+    }
+
+    public function test_reject_with_final_reason_keeps_destination_valid(): void
+    {
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+        ]);
+
+        app(RefundService::class)->reject($order, 'payment_unverified', null, 'system', $admin->id);
+
+        $order->refresh();
+        $this->assertSame('valid', $order->refund_destination_status);
+    }
+
+    public function test_reject_accepts_legacy_repair_when_before_cutoff(): void
+    {
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'missing',
+            'refund_requested_at' => \Carbon\Carbon::create(2026, 7, 23, 23, 59, 0, config('app.timezone')),
+        ]);
+
+        $history = app(RefundService::class)->reject($order, 'payment_unverified', null, 'system', $admin->id, legacyRepair: true);
+
+        $order->refresh();
+        $this->assertSame('refund_rejected', $order->payment_status);
+        $this->assertSame('valid', $order->refund_destination_status);
+    }
+
+    public function test_reject_legacy_repair_rejects_after_cutoff(): void
+    {
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'missing',
+            'refund_requested_at' => \Carbon\Carbon::create(2026, 7, 24, 2, 0, 0, config('app.timezone')),
+        ]);
+
+        $this->expectException(DomainException::class);
+
+        app(RefundService::class)->reject($order, 'payment_unverified', null, 'system', $admin->id, legacyRepair: true);
+    }
+
+    public function test_reject_legacy_repair_rejects_without_flag(): void
+    {
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'missing',
+            'refund_requested_at' => \Carbon\Carbon::create(2026, 7, 23, 23, 59, 0, config('app.timezone')),
+        ]);
+
+        $this->expectException(DomainException::class);
+
+        app(RefundService::class)->reject($order, 'payment_unverified', null, 'system', $admin->id);
+    }
+
+    public function test_start_fails_when_destination_fields_incomplete(): void
+    {
+        $customer = $this->registeredCustomer();
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => null,
+            'refund_account_number' => null,
+            'refund_account_holder' => 'Arya',
+            'refund_amount' => 50000,
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Tujuan refund belum lengkap atau tidak valid.');
+
+        app(RefundService::class)->start($order, $owner->id);
+    }
+
+    public function test_reject_with_incomplete_destination_reason_marks_destination_invalid(): void
+    {
+        $admin = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+        ]);
+
+        $service = app(RefundService::class);
+        $history = $service->reject($order, 'incomplete_destination', 'Missing fields', 'system', $admin->id);
+
+        $order->refresh();
+        $this->assertSame('invalid', $order->refund_destination_status);
+        $this->assertSame('incomplete_destination', $history->reason_code);
+    }
+
+    public function test_start_history_rolls_back_on_failure(): void
+    {
+        $customer = $this->registeredCustomer();
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_pending',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
+            'refund_amount' => 50000,
+        ]);
+
+        $originalStatus = $order->payment_status;
+
+        RefundStatusHistory::creating(function () {
+            throw new \RuntimeException('Simulated history failure');
+        });
+
+        try {
+            app(RefundService::class)->start($order, $owner->id);
+            $this->fail('Expected exception was not thrown.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('Simulated history failure', $e->getMessage());
+        }
+
+        $order->refresh();
+        $this->assertSame($originalStatus, $order->payment_status);
+        $this->assertNull($order->refund_started_at);
+        $this->assertNull($order->refund_started_by);
+    }
 }
