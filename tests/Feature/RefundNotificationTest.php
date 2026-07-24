@@ -112,19 +112,43 @@ class RefundNotificationTest extends TestCase
         $this->assertStringNotContainsString('1234567890', $notification->toJson());
     }
 
-    public function test_notify_refund_rejected_creates_customer_notification_without_destination_number(): void
+    public function test_notify_refund_rejected_invites_customer_to_correct_and_resubmit_eligible_destinations(): void
     {
         $order = Order::factory()->create(['refund_account_number' => '1234567890']);
 
-        app(NotificationService::class)->notifyRefundRejected($order, RefundRejectionReason::InvalidDestination);
+        foreach ([RefundRejectionReason::InvalidDestination, RefundRejectionReason::IncompleteDestination] as $reason) {
+            app(NotificationService::class)->notifyRefundRejected($order, $reason);
 
-        $notification = Notification::where('customer_id', $order->customer_id)
-            ->where('type', 'order.refund_rejected')
-            ->firstOrFail();
+            $notification = Notification::where('customer_id', $order->customer_id)
+                ->where('type', 'order.refund_rejected')
+                ->latest('id')
+                ->firstOrFail();
 
-        $this->assertSame(RefundRejectionReason::InvalidDestination->value, $notification->data['reason']);
-        $this->assertStringContainsString(RefundRejectionReason::InvalidDestination->label(), $notification->message);
-        $this->assertStringNotContainsString('1234567890', $notification->toJson());
+            $this->assertSame($reason->value, $notification->data['reason']);
+            $this->assertTrue($notification->data['can_resubmit']);
+            $this->assertStringContainsString($reason->label(), $notification->message);
+            $this->assertStringContainsString('perbaiki dan kirim ulang tujuan refund', $notification->message);
+            $this->assertStringNotContainsString('1234567890', $notification->toJson());
+        }
+    }
+
+    public function test_notify_refund_rejected_does_not_invite_resubmission_for_final_reasons(): void
+    {
+        $order = Order::factory()->create();
+
+        foreach ([RefundRejectionReason::PaymentUnverified, RefundRejectionReason::DuplicateRefund, RefundRejectionReason::Other] as $reason) {
+            app(NotificationService::class)->notifyRefundRejected($order, $reason);
+
+            $notification = Notification::where('customer_id', $order->customer_id)
+                ->where('type', 'order.refund_rejected')
+                ->latest('id')
+                ->firstOrFail();
+
+            $this->assertSame($reason->value, $notification->data['reason']);
+            $this->assertFalse($notification->data['can_resubmit']);
+            $this->assertStringContainsString($reason->label(), $notification->message);
+            $this->assertStringNotContainsString('kirim ulang tujuan refund', $notification->message);
+        }
     }
 
     public function test_notify_refund_requested_no_customer_does_nothing(): void
