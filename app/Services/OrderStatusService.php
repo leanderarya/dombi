@@ -44,7 +44,7 @@ class OrderStatusService
     ];
 
     private const OUTLET_CANCELLATION_REASONS = [
-        'Stok Habis',
+        'Stok Tidak Tersedia',
         'Produk Rusak',
         'Outlet Tutup',
         'Gangguan Operasional',
@@ -56,6 +56,7 @@ class OrderStatusService
         private readonly NotificationService $notificationService,
         private readonly SettlementService $settlementService,
         private readonly SettlementGeneratorService $settlementGeneratorService,
+        private readonly RefundService $refundService,
     ) {}
 
     /**
@@ -117,8 +118,8 @@ class OrderStatusService
             $this->notificationService->notifyOrderRejected($order, $reason);
 
             // Trigger refund if order was already paid (auto-refund)
-            if ($order->payment_status === 'paid') {
-                $this->processRefund($order, 'rejected_by_outlet');
+            if (in_array($order->payment_status, [PaymentStatus::Paid->value, PaymentStatus::Settled->value], true)) {
+                $this->refundService->request($order, 'outlet', $actor->id, 'outlet_rejection');
             }
 
             return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
@@ -165,6 +166,16 @@ class OrderStatusService
         if ($order->status !== Order::STATUS_READY_FOR_PICKUP) {
             throw ValidationException::withMessages([
                 'status' => 'Pesanan harus dalam status siap diambil.',
+            ]);
+        }
+
+        $lockedOrder = Order::lockForUpdate()->find($order->id);
+        if (!in_array($lockedOrder->payment_status ?? $order->payment_status, [
+            PaymentStatus::Paid->value,
+            PaymentStatus::Settled->value,
+        ], true)) {
+            throw ValidationException::withMessages([
+                'payment_status' => 'Pesanan belum dibayar dan tidak dapat diproses.',
             ]);
         }
 
@@ -236,6 +247,23 @@ class OrderStatusService
             ], true)) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'status' => 'Pesanan pickup tidak dapat masuk ke status pengiriman.',
+                ]);
+            }
+
+            // Payment guard: operational forward transitions require paid/settled
+            if (in_array($newStatus, [
+                Order::STATUS_CONFIRMED,
+                Order::STATUS_PREPARING,
+                Order::STATUS_READY_FOR_PICKUP,
+                Order::STATUS_PICKED_UP,
+                Order::STATUS_DELIVERING,
+                Order::STATUS_COMPLETED,
+            ], true) && !in_array($order->payment_status, [
+                PaymentStatus::Paid->value,
+                PaymentStatus::Settled->value,
+            ], true)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'payment_status' => 'Pesanan belum dibayar dan tidak dapat diproses.',
                 ]);
             }
 
@@ -314,10 +342,26 @@ class OrderStatusService
             $this->inventoryService->releaseReservedStock($order);
         }
 
-        // Refund on cancellation/expiration/rejection (if paid via DOKU)
+        // Refund on cancellation/expiration/rejection (if paid/settled via DOKU)
         if (in_array($to, ['cancelled_by_customer', 'cancelled_by_outlet', 'rejected_by_outlet', 'expired'], true)) {
-            if ($order->payment_status === 'paid') {
-                $this->processRefund($order, $to);
+            if (in_array($order->payment_status, [PaymentStatus::Paid->value, PaymentStatus::Settled->value], true)) {
+                $source = match ($to) {
+                    'cancelled_by_customer' => 'customer_cancellation',
+                    'cancelled_by_outlet' => 'outlet_cancellation',
+                    'rejected_by_outlet' => 'outlet_rejection',
+                    'expired' => 'expiry',
+                    default => null,
+                };
+                $actorType = match ($to) {
+                    'cancelled_by_customer' => 'customer',
+                    'cancelled_by_outlet' => 'outlet',
+                    'rejected_by_outlet' => 'outlet',
+                    'expired' => 'system',
+                    default => 'system',
+                };
+                if ($source) {
+                    $this->refundService->request($order, $actorType, $ctx['actor_id'] ?? null, $source);
+                }
             }
         }
 
@@ -330,25 +374,6 @@ class OrderStatusService
                 if ($outlet) {
                     $this->settlementGeneratorService->generateForOutlet($outlet, $order->completed_at ?? now());
                 }
-            }
-        }
-    }
-
-    private function processRefund(Order $order, string $reason): void
-    {
-        if (in_array($order->payment_status, ['refunded', 'refund_failed', 'refund_pending'], true)) {
-            return;
-        }
-
-        $ok = app(PaymentStatusService::class)->transition($order, PaymentStatus::RefundPending, [
-            'refund_requested_at' => now(),
-            'refund_reason' => $reason,
-            'refund_amount' => $order->total,
-        ]);
-
-        if ($ok) {
-            if (method_exists(app(NotificationService::class), 'notifyRefundRequested')) {
-                app(NotificationService::class)->notifyRefundRequested($order);
             }
         }
     }
