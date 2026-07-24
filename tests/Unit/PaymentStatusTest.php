@@ -13,8 +13,15 @@ class PaymentStatusTest extends TestCase
         $cases = array_map(fn ($c) => $c->value, PaymentStatus::cases());
         $this->assertSame([
             'pending', 'paid', 'failed', 'expired',
-            'refund_pending', 'refunded', 'refund_rejected', 'refund_failed',
+            'refund_pending', 'refund_in_progress', 'refunded', 'refund_rejected', 'refund_failed',
         ], $cases);
+    }
+
+    public function test_refund_in_progress_is_non_terminal_and_mutable(): void
+    {
+        $this->assertSame('refund_in_progress', PaymentStatus::RefundInProgress->value);
+        $this->assertFalse(PaymentStatus::RefundInProgress->isTerminal());
+        $this->assertTrue(PaymentStatus::RefundInProgress->isMutable());
     }
 
     public function test_is_terminal_returns_true_only_for_terminal_states(): void
