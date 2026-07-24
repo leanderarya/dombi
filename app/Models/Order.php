@@ -94,6 +94,10 @@ class Order extends Model
         'expired_at', 'expired_reason',
         'completed_at', 'refunded_at', 'refund_amount', 'refund_reason', 'doku_refund_id',
         'refund_requested_at', 'refund_proof_image', 'refunded_by', 'refund_rejected_reason',
+        'refund_destination_type', 'refund_bank_name', 'refund_account_number', 'refund_account_holder',
+        'refund_ewallet_provider', 'refund_ewallet_number', 'refund_ewallet_holder', 'refund_destination_submitted_at',
+        'refund_started_at', 'refund_started_by', 'refund_transfer_reference', 'refund_transfer_note',
+        'refund_rejected_at', 'refund_rejected_by', 'refund_rejection_note',
         'gateway_fee', 'absorbed_fee',
     ];
 
@@ -139,6 +143,15 @@ class Order extends Model
             'refunded_at' => 'datetime',
             'refund_amount' => 'decimal:2',
             'refund_requested_at' => 'datetime',
+            'refund_destination_submitted_at' => 'datetime',
+            'refund_started_at' => 'datetime',
+            'refund_rejected_at' => 'datetime',
+            'refund_bank_name' => 'encrypted',
+            'refund_account_number' => 'encrypted',
+            'refund_account_holder' => 'encrypted',
+            'refund_ewallet_provider' => 'encrypted',
+            'refund_ewallet_number' => 'encrypted',
+            'refund_ewallet_holder' => 'encrypted',
             'gateway_fee' => 'decimal:2',
             'absorbed_fee' => 'decimal:2',
         ];
@@ -157,8 +170,10 @@ class Order extends Model
     public function scopeRefundable(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereIn('payment_status', [
-            PaymentStatus::Paid->value,
             PaymentStatus::RefundPending->value,
+            PaymentStatus::RefundInProgress->value,
+            PaymentStatus::Refunded->value,
+            PaymentStatus::RefundRejected->value,
         ]);
     }
 
