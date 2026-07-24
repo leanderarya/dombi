@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Enums\RefundRejectionReason;
+use App\Jobs\PushNotificationJob;
 use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\ExchangeRequest;
@@ -13,7 +15,6 @@ use App\Models\ReturnRequest;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Models\User;
-use App\Jobs\PushNotificationJob;
 
 class NotificationService
 {
@@ -102,7 +103,13 @@ class NotificationService
     // Refund notifications
     public const REFUND_REQUESTED = 'order.refund_requested';
 
+    public const REFUND_DESTINATION_SUBMITTED = 'order.refund_destination_submitted';
+
+    public const REFUND_PROCESSING_STARTED = 'order.refund_processing_started';
+
     public const REFUND_PROCESSED = 'order.refund_processed';
+
+    public const REFUND_REJECTED = 'order.refund_rejected';
 
     // Settlement notifications
     public const SETTLEMENT_REMINDER = 'settlement.reminder';
@@ -1124,7 +1131,7 @@ class NotificationService
 
     public function notifyRefundRequested(Order $order): void
     {
-        $formattedAmount = 'Rp ' . number_format($order->total, 0, ',', '.');
+        $formattedAmount = 'Rp '.number_format($order->total, 0, ',', '.');
 
         if ($order->customer_id) {
             $this->create(
@@ -1141,9 +1148,43 @@ class NotificationService
         }
     }
 
+    public function notifyRefundDestinationSubmitted(Order $order, bool $updated): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::REFUND_DESTINATION_SUBMITTED,
+                title: $updated ? 'Tujuan Refund Diperbarui' : 'Tujuan Refund Disimpan',
+                message: "Tujuan refund untuk pesanan {$order->order_code} telah ".($updated ? 'diperbarui' : 'disimpan').'.',
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyRefundProcessingStarted(Order $order): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::REFUND_PROCESSING_STARTED,
+                title: 'Refund Sedang Ditransfer',
+                message: "Owner sedang mentransfer refund pesanan {$order->order_code} ke tujuan refund Anda.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
     public function notifyRefundProcessed(Order $order, float $amount): void
     {
-        $formattedAmount = 'Rp ' . number_format($amount, 0, ',', '.');
+        $formattedAmount = 'Rp '.number_format($amount, 0, ',', '.');
 
         if ($order->customer_id) {
             $this->create(
@@ -1152,8 +1193,25 @@ class NotificationService
                 customerId: $order->customer_id,
                 type: self::REFUND_PROCESSED,
                 title: 'Refund Berhasil',
-                message: "{$formattedAmount} telah dikembalikan ke metode pembayaran Anda. Order #{$order->order_code} dibatalkan.",
+                message: "Owner telah mentransfer {$formattedAmount} ke tujuan refund Anda. Order #{$order->order_code} dibatalkan.",
                 data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'amount' => $amount],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyRefundRejected(Order $order, RefundRejectionReason $reason): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::REFUND_REJECTED,
+                title: 'Refund Ditolak',
+                message: "Refund pesanan {$order->order_code} ditolak. Alasan: {$reason->label()}.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'reason' => $reason->value],
                 entityType: 'order',
                 entityId: $order->id
             );
