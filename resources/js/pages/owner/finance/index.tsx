@@ -5,6 +5,7 @@ import { SkeletonPage } from '@/components/ui/skeleton';
 import PembayaranTab from './pembayaran-tab';
 import RekeningTab from './rekening-tab';
 import TagihanTab from './tagihan-tab';
+import RefundTab from './refund-tab';
 
 const TABS = [
     {
@@ -21,6 +22,11 @@ const TABS = [
         key: 'rekening',
         label: 'Rekening',
         description: 'Rekening tujuan pembayaran',
+    },
+    {
+        key: 'refund',
+        label: 'Refund',
+        description: 'Proses refund customer dan guest',
     },
 ];
 
@@ -45,7 +51,7 @@ export default function FinanceIndex(props: any) {
         );
     };
 
-    if (!props.kpis && !props.payments && !props.accounts) {
+    if (!props.kpis && !props.payments && !props.accounts && !props.refunds) {
         return (
             <OwnerPageShell
                 title="Keuangan"
@@ -98,6 +104,7 @@ export default function FinanceIndex(props: any) {
                 {activeTab === 'tagihan' && <TagihanTab {...props} />}
                 {activeTab === 'pembayaran' && <PembayaranTab {...props} />}
                 {activeTab === 'rekening' && <RekeningTab {...props} />}
+                {activeTab === 'refund' && <RefundTab {...props} />}
             </div>
         </OwnerPageShell>
     );
