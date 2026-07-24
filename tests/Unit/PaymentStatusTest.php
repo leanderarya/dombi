@@ -12,9 +12,18 @@ class PaymentStatusTest extends TestCase
     {
         $cases = array_map(fn ($c) => $c->value, PaymentStatus::cases());
         $this->assertSame([
-            'pending', 'paid', 'failed', 'expired',
+            'pending', 'paid', 'settled', 'failed', 'expired',
             'refund_pending', 'refund_in_progress', 'refunded', 'refund_rejected', 'refund_failed',
         ], $cases);
+    }
+
+    public function test_settled_is_terminal(): void
+    {
+        $this->assertSame('settled', PaymentStatus::Settled->value);
+        foreach (['pending','paid','settled','expired','failed','refund_pending','refund_in_progress','refunded','refund_rejected','refund_failed'] as $value) {
+            $this->assertSame($value, PaymentStatus::from($value)->value);
+        }
+        $this->assertTrue(PaymentStatus::Settled->isTerminal());
     }
 
     public function test_refund_in_progress_is_non_terminal_and_mutable(): void
@@ -27,6 +36,7 @@ class PaymentStatusTest extends TestCase
     public function test_is_terminal_returns_true_only_for_terminal_states(): void
     {
         $this->assertFalse(PaymentStatus::Paid->isTerminal());
+        $this->assertTrue(PaymentStatus::Settled->isTerminal());
         $this->assertTrue(PaymentStatus::Refunded->isTerminal());
         $this->assertFalse(PaymentStatus::Pending->isTerminal());
     }
