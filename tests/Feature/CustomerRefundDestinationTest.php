@@ -5,8 +5,10 @@ namespace Tests\Feature;
 use App\Enums\PaymentStatus;
 use App\Enums\RefundRejectionReason;
 use App\Models\Customer;
+use App\Models\Notification;
 use App\Models\Order;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -41,6 +43,7 @@ class CustomerRefundDestinationTest extends TestCase
         $this->assertNotNull($order->refund_destination_submitted_at);
         $this->assertSame('50000.00', $order->refund_amount);
         $this->assertNotSame('1234567890', DB::table('orders')->find($order->id)->refund_account_number);
+        $this->assertRefundDestinationNotification($order, 'Tujuan Refund Disimpan');
     }
 
     public function test_customer_saves_ewallet_destination(): void
@@ -92,6 +95,7 @@ class CustomerRefundDestinationTest extends TestCase
         ])->assertRedirect();
 
         $this->assertSame('New Bank', $order->fresh()->refund_bank_name);
+        $this->assertRefundDestinationNotification($order, 'Tujuan Refund Diperbarui');
     }
 
     public function test_customer_cannot_edit_destination_after_processing_starts(): void
@@ -104,6 +108,11 @@ class CustomerRefundDestinationTest extends TestCase
             ->assertSessionHas('error');
 
         $this->assertNull($order->fresh()->refund_destination_type);
+        $this->assertDatabaseMissing('notifications', [
+            'customer_id' => $order->customer_id,
+            'type' => NotificationService::REFUND_DESTINATION_SUBMITTED,
+            'entity_id' => $order->id,
+        ]);
     }
 
     public function test_eligible_rejected_refund_reopens_when_customer_resubmits(): void
@@ -113,6 +122,11 @@ class CustomerRefundDestinationTest extends TestCase
             'refund_rejected_reason' => RefundRejectionReason::InvalidDestination->value,
             'refund_rejection_note' => 'Nomor rekening salah',
             'refund_rejected_at' => now(),
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'Old Bank',
+            'refund_account_number' => '111',
+            'refund_account_holder' => 'Old Name',
+            'refund_destination_submitted_at' => now()->subDay(),
         ]);
 
         $this->actingAs($user)->patch($this->endpoint($order), $this->bankPayload())
@@ -123,6 +137,7 @@ class CustomerRefundDestinationTest extends TestCase
         $this->assertNull($order->refund_rejected_reason);
         $this->assertNull($order->refund_rejection_note);
         $this->assertSame('Bank Central Asia', $order->refund_bank_name);
+        $this->assertRefundDestinationNotification($order, 'Tujuan Refund Diperbarui');
     }
 
     public function test_final_rejected_refund_cannot_be_resubmitted(): void
@@ -138,6 +153,11 @@ class CustomerRefundDestinationTest extends TestCase
         $order->refresh();
         $this->assertSame(PaymentStatus::RefundRejected->value, $order->payment_status);
         $this->assertNull($order->refund_destination_type);
+        $this->assertDatabaseMissing('notifications', [
+            'customer_id' => $order->customer_id,
+            'type' => NotificationService::REFUND_DESTINATION_SUBMITTED,
+            'entity_id' => $order->id,
+        ]);
     }
 
     public function test_switching_destination_method_clears_unused_fields(): void
@@ -161,6 +181,17 @@ class CustomerRefundDestinationTest extends TestCase
         $this->assertNull($order->refund_account_number);
         $this->assertNull($order->refund_account_holder);
         $this->assertSame('OVO', $order->refund_ewallet_provider);
+    }
+
+    private function assertRefundDestinationNotification(Order $order, string $title): void
+    {
+        $notification = Notification::query()
+            ->where('customer_id', $order->customer_id)
+            ->where('type', NotificationService::REFUND_DESTINATION_SUBMITTED)
+            ->where('entity_id', $order->id)
+            ->sole();
+
+        $this->assertSame($title, $notification->title);
     }
 
     private function customerAndOrder(array $attributes = []): array
