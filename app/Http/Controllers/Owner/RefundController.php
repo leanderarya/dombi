@@ -61,6 +61,10 @@ class RefundController extends Controller
 
         $path = $request->file('proof')->store('refunds', 'public');
 
+        if (! $path) {
+            return redirect()->back()->with('error', 'Gagal menyimpan bukti refund.');
+        }
+
         $transitioned = $payment->transition($order, PaymentStatus::Refunded, [
             'refund_amount' => $order->total,
             'refund_proof_image' => $path,
