@@ -220,4 +220,73 @@ class CustomerRefundDestinationTest extends TestCase
             'account_holder' => 'Jane Doe',
         ];
     }
+
+    public function test_order_show_refund_prop_includes_masked_destination(): void
+    {
+        [$user, $order] = $this->customerAndOrder([
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'Bank Central Asia',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Jane Doe',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('customer.orders.show', $order))
+            ->assertInertia(fn ($page) => $page
+                ->has('refund')
+                ->where('refund.payment_status', 'refund_pending')
+                ->where('refund.destination.label', 'Bank Central Asia')
+                ->where('refund.destination.masked_number', '******7890')
+                ->where('refund.can_edit_destination', true)
+                ->where('refund.can_resubmit', false)
+                ->missing('refund.destination.account_number')
+            );
+    }
+
+    public function test_order_show_refund_prop_returns_null_for_non_refund_order(): void
+    {
+        [$user, $order] = $this->customerAndOrder([
+            'payment_status' => PaymentStatus::Paid->value,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('customer.orders.show', $order))
+            ->assertInertia(fn ($page) => $page
+                ->missing('refund')
+            );
+    }
+
+    public function test_order_show_refund_prop_shows_rejection_with_resubmit(): void
+    {
+        [$user, $order] = $this->customerAndOrder([
+            'payment_status' => PaymentStatus::RefundRejected->value,
+            'refund_rejected_reason' => RefundRejectionReason::InvalidDestination->value,
+            'refund_rejection_note' => 'Nomor rekening salah',
+            'refund_destination_submitted_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('customer.orders.show', $order))
+            ->assertInertia(fn ($page) => $page
+                ->where('refund.payment_status', 'refund_rejected')
+                ->where('refund.rejection.reason', RefundRejectionReason::InvalidDestination->label())
+                ->where('refund.rejection.note', 'Nomor rekening salah')
+                ->where('refund.can_resubmit', true)
+            );
+    }
+
+    public function test_order_show_refund_prop_shows_final_rejection(): void
+    {
+        [$user, $order] = $this->customerAndOrder([
+            'payment_status' => PaymentStatus::RefundRejected->value,
+            'refund_rejected_reason' => RefundRejectionReason::PaymentUnverified->value,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('customer.orders.show', $order))
+            ->assertInertia(fn ($page) => $page
+                ->where('refund.payment_status', 'refund_rejected')
+                ->where('refund.can_resubmit', false)
+            );
+    }
 }
