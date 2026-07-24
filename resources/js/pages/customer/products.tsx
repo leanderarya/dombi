@@ -16,7 +16,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
 import { useFlashToast } from '@/hooks/use-flash-toast';
 import { useFulfillmentOverlay } from '@/hooks/use-fulfillment-overlay';
-import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 import { useProducts } from '@/hooks/use-products';
 import type { Family } from '@/hooks/use-products';
 import { useSectionReveal } from '@/hooks/use-section-reveal';
@@ -83,7 +82,6 @@ function ProductsInner() {
     }, []);
 
     useFlashToast();
-    const { visible } = useHideOnScroll();
     const { totalItems } = useCart();
     const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -279,8 +277,8 @@ function ProductsInner() {
                 flavorName={sheetData.flavor}
                 variants={sheetData.variants}
             />
-            {totalItems > 0 && <FloatingCartBar bottomNavVisible={visible} />}
-            <CustomerBottomNav visible={visible} />
+            {totalItems > 0 && <FloatingCartBar />}
+            <CustomerBottomNav />
             <FulfillmentOverlay state={overlayState} target={overlayTarget} />
             <CollapsedOutletBar
                 show={showBar}

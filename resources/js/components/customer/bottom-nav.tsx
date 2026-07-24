@@ -6,21 +6,11 @@ const navItems = [
     { href: '/customer/profile', label: 'Akun', icon: UserIcon },
 ];
 
-interface Props {
-    visible?: boolean;
-}
-
-export default function CustomerBottomNav({ visible = true }: Props) {
+export default function CustomerBottomNav() {
     const { url } = usePage();
 
     return (
-        <nav
-            className="fixed inset-x-0 z-40"
-            style={{
-                bottom: visible ? 0 : -100,
-                transition: 'bottom 200ms ease',
-            }}
-        >
+        <nav className="fixed inset-x-0 bottom-0 z-40">
             <div className="bg-white/95 pb-safe shadow-[0_-1px_3px_rgba(0,0,0,0.06)] backdrop-blur">
             <div className="mx-auto grid h-14 max-w-lg grid-cols-3">
                 {navItems.map((item) => {
