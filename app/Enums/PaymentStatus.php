@@ -9,6 +9,7 @@ enum PaymentStatus: string
     case Failed = 'failed';
     case Expired = 'expired';
     case RefundPending = 'refund_pending';
+    case RefundInProgress = 'refund_in_progress';
     case Refunded = 'refunded';
     case RefundRejected = 'refund_rejected';
 
