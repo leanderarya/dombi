@@ -13,12 +13,12 @@ export default function GuestRefundStatusCard({ refund }: Props) {
     const { payment_status: status, amount, guidance, rejection, queue_state, timeline } = refund;
     const fmtAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
 
-    const cardClass = 'border-0 shadow-card';
+    const cardClass = 'border-0';
 
     if (status === 'refund_pending' && (queue_state === 'awaiting_guest' || queue_state === 'awaiting_customer')) {
         return (
             <Card className={cardClass}>
-                <CardHeader className="pb-3">
+                <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm text-amber-700">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
                             <Clock className="h-4 w-4 text-amber-600" />
@@ -26,9 +26,9 @@ export default function GuestRefundStatusCard({ refund }: Props) {
                         Informasi Refund
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <p className="rounded-xl bg-amber-50 px-4 py-3 text-[13px] text-amber-800">
+                    <p className="rounded-xl bg-amber-50 px-4 py-3.5 text-[13px] text-amber-800">
                         {guidance}
                     </p>
                     <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
@@ -40,7 +40,7 @@ export default function GuestRefundStatusCard({ refund }: Props) {
     if (status === 'refund_pending') {
         return (
             <Card className={cardClass}>
-                <CardHeader className="pb-3">
+                <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm text-amber-700">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-100">
                             <Clock className="h-4 w-4 text-amber-600" />
@@ -48,9 +48,9 @@ export default function GuestRefundStatusCard({ refund }: Props) {
                         Menunggu Diproses
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <p className="rounded-xl bg-amber-50 px-4 py-3 text-[13px] text-amber-800">{guidance}</p>
+                    <p className="rounded-xl bg-amber-50 px-4 py-3.5 text-[13px] text-amber-800">{guidance}</p>
                     <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
                 </CardContent>
             </Card>
@@ -60,7 +60,7 @@ export default function GuestRefundStatusCard({ refund }: Props) {
     if (status === 'refund_in_progress') {
         return (
             <Card className={cardClass}>
-                <CardHeader className="pb-3">
+                <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm text-blue-700">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-blue-100">
                             <Clock className="h-4 w-4 text-blue-600" />
@@ -68,9 +68,9 @@ export default function GuestRefundStatusCard({ refund }: Props) {
                         Refund Sedang Diproses
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <p className="rounded-xl bg-muted px-4 py-3 text-xs text-text-muted">{guidance}</p>
+                    <p className="rounded-xl bg-muted px-4 py-3.5 text-xs text-text-muted">{guidance}</p>
                     <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
                 </CardContent>
             </Card>
@@ -80,7 +80,7 @@ export default function GuestRefundStatusCard({ refund }: Props) {
     if (status === 'refunded') {
         return (
             <Card className={cardClass}>
-                <CardHeader className="pb-3">
+                <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm text-green-700">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100">
                             <CheckCircle2 className="h-4 w-4 text-green-600" />
@@ -88,9 +88,9 @@ export default function GuestRefundStatusCard({ refund }: Props) {
                         Refund Selesai
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} variant="success" />
-                    <p className="rounded-xl bg-green-50 px-4 py-3 text-[13px] text-green-800">
+                    <p className="rounded-xl bg-green-50 px-4 py-3.5 text-[13px] text-green-800">
                         Silakan cek mutasi rekening/e-wallet Anda. Jika belum masuk dalam 1×24 jam, hubungi CS.
                     </p>
                     <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
@@ -102,7 +102,7 @@ export default function GuestRefundStatusCard({ refund }: Props) {
     if (status === 'refund_rejected') {
         return (
             <Card className={cardClass}>
-                <CardHeader className="pb-3">
+                <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm text-red-700">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">
                             <XCircle className="h-4 w-4 text-red-600" />
@@ -110,13 +110,13 @@ export default function GuestRefundStatusCard({ refund }: Props) {
                         Refund Ditolak
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <div className="rounded-xl bg-red-50 px-4 py-3 text-[13px] text-red-800 space-y-1">
+                    <div className="rounded-xl bg-red-50 px-4 py-3.5 text-[13px] text-red-800 space-y-1">
                         <p className="font-medium">{rejection?.label || rejection?.code}</p>
                         {rejection?.note && <p className="text-red-600">{rejection.note}</p>}
                     </div>
-                    <p className="rounded-xl bg-surface-muted px-4 py-3 text-xs text-text-muted">
+                    <p className="rounded-xl bg-surface-muted px-4 py-3.5 text-xs text-text-muted">
                         Silakan hubungi customer service untuk bantuan lebih lanjut.
                     </p>
                     <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
@@ -128,7 +128,7 @@ export default function GuestRefundStatusCard({ refund }: Props) {
     if (status === 'refund_failed') {
         return (
             <Card className={cardClass}>
-                <CardHeader className="pb-3">
+                <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm text-red-700">
                         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">
                             <AlertCircle className="h-4 w-4 text-red-600" />
@@ -136,9 +136,9 @@ export default function GuestRefundStatusCard({ refund }: Props) {
                         Refund Gagal
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} />
-                    <p className="rounded-xl bg-red-50 px-4 py-3 text-xs text-red-700">
+                    <p className="rounded-xl bg-red-50 px-4 py-3.5 text-xs text-red-700">
                         Refund gagal diproses. Tim kami akan menghubungi Anda.
                     </p>
                     <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
@@ -154,7 +154,7 @@ function AmountBlock({ amount, variant = 'default' }: { amount: string; variant?
     const textColor = variant === 'success' ? 'text-emerald-700' : 'text-text';
     const bgColor = variant === 'success' ? 'bg-emerald-50' : 'bg-surface-muted';
     return (
-        <div className={`rounded-xl ${bgColor} px-4 py-3`}>
+        <div className={`rounded-xl ${bgColor} px-4 py-3.5`}>
             <p className="text-xs text-text-muted">Total Refund</p>
             <p className={`mt-0.5 text-xl font-bold tabular-nums ${textColor}`}>
                 {amount}
