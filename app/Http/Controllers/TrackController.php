@@ -68,7 +68,7 @@ class TrackController extends Controller
         $refund = $payloads->forGuest($order);
         $canCancel = auth()->check() && $order->customer && $order->customer->user_id === auth()->id();
 
-        return Inertia::render('track', [
+        $props = [
             'order' => [
                 'id' => $order->id,
                 'order_code' => $order->order_code,
@@ -125,13 +125,13 @@ class TrackController extends Controller
             'canCreateAccount' => $request->session()->get('canCreateAccount', false),
             'accountPhone' => $request->session()->get('accountPhone'),
             'accountName' => $request->session()->get('accountName'),
-        ]);
+        ];
 
         if ($refund !== null) {
-            $inertiaResponse->additional(['refund' => $refund]);
+            $props['refund'] = $refund;
         }
 
-        return $inertiaResponse;
+        return Inertia::render('track', $props);
     }
 
     /**

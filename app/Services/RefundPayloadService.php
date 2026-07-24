@@ -126,8 +126,7 @@ class RefundPayloadService
         $base = $this->basePayload($order, $queue);
 
         $base['destination'] = $this->maskedDestination($order);
-        $base['can_edit_destination'] = $order->payment_status === 'refund_pending'
-            && $order->refund_destination_status !== 'valid';
+        $base['can_edit_destination'] = $order->payment_status === 'refund_pending';
         $base['can_resubmit'] = $order->payment_status === 'refund_rejected'
             && $order->refund_rejected_reason !== null
             && in_array($order->refund_rejected_reason, [
