@@ -170,6 +170,24 @@ export default function RefundStatusCard({ refund }: Props) {
         );
     }
 
+    if (status === 'refund_failed') {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                        <AlertCircle className="h-4 w-4 text-red-500" />
+                        Refund Gagal
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                    <p className="text-xs text-text-muted" role="status">Refund sebesar <strong>{fmtAmount}</strong> gagal diproses.</p>
+                    {destination && <DestinationSummary dest={destination} />}
+                    <p className="text-xs text-text-muted">Tim kami akan menghubungi Anda untuk proses ulang. Jika tidak dihubungi dalam 1x24 jam, silakan hubungi CS.</p>
+                </CardContent>
+            </Card>
+        );
+    }
+
     return null;
 }
 
