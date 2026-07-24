@@ -51,4 +51,5 @@ docs/archive/
 .agents/
 .claude/
 .superpowers/
+.worktrees/
 docs/superpowers/
