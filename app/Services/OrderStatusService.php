@@ -116,6 +116,11 @@ class OrderStatusService
 
             $this->notificationService->notifyOrderRejected($order, $reason);
 
+            // Trigger refund if order was already paid (auto-refund)
+            if ($order->payment_status === 'paid') {
+                $this->processRefund($order, 'rejected_by_outlet');
+            }
+
             return $order->fresh(['outlet', 'items.product', 'statusHistories.actor']);
         });
     }
