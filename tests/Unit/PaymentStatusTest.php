@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Enums\PaymentStatus;
+use App\Enums\RefundRejectionReason;
 use PHPUnit\Framework\TestCase;
 
 class PaymentStatusTest extends TestCase
@@ -21,5 +22,32 @@ class PaymentStatusTest extends TestCase
         $this->assertFalse(PaymentStatus::Paid->isTerminal());
         $this->assertTrue(PaymentStatus::Refunded->isTerminal());
         $this->assertFalse(PaymentStatus::Pending->isTerminal());
+    }
+
+    public function test_refund_rejection_reasons_have_expected_values_labels_and_resubmission_rules(): void
+    {
+        $this->assertSame([
+            'invalid_destination',
+            'incomplete_destination',
+            'payment_unverified',
+            'duplicate_refund',
+            'other',
+        ], array_map(fn ($case) => $case->value, RefundRejectionReason::cases()));
+
+        $this->assertSame([
+            'Data tujuan refund tidak valid',
+            'Data belum lengkap',
+            'Pembayaran tidak terverifikasi',
+            'Refund duplikat',
+            'Lainnya',
+        ], array_map(fn ($case) => $case->label(), RefundRejectionReason::cases()));
+
+        $this->assertSame([
+            true,
+            true,
+            false,
+            false,
+            false,
+        ], array_map(fn ($case) => $case->canResubmit(), RefundRejectionReason::cases()));
     }
 }
