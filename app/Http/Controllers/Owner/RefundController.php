@@ -2,135 +2,122 @@
 
 namespace App\Http\Controllers\Owner;
 
-use App\Enums\PaymentStatus;
 use App\Enums\RefundRejectionReason;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Owner\CompleteManualRefundRequest;
+use App\Http\Requests\Customer\UpdateRefundDestinationRequest;
 use App\Http\Requests\Owner\RejectRefundRequest;
+use App\Http\Requests\Owner\RollbackRefundRequest;
 use App\Models\Order;
-use App\Services\NotificationService;
-use App\Services\PaymentStatusService;
+use App\Services\RefundService;
+use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
-use Inertia\Inertia;
-use Inertia\Response;
+use Illuminate\Validation\ValidationException;
 
 class RefundController extends Controller
 {
-    public function index(): Response
+    public function index(): RedirectResponse
     {
-        $filter = request()->validate([
-            'filter' => ['nullable', Rule::in([
-                'awaiting_destination',
-                'ready',
-                'in_progress',
-                'completed',
-                'rejected',
-            ])],
-        ])['filter'] ?? 'ready';
+        $filter = request()->query('filter', 'ready');
 
-        $query = Order::refundable()
-            ->with(['outlet:id,name', 'customer:id,name']);
+        $validFilters = ['awaiting_customer', 'awaiting_guest', 'ready', 'in_progress', 'action_required', 'completed', 'rejected'];
+        if (! in_array($filter, $validFilters, true)) {
+            $filter = 'ready';
+        }
 
-        $query = match ($filter) {
-            'awaiting_destination' => $query
-                ->where('payment_status', PaymentStatus::RefundPending->value)
-                ->whereNull('refund_destination_submitted_at'),
-            'ready' => $query
-                ->where('payment_status', PaymentStatus::RefundPending->value)
-                ->whereNotNull('refund_destination_submitted_at'),
-            'in_progress' => $query->where('payment_status', PaymentStatus::RefundInProgress->value),
-            'completed' => $query->where('payment_status', PaymentStatus::Refunded->value),
-            'rejected' => $query->where('payment_status', PaymentStatus::RefundRejected->value),
-            default => $query,
-        };
-
-        $orders = $query->orderByDesc('refund_requested_at')->paginate(20)->withQueryString();
-
-        return Inertia::render('owner/finance/refund-tab', [
-            'refunds' => $orders,
-            'filter' => $filter,
-        ]);
+        return redirect()->route('owner.finance.dashboard', ['tab' => 'refund', 'filter' => $filter]);
     }
 
-    public function start(Order $order, PaymentStatusService $payment, NotificationService $notifications): RedirectResponse
+    public function destination(UpdateRefundDestinationRequest $request, Order $order, RefundService $refunds): RedirectResponse
     {
-        if ($order->payment_status_enum !== PaymentStatus::RefundPending) {
-            return redirect()->back()->with('error', 'Order ini tidak dalam antrean refund.');
+        $validated = $request->validated();
+
+        if (! $request->boolean('phone_verified')) {
+            return back()->with('error', 'Verifikasi nomor telepon diperlukan.');
         }
 
-        if (blank($order->refund_destination_type) || blank($order->refund_destination_submitted_at)) {
-            return redirect()->back()->with('error', 'Customer belum mengisi tujuan refund.');
+        try {
+            $refunds->submitDestination(
+                $order,
+                $validated['destination_type'],
+                'owner',
+                $request->user()->id,
+                $validated,
+            );
+
+            return back()->with('success', 'Tujuan refund berhasil disimpan.');
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $transitioned = $payment->transition($order, PaymentStatus::RefundInProgress, [
-            'refund_started_at' => now(),
-            'refund_started_by' => auth()->id(),
-        ]);
-
-        if (! $transitioned) {
-            return redirect()->back()->with('error', 'Gagal memproses refund. Coba lagi.');
-        }
-
-        $notifications->notifyRefundProcessingStarted($order);
-
-        return redirect()->back()->with('success', 'Proses refund dimulai.');
     }
 
-    public function complete(Order $order, CompleteManualRefundRequest $request, PaymentStatusService $payment, NotificationService $notifications): RedirectResponse
+    public function start(Order $order, RefundService $refunds): RedirectResponse
     {
-        if ($order->payment_status_enum !== PaymentStatus::RefundInProgress) {
-            return redirect()->back()->with('error', 'Refund tidak dalam proses.');
+        try {
+            $refunds->start($order, auth()->id());
+
+            return back()->with('success', 'Proses refund dimulai.');
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
         }
-
-        $path = $request->file('proof')->store('refunds', 'public');
-
-        if (! $path) {
-            return redirect()->back()->with('error', 'Gagal menyimpan bukti refund.');
-        }
-
-        $transitioned = $payment->transition($order, PaymentStatus::Refunded, [
-            'refund_amount' => $order->total,
-            'refund_proof_image' => $path,
-            'refund_transfer_reference' => $request->input('transfer_reference'),
-            'refund_transfer_note' => $request->input('transfer_note'),
-            'refunded_by' => auth()->id(),
-            'refunded_at' => now(),
-        ]);
-
-        if (! $transitioned) {
-            Storage::disk('public')->delete($path);
-
-            return redirect()->back()->with('error', 'Refund sudah diproses sebelumnya.');
-        }
-
-        $notifications->notifyRefundProcessed($order, (float) $order->total);
-
-        return redirect()->back()->with('success', 'Refund ditandai selesai.');
     }
 
-    public function reject(Order $order, RejectRefundRequest $request, PaymentStatusService $payment, NotificationService $notifications): RedirectResponse
+    public function reject(Order $order, RejectRefundRequest $request, RefundService $refunds): RedirectResponse
     {
-        if ($order->payment_status_enum !== PaymentStatus::RefundPending) {
-            return redirect()->back()->with('error', 'Order ini tidak dalam antrean refund.');
+        $validated = $request->validated();
+
+        try {
+            $refunds->reject(
+                $order,
+                $validated['reason'],
+                $validated['note'] ?? null,
+                'owner',
+                $request->user()->id,
+                $validated['legacy_repair'] ?? false,
+            );
+
+            return back()->with('success', 'Refund ditolak.');
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
         }
+    }
 
-        $reason = RefundRejectionReason::from($request->input('reason'));
+    public function rollback(Order $order, RollbackRefundRequest $request, RefundService $refunds): RedirectResponse
+    {
+        $validated = $request->validated();
 
-        $transitioned = $payment->transition($order, PaymentStatus::RefundRejected, [
-            'refund_rejected_reason' => $reason->value,
-            'refund_rejection_note' => $request->input('note'),
-            'refund_rejected_by' => auth()->id(),
-            'refund_rejected_at' => now(),
-        ]);
+        try {
+            $refunds->rollback($order, $request->user()->id, $validated['mode'], $validated['reason']);
 
-        if (! $transitioned) {
-            return redirect()->back()->with('error', 'Gagal menolak refund. Coba lagi.');
+            return back()->with('success', 'Refund dikembalikan ke antrean.');
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
         }
+    }
 
-        $notifications->notifyRefundRejected($order, $reason);
+    public function complete(Order $order, \App\Http\Requests\Owner\CompleteManualRefundRequest $request, RefundService $refunds): RedirectResponse
+    {
+        try {
+            $relative = $request->file('proof')->store("refund-proofs/{$order->id}", 'local');
+            if ($relative === false) {
+                return back()->with('error', 'Gagal menyimpan bukti refund.');
+            }
 
-        return redirect()->back()->with('success', 'Refund ditolak.');
+            $persisted = "private:{$relative}";
+
+            $refunds->complete(
+                $order,
+                $request->user()->id,
+                $persisted,
+                $request->input('transfer_reference'),
+                $request->input('transfer_note'),
+            );
+
+            return back()->with('success', 'Refund ditandai selesai.');
+        } catch (DomainException $e) {
+            Storage::disk('local')->delete($relative ?? '');
+
+            return back()->with('error', $e->getMessage());
+        }
     }
 }
