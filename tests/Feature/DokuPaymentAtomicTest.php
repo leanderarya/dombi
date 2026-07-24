@@ -26,6 +26,21 @@ class DokuPaymentAtomicTest extends TestCase
         $this->assertSame('paid', Order::find($order->id)->payment_status);
     }
 
+    public function test_late_payment_on_terminal_order_persists_refund_amount(): void
+    {
+        $order = Order::factory()->create([
+            'status' => Order::STATUS_CANCELLED_BY_CUSTOMER,
+            'payment_status' => 'pending',
+            'total' => 50000,
+        ]);
+
+        app(DokuService::class)->markOrderPaidPublic($order);
+
+        $order->refresh();
+        $this->assertSame('refund_pending', $order->payment_status);
+        $this->assertSame($order->total, $order->refund_amount);
+    }
+
     public function test_webhook_skips_terminal_status(): void
     {
         $order = Order::factory()->create(['payment_status' => 'refunded']);
