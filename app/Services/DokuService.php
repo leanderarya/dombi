@@ -411,6 +411,7 @@ class DokuService
             // Late payment after cancellation/expiry → flag manual refund, no Doku call.
             app(PaymentStatusService::class)->transition($order, PaymentStatus::RefundPending, [
                 'refund_requested_at' => now(),
+                'refund_amount' => $order->total,
             ]);
             app(NotificationService::class)->notifyRefundRequested($order);
             return;
