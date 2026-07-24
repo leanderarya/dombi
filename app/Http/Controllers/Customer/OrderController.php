@@ -2,15 +2,20 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
+use App\Http\Requests\Customer\UpdateRefundDestinationRequest;
 use App\Models\Order;
 use App\Models\OrderReport;
 use App\Models\PaymentTransaction;
 use App\Services\DokuService;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
+use App\Services\RefundPayloadService;
+use App\Services\RefundService;
+use DomainException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -21,7 +26,7 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, RefundPayloadService $refundPayloads): Response
     {
         $user = $request->user();
         $customer = $user?->customer;
@@ -32,15 +37,10 @@ class OrderController extends Controller
         if ($customer) {
             $activeOrders = $customer->orders()
                 ->whereIn('status', Order::ACTIVE_STATUSES)
-                // Exclude orders that have been fully expired (status = expired),
-                // but INCLUDE orders with failed/expired PAYMENT that are still
-                // pending_confirmation — customer can retry payment within the window.
                 ->where(function ($q) {
                     $q->whereNull('payment_status')
                         ->orWhere('payment_status', 'pending')
                         ->orWhere('payment_status', 'paid')
-                        // Failed/expired payment but order still pending_confirmation
-                        // and within confirmation window — customer can retry
                         ->orWhere(function ($q2) {
                             $q2->whereIn('payment_status', ['failed', 'expired'])
                                 ->where('status', Order::STATUS_PENDING_CONFIRMATION);
@@ -52,17 +52,42 @@ class OrderController extends Controller
                         ->orWhere('confirmation_expires_at', '>', now());
                 })
                 ->with(['outlet', 'items.variant.family'])
-                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
+                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
                 ->orderByDesc('ordered_at')
-                ->get();
+                ->get()
+                ->map(function (Order $order) use ($refundPayloads) {
+                    $queue = $refundPayloads->queueState($order);
+                    if ($queue) {
+                        $order->setAttribute('refund_badge', [
+                            'payment_status' => $order->payment_status,
+                            'queue_state' => $queue,
+                            'status_label' => $refundPayloads->statusLabel($order),
+                        ]);
+                    }
+                    return $order;
+                });
 
-            $historyOrders = $customer->orders()
+            $historyQuery = $customer->orders()
                 ->whereIn('status', Order::HISTORY_STATUSES)
                 ->with(['outlet', 'items'])
-                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
-                ->orderByDesc('ordered_at')
+                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
+                ->orderByDesc('ordered_at');
+
+            $historyOrders = $historyQuery
                 ->paginate(10)
                 ->withQueryString();
+
+            $historyOrders->getCollection()->transform(function (Order $order) use ($refundPayloads) {
+                $queue = $refundPayloads->queueState($order);
+                if ($queue) {
+                    $order->setAttribute('refund_badge', [
+                        'payment_status' => $order->payment_status,
+                        'queue_state' => $queue,
+                        'status_label' => $refundPayloads->statusLabel($order),
+                    ]);
+                }
+                return $order;
+            });
         }
 
         return Inertia::render('customer/orders/index', [
@@ -78,7 +103,7 @@ class OrderController extends Controller
         return redirect()->route('track', ['token' => $order->recovery_token])->with('success', 'Order berhasil dibuat.');
     }
 
-    public function show(Order $order): Response
+    public function show(Order $order, RefundPayloadService $payloads): Response
     {
         $user = auth()->user();
 
@@ -95,15 +120,25 @@ class OrderController extends Controller
             ->where('customer_id', $customer->id)
             ->exists();
 
-        return Inertia::render('customer/orders/show', [
-            'order' => $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier']),
+        $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier', 'refundStatusHistories']);
+
+        $refund = $payloads->forCustomer($order);
+
+        $props = [
+            'order' => $order,
             'cancellationReasons' => OrderStatusService::cancellationReasons(),
             'activeReport' => $activeReport,
             'hasRecentReport' => $hasRecentReport,
             'canReport' => $order->status === Order::STATUS_COMPLETED
                 && (! $order->completed_at || $order->completed_at->gt(now()->subDays(7)))
                 && ! $hasRecentReport,
-        ]);
+        ];
+
+        if ($refund !== null) {
+            $props['refund'] = $refund;
+        }
+
+        return Inertia::render('customer/orders/show', $props);
     }
 
     public function confirmation(Order $order, string $token): Response
@@ -170,33 +205,14 @@ class OrderController extends Controller
      */
     public function pay(Request $request, Order $order): RedirectResponse
     {
+        $this->authorizePaymentAccess($request, $order);
+
         $validated = $request->validate([
             'payment_method' => ['nullable', 'string', Rule::in(array_keys(config('doku.methods')))],
         ]);
 
         if (($validated['payment_method'] ?? null) && $order->payment_method !== $validated['payment_method']) {
             $order->update(['payment_method' => $validated['payment_method']]);
-        }
-
-        // Ownership verification — permissive for checkout flow
-        $user = auth()->user();
-        if ($user) {
-            // Logged-in user — check ownership
-            if (! $user->isOwner() && $user->getCustomerOrCreate()->id !== $order->customer_id) {
-                abort(403, 'Unauthorized');
-            }
-        } elseif ($order->customer_id) {
-            // Guest — verify via recovery session OR via recent order (within 30 min)
-            $recovery = session('guest_recovery');
-            $hasRecovery = is_array($recovery)
-                && ($recovery['customer_id'] ?? null) === $order->customer_id
-                && in_array($order->id, $recovery['order_ids'] ?? [], true);
-
-            $isFreshOrder = $order->created_at && $order->created_at->gt(now()->subMinutes(30));
-
-            if (! $hasRecovery && ! $isFreshOrder) {
-                abort(403, 'Unauthorized');
-            }
         }
 
         // Guard: order must be pending or confirmed (not already terminal)
@@ -300,26 +316,9 @@ class OrderController extends Controller
      * Payment status polling endpoint.
      * Returns current payment status and DOKU order ID.
      */
-    public function paymentStatus(Order $order): JsonResponse
+    public function paymentStatus(Request $request, Order $order): JsonResponse
     {
-        // Ownership check — same as pay()
-        $user = auth()->user();
-        if ($user) {
-            if (! $user->isOwner() && $user->getCustomerOrCreate()->id !== $order->customer_id) {
-                return response()->json(['error' => 'Unauthorized'], 403);
-            }
-        } elseif ($order->customer_id) {
-            $recovery = session('guest_recovery');
-            $hasRecovery = is_array($recovery)
-                && ($recovery['customer_id'] ?? null) === $order->customer_id
-                && in_array($order->id, $recovery['order_ids'] ?? [], true);
-
-            $isFreshOrder = $order->created_at && $order->created_at->gt(now()->subMinutes(30));
-
-            if (! $hasRecovery && ! $isFreshOrder) {
-                return response()->json(['error' => 'Unauthorized'], 403);
-            }
-        }
+        $this->authorizePaymentAccess($request, $order);
 
         // Always sync from DOKU API to ensure accurate status
         // This handles cases where webhook hasn't arrived yet
@@ -341,6 +340,26 @@ class OrderController extends Controller
             'doku_order_id' => $order->doku_order_id,
             'paid_at' => $order->paid_at?->toISOString(),
         ]);
+    }
+
+    public function updateRefundDestination(
+        UpdateRefundDestinationRequest $request,
+        Order $order,
+        RefundService $refunds,
+    ): RedirectResponse {
+        try {
+            $refunds->submitDestination(
+                $order,
+                $request->validated()['destination_type'],
+                $request->actorType(),
+                $request->user()->id,
+                $request->validated(),
+            );
+
+            return back()->with('success', 'Tujuan refund berhasil disimpan.');
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 
     public function cancel(CancelOrderRequest $request, Order $order, OrderStatusService $orderStatusService): RedirectResponse
@@ -431,5 +450,27 @@ class OrderController extends Controller
 
         return redirect()->route('customer.checkout.index')
             ->with('success', $message);
+    }
+
+    private function authorizePaymentAccess(Request $request, Order $order): void
+    {
+        $user = auth()->user();
+
+        if ($user) {
+            if (! $user->isOwner() && $user->getCustomerOrCreate()->id !== $order->customer_id) {
+                abort(403, 'Unauthorized');
+            }
+        } elseif ($order->customer_id) {
+            $recovery = session('guest_recovery');
+            $hasRecovery = is_array($recovery)
+                && ($recovery['customer_id'] ?? null) === $order->customer_id
+                && in_array($order->id, $recovery['order_ids'] ?? [], true);
+
+            if (! $hasRecovery) {
+                abort(403, 'Unauthorized');
+            }
+        } else {
+            abort(403, 'Unauthorized');
+        }
     }
 }

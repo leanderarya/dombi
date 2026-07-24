@@ -2,18 +2,21 @@
 
 namespace App\Services;
 
+use App\Enums\RefundRejectionReason;
+use App\Jobs\PushNotificationJob;
 use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\ExchangeRequest;
 use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\RefundStatusHistory;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Models\User;
-use App\Jobs\PushNotificationJob;
+use Illuminate\Support\Facades\DB;
 
 class NotificationService
 {
@@ -102,7 +105,17 @@ class NotificationService
     // Refund notifications
     public const REFUND_REQUESTED = 'order.refund_requested';
 
+    public const REFUND_DESTINATION_SUBMITTED = 'order.refund_destination_submitted';
+
+    public const REFUND_PROCESSING_STARTED = 'order.refund_processing_started';
+
     public const REFUND_PROCESSED = 'order.refund_processed';
+
+    public const REFUND_REJECTED = 'order.refund_rejected';
+
+    public const REFUND_ROLLED_BACK = 'order.refund_rolled_back';
+
+    public const REFUND_FAILED = 'order.refund_failed';
 
     // Settlement notifications
     public const SETTLEMENT_REMINDER = 'settlement.reminder';
@@ -1124,7 +1137,7 @@ class NotificationService
 
     public function notifyRefundRequested(Order $order): void
     {
-        $formattedAmount = 'Rp ' . number_format($order->total, 0, ',', '.');
+        $formattedAmount = 'Rp '.number_format($order->total, 0, ',', '.');
 
         if ($order->customer_id) {
             $this->create(
@@ -1141,9 +1154,43 @@ class NotificationService
         }
     }
 
+    public function notifyRefundDestinationSubmitted(Order $order, bool $updated): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::REFUND_DESTINATION_SUBMITTED,
+                title: $updated ? 'Tujuan Refund Diperbarui' : 'Tujuan Refund Disimpan',
+                message: "Tujuan refund untuk pesanan {$order->order_code} telah ".($updated ? 'diperbarui' : 'disimpan').'.',
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyRefundProcessingStarted(Order $order): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::REFUND_PROCESSING_STARTED,
+                title: 'Refund Sedang Ditransfer',
+                message: "Owner sedang mentransfer refund pesanan {$order->order_code} ke tujuan refund Anda.",
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
     public function notifyRefundProcessed(Order $order, float $amount): void
     {
-        $formattedAmount = 'Rp ' . number_format($amount, 0, ',', '.');
+        $formattedAmount = 'Rp '.number_format($amount, 0, ',', '.');
 
         if ($order->customer_id) {
             $this->create(
@@ -1152,12 +1199,185 @@ class NotificationService
                 customerId: $order->customer_id,
                 type: self::REFUND_PROCESSED,
                 title: 'Refund Berhasil',
-                message: "{$formattedAmount} telah dikembalikan ke metode pembayaran Anda. Order #{$order->order_code} dibatalkan.",
+                message: "Owner telah mentransfer {$formattedAmount} ke tujuan refund Anda. Order #{$order->order_code} dibatalkan.",
                 data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'amount' => $amount],
                 entityType: 'order',
                 entityId: $order->id
             );
         }
+    }
+
+    public function notifyRefundRejected(Order $order, RefundRejectionReason $reason): void
+    {
+        if ($order->customer_id) {
+            $this->create(
+                userType: 'customer',
+                userId: null,
+                customerId: $order->customer_id,
+                type: self::REFUND_REJECTED,
+                title: 'Refund Ditolak',
+                message: "Refund pesanan {$order->order_code} ditolak. Alasan: {$reason->label()}.".($reason->canResubmit() ? ' Silakan perbaiki dan kirim ulang tujuan refund.' : ''),
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'reason' => $reason->value, 'can_resubmit' => $reason->canResubmit()],
+                entityType: 'order',
+                entityId: $order->id
+            );
+        }
+    }
+
+    public function notifyRefundEvent(Order $order, RefundStatusHistory $history): void
+    {
+        $order->loadMissing('customer');
+        $isRegistered = $order->customer?->user_id !== null;
+
+        $eventMap = $this->refundEventMap($history->event);
+
+        if ($eventMap === null) {
+            return;
+        }
+
+        [$type, $title, $message] = $eventMap;
+        $queueFilter = $this->eventQueue($history->event, $order);
+        $ownerUrl = $queueFilter ? "/owner/finance?tab=refund&filter={$queueFilter}" : null;
+        $customerUrl = "/customer/orders/{$order->id}";
+
+        $data = [
+            'refund_history_id' => $history->id,
+            'order_id' => $order->id,
+            'order_code' => $order->order_code,
+        ];
+
+        // Customer notification
+        if ($isRegistered && $this->shouldNotifyCustomer($history->event)) {
+            $data['url'] = $customerUrl;
+            $this->createRefundOnce($history, 'customer', null, $order->customer_id, $type, $title, $message, $data, $customerUrl);
+        }
+
+        // Owner notification
+        if ($this->shouldNotifyOwner($history->event)) {
+            foreach ($this->getOwners() as $ownerId) {
+                $ownerData = $data;
+                $ownerData['url'] = $ownerUrl ?? $customerUrl;
+                $this->createRefundOnce($history, 'owner', $ownerId, null, $type, $title, $message, $ownerData, $ownerUrl ?? $customerUrl);
+            }
+        }
+    }
+
+    private function shouldNotifyCustomer(string $event): bool
+    {
+        return ! in_array($event, [
+            RefundStatusHistory::EVENT_GUEST_DESTINATION_SUBMITTED_BY_OWNER,
+            RefundStatusHistory::EVENT_GUEST_DESTINATION_UPDATED_BY_OWNER,
+        ], true);
+    }
+
+    private function shouldNotifyOwner(string $event): bool
+    {
+        return in_array($event, [
+            RefundStatusHistory::EVENT_REFUND_REQUESTED,
+            RefundStatusHistory::EVENT_DESTINATION_SUBMITTED,
+            RefundStatusHistory::EVENT_DESTINATION_UPDATED,
+            RefundStatusHistory::EVENT_REFUND_REOPENED,
+            RefundStatusHistory::EVENT_REFUND_FAILED,
+        ], true);
+    }
+
+    private function refundEventMap(string $event): ?array
+    {
+        return match ($event) {
+            RefundStatusHistory::EVENT_REFUND_REQUESTED => [
+                self::REFUND_REQUESTED,
+                'Refund Diproses',
+                'Refund pesanan sedang diproses.',
+            ],
+            RefundStatusHistory::EVENT_DESTINATION_SUBMITTED,
+            RefundStatusHistory::EVENT_DESTINATION_UPDATED,
+            RefundStatusHistory::EVENT_REFUND_REOPENED => [
+                self::REFUND_DESTINATION_SUBMITTED,
+                'Tujuan Refund Disimpan',
+                'Tujuan refund telah disimpan.',
+            ],
+            RefundStatusHistory::EVENT_GUEST_DESTINATION_SUBMITTED_BY_OWNER,
+            RefundStatusHistory::EVENT_GUEST_DESTINATION_UPDATED_BY_OWNER => null,
+            RefundStatusHistory::EVENT_PROCESSING_STARTED => [
+                self::REFUND_PROCESSING_STARTED,
+                'Refund Sedang Diproses',
+                'Owner sedang memproses refund Anda.',
+            ],
+            RefundStatusHistory::EVENT_PROCESSING_ROLLED_BACK => [
+                self::REFUND_ROLLED_BACK,
+                'Refund Dikembalikan',
+                'Proses refund dikembalikan ke antrean.',
+            ],
+            RefundStatusHistory::EVENT_REFUND_REJECTED => [
+                self::REFUND_REJECTED,
+                'Refund Ditolak',
+                'Refund pesanan ditolak.',
+            ],
+            RefundStatusHistory::EVENT_REFUND_COMPLETED => [
+                self::REFUND_PROCESSED,
+                'Refund Berhasil',
+                'Refund telah berhasil diproses.',
+            ],
+            RefundStatusHistory::EVENT_REFUND_FAILED => [
+                self::REFUND_FAILED,
+                'Refund Gagal',
+                'Refund gagal diproses. Perlu tindakan.',
+            ],
+            default => null,
+        };
+    }
+
+    private function eventQueue(string $event, Order $order): ?string
+    {
+        return match ($event) {
+            RefundStatusHistory::EVENT_REFUND_REQUESTED => $order->isGuestCustomer() ? 'awaiting_guest' : 'awaiting_customer',
+            RefundStatusHistory::EVENT_DESTINATION_SUBMITTED,
+            RefundStatusHistory::EVENT_DESTINATION_UPDATED,
+            RefundStatusHistory::EVENT_REFUND_REOPENED => 'ready',
+            RefundStatusHistory::EVENT_REFUND_FAILED => 'action_required',
+            default => null,
+        };
+    }
+
+    private function createRefundOnce(RefundStatusHistory $history, string $userType, ?int $userId, ?int $customerId, string $type, string $title, string $message, array $data, string $url): void
+    {
+        DB::transaction(function () use ($history, $userType, $userId, $customerId, $type, $title, $message, $data, $url) {
+            $history->fresh();
+            RefundStatusHistory::lockForUpdate()->find($history->id);
+
+            $exists = false;
+            if ($userId) {
+                $exists = Notification::where('type', $type)
+                    ->where('entity_type', 'order')
+                    ->where('entity_id', $history->order_id)
+                    ->where('user_type', $userType)
+                    ->where('user_id', $userId)
+                    ->where('data->refund_history_id', $history->id)
+                    ->exists();
+            } elseif ($customerId) {
+                $exists = Notification::where('type', $type)
+                    ->where('entity_type', 'order')
+                    ->where('entity_id', $history->order_id)
+                    ->where('user_type', $userType)
+                    ->where('customer_id', $customerId)
+                    ->where('data->refund_history_id', $history->id)
+                    ->exists();
+            }
+
+            if (! $exists) {
+                $this->create(
+                    userType: $userType,
+                    userId: $userId,
+                    customerId: $customerId,
+                    type: $type,
+                    title: $title,
+                    message: $message,
+                    data: $data,
+                    entityType: 'order',
+                    entityId: $history->order_id,
+                );
+            }
+        });
     }
 
     // ─── HELPER METHODS ───────────────────────────────────────────────
@@ -1187,6 +1407,8 @@ class NotificationService
             ]);
 
             // Dispatch push notification
+            $pushUrl = $data['url'] ?? $this->getPushUrl($entityType, $entityId);
+
             if ($userId) {
                 $user = User::find($userId);
                 if ($user) {
@@ -1198,7 +1420,7 @@ class NotificationService
                         data: [
                             'entity_type' => $entityType,
                             'entity_id' => $entityId,
-                            'url' => $this->getPushUrl($entityType, $entityId),
+                            'url' => $pushUrl,
                         ],
                     ));
                 }
@@ -1211,7 +1433,7 @@ class NotificationService
                     data: [
                         'entity_type' => $entityType,
                         'entity_id' => $entityId,
-                        'url' => $this->getPushUrl($entityType, $entityId),
+                        'url' => $pushUrl,
                     ],
                 ));
             }
