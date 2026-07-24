@@ -60,9 +60,10 @@ class HybridCustomerIdentityTest extends TestCase
 
     public function test_customer_scopes_work_correctly(): void
     {
+        $user = User::factory()->create(['role' => 'customer']);
         Customer::create(['name' => 'Guest 1', 'phone' => '6281234567890', 'is_registered' => false]);
         Customer::create(['name' => 'Guest 2', 'phone' => '6281234567891', 'is_registered' => false]);
-        Customer::create(['name' => 'Registered 1', 'phone' => '6281234567892', 'is_registered' => true]);
+        Customer::create(['name' => 'Registered 1', 'phone' => '6281234567892', 'is_registered' => true, 'user_id' => $user->id]);
 
         $this->assertEquals(2, Customer::guest()->count());
         $this->assertEquals(1, Customer::registered()->count());
@@ -367,6 +368,52 @@ class HybridCustomerIdentityTest extends TestCase
         $this->assertNull($customer->user_id);
         $this->assertNull($customer->user);
         $this->assertTrue($customer->isGuest());
+    }
+
+    // ─── CANONICAL IDENTITY TESTS ────────────────────────────────
+
+    public function test_contradictory_flag_is_guest_when_user_id_null(): void
+    {
+        $customer = Customer::create([
+            'name' => 'Flagged registered but no user',
+            'phone' => '6281234567801',
+            'is_registered' => true,
+            'user_id' => null,
+        ]);
+
+        $this->assertTrue($customer->isGuest(), 'Should be guest when user_id is null');
+        $this->assertFalse($customer->isRegistered(), 'Should not be registered when user_id is null');
+    }
+
+    public function test_contradictory_flag_is_registered_when_user_id_set(): void
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        $customer = Customer::create([
+            'name' => 'Flagged guest but has user',
+            'phone' => '6281234567802',
+            'is_registered' => false,
+            'user_id' => $user->id,
+        ]);
+
+        $this->assertFalse($customer->isGuest(), 'Should not be guest when user_id is set');
+        $this->assertTrue($customer->isRegistered(), 'Should be registered when user_id is set');
+    }
+
+    public function test_contradictory_scope_guest_uses_user_id(): void
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        Customer::create(['name' => 'C1', 'phone' => '6281234567803', 'is_registered' => true, 'user_id' => null]);
+        Customer::create(['name' => 'C2', 'phone' => '6281234567804', 'is_registered' => true, 'user_id' => null]);
+
+        $this->assertEquals(2, Customer::guest()->count());
+    }
+
+    public function test_contradictory_scope_registered_uses_user_id(): void
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        Customer::create(['name' => 'C3', 'phone' => '6281234567805', 'is_registered' => false, 'user_id' => $user->id]);
+
+        $this->assertEquals(1, Customer::registered()->count());
     }
 
     // ─── HELPERS ───────────────────────────────────────────────────
