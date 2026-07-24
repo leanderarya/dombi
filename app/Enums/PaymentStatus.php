@@ -6,6 +6,7 @@ enum PaymentStatus: string
 {
     case Pending = 'pending';
     case Paid = 'paid';
+    case Settled = 'settled';
     case Failed = 'failed';
     case Expired = 'expired';
     case RefundPending = 'refund_pending';
@@ -19,7 +20,7 @@ enum PaymentStatus: string
 
     public function isTerminal(): bool
     {
-        return in_array($this, [self::Refunded, self::RefundRejected, self::RefundFailed], true);
+        return in_array($this, [self::Refunded, self::RefundRejected, self::RefundFailed, self::Settled], true);
     }
 
     public function isMutable(): bool
