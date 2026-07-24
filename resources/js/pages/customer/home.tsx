@@ -56,7 +56,6 @@ export default function Home({ customerName, activeOrders }: any) {
             customerName={customerName}
             hideTopBar
             activeOrder={activeOrder}
-            keepBottomNavVisible
         >
             <Head title="Home" />
             <HeroCarousel hero={hero} />

@@ -13,11 +13,7 @@ function getSelectedOutletId(): number | null {
     }
 }
 
-export default function FloatingCartBar({
-    bottomNavVisible = true,
-}: {
-    bottomNavVisible?: boolean;
-}) {
+export default function FloatingCartBar() {
     const { items, totalItems, totalPrice } = useCart();
 
     if (totalItems === 0) {
@@ -38,9 +34,7 @@ export default function FloatingCartBar({
         router.post('/customer/checkout', payload);
     };
 
-    const bottom = bottomNavVisible
-        ? 'calc(4.5rem + env(safe-area-inset-bottom, 0px))'
-        : 'calc(1rem + env(safe-area-inset-bottom, 0px))';
+    const bottom = 'calc(4.5rem + env(safe-area-inset-bottom, 0px))';
 
     return (
         <div

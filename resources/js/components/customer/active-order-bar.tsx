@@ -23,13 +23,9 @@ function setDismissedOrderCode(code: string): void {
 
 interface Props {
     order?: any;
-    bottomNavVisible?: boolean;
 }
 
-export default function ActiveOrderBar({
-    order,
-    bottomNavVisible = true,
-}: Props) {
+export default function ActiveOrderBar({ order }: Props) {
     const [dismissed, setDismissed] = useState(
         () => getDismissedOrderCode() === order?.order_code,
     );
@@ -47,9 +43,7 @@ export default function ActiveOrderBar({
         setDismissed(true);
     };
 
-    const bottom = bottomNavVisible
-        ? 'calc(4.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem)'
-        : 'calc(1rem + env(safe-area-inset-bottom, 0px))';
+    const bottom = 'calc(4.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem)';
 
     return (
         <div
