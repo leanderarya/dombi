@@ -13,7 +13,6 @@ class PaymentStatusService
     {
         $current = PaymentStatus::from($order->payment_status ?? 'pending');
 
-        // Same-status transition is always a no-op (idempotency guard).
         if ($current === $to) {
             return false;
         }
@@ -22,6 +21,7 @@ class PaymentStatusService
             Log::info('PaymentStatus: terminal status is immutable; transition blocked', [
                 'order_id' => $order->id, 'current' => $order->payment_status, 'attempted' => $to->value,
             ]);
+
             return false;
         }
 
@@ -29,6 +29,7 @@ class PaymentStatusService
             Log::info('PaymentStatus: invalid transition blocked', [
                 'order_id' => $order->id, 'current' => $current->value, 'attempted' => $to->value,
             ]);
+
             return false;
         }
 
@@ -42,6 +43,7 @@ class PaymentStatusService
 
         $order->refresh();
         $this->bustCaches($order);
+
         return true;
     }
 
@@ -50,6 +52,7 @@ class PaymentStatusService
         if (isset($extra['paid_at']) && $extra['paid_at'] === null) {
             unset($extra['paid_at']);
         }
+
         return $extra;
     }
 
@@ -60,15 +63,10 @@ class PaymentStatusService
         Cache::forget('owner:order_stats');
     }
 
-    /**
-     * Valid payment_status transitions.
-     * States not listed here (Expired, RefundPending, RefundRejected) are immutable.
-     */
     private const VALID_TRANSITIONS = [
-        'pending'         => ['paid', 'failed', 'expired'],
-        'paid'            => ['refund_pending'],
-        'failed'          => ['paid', 'expired'],
-        'refund_pending'  => ['refunded', 'refund_rejected'],
+        'pending' => ['paid', 'failed', 'expired'],
+        'failed' => ['paid', 'expired'],
+        'expired' => ['paid'],
     ];
 
     private function isValidTransition(PaymentStatus $from, PaymentStatus $to): bool

@@ -7,6 +7,7 @@ use App\Models\Outlet;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ManualRefundTriggerTest extends TestCase
@@ -23,6 +24,16 @@ class ManualRefundTriggerTest extends TestCase
             'payment_status' => 'paid',
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'total' => 50000,
+        ]);
+
+        DB::table('payment_transactions')->insert([
+            'order_id' => $order->id,
+            'doku_order_id' => $order->doku_order_id ?? 'test-'.$order->id,
+            'payment_method' => $order->payment_method ?? 'qris',
+            'amount' => $order->total,
+            'status' => 'paid',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $this->actingAs($user)->post("/customer/orders/{$order->id}/cancel", [

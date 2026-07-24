@@ -53,6 +53,13 @@ class UpdateOrderStatusRequest extends FormRequest
                         $this->validator->errors()->add('reason', 'Alasan pembatalan tidak valid.');
                     }
                 }
+
+                if ($order && ! in_array($order->payment_status, [
+                    \App\Enums\PaymentStatus::Paid->value,
+                    \App\Enums\PaymentStatus::Settled->value,
+                ], true)) {
+                    $this->validator->errors()->add('payment_status', 'Pesanan belum dibayar dan tidak dapat diproses outlet.');
+                }
             },
         ];
     }

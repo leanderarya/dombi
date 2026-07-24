@@ -15,6 +15,7 @@ import {
 import { useEffect, useState } from 'react';
 import OrderHeader from '@/components/customer/order/order-header';
 import OrderInfoCard from '@/components/customer/order/order-info-card';
+import GuestRefundStatusCard from '@/components/customer/order/guest-refund-status-card';
 import StatusGuidanceCard from '@/components/customer/order/status-guidance-card';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
@@ -23,6 +24,7 @@ import Dialog from '@/components/ui/dialog';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { waLinkWithMessage } from '@/lib/wa';
+import type { GuestRefundPayload } from '@/types/refund';
 
 type TrackOrder = {
     id: number;
@@ -86,6 +88,7 @@ type Props = {
     canCreateAccount?: boolean;
     accountPhone?: string;
     accountName?: string;
+    refund?: GuestRefundPayload | null;
 };
 
 const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
@@ -98,6 +101,7 @@ export default function TrackPage({
     canCreateAccount = false,
     accountPhone,
     accountName,
+    refund = null,
 }: Props) {
     const { auth } = usePage().props as any;
     const isLoggedIn = !!auth?.user;
@@ -260,6 +264,8 @@ export default function TrackPage({
                     outletLatitude={order.outlet?.latitude}
                     outletLongitude={order.outlet?.longitude}
                 />
+
+                {refund && <GuestRefundStatusCard refund={refund} />}
 
                 {/* QR Code */}
                 {isPickup && order.status === 'ready_for_pickup' && (

@@ -52,8 +52,10 @@ const navGroups: NavGroup[] = [
             {
                 href: '/owner/finance',
                 label: 'Keuangan',
-                isActive: (url: string) =>
-                    url.split('?')[0] === '/owner/finance',
+                isActive: (url: string) => {
+                    const path = url.split('?')[0];
+                    return path === '/owner/finance' || path === '/owner/refunds';
+                },
             },
         ],
     },

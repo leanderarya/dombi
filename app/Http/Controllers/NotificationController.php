@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -10,20 +11,10 @@ class NotificationController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
+        $query = $this->recipientQuery($request);
 
-        $notifications = Notification::query()
-            ->where('user_type', $user->role)
-            ->where('user_id', $user->id)
-            ->latest()
-            ->limit(50)
-            ->get();
-
-        $unreadCount = Notification::query()
-            ->where('user_type', $user->role)
-            ->where('user_id', $user->id)
-            ->unread()
-            ->count();
+        $notifications = (clone $query)->latest()->limit(50)->get();
+        $unreadCount = (clone $query)->unread()->count();
 
         return response()->json([
             'notifications' => $notifications->map(fn (Notification $n) => [
@@ -42,11 +33,7 @@ class NotificationController extends Controller
 
     public function unreadCount(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        $query = Notification::query()
-            ->where('user_type', $user->role)
-            ->where('user_id', $user->id);
+        $query = $this->recipientQuery($request);
 
         $unreadCount = (clone $query)->unread()->count();
 
@@ -69,7 +56,12 @@ class NotificationController extends Controller
     {
         $user = $request->user();
 
-        if ($notification->user_type !== $user->role || $notification->user_id !== $user->id) {
+        if ($user->isCustomer()) {
+            $customer = $user->customer;
+            if (! $customer || $notification->customer_id !== $customer->id) {
+                abort(403);
+            }
+        } elseif ($notification->user_type !== $user->role || $notification->user_id !== $user->id) {
             abort(403);
         }
 
@@ -80,14 +72,27 @@ class NotificationController extends Controller
 
     public function markAllAsRead(Request $request): JsonResponse
     {
-        $user = $request->user();
-
-        Notification::query()
-            ->where('user_type', $user->role)
-            ->where('user_id', $user->id)
-            ->unread()
-            ->update(['read_at' => now()]);
+        $query = $this->recipientQuery($request);
+        (clone $query)->unread()->update(['read_at' => now()]);
 
         return response()->json(['success' => true]);
+    }
+
+    private function recipientQuery(Request $request): Builder
+    {
+        $user = $request->user();
+
+        if ($user->isCustomer()) {
+            $customer = $user->customer;
+            if ($customer) {
+                return Notification::query()
+                    ->where('user_type', 'customer')
+                    ->where('customer_id', $customer->id);
+            }
+        }
+
+        return Notification::query()
+            ->where('user_type', $user->role)
+            ->where('user_id', $user->id);
     }
 }

@@ -1,11 +1,13 @@
 import { Link } from '@inertiajs/react';
-import { RotateCcw, Smartphone, Store } from 'lucide-react';
+import { RotateCcw, Smartphone, Store, RefreshCw } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/format';
 import {
     getOrderStatusConfig,
     isTerminalStatus,
 } from '@/lib/order-status-config';
 import OrderCardShell from './order-card-shell';
+import { normalizeOrderReason } from '@/lib/order-reasons';
+import type { CustomerRefundPayload } from '@/types/refund';
 
 interface OrderItem {
     product_name: string;
@@ -13,11 +15,18 @@ interface OrderItem {
     variant_name?: string;
 }
 
+interface RefundBadge {
+    payment_status: string;
+    status_label: string;
+    queue_state: string;
+}
+
 interface Props {
     order: {
         id: number;
         order_code: string;
         status: string;
+        payment_status?: string;
         fulfillment_type?: string;
         total: number | string;
         ordered_at?: string;
@@ -26,8 +35,20 @@ interface Props {
         items?: OrderItem[];
         customer_address?: string;
         recovery_token?: string;
+        refund_badge?: RefundBadge | null;
+        refund?: RefundBadge | null;
     };
 }
+
+const REFUND_BADGE_STYLES: Record<string, string> = {
+    awaiting_customer: 'bg-amber-100 text-amber-800 border-amber-200',
+    awaiting_guest: 'bg-amber-100 text-amber-800 border-amber-200',
+    ready: 'bg-blue-100 text-blue-800 border-blue-200',
+    in_progress: 'bg-blue-100 text-blue-800 border-blue-200',
+    action_required: 'bg-red-100 text-red-800 border-red-200',
+    completed: 'bg-green-100 text-green-800 border-green-200',
+    rejected: 'bg-red-100 text-red-800 border-red-200',
+};
 
 export default function OrderHistoryCard({ order }: Props) {
     const isPickup = order.fulfillment_type !== 'delivery_dombi';
@@ -35,6 +56,7 @@ export default function OrderHistoryCard({ order }: Props) {
     const firstItem = order.items?.[0];
     const statusCfg = getOrderStatusConfig(order.status);
     const isDead = isTerminalStatus(order.status);
+    const refundBadge = order.refund_badge ?? order.refund ?? null;
 
     const dateStr = order.ordered_at
         ? formatDate(order.ordered_at)
@@ -47,7 +69,18 @@ export default function OrderHistoryCard({ order }: Props) {
             orderId={order.id}
             recoveryToken={order.recovery_token}
             status={order.status}
+            clickable={true}
         >
+            {/* Refund badge row */}
+            {refundBadge && (
+                <div className="mb-2 flex">
+                    <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold ${REFUND_BADGE_STYLES[refundBadge.queue_state] ?? 'bg-amber-100 text-amber-800 border-amber-200'}`}>
+                        <RefreshCw className="h-3 w-3" />
+                        {refundBadge.status_label}
+                    </span>
+                </div>
+            )}
+
             {/* Header: Logo + Order Type + Date + Status Badge */}
             <div className="flex items-start gap-3">
                 <div
