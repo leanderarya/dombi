@@ -115,4 +115,50 @@ class RefundFlowTest extends TestCase
 
         $this->assertSame('refund_pending', $order->payment_status);
     }
+
+    public function test_reject_paid_order_creates_refund_pending(): void
+    {
+        $outlet = Outlet::factory()->create();
+        $user = User::factory()->create(['role' => 'outlet', 'outlet_id' => $outlet->id]);
+        $order = Order::factory()->create([
+            'outlet_id' => $outlet->id,
+            'status' => 'pending_confirmation',
+            'payment_status' => 'paid',
+            'total' => 75000,
+        ]);
+
+        $this->actingAs($user)
+            ->post("/outlet/orders/{$order->id}/reject", [
+                'reason' => 'Stok Tidak Tersedia',
+            ]);
+
+        $order->refresh();
+        $this->assertSame('rejected_by_outlet', $order->status);
+        $this->assertSame('refund_pending', $order->payment_status);
+        $this->assertSame(75000, (int) $order->refund_amount);
+        $this->assertNotNull($order->refund_requested_at);
+    }
+
+    public function test_reject_unpaid_order_does_not_create_refund(): void
+    {
+        $outlet = Outlet::factory()->create();
+        $user = User::factory()->create(['role' => 'outlet', 'outlet_id' => $outlet->id]);
+        $order = Order::factory()->create([
+            'outlet_id' => $outlet->id,
+            'status' => 'pending_confirmation',
+            'payment_status' => 'pending',
+            'total' => 75000,
+        ]);
+
+        $this->actingAs($user)
+            ->post("/outlet/orders/{$order->id}/reject", [
+                'reason' => 'Stok Tidak Tersedia',
+            ]);
+
+        $order->refresh();
+        $this->assertSame('rejected_by_outlet', $order->status);
+        $this->assertSame('pending', $order->payment_status);
+        $this->assertNull($order->refund_amount);
+        $this->assertNull($order->refund_requested_at);
+    }
 }
