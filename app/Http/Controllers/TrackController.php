@@ -7,6 +7,7 @@ use App\Models\Notification;
 use App\Models\Order;
 use App\Services\GuestOrderMerger;
 use App\Services\OrderStatusService;
+use App\Services\RefundPayloadService;
 use App\Support\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -16,11 +17,11 @@ use Inertia\Inertia;
 
 class TrackController extends Controller
 {
-    public function __invoke(string $token, Request $request)
+    public function __invoke(string $token, Request $request, RefundPayloadService $payloads)
     {
         $order = Order::query()
             ->where('recovery_token', strtoupper($token))
-            ->with(['outlet:id,name,address,phone,latitude,longitude', 'items', 'statusHistories', 'delivery.courier:id,name'])
+            ->with(['outlet:id,name,address,phone,latitude,longitude', 'items', 'statusHistories', 'delivery.courier:id,name', 'customer', 'refundStatusHistories'])
             ->first();
 
         if (! $order) {
@@ -63,6 +64,9 @@ class TrackController extends Controller
                     'time_ago' => $n->created_at->diffForHumans(),
                 ]);
         }
+
+        $refund = $payloads->forGuest($order);
+        $canCancel = auth()->check() && $order->customer && $order->customer->user_id === auth()->id();
 
         return Inertia::render('track', [
             'order' => [
@@ -114,14 +118,20 @@ class TrackController extends Controller
                 'cancellation_reason' => $order->cancellation_reason,
                 'cancellation_note' => $order->cancellation_note,
             ],
-            'cancellationReasons' => OrderStatusService::cancellationReasons(),
+            'cancellationReasons' => [],
             'notifications' => $notifications,
             'found' => true,
-            'canCancel' => auth()->check() && $order->customer && $order->customer->user_id === auth()->id(),
+            'canCancel' => $canCancel,
             'canCreateAccount' => $request->session()->get('canCreateAccount', false),
             'accountPhone' => $request->session()->get('accountPhone'),
             'accountName' => $request->session()->get('accountName'),
         ]);
+
+        if ($refund !== null) {
+            $inertiaResponse->additional(['refund' => $refund]);
+        }
+
+        return $inertiaResponse;
     }
 
     /**
@@ -195,7 +205,7 @@ class TrackController extends Controller
         $user = $request->user();
 
         if (! $user) {
-            return response()->json(['success' => false, 'error' => 'Silakan masuk terlebih dahulu.'], 401);
+            abort(403, 'Guest tidak dapat membatalkan pesanan.');
         }
 
         $order = Order::query()
