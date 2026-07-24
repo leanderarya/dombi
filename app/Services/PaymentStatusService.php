@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Enums\PaymentStatus;
-use App\Enums\RefundRejectionReason;
 use App\Models\Order;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -14,7 +13,6 @@ class PaymentStatusService
     {
         $current = PaymentStatus::from($order->payment_status ?? 'pending');
 
-        // Same-status transition is always a no-op (idempotency guard).
         if ($current === $to) {
             return false;
         }
@@ -49,34 +47,6 @@ class PaymentStatusService
         return true;
     }
 
-    public function reopenRefund(Order $order): bool
-    {
-        $updated = Order::query()
-            ->whereKey($order->id)
-            ->where('payment_status', PaymentStatus::RefundRejected->value)
-            ->whereIn('refund_rejected_reason', [
-                RefundRejectionReason::InvalidDestination->value,
-                RefundRejectionReason::IncompleteDestination->value,
-            ])
-            ->update([
-                'payment_status' => PaymentStatus::RefundPending->value,
-                'refund_rejected_reason' => null,
-                'refund_rejection_note' => null,
-                'refund_rejected_at' => null,
-                'refund_rejected_by' => null,
-                'updated_at' => now(),
-            ]);
-
-        if ($updated !== 1) {
-            return false;
-        }
-
-        $order->refresh();
-        $this->bustCaches($order);
-
-        return true;
-    }
-
     private function normalizeExtra(array $extra): array
     {
         if (isset($extra['paid_at']) && $extra['paid_at'] === null) {
@@ -93,22 +63,10 @@ class PaymentStatusService
         Cache::forget('owner:order_stats');
     }
 
-    /**
-     * Valid payment_status transitions.
-     * States not listed here (Settled, RefundRejected) are immutable.
-     *
-     * @deprecated Refund transitions retained for backward compatibility.
-     *             Remove after all callers migrate in Tasks 10, 12, 24, 25.
-     *             reopenRefund() removed in Task 26.
-     *             See .superpowers/sdd/task-6-brief.md
-     */
     private const VALID_TRANSITIONS = [
         'pending' => ['paid', 'failed', 'expired'],
-        'paid' => ['refund_pending'],
         'failed' => ['paid', 'expired'],
         'expired' => ['paid'],
-        'refund_pending' => ['refund_in_progress', 'refund_rejected'],
-        'refund_in_progress' => ['refunded'],
     ];
 
     private function isValidTransition(PaymentStatus $from, PaymentStatus $to): bool
