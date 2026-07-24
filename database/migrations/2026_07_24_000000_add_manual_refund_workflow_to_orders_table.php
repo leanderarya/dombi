@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -36,6 +37,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        DB::table('orders')
+            ->where('payment_status', 'refund_in_progress')
+            ->update(['payment_status' => 'refund_pending']);
+
         Schema::table('orders', function (Blueprint $table) {
             $table->enum('payment_status', [
                 'pending', 'paid', 'settled', 'expired', 'failed',
