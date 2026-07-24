@@ -146,6 +146,8 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::post('/verify-phone', [SocialAuthController::class, 'verifyPhone'])->name('verify-phone');
 
         Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])->name('orders.show');
+        Route::patch('orders/{order}/refund-destination', [CustomerOrderController::class, 'updateRefundDestination'])
+            ->name('orders.refund-destination.update');
         Route::post('/orders/{order}/cancel', [CustomerOrderController::class, 'cancel'])->name('orders.cancel');
         Route::post('/orders/{order}/report', [OrderReportController::class, 'store'])->name('orders.report')->middleware('throttle:order-report');
         Route::get('/addresses', [CustomerAddressController::class, 'index'])->name('addresses.index');
@@ -181,15 +183,7 @@ Route::post('/customer/orders/{order}/pay', [CustomerOrderController::class, 'pa
 // Payment status polling — accessible to guest (same ownership check as pay)
 Route::get('/customer/orders/{order}/payment-status', [CustomerOrderController::class, 'paymentStatus'])->middleware('throttle:60,1')->name('orders.payment-status');
 
-// Guest cancel — no auth, token-validated via GuestCancelOrderRequest
-Route::prefix('guest')->middleware(['throttle:guest-cancel'])->group(function () {
-    Route::get('/orders/{order}/cancel/{token}', [App\Http\Controllers\Customer\GuestOrderController::class, 'showCancelPage'])
-        ->name('guest.orders.cancel-page');
-    Route::post('/orders/{order}/cancel/{token}', [App\Http\Controllers\Customer\GuestOrderController::class, 'cancel'])
-        ->middleware('throttle:guest-cancel-token')
-        ->name('guest.orders.cancel');
-});
-
+// Guest tracking — no auth, token-validated via recovery token
 // DOKU payment — no auth, signature-verified (called by DOKU servers)
 Route::match(['get', 'post'], '/payment/doku/notify', [DokuPaymentController::class, 'notify'])->name('doku.notify');
 Route::match(['get', 'post'], '/payment/doku/redirect', [DokuPaymentController::class, 'redirect'])->name('doku.redirect');
@@ -315,8 +309,11 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
         Route::resource('finance/payment-accounts', PaymentAccountController::class)->only(['store', 'update', 'destroy']);
         Route::get('refunds', [RefundController::class, 'index'])->name('refunds.index');
-        Route::post('refunds/{order}/mark-refunded', [RefundController::class, 'markRefunded'])->name('refunds.mark-refunded');
+        Route::post('refunds/{order}/destination', [RefundController::class, 'destination'])->name('refunds.destination');
+        Route::post('refunds/{order}/start', [RefundController::class, 'start'])->name('refunds.start');
         Route::post('refunds/{order}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
+        Route::post('refunds/{order}/rollback', [RefundController::class, 'rollback'])->name('refunds.rollback');
+        Route::post('refunds/{order}/complete', [RefundController::class, 'complete'])->name('refunds.complete');
         Route::get('returns', [OwnerReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/{returnRequest}', [OwnerReturnController::class, 'show'])->name('returns.show');
         Route::post('returns/{returnRequest}/approve', [OwnerReturnController::class, 'approve'])->name('returns.approve');
@@ -335,6 +332,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('couriers/{profile}/reject', [\App\Http\Controllers\Owner\CourierManagementController::class, 'reject'])->name('couriers.reject');
         Route::put('couriers/{profile}/outlets', [\App\Http\Controllers\Owner\CourierManagementController::class, 'updateAssignments'])->name('couriers.outlets');
     });
+
+    // Proof streaming — authenticated role-aware
+    Route::get('/refunds/{order}/proof', [App\Http\Controllers\RefundProofController::class, '__invoke'])->name('refunds.proof');
 
     // Outlet routes
     Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')->name('outlet.')->group(function (): void {
