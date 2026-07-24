@@ -7,10 +7,13 @@ use App\Models\Order;
 use App\Models\PaymentTransaction;
 use App\Models\RefundStatusHistory;
 use App\Models\User;
+use App\Services\NotificationService;
 use App\Services\RefundService;
 use Carbon\Carbon;
 use DomainException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class RefundServiceTest extends TestCase
@@ -617,31 +620,261 @@ class RefundServiceTest extends TestCase
         $this->assertSame('incomplete_destination', $history->reason_code);
     }
 
-    public function test_start_history_rolls_back_on_failure(): void
+    // ─── Task 9: Rollback & Complete Tests ────────────────────────────
+
+    public function test_retry_rollback_goes_to_refund_pending_and_valid_and_clears_started_fields(): void
     {
         $customer = $this->registeredCustomer();
         $owner = User::factory()->create();
         $order = Order::factory()->paid()->create([
             'customer_id' => $customer->id,
-            'payment_status' => 'refund_pending',
+            'payment_status' => 'refund_in_progress',
             'refund_destination_status' => 'valid',
             'refund_destination_type' => 'bank',
             'refund_bank_name' => 'BCA',
             'refund_account_number' => '1234567890',
             'refund_account_holder' => 'Arya',
             'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
         ]);
 
-        $originalStatus = $order->payment_status;
+        $service = app(RefundService::class);
+        $history = $service->rollback($order, $owner->id, 'retry', 'Perlu perbaikan data');
+
+        $order->refresh();
+        $this->assertSame('refund_pending', $order->payment_status);
+        $this->assertSame('valid', $order->refund_destination_status);
+        $this->assertNull($order->refund_started_at);
+        $this->assertNull($order->refund_started_by);
+
+        $this->assertSame('processing_rolled_back', $history->event);
+        $this->assertSame('refund_in_progress', $history->from_status);
+        $this->assertSame('refund_pending', $history->to_status);
+        $this->assertSame('Perlu perbaikan data', $history->note);
+        $this->assertEquals(['rollback_mode' => 'retry'], $history->metadata);
+    }
+
+    public function test_fix_destination_rollback_goes_to_refund_pending_and_invalid_and_clears_started(): void
+    {
+        $customer = $this->registeredCustomer();
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_destination_type' => 'bank',
+            'refund_bank_name' => 'BCA',
+            'refund_account_number' => '1234567890',
+            'refund_account_holder' => 'Arya',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        $service = app(RefundService::class);
+        $history = $service->rollback($order, $owner->id, 'fix_destination', 'Data tujuan salah');
+
+        $order->refresh();
+        $this->assertSame('refund_pending', $order->payment_status);
+        $this->assertSame('invalid', $order->refund_destination_status);
+        $this->assertNull($order->refund_started_at);
+        $this->assertNull($order->refund_started_by);
+
+        $this->assertSame('processing_rolled_back', $history->event);
+        $this->assertEquals(['rollback_mode' => 'fix_destination'], $history->metadata);
+    }
+
+    public function test_rollback_invalid_mode_rejected(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+            'refund_amount' => 50000,
+        ]);
+
+        $this->expectException(DomainException::class);
+
+        app(RefundService::class)->rollback($order, $owner->id, 'invalid_mode', 'Some reason');
+    }
+
+    public function test_rollback_blank_reason_rejected(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+            'refund_amount' => 50000,
+        ]);
+
+        $this->expectException(DomainException::class);
+
+        app(RefundService::class)->rollback($order, $owner->id, 'retry', '');
+    }
+
+    public function test_rollback_reason_over_500_chars_rejected(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+            'refund_amount' => 50000,
+        ]);
+
+        $this->expectException(DomainException::class);
+
+        app(RefundService::class)->rollback($order, $owner->id, 'retry', str_repeat('a', 501));
+    }
+
+    public function test_rollback_after_refunded_rejected(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refunded',
+            'refund_amount' => 50000,
+        ]);
+
+        $this->expectException(DomainException::class);
+
+        app(RefundService::class)->rollback($order, $owner->id, 'retry', 'Test');
+    }
+
+    public function test_complete_from_in_progress_writes_refunded_and_one_history(): void
+    {
+        $customer = $this->registeredCustomer();
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        $service = app(RefundService::class);
+        $proofPath = "private:refund-proofs/{$order->id}/proof.jpg";
+
+        $history = $service->complete($order, $owner->id, $proofPath, 'TRX001', 'Transfer selesai');
+
+        $order->refresh();
+        $this->assertSame('refunded', $order->payment_status);
+        $this->assertSame('private:refund-proofs/'.$order->id.'/proof.jpg', $order->refund_proof_image);
+        $this->assertSame('TRX001', $order->refund_transfer_reference);
+        $this->assertSame('Transfer selesai', $order->refund_transfer_note);
+        $this->assertSame($owner->id, $order->refunded_by);
+        $this->assertNotNull($order->refunded_at);
+
+        $this->assertSame('refund_completed', $history->event);
+        $this->assertSame('refund_in_progress', $history->from_status);
+        $this->assertSame('refunded', $history->to_status);
+        $this->assertEquals(['proof_present' => true, 'reference_present' => true], $history->metadata);
+        $this->assertDatabaseCount('refund_status_histories', 1);
+    }
+
+    public function test_complete_from_pending_rejected(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_pending',
+            'refund_amount' => 50000,
+        ]);
+
+        $this->expectException(DomainException::class);
+        $this->expectExceptionMessage('Refund sudah tidak dalam status diproses.');
+
+        app(RefundService::class)->complete($order, $owner->id, "private:refund-proofs/{$order->id}/p.jpg", null, null);
+    }
+
+    public function test_completion_keeps_refund_amount_after_order_total_changes(): void
+    {
+        $customer = $this->registeredCustomer();
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_amount' => 50000,
+            'total' => 75000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        $service = app(RefundService::class);
+        $history = $service->complete($order, $owner->id, "private:refund-proofs/{$order->id}/p.jpg", null, null);
+
+        $order->refresh();
+        $this->assertSame('refunded', $order->payment_status);
+        $this->assertSame(50000.0, (float) $order->refund_amount);
+    }
+
+    public function test_completion_accepts_only_private_refund_proofs_prefix(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+            'refund_amount' => 50000,
+        ]);
+
+        $this->expectException(DomainException::class);
+
+        app(RefundService::class)->complete($order, $owner->id, "public:proofs/{$order->id}/p.jpg", null, null);
+    }
+
+    public function test_completion_metadata_records_only_booleans(): void
+    {
+        $customer = $this->registeredCustomer();
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        $service = app(RefundService::class);
+        $history = $service->complete($order, $owner->id, "private:refund-proofs/{$order->id}/p.jpg", null, null);
+
+        $this->assertSame(['proof_present' => true, 'reference_present' => false], $history->metadata);
+    }
+
+    public function test_lost_completion_cas_creates_no_history(): void
+    {
+        $customer = $this->registeredCustomer();
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'customer_id' => $customer->id,
+            'payment_status' => 'refund_in_progress',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        $order->update(['payment_status' => 'refunded']);
+
+        $this->expectException(DomainException::class);
+
+        app(RefundService::class)->complete($order->fresh(), $owner->id, "private:refund-proofs/{$order->id}/p.jpg", null, null);
+    }
+
+    public function test_rollback_history_failure_rolls_back_order(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+            'refund_destination_status' => 'valid',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
 
         $dispatcher = RefundStatusHistory::getEventDispatcher();
-
         RefundStatusHistory::creating(function () {
             throw new \RuntimeException('Simulated history failure');
         });
 
         try {
-            app(RefundService::class)->start($order, $owner->id);
+            app(RefundService::class)->rollback($order, $owner->id, 'retry', 'Test');
             $this->fail('Expected exception was not thrown.');
         } catch (\RuntimeException $e) {
             $this->assertSame('Simulated history failure', $e->getMessage());
@@ -650,8 +883,35 @@ class RefundServiceTest extends TestCase
         }
 
         $order->refresh();
-        $this->assertSame($originalStatus, $order->payment_status);
-        $this->assertNull($order->refund_started_at);
-        $this->assertNull($order->refund_started_by);
+        $this->assertSame('refund_in_progress', $order->payment_status);
+        $this->assertNotNull($order->refund_started_at);
+    }
+
+    public function test_complete_history_failure_rolls_back_order(): void
+    {
+        $owner = User::factory()->create();
+        $order = Order::factory()->paid()->create([
+            'payment_status' => 'refund_in_progress',
+            'refund_amount' => 50000,
+            'refund_started_at' => now()->subHour(),
+            'refund_started_by' => $owner->id,
+        ]);
+
+        $dispatcher = RefundStatusHistory::getEventDispatcher();
+        RefundStatusHistory::creating(function () {
+            throw new \RuntimeException('Simulated history failure');
+        });
+
+        try {
+            app(RefundService::class)->complete($order, $owner->id, "private:refund-proofs/{$order->id}/p.jpg", null, null);
+            $this->fail('Expected exception was not thrown.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('Simulated history failure', $e->getMessage());
+        } finally {
+            $dispatcher->forget('eloquent.creating: '.RefundStatusHistory::class);
+        }
+
+        $order->refresh();
+        $this->assertSame('refund_in_progress', $order->payment_status);
     }
 }
