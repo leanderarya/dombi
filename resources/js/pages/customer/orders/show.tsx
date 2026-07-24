@@ -12,6 +12,7 @@ import {
 import { useEffect, useState } from 'react';
 import OrderHeader from '@/components/customer/order/order-header';
 import OrderInfoCard from '@/components/customer/order/order-info-card';
+import RefundStatusCard from '@/components/customer/order/refund-status-card';
 import StatusGuidanceCard from '@/components/customer/order/status-guidance-card';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
@@ -116,6 +117,7 @@ export default function OrderShow({
     activeReport = null,
     hasRecentReport = false,
     canReport = false,
+    refund = null,
 }: any) {
     usePolling(15000);
     const { addOrder } = useOrderRecovery();
@@ -215,6 +217,8 @@ export default function OrderShow({
                     customerName={order.customer_name}
                     orderCode={order.order_code}
                 />
+
+                {refund && <RefundStatusCard refund={refund} />}
 
                 {isPickup && order.status === 'ready_for_pickup' && (
                     <OrderQRCard orderCode={order.order_code} />
