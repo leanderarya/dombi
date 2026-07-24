@@ -38,6 +38,11 @@ export default function RefundCompletionModal({ orderId, orderCode, amount, open
             return;
         }
 
+        if (proof.size > 2 * 1024 * 1024) {
+            toast.error('Ukuran file maksimal 2 MB');
+            return;
+        }
+
         setBusy(true);
         const fd = new FormData();
         fd.append('proof', proof);
@@ -59,18 +64,19 @@ export default function RefundCompletionModal({ orderId, orderCode, amount, open
         <Dialog open={open} onOpenChange={(v) => !v && !busy && onClose()}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Selesaikan Refund</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle id="complete-dialog-title">Selesaikan Refund</DialogTitle>
+                    <DialogDescription id="complete-dialog-desc">
                         Order #{orderCode} — Rp{amount.toLocaleString('id-ID')}
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} aria-labelledby="complete-dialog-title" className="space-y-4">
                     <div>
                         <Label htmlFor="proof">Bukti Transfer</Label>
+                        <p className="text-[11px] text-text-muted">Maksimal 2 MB. Format: JPG, PNG, WebP</p>
                         <input
                             id="proof"
                             type="file"
-                            accept="image/*"
+                            accept="image/jpeg,image/png,image/webp"
                             onChange={(e) => {
                                 const file = e.target.files?.[0] ?? null;
                                 setProof(file);
@@ -83,20 +89,21 @@ export default function RefundCompletionModal({ orderId, orderCode, amount, open
                             className="mt-1 block w-full text-xs"
                         />
                         {preview && (
-                            <img src={preview} alt="Preview" className="mt-2 max-h-32 rounded object-contain" />
+                            <img src={preview} alt="Preview bukti transfer" className="mt-2 max-h-32 rounded object-contain" />
                         )}
                     </div>
                     <div>
-                        <Label htmlFor="reference">Referensi Transfer (opsional)</Label>
-                        <Input id="reference" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="B1234567890" />
+                        <Label htmlFor="reference">Referensi Transfer</Label>
+                        <Input id="reference" value={reference} onChange={(e) => setReference(e.target.value)} placeholder="B1234567890" maxLength={255} />
                     </div>
                     <div>
                         <Label htmlFor="note">Catatan (opsional)</Label>
-                            <Textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="..." rows={2} />
+                        <Textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} placeholder="..." rows={2} maxLength={500} />
+                        <p className="text-[11px] text-text-muted">{note.length}/500</p>
                     </div>
                     <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={onClose} disabled={busy}>Batal</Button>
-                        <Button type="submit" disabled={busy || !proof}>{busy ? 'Memproses...' : 'Selesaikan Refund'}</Button>
+                        <Button type="button" variant="outline" onClick={onClose} disabled={busy} className="min-h-11">Batal</Button>
+                        <Button type="submit" disabled={busy || !proof} className="min-h-11">{busy ? 'Memproses...' : 'Selesaikan Refund'}</Button>
                     </div>
                 </form>
             </DialogContent>
