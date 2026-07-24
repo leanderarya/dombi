@@ -9,6 +9,7 @@ use App\Models\RefundStatusHistory;
 use Carbon\Carbon;
 use DomainException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class RefundService
 {
@@ -265,6 +266,88 @@ class RefundService
                 'actor_id' => $actorId,
                 'reason_code' => $reason,
                 'note' => $note,
+            ]);
+        });
+    }
+
+    public function rollback(Order $order, int $ownerId, string $mode, string $reason): RefundStatusHistory
+    {
+        if (!in_array($mode, ['retry', 'fix_destination'], true)) {
+            throw new DomainException('Mode rollback tidak valid.');
+        }
+
+        $trimmed = trim($reason);
+        if ($trimmed === '' || mb_strlen($trimmed) > 500) {
+            throw new DomainException('Alasan rollback tidak valid.');
+        }
+
+        return DB::transaction(function () use ($order, $ownerId, $mode, $trimmed) {
+            $locked = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
+                throw new DomainException('Refund sudah tidak dalam status diproses.');
+            }
+
+            $locked->update([
+                'payment_status' => PaymentStatus::RefundPending->value,
+                'refund_started_at' => null,
+                'refund_started_by' => null,
+                'refund_destination_status' => $mode === 'retry'
+                    ? Order::REFUND_DESTINATION_VALID
+                    : Order::REFUND_DESTINATION_INVALID,
+            ]);
+
+            return RefundStatusHistory::create([
+                'order_id' => $locked->id,
+                'from_status' => PaymentStatus::RefundInProgress->value,
+                'to_status' => PaymentStatus::RefundPending->value,
+                'event' => RefundStatusHistory::EVENT_PROCESSING_ROLLED_BACK,
+                'actor_type' => 'owner',
+                'actor_id' => $ownerId,
+                'note' => $trimmed,
+                'metadata' => ['rollback_mode' => $mode],
+            ]);
+        });
+    }
+
+    public function complete(Order $order, int $ownerId, string $proofPath, ?string $transferReference, ?string $transferNote): RefundStatusHistory
+    {
+        $prefix = "private:refund-proofs/{$order->id}/";
+        if (!Str::startsWith($proofPath, $prefix)) {
+            throw new DomainException('Path bukti refund tidak valid.');
+        }
+
+        return DB::transaction(function () use ($order, $ownerId, $proofPath, $transferReference, $transferNote) {
+            $locked = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
+                throw new DomainException('Refund sudah tidak dalam status diproses.');
+            }
+
+            if ((float) $locked->refund_amount <= 0) {
+                throw new DomainException('Jumlah refund tidak valid.');
+            }
+
+            $locked->update([
+                'payment_status' => PaymentStatus::Refunded->value,
+                'refund_proof_image' => $proofPath,
+                'refund_transfer_reference' => $transferReference,
+                'refund_transfer_note' => $transferNote,
+                'refunded_by' => $ownerId,
+                'refunded_at' => now(),
+            ]);
+
+            return RefundStatusHistory::create([
+                'order_id' => $locked->id,
+                'from_status' => PaymentStatus::RefundInProgress->value,
+                'to_status' => PaymentStatus::Refunded->value,
+                'event' => RefundStatusHistory::EVENT_REFUND_COMPLETED,
+                'actor_type' => 'owner',
+                'actor_id' => $ownerId,
+                'metadata' => [
+                    'proof_present' => $proofPath !== null,
+                    'reference_present' => $transferReference !== null,
+                ],
             ]);
         });
     }
