@@ -9,6 +9,7 @@ use App\Models\PaymentAccount;
 use App\Models\Settlement;
 use App\Models\SettlementAuditLog;
 use App\Models\SettlementPayment;
+use App\Services\RefundPayloadService;
 use App\Services\SettlementPaymentService;
 use App\Services\SettlementReconciliationService;
 use Carbon\Carbon;
@@ -23,6 +24,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FinanceSettlementController extends Controller
 {
+    public function __construct(
+        private readonly RefundPayloadService $refundPayloads,
+    ) {}
+
     /**
      * Dashboard Tagihan — all outlets with sales + settlement aggregation.
      */
@@ -184,6 +189,63 @@ class FinanceSettlementController extends Controller
         // Rekening tab data
         $accounts = PaymentAccount::orderBy('bank_name')->get();
 
+        // Refund tab data
+        $filter = $request->string('filter', 'ready')->toString();
+        $validQueues = RefundPayloadService::QUEUES;
+        if (! in_array($filter, $validQueues, true)) {
+            $filter = 'ready';
+        }
+
+        $query = Order::refundable()
+            ->with(['outlet:id,name', 'customer', 'paymentTransactions'])
+            ->orderByDesc('refund_requested_at');
+
+        $query = match ($filter) {
+            'awaiting_customer' => $query
+                ->where('payment_status', 'refund_pending')
+                ->where('refund_destination_status', '!=', 'valid')
+                ->where(fn ($q) => $q
+                    ->whereHas('customer', fn ($cq) => $cq->whereNotNull('user_id'))
+                    ->orDoesntHave('customer')
+                ),
+            'awaiting_guest' => $query
+                ->where('payment_status', 'refund_pending')
+                ->where('refund_destination_status', '!=', 'valid')
+                ->whereHas('customer', fn ($cq) => $cq->whereNull('user_id')),
+            'ready' => $query
+                ->where('payment_status', 'refund_pending')
+                ->where('refund_destination_status', 'valid'),
+            'in_progress' => $query
+                ->where('payment_status', 'refund_in_progress')
+                ->where('refund_started_at', '>', now()->subHours(24)),
+            'action_required' => $query
+                ->where(fn ($q) => $q
+                    ->where('payment_status', 'refund_in_progress')
+                    ->where('refund_started_at', '<=', now()->subHours(24))
+                    ->orWhere('payment_status', 'refund_failed')
+                ),
+            'completed' => $query->where('payment_status', 'refunded'),
+            'rejected' => $query->where('payment_status', 'refund_rejected'),
+            default => $query,
+        };
+
+        $refunds = $query->paginate(20)->through(
+            fn (Order $order) => $this->refundPayloads->forOwner($order),
+        );
+
+        $refundCounts = [];
+        foreach ($validQueues as $queue) {
+            $refundCounts[$queue] = 0;
+        }
+        Order::refundable()->chunk(200, function ($orders) use (&$refundCounts, $validQueues): void {
+            foreach ($orders as $order) {
+                $queue = $this->refundPayloads->queueState($order);
+                if ($queue !== null && isset($refundCounts[$queue])) {
+                    $refundCounts[$queue]++;
+                }
+            }
+        });
+
         return Inertia::render('owner/finance/index', [
             // Tagihan
             'kpis' => [
@@ -202,6 +264,10 @@ class FinanceSettlementController extends Controller
             ],
             // Rekening
             'accounts' => $accounts,
+            // Refund
+            'refunds' => $refunds,
+            'refundCounts' => $refundCounts,
+            'refundFilter' => $filter,
         ]);
     }
 
