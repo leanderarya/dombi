@@ -8,6 +8,7 @@ use App\Models\PaymentTransaction;
 use App\Models\RefundStatusHistory;
 use App\Models\User;
 use App\Services\RefundService;
+use Carbon\Carbon;
 use DomainException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -30,6 +31,7 @@ class RefundServiceTest extends TestCase
     private function registeredCustomer(): Customer
     {
         $user = User::factory()->create();
+
         return Customer::factory()->create(['user_id' => $user->id]);
     }
 
@@ -328,6 +330,8 @@ class RefundServiceTest extends TestCase
             'refund_destination_status',
         ]);
 
+        $dispatcher = RefundStatusHistory::getEventDispatcher();
+
         RefundStatusHistory::creating(function () {
             throw new \RuntimeException('Simulated history failure');
         });
@@ -341,6 +345,8 @@ class RefundServiceTest extends TestCase
             $this->fail('Expected exception was not thrown.');
         } catch (\RuntimeException $e) {
             $this->assertSame('Simulated history failure', $e->getMessage());
+        } finally {
+            $dispatcher->forget('eloquent.creating: '.RefundStatusHistory::class);
         }
 
         $order->refresh();
@@ -536,7 +542,7 @@ class RefundServiceTest extends TestCase
         $order = Order::factory()->paid()->create([
             'payment_status' => 'refund_pending',
             'refund_destination_status' => 'missing',
-            'refund_requested_at' => \Carbon\Carbon::create(2026, 7, 23, 23, 59, 0, config('app.timezone')),
+            'refund_requested_at' => Carbon::create(2026, 7, 23, 23, 59, 0, config('app.timezone')),
         ]);
 
         $history = app(RefundService::class)->reject($order, 'payment_unverified', null, 'system', $admin->id, legacyRepair: true);
@@ -552,7 +558,7 @@ class RefundServiceTest extends TestCase
         $order = Order::factory()->paid()->create([
             'payment_status' => 'refund_pending',
             'refund_destination_status' => 'missing',
-            'refund_requested_at' => \Carbon\Carbon::create(2026, 7, 24, 2, 0, 0, config('app.timezone')),
+            'refund_requested_at' => Carbon::create(2026, 7, 24, 2, 0, 0, config('app.timezone')),
         ]);
 
         $this->expectException(DomainException::class);
@@ -566,7 +572,7 @@ class RefundServiceTest extends TestCase
         $order = Order::factory()->paid()->create([
             'payment_status' => 'refund_pending',
             'refund_destination_status' => 'missing',
-            'refund_requested_at' => \Carbon\Carbon::create(2026, 7, 23, 23, 59, 0, config('app.timezone')),
+            'refund_requested_at' => Carbon::create(2026, 7, 23, 23, 59, 0, config('app.timezone')),
         ]);
 
         $this->expectException(DomainException::class);
@@ -628,6 +634,8 @@ class RefundServiceTest extends TestCase
 
         $originalStatus = $order->payment_status;
 
+        $dispatcher = RefundStatusHistory::getEventDispatcher();
+
         RefundStatusHistory::creating(function () {
             throw new \RuntimeException('Simulated history failure');
         });
@@ -637,6 +645,8 @@ class RefundServiceTest extends TestCase
             $this->fail('Expected exception was not thrown.');
         } catch (\RuntimeException $e) {
             $this->assertSame('Simulated history failure', $e->getMessage());
+        } finally {
+            $dispatcher->forget('eloquent.creating: '.RefundStatusHistory::class);
         }
 
         $order->refresh();
