@@ -9,7 +9,9 @@ use App\Models\PaymentTransaction;
 use App\Services\NotificationService;
 use App\Services\OrderStatusService;
 use App\Services\PaymentStatusService;
+use App\Services\RefundService;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class DokuService
@@ -20,11 +22,14 @@ class DokuService
 
     private string $secretKey;
 
+    private RefundService $refundService;
+
     public function __construct()
     {
         $this->baseUrl = config('doku.base_url') ?? 'https://api-sandbox.doku.com';
         $this->clientId = config('doku.client_id') ?? '';
         $this->secretKey = config('doku.api_key') ?? '';
+        $this->refundService = app(RefundService::class);
     }
 
     /**
@@ -396,10 +401,6 @@ class DokuService
      */
     public function markOrderPaid(Order $order): void
     {
-        if (! app(PaymentStatusService::class)->transition($order, PaymentStatus::Paid, ['paid_at' => now()])) {
-            return; // already paid/terminal — no double marking
-        }
-
         $terminalStatuses = [
             Order::STATUS_CANCELLED_BY_CUSTOMER,
             Order::STATUS_CANCELLED_BY_OUTLET,
@@ -408,21 +409,27 @@ class DokuService
         ];
 
         if (in_array($order->status, $terminalStatuses, true)) {
-            // Late payment after cancellation/expiry → flag manual refund, no Doku call.
-            app(PaymentStatusService::class)->transition($order, PaymentStatus::RefundPending, [
-                'refund_requested_at' => now(),
-                'refund_amount' => $order->total,
-            ]);
-            app(NotificationService::class)->notifyRefundRequested($order);
+            DB::transaction(function () use ($order) {
+                $locked = Order::lockForUpdate()
+                    ->with('paymentTransactions')
+                    ->findOrFail($order->id);
+
+                if (! app(PaymentStatusService::class)->transition($locked, PaymentStatus::Paid, ['paid_at' => now()])) {
+                    return;
+                }
+
+                $this->refundService->request($locked, 'system', null, 'late_payment');
+            });
+            return;
+        }
+
+        if (! app(PaymentStatusService::class)->transition($order, PaymentStatus::Paid, ['paid_at' => now()])) {
             return;
         }
 
         if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
-            // Payment confirmed but outlet still needs to accept.
-            // Order stays pending_confirmation until outlet confirms or rejects.
+            app(NotificationService::class)->notifyOrderCreated($order);
         }
-
-        app(NotificationService::class)->notifyOrderCreated($order);
     }
 
     public function markOrderPaidPublic(Order $order): void
@@ -433,15 +440,16 @@ class DokuService
     /**
      * Process payment status change — shared by webhook and status sync.
      * Handles: paid, failed, expired transitions.
-     * Public so DokuPaymentController can use it as fallback when syncStatusFromDoku fails.
      */
     public function processPaymentStatusChange(Order $order, string $status): void
     {
         $to = PaymentStatus::from($status);
+
         if ($to === PaymentStatus::Paid) {
             $this->markOrderPaid($order);
             return;
         }
+
         if (in_array($status, ['failed', 'expired'], true)
             && $order->payment_status === 'pending') {
             $retryWindowMinutes = config('order.payment_retry_window_minutes', 15);
