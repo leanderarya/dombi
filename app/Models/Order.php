@@ -81,6 +81,10 @@ class Order extends Model
         self::FULFILLMENT_DELIVERY_OJOL,
     ];
 
+    public const REFUND_DESTINATION_MISSING = 'missing';
+    public const REFUND_DESTINATION_VALID = 'valid';
+    public const REFUND_DESTINATION_INVALID = 'invalid';
+
     protected $fillable = [
         'customer_id', 'outlet_id', 'recommended_outlet_id', 'order_code', 'recovery_token', 'guest_token', 'status', 'fulfillment_type',
         'subtotal', 'delivery_fee', 'payment_method', 'payment_fee', 'total', 'customer_name', 'customer_phone',
@@ -98,6 +102,7 @@ class Order extends Model
         'refund_ewallet_provider', 'refund_ewallet_number', 'refund_ewallet_holder', 'refund_destination_submitted_at',
         'refund_started_at', 'refund_started_by', 'refund_transfer_reference', 'refund_transfer_note',
         'refund_rejected_at', 'refund_rejected_by', 'refund_rejection_note',
+        'refund_destination_status',
         'gateway_fee', 'absorbed_fee',
     ];
 
@@ -152,6 +157,7 @@ class Order extends Model
             'refund_ewallet_provider' => 'encrypted',
             'refund_ewallet_number' => 'encrypted',
             'refund_ewallet_holder' => 'encrypted',
+            'refund_destination_status' => 'string',
             'gateway_fee' => 'decimal:2',
             'absorbed_fee' => 'decimal:2',
         ];
@@ -174,6 +180,7 @@ class Order extends Model
             PaymentStatus::RefundInProgress->value,
             PaymentStatus::Refunded->value,
             PaymentStatus::RefundRejected->value,
+            PaymentStatus::RefundFailed->value,
         ]);
     }
 
@@ -275,6 +282,18 @@ class Order extends Model
     public function paymentTransactions(): HasMany
     {
         return $this->hasMany(PaymentTransaction::class);
+    }
+
+    public function refundStatusHistories(): HasMany
+    {
+        return $this->hasMany(RefundStatusHistory::class)->orderBy('created_at')->orderBy('id');
+    }
+
+    public function isGuestCustomer(): bool
+    {
+        return $this->relationLoaded('customer')
+            ? $this->customer?->user_id === null
+            : ! $this->customer()->whereNotNull('user_id')->exists();
     }
 
     public function isActive(): bool
