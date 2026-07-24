@@ -55,6 +55,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
                 'outlet_provisioning' => fn () => $request->session()->get('outlet_provisioning'),
             ],
             'guestMode' => fn () => session('guest_mode', false),
