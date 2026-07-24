@@ -101,7 +101,8 @@ class OrderController extends Controller
             ->where('customer_id', $customer->id)
             ->exists();
 
-        return Inertia::render('customer/orders/show', [
+        $refund = $this->refundPayload($order);
+        $props = [
             'order' => $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier']),
             'cancellationReasons' => OrderStatusService::cancellationReasons(),
             'activeReport' => $activeReport,
@@ -109,8 +110,13 @@ class OrderController extends Controller
             'canReport' => $order->status === Order::STATUS_COMPLETED
                 && (! $order->completed_at || $order->completed_at->gt(now()->subDays(7)))
                 && ! $hasRecentReport,
-            'refund' => $this->refundPayload($order),
-        ]);
+        ];
+
+        if ($refund !== null) {
+            $props['refund'] = $refund;
+        }
+
+        return Inertia::render('customer/orders/show', $props);
     }
 
     public function confirmation(Order $order, string $token): Response
