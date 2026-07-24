@@ -65,6 +65,22 @@ const STATUS_GUIDANCE: Record<
         description: 'Pesanan kadaluarsa',
         nextStep: 'Outlet tidak konfirmasi dalam batas waktu',
     },
+    refund_pending: {
+        description: 'Refund sedang diproses',
+        nextStep: 'Lengkapi data tujuan transfer untuk melanjutkan',
+    },
+    refund_in_progress: {
+        description: 'Owner sedang memproses refund',
+        nextStep: 'Dana akan ditransfer setelah selesai diverifikasi',
+    },
+    refunded: {
+        description: 'Refund telah selesai diproses',
+        nextStep: 'Cek bukti transfer di panel refund',
+    },
+    refund_rejected: {
+        description: 'Refund tidak dapat diproses',
+        nextStep: 'Lihat alasan penolakan di panel refund',
+    },
 };
 
 interface Props {
@@ -105,7 +121,7 @@ export default function StatusGuidanceCard({
         : status === 'ready_for_pickup' && isDelivery
           ? 'ready_for_pickup_delivery'
           : status;
-    const guidance = STATUS_GUIDANCE[guidanceKey];
+    const guidance = STATUS_GUIDANCE[guidanceKey] ?? STATUS_GUIDANCE[paymentStatus ?? ''];
 
     if (!guidance) return null;
 
