@@ -46,7 +46,7 @@ const REPORT_STATUS_LABELS: Record<string, { label: string; variant: string }> =
         rejected: { label: 'Tidak Dapat Diproses', variant: 'danger' },
     };
 
-const CANCELLABLE_STATUSES = ['pending_confirmation', 'confirmed', 'preparing'];
+const CANCELLABLE_STATUSES = ['pending_confirmation'];
 
 const STATUS_GUIDANCE: Record<
     string,
