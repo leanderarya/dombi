@@ -317,7 +317,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('finance/settlements/{outlet}/send-invoice', [FinanceSettlementController::class, 'sendInvoice'])->name('finance.settlements.send-invoice');
         Route::resource('finance/payment-accounts', PaymentAccountController::class)->only(['store', 'update', 'destroy']);
         Route::get('refunds', [RefundController::class, 'index'])->name('refunds.index');
-        Route::post('refunds/{order}/mark-refunded', [RefundController::class, 'markRefunded'])->name('refunds.mark-refunded');
+        Route::post('refunds/{order}/start', [RefundController::class, 'start'])->name('refunds.start');
+        Route::post('refunds/{order}/complete', [RefundController::class, 'complete'])->name('refunds.complete');
         Route::post('refunds/{order}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
         Route::get('returns', [OwnerReturnController::class, 'index'])->name('returns.index');
         Route::get('returns/{returnRequest}', [OwnerReturnController::class, 'show'])->name('returns.show');
