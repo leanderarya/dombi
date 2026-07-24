@@ -417,14 +417,8 @@ class DokuService
         }
 
         if ($order->status === Order::STATUS_PENDING_CONFIRMATION) {
-            try {
-                app(OrderStatusService::class)->updateStatus($order, Order::STATUS_CONFIRMED);
-            } catch (\Exception $e) {
-                Log::info('Order status transition skipped', [
-                    'order_id' => $order->id,
-                    'current_status' => $order->fresh()->status,
-                ]);
-            }
+            // Payment confirmed but outlet still needs to accept.
+            // Order stays pending_confirmation until outlet confirms or rejects.
         }
 
         app(NotificationService::class)->notifyOrderCreated($order);
