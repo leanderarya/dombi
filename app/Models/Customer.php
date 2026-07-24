@@ -55,12 +55,12 @@ class Customer extends Model
 
     public function isGuest(): bool
     {
-        return ! $this->is_registered;
+        return $this->user_id === null;
     }
 
     public function isRegistered(): bool
     {
-        return $this->is_registered;
+        return $this->user_id !== null;
     }
 
     /**
@@ -87,7 +87,7 @@ class Customer extends Model
      */
     public function scopeGuest($query)
     {
-        return $query->where('is_registered', false);
+        return $query->whereNull('user_id');
     }
 
     /**
@@ -95,6 +95,6 @@ class Customer extends Model
      */
     public function scopeRegistered($query)
     {
-        return $query->where('is_registered', true);
+        return $query->whereNotNull('user_id');
     }
 }
