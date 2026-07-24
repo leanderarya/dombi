@@ -338,6 +338,7 @@ class OrderStatusService
         $ok = app(PaymentStatusService::class)->transition($order, PaymentStatus::RefundPending, [
             'refund_requested_at' => now(),
             'refund_reason' => $reason,
+            'refund_amount' => $order->total,
         ]);
 
         if ($ok) {
