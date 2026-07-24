@@ -6,7 +6,6 @@ import CustomerTopBar from '@/components/customer/customer-top-bar';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import OfflineBanner from '@/components/shared/offline-banner';
 import { useFlashToast } from '@/hooks/use-flash-toast';
-import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 import { useCart } from '@/lib/use-cart';
 import FavoritesProvider from '@/providers/favorites-provider';
 import { NavigationProvider } from '@/providers/navigation-provider';
@@ -19,7 +18,6 @@ interface Props extends PropsWithChildren {
     hideTopBar?: boolean;
     hideCartBar?: boolean;
     hideBottomNav?: boolean;
-    keepBottomNavVisible?: boolean;
 }
 
 export default function CustomerMobileLayout({
@@ -31,11 +29,8 @@ export default function CustomerMobileLayout({
     hideTopBar = false,
     hideCartBar = false,
     hideBottomNav = false,
-    keepBottomNavVisible = false,
 }: Props) {
     useFlashToast();
-    const { visible: scrollVisible } = useHideOnScroll();
-    const visible = keepBottomNavVisible ? true : scrollVisible;
     const { totalItems } = useCart();
 
     const showCartBar =
@@ -64,14 +59,11 @@ export default function CustomerMobileLayout({
 
                     {footerSlot ??
                         (activeOrder ? (
-                            <ActiveOrderBar
-                                order={activeOrder}
-                                bottomNavVisible={visible}
-                            />
+                            <ActiveOrderBar order={activeOrder} />
                         ) : showCartBar ? (
-                            <FloatingCartBar bottomNavVisible={visible} />
+                            <FloatingCartBar />
                         ) : null)}
-                    {!hideBottomNav && <CustomerBottomNav visible={visible} />}
+                    {!hideBottomNav && <CustomerBottomNav />}
                 </div>
             </NavigationProvider>
         </FavoritesProvider>
