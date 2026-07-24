@@ -1210,8 +1210,8 @@ class NotificationService
                 customerId: $order->customer_id,
                 type: self::REFUND_REJECTED,
                 title: 'Refund Ditolak',
-                message: "Refund pesanan {$order->order_code} ditolak. Alasan: {$reason->label()}.",
-                data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'reason' => $reason->value],
+                message: "Refund pesanan {$order->order_code} ditolak. Alasan: {$reason->label()}.".($reason->canResubmit() ? ' Silakan perbaiki dan kirim ulang tujuan refund.' : ''),
+                data: ['order_id' => $order->id, 'order_code' => $order->order_code, 'reason' => $reason->value, 'can_resubmit' => $reason->canResubmit()],
                 entityType: 'order',
                 entityId: $order->id
             );
