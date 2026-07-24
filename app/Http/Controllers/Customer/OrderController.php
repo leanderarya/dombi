@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Customer;
 
-use App\Http\Controllers\Controller;
 use App\Enums\PaymentStatus;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Http\Requests\Customer\UpdateRefundDestinationRequest;
@@ -11,6 +11,7 @@ use App\Models\Order;
 use App\Models\OrderReport;
 use App\Models\PaymentTransaction;
 use App\Services\DokuService;
+use App\Services\NotificationService;
 use App\Services\OrderService;
 use App\Services\OrderStatusService;
 use App\Services\PaymentStatusService;
@@ -351,16 +352,18 @@ class OrderController extends Controller
         UpdateRefundDestinationRequest $request,
         Order $order,
         PaymentStatusService $payment,
+        NotificationService $notifications,
     ): RedirectResponse {
-        $saved = DB::transaction(function () use ($request, $order, $payment): bool {
+        $updated = DB::transaction(function () use ($request, $order, $payment): ?bool {
             $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+            $updated = $order->refund_destination_submitted_at !== null || $order->refund_destination_type !== null;
 
             if ($order->payment_status === PaymentStatus::RefundRejected->value && ! $payment->reopenRefund($order)) {
-                return false;
+                return null;
             }
 
             if ($order->payment_status !== PaymentStatus::RefundPending->value) {
-                return false;
+                return null;
             }
 
             $destination = $request->validated();
@@ -375,12 +378,14 @@ class OrderController extends Controller
             $order->refund_destination_submitted_at = now();
             $order->save();
 
-            return true;
+            return $updated;
         });
 
-        if (! $saved) {
+        if ($updated === null) {
             return back()->with('error', 'Tujuan refund sudah tidak dapat diubah.');
         }
+
+        $notifications->notifyRefundDestinationSubmitted($order->fresh(), $updated);
 
         return back()->with('success', 'Tujuan refund berhasil disimpan.');
     }
