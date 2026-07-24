@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Enums\PaymentStatus;
+use App\Enums\RefundRejectionReason;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
@@ -108,6 +109,7 @@ class OrderController extends Controller
             'canReport' => $order->status === Order::STATUS_COMPLETED
                 && (! $order->completed_at || $order->completed_at->gt(now()->subDays(7)))
                 && ! $hasRecentReport,
+            'refund' => $this->refundPayload($order),
         ]);
     }
 
@@ -478,5 +480,75 @@ class OrderController extends Controller
 
         return redirect()->route('customer.checkout.index')
             ->with('success', $message);
+    }
+
+    private function refundPayload(Order $order): ?array
+    {
+        $ps = $order->payment_status;
+
+        if (! in_array($ps, ['refund_pending', 'refund_in_progress', 'refunded', 'refund_rejected'], true)) {
+            return null;
+        }
+
+        $canEditDestination = $ps === 'refund_pending';
+        $canResubmit = false;
+        $rejection = null;
+
+        if ($ps === 'refund_rejected' && $order->refund_rejected_reason) {
+            $reason = RefundRejectionReason::tryFrom($order->refund_rejected_reason);
+            $canResubmit = $reason?->canResubmit() ?? false;
+            $rejection = [
+                'reason' => $reason?->label() ?? $order->refund_rejected_reason,
+                'note' => $order->refund_rejection_note,
+            ];
+        }
+
+        $destination = null;
+        if ($order->refund_destination_type) {
+            $isBank = $order->refund_destination_type === 'bank';
+            $destination = [
+                'type' => $order->refund_destination_type,
+                'label' => $isBank ? $order->refund_bank_name : $order->refund_ewallet_provider,
+                'holder' => $isBank ? $order->refund_account_holder : $order->refund_ewallet_holder,
+                'masked_number' => $this->maskRefundNumber(
+                    $isBank ? $order->refund_account_number : $order->refund_ewallet_number
+                ),
+            ];
+        }
+
+        $proofUrl = null;
+        if ($ps === 'refunded' && $order->refund_proof_image) {
+            $proofUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($order->refund_proof_image);
+        }
+
+        return [
+            'payment_status' => $ps,
+            'amount' => (float) ($order->refund_amount ?? $order->total),
+            'destination' => $destination,
+            'can_edit_destination' => $canEditDestination,
+            'can_resubmit' => $canResubmit,
+            'rejection' => $rejection,
+            'proof_url' => $proofUrl,
+            'transfer_reference' => $order->refund_transfer_reference,
+            'transfer_note' => $order->refund_transfer_note,
+            'submitted_at' => $order->refund_destination_submitted_at?->toISOString(),
+            'started_at' => $order->refund_started_at?->toISOString(),
+            'completed_at' => $order->refunded_at?->toISOString(),
+        ];
+    }
+
+    private function maskRefundNumber(?string $number): ?string
+    {
+        if (! $number) {
+            return null;
+        }
+
+        $len = strlen($number);
+
+        if ($len <= 4) {
+            return str_repeat('*', $len);
+        }
+
+        return str_repeat('*', $len - 4).substr($number, -4);
     }
 }
