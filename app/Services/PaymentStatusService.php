@@ -95,12 +95,18 @@ class PaymentStatusService
 
     /**
      * Valid payment_status transitions.
-     * States not listed here (Expired, RefundRejected) are immutable.
+     * States not listed here (Settled, RefundRejected) are immutable.
+     *
+     * @deprecated Refund transitions retained for backward compatibility.
+     *             Remove after all callers migrate in Tasks 10, 12, 24, 25.
+     *             reopenRefund() removed in Task 26.
+     *             See .superpowers/sdd/task-6-brief.md
      */
     private const VALID_TRANSITIONS = [
         'pending' => ['paid', 'failed', 'expired'],
         'paid' => ['refund_pending'],
         'failed' => ['paid', 'expired'],
+        'expired' => ['paid'],
         'refund_pending' => ['refund_in_progress', 'refund_rejected'],
         'refund_in_progress' => ['refunded'],
     ];

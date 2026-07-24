@@ -80,6 +80,54 @@ class PaymentStatusServiceTest extends TestCase
         $this->assertFalse($ok);
     }
 
+    public function test_transition_matrix(): void
+    {
+        $service = app(PaymentStatusService::class);
+
+        // Allowed transitions
+        $this->assertTransitionSucceeds($service, 'pending', 'paid');
+        $this->assertTransitionSucceeds($service, 'failed', 'paid');
+        $this->assertTransitionSucceeds($service, 'expired', 'paid');
+
+        // Blocked transitions
+        $this->assertTransitionFails($service, 'settled', 'paid');
+        $this->assertTransitionFails($service, 'refunded', 'paid');
+
+        // Same-state (idempotency guard)
+        foreach (['pending', 'paid', 'failed', 'expired', 'settled', 'refunded'] as $status) {
+            $this->assertSameStatusFails($service, $status);
+        }
+
+        // CAS race condition (lost update)
+        $order = Order::factory()->create(['payment_status' => 'pending']);
+        $stale = Order::find($order->id);
+        $order->update(['payment_status' => 'paid']);
+        $this->assertFalse($service->transition($stale, PaymentStatus::Failed));
+    }
+
+    private function assertTransitionSucceeds(PaymentStatusService $service, string $from, string $to): void
+    {
+        $order = Order::factory()->create(['payment_status' => $from]);
+        $ok = $service->transition($order, PaymentStatus::from($to));
+        $this->assertTrue($ok, "Expected $from -> $to to succeed");
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => $to]);
+    }
+
+    private function assertTransitionFails(PaymentStatusService $service, string $from, string $to): void
+    {
+        $order = Order::factory()->create(['payment_status' => $from]);
+        $ok = $service->transition($order, PaymentStatus::from($to));
+        $this->assertFalse($ok, "Expected $from -> $to to fail");
+        $this->assertDatabaseHas('orders', ['id' => $order->id, 'payment_status' => $from]);
+    }
+
+    private function assertSameStatusFails(PaymentStatusService $service, string $status): void
+    {
+        $order = Order::factory()->create(['payment_status' => $status]);
+        $ok = $service->transition($order, PaymentStatus::from($status));
+        $this->assertFalse($ok, "Expected same-status $status -> $status to fail");
+    }
+
     public function test_only_eligible_rejection_reasons_can_reopen_refund(): void
     {
         $service = app(PaymentStatusService::class);
