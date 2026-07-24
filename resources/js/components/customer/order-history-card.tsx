@@ -57,6 +57,7 @@ export default function OrderHistoryCard({ order }: Props) {
             orderId={order.id}
             recoveryToken={order.recovery_token}
             status={order.status}
+            clickable={true}
         >
             {/* Header: Logo + Order Type + Date + Status Badge */}
             <div className="flex items-start gap-3">
