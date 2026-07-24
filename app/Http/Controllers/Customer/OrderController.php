@@ -26,7 +26,7 @@ use Inertia\Response;
 
 class OrderController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, RefundPayloadService $refundPayloads): Response
     {
         $user = $request->user();
         $customer = $user?->customer;
@@ -37,15 +37,10 @@ class OrderController extends Controller
         if ($customer) {
             $activeOrders = $customer->orders()
                 ->whereIn('status', Order::ACTIVE_STATUSES)
-                // Exclude orders that have been fully expired (status = expired),
-                // but INCLUDE orders with failed/expired PAYMENT that are still
-                // pending_confirmation — customer can retry payment within the window.
                 ->where(function ($q) {
                     $q->whereNull('payment_status')
                         ->orWhere('payment_status', 'pending')
                         ->orWhere('payment_status', 'paid')
-                        // Failed/expired payment but order still pending_confirmation
-                        // and within confirmation window — customer can retry
                         ->orWhere(function ($q2) {
                             $q2->whereIn('payment_status', ['failed', 'expired'])
                                 ->where('status', Order::STATUS_PENDING_CONFIRMATION);
@@ -57,17 +52,42 @@ class OrderController extends Controller
                         ->orWhere('confirmation_expires_at', '>', now());
                 })
                 ->with(['outlet', 'items.variant.family'])
-                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
+                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
                 ->orderByDesc('ordered_at')
-                ->get();
+                ->get()
+                ->map(function (Order $order) use ($refundPayloads) {
+                    $queue = $refundPayloads->queueState($order);
+                    if ($queue) {
+                        $order->setAttribute('refund_badge', [
+                            'payment_status' => $order->payment_status,
+                            'queue_state' => $queue,
+                            'status_label' => $refundPayloads->statusLabel($order),
+                        ]);
+                    }
+                    return $order;
+                });
 
-            $historyOrders = $customer->orders()
+            $historyQuery = $customer->orders()
                 ->whereIn('status', Order::HISTORY_STATUSES)
                 ->with(['outlet', 'items'])
-                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address'])
-                ->orderByDesc('ordered_at')
+                ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
+                ->orderByDesc('ordered_at');
+
+            $historyOrders = $historyQuery
                 ->paginate(10)
                 ->withQueryString();
+
+            $historyOrders->getCollection()->transform(function (Order $order) use ($refundPayloads) {
+                $queue = $refundPayloads->queueState($order);
+                if ($queue) {
+                    $order->setAttribute('refund_badge', [
+                        'payment_status' => $order->payment_status,
+                        'queue_state' => $queue,
+                        'status_label' => $refundPayloads->statusLabel($order),
+                    ]);
+                }
+                return $order;
+            });
         }
 
         return Inertia::render('customer/orders/index', [
@@ -100,9 +120,9 @@ class OrderController extends Controller
             ->where('customer_id', $customer->id)
             ->exists();
 
-        $refund = $payloads->forCustomer($order);
-
         $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier', 'refundStatusHistories']);
+
+        $refund = $payloads->forCustomer($order);
 
         $props = [
             'order' => $order,
