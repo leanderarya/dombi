@@ -17,6 +17,8 @@ import {
     formatDistance,
 } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import { Skeleton, SkeletonList } from '@/components/ui/skeleton';
 
 const statusOptions = [
     { key: 'waiting_pickup', label: 'Menunggu Pickup' },
@@ -34,6 +36,7 @@ export default function OutletDeliveriesIndex({
     filters,
 }: any) {
     usePolling(20000);
+    const { loading } = useInertiaLoading();
     const [assignOpen, setAssignOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [couriers, setCouriers] = useState<any[]>([]);
@@ -72,146 +75,162 @@ export default function OutletDeliveriesIndex({
         >
             <Head title="Pengiriman" />
             <OutletPageShell>
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-2">
-                    <StatCard
-                        label="Perlu Dikirim"
-                        value={stats.needsDispatch}
-                        alert={stats.needsDispatch > 0}
-                    />
-                    <StatCard
-                        label="Menunggu Pickup"
-                        value={stats.waitingPickup}
-                    />
-                    <StatCard
-                        label="Dalam Perjalanan"
-                        value={stats.inTransit}
-                    />
-                    <StatCard
-                        label="Gagal"
-                        value={stats.failed}
-                        alert={stats.failed > 0}
-                    />
-                </div>
-
-                {/* Unassigned Orders */}
-                {unassignedOrders.length > 0 && (
-                    <SectionCard label="Perlu Assign Kurir">
-                        <div className="mt-2 space-y-2">
-                            {unassignedOrders.map((order: any) => (
-                                <div
-                                    key={order.id}
-                                    className="rounded-xl border border-border bg-surface-muted p-3"
-                                >
-                                    <div className="flex items-start justify-between gap-2">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="text-sm font-bold text-text tabular-nums">
-                                                {order.order_code}
-                                            </div>
-                                            <div className="mt-0.5 text-xs text-text-muted">
-                                                {order.customer_name}
-                                            </div>
-                                            <div className="mt-1 flex items-center gap-2 text-[11px] text-text-subtle">
-                                                {order.distance_km != null && (
-                                                    <span>
-                                                        {formatDistance(
-                                                            order.distance_km,
-                                                        )}
-                                                    </span>
-                                                )}
-                                                <span>
-                                                    {formatCurrency(
-                                                        order.total,
-                                                    )}
-                                                </span>
-                                                <span
-                                                    className={`font-medium ${order.delivery_age > 30 ? 'text-danger' : 'text-text-muted'}`}
-                                                >
-                                                    {formatDeliveryAge(
-                                                        order.delivery_age,
-                                                    )}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        {order.sla_health && (
-                                            <DeliverySlaBadge
-                                                health={order.sla_health}
-                                            />
-                                        )}
-                                    </div>
-                                    <Button
-                                        size="lg"
-                                        onClick={() =>
-                                            handleAssignCourier(order.id)
-                                        }
-                                        icon={Truck}
-                                        className="mt-2 w-full"
-                                    >
-                                        Assign Kurir
-                                    </Button>
+                {loading ? (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-2">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="rounded-xl border border-border bg-surface p-4 space-y-2">
+                                    <Skeleton className="h-3 w-2/3" />
+                                    <Skeleton className="h-6 w-1/2" />
                                 </div>
                             ))}
                         </div>
-                    </SectionCard>
-                )}
-
-                {/* Delivery List */}
-                <SectionCard label="Riwayat Pengiriman">
-                    {deliveries.data.length === 0 ? (
-                        <EmptyState
-                            icon={
-                                <Package className="h-8 w-8 text-text-subtle" />
-                            }
-                            title="Belum ada pengiriman"
-                            description="Pengiriman akan muncul setelah kurir di-assign."
-                        />
-                    ) : (
-                        <div className="mt-2 space-y-2">
-                            {deliveries.data.map((d: any) => (
-                                <Link
-                                    key={d.id}
-                                    href={`/outlet/deliveries/${d.id}`}
-                                    className="flex items-center gap-3 rounded-xl border border-border bg-white p-3 active:bg-surface-muted"
-                                >
-                                    <div className="min-w-0 flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-text tabular-nums">
-                                                {d.order_code}
-                                            </span>
-                                            {d.sla_health && (
-                                                <DeliverySlaBadge
-                                                    health={d.sla_health}
-                                                />
-                                            )}
-                                        </div>
-                                        <div className="mt-0.5 text-xs text-text-muted">
-                                            {d.customer_name}{' '}
-                                            {d.courier
-                                                ? `· ${d.courier.name}`
-                                                : ''}
-                                        </div>
-                                        <div className="mt-1 text-[11px] text-text-subtle tabular-nums">
-                                            {d.delivery_age != null && (
-                                                <span
-                                                    className={
-                                                        d.delivery_age > 60
-                                                            ? 'font-medium text-danger'
-                                                            : ''
-                                                    }
-                                                >
-                                                    {formatDeliveryAge(
-                                                        d.delivery_age,
-                                                    )}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <StatusBadge status={d.status} />
-                                </Link>
-                            ))}
+                        <SkeletonList count={5} />
+                    </div>
+                ) : (
+                    <>
+                        {/* Stats */}
+                        <div className="grid grid-cols-2 gap-2">
+                            <StatCard
+                                label="Perlu Dikirim"
+                                value={stats.needsDispatch}
+                                alert={stats.needsDispatch > 0}
+                            />
+                            <StatCard
+                                label="Menunggu Pickup"
+                                value={stats.waitingPickup}
+                            />
+                            <StatCard
+                                label="Dalam Perjalanan"
+                                value={stats.inTransit}
+                            />
+                            <StatCard
+                                label="Gagal"
+                                value={stats.failed}
+                                alert={stats.failed > 0}
+                            />
                         </div>
-                    )}
-                </SectionCard>
+
+                        {/* Unassigned Orders */}
+                        {unassignedOrders.length > 0 && (
+                            <SectionCard label="Perlu Assign Kurir">
+                                <div className="mt-2 space-y-2">
+                                    {unassignedOrders.map((order: any) => (
+                                        <div
+                                            key={order.id}
+                                            className="rounded-xl border border-border bg-surface-muted p-3"
+                                        >
+                                            <div className="flex items-start justify-between gap-2">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="text-sm font-bold text-text tabular-nums">
+                                                        {order.order_code}
+                                                    </div>
+                                                    <div className="mt-0.5 text-xs text-text-muted">
+                                                        {order.customer_name}
+                                                    </div>
+                                                    <div className="mt-1 flex items-center gap-2 text-[11px] text-text-subtle">
+                                                        {order.distance_km != null && (
+                                                            <span>
+                                                                {formatDistance(
+                                                                    order.distance_km,
+                                                                )}
+                                                            </span>
+                                                        )}
+                                                        <span>
+                                                            {formatCurrency(
+                                                                order.total,
+                                                            )}
+                                                        </span>
+                                                        <span
+                                                            className={`font-medium ${order.delivery_age > 30 ? 'text-danger' : 'text-text-muted'}`}
+                                                        >
+                                                            {formatDeliveryAge(
+                                                                order.delivery_age,
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {order.sla_health && (
+                                                    <DeliverySlaBadge
+                                                        health={order.sla_health}
+                                                    />
+                                                )}
+                                            </div>
+                                            <Button
+                                                size="lg"
+                                                onClick={() =>
+                                                    handleAssignCourier(order.id)
+                                                }
+                                                icon={Truck}
+                                                className="mt-2 w-full"
+                                            >
+                                                Assign Kurir
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </SectionCard>
+                        )}
+
+                        {/* Delivery List */}
+                        <SectionCard label="Riwayat Pengiriman">
+                            {deliveries.data.length === 0 ? (
+                                <EmptyState
+                                    icon={
+                                        <Package className="h-8 w-8 text-text-subtle" />
+                                    }
+                                    title="Belum ada pengiriman"
+                                    description="Pengiriman akan muncul setelah kurir di-assign."
+                                />
+                            ) : (
+                                <div className="mt-2 space-y-2">
+                                    {deliveries.data.map((d: any) => (
+                                        <Link
+                                            key={d.id}
+                                            href={`/outlet/deliveries/${d.id}`}
+                                            className="flex items-center gap-3 rounded-xl border border-border bg-white p-3 active:bg-surface-muted"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-bold text-text tabular-nums">
+                                                        {d.order_code}
+                                                    </span>
+                                                    {d.sla_health && (
+                                                        <DeliverySlaBadge
+                                                            health={d.sla_health}
+                                                        />
+                                                    )}
+                                                </div>
+                                                <div className="mt-0.5 text-xs text-text-muted">
+                                                    {d.customer_name}{' '}
+                                                    {d.courier
+                                                        ? `· ${d.courier.name}`
+                                                        : ''}
+                                                </div>
+                                                <div className="mt-1 text-[11px] text-text-subtle tabular-nums">
+                                                    {d.delivery_age != null && (
+                                                        <span
+                                                            className={
+                                                                d.delivery_age > 60
+                                                                    ? 'font-medium text-danger'
+                                                                    : ''
+                                                            }
+                                                        >
+                                                            {formatDeliveryAge(
+                                                                d.delivery_age,
+                                                            )}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <StatusBadge status={d.status} />
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </SectionCard>
+                    </>
+                )}
             </OutletPageShell>
 
             {/* Assign Courier Sheet */}
