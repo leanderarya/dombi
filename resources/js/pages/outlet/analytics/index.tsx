@@ -6,6 +6,8 @@ import TopProductsChart from '@/components/outlet/top-products-chart';
 import FilterChips from '@/components/ui/filter-chips';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import { Skeleton, SkeletonKpiGrid } from '@/components/ui/skeleton';
 
 interface TopProduct {
     product_name: string;
@@ -50,6 +52,7 @@ export default function OutletAnalytics({
 }: Props) {
     const [from, setFrom] = useState(dateFrom);
     const [to, setTo] = useState(dateTo);
+    const { loading } = useInertiaLoading();
 
     const handlePeriodChange = (newPeriod: string) => {
         if (newPeriod === 'custom') {
@@ -83,7 +86,24 @@ export default function OutletAnalytics({
             <Head title="Analitik Performa" />
 
             <OutletPageShell>
-                <FilterChips
+                {loading ? (
+                    <div className="space-y-4">
+                        <div className="flex gap-2">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <Skeleton key={i} className="h-8 w-20 rounded-full" />
+                            ))}
+                        </div>
+                        <SkeletonKpiGrid count={3} />
+                        {Array.from({ length: 2 }).map((_, i) => (
+                            <div key={i} className="rounded-xl border border-border bg-white p-4">
+                                <Skeleton className="h-3 w-1/4 mb-3" />
+                                <Skeleton className="h-[220px] w-full rounded-lg" />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <>
+                        <FilterChips
                     options={periods}
                     active={period}
                     onChange={handlePeriodChange}
@@ -166,6 +186,8 @@ export default function OutletAnalytics({
                         <RevenueTrendChart data={dailyRevenue} />
                     </div>
                 </div>
+                    </>
+                )}
             </OutletPageShell>
         </OutletLayout>
     );

@@ -8,6 +8,8 @@ import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import { SkeletonList } from '@/components/ui/skeleton';
 import OutletLayout from '@/layouts/outlet-layout';
 
 const statusFilters = [
@@ -27,6 +29,7 @@ export default function OutletRestocksIndex({
 }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const [showCreate, setShowCreate] = useState(false);
+    const { loading } = useInertiaLoading();
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
@@ -50,6 +53,10 @@ export default function OutletRestocksIndex({
         >
             <Head title="Restock" />
             <OutletPageShell>
+                {loading ? (
+                    <SkeletonList count={5} />
+                ) : (
+                <>
                 {/* Action Bar */}
                 <div className="flex justify-end">
                     <Button
@@ -116,6 +123,8 @@ export default function OutletRestocksIndex({
                     </div>
                 )}
                 <Pagination links={restocks.links} />
+                </>
+                )}
             </OutletPageShell>
 
             {/* Create Restock Dialog */}
