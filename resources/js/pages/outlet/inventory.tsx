@@ -10,6 +10,8 @@ import {
     Search,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
 import BottomSheet from '@/components/ui/bottom-sheet';
@@ -29,6 +31,7 @@ export default function OutletInventory({
     recentRestocks = [] as any[],
 }: any) {
     const [showRestock, setShowRestock] = useState(false);
+    const { loading } = useInertiaLoading();
     const [search, setSearch] = useState('');
     const [detailItem, setDetailItem] = useState<any>(null);
     const familyGroups = new Map<number, { family: any; items: any[] }>();
@@ -136,6 +139,10 @@ export default function OutletInventory({
         <OutletLayout title="Inventaris" subtitle={outlet.name}>
             <Head title="Inventaris" />
             <OutletPageShell>
+                {loading ? (
+                    <SkeletonPage showFilters />
+                ) : (
+                    <>
                 {/* Summary Bar + Restock CTA */}
                 <div className="flex items-center gap-3">
                     <div className="flex flex-1 items-center divide-x divide-border rounded-xl border border-border bg-white">
@@ -360,6 +367,8 @@ export default function OutletInventory({
                             ))}
                         </div>
                     </div>
+                )}
+                </>
                 )}
             </OutletPageShell>
 
