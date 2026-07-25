@@ -1,6 +1,8 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ChartColumn, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import { Skeleton, SkeletonTable } from '@/components/ui/skeleton';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import { Button } from '@/components/ui/button';
@@ -109,6 +111,7 @@ export default function OutletSettlement({
 }: Props) {
     const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
     const [detailOpen, setDetailOpen] = useState(false);
+    const { loading } = useInertiaLoading();
 
     const handlePeriodChange = (newPeriod: string) => {
         router.get(
@@ -151,7 +154,24 @@ export default function OutletSettlement({
         >
             <Head title="Settlement" />
             <OutletPageShell>
-                {/* ── 1. Hero: Outstanding + Rekening + Action ── */}
+                {loading ? (
+                    <div className="space-y-4">
+                        <div className="rounded-xl border border-border bg-surface p-5 space-y-2">
+                            <Skeleton className="h-3 w-1/3" />
+                            <Skeleton className="h-8 w-1/2" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            {Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="rounded-xl border border-border bg-white p-4 space-y-1.5">
+                                    <Skeleton className="h-3 w-2/3" />
+                                    <Skeleton className="h-5 w-1/3" />
+                                </div>
+                            ))}
+                        </div>
+                        <SkeletonTable rows={3} />
+                    </div>
+                ) : (
+                    <>{/* ── 1. Hero: Outstanding + Rekening + Action ── */}
                 {isSettled ? (
                     <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
                         <div className="flex items-center gap-2">
@@ -454,7 +474,9 @@ export default function OutletSettlement({
                         )}
                     </SectionCard>
                 )}
-            </OutletPageShell>
+                        </>
+                    )}
+                </OutletPageShell>
 
             {/* Payment Bottom Sheet */}
             <PaymentSheet
