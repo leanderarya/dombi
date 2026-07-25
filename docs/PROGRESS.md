@@ -1,8 +1,8 @@
 # Dombi — Progress Roadmap
 
-**Updated:** 2026-07-22
+**Updated:** 2026-07-26
 **Current Branch:** `main`
-**Status:** Production-ready. 791 tests passing. All hardening done. Courier management v2 live.
+**Status:** Production-ready. 791 tests passing. Refund UI polish done. Next: Phase 8 continuation.
 
 ---
 
@@ -83,6 +83,7 @@
 ### Phase 8: UI/UX Polish
 | Task | Status |
 |------|--------|
+| Refund UI (customer + owner) | ✅ Done — AmountBlock, Timeline, DestinationSummary, filter badges, spacing |
 | Outlet bottom navigation | ❌ |
 | Outlet card-based layout | ❌ |
 | Outlet loading skeletons | ❌ |
