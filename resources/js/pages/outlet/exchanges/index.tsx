@@ -10,6 +10,8 @@ import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDate } from '@/lib/format';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import { SkeletonList } from '@/components/ui/skeleton';
 
 const statusFilters = [
     { key: '', label: 'Semua' },
@@ -31,6 +33,7 @@ export default function OutletExchangesIndex({
 }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const [showCreate, setShowCreate] = useState(false);
+    const { loading } = useInertiaLoading();
 
     const handleFilterChange = (key: string) => {
         setActiveFilter(key);
@@ -53,6 +56,10 @@ export default function OutletExchangesIndex({
         >
             <Head title="Tukar Produk" />
             <OutletPageShell hasStickyBar>
+                {loading ? (
+                    <SkeletonList count={5} />
+                ) : (
+                    <>
                 {/* Action Bar */}
                 <div className="flex justify-end">
                     <Button
@@ -104,6 +111,8 @@ export default function OutletExchangesIndex({
                 </div>
 
                 <Pagination links={exchanges.links} />
+                    </>
+                )}
             </OutletPageShell>
 
             {/* Create Exchange Dialog */}
