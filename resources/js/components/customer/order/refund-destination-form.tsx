@@ -66,11 +66,11 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
     };
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4.5">
             {/* Method Toggle */}
             <div>
                 <Label>Metode Penerimaan Dana</Label>
-                <div className="mt-1.5 flex gap-2">
+                <div className="mt-2 flex gap-2">
                     <button
                         type="button"
                         onClick={() => setType('bank')}
@@ -98,7 +98,7 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                 </div>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3.5">
                 {isBank ? (
                     <>
                         <div>
@@ -111,7 +111,7 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                                 className="min-h-11"
                             />
                             {errors.bank_name && (
-                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                <p className="mt-1 text-[11px] text-red-500" role="alert">
                                     {errors.bank_name}
                                 </p>
                             )}
@@ -127,7 +127,7 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                                 className="min-h-11"
                             />
                             {errors.account_number && (
-                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                <p className="mt-1 text-[11px] text-red-500" role="alert">
                                     {errors.account_number}
                                 </p>
                             )}
@@ -142,7 +142,7 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                                 className="min-h-11"
                             />
                             {errors.account_holder && (
-                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                <p className="mt-1 text-[11px] text-red-500" role="alert">
                                     {errors.account_holder}
                                 </p>
                             )}
@@ -167,7 +167,7 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                                 className="min-h-11"
                             />
                             {errors.ewallet_provider && (
-                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                <p className="mt-1 text-[11px] text-red-500" role="alert">
                                     {errors.ewallet_provider}
                                 </p>
                             )}
@@ -182,11 +182,11 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                                 inputMode="numeric"
                                 className="min-h-11"
                             />
-                            <p className="mt-0.5 text-[11px] text-text-subtle">
+                            <p className="mt-1 text-[11px] text-text-subtle">
                                 Nomor HP yang terdaftar di akun e-wallet
                             </p>
                             {errors.ewallet_number && (
-                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                <p className="mt-1 text-[11px] text-red-500" role="alert">
                                     {errors.ewallet_number}
                                 </p>
                             )}
@@ -201,7 +201,7 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                                 className="min-h-11"
                             />
                             {errors.ewallet_holder && (
-                                <p className="mt-0.5 text-[11px] text-red-500" role="alert">
+                                <p className="mt-1 text-[11px] text-red-500" role="alert">
                                     {errors.ewallet_holder}
                                 </p>
                             )}

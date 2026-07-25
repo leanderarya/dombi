@@ -61,7 +61,9 @@ export default function RefundStatusCard({ refund }: Props) {
                     <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-[13px] text-amber-800">
                         Masukkan data tujuan transfer agar refund dapat diproses.
                     </div>
-                    <RefundDestinationForm orderId={order_id} />
+                    <div className="rounded-xl bg-surface-muted px-4 py-3.5">
+                        <RefundDestinationForm orderId={order_id} />
+                    </div>
                 </CardContent>
             </Card>
         );
@@ -90,13 +92,15 @@ export default function RefundStatusCard({ refund }: Props) {
                         </Button>
                     )}
                     {editing && (
-                        <RefundDestinationForm
-                            orderId={order_id}
-                            initialType={destination.type}
-                            initialLabel={destination.label ?? undefined}
-                            initialHolder={destination.holder ?? undefined}
-                            onSaved={() => setEditing(false)}
-                        />
+                        <div className="rounded-xl bg-surface-muted px-4 py-3.5">
+                            <RefundDestinationForm
+                                orderId={order_id}
+                                initialType={destination.type}
+                                initialLabel={destination.label ?? undefined}
+                                initialHolder={destination.holder ?? undefined}
+                                onSaved={() => setEditing(false)}
+                            />
+                        </div>
                     )}
                     <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
                 </CardContent>
@@ -189,12 +193,14 @@ export default function RefundStatusCard({ refund }: Props) {
                         </Button>
                     )}
                     {resubmitting && (
-                        <RefundDestinationForm
-                            orderId={order_id}
-                            initialType={destination?.type}
-                            initialHolder={destination?.holder ?? undefined}
-                            onSaved={() => setResubmitting(false)}
-                        />
+                        <div className="rounded-xl bg-surface-muted px-4 py-3.5">
+                            <RefundDestinationForm
+                                orderId={order_id}
+                                initialType={destination?.type}
+                                initialHolder={destination?.holder ?? undefined}
+                                onSaved={() => setResubmitting(false)}
+                            />
+                        </div>
                     )}
                     <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
                 </CardContent>
