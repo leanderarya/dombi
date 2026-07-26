@@ -8,6 +8,8 @@ import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
+import OwnerTable from '@/components/owner/owner-table';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
@@ -155,97 +157,62 @@ export default function OwnerOrdersIndex({
                     description="Pesanan akan muncul di sini setelah pelanggan melakukan pemesanan"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table
-                        aria-label="Daftar pesanan"
-                        className="w-full min-w-[600px]"
-                    >
-                        <thead>
+                <OwnerTable>
+                    <Table>
+                        <TableHeader>
                             <tr className="bg-surface-muted/50">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
-                                    Kode
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
-                                    Customer
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
-                                    Outlet
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
-                                    Status
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
-                                    Total
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
-                                    Aksi
-                                </th>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">Customer</TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">Total</TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</TableHead>
                             </tr>
-                        </thead>
-                        <tbody>
+                        </TableHeader>
+                        <TableBody>
                             {orders.data.map((order: any) => {
                                 const s = getOrderStatus(order.status);
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={order.id}
                                         className="hover:bg-mint-wash border-t border-border/20 transition-colors"
                                     >
-                                        <td className="px-4 py-3 font-bold text-text tabular-nums">
+                                        <TableCell className="px-4 py-3 font-bold text-text tabular-nums">
                                             {order.order_code}
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
                                             {order.customer_name ?? '—'}
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
                                             {order.outlet?.name ?? '—'}
-                                        </td>
-                                        <td className="px-4 py-3">
-                                            <StatusBadge
-                                                variant={s.variant}
-                                                size="sm"
-                                            >
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
+                                            <StatusBadge variant={s.variant} size="sm">
                                                 {s.label}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-4 py-3 text-right font-semibold text-primary tabular-nums">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-right font-semibold text-primary tabular-nums">
                                             {formatCurrency(order.total)}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-2">
-                                                {order.status ===
-                                                    'ready_for_pickup' &&
-                                                    !order.delivery && (
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() =>
-                                                                setAssignOrder(
-                                                                    order,
-                                                                )
-                                                            }
-                                                        >
-                                                            Assign
-                                                        </Button>
-                                                    )}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        router.visit(
-                                                            `/owner/orders/${order.id}`,
-                                                        )
-                                                    }
-                                                >
+                                                {order.status === 'ready_for_pickup' && !order.delivery && (
+                                                    <Button size="sm" onClick={() => setAssignOrder(order)}>
+                                                        Assign
+                                                    </Button>
+                                                )}
+                                                <Button variant="ghost" size="sm" onClick={() => router.visit(`/owner/orders/${order.id}`)}>
                                                     Detail
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={orders.links} />
