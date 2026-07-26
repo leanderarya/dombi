@@ -3,9 +3,11 @@ import { useCallback, useMemo, useState } from 'react';
 import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import { SkeletonList } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
 import { GlobalPriceModal } from './pricing-modals';
@@ -159,50 +161,50 @@ export function PusatTab({
                     }
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table className="w-full text-sm">
-                        <thead>
+                <OwnerTable minWidth="700px">
+                    <Table>
+                        <TableHeader>
                             <tr className="border-b border-border bg-surface-muted/50 text-left">
-                                <th
+                                <TableHead
                                     className="cursor-pointer px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('name')}
                                 >
                                     Produk
                                     <SortMarker col="name" />
-                                </th>
-                                <th
+                                </TableHead>
+                                <TableHead
                                     className="cursor-pointer px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('center_price')}
                                 >
                                     HPP
                                     <SortMarker col="center_price" />
-                                </th>
-                                <th
+                                </TableHead>
+                                <TableHead
                                     className="cursor-pointer px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('selling_price')}
                                 >
                                     Harga Jual
                                     <SortMarker col="selling_price" />
-                                </th>
-                                <th
+                                </TableHead>
+                                <TableHead
                                     className="cursor-pointer px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('margin')}
                                 >
                                     Margin
                                     <SortMarker col="margin" />
-                                </th>
-                                <th className="w-24 px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                </TableHead>
+                                <TableHead className="w-24 px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Aksi
-                                </th>
+                                </TableHead>
                             </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/50">
+                        </TableHeader>
+                        <TableBody>
                             {paginated.map((v) => (
-                                <tr
+                                <TableRow
                                     key={v.variant_id}
                                     className="hover:bg-mint-wash/30 transition-colors"
                                 >
-                                    <td className="px-3 py-3">
+                                    <TableCell className="px-3 py-3">
                                         <div className="font-semibold text-text">
                                             {v.name}
                                         </div>
@@ -212,21 +214,21 @@ export function PusatTab({
                                                 override
                                             </span>
                                         )}
-                                    </td>
-                                    <td className="px-3 py-3 text-right text-text-muted tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-right text-text-muted tabular-nums">
                                         {formatCurrency(v.center_price)}
-                                    </td>
-                                    <td className="px-3 py-3 text-right text-base font-bold text-text tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-right text-base font-bold text-text tabular-nums">
                                         {formatCurrency(v.selling_price)}
-                                    </td>
-                                    <td className="px-3 py-3 text-right">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-right">
                                         <MarginBarInline
                                             margin={v.margin}
                                             maxMargin={maxMargin}
                                             sellingPrice={v.selling_price}
                                         />
-                                    </td>
-                                    <td className="px-3 py-3 text-center">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-center">
                                         <Button
                                             type="button"
                                             size="sm"
@@ -239,12 +241,12 @@ export function PusatTab({
                                         >
                                             Ubah
                                         </Button>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             {totalPages > 1 && (
