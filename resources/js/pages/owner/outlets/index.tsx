@@ -5,6 +5,8 @@ import OutletProvisioningSummary from '@/components/owner/outlet-provisioning-su
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
@@ -168,37 +170,34 @@ export default function OutletsIndex({ outlets }: any) {
                     }}
                 />
             ) : (
-                <div
-                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
-                    aria-label="Daftar Outlet"
-                >
-                    <table className="w-full min-w-[600px]">
-                        <thead>
+                <OwnerTable minWidth="600px">
+                    <Table>
+                        <TableHeader>
                             <tr className="bg-surface-muted/50">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                     Outlet
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                     Lokasi
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                     Status
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">
                                     Pesanan
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">
                                     Aksi
-                                </th>
+                                </TableHead>
                             </tr>
-                        </thead>
-                        <tbody>
+                        </TableHeader>
+                        <TableBody>
                             {filtered.map((outlet: any) => {
                                 const status = getOutletStatus(outlet);
                                 const lowStock = Number(outlet.low_stock_count);
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={outlet.id}
                                         className="hover:bg-mint-wash cursor-pointer border-t border-border/20 transition-colors"
                                         onClick={() =>
@@ -207,7 +206,7 @@ export default function OutletsIndex({ outlets }: any) {
                                             )
                                         }
                                     >
-                                        <td className="px-4 py-3">
+                                        <TableCell className="px-4 py-3">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
                                                     {outlet.name
@@ -226,8 +225,8 @@ export default function OutletsIndex({ outlets }: any) {
                                                     )}
                                                 </div>
                                             </div>
-                                        </td>
-                                        <td className="px-4 py-3 text-xs text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-xs text-text-muted">
                                             {outlet.kelurahan} &middot;{' '}
                                             {outlet.kecamatan}
                                             {Number(
@@ -241,21 +240,21 @@ export default function OutletsIndex({ outlets }: any) {
                                                     restock
                                                 </span>
                                             )}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <StatusBadge
                                                 variant={status.variant}
                                                 size="sm"
                                             >
                                                 {status.label}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-right">
                                             <span className="rounded-md bg-surface-muted px-2 py-0.5 text-xs font-bold text-text-muted tabular-nums">
                                                 {outlet.active_orders_count}
                                             </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 <Button
                                                     variant="ghost"
@@ -294,13 +293,13 @@ export default function OutletsIndex({ outlets }: any) {
                                                     Inv
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={outlets.links} />
