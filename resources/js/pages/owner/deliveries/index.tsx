@@ -9,6 +9,8 @@ import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { formatDate } from '@/lib/format';
+import OwnerTable from '@/components/owner/owner-table';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 const statusOptions = [
     { value: '', label: 'Semua' },
@@ -153,34 +155,34 @@ export default function OwnerDeliveriesIndex({
                     description="Pengiriman akan muncul di sini setelah kurir di-assign ke pesanan"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table
+                <OwnerTable>
+                    <Table
                         aria-label="Daftar pengiriman"
                         className="w-full min-w-[600px]"
                     >
-                        <thead>
+                        <TableHeader>
                             <tr className="bg-surface-muted/50">
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                     Kode
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                     Outlet
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                     Kurir
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                     Status
-                                </th>
-                                <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                     Tanggal
-                                </th>
-                                <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">
                                     Aksi
-                                </th>
+                                </TableHead>
                             </tr>
-                        </thead>
-                        <tbody>
+                        </TableHeader>
+                        <TableBody>
                             {deliveries.data.map((d: any) => {
                                 const isActive = [
                                     'delivering',
@@ -188,29 +190,29 @@ export default function OwnerDeliveriesIndex({
                                 ].includes(d.status);
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={d.id}
                                         className="hover:bg-mint-wash border-t border-border/20 transition-colors"
                                     >
-                                        <td className="px-4 py-3 font-bold text-text tabular-nums">
+                                        <TableCell className="px-4 py-3 font-bold text-text tabular-nums">
                                             {d.order?.order_code ?? '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
                                             {d.order?.outlet?.name ?? '-'}
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
                                             {d.courier?.name ??
                                                 'Belum ada kurir'}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <DeliveryStatusBadge
                                                 status={d.status}
                                             />
-                                        </td>
-                                        <td className="px-4 py-3 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-text-muted">
                                             {formatDate(d.assigned_at)}
-                                        </td>
-                                        <td className="px-4 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-2">
                                                 {isActive && (
                                                     <Button
@@ -236,13 +238,13 @@ export default function OwnerDeliveriesIndex({
                                                     Detail
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={deliveries.links} />
