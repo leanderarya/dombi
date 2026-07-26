@@ -1,9 +1,7 @@
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
-    CheckCircle,
     ChevronDown,
-    ChevronUp,
     ClipboardCheck,
     Package,
     Plus,
@@ -11,6 +9,8 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import CollapsibleCard from '@/components/ui/collapsible-card';
+import SectionCard from '@/components/ui/section-card';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RestockCreateDialog from '@/components/outlet/restock-create-dialog';
@@ -132,9 +132,6 @@ export default function OutletInventory({
     const healthyFamilies = [...familyGroups.entries()].filter(
         ([id]) => familyHealth.get(id) === 'success',
     );
-
-    const [showHealthy, setShowHealthy] = useState(false);
-
     return (
         <OutletLayout title="Inventaris" subtitle={outlet.name}>
             <Head title="Inventaris" />
@@ -241,43 +238,25 @@ export default function OutletInventory({
 
                 {/* Healthy — collapsed */}
                 {filteredHealthyFamilies.length > 0 && (
-                    <div>
-                        <button
-                            type="button"
-                            onClick={() => setShowHealthy(!showHealthy)}
-                            className="flex min-h-11 w-full items-center justify-between rounded-xl border border-border bg-white px-4 text-left transition-colors active:bg-surface-muted"
-                        >
-                            <div className="flex items-center gap-2">
-                                <CheckCircle className="h-4 w-4 text-text-muted" />
-                                <span className="text-sm font-medium text-text">
-                                    Stok Sehat
-                                </span>
-                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] font-bold text-text-muted">
-                                    {filteredHealthyFamilies.length}
-                                </span>
-                            </div>
-                            {showHealthy ? (
-                                <ChevronUp className="h-4 w-4 text-text-subtle" />
-                            ) : (
-                                <ChevronDown className="h-4 w-4 text-text-subtle" />
+                    <CollapsibleCard
+                        label="Stok Sehat"
+                        badge={`${filteredHealthyFamilies.length}`}
+                        defaultOpen={false}
+                    >
+                        <div className="space-y-2">
+                            {filteredHealthyFamilies.map(
+                                ([familyId, group]) => (
+                                    <FamilyGroup
+                                        key={familyId}
+                                        group={group}
+                                        centerStocks={centerStocks}
+                                        activeRestocks={activeRestocks}
+                                        onDetail={setDetailItem}
+                                    />
+                                ),
                             )}
-                        </button>
-                        {showHealthy && (
-                            <div className="mt-2 space-y-2">
-                                {filteredHealthyFamilies.map(
-                                    ([familyId, group]) => (
-                                        <FamilyGroup
-                                            key={familyId}
-                                            group={group}
-                                            centerStocks={centerStocks}
-                                            activeRestocks={activeRestocks}
-                                            onDetail={setDetailItem}
-                                        />
-                                    ),
-                                )}
-                            </div>
-                        )}
-                    </div>
+                        </div>
+                    </CollapsibleCard>
                 )}
 
                 {/* No-family items */}
@@ -327,19 +306,18 @@ export default function OutletInventory({
                 )}
 
                 {recentRestocks.length > 0 && (
-                    <div className="mt-6 rounded-xl border border-border bg-white p-4">
-                        <div className="mb-3 flex items-center justify-between">
-                            <div className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">
-                                Riwayat Restock
-                            </div>
+                    <SectionCard
+                        label="Riwayat Restock"
+                        labelRight={
                             <Link
                                 href="/outlet/restocks"
                                 className="text-[11px] font-semibold text-primary"
                             >
                                 Lihat Semua →
                             </Link>
-                        </div>
-                        <div className="space-y-2">
+                        }
+                    >
+                        <div className="mt-2 space-y-2">
                             {recentRestocks.slice(0, 5).map((r: any) => (
                                 <Link
                                     key={r.id}
@@ -366,7 +344,7 @@ export default function OutletInventory({
                                 </Link>
                             ))}
                         </div>
-                    </div>
+                    </SectionCard>
                 )}
                 </>
                 )}
