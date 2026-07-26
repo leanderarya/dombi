@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { Clock, MapPin, Phone } from 'lucide-react';
 import { useCountdown } from '@/hooks/use-countdown';
 import { waLinkWithMessage } from '@/lib/wa';
+import StatusBadge from '@/components/ui/status-badge';
 
 const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
 
@@ -94,6 +95,9 @@ interface Props {
     outletName?: string;
     customerName?: string;
     orderCode?: string;
+    badgeVariant?: string;
+    badgeLabel?: string;
+    badgeFallbackStatus?: string;
 }
 
 export default function StatusGuidanceCard({
@@ -107,6 +111,9 @@ export default function StatusGuidanceCard({
     outletName,
     customerName,
     orderCode,
+    badgeVariant,
+    badgeLabel,
+    badgeFallbackStatus,
 }: Props) {
     const countdown = useCountdown(confirmationExpiresAt);
     const isPendingUnpaid =
@@ -134,7 +141,12 @@ export default function StatusGuidanceCard({
         countdown.totalSeconds > 0;
 
     return (
-        <div className="mt-3 rounded-xl border border-border bg-white p-3">
+        <div className="rounded-xl border border-border bg-white p-3">
+            {badgeLabel && badgeVariant ? (
+                <StatusBadge variant={badgeVariant as any}>{badgeLabel}</StatusBadge>
+            ) : badgeFallbackStatus ? (
+                <StatusBadge status={badgeFallbackStatus} />
+            ) : null}
             <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                     <div className="text-xs font-semibold text-text">
