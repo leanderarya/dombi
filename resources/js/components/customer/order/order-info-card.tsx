@@ -75,9 +75,9 @@ export default function OrderInfoCard({
     orderCode,
 }: Props) {
     return (
-        <div className="mt-4 divide-y divide-border/50 rounded-xl border border-border bg-white">
+        <div className="space-y-3">
             {/* Items */}
-            <div className="p-3">
+            <div className="rounded-xl border border-border bg-white p-3">
                 <div className="mb-2 flex items-center gap-2">
                     <Package className="h-3.5 w-3.5 text-text-subtle" />
                     <span className="text-[11px] text-text-subtle">
@@ -132,7 +132,7 @@ export default function OrderInfoCard({
 
             {/* Outlet */}
             {outlet && (
-                <div className="p-3">
+                <div className="rounded-xl border border-border bg-white p-3">
                     <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
@@ -195,7 +195,7 @@ export default function OrderInfoCard({
 
             {/* Delivery address */}
             {!isPickup && customerAddress && (
-                <div className="p-3">
+                <div className="rounded-xl border border-border bg-white p-3">
                     <div className="flex items-start gap-1.5">
                         <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-text-subtle" />
                         <div className="min-w-0 flex-1">
@@ -225,7 +225,7 @@ export default function OrderInfoCard({
 
             {/* Courier */}
             {delivery?.courier && (
-                <div className="p-3">
+                <div className="rounded-xl border border-border bg-white p-3">
                     <div className="flex items-center gap-2">
                         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-muted">
                             <UserCheck className="h-3.5 w-3.5 text-text-muted" />
@@ -244,7 +244,7 @@ export default function OrderInfoCard({
 
             {/* Failed delivery */}
             {delivery?.failed_reason && (
-                <div className="bg-amber-50 p-3">
+                <div className="rounded-xl border border-amber-200 bg-amber-50 p-3">
                     <div className="flex items-center gap-1.5">
                         <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
                         <span className="text-xs font-semibold text-amber-700">

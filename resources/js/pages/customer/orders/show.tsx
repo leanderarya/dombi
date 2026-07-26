@@ -2,12 +2,8 @@ import { Head, Link, router, useForm } from '@inertiajs/react';
 import {
     AlertCircle,
     AlertTriangle,
-    CheckCircle2,
-    Clock,
-    Package,
     Phone,
     RotateCcw,
-    XCircle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import OrderHeader from '@/components/customer/order/order-header';
@@ -19,7 +15,6 @@ import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import Dialog from '@/components/ui/dialog';
-import StatusBadge from '@/components/ui/status-badge';
 import { waLinkWithMessage } from '@/lib/wa';
 import {
     useOrderCancel,
@@ -191,7 +186,7 @@ export default function OrderShow({
                 isConfirmation={isConfirmation}
             />
 
-            <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
+            <main className="mx-auto max-w-lg space-y-5 px-4 pt-4 pb-24">
                 {hasPaymentIssue && (
                     <PaymentIssueBanner
                         isFailed={order.payment_status === 'failed'}
@@ -200,11 +195,6 @@ export default function OrderShow({
                     />
                 )}
 
-                <StatusBadgeSection
-                    order={order}
-                    hasPaymentIssue={hasPaymentIssue}
-                    isPickup={isPickup}
-                />
                 <StatusGuidanceCard
                     status={order.status}
                     paymentStatus={order.payment_status}
@@ -216,6 +206,14 @@ export default function OrderShow({
                     outletName={order.outlet?.name}
                     customerName={order.customer_name}
                     orderCode={order.order_code}
+                    {...(order.status === 'ready_for_pickup' && !isPickup
+                        ? { badgeVariant: 'info', badgeLabel: 'Menunggu Kurir' }
+                        : hasPaymentIssue
+                          ? { badgeFallbackStatus: 'payment_failed' }
+                          : order.status === 'pending_confirmation' &&
+                              order.payment_status !== 'paid'
+                            ? { badgeFallbackStatus: 'pending_payment' }
+                            : { badgeFallbackStatus: order.status })}
                 />
 
                 {refund && <RefundStatusCard refund={refund} />}
@@ -223,29 +221,22 @@ export default function OrderShow({
                 {isPickup && order.status === 'ready_for_pickup' && (
                     <OrderQRCard orderCode={order.order_code} />
                 )}
-                {order.status === 'completed' && (
-                    <div className="rounded-lg bg-success/10 p-4 text-center">
-                        <p className="text-sm font-medium text-success">
-                            Pesanan selesai. Terima kasih telah berbelanja.
-                        </p>
-                        <Link
-                            href={`/customer/orders/${order.id}/restore-cart`}
-                            className="mt-3 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-6 text-xs font-bold text-white active:opacity-80"
-                        >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                            Beli Lagi
-                        </Link>
-                    </div>
-                )}
+                <OrderTimeline
+                    currentStatus={order.status}
+                    histories={order.status_histories}
+                    fulfillmentType={order.fulfillment_type}
+                    defaultCollapsed
+                />
 
-                <div className="mt-4">
-                    <OrderTimeline
-                        currentStatus={order.status}
-                        histories={order.status_histories}
-                        fulfillmentType={order.fulfillment_type}
-                        defaultCollapsed
-                    />
-                </div>
+                {order.status === 'completed' && (
+                    <Link
+                        href={`/customer/orders/${order.id}/restore-cart`}
+                        className="flex min-h-10 w-full items-center justify-center gap-1.5 rounded-lg bg-primary px-6 text-xs font-bold text-white active:opacity-80"
+                    >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Beli Lagi
+                    </Link>
+                )}
 
                 <OrderInfoCard
                     items={order.items}
@@ -265,24 +256,20 @@ export default function OrderShow({
                     orderCode={order.order_code}
                 />
 
-                <StatusBanner order={order} />
-
-                <div className="mt-4">
-                    {isCancellable ? (
-                        <CancelButton
-                            onClick={() => setCancelDialogOpen(true)}
-                        />
-                    ) : !isTerminal ? (
-                        <NonCancellableNotice
-                            phone={order.outlet?.phone}
-                            outletName={order.outlet?.name}
-                            customerName={order.customer_name}
-                            orderCode={order.order_code}
-                        />
-                    ) : order.status !== 'completed' ? (
-                        <ReorderLink orderId={order.id} />
-                    ) : null}
-                </div>
+                {isCancellable ? (
+                    <CancelButton
+                        onClick={() => setCancelDialogOpen(true)}
+                    />
+                ) : !isTerminal ? (
+                    <NonCancellableNotice
+                        phone={order.outlet?.phone}
+                        outletName={order.outlet?.name}
+                        customerName={order.customer_name}
+                        orderCode={order.order_code}
+                    />
+                ) : order.status !== 'completed' ? (
+                    <ReorderLink orderId={order.id} />
+                ) : null}
 
                 {hasRecentReport && activeReport && (
                     <ReportStatusCard report={activeReport} />
@@ -338,7 +325,7 @@ function PaymentIssueBanner({
     loading: boolean;
 }) {
     return (
-        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
             <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
                 <div>
@@ -362,35 +349,6 @@ function PaymentIssueBanner({
                     </button>
                 </div>
             </div>
-        </div>
-    );
-}
-
-function StatusBadgeSection({
-    order,
-    hasPaymentIssue,
-    isPickup,
-}: {
-    order: any;
-    hasPaymentIssue: boolean;
-    isPickup: boolean;
-}) {
-    return (
-        <div className="flex items-center justify-center">
-            {order.status === 'ready_for_pickup' && !isPickup ? (
-                <StatusBadge variant="info">Menunggu Kurir</StatusBadge>
-            ) : (
-                <StatusBadge
-                    status={
-                        hasPaymentIssue
-                            ? 'payment_failed'
-                            : order.status === 'pending_confirmation' &&
-                                order.payment_status !== 'paid'
-                              ? 'pending_payment'
-                              : order.status
-                    }
-                />
-            )}
         </div>
     );
 }
@@ -573,7 +531,7 @@ function ReportStatusCard({ report }: { report: any }) {
                 : 'bg-amber-50 text-amber-700 ring-1 ring-amber-200';
 
     return (
-        <div className="mt-4 rounded-xl border border-border bg-white p-4">
+        <div className="rounded-xl border border-border bg-white p-4">
             <div className="flex items-center justify-between">
                 <span className="text-[13px] text-text-subtle">
                     Laporan Anda
@@ -642,7 +600,7 @@ function CancelDialog({
                 Pesanan yang dibatalkan tidak dapat dipulihkan.
             </p>
             {isPickup && isConfirmation && (
-                <div className="mt-4">
+        <div>
                     <label className="text-xs font-medium text-text-subtle">
                         4 digit terakhir nomor HP
                     </label>
