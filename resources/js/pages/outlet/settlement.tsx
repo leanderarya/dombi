@@ -1,5 +1,5 @@
 import { Head, Link, router, useForm } from '@inertiajs/react';
-import { ChartColumn, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChartColumn } from 'lucide-react';
 import { useState } from 'react';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import { Skeleton, SkeletonTable } from '@/components/ui/skeleton';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import SectionCard from '@/components/ui/section-card';
+import CollapsibleCard from '@/components/ui/collapsible-card';
 import StatusBadge from '@/components/ui/status-badge';
 import StickyActionBar from '@/components/ui/sticky-action-bar';
 import OutletLayout from '@/layouts/outlet-layout';
@@ -110,7 +111,6 @@ export default function OutletSettlement({
     period,
 }: Props) {
     const [paymentSheetOpen, setPaymentSheetOpen] = useState(false);
-    const [detailOpen, setDetailOpen] = useState(false);
     const { loading } = useInertiaLoading();
 
     const handlePeriodChange = (newPeriod: string) => {
@@ -173,7 +173,7 @@ export default function OutletSettlement({
                 ) : (
                     <>{/* ── 1. Hero: Outstanding + Rekening + Action ── */}
                 {isSettled ? (
-                    <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
                         <div className="flex items-center gap-2">
                             <svg
                                 className="h-5 w-5 text-emerald-600"
@@ -192,7 +192,7 @@ export default function OutletSettlement({
                         </div>
                     </div>
                 ) : (
-                    <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-4">
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-4">
                         <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
                             Total Belum Disetor
                         </div>
@@ -390,89 +390,66 @@ export default function OutletSettlement({
 
                 {/* ── 4. Detail Rincian (expandable) ── */}
                 {hasSales && (
-                    <SectionCard label="Detail Rincian" className="mb-24">
-                        <button
-                            type="button"
-                            onClick={() => setDetailOpen(!detailOpen)}
-                            className="flex w-full items-center justify-between py-1 text-xs font-semibold text-text-muted"
-                        >
-                            <span>
-                                {detailOpen
-                                    ? 'Sembunyikan rincian'
-                                    : 'Lihat rincian periode'}
-                            </span>
-                            {detailOpen ? (
-                                <ChevronUp className="h-4 w-4" />
-                            ) : (
-                                <ChevronDown className="h-4 w-4" />
+                    <CollapsibleCard label="Detail Rincian" defaultOpen={false}>
+                        <div className="space-y-2">
+                            <BreakdownRow
+                                label="Total Pesanan"
+                                value={summary.orders_count}
+                                isCurrency={false}
+                            />
+                            <BreakdownRow
+                                label="Omset Produk"
+                                value={summary.sales_amount}
+                            />
+                            <BreakdownRow
+                                label="Ongkos Kirim"
+                                value={summary.delivery_fee_amount}
+                            />
+                            <div className="border-t border-border pt-2">
+                                <BreakdownRow
+                                    label="Total Pendapatan"
+                                    value={summary.gross_revenue}
+                                />
+                            </div>
+                            <BreakdownRow
+                                label="Kewajiban (Harga Pusat)"
+                                value={summary.center_share}
+                            />
+                            <BreakdownRow
+                                label="Keuntungan Outlet"
+                                value={summary.outlet_margin}
+                                accent
+                            />
+                            {reconciliation.adjustments !== 0 && (
+                                <BreakdownRow
+                                    label="Penyesuaian Return/Exchange"
+                                    value={reconciliation.adjustments}
+                                    negative={reconciliation.adjustments < 0}
+                                />
                             )}
-                        </button>
-
-                        {detailOpen && (
-                            <div className="mt-3 space-y-2">
+                            <div className="border-t border-border pt-2">
                                 <BreakdownRow
-                                    label="Total Pesanan"
-                                    value={summary.orders_count}
-                                    isCurrency={false}
+                                    label="Sudah Disetor"
+                                    value={reconciliation.verified_payments}
                                 />
-                                <BreakdownRow
-                                    label="Omset Produk"
-                                    value={summary.sales_amount}
-                                />
-                                <BreakdownRow
-                                    label="Ongkos Kirim"
-                                    value={summary.delivery_fee_amount}
-                                />
-                                <div className="border-t border-border pt-2">
+                                {reconciliation.pending_payments > 0 && (
                                     <BreakdownRow
-                                        label="Total Pendapatan"
-                                        value={summary.gross_revenue}
-                                    />
-                                </div>
-                                <BreakdownRow
-                                    label="Kewajiban (Harga Pusat)"
-                                    value={summary.center_share}
-                                />
-                                <BreakdownRow
-                                    label="Keuntungan Outlet"
-                                    value={summary.outlet_margin}
-                                    accent
-                                />
-                                {reconciliation.adjustments !== 0 && (
-                                    <BreakdownRow
-                                        label="Penyesuaian Return/Exchange"
-                                        value={reconciliation.adjustments}
-                                        negative={
-                                            reconciliation.adjustments < 0
-                                        }
+                                        label="Menunggu Verifikasi"
+                                        value={reconciliation.pending_payments}
+                                        muted
                                     />
                                 )}
-                                <div className="border-t border-border pt-2">
+                                <div className="mt-1">
                                     <BreakdownRow
-                                        label="Sudah Disetor"
-                                        value={reconciliation.verified_payments}
+                                        label="Belum Disetor"
+                                        value={reconciliation.outstanding}
+                                        negative={false}
+                                        accent
                                     />
-                                    {reconciliation.pending_payments > 0 && (
-                                        <BreakdownRow
-                                            label="Menunggu Verifikasi"
-                                            value={
-                                                reconciliation.pending_payments
-                                            }
-                                            muted
-                                        />
-                                    )}
-                                    <div className="mt-1">
-                                        <BreakdownRow
-                                            label="Belum Disetor"
-                                            value={reconciliation.outstanding}
-                                            negative={false}
-                                            accent
-                                        />
-                                    </div>
                                 </div>
                             </div>
-                        )}
-                    </SectionCard>
+                        </div>
+                    </CollapsibleCard>
                 )}
                         </>
                     )}
