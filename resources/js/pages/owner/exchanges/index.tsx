@@ -3,11 +3,20 @@ import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 import { getExchangeStatus } from '@/lib/status-labels';
 
@@ -166,56 +175,53 @@ export default function OwnerExchangesIndex({
                     description="Belum ada pengajuan penukaran dari outlet"
                 />
             ) : (
-                <div
-                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
-                    aria-label="Tabel Tukar Produk"
-                >
-                    <table className="w-full min-w-[600px] text-sm">
-                        <thead>
-                            <tr className="bg-surface-muted/50 text-xs font-medium text-text-muted">
-                                <th className="px-3 py-2.5 text-left">Kode</th>
-                                <th className="px-3 py-2.5 text-left">
+                <OwnerTable minWidth="600px">
+                    <Table className="text-sm" aria-label="Tabel Tukar Produk">
+                        <TableHeader>
+                            <TableRow className="bg-surface-muted/50 text-xs font-medium text-text-muted">
+                                <TableHead className="px-3 py-2.5 text-left">Kode</TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Outlet / Info
-                                </th>
-                                <th className="px-3 py-2.5 text-left">
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Status
-                                </th>
-                                <th className="px-3 py-2.5 text-right">
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">
                                     Nilai
-                                </th>
-                                <th className="px-3 py-2.5 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {exchanges.data.map((ex: any) => {
                                 const status = getExchangeStatus(ex.status);
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={ex.id}
                                         className="hover:bg-mint-wash border-t border-border/20 transition-colors last:border-b-0"
                                     >
-                                        <td className="px-3 py-2.5 font-bold text-text tabular-nums">
+                                        <TableCell className="px-3 py-2.5 font-bold text-text tabular-nums">
                                             #{ex.id}
-                                        </td>
-                                        <td className="truncate px-3 py-2.5 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="truncate px-3 py-2.5 text-text-muted">
                                             {ex.outlet?.name ?? '-'} ·{' '}
                                             {ex.return_request_id
                                                 ? `Return #${ex.return_request_id}`
                                                 : 'Tanpa return'}
-                                        </td>
-                                        <td className="px-3 py-2.5">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5">
                                             <StatusBadge
                                                 variant={status.variant}
                                                 size="sm"
                                             >
                                                 {status.label}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
                                             {formatCurrency(ex.exchange_value)}
-                                        </td>
-                                        <td className="px-3 py-2.5 text-right">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5 text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 {ex.status === 'submitted' && (
                                                     <Button
@@ -243,13 +249,13 @@ export default function OwnerExchangesIndex({
                                                     Tinjau
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={exchanges.links} />

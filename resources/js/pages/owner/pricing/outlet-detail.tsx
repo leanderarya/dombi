@@ -3,6 +3,7 @@ import { Copy, Package, Pencil, Plus, RotateCcw } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
 import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -15,6 +16,7 @@ import {
 import EmptyState from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
 import { SkeletonList } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
 import { OutletPriceModal } from './pricing-modals';
@@ -358,50 +360,50 @@ export default function OutletDetail({
                     }
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table className="w-full text-sm">
-                        <thead>
+                <OwnerTable minWidth="700px">
+                    <Table>
+                        <TableHeader>
                             <tr className="border-b border-border/30 bg-surface-muted/50">
-                                <th
+                                <TableHead
                                     className="cursor-pointer px-6 py-3.5 text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('name')}
                                 >
                                     Produk
                                     <SortMarker col="name" />
-                                </th>
-                                <th
+                                </TableHead>
+                                <TableHead
                                     className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('center_price')}
                                 >
                                     HPP
                                     <SortMarker col="center_price" />
-                                </th>
-                                <th
+                                </TableHead>
+                                <TableHead
                                     className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('selling_price')}
                                 >
                                     Harga Jual
                                     <SortMarker col="selling_price" />
-                                </th>
-                                <th
+                                </TableHead>
+                                <TableHead
                                     className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('margin')}
                                 >
                                     Margin
                                     <SortMarker col="margin" />
-                                </th>
-                                <th className="px-6 py-3.5 text-center text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                </TableHead>
+                                <TableHead className="px-6 py-3.5 text-center text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                     Aksi
-                                </th>
+                                </TableHead>
                             </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/20">
+                        </TableHeader>
+                        <TableBody>
                             {paginated.map((row) => (
-                                <tr
+                                <TableRow
                                     key={row.variant_id}
                                     className="hover:bg-mint-wash transition-colors"
                                 >
-                                    <td className="px-6 py-4">
+                                    <TableCell className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <span className="font-semibold text-text">
                                                 {row.name}
@@ -421,21 +423,21 @@ export default function OutletDetail({
                                                 {row.family_name}
                                             </div>
                                         )}
-                                    </td>
-                                    <td className="px-6 py-4 text-right text-text-muted tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-right text-text-muted tabular-nums">
                                         {formatCurrency(row.center_price)}
-                                    </td>
-                                    <td className="px-6 py-4 text-right text-base font-bold text-text tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-right text-base font-bold text-text tabular-nums">
                                         {formatCurrency(row.selling_price)}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4 text-right">
                                         <MarginBarInline
                                             margin={row.margin}
                                             maxMargin={maxMargin}
                                             sellingPrice={row.selling_price}
                                         />
-                                    </td>
-                                    <td className="px-6 py-4">
+                                    </TableCell>
+                                    <TableCell className="px-6 py-4">
                                         <div className="flex items-center justify-center gap-1">
                                             {row.has_override && (
                                                 <button
@@ -464,12 +466,12 @@ export default function OutletDetail({
                                                 <Pencil className="h-3.5 w-3.5" />
                                             </button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             {totalPages > 1 && (

@@ -3,6 +3,8 @@ import { useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import SortableTh from '@/components/owner/sortable-th';
+import OwnerTable from '@/components/owner/owner-table';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -165,12 +167,9 @@ export default function CentralStockTab({
                     description="Coba ubah kata kunci pencarian"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table
-                        className="w-full min-w-[600px]"
-                        aria-label="Stok Pusat"
-                    >
-                        <thead>
+                <OwnerTable minWidth="600px">
+                    <Table>
+                        <TableHeader>
                             <tr className="bg-surface-muted/50">
                                 <SortableTh
                                     label="Produk / SKU"
@@ -192,26 +191,26 @@ export default function CentralStockTab({
                                     align="right"
                                     onClick={() => toggleSort('center_price')}
                                 />
-                                <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Status
-                                </th>
-                                <th className="w-20 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                </TableHead>
+                                <TableHead className="w-20 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Aksi
-                                </th>
+                                </TableHead>
                             </tr>
-                        </thead>
-                        <tbody>
+                        </TableHeader>
+                        <TableBody>
                             {sorted.map((v: any) => {
                                 const isZero = v.center_stock <= 0;
                                 const isLow =
                                     v.center_stock > 0 && v.center_stock <= 10;
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={v.id}
                                         className="hover:bg-mint-wash border-t border-border/20 transition-colors"
                                     >
-                                        <td className="px-3 py-3">
+                                        <TableCell className="px-3 py-3">
                                             <span className="font-bold text-text">
                                                 {displayProductName(v)}
                                             </span>
@@ -220,16 +219,16 @@ export default function CentralStockTab({
                                                     {v.sku}
                                                 </span>
                                             )}
-                                        </td>
-                                        <td
+                                        </TableCell>
+                                        <TableCell
                                             className={`px-3 py-3 text-right font-bold tabular-nums ${isZero ? 'text-red-600' : isLow ? 'text-amber-600' : 'text-emerald-600'}`}
                                         >
                                             {v.center_stock} pcs
-                                        </td>
-                                        <td className="px-3 py-3 text-right text-text-muted tabular-nums">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3 text-right text-text-muted tabular-nums">
                                             {formatCurrency(v.center_price)}
-                                        </td>
-                                        <td className="px-3 py-3">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3">
                                             <StatusBadge
                                                 variant={
                                                     isZero
@@ -246,8 +245,8 @@ export default function CentralStockTab({
                                                       ? 'Rendah'
                                                       : 'Aman'}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-3 py-3 text-right">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-3 text-right">
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
@@ -261,13 +260,13 @@ export default function CentralStockTab({
                                             >
                                                 Edit
                                             </Button>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Dialog

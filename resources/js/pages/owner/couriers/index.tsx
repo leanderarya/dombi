@@ -3,6 +3,7 @@ import { Bike, Car, MapPin, Package, Search, Truck, Users } from 'lucide-react';
 import { useState } from 'react';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -16,6 +17,14 @@ import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import Pagination from '@/components/ui/pagination';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
 const vehicleTypes = [
@@ -121,28 +130,25 @@ export default function CouriersIndex({
                         }
                     />
                 ) : (
-                    <div
-                        className="overflow-x-auto rounded-xl bg-surface shadow-card"
-                        aria-label="Daftar Kurir"
-                    >
-                        <table className="w-full min-w-[500px]">
-                            <thead>
-                                <tr className="bg-surface-muted/50">
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                    <OwnerTable minWidth="500px">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-surface-muted/50">
+                                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                         Kurir
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                         Kendaraan
-                                    </th>
-                                    <th className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
                                         Status
-                                    </th>
-                                    <th className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">
                                         Aksi
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
                                 {filtered.map((courier: any) => {
                                     const vehicleIcon =
                                         courier.vehicle_type === 'car'
@@ -151,11 +157,11 @@ export default function CouriersIndex({
                                     const VehicleIcon = vehicleIcon;
 
                                     return (
-                                        <tr
+                                        <TableRow
                                             key={courier.id}
                                             className="hover:bg-mint-wash border-t border-border/20 transition-colors"
                                         >
-                                            <td className="px-4 py-3">
+                                            <TableCell className="px-4 py-3">
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-text-muted">
                                                         {courier.name
@@ -172,8 +178,8 @@ export default function CouriersIndex({
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td className="px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
                                                 <div className="flex items-center gap-1.5 text-xs text-text-muted">
                                                     <VehicleIcon
                                                         className="h-3.5 w-3.5"
@@ -184,8 +190,8 @@ export default function CouriersIndex({
                                                             '-'}
                                                     </span>
                                                 </div>
-                                            </td>
-                                            <td className="px-4 py-3">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3">
                                                 {courier.is_online ? (
                                                     <StatusBadge
                                                         variant="success"
@@ -201,8 +207,8 @@ export default function CouriersIndex({
                                                         Offline
                                                     </StatusBadge>
                                                 )}
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
+                                            </TableCell>
+                                            <TableCell className="px-4 py-3 text-right">
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
@@ -214,13 +220,13 @@ export default function CouriersIndex({
                                                 >
                                                     Detail
                                                 </Button>
-                                            </td>
-                                        </tr>
+                                            </TableCell>
+                                        </TableRow>
                                     );
                                 })}
-                            </tbody>
-                        </table>
-                    </div>
+                            </TableBody>
+                        </Table>
+                    </OwnerTable>
                 )}
 
                 <Pagination links={couriers.links} />

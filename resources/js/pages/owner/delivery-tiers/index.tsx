@@ -17,6 +17,15 @@ import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
+import OwnerTable from '@/components/owner/owner-table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 interface DeliveryTier {
     id: number;
@@ -146,38 +155,39 @@ export default function DeliveryTiersIndex({
                 />
             ) : (
                 <div
-                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
+                    className="overflow-x-auto rounded-xl bg-surface shadow-xs ring-1 ring-foreground/10"
                     aria-label="Daftar tier pengiriman"
                 >
-                    <table className="w-full min-w-[500px] text-sm">
-                        <thead>
-                            <tr className="bg-surface-muted text-xs font-medium text-text-muted">
-                                <th className="w-10 px-4 py-3"></th>
-                                <th className="px-4 py-3 text-left">Jarak</th>
-                                <th className="px-4 py-3 text-left">Tarif</th>
-                                <th className="px-4 py-3 text-left">Status</th>
-                                <th className="px-4 py-3 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                    <OwnerTable minWidth="500px">
+                        <Table>
+                        <TableHeader>
+                            <TableRow className="bg-surface-muted text-xs font-medium text-text-muted">
+                                <TableHead className="w-10 px-4 py-3"></TableHead>
+                                <TableHead className="px-4 py-3 text-left">Jarak</TableHead>
+                                <TableHead className="px-4 py-3 text-left">Tarif</TableHead>
+                                <TableHead className="px-4 py-3 text-left">Status</TableHead>
+                                <TableHead className="px-4 py-3 text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {tiers.map((tier) => (
-                                <tr
+                                <TableRow
                                     key={tier.id}
                                     className={`hover:bg-mint-wash border-t border-border/20 transition-colors ${!tier.is_active ? 'opacity-50' : ''}`}
                                 >
-                                    <td className="px-4 py-3">
+                                    <TableCell className="px-4 py-3">
                                         <GripVertical
                                             className="h-4 w-4 text-text-subtle"
                                             aria-hidden="true"
                                         />
-                                    </td>
-                                    <td className="px-4 py-3 font-medium text-text">
+                                    </TableCell>
+                                    <TableCell className="px-4 py-3 font-medium text-text">
                                         {tier.min_km} – {tier.max_km} km
-                                    </td>
-                                    <td className="px-4 py-3 font-bold text-text tabular-nums">
+                                    </TableCell>
+                                    <TableCell className="px-4 py-3 font-bold text-text tabular-nums">
                                         {formatCurrency(tier.fee)}
-                                    </td>
-                                    <td className="px-4 py-3">
+                                    </TableCell>
+                                    <TableCell className="px-4 py-3">
                                         <button
                                             type="button"
                                             onClick={() =>
@@ -198,8 +208,8 @@ export default function DeliveryTiersIndex({
                                                     : 'Nonaktif'}
                                             </StatusBadge>
                                         </button>
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
+                                    </TableCell>
+                                    <TableCell className="px-4 py-3 text-right">
                                         <div className="flex items-center justify-end gap-1">
                                             <Button
                                                 size="sm"
@@ -229,11 +239,12 @@ export default function DeliveryTiersIndex({
                                                 />
                                             </Button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
                 </div>
             )}
 
