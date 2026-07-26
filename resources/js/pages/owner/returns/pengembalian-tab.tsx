@@ -9,6 +9,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { getReturnStatus } from '@/lib/status-labels';
+import OwnerTable from '@/components/owner/owner-table';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 
 const RETURN_STATUS_FILTERS = [
     { key: '', label: 'Semua' },
@@ -161,57 +170,54 @@ export default function PengembalianTab({
                     description="Belum ada pengajuan return dari outlet"
                 />
             ) : (
-                <div
-                    className="overflow-x-auto rounded-xl bg-surface shadow-card"
-                    aria-label="Tabel Pengembalian"
-                >
-                    <table className="w-full min-w-[600px] text-sm">
-                        <thead>
-                            <tr className="bg-surface-muted/50 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                <th className="px-3 py-2.5 text-left">Kode</th>
-                                <th className="px-3 py-2.5 text-left">
+                <OwnerTable minWidth="600px" aria-label="Tabel Pengembalian">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="bg-surface-muted/50 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                <TableHead className="px-3 py-2.5 text-left">Kode</TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Outlet / Alasan
-                                </th>
-                                <th className="px-3 py-2.5 text-left">
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
                                     Status
-                                </th>
-                                <th className="px-3 py-2.5 text-right">
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">
                                     Nilai
-                                </th>
-                                <th className="px-3 py-2.5 text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                                </TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">Aksi</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {returns.data.map((ret: any) => {
                                 const status = getReturnStatus(ret.status);
 
                                 return (
-                                    <tr
+                                    <TableRow
                                         key={ret.id}
                                         className="hover:bg-mint-wash border-t border-border/20 transition-colors last:border-b-0"
                                     >
-                                        <td className="px-3 py-2.5 font-bold text-text tabular-nums">
+                                        <TableCell className="px-3 py-2.5 font-bold text-text tabular-nums">
                                             #{ret.id}
-                                        </td>
-                                        <td className="truncate px-3 py-2.5 text-text-muted">
+                                        </TableCell>
+                                        <TableCell className="truncate px-3 py-2.5 text-text-muted">
                                             {ret.outlet?.name ?? '-'} ·{' '}
                                             {(ret.reason ?? '').replaceAll(
                                                 '_',
                                                 ' ',
                                             )}
-                                        </td>
-                                        <td className="px-3 py-2.5">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5">
                                             <StatusBadge
                                                 variant={status.variant}
                                                 size="sm"
                                             >
                                                 {status.label}
                                             </StatusBadge>
-                                        </td>
-                                        <td className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
                                             {formatCurrency(ret.total_value)}
-                                        </td>
-                                        <td className="px-3 py-2.5 text-right">
+                                        </TableCell>
+                                        <TableCell className="px-3 py-2.5 text-right">
                                             <div className="flex items-center justify-end gap-1">
                                                 {ret.status === 'submitted' && (
                                                     <Button
@@ -239,13 +245,13 @@ export default function PengembalianTab({
                                                     Tinjau
                                                 </Button>
                                             </div>
-                                        </td>
-                                    </tr>
+                                        </TableCell>
+                                    </TableRow>
                                 );
                             })}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={returns.links} />

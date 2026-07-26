@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
 import {
@@ -18,6 +19,14 @@ import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
 import { displayProductName } from '@/lib/display';
 import { formatDate } from '@/lib/format';
@@ -201,13 +210,10 @@ export default function OwnerRestocksIndex({
                     description="Permintaan restock akan muncul di sini setelah diajukan outlet"
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                    <table
-                        className="w-full min-w-[600px]"
-                        aria-label="Daftar Restock"
-                    >
-                        <thead>
-                            <tr className="bg-surface-muted/50">
+                <OwnerTable minWidth="600px">
+                    <Table aria-label="Daftar Restock">
+                        <TableHeader>
+                            <TableRow className="bg-surface-muted/50">
                                 <SortableTh
                                     label="Kode"
                                     active={sortKey === 'id'}
@@ -220,9 +226,9 @@ export default function OwnerRestocksIndex({
                                     dir={sortDir}
                                     onClick={() => toggleSort('outlet')}
                                 />
-                                <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Status
-                                </th>
+                                </TableHead>
                                 <SortableTh
                                     label="Items"
                                     active={sortKey === 'items'}
@@ -235,36 +241,36 @@ export default function OwnerRestocksIndex({
                                     dir={sortDir}
                                     onClick={() => toggleSort('date')}
                                 />
-                                <th className="w-28 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                <TableHead className="w-28 px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
                                     Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {sorted.map((r: any) => (
-                                <tr
+                                <TableRow
                                     key={r.id}
                                     className="hover:bg-mint-wash border-t border-border/20 transition-colors"
                                 >
-                                    <td className="px-3 py-3 font-bold text-text tabular-nums">
+                                    <TableCell className="px-3 py-3 font-bold text-text tabular-nums">
                                         #{r.id}
-                                    </td>
-                                    <td className="px-3 py-3 text-text-muted">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-text-muted">
                                         {r.outlet?.name ?? '—'}
-                                    </td>
-                                    <td className="px-3 py-3">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3">
                                         <StatusBadge
                                             status={r.status}
                                             size="sm"
                                         />
-                                    </td>
-                                    <td className="px-3 py-3 text-text-muted">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-text-muted">
                                         {r.items?.length ?? 0} item
-                                    </td>
-                                    <td className="px-3 py-3 text-text-muted">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-text-muted">
                                         {formatDate(r.created_at)}
-                                    </td>
-                                    <td className="px-3 py-3 text-right">
+                                    </TableCell>
+                                    <TableCell className="px-3 py-3 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             {r.status === 'requested' ? (
                                                 <Button
@@ -287,12 +293,12 @@ export default function OwnerRestocksIndex({
                                                 </Button>
                                             )}
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
             )}
 
             <Pagination links={restocks.links} />

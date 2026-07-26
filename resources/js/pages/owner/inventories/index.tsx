@@ -6,6 +6,8 @@ import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import SortableTh from '@/components/owner/sortable-th';
+import OwnerTable from '@/components/owner/owner-table';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -376,23 +378,20 @@ export default function InventoriesIndex({
                             description="Coba ubah filter atau kata kunci"
                         />
                     ) : (
-                        <div className="overflow-x-auto rounded-xl bg-surface shadow-card">
-                            <table
-                                className="w-full min-w-[700px]"
-                                aria-label="Stok Outlet — Grup per Produk"
-                            >
-                                <thead>
+                        <OwnerTable minWidth="700px">
+                            <Table>
+                                <TableHeader>
                                     <tr className="bg-surface-muted/50">
-                                        <th className="w-8 px-3 py-2.5" />
+                                        <TableHead className="w-8 px-3 py-2.5" />
                                         <SortableTh
                                             label="Produk"
                                             active={sortKey === 'name'}
                                             dir={sortDir}
                                             onClick={() => toggleSort('name')}
                                         />
-                                        <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                        <TableHead className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
                                             Status Outlet
-                                        </th>
+                                        </TableHead>
                                         <SortableTh
                                             label="Total Stok"
                                             active={sortKey === 'total_stock'}
@@ -409,8 +408,8 @@ export default function InventoriesIndex({
                                             onClick={() => toggleSort('status')}
                                         />
                                     </tr>
-                                </thead>
-                                <tbody>
+                                </TableHeader>
+                                <TableBody>
                                     {sorted.map((group) => {
                                         const isExpanded = expandedIds.has(
                                             group.variantId,
@@ -483,7 +482,7 @@ export default function InventoriesIndex({
 
                                         return (
                                             <>
-                                                <tr
+                                                <TableRow
                                                     key={group.variantId}
                                                     className="hover:bg-mint-wash cursor-pointer border-t border-border/20 transition-colors"
                                                     onClick={() =>
@@ -492,14 +491,14 @@ export default function InventoriesIndex({
                                                         )
                                                     }
                                                 >
-                                                    <td className="px-3 py-3 text-center">
+                                                    <TableCell className="px-3 py-3 text-center">
                                                         {isExpanded ? (
                                                             <ChevronDown className="mx-auto h-4 w-4 text-text-muted" />
                                                         ) : (
                                                             <ChevronRight className="mx-auto h-4 w-4 text-text-muted" />
                                                         )}
-                                                    </td>
-                                                    <td className="px-3 py-3">
+                                                    </TableCell>
+                                                    <TableCell className="px-3 py-3">
                                                         <span className="font-bold text-text">
                                                             {productName}
                                                         </span>
@@ -512,8 +511,8 @@ export default function InventoriesIndex({
                                                                 }
                                                             </span>
                                                         )}
-                                                    </td>
-                                                    <td className="px-3 py-3">
+                                                    </TableCell>
+                                                    <TableCell className="px-3 py-3">
                                                         <div className="flex items-center gap-1.5">
                                                             <div className="flex gap-0.5">
                                                                 {group.outlets.map(
@@ -565,8 +564,8 @@ export default function InventoriesIndex({
                                                                     ` · ${group.lowCount} rendah`}
                                                             </span>
                                                         </div>
-                                                    </td>
-                                                    <td
+                                                    </TableCell>
+                                                    <TableCell
                                                         className={cn(
                                                             'px-3 py-3 text-right font-bold tabular-nums',
                                                             group.overallStatus ===
@@ -579,8 +578,8 @@ export default function InventoriesIndex({
                                                         )}
                                                     >
                                                         {group.totalStock} pcs
-                                                    </td>
-                                                    <td className="px-3 py-3">
+                                                    </TableCell>
+                                                    <TableCell className="px-3 py-3">
                                                         <StatusBadge
                                                             variant={
                                                                 statusVariant
@@ -589,15 +588,15 @@ export default function InventoriesIndex({
                                                         >
                                                             {statusLabel}
                                                         </StatusBadge>
-                                                    </td>
-                                                </tr>
+                                                    </TableCell>
+                                                </TableRow>
 
                                                 {isExpanded && (
-                                                    <tr
+                                                    <TableRow
                                                         key={`${group.variantId}-sub`}
                                                         className="border-t border-border/50 bg-surface-muted/30"
                                                     >
-                                                        <td
+                                                        <TableCell
                                                             colSpan={5}
                                                             className="px-0 py-0"
                                                         >
@@ -806,18 +805,18 @@ export default function InventoriesIndex({
                                                                                 );
                                                                             },
                                                                         )}
-                                                                    </tbody>
-                                                                </table>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
+                                                                             </tbody>
+                                                                 </table>
+                                                             </div>
+                                                         </TableCell>
+                                                     </TableRow>
                                                 )}
                                             </>
                                         );
                                     })}
-                                </tbody>
-                            </table>
-                        </div>
+                                </TableBody>
+                            </Table>
+                        </OwnerTable>
                     )}
                 </>
             )}

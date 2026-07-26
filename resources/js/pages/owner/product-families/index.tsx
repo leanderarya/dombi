@@ -16,6 +16,15 @@ import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
+import OwnerTable from '@/components/owner/owner-table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 
 interface Variant {
     id: number;
@@ -202,40 +211,41 @@ export default function ProductFamiliesIndex({ families }: Props) {
                 />
             ) : (
                 <div
-                    className="overflow-hidden rounded-xl bg-surface shadow-card"
+                    className="overflow-hidden rounded-xl bg-surface shadow-xs ring-1 ring-foreground/10"
                     aria-label="Daftar Product Family"
                 >
-                    <table className="w-full border-collapse text-left">
-                        <thead>
-                            <tr className="border-b border-border/30 bg-surface-muted/50">
-                                <th className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                    <OwnerTable noWrapper>
+                        <Table>
+                        <TableHeader>
+                            <TableRow className="border-b border-border/30 bg-surface-muted/50">
+                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                     Produk
-                                </th>
-                                <th className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                </TableHead>
+                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                     Gambar
-                                </th>
-                                <th className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                </TableHead>
+                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                     Merek
-                                </th>
-                                <th className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                </TableHead>
+                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                     Varian
-                                </th>
-                                <th className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                </TableHead>
+                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                     Status
-                                </th>
-                                <th className="px-6 py-4 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                </TableHead>
+                                <TableHead className="px-6 py-4 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                     Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/20">
+                                </TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-border/20">
                             {filteredFamilies.map((family) => (
-                                <tr
+                                <TableRow
                                     key={family.id}
                                     className="hover:bg-mint-wash group transition-colors"
                                 >
                                     {/* Produk */}
-                                    <td className="px-6 py-4">
+                                    <TableCell className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="bg-mint-wash flex h-8 w-8 items-center justify-center rounded-lg text-primary">
                                                 <Package className="h-4 w-4" />
@@ -244,10 +254,10 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                                 {family.name}
                                             </span>
                                         </div>
-                                    </td>
+                                    </TableCell>
 
                                     {/* Gambar */}
-                                    <td className="px-6 py-4">
+                                    <TableCell className="px-6 py-4">
                                         {family.image ? (
                                             <img
                                                 src={`/storage/${family.image}`}
@@ -259,15 +269,15 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                                 —
                                             </span>
                                         )}
-                                    </td>
+                                    </TableCell>
 
                                     {/* Merek */}
-                                    <td className="px-6 py-4 text-sm text-text-muted">
+                                    <TableCell className="px-6 py-4 text-sm text-text-muted">
                                         {family.brand || '-'}
-                                    </td>
+                                    </TableCell>
 
                                     {/* Varian */}
-                                    <td className="px-6 py-4">
+                                    <TableCell className="px-6 py-4">
                                         <div className="flex flex-wrap gap-1.5">
                                             {family.variants
                                                 .slice(0, 3)
@@ -290,10 +300,10 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                                 </span>
                                             )}
                                         </div>
-                                    </td>
+                                    </TableCell>
 
                                     {/* Status */}
-                                    <td className="px-6 py-4">
+                                    <TableCell className="px-6 py-4">
                                         {family.is_active ? (
                                             <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
                                                 AKTIF
@@ -303,10 +313,10 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                                 NONAKTIF
                                             </span>
                                         )}
-                                    </td>
+                                    </TableCell>
 
                                     {/* Aksi */}
-                                    <td className="px-6 py-4 text-right">
+                                    <TableCell className="px-6 py-4 text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <button
                                                 onClick={() =>
@@ -338,11 +348,12 @@ export default function ProductFamiliesIndex({ families }: Props) {
                                                 <Trash2 className="h-3.5 w-3.5" />
                                             </button>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                        </tbody>
-                    </table>
+                        </TableBody>
+                    </Table>
+                </OwnerTable>
                 </div>
             )}
 
