@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Delivery;
+use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\User;
+use App\Services\DeliveryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -74,6 +76,49 @@ class DeliveryExternalCourierTest extends TestCase
         $this->assertEquals(Order::STATUS_DELIVERING, $this->order->status);
     }
 
+    public function test_external_assignment_records_outlet_actor_and_timestamps(): void
+    {
+        $assignmentTime = now()->startOfSecond();
+        $this->travelTo($assignmentTime);
+
+        $delivery = $this->assignExternal($this->order, $this->outletStaff);
+        $history = DeliveryStatusHistory::where('delivery_id', $delivery->id)->sole();
+
+        $this->assertSame($this->outletStaff->id, $delivery->assigned_by);
+        $this->assertNotNull($delivery->assigned_at);
+        $this->assertTrue($delivery->assigned_at->equalTo($assignmentTime));
+        $this->assertSame('outlet', $history->changed_by_type);
+        $this->assertSame($this->outletStaff->id, $history->changed_by_id);
+        $this->assertSame('delivering', $history->to_status);
+        $this->assertNotNull($history->created_at);
+        $this->assertTrue($history->created_at->equalTo($assignmentTime));
+    }
+
+    public function test_external_assignment_records_owner_actor_and_timestamps(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner']);
+        $order = Order::factory()->create([
+            'outlet_id' => $this->outletStaff->outlet_id,
+            'status' => Order::STATUS_READY_FOR_PICKUP,
+            'fulfillment_type' => Order::FULFILLMENT_DELIVERY_DOMBI,
+            'payment_status' => 'paid',
+        ]);
+        $assignmentTime = now()->startOfSecond();
+        $this->travelTo($assignmentTime);
+
+        $delivery = $this->assignExternal($order, $owner);
+        $history = DeliveryStatusHistory::where('delivery_id', $delivery->id)->sole();
+
+        $this->assertSame($owner->id, $delivery->assigned_by);
+        $this->assertNotNull($delivery->assigned_at);
+        $this->assertTrue($delivery->assigned_at->equalTo($assignmentTime));
+        $this->assertSame('owner', $history->changed_by_type);
+        $this->assertSame($owner->id, $history->changed_by_id);
+        $this->assertSame('delivering', $history->to_status);
+        $this->assertNotNull($history->created_at);
+        $this->assertTrue($history->created_at->equalTo($assignmentTime));
+    }
+
     public function test_assign_eksternal_rejects_without_name(): void
     {
         $response = $this->actingAs($this->outletStaff)
@@ -119,5 +164,17 @@ class DeliveryExternalCourierTest extends TestCase
 
         $this->order->refresh();
         $this->assertEquals(Order::STATUS_COMPLETED, $this->order->status);
+    }
+
+    private function assignExternal(Order $order, User $actor): Delivery
+    {
+        return app(DeliveryService::class)->assignCourier(
+            order: $order,
+            courier: null,
+            assignedBy: $actor,
+            courierType: 'eksternal',
+            externalName: 'Gojek',
+            courierCost: 25000,
+        );
     }
 }
