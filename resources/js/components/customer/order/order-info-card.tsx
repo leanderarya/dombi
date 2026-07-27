@@ -58,7 +58,6 @@ interface Props {
 
 export default function OrderInfoCard({
     items,
-    subtotal,
     deliveryFee,
     total,
     isPickup,
@@ -69,7 +68,6 @@ export default function OrderInfoCard({
     customerAddressDetail,
     latitude,
     longitude,
-    fulfillmentType,
     customerName,
     orderCode,
 }: Props) {

@@ -17,7 +17,7 @@ export default function OrderHeader({
     isConfirmation = false,
     fallbackHref = '/customer/orders',
 }: Props) {
-    const handleShare = trackingUrl ? useShareTracking(trackingUrl) : undefined;
+    const handleShare = useShareTracking(trackingUrl ?? null);
 
     return (
         <header className="sticky top-0 z-30 border-b border-border bg-white/95 pt-safe backdrop-blur">
@@ -48,7 +48,7 @@ export default function OrderHeader({
                         </div>
                     )}
                 </div>
-                {handleShare ? (
+                {trackingUrl ? (
                     <button
                         type="button"
                         onClick={handleShare}

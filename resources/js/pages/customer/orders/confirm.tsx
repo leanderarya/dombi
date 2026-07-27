@@ -44,7 +44,7 @@ export default function ConfirmPage({
     const [cancelLoading, setCancelLoading] = useState(false);
     const [needsRefund, setNeedsRefund] = useState(false);
     const pollInterval = useRef<ReturnType<typeof setInterval> | null>(null);
-    const pollStart = useRef(Date.now());
+    const pollStart = useRef<number | null>(null);
     const submitLock = useRef(false);
 
     // Prune navigation stack after successful payment
@@ -63,7 +63,10 @@ export default function ConfirmPage({
 
         pollInterval.current = setInterval(async () => {
             // Stop polling after timeout
-            if (Date.now() - pollStart.current > POLL_TIMEOUT_MS) {
+            if (
+                pollStart.current !== null &&
+                Date.now() - pollStart.current > POLL_TIMEOUT_MS
+            ) {
                 if (pollInterval.current) {
                     clearInterval(pollInterval.current);
                 }
@@ -112,7 +115,7 @@ export default function ConfirmPage({
                 clearInterval(pollInterval.current);
             }
         };
-    }, [paymentStatus]);
+    }, [order.id, paymentStatus]);
 
     // Countdown timer — auto-expire when reaching 0
     useEffect(() => {
@@ -180,7 +183,7 @@ export default function ConfirmPage({
                 },
             },
         );
-    }, [order.id, cancelReason]);
+    }, [order.id, cancelReason, paymentStatus]);
 
     const handlePay = useCallback(
         (method?: string) => {

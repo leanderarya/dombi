@@ -58,6 +58,20 @@ type LocationDraft = {
     delivery_notes?: string;
 };
 
+const EMPTY_LOCATION_DRAFT: LocationDraft = {
+    address_line: '',
+    address_detail: '',
+    province: '',
+    city: '',
+    district: '',
+    village: '',
+    postal_code: '',
+    latitude: null,
+    longitude: null,
+    accuracy: null,
+    timestamp: 0,
+};
+
 export default function LocationSheet({
     open,
     onClose,
@@ -65,6 +79,32 @@ export default function LocationSheet({
     isLoggedIn = true,
 }: Props) {
     const { location, saveLocation } = useCustomerLocation();
+
+    if (!open) {
+        return null;
+    }
+
+    return (
+        <LocationSheetContent
+            onClose={onClose}
+            onLocationSaved={onLocationSaved}
+            isLoggedIn={isLoggedIn}
+            location={location}
+            saveLocation={saveLocation}
+        />
+    );
+}
+
+function LocationSheetContent({
+    onClose,
+    onLocationSaved,
+    isLoggedIn,
+    location,
+    saveLocation,
+}: Omit<Props, 'open'> & {
+    location: CustomerLocation | null;
+    saveLocation: (location: CustomerLocation) => void;
+}) {
     const [mode, setMode] = useState<SheetMode>('options');
     const [loadingCurrent, setLoadingCurrent] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -82,6 +122,7 @@ export default function LocationSheet({
             return;
         }
 
+        await Promise.resolve();
         setLoadingAddresses(true);
 
         try {
@@ -106,14 +147,10 @@ export default function LocationSheet({
     }, [isLoggedIn]);
 
     useEffect(() => {
-        if (open) {
-            setMode('options');
-            setError(null);
-            setDraft(toDraft(location));
-            setGpsAccuracy(null);
-            fetchAddresses();
-        }
-    }, [open, location, fetchAddresses]);
+        const timeout = window.setTimeout(fetchAddresses, 0);
+
+        return () => window.clearTimeout(timeout);
+    }, [fetchAddresses]);
 
     async function handleUseCurrentLocation() {
         if (!navigator.geolocation) {
@@ -196,7 +233,7 @@ export default function LocationSheet({
         );
     }
 
-    function handleSelectSavedAddress(addr: SavedAddress) {
+    function handleSelectSavedAddress(addr: SavedAddress, timestamp: number) {
         const nextLocation: CustomerLocation = {
             address_id: addr.id,
             address_line: addr.address_line,
@@ -208,7 +245,7 @@ export default function LocationSheet({
             postal_code: addr.postal_code,
             latitude: addr.latitude,
             longitude: addr.longitude,
-            timestamp: Date.now(),
+            timestamp,
             landmark: addr.landmark,
             delivery_notes: addr.delivery_notes,
         };
@@ -273,10 +310,6 @@ export default function LocationSheet({
         } finally {
             setSaving(false);
         }
-    }
-
-    if (!open) {
-        return null;
     }
 
     return createPortal(
@@ -346,9 +379,12 @@ export default function LocationSheet({
                                         <button
                                             key={addr.id}
                                             type="button"
-                                            onClick={() =>
-                                                handleSelectSavedAddress(addr)
-                                            }
+                                            onClick={() => {
+                                                handleSelectSavedAddress(
+                                                    addr,
+                                                    Date.now(),
+                                                );
+                                            }}
                                             className="flex h-14 w-full items-center gap-3 rounded-xl border border-border bg-white px-4 transition-all active:bg-zinc-50 active:opacity-80"
                                         >
                                             <MapPin className="h-4 w-4 shrink-0 text-text-subtle" />
@@ -429,21 +465,7 @@ export default function LocationSheet({
                             </button>
 
                             <LocationSearchPanel
-                                value={
-                                    draft ?? {
-                                        address_line: '',
-                                        address_detail: '',
-                                        province: '',
-                                        city: '',
-                                        district: '',
-                                        village: '',
-                                        postal_code: '',
-                                        latitude: null,
-                                        longitude: null,
-                                        accuracy: null,
-                                        timestamp: Date.now(),
-                                    }
-                                }
+                                value={draft ?? EMPTY_LOCATION_DRAFT}
                                 onChange={(next) =>
                                     setDraft((current) => ({
                                         address_line:

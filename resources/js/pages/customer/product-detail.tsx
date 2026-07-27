@@ -191,24 +191,23 @@ function ProductDetailInner({
         typeof window !== 'undefined'
             ? new URLSearchParams(window.location.search)
             : null;
-    const [overriddenFlavor, setOverriddenFlavor] = useState<string | null>(
-        urlParams?.get('flavor') ?? null,
-    );
-    const [overriddenSize, setOverriddenSize] = useState<string | null>(
-        urlParams?.get('size') ?? null,
-    );
+    const [selection, setSelection] = useState(() => ({
+        familyId: family.id,
+        flavor: urlParams?.get('flavor') ?? null,
+        size: urlParams?.get('size') ?? null,
+    }));
     const [quantity, setQuantity] = useState(1);
-    const [maxQuantity, setMaxQuantity] = useState(999);
 
-    // Reset on family change (key-based, render-phase safe)
-    const familyIdRef = useRef(family.id);
-
-    if (familyIdRef.current !== family.id) {
-        familyIdRef.current = family.id;
-        setOverriddenFlavor(null);
-        setOverriddenSize(null);
+    if (selection.familyId !== family.id) {
+        setSelection({
+            familyId: family.id,
+            flavor: null,
+            size: null,
+        });
     }
 
+    const overriddenFlavor = selection.flavor;
+    const overriddenSize = selection.size;
     const effectiveFlavor = overriddenFlavor ?? defaultFlavor;
     const effectiveSize = overriddenSize ?? defaultSize;
     const selectedVariant = family.variants.find(
@@ -223,10 +222,7 @@ function ProductDetailInner({
         .join(' • ');
     const showFlavorSelector = flavors.length > 1;
     const showSizeSelector = sortedSizes.length > 1;
-    const effectiveMax = Math.min(
-        maxQuantity,
-        selectedVariant?.available_stock ?? 999,
-    );
+    const effectiveMax = Math.min(999, selectedVariant?.available_stock ?? 999);
 
     const handleAdd = () => {
         if (!selectedVariant || isOutOfStock || isOutletClosed) {
@@ -325,7 +321,11 @@ function ProductDetailInner({
                                         (sortedSizes.length === 0 ||
                                             v.size === effectiveSize),
                                 ),
-                                onSelect: () => setOverriddenFlavor(f),
+                                onSelect: () =>
+                                    setSelection((current) => ({
+                                        ...current,
+                                        flavor: f,
+                                    })),
                             }))}
                         />
                     )}
@@ -356,7 +356,11 @@ function ProductDetailInner({
                                             (flavors.length === 0 ||
                                                 v.flavor === effectiveFlavor),
                                     ),
-                                    onSelect: () => setOverriddenSize(s),
+                                    onSelect: () =>
+                                        setSelection((current) => ({
+                                            ...current,
+                                            size: s,
+                                        })),
                                     right: v ? (
                                         <PriceDiff
                                             diff={v.selling_price - basePrice}
@@ -379,8 +383,11 @@ function ProductDetailInner({
                                     selected: selectedVariant?.id === v.id,
                                     hasVariant: true,
                                     onSelect: () => {
-                                        setOverriddenFlavor(null);
-                                        setOverriddenSize(null);
+                                        setSelection((current) => ({
+                                            ...current,
+                                            flavor: null,
+                                            size: null,
+                                        }));
                                     },
                                     right: (
                                         <span className="text-sm text-text-muted tabular-nums">
@@ -768,13 +775,7 @@ function StickyCTA({
     );
 }
 
-function RadioDot({
-    checked,
-    disabled,
-}: {
-    checked: boolean;
-    disabled?: boolean;
-}) {
+function RadioDot({ checked }: { checked: boolean; disabled?: boolean }) {
     if (checked) {
         return (
             <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-emerald-600">

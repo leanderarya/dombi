@@ -116,6 +116,7 @@ export default function NotificationSheet({
     const [loading, setLoading] = useState(false);
 
     const fetchNotifications = useCallback(async () => {
+        await Promise.resolve();
         setLoading(true);
 
         try {
@@ -134,14 +135,20 @@ export default function NotificationSheet({
     }, []);
 
     useEffect(() => {
+        let fetchTimeout: number | undefined;
+
         if (open) {
-            fetchNotifications();
+            fetchTimeout = window.setTimeout(fetchNotifications, 0);
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
         }
 
         return () => {
+            if (fetchTimeout !== undefined) {
+                window.clearTimeout(fetchTimeout);
+            }
+
             document.body.style.overflow = '';
         };
     }, [open, fetchNotifications]);
