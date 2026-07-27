@@ -11,6 +11,10 @@ import {
 import { Input } from '@/components/ui/input';
 import PhoneInput from '@/components/ui/phone-input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    closeOutletInfoModal,
+    createOutletInfoFormDefaults,
+} from './outlet-modal-reset';
 
 interface Props {
     outlet: any;
@@ -25,19 +29,12 @@ export default function OutletInfoModal({
     onClose,
     onSuccess,
 }: Props) {
-    const { data, setData, patch, processing, errors, reset } = useForm({
-        name: outlet.name ?? '',
-        phone: outlet.phone ?? '',
-        pic_name: outlet.pic_name ?? '',
-        pic_phone: outlet.pic_phone ?? '',
-        pic_position: outlet.pic_position ?? '',
-        operational_notes: outlet.operational_notes ?? '',
-    });
+    const { data, setData, patch, processing, errors, reset } = useForm(
+        createOutletInfoFormDefaults(outlet),
+    );
 
-    const closeModal = () => {
-        reset();
-        onClose();
-    };
+    const closeModal = () =>
+        closeOutletInfoModal({ resetForm: reset, onClose });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

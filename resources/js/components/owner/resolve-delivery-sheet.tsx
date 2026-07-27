@@ -1,9 +1,14 @@
 import { useForm } from '@inertiajs/react';
 import { Package, TriangleAlert } from 'lucide-react';
-import { useState } from 'react';
+import { useReducer } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
+import {
+    closeResolveDeliverySheet,
+    initialResolveDeliveryDialogState,
+    resolveDeliveryDialogReducer,
+} from './resolve-delivery-state';
 
 interface Props {
     delivery: any;
@@ -50,24 +55,29 @@ export default function ResolveDeliverySheet({
     onClose,
 }: Props) {
     const form = useForm({ resolution: '', resolution_notes: '' });
-    const [confirmDestructive, setConfirmDestructive] = useState(false);
+    const [dialogState, dispatchDialog] = useReducer(
+        resolveDeliveryDialogReducer,
+        initialResolveDeliveryDialogState,
+    );
+    const { confirmDestructive } = dialogState;
 
     const selectedOption = resolutionOptions.find(
         (o) => o.value === form.data.resolution,
     );
     const isDestructive = selectedOption?.destructive ?? false;
 
-    const closeSheet = () => {
-        form.reset();
-        setConfirmDestructive(false);
-        onClose();
-    };
+    const closeSheet = () =>
+        closeResolveDeliverySheet({
+            resetForm: form.reset,
+            resetDialog: () => dispatchDialog({ type: 'reset' }),
+            onClose,
+        });
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
 
         if (isDestructive && !confirmDestructive) {
-            setConfirmDestructive(true);
+            dispatchDialog({ type: 'confirm-destructive' });
 
             return;
         }
@@ -175,7 +185,7 @@ export default function ResolveDeliverySheet({
                                                 'resolution',
                                                 opt.value,
                                             );
-                                            setConfirmDestructive(false);
+                                            dispatchDialog({ type: 'reset' });
                                         }}
                                         className="sr-only"
                                     />

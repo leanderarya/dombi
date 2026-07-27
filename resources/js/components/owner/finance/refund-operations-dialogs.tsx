@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { Banknote, Check, Copy, Smartphone } from 'lucide-react';
 import type { FormEventHandler } from 'react';
-import { useState } from 'react';
+import { useReducer, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,7 +15,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import type { OwnerRefundPayload, RefundDestinationType } from '@/types/refund';
+import type { OwnerRefundPayload } from '@/types/refund';
+import {
+    guestRefundDialogReducer,
+    initialGuestRefundDialogState,
+    initialRefundRollbackDialogState,
+    refundRollbackDialogReducer,
+} from './refund-dialog-state';
 
 interface DialogProps {
     refund: OwnerRefundPayload | null;
@@ -28,27 +34,28 @@ export function GuestRefundDestinationDialog({
     open,
     onClose,
 }: DialogProps) {
-    const [type, setType] = useState<RefundDestinationType>('bank');
-    const [bankName, setBankName] = useState('');
-    const [accountNumber, setAccountNumber] = useState('');
-    const [accountHolder, setAccountHolder] = useState('');
-    const [ewalletProvider, setEwalletProvider] = useState('');
-    const [ewalletNumber, setEwalletNumber] = useState('');
-    const [ewalletHolder, setEwalletHolder] = useState('');
-    const [phoneVerified, setPhoneVerified] = useState(false);
+    const [dialogState, dispatchDialog] = useReducer(
+        guestRefundDialogReducer,
+        initialGuestRefundDialogState,
+    );
     const [busy, setBusy] = useState(false);
-    const [copied, setCopied] = useState(false);
+    const {
+        type,
+        bankName,
+        accountNumber,
+        accountHolder,
+        ewalletProvider,
+        ewalletNumber,
+        ewalletHolder,
+        phoneVerified,
+        copied,
+    } = dialogState;
+    const updateDialog = (
+        patch: Partial<typeof initialGuestRefundDialogState>,
+    ) => dispatchDialog({ type: 'update', patch });
 
     const closeDialog = () => {
-        setType('bank');
-        setBankName('');
-        setAccountNumber('');
-        setAccountHolder('');
-        setEwalletProvider('');
-        setEwalletNumber('');
-        setEwalletHolder('');
-        setPhoneVerified(false);
-        setCopied(false);
+        dispatchDialog({ type: 'reset' });
         onClose();
     };
 
@@ -125,8 +132,11 @@ export function GuestRefundDestinationDialog({
                                     navigator.clipboard.writeText(
                                         refund.destination!.number,
                                     );
-                                    setCopied(true);
-                                    setTimeout(() => setCopied(false), 2000);
+                                    updateDialog({ copied: true });
+                                    setTimeout(
+                                        () => updateDialog({ copied: false }),
+                                        2000,
+                                    );
                                 }}
                                 aria-label={
                                     copied
@@ -151,14 +161,16 @@ export function GuestRefundDestinationDialog({
                         <div className="mt-1.5 flex gap-2">
                             <button
                                 type="button"
-                                onClick={() => setType('bank')}
+                                onClick={() => updateDialog({ type: 'bank' })}
                                 className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${type === 'bank' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted'}`}
                             >
                                 <Banknote className="h-4 w-4" /> Transfer Bank
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setType('ewallet')}
+                                onClick={() =>
+                                    updateDialog({ type: 'ewallet' })
+                                }
                                 className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-semibold ${type === 'ewallet' ? 'border-primary bg-primary/10 text-primary' : 'border-border text-text-muted'}`}
                             >
                                 <Smartphone className="h-4 w-4" /> E-Wallet
@@ -173,7 +185,9 @@ export function GuestRefundDestinationDialog({
                                     id="gb_bank"
                                     value={bankName}
                                     onChange={(e) =>
-                                        setBankName(e.target.value)
+                                        updateDialog({
+                                            bankName: e.target.value,
+                                        })
                                     }
                                     placeholder="BCA"
                                 />
@@ -186,7 +200,9 @@ export function GuestRefundDestinationDialog({
                                     id="gb_account"
                                     value={accountNumber}
                                     onChange={(e) =>
-                                        setAccountNumber(e.target.value)
+                                        updateDialog({
+                                            accountNumber: e.target.value,
+                                        })
                                     }
                                     placeholder="1234567890"
                                     className="break-all"
@@ -198,7 +214,9 @@ export function GuestRefundDestinationDialog({
                                     id="gb_holder"
                                     value={accountHolder}
                                     onChange={(e) =>
-                                        setAccountHolder(e.target.value)
+                                        updateDialog({
+                                            accountHolder: e.target.value,
+                                        })
                                     }
                                     placeholder="sesuai rekening"
                                 />
@@ -212,7 +230,9 @@ export function GuestRefundDestinationDialog({
                                     id="ge_provider"
                                     value={ewalletProvider}
                                     onChange={(e) =>
-                                        setEwalletProvider(e.target.value)
+                                        updateDialog({
+                                            ewalletProvider: e.target.value,
+                                        })
                                     }
                                     options={[
                                         { value: 'GoPay', label: 'GoPay' },
@@ -234,7 +254,9 @@ export function GuestRefundDestinationDialog({
                                     id="ge_number"
                                     value={ewalletNumber}
                                     onChange={(e) =>
-                                        setEwalletNumber(e.target.value)
+                                        updateDialog({
+                                            ewalletNumber: e.target.value,
+                                        })
                                     }
                                     placeholder="081234567890"
                                     className="break-all"
@@ -246,7 +268,9 @@ export function GuestRefundDestinationDialog({
                                     id="ge_holder"
                                     value={ewalletHolder}
                                     onChange={(e) =>
-                                        setEwalletHolder(e.target.value)
+                                        updateDialog({
+                                            ewalletHolder: e.target.value,
+                                        })
                                     }
                                     placeholder="sesuai akun"
                                 />
@@ -258,7 +282,11 @@ export function GuestRefundDestinationDialog({
                             type="checkbox"
                             id="phone_verified"
                             checked={phoneVerified}
-                            onChange={(e) => setPhoneVerified(e.target.checked)}
+                            onChange={(e) =>
+                                updateDialog({
+                                    phoneVerified: e.target.checked,
+                                })
+                            }
                             className="h-4 w-4 rounded border-border accent-primary"
                         />
                         <Label htmlFor="phone_verified" className="text-xs">
@@ -291,13 +319,18 @@ export function GuestRefundDestinationDialog({
 }
 
 export function RefundRollbackDialog({ refund, open, onClose }: DialogProps) {
-    const [mode, setMode] = useState<'retry' | 'fix_destination'>('retry');
-    const [reason, setReason] = useState('');
+    const [dialogState, dispatchDialog] = useReducer(
+        refundRollbackDialogReducer,
+        initialRefundRollbackDialogState,
+    );
     const [busy, setBusy] = useState(false);
+    const { mode, reason } = dialogState;
+    const updateDialog = (
+        patch: Partial<typeof initialRefundRollbackDialogState>,
+    ) => dispatchDialog({ type: 'update', patch });
 
     const closeDialog = () => {
-        setMode('retry');
-        setReason('');
+        dispatchDialog({ type: 'reset' });
         onClose();
     };
 
@@ -356,7 +389,9 @@ export function RefundRollbackDialog({ refund, open, onClose }: DialogProps) {
                                     name="mode"
                                     value="retry"
                                     checked={mode === 'retry'}
-                                    onChange={() => setMode('retry')}
+                                    onChange={() =>
+                                        updateDialog({ mode: 'retry' })
+                                    }
                                     className="accent-primary"
                                 />
                                 <div>
@@ -370,7 +405,11 @@ export function RefundRollbackDialog({ refund, open, onClose }: DialogProps) {
                                     name="mode"
                                     value="fix_destination"
                                     checked={mode === 'fix_destination'}
-                                    onChange={() => setMode('fix_destination')}
+                                    onChange={() =>
+                                        updateDialog({
+                                            mode: 'fix_destination',
+                                        })
+                                    }
                                     className="accent-primary"
                                 />
                                 <div>
@@ -387,7 +426,9 @@ export function RefundRollbackDialog({ refund, open, onClose }: DialogProps) {
                         <Textarea
                             id="rollback-reason"
                             value={reason}
-                            onChange={(e) => setReason(e.target.value)}
+                            onChange={(e) =>
+                                updateDialog({ reason: e.target.value })
+                            }
                             placeholder="Jelaskan alasan pengembalian..."
                             rows={2}
                             maxLength={500}
