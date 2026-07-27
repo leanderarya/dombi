@@ -84,7 +84,7 @@
 | Task | Status |
 |------|--------|
 | Refund UI (customer + owner) | ✅ Done — AmountBlock, Timeline, DestinationSummary, filter badges, spacing |
-| Customer refund order visibility | ✅ Done — active refund states stay in Pesanan Aktif across Orders, Home, guest recovery |
+| Customer refund order visibility | ✅ Done — active refund states stay in Pesanan Aktif with status badges and full-card navigation across Orders, Home, guest recovery |
 | Outlet bottom navigation | ❌ |
 | Outlet card-based layout | ❌ |
 | Outlet loading skeletons | ❌ |
