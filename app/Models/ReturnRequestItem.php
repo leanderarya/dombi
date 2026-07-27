@@ -13,12 +13,16 @@ class ReturnRequestItem extends Model
         'quantity',
         'unit_price',
         'subtotal',
+        'disposition',
+        'disposed_at',
+        'disposed_by',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'unit_price' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'disposed_at' => 'datetime',
     ];
 
     public function returnRequest(): BelongsTo
@@ -29,5 +33,10 @@ class ReturnRequestItem extends Model
     public function variant(): BelongsTo
     {
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
+    }
+
+    public function disposer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'disposed_by');
     }
 }
