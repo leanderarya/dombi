@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use App\Enums\PaymentStatus;
+use App\Enums\RefundRejectionReason;
 
 class Order extends Model
 {
@@ -212,7 +213,17 @@ class Order extends Model
                             ->orWhereNull('confirmation_expires_at')
                             ->orWhere('confirmation_expires_at', '>', now());
                     });
-            })->orWhereIn('payment_status', self::ACTIVE_REFUND_PAYMENT_STATUSES);
+            })->orWhereIn('payment_status', [
+                    PaymentStatus::RefundPending->value,
+                    PaymentStatus::RefundInProgress->value,
+                    PaymentStatus::RefundFailed->value,
+                ])->orWhere(function (\Illuminate\Database\Eloquent\Builder $q) {
+                    $q->where('payment_status', PaymentStatus::RefundRejected->value)
+                      ->whereIn('refund_rejected_reason', [
+                          RefundRejectionReason::InvalidDestination->value,
+                          RefundRejectionReason::IncompleteDestination->value,
+                      ]);
+                });
         });
     }
 
@@ -221,7 +232,11 @@ class Order extends Model
         return $query->whereIn('status', self::HISTORY_STATUSES)
             ->where(function ($payment) {
                 $payment->whereNull('payment_status')
-                    ->orWhereNotIn('payment_status', self::ACTIVE_REFUND_PAYMENT_STATUSES);
+                    ->orWhereNotIn('payment_status', [
+                        PaymentStatus::RefundPending->value,
+                        PaymentStatus::RefundInProgress->value,
+                        PaymentStatus::RefundFailed->value,
+                    ]);
             });
     }
 

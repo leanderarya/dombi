@@ -25,10 +25,18 @@ class ActiveRefundOrderVisibilityTest extends TestCase
 
     private function createRefundOrders(Customer $customer): array
     {
+        $rejectionReasons = [
+            'refund_pending' => null,
+            'refund_in_progress' => null,
+            'refund_rejected' => \App\Enums\RefundRejectionReason::InvalidDestination->value,
+            'refund_failed' => null,
+        ];
+
         $active = collect(Order::ACTIVE_REFUND_PAYMENT_STATUSES)->map(fn (string $paymentStatus) => Order::factory()->create([
             'customer_id' => $customer->id,
             'status' => Order::STATUS_CANCELLED_BY_CUSTOMER,
             'payment_status' => $paymentStatus,
+            'refund_rejected_reason' => $rejectionReasons[$paymentStatus] ?? null,
         ])
         );
 
@@ -140,5 +148,34 @@ class ActiveRefundOrderVisibilityTest extends TestCase
             $this->assertSame($expectedLabels[$order->payment_status], $badge['status_label']);
             $this->assertNotEmpty($badge['queue_state']);
         });
+    }
+
+    public function test_terminal_refund_rejected_appears_in_history(): void
+    {
+        [$user, $customer] = $this->registeredCustomer();
+
+        $active = Order::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Order::STATUS_CANCELLED_BY_CUSTOMER,
+            'payment_status' => 'refund_rejected',
+            'refund_rejected_reason' => \App\Enums\RefundRejectionReason::InvalidDestination->value,
+        ]);
+
+        $history = Order::factory()->create([
+            'customer_id' => $customer->id,
+            'status' => Order::STATUS_CANCELLED_BY_CUSTOMER,
+            'payment_status' => 'refund_rejected',
+            'refund_rejected_reason' => \App\Enums\RefundRejectionReason::PaymentUnverified->value,
+        ]);
+
+        $response = $this->actingAs($user)->get('/customer/orders')->assertOk();
+        $props = $response->viewData('page')['props'];
+        $activeIds = collect($props['activeOrders'])->pluck('id');
+        $historyIds = collect($props['historyOrders']['data'])->pluck('id');
+
+        $this->assertTrue($activeIds->contains($active->id));
+        $this->assertFalse($historyIds->contains($active->id));
+        $this->assertFalse($activeIds->contains($history->id));
+        $this->assertTrue($historyIds->contains($history->id));
     }
 }
