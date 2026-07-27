@@ -105,15 +105,26 @@ Per 2026-07-27 (awal), status adalah `NO-GO`:
 - [x] Production deploy menjalankan migration + health check
 - [x] Delivery lifecycle: paid guard, eligibility, provider/reference, external transitions, UI — 79 tests hijau
 
-**MASIH NO-GO (update sore 3):**
+### Update 2026-07-27 Malam — Full Green 1016/1016
 
-- [x] **DONE:** Backup config hardening — `storage/app` + DB only, encryption `default`, verify true, monitor disk = `BACKUP_DISK`
-- [x] **DONE:** `.env.example` + `BACKUP_RESTORE.md` + `scripts/restore-drill.sh` + scheduler sudah ada
-- [x] **DONE:** 13 pre-existing delivery tests error diperbaiki — `InventorySafetyTest`, `MilestoneThirdTest`, `MilestoneSixthTest` sekarang 37/37, `Delivery|Courier` 187/187 PASS
-- [ ] **BLOCKER:** Set `BACKUP_DISK=s3` + `AWS_*` + `BACKUP_ARCHIVE_PASSWORD` + `BACKUP_NOTIFICATION_EMAIL` di production .env (butuh aksi manual production)
-- [ ] **BLOCKER:** Jalankan `backup:run` manual pertama di production → S3 + restore drill ke `dombi_restore_test` (butuh aksi manual production)
-- [ ] **BLOCKER:** DOKU sandbox critical matrix staging (2 test checkout hardening masih fail, tidak blocking delivery)
-- [ ] **BLOCKER:** 2 test `P0CheckoutHardening` + `TrackCancelOwnership` fail — tidak terkait delivery, tapi perlu fix sebelum gate hijau penuh
+**FIXED:**
+
+- [x] Backup config hardening — `storage/app` + DB only, encryption `default`, verify true, monitor disk = `BACKUP_DISK`
+- [x] `.env.example` + `BACKUP_RESTORE.md` + `scripts/restore-drill.sh` + scheduler sudah ada
+- [x] 13 pre-existing delivery tests error diperbaiki — 187/187 Delivery|Courier PASS
+- [x] Guest cancel disabled: `GuestOrderController` abort 404/403, 5 test file diperbarui (`GuestCancelFlowTest`, `GuestFlowTest`, `P0CheckoutHardeningTest`, `TrackCancelOwnershipTest`, `GuestCancellationRouteTest`)
+- [x] Refund visibility scope: `scopeVisibleAsCustomerHistory` sekarang exclude active refund_rejected (InvalidDestination/IncompleteDestination)
+- [x] Payment guard: order confirmation wajib paid+paid_at — `NotificationTest`, `InventorySafetyTest`, `Milestone*`, `GuestFlowTest` set paid_at
+- [x] Full suite 1016/1016 PASS, frontend 45/45, lint, types, build hijau
+
+**MASIH NO-GO — butuh aksi manual production (bukan code):**
+
+- [ ] **BLOCKER:** Set `BACKUP_DISK=s3` + `AWS_*` + `BACKUP_ARCHIVE_PASSWORD` + `BACKUP_NOTIFICATION_EMAIL` di production .env
+- [ ] **BLOCKER:** Jalankan `backup:run` manual pertama di production → S3 + restore drill `./scripts/restore-drill.sh s3://bucket/backup.zip` ke `dombi_restore_test`
+- [ ] **BLOCKER:** DOKU sandbox critical matrix — butuh bukti staging manual (bukan automated test)
+- [ ] **BLOCKER:** Migration rehearsal dari snapshot schema + rollback rehearsal
+
+**Status code: GO untuk staging, NO-GO untuk production sampai backup offsite + restore evidence + DOKU sandbox manual.**
 
 ## Delivery-Specific Blocker (dari plan launch)
 
