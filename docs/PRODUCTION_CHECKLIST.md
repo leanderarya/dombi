@@ -105,12 +105,15 @@ Per 2026-07-27 (awal), status adalah `NO-GO`:
 - [x] Production deploy menjalankan migration + health check
 - [x] Delivery lifecycle: paid guard, eligibility, provider/reference, external transitions, UI — 79 tests hijau
 
-**MASIH NO-GO:**
+**MASIH NO-GO (update sore 2):**
 
-- [ ] **BLOCKER:** offsite encrypted backup belum terbukti direstore — `TEST_STRATEGY.md` dan `RUNBOOK.md` sudah ada prosedur
-- [ ] **BLOCKER:** 13 pre-existing tests error karena fixture tanpa `payment_status` — bukan bug baru, tapi harus diperbaiki sebelum gate dianggap hijau penuh
-- [ ] **BLOCKER:** backup offsite + restore drill belum ada bukti
-- [ ] **BLOCKER:** DOKU sandbox critical matrix belum ada bukti staging
+- [x] **DONE:** Backup config hardening — `storage/app` + DB only, encryption `default`, verify true, monitor disk = `BACKUP_DISK`
+- [x] **DONE:** `.env.example` + `BACKUP_RESTORE.md` + `scripts/restore-drill.sh` + scheduler sudah ada
+- [ ] **BLOCKER:** Set `BACKUP_DISK=s3` + `AWS_*` + `BACKUP_ARCHIVE_PASSWORD` + `BACKUP_NOTIFICATION_EMAIL` di production .env (belum bukti)
+- [ ] **BLOCKER:** Jalankan `backup:run` manual pertama di production → S3 (belum bukti)
+- [ ] **BLOCKER:** Restore drill ke `dombi_restore_test` + catat evidence di release table (belum bukti)
+- [ ] **BLOCKER:** 13 pre-existing tests error karena fixture tanpa `payment_status` — harus diperbaiki atau ditandai debt
+- [ ] **BLOCKER:** DOKU sandbox critical matrix staging
 
 ## Delivery-Specific Blocker (dari plan launch)
 

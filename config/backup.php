@@ -23,12 +23,16 @@ return [
 
         'source' => [
             'files' => [
-                /*
-                 * The list of directories and files that will be included in the backup.
-                 */
-                'include' => [
-                    base_path(),
-                    // storage_path(),  // Include if you use zero downtime deployments and don't follow symlinks
+            /*
+             * The list of directories and files that will be included in the backup.
+             * For production: only database + essential uploads to keep backup small and fast.
+             * Full base_path is too large and leaks secrets if not encrypted.
+             */
+            'include' => [
+                    // base_path() was here before — too large. Only backup what matters:
+                    storage_path('app'),
+                    storage_path('app/public'),
+                    // Add more only if needed, never vendor/node_modules
                 ],
 
                 /*
@@ -163,6 +167,8 @@ return [
 
             /*
              * The disk names on which the backups will be stored.
+             * PRODUCTION MUST use offsite encrypted disk (s3, etc.)
+             * Set BACKUP_DISK=s3 in production .env and configure AWS_*
              */
             'disks' => [
                 env('BACKUP_DISK', 'local'),
@@ -181,7 +187,8 @@ return [
 
         /*
          * The password to be used for archive encryption.
-         * Set to `null` to disable encryption.
+         * PRODUCTION MUST set BACKUP_ARCHIVE_PASSWORD — never commit to repo.
+         * Without password, backup is NOT encrypted and fails production checklist.
          */
         'password' => env('BACKUP_ARCHIVE_PASSWORD'),
 
@@ -192,14 +199,16 @@ return [
          * Supported: 'none', 'default', 'aes128', 'aes192', 'aes256'
          *
          * When set to 'default', we'll use AES-256 if available on your system.
+         * Production MUST use default (AES-256).
          */
-        'encryption' => 'default',
+        'encryption' => env('BACKUP_ARCHIVE_PASSWORD') ? 'default' : 'none',
 
         /*
          * After creating the zip, verify it can be opened and contains files.
          * Recommended for critical backups but adds a small overhead.
+         * Production MUST set to true to prove restore-ability.
          */
-        'verify_backup' => false,
+        'verify_backup' => (bool) env('BACKUP_VERIFY', true),
 
         /*
          * The number of attempts, in case the backup command encounters an exception
@@ -237,7 +246,7 @@ return [
         'notifiable' => Notifiable::class,
 
         'mail' => [
-            'to' => 'your@example.com',
+            'to' => env('BACKUP_NOTIFICATION_EMAIL', env('MAIL_FROM_ADDRESS', 'your@example.com')),
 
             'from' => [
                 'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
@@ -298,7 +307,7 @@ return [
     'monitor_backups' => [
         [
             'name' => env('APP_NAME', 'dombi'),
-            'disks' => ['local'],
+            'disks' => [env('BACKUP_DISK', 'local')],
             'health_checks' => [
                 MaximumAgeInDays::class => 1,
                 MaximumStorageInMegabytes::class => 5000,

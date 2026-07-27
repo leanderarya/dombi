@@ -113,14 +113,31 @@ Log utama:
 
 Backup dianggap valid hanya jika:
 
-- terenkripsi;
-- disimpan di luar server aplikasi;
-- mencakup database dan upload yang diperlukan;
-- dapat dibuka;
-- berhasil direstore ke environment terisolasi;
-- hasil restore diverifikasi dengan record sampling.
+- terenkripsi (AES-256, `BACKUP_ARCHIVE_PASSWORD` diset);
+- disimpan di luar server aplikasi (`BACKUP_DISK=s3` offsite);
+- mencakup database dan upload yang diperlukan (`storage/app`);
+- dapat dibuka (`verify_backup=true`);
+- berhasil direstore ke environment terisolasi (`dombi_restore_test`);
+- hasil restore diverifikasi dengan record sampling (orders, users, uploads).
 
-Tetapkan RPO/RTO pilot secara eksplisit. Lakukan restore drill berkala dan simpan
+**Config hardening (2026-07-27):**
+
+- `config/backup.php` include hanya `storage/app` + `app/public` + DB, bukan seluruh `base_path`
+- `encryption` = `default` jika password diset, `none` jika tidak — production WAJIB password
+- `verify_backup` = `env(BACKUP_VERIFY, true)` — production WAJIB true
+- `monitor_backups.disks` = `env(BACKUP_DISK)` — production WAJIB `s3`
+- Scheduler sudah ada: `backup:clean` 02:00, `backup:run` 02:30, `backup:monitor` 03:00
+- Dokumen drill: `docs/BACKUP_RESTORE.md`
+- Script drill: `scripts/restore-drill.sh`
+
+**Sebelum GO production:**
+
+1. Set di production .env: `BACKUP_DISK=s3`, `AWS_*`, `BACKUP_ARCHIVE_PASSWORD`, `BACKUP_NOTIFICATION_EMAIL`
+2. `php artisan backup:run` — pastikan file masuk S3 dan terenkripsi
+3. `./scripts/restore-drill.sh s3://bucket/backup.zip` ke DB terisolasi
+4. Catat evidence di `PRODUCTION_CHECKLIST.md` Release Evidence → Backup restore
+
+Tetapkan RPO/RTO pilot secara eksplisit. Lakukan restore drill berkala (<30 hari) dan simpan
 bukti waktu serta hasil. Listing archive bukan bukti restore.
 
 ## Deployment dan Recovery
