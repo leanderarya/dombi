@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
-import { useState } from 'react';
 import { CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
@@ -74,7 +74,10 @@ export default function PenukaranTab({
     };
 
     const handleApprove = () => {
-        if (approveId === null) return;
+        if (approveId === null) {
+            return;
+        }
+
         setApproving(true);
         router.post(
             `/owner/exchanges/${approveId}/approve`,
@@ -278,7 +281,9 @@ export default function PenukaranTab({
             <Dialog
                 open={approveId !== null}
                 onOpenChange={(open) => {
-                    if (!open) setApproveId(null);
+                    if (!open) {
+                        setApproveId(null);
+                    }
                 }}
             >
                 <DialogContent>
