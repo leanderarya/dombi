@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\ExchangeRequest;
+use App\Models\ReturnRequestItem;
 use App\Models\Outlet;
 use App\Models\ReturnRequest;
 use App\Services\ExchangeService;
@@ -159,5 +160,19 @@ class ReturnController extends Controller
         $service->completeReturn($returnRequest, $request->user());
 
         return redirect()->route('owner.returns.show', $returnRequest)->with('success', 'Return completed and settlement adjusted.');
+    }
+
+    public function disposeItem(Request $request, ReturnRequest $returnRequest, ReturnRequestItem $item, ReturnService $service): RedirectResponse
+    {
+        $service->disposeItem($returnRequest, $item, $request->user());
+
+        return redirect()->back()->with('success', 'Item dibuang.');
+    }
+
+    public function storeItem(Request $request, ReturnRequest $returnRequest, ReturnRequestItem $item, ReturnService $service): RedirectResponse
+    {
+        $service->storeItem($returnRequest, $item, $request->user());
+
+        return redirect()->back()->with('success', 'Item disimpan.');
     }
 }
