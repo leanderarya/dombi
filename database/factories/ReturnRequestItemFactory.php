@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\ProductVariant;
 use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
-use App\Models\ProductVariant;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ReturnRequestItemFactory extends Factory

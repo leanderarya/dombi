@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\SocialAuthController;
 use App\Http\Controllers\Courier\CourierAvailabilityController;
 use App\Http\Controllers\Courier\DeliveryController as CourierDeliveryController;
 use App\Http\Controllers\Courier\LocationController;
+use App\Http\Controllers\CourierInvitationController;
 use App\Http\Controllers\Customer\AccountPromotionController;
 use App\Http\Controllers\Customer\AddressController as CustomerAddressController;
 use App\Http\Controllers\Customer\CartController;
@@ -13,8 +14,6 @@ use App\Http\Controllers\Customer\CheckoutController as CustomerCheckoutControll
 use App\Http\Controllers\Customer\CustomerOutletController;
 use App\Http\Controllers\Customer\CustomerProductApiController;
 use App\Http\Controllers\Customer\FavoriteController;
-use App\Http\Controllers\CustomerOfflineController;
-use App\Http\Controllers\Customer\GuestOrderController;
 use App\Http\Controllers\Customer\GuestOrderRecoveryController;
 use App\Http\Controllers\Customer\HomeController as CustomerHomeController;
 use App\Http\Controllers\Customer\OrderController as CustomerOrderController;
@@ -22,16 +21,18 @@ use App\Http\Controllers\Customer\OrderReportController;
 use App\Http\Controllers\Customer\ProductController as CustomerProductController;
 use App\Http\Controllers\Customer\ProfileController;
 use App\Http\Controllers\Customer\RecipientController;
+use App\Http\Controllers\CustomerOfflineController;
 use App\Http\Controllers\DashboardRedirectController;
 use App\Http\Controllers\DevRoleSwitcherController;
 use App\Http\Controllers\DokuPaymentController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PushController as UnifiedPushController;
 use App\Http\Controllers\Outlet\AnalyticsController as OutletAnalyticsController;
+use App\Http\Controllers\Outlet\CourierController as OutletCourierController;
 use App\Http\Controllers\Outlet\DashboardController;
 use App\Http\Controllers\Outlet\DeliveryController as OutletDeliveryController;
 use App\Http\Controllers\Outlet\ExchangeController as OutletExchangeController;
 use App\Http\Controllers\Outlet\InventoryController as OutletInventoryController;
+use App\Http\Controllers\Outlet\MyCourierController;
 use App\Http\Controllers\Outlet\OfflineSaleController;
 use App\Http\Controllers\Outlet\OrderController as OutletOrderController;
 use App\Http\Controllers\Outlet\PushController;
@@ -39,12 +40,13 @@ use App\Http\Controllers\Outlet\ReportController as OutletReportController;
 use App\Http\Controllers\Outlet\RestockController as OutletRestockController;
 use App\Http\Controllers\Outlet\ReturnController as OutletReturnController;
 use App\Http\Controllers\Outlet\ScanController as OutletScanController;
-use App\Http\Controllers\Outlet\CourierController as OutletCourierController;
 use App\Http\Controllers\Outlet\SettlementController;
 use App\Http\Controllers\Owner\AnalyticsController as OwnerAnalyticsController;
-use App\Http\Controllers\Owner\DeliveryTierController;
+use App\Http\Controllers\Owner\CourierController;
+use App\Http\Controllers\Owner\CourierManagementController;
 use App\Http\Controllers\Owner\DashboardController as OwnerDashboardController;
 use App\Http\Controllers\Owner\DeliveryController as OwnerDeliveryController;
+use App\Http\Controllers\Owner\DeliveryTierController;
 use App\Http\Controllers\Owner\ExchangeController as OwnerExchangeController;
 use App\Http\Controllers\Owner\FinanceSettlementController;
 use App\Http\Controllers\Owner\InventoryController as OwnerInventoryController;
@@ -59,17 +61,16 @@ use App\Http\Controllers\Owner\ProductController as OwnerProductController;
 use App\Http\Controllers\Owner\ProductFamilyController;
 use App\Http\Controllers\Owner\ProductVariantController;
 use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
+use App\Http\Controllers\Owner\RefundController;
 use App\Http\Controllers\Owner\ReportController;
 use App\Http\Controllers\Owner\RestockController as OwnerRestockController;
-use App\Http\Controllers\Owner\RefundController;
 use App\Http\Controllers\Owner\ReturnController as OwnerReturnController;
 use App\Http\Controllers\Owner\SettlementPaymentController;
-
+use App\Http\Controllers\PushController as UnifiedPushController;
+use App\Http\Controllers\RefundProofController;
 use App\Http\Controllers\SystemController;
-
-use App\Models\Outlet;
-
 use App\Http\Controllers\TrackController;
+use App\Models\Outlet;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -98,7 +99,7 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
     }
 
     Route::get('/track/{token}', TrackController::class)->middleware('throttle:track')->name('track');
-    Route::get('/offline', [\App\Http\Controllers\CustomerOfflineController::class, 'index'])->name('offline');
+    Route::get('/offline', [CustomerOfflineController::class, 'index'])->name('offline');
 
     // Customer routes
     Route::middleware('guest.or.customer')->prefix('customer')->name('customer.')->group(function (): void {
@@ -190,8 +191,8 @@ Route::match(['get', 'post'], '/payment/doku/redirect', [DokuPaymentController::
 
 // Courier invitation — no auth required
 Route::middleware('internal.inertia')->group(function (): void {
-    Route::get('/courier/invite/{token}', [App\Http\Controllers\CourierInvitationController::class, 'show'])->name('courier.invite.show');
-    Route::post('/courier/invite/{token}', [App\Http\Controllers\CourierInvitationController::class, 'accept'])->name('courier.invite.accept');
+    Route::get('/courier/invite/{token}', [CourierInvitationController::class, 'show'])->name('courier.invite.show');
+    Route::post('/courier/invite/{token}', [CourierInvitationController::class, 'accept'])->name('courier.invite.accept');
 });
 
 Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): void {
@@ -290,7 +291,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
         Route::resource('delivery-tiers', DeliveryTierController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::patch('delivery-tiers/{tier}/toggle', [DeliveryTierController::class, 'toggle'])->name('delivery-tiers.toggle');
-        Route::resource('couriers', \App\Http\Controllers\Owner\CourierController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
+        Route::resource('couriers', CourierController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
         Route::get('reports/export-csv', [ReportController::class, 'exportCsv'])->middleware('throttle:export')->name('reports.export-csv');
         Route::get('reports/orders/export', [ReportController::class, 'exportOrders'])->name('reports.orders.export');
         Route::get('reports/settlements/export', [ReportController::class, 'exportSettlements'])->name('reports.settlements.export');
@@ -330,14 +331,14 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('exchanges/{exchangeRequest}/mark-preparing', [OwnerExchangeController::class, 'markPreparing'])->name('exchanges.mark-preparing');
         Route::post('exchanges/{exchangeRequest}/mark-shipped', [OwnerExchangeController::class, 'markShipped'])->name('exchanges.mark-shipped');
         Route::post('exchanges/{exchangeRequest}/complete', [OwnerExchangeController::class, 'complete'])->name('exchanges.complete');
-        Route::get('couriers/management', [\App\Http\Controllers\Owner\CourierManagementController::class, 'index'])->name('couriers.management.index');
-        Route::post('couriers/{profile}/approve', [\App\Http\Controllers\Owner\CourierManagementController::class, 'approve'])->name('couriers.approve');
-        Route::post('couriers/{profile}/reject', [\App\Http\Controllers\Owner\CourierManagementController::class, 'reject'])->name('couriers.reject');
-        Route::put('couriers/{profile}/outlets', [\App\Http\Controllers\Owner\CourierManagementController::class, 'updateAssignments'])->name('couriers.outlets');
+        Route::get('couriers/management', [CourierManagementController::class, 'index'])->name('couriers.management.index');
+        Route::post('couriers/{profile}/approve', [CourierManagementController::class, 'approve'])->name('couriers.approve');
+        Route::post('couriers/{profile}/reject', [CourierManagementController::class, 'reject'])->name('couriers.reject');
+        Route::put('couriers/{profile}/outlets', [CourierManagementController::class, 'updateAssignments'])->name('couriers.outlets');
     });
 
     // Proof streaming — authenticated role-aware
-    Route::get('/refunds/{order}/proof', [App\Http\Controllers\RefundProofController::class, '__invoke'])->name('refunds.proof');
+    Route::get('/refunds/{order}/proof', [RefundProofController::class, '__invoke'])->name('refunds.proof');
 
     // Outlet routes
     Route::middleware(['auth', 'role:outlet', 'password.changed'])->prefix('outlet')->name('outlet.')->group(function (): void {
@@ -389,8 +390,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/analytics', [OutletAnalyticsController::class, 'index'])->name('analytics.index');
         Route::get('/reports', [OutletReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/sales/export', [OutletReportController::class, 'export'])->name('reports.sales.export');
-        Route::get('/my-couriers', [\App\Http\Controllers\Outlet\MyCourierController::class, 'index'])->name('my-couriers.index');
-        Route::post('/my-couriers/nominate', [\App\Http\Controllers\Outlet\MyCourierController::class, 'nominate'])->name('my-couriers.nominate');
+        Route::get('/my-couriers', [MyCourierController::class, 'index'])->name('my-couriers.index');
+        Route::post('/my-couriers/nominate', [MyCourierController::class, 'nominate'])->name('my-couriers.nominate');
     });
 
     // Courier routes

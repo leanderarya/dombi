@@ -224,7 +224,7 @@ class ReturnService
 
     public function storeItem(ReturnRequest $return, ReturnRequestItem $item, User $owner): ReturnRequestItem
     {
-        return DB::transaction(function () use ($return, $item, $owner) {
+        return DB::transaction(function () use ($return, $item) {
             if (! $return->isReceivedAtCenter()) {
                 throw ValidationException::withMessages([
                     'status' => ['Return harus sudah diterima di pusat.'],

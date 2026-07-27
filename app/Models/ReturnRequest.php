@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class ReturnRequest extends Model
 {
     use HasFactory;
+
     const STATUS_DRAFT = 'draft';
 
     const STATUS_SUBMITTED = 'submitted';
