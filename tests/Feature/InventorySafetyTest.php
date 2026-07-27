@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Exceptions\InsufficientStockException;
+use App\Models\CourierProfile;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Delivery;
@@ -281,7 +282,7 @@ class InventorySafetyTest extends TestCase
         $delivery = $deliveryService->assignCourier($context['order'], $context['courier'], $context['owner']);
         $deliveryService->confirmPickup($delivery, $context['courier']);
         $deliveryService->startDelivery($delivery, $context['courier']);
-        $delivery = $deliveryService->failDelivery($delivery, $context['courier'], 'Alamat tidak ditemukan');
+        $delivery = $deliveryService->failDelivery($delivery->fresh(), $context['courier'], 'Alamat tidak ditemukan');
 
         return [...$context, 'delivery' => $delivery->fresh()];
     }
@@ -289,6 +290,16 @@ class InventorySafetyTest extends TestCase
     private function makeReadyForPickupOrder(int $quantity): array
     {
         $context = $this->makeOrderContext($quantity);
+        // Ensure courier is eligible for this outlet
+        CourierProfile::firstOrCreate([
+            'user_id' => $context['courier']->id,
+            'outlet_id' => $context['outlet']->id,
+        ], [
+            'courier_source' => 'outlet',
+            'invitation_status' => 'accepted',
+        ]);
+        // Mark order as paid before operational transitions — include paid_at so refund can compute trusted amount
+        $context['order']->update(['payment_status' => 'paid', 'paid_at' => now()]);
         $orderStatusService = app(OrderStatusService::class);
         $orderStatusService->updateStatus($context['order'], 'confirmed', $context['outletUser']);
         $orderStatusService->updateStatus($context['order']->fresh(), 'preparing', $context['outletUser']);
@@ -364,6 +375,7 @@ class InventorySafetyTest extends TestCase
             'items' => [['product_variant_id' => $variant->id, 'quantity' => $quantity]],
             'payment_method' => 'qris',
         ]);
+        $order->update(['payment_status' => 'paid', 'paid_at' => now()]);
 
         return compact('owner', 'outletUser', 'courier', 'customer', 'outlet', 'product', 'variant', 'order');
     }

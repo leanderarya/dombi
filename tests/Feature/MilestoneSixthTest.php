@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Exceptions\InsufficientStockException;
+use App\Models\CourierProfile;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Delivery;
@@ -415,13 +416,23 @@ class MilestoneSixthTest extends TestCase
             'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => $quantity]],
             'payment_method' => 'qris',
         ]);
+        // Mark as paid so forward transitions (confirmed, preparing, etc.) are allowed
+        $order->update(['payment_status' => 'paid', 'paid_at' => now()]);
 
-        return [...$context, 'order' => $order];
+        return [...$context, 'order' => $order->fresh()];
     }
 
     private function makeReadyForPickupOrder(int $quantity): array
     {
         $context = $this->makeOrderContext($quantity);
+        CourierProfile::firstOrCreate([
+            'user_id' => $context['courier']->id,
+            'outlet_id' => $context['outlet']->id,
+        ], [
+            'courier_source' => 'outlet',
+            'invitation_status' => 'accepted',
+        ]);
+        $context['order']->update(['payment_status' => 'paid', 'paid_at' => now()]);
         $orderStatusService = app(OrderStatusService::class);
         $orderStatusService->updateStatus($context['order'], 'confirmed', $context['outletUser']);
         $orderStatusService->updateStatus($context['order']->fresh(), 'preparing', $context['outletUser']);
@@ -437,7 +448,7 @@ class MilestoneSixthTest extends TestCase
         $delivery = $deliveryService->assignCourier($context['order'], $context['courier'], $context['owner']);
         $deliveryService->confirmPickup($delivery, $context['courier']);
         $deliveryService->startDelivery($delivery, $context['courier']);
-        $delivery = $deliveryService->failDelivery($delivery, $context['courier'], 'Alamat tidak ditemukan');
+        $delivery = $deliveryService->failDelivery($delivery->fresh(), $context['courier'], 'Alamat tidak ditemukan');
 
         return [...$context, 'delivery' => $delivery->fresh()];
     }

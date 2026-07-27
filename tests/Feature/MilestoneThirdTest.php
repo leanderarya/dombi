@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CourierProfile;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Delivery;
@@ -101,6 +102,14 @@ class MilestoneThirdTest extends TestCase
     private function makeReadyForPickupOrder(int $quantity): array
     {
         $context = $this->makeOrder($quantity);
+        CourierProfile::firstOrCreate([
+            'user_id' => $context['courier']->id,
+            'outlet_id' => $context['outlet']->id,
+        ], [
+            'courier_source' => 'outlet',
+            'invitation_status' => 'accepted',
+        ]);
+        $context['order']->update(['payment_status' => 'paid', 'paid_at' => now()]);
         $orderStatusService = app(OrderStatusService::class);
         $orderStatusService->updateStatus($context['order'], 'confirmed', $context['outletUser']);
         $orderStatusService->updateStatus($context['order']->fresh(), 'preparing', $context['outletUser']);
@@ -170,6 +179,7 @@ class MilestoneThirdTest extends TestCase
             'items' => [['product_variant_id' => $variant->id, 'quantity' => $quantity]],
             'payment_method' => 'qris',
         ]);
+        $order->update(['payment_status' => 'paid', 'paid_at' => now()]);
 
         return compact('owner', 'outletUser', 'courier', 'customer', 'outlet', 'product', 'variant', 'order');
     }
