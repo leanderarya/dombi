@@ -9,6 +9,7 @@ import RecoverySheet from '@/components/customer/recovery-sheet';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonList } from '@/components/ui/skeleton';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import type { RefundBadge } from '@/lib/active-order-card-state';
 import { PENDING_PHONE_KEY } from '@/lib/constants';
 import { useOrderRecovery } from '@/lib/order-recovery';
 import { usePolling } from '@/lib/use-polling';
@@ -41,6 +42,7 @@ interface Order {
     customer_address: string | null;
     outlet: OrderOutlet;
     items: OrderItem[];
+    refund_badge?: RefundBadge | null;
 }
 
 interface PaginatedOrders {
