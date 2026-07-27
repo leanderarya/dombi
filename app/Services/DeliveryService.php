@@ -55,8 +55,20 @@ class DeliveryService
             ]);
         }
 
+        if ($courier === null) {
+            throw ValidationException::withMessages([
+                'courier_id' => 'Kurir wajib dipilih.',
+            ]);
+        }
+
         return DB::transaction(function () use ($order, $courier, $assignedBy, $overrideCapacity, $overrideReason): Delivery {
             $order = Order::query()->lockForUpdate()->with('delivery')->findOrFail($order->id);
+
+            if (! $order->isDelivery()) {
+                throw ValidationException::withMessages([
+                    'fulfillment_type' => 'Pesanan pickup tidak memerlukan kurir.',
+                ]);
+            }
 
             if ($order->payment_status !== 'paid') {
                 throw ValidationException::withMessages([
@@ -64,8 +76,19 @@ class DeliveryService
                 ]);
             }
 
-            // Lock courier row to prevent race condition on capacity check
-            User::query()->where('id', $courier->id)->lockForUpdate()->firstOrFail();
+            if ($order->fulfillment_type === 'delivery_ojol') {
+                throw ValidationException::withMessages([
+                    'courier_id' => 'Pesanan delivery Ojol tidak bisa di-assign ke kurir internal.',
+                ]);
+            }
+
+            $courier = User::query()->whereKey($courier->id)->lockForUpdate()->first();
+
+            if ($courier === null) {
+                throw ValidationException::withMessages([
+                    'courier_id' => 'Kurir tidak ditemukan.',
+                ]);
+            }
 
             if ($order->status !== 'ready_for_pickup') {
                 throw ValidationException::withMessages([
@@ -146,6 +169,12 @@ class DeliveryService
         return DB::transaction(function () use ($order, $actor, $externalName, $externalPhone, $externalPlate, $courierCost): Delivery {
             $order = Order::query()->lockForUpdate()->findOrFail($order->id);
 
+            if (! $order->isDelivery()) {
+                throw ValidationException::withMessages([
+                    'fulfillment_type' => 'Pesanan pickup tidak memerlukan kurir.',
+                ]);
+            }
+
             if ($order->payment_status !== 'paid') {
                 throw ValidationException::withMessages([
                     'payment_status' => 'Pesanan harus sudah dibayar sebelum kurir dipilih.',
@@ -173,7 +202,7 @@ class DeliveryService
 
             $this->orderStatusService->updateStatus($order, Order::STATUS_DELIVERING);
 
-            $this->recordHistory($delivery, null, 'delivering', $actor, 'outlet', 'Kurir eksternal (Gojek/Grab).');
+            $this->recordHistory($delivery, null, 'delivering', $actor, $actor->isOwner() ? 'owner' : 'outlet', 'Kurir eksternal (Gojek/Grab).');
 
             return $delivery->load(['order.outlet', 'order.items.product', 'assignedBy']);
         });

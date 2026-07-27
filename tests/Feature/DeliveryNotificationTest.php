@@ -52,6 +52,7 @@ class DeliveryNotificationTest extends TestCase
             'order_code' => 'ORD-'.strtoupper(substr(uniqid(), -6)),
             'status' => 'ready_for_pickup',
             'fulfillment_type' => 'delivery_dombi',
+            'payment_status' => 'paid',
             'subtotal' => 25000,
             'delivery_fee' => 5000,
             'total' => 30000,
