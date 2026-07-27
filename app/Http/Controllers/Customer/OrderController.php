@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Customer;
 
-use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
@@ -36,21 +35,7 @@ class OrderController extends Controller
 
         if ($customer) {
             $activeOrders = $customer->orders()
-                ->whereIn('status', Order::ACTIVE_STATUSES)
-                ->where(function ($q) {
-                    $q->whereNull('payment_status')
-                        ->orWhere('payment_status', 'pending')
-                        ->orWhere('payment_status', 'paid')
-                        ->orWhere(function ($q2) {
-                            $q2->whereIn('payment_status', ['failed', 'expired'])
-                                ->where('status', Order::STATUS_PENDING_CONFIRMATION);
-                        });
-                })
-                ->where(function ($q) {
-                    $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
-                        ->orWhereNull('confirmation_expires_at')
-                        ->orWhere('confirmation_expires_at', '>', now());
-                })
+                ->visibleAsCustomerActive()
                 ->with(['outlet', 'items.variant.family'])
                 ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
                 ->orderByDesc('ordered_at')
@@ -64,11 +49,12 @@ class OrderController extends Controller
                             'status_label' => $refundPayloads->statusLabel($order),
                         ]);
                     }
+
                     return $order;
                 });
 
             $historyQuery = $customer->orders()
-                ->whereIn('status', Order::HISTORY_STATUSES)
+                ->visibleAsCustomerHistory()
                 ->with(['outlet', 'items'])
                 ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
                 ->orderByDesc('ordered_at');
@@ -86,6 +72,7 @@ class OrderController extends Controller
                         'status_label' => $refundPayloads->statusLabel($order),
                     ]);
                 }
+
                 return $order;
             });
         }
