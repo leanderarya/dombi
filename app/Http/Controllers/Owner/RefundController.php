@@ -120,4 +120,29 @@ class RefundController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    public function completeDirect(Order $order, \App\Http\Requests\Owner\CompleteManualRefundRequest $request, RefundService $refunds): RedirectResponse
+    {
+        try {
+            $relative = $request->file('proof')->store("refund-proofs/{$order->id}", 'local');
+            if ($relative === false) {
+                return back()->with('error', 'Gagal menyimpan bukti refund.');
+            }
+
+            $persisted = "private:{$relative}";
+
+            $refunds->startAndComplete(
+                $order,
+                $request->user()->id,
+                $persisted,
+                $request->input('transfer_reference'),
+                $request->input('transfer_note'),
+            );
+
+            return back()->with('success', 'Refund ditandai selesai.');
+        } catch (DomainException $e) {
+            Storage::disk('local')->delete($relative ?? '');
+            return back()->with('error', $e->getMessage());
+        }
+    }
 }
