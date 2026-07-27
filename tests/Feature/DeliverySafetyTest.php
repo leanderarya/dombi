@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CourierProfile;
 use App\Models\Customer;
 use App\Models\Delivery;
 use App\Models\DeliveryStatusHistory;
@@ -36,6 +37,20 @@ class DeliverySafetyTest extends TestCase
             'status' => 'active',
         ]);
         $outletUser->update(['outlet_id' => $outlet->id]);
+
+        CourierProfile::create([
+            'user_id' => $courier->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $outlet->id,
+            'invitation_status' => 'accepted',
+        ]);
+
+        CourierProfile::create([
+            'user_id' => $courier2->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $outlet->id,
+            'invitation_status' => 'accepted',
+        ]);
 
         return compact('owner', 'courier', 'courier2', 'customer', 'outlet', 'outletUser');
     }

@@ -235,6 +235,16 @@ class DeliveryAssignmentLaunchGuardTest extends TestCase
             'is_active' => true,
             'is_online' => true,
         ]);
+
+        if ($fulfillmentType === Order::FULFILLMENT_DELIVERY_DOMBI) {
+            \App\Models\CourierProfile::create([
+                'user_id' => $courier->id,
+                'courier_source' => 'outlet',
+                'outlet_id' => $outlet->id,
+                'invitation_status' => 'accepted',
+            ]);
+        }
+
         $order = Order::factory()->create([
             'outlet_id' => $outlet->id,
             'fulfillment_type' => $fulfillmentType,
