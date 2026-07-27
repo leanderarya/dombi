@@ -232,11 +232,19 @@ class Order extends Model
         return $query->whereIn('status', self::HISTORY_STATUSES)
             ->where(function ($payment) {
                 $payment->whereNull('payment_status')
-                    ->orWhereNotIn('payment_status', [
-                        PaymentStatus::RefundPending->value,
-                        PaymentStatus::RefundInProgress->value,
-                        PaymentStatus::RefundFailed->value,
-                    ]);
+                    ->orWhere(function ($q) {
+                        $q->whereNotIn('payment_status', [
+                            PaymentStatus::RefundPending->value,
+                            PaymentStatus::RefundInProgress->value,
+                            PaymentStatus::RefundFailed->value,
+                        ])->where(function ($sub) {
+                            $sub->where('payment_status', '!=', PaymentStatus::RefundRejected->value)
+                                ->orWhereNotIn('refund_rejected_reason', [
+                                    RefundRejectionReason::InvalidDestination->value,
+                                    RefundRejectionReason::IncompleteDestination->value,
+                                ]);
+                        });
+                    });
             });
     }
 
