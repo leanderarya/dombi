@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Outlet\UpdateExternalDeliveryRequest;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Services\DeliveryService;
@@ -164,5 +165,22 @@ class DeliveryController extends Controller
         );
 
         return redirect()->route('outlet.deliveries.show', $delivery)->with('success', 'Pengembalian barang dikonfirmasi.');
+    }
+
+    public function updateExternalStatus(
+        UpdateExternalDeliveryRequest $request,
+        Delivery $delivery,
+        DeliveryService $deliveryService,
+    ): RedirectResponse {
+        $deliveryService->transitionExternal(
+            $delivery,
+            $request->user(),
+            $request->validated('status'),
+            $request->validated('reason'),
+        );
+
+        return redirect()
+            ->route('outlet.deliveries.show', $delivery)
+            ->with('success', 'Status pengiriman eksternal diperbarui.');
     }
 }
