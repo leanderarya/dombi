@@ -52,21 +52,7 @@ class GuestOrderRecoveryService
 
         $activeOrders = Order::query()
             ->where('customer_id', $customer->id)
-            ->whereIn('status', Order::ACTIVE_STATUSES)
-            ->where(function ($q) {
-                $q->whereNull('payment_status')
-                    ->orWhere('payment_status', 'pending')
-                    ->orWhere('payment_status', 'paid')
-                    ->orWhere(function ($q2) {
-                        $q2->whereIn('payment_status', ['failed', 'expired'])
-                            ->where('status', Order::STATUS_PENDING_CONFIRMATION);
-                    });
-            })
-            ->where(function ($q) {
-                $q->where('status', '!=', Order::STATUS_PENDING_CONFIRMATION)
-                    ->orWhereNull('confirmation_expires_at')
-                    ->orWhere('confirmation_expires_at', '>', now());
-            })
+            ->visibleAsCustomerActive()
             ->with(['outlet:id,name', 'items.variant.family'])
             ->latest()
             ->get()
@@ -76,7 +62,7 @@ class GuestOrderRecoveryService
         $recentOrders = $activeOnly
             ? Order::query()
                 ->where('customer_id', $customer->id)
-                ->whereIn('status', array_merge(Order::HISTORY_STATUSES, [Order::STATUS_EXPIRED]))
+                ->visibleAsCustomerHistory()
                 ->where('ordered_at', '>=', now()->subDays(self::MAX_DAYS))
                 ->with(['outlet:id,name', 'items.variant.family'])
                 ->latest()
@@ -85,7 +71,7 @@ class GuestOrderRecoveryService
                 ->map(fn (Order $order) => $this->formatOrder($order))
             : Order::query()
                 ->where('customer_id', $customer->id)
-                ->whereIn('status', Order::HISTORY_STATUSES)
+                ->visibleAsCustomerHistory()
                 ->where('ordered_at', '>=', now()->subDays(self::MAX_DAYS))
                 ->with(['outlet:id,name', 'items'])
                 ->latest()
