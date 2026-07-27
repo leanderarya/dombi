@@ -1,7 +1,8 @@
 import { useForm } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { formatCurrency } from '@/lib/format';
+import { createInitialAssignCourierSheetState } from './assign-courier-sheet-lifecycle';
 
 interface Courier {
     id: number;
@@ -45,8 +46,17 @@ function AssignCourierSheetContent({
     onClose,
     assignUrl,
 }: Omit<Props, 'open'>) {
-    const [selectedCourier, setSelectedCourier] = useState<number | null>(null);
+    const [sheetState, setSheetState] = useState(
+        createInitialAssignCourierSheetState,
+    );
     const form = useForm({ courier_id: '' });
+
+    const closeSheet = useCallback(() => {
+        form.cancel();
+        form.reset();
+        setSheetState(createInitialAssignCourierSheetState());
+        onClose();
+    }, [form, onClose]);
 
     useEffect(() => {
         document.body.style.overflow = 'hidden';
@@ -59,24 +69,28 @@ function AssignCourierSheetContent({
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
-                onClose();
+                closeSheet();
             }
         };
         document.addEventListener('keydown', handler);
 
         return () => document.removeEventListener('keydown', handler);
-    }, [onClose]);
+    }, [closeSheet]);
+
+    useEffect(() => form.cancel, [form.cancel]);
 
     const submitUrl = assignUrl ?? `/owner/orders/${order.id}/assign-courier`;
 
     function handleSubmit() {
+        const { selectedCourier } = sheetState;
+
         if (!selectedCourier) {
             return;
         }
 
         form.transform(() => ({ courier_id: String(selectedCourier) }));
         form.post(submitUrl, {
-            onSuccess: () => onClose(),
+            onSuccess: closeSheet,
             preserveScroll: true,
         });
     }
@@ -87,7 +101,10 @@ function AssignCourierSheetContent({
             role="dialog"
             aria-modal="true"
         >
-            <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+            <div
+                className="absolute inset-0 bg-black/40"
+                onClick={closeSheet}
+            />
             <div
                 className="relative w-full max-w-lg animate-[slideUp_200ms_ease-out] rounded-t-2xl bg-white pb-safe"
                 style={{ maxHeight: '80vh', overflowY: 'auto' }}
@@ -136,7 +153,8 @@ function AssignCourierSheetContent({
                             ) : (
                                 couriers.map((courier) => {
                                     const isSelected =
-                                        selectedCourier === courier.id;
+                                        sheetState.selectedCourier ===
+                                        courier.id;
                                     const activeCount =
                                         courier.active_deliveries ?? 0;
                                     const isBusy = activeCount >= 3;
@@ -146,7 +164,9 @@ function AssignCourierSheetContent({
                                             key={courier.id}
                                             type="button"
                                             onClick={() =>
-                                                setSelectedCourier(courier.id)
+                                                setSheetState({
+                                                    selectedCourier: courier.id,
+                                                })
                                             }
                                             className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-150 active:opacity-80 ${
                                                 isSelected
@@ -200,7 +220,7 @@ function AssignCourierSheetContent({
                     <div className="mt-4 flex gap-2">
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={closeSheet}
                             className="flex min-h-[48px] flex-1 items-center justify-center rounded-lg border border-slate-200 text-sm font-semibold text-slate-600 transition-all duration-150 active:bg-slate-50 active:opacity-80"
                         >
                             Batal
@@ -208,7 +228,9 @@ function AssignCourierSheetContent({
                         <button
                             type="button"
                             onClick={handleSubmit}
-                            disabled={!selectedCourier || form.processing}
+                            disabled={
+                                !sheetState.selectedCourier || form.processing
+                            }
                             className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white transition-all duration-150 active:bg-emerald-800 active:opacity-80 disabled:bg-slate-300"
                         >
                             {form.processing
