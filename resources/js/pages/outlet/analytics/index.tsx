@@ -4,10 +4,10 @@ import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import RevenueTrendChart from '@/components/outlet/revenue-trend-chart';
 import TopProductsChart from '@/components/outlet/top-products-chart';
 import FilterChips from '@/components/ui/filter-chips';
+import { Skeleton, SkeletonKpiGrid } from '@/components/ui/skeleton';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
-import { useInertiaLoading } from '@/hooks/use-inertia-loading';
-import { Skeleton, SkeletonKpiGrid } from '@/components/ui/skeleton';
 
 interface TopProduct {
     product_name: string;
@@ -90,13 +90,19 @@ export default function OutletAnalytics({
                     <div className="space-y-4">
                         <div className="flex gap-2">
                             {Array.from({ length: 4 }).map((_, i) => (
-                                <Skeleton key={i} className="h-8 w-20 rounded-full" />
+                                <Skeleton
+                                    key={i}
+                                    className="h-8 w-20 rounded-full"
+                                />
                             ))}
                         </div>
                         <SkeletonKpiGrid count={3} />
                         {Array.from({ length: 2 }).map((_, i) => (
-                            <div key={i} className="rounded-xl border border-border bg-white p-4">
-                                <Skeleton className="h-3 w-1/4 mb-3" />
+                            <div
+                                key={i}
+                                className="rounded-xl border border-border bg-white p-4"
+                            >
+                                <Skeleton className="mb-3 h-3 w-1/4" />
                                 <Skeleton className="h-[220px] w-full rounded-lg" />
                             </div>
                         ))}
@@ -104,88 +110,90 @@ export default function OutletAnalytics({
                 ) : (
                     <>
                         <FilterChips
-                    options={periods}
-                    active={period}
-                    onChange={handlePeriodChange}
-                    size="sm"
-                    variant="ring"
-                />
-
-                {period === 'custom' && (
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="date"
-                            value={from}
-                            onChange={(e) => setFrom(e.target.value)}
-                            className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
+                            options={periods}
+                            active={period}
+                            onChange={handlePeriodChange}
+                            size="sm"
+                            variant="ring"
                         />
-                        <span className="text-xs text-text-muted">sampai</span>
-                        <input
-                            type="date"
-                            value={to}
-                            onChange={(e) => setTo(e.target.value)}
-                            className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
-                        />
-                        <button
-                            type="button"
-                            onClick={handleCustomApply}
-                            className="min-h-11 shrink-0 rounded-lg bg-primary px-4 text-sm font-bold text-white active:opacity-80"
-                        >
-                            Terapkan
-                        </button>
-                    </div>
-                )}
 
-                <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-border bg-white p-4">
-                        <div className="text-[11px] font-medium text-text-muted">
-                            Total Pendapatan
-                        </div>
-                        <div className="mt-1 text-lg font-bold text-text tabular-nums">
-                            {formatCurrency(kpis.total_revenue)}
-                        </div>
-                    </div>
-                    <div className="rounded-xl border border-border bg-white p-4">
-                        <div className="text-[11px] font-medium text-text-muted">
-                            Total Pesanan
-                        </div>
-                        <div className="mt-1 text-lg font-bold text-text tabular-nums">
-                            {kpis.total_orders}
-                        </div>
-                    </div>
-                    <div className="col-span-2 rounded-xl border border-border bg-white p-4">
-                        <div className="text-[11px] font-medium text-text-muted">
-                            Rata-rata per Pesanan
-                        </div>
-                        <div className="mt-1 text-lg font-bold text-text tabular-nums">
-                            {formatCurrency(kpis.avg_order_value)}
-                        </div>
-                    </div>
-                </div>
+                        {period === 'custom' && (
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="date"
+                                    value={from}
+                                    onChange={(e) => setFrom(e.target.value)}
+                                    className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
+                                />
+                                <span className="text-xs text-text-muted">
+                                    sampai
+                                </span>
+                                <input
+                                    type="date"
+                                    value={to}
+                                    onChange={(e) => setTo(e.target.value)}
+                                    className="min-h-11 flex-1 rounded-lg border border-border px-3 text-sm"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleCustomApply}
+                                    className="min-h-11 shrink-0 rounded-lg bg-primary px-4 text-sm font-bold text-white active:opacity-80"
+                                >
+                                    Terapkan
+                                </button>
+                            </div>
+                        )}
 
-                <div className="rounded-xl border border-border bg-white p-4">
-                    <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
-                        Produk Terlaris
-                    </div>
-                    <div
-                        className="w-full [&_*:focus]:outline-none"
-                        style={{ height: 220 }}
-                    >
-                        <TopProductsChart data={topProducts} />
-                    </div>
-                </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-xl border border-border bg-white p-4">
+                                <div className="text-[11px] font-medium text-text-muted">
+                                    Total Pendapatan
+                                </div>
+                                <div className="mt-1 text-lg font-bold text-text tabular-nums">
+                                    {formatCurrency(kpis.total_revenue)}
+                                </div>
+                            </div>
+                            <div className="rounded-xl border border-border bg-white p-4">
+                                <div className="text-[11px] font-medium text-text-muted">
+                                    Total Pesanan
+                                </div>
+                                <div className="mt-1 text-lg font-bold text-text tabular-nums">
+                                    {kpis.total_orders}
+                                </div>
+                            </div>
+                            <div className="col-span-2 rounded-xl border border-border bg-white p-4">
+                                <div className="text-[11px] font-medium text-text-muted">
+                                    Rata-rata per Pesanan
+                                </div>
+                                <div className="mt-1 text-lg font-bold text-text tabular-nums">
+                                    {formatCurrency(kpis.avg_order_value)}
+                                </div>
+                            </div>
+                        </div>
 
-                <div className="rounded-xl border border-border bg-white p-4">
-                    <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
-                        Trend Revenue
-                    </div>
-                    <div
-                        className="w-full [&_*:focus]:outline-none"
-                        style={{ height: 220 }}
-                    >
-                        <RevenueTrendChart data={dailyRevenue} />
-                    </div>
-                </div>
+                        <div className="rounded-xl border border-border bg-white p-4">
+                            <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                Produk Terlaris
+                            </div>
+                            <div
+                                className="w-full [&_*:focus]:outline-none"
+                                style={{ height: 220 }}
+                            >
+                                <TopProductsChart data={topProducts} />
+                            </div>
+                        </div>
+
+                        <div className="rounded-xl border border-border bg-white p-4">
+                            <div className="mb-3 text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                Trend Revenue
+                            </div>
+                            <div
+                                className="w-full [&_*:focus]:outline-none"
+                                style={{ height: 220 }}
+                            >
+                                <RevenueTrendChart data={dailyRevenue} />
+                            </div>
+                        </div>
                     </>
                 )}
             </OutletPageShell>

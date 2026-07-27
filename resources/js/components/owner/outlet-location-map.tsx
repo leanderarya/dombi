@@ -387,8 +387,8 @@ function MapFitBounds({
         if (existingOutlets.length >= 2) {
             const bounds = L.latLngBounds(
                 existingOutlets.map((o) => [
-                    parseFloat(o.latitude),
-                    parseFloat(o.longitude),
+                    Number(o.latitude),
+                    Number(o.longitude),
                 ]),
             );
             map.fitBounds(bounds, { maxZoom: MARKER_ZOOM, padding: [40, 40] });
@@ -396,8 +396,8 @@ function MapFitBounds({
         } else if (existingOutlets.length === 1) {
             map.setView(
                 [
-                    parseFloat(existingOutlets[0].latitude),
-                    parseFloat(existingOutlets[0].longitude),
+                    Number(existingOutlets[0].latitude),
+                    Number(existingOutlets[0].longitude),
                 ],
                 MARKER_ZOOM,
                 { animate: false },

@@ -18,16 +18,28 @@ export type ProductLike = {
 export function displayProductName(
     item: ProductLike | null | undefined,
 ): string {
-    if (!item) return '—';
+    if (!item) {
+        return '—';
+    }
 
-    if (item.full_name) return item.full_name;
+    if (item.full_name) {
+        return item.full_name;
+    }
 
     const variantName = item.name;
     const familyName = item.family?.name ?? item.family_name;
 
-    if (familyName && variantName) return `${familyName} — ${variantName}`;
-    if (variantName) return variantName;
-    if (item.product?.name) return item.product.name;
+    if (familyName && variantName) {
+        return `${familyName} — ${variantName}`;
+    }
+
+    if (variantName) {
+        return variantName;
+    }
+
+    if (item.product?.name) {
+        return item.product.name;
+    }
 
     return '—';
 }

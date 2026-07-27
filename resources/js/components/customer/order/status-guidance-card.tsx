@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
 import { Clock, MapPin, Phone } from 'lucide-react';
+import StatusBadge from '@/components/ui/status-badge';
 import { useCountdown } from '@/hooks/use-countdown';
 import { waLinkWithMessage } from '@/lib/wa';
-import StatusBadge from '@/components/ui/status-badge';
 
 const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
 
@@ -128,9 +128,12 @@ export default function StatusGuidanceCard({
         : status === 'ready_for_pickup' && isDelivery
           ? 'ready_for_pickup_delivery'
           : status;
-    const guidance = STATUS_GUIDANCE[guidanceKey] ?? STATUS_GUIDANCE[paymentStatus ?? ''];
+    const guidance =
+        STATUS_GUIDANCE[guidanceKey] ?? STATUS_GUIDANCE[paymentStatus ?? ''];
 
-    if (!guidance) return null;
+    if (!guidance) {
+        return null;
+    }
 
     const isPickupReady =
         status === 'ready_for_pickup' && outletLatitude && outletLongitude;
@@ -143,7 +146,9 @@ export default function StatusGuidanceCard({
     return (
         <div className="rounded-xl border border-border bg-white p-3">
             {badgeLabel && badgeVariant ? (
-                <StatusBadge variant={badgeVariant as any}>{badgeLabel}</StatusBadge>
+                <StatusBadge variant={badgeVariant as any}>
+                    {badgeLabel}
+                </StatusBadge>
             ) : badgeFallbackStatus ? (
                 <StatusBadge status={badgeFallbackStatus} />
             ) : null}

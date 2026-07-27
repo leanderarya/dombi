@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import { Copy, Package, Pencil, Plus, RotateCcw } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerTable from '@/components/owner/owner-table';
@@ -16,9 +16,15 @@ import {
 import EmptyState from '@/components/ui/empty-state';
 import { Select } from '@/components/ui/select';
 import { SkeletonList } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
-import { marginColor } from '@/lib/pricing-utils';
 import { OutletPriceModal } from './pricing-modals';
 import { BulkPanel, CopyPanel, PaginationBar } from './pricing-shared';
 import type {
@@ -67,7 +73,9 @@ export default function OutletDetail({
         setConfirmOpen(true);
     };
 
-    if (!prices) return <SkeletonList count={5} />;
+    if (!prices) {
+        return <SkeletonList count={5} />;
+    }
 
     // Summary stats
     const customCount = prices.filter((p) => p.has_override).length;
@@ -82,19 +90,30 @@ export default function OutletDetail({
             prices.filter((p) => {
                 if (search) {
                     const q = search.toLowerCase();
+
                     if (
                         !p.name.toLowerCase().includes(q) &&
                         !(p.family_name ?? '').toLowerCase().includes(q)
-                    )
+                    ) {
                         return false;
+                    }
                 }
-                if (marginFilter === 'high' && p.margin <= 20000) return false;
+
+                if (marginFilter === 'high' && p.margin <= 20000) {
+                    return false;
+                }
+
                 if (
                     marginFilter === 'low' &&
                     (p.margin < 5000 || p.margin > 20000)
-                )
+                ) {
                     return false;
-                if (marginFilter === 'negative' && p.margin >= 0) return false;
+                }
+
+                if (marginFilter === 'negative' && p.margin >= 0) {
+                    return false;
+                }
+
                 return true;
             }),
         [prices, search, marginFilter],
@@ -109,6 +128,7 @@ export default function OutletDetail({
                     typeof av === 'string'
                         ? av.localeCompare(String(bv))
                         : Number(av) - Number(bv);
+
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
         [filtered, sortKey, sortDir],
@@ -125,6 +145,7 @@ export default function OutletDetail({
             setSortKey(key);
             setSortDir('asc');
         }
+
         setPage(1);
     };
 
@@ -134,7 +155,10 @@ export default function OutletDetail({
     );
 
     const handleSave = (newPrice: number) => {
-        if (!selectedRow || isNaN(newPrice)) return;
+        if (!selectedRow || isNaN(newPrice)) {
+            return;
+        }
+
         setSaving(true);
         router.patch(
             `/owner/pricing/outlets/${outlet.id}/variants/${selectedRow.variant_id}`,
@@ -161,7 +185,11 @@ export default function OutletDetail({
 
     const handleBulkUpdate = () => {
         const amount = parseFloat(bulkAmount);
-        if (isNaN(amount)) return;
+
+        if (isNaN(amount)) {
+            return;
+        }
+
         showConfirm(
             'Atur Massal',
             `${sorted.length} produk akan diperbarui. Lanjutkan?`,
@@ -183,7 +211,10 @@ export default function OutletDetail({
     };
 
     const handleCopy = () => {
-        if (!copySource) return;
+        if (!copySource) {
+            return;
+        }
+
         setSaving(true);
         router.post(
             `/owner/pricing/outlets/${outlet.id}/copy`,
@@ -199,11 +230,12 @@ export default function OutletDetail({
     };
 
     const handleOutletChange = (outletId: string) => {
-        if (outletId)
+        if (outletId) {
             router.reload({
                 only: ['outletPrices', 'selectedOutlet'],
                 data: { tab: 'outlet', outlet_id: outletId },
             });
+        }
     };
 
     const SortMarker = ({ col }: { col: SortKey }) =>

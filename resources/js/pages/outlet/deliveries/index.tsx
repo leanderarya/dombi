@@ -9,7 +9,9 @@ import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import SectionCard from '@/components/ui/section-card';
+import { Skeleton, SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import OutletLayout from '@/layouts/outlet-layout';
 import {
     formatCurrency,
@@ -17,8 +19,6 @@ import {
     formatDistance,
 } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
-import { useInertiaLoading } from '@/hooks/use-inertia-loading';
-import { Skeleton, SkeletonList } from '@/components/ui/skeleton';
 
 const statusOptions = [
     { key: 'waiting_pickup', label: 'Menunggu Pickup' },
@@ -79,7 +79,10 @@ export default function OutletDeliveriesIndex({
                     <div className="space-y-4">
                         <div className="grid grid-cols-2 gap-2">
                             {Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="rounded-xl border border-border bg-surface p-4 space-y-2">
+                                <div
+                                    key={i}
+                                    className="space-y-2 rounded-xl border border-border bg-surface p-4"
+                                >
                                     <Skeleton className="h-3 w-2/3" />
                                     <Skeleton className="h-6 w-1/2" />
                                 </div>
@@ -129,7 +132,8 @@ export default function OutletDeliveriesIndex({
                                                         {order.customer_name}
                                                     </div>
                                                     <div className="mt-1 flex items-center gap-2 text-[11px] text-text-subtle">
-                                                        {order.distance_km != null && (
+                                                        {order.distance_km !=
+                                                            null && (
                                                             <span>
                                                                 {formatDistance(
                                                                     order.distance_km,
@@ -152,14 +156,18 @@ export default function OutletDeliveriesIndex({
                                                 </div>
                                                 {order.sla_health && (
                                                     <DeliverySlaBadge
-                                                        health={order.sla_health}
+                                                        health={
+                                                            order.sla_health
+                                                        }
                                                     />
                                                 )}
                                             </div>
                                             <Button
                                                 size="lg"
                                                 onClick={() =>
-                                                    handleAssignCourier(order.id)
+                                                    handleAssignCourier(
+                                                        order.id,
+                                                    )
                                                 }
                                                 icon={Truck}
                                                 className="mt-2 w-full"
@@ -197,7 +205,9 @@ export default function OutletDeliveriesIndex({
                                                     </span>
                                                     {d.sla_health && (
                                                         <DeliverySlaBadge
-                                                            health={d.sla_health}
+                                                            health={
+                                                                d.sla_health
+                                                            }
                                                         />
                                                     )}
                                                 </div>
@@ -211,7 +221,8 @@ export default function OutletDeliveriesIndex({
                                                     {d.delivery_age != null && (
                                                         <span
                                                             className={
-                                                                d.delivery_age > 60
+                                                                d.delivery_age >
+                                                                60
                                                                     ? 'font-medium text-danger'
                                                                     : ''
                                                             }

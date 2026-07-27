@@ -48,10 +48,12 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
 
         for (const d of data) {
             const map = new Map<string, OutletPriceRow>();
+
             for (const p of d.prices) {
                 allVariantNames.add(p.name);
                 map.set(p.name, p);
             }
+
             byOutlet.set(d.outlet_id, map);
         }
 

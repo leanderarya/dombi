@@ -1,4 +1,4 @@
-import { Clock, Save } from 'lucide-react';
+import { Save } from 'lucide-react';
 import { useState } from 'react';
 import { toastMutation } from '@/lib/toast-mutation';
 
@@ -40,11 +40,16 @@ export default function OperatingHoursManager({
             return DEFAULT_HOURS;
         }
 
-        const map = new Map(initialHours.map((h) => [h.day_of_week, {
-            ...h,
-            open_time: h.open_time.substring(0, 5),
-            close_time: h.close_time.substring(0, 5),
-        }]));
+        const map = new Map(
+            initialHours.map((h) => [
+                h.day_of_week,
+                {
+                    ...h,
+                    open_time: h.open_time.substring(0, 5),
+                    close_time: h.close_time.substring(0, 5),
+                },
+            ]),
+        );
 
         return DEFAULT_HOURS.map((d) => map.get(d.day_of_week) ?? d);
     });
@@ -76,7 +81,11 @@ export default function OperatingHoursManager({
                     },
                 );
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error ?? 'Gagal menyimpan.');
+
+                if (!res.ok) {
+                    throw new Error(data.error ?? 'Gagal menyimpan.');
+                }
+
                 return data;
             },
             {
@@ -142,7 +151,9 @@ export default function OperatingHoursManager({
             ))}
 
             {saving && (
-                <p className="text-xs font-medium text-amber-600">Menyimpan...</p>
+                <p className="text-xs font-medium text-amber-600">
+                    Menyimpan...
+                </p>
             )}
 
             <button

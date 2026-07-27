@@ -1,3 +1,4 @@
+import { router } from '@inertiajs/react';
 import {
     CircleCheck,
     CircleX,
@@ -14,7 +15,6 @@ import {
     Mail,
     AlertTriangle,
 } from 'lucide-react';
-import { router } from '@inertiajs/react';
 import { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
@@ -54,11 +54,17 @@ const typeIcons: Record<string, ReactNode> = {
     'order.cancelled': <Ban className="h-5 w-5 text-slate-500" />,
     // Refund
     'order.refund_requested': <Undo2 className="h-5 w-5 text-amber-600" />,
-    'order.refund_destination_submitted': <ClipboardList className="h-5 w-5 text-blue-600" />,
-    'order.refund_processing_started': <RefreshCw className="h-5 w-5 text-blue-600" />,
+    'order.refund_destination_submitted': (
+        <ClipboardList className="h-5 w-5 text-blue-600" />
+    ),
+    'order.refund_processing_started': (
+        <RefreshCw className="h-5 w-5 text-blue-600" />
+    ),
     'order.refund_rolled_back': <Undo2 className="h-5 w-5 text-amber-600" />,
     'order.refund_rejected': <CircleX className="h-5 w-5 text-red-600" />,
-    'order.refund_processed': <CircleCheck className="h-5 w-5 text-emerald-600" />,
+    'order.refund_processed': (
+        <CircleCheck className="h-5 w-5 text-emerald-600" />
+    ),
     'order.refund_failed': <TriangleAlert className="h-5 w-5 text-red-600" />,
     // Pengiriman
     'delivery.courier_assigned': <Truck className="h-5 w-5 text-blue-600" />,
@@ -192,7 +198,11 @@ export default function NotificationSheet({
         }
 
         // Navigate refund notifications by URL
-        if (data?.url && typeof data.url === 'string' && data.url.startsWith('/')) {
+        if (
+            data?.url &&
+            typeof data.url === 'string' &&
+            data.url.startsWith('/')
+        ) {
             onClose();
             router.visit(data.url);
         }
@@ -288,8 +298,13 @@ export default function NotificationSheet({
                                                 </span>
                                                 {!notification.read_at && (
                                                     <>
-                                                        <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
-                                                        <span className="sr-only">Belum dibaca</span>
+                                                        <span
+                                                            className="h-2 w-2 rounded-full bg-emerald-500"
+                                                            aria-hidden="true"
+                                                        />
+                                                        <span className="sr-only">
+                                                            Belum dibaca
+                                                        </span>
                                                     </>
                                                 )}
                                             </div>

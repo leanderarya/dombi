@@ -20,18 +20,23 @@ describe('getActiveRefundPresentation', () => {
         ['in_progress', 'text-blue-700'],
         ['action_required', 'text-red-700'],
         ['rejected', 'text-red-700'],
-    ])('presents %s refund state with backend label', (queueState, detailClassName) => {
-        expect(getActiveRefundPresentation({
-            payment_status: 'refund_pending',
-            queue_state: queueState,
-            status_label: 'Backend Refund Label',
-        })).toEqual({
-            active: true,
-            primaryLabel: 'Proses Refund',
-            detailLabel: 'Backend Refund Label',
-            detailClassName,
-            forceClickable: true,
-            suppressActions: true,
-        });
-    });
+    ])(
+        'presents %s refund state with backend label',
+        (queueState, detailClassName) => {
+            expect(
+                getActiveRefundPresentation({
+                    payment_status: 'refund_pending',
+                    queue_state: queueState,
+                    status_label: 'Backend Refund Label',
+                }),
+            ).toEqual({
+                active: true,
+                primaryLabel: 'Proses Refund',
+                detailLabel: 'Backend Refund Label',
+                detailClassName,
+                forceClickable: true,
+                suppressActions: true,
+            });
+        },
+    );
 });

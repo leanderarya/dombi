@@ -1,13 +1,12 @@
 import { router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import { Bell, Check, ChevronDown, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import SortableTh from '@/components/owner/sortable-th';
 import OwnerTable from '@/components/owner/owner-table';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -21,9 +20,17 @@ import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
 import { displayProductName } from '@/lib/display';
+import { cn } from '@/lib/utils';
 import CentralStockTab from './central-stock-tab';
 
 const TABS = [
@@ -38,6 +45,7 @@ function getCsrfToken(): string {
     const el = document.querySelector(
         'meta[name="csrf-token"]',
     ) as HTMLMetaElement;
+
     return el?.content ?? '';
 }
 
@@ -60,7 +68,10 @@ function buildProductGroups(outletSections: any[]) {
     for (const section of outletSections ?? []) {
         for (const item of section.inventories ?? []) {
             const variantId = item.product_variant_id ?? item.variant?.id;
-            if (!variantId) continue;
+
+            if (!variantId) {
+                continue;
+            }
 
             const entry = map.get(variantId) ?? {
                 variantId,
@@ -83,18 +94,27 @@ function buildProductGroups(outletSections: any[]) {
             const stock = item.current_stock ?? 0;
             const available = stock - (item.reserved_stock ?? 0);
             entry.totalStock += stock;
-            if (available <= 0) entry.criticalCount++;
-            else if (available <= (item.minimum_stock ?? 0)) entry.lowCount++;
-            else entry.healthyCount++;
+
+            if (available <= 0) {
+                entry.criticalCount++;
+            } else if (available <= (item.minimum_stock ?? 0)) {
+                entry.lowCount++;
+            } else {
+                entry.healthyCount++;
+            }
 
             map.set(variantId, entry);
         }
     }
 
     for (const entry of map.values()) {
-        if (entry.criticalCount > 0) entry.overallStatus = 'critical';
-        else if (entry.lowCount > 0) entry.overallStatus = 'low';
-        else entry.overallStatus = 'healthy';
+        if (entry.criticalCount > 0) {
+            entry.overallStatus = 'critical';
+        } else if (entry.lowCount > 0) {
+            entry.overallStatus = 'low';
+        } else {
+            entry.overallStatus = 'healthy';
+        }
     }
 
     return Array.from(map.values());
@@ -141,14 +161,19 @@ export default function InventoriesIndex({
 
     const handleEdit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editItem) return;
+
+        if (!editItem) {
+            return;
+        }
+
         editForm.put(`/owner/inventories/${editItem.id}`, {
             onSuccess: () => {
                 setEditItem(null);
                 editForm.reset();
                 toast.success('Stok diperbarui');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -193,6 +218,7 @@ export default function InventoriesIndex({
             const q = search.toLowerCase();
             result = result.filter((g) => {
                 const name = displayProductName(g.variant).toLowerCase();
+
                 return (
                     name.includes(q) ||
                     (g.variant?.sku ?? '').toLowerCase().includes(q) ||
@@ -236,10 +262,12 @@ export default function InventoriesIndex({
                         av = displayProductName(a.variant);
                         bv = displayProductName(b.variant);
                 }
+
                 const cmp =
                     typeof av === 'string'
                         ? av.localeCompare(String(bv))
                         : Number(av) - Number(bv);
+
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
         [filtered, sortKey, sortDir],
@@ -248,8 +276,13 @@ export default function InventoriesIndex({
     const toggleExpand = (variantId: number) => {
         setExpandedIds((prev) => {
             const next = new Set(prev);
-            if (next.has(variantId)) next.delete(variantId);
-            else next.add(variantId);
+
+            if (next.has(variantId)) {
+                next.delete(variantId);
+            } else {
+                next.add(variantId);
+            }
+
             return next;
         });
     };
@@ -434,6 +467,7 @@ export default function InventoriesIndex({
                                             ...group.outlets,
                                         ].sort((a: any, b: any) => {
                                             let av: any, bv: any;
+
                                             switch (subSortKey) {
                                                 case 'outlet_name':
                                                     av = a.outlet_name;
@@ -469,12 +503,14 @@ export default function InventoriesIndex({
                                                     av = a.outlet_name;
                                                     bv = b.outlet_name;
                                             }
+
                                             const cmp =
                                                 typeof av === 'string'
                                                     ? av.localeCompare(
                                                           String(bv),
                                                       )
                                                     : Number(av) - Number(bv);
+
                                             return subSortDir === 'asc'
                                                 ? cmp
                                                 : -cmp;
@@ -528,6 +564,7 @@ export default function InventoriesIndex({
                                                                                         0)
                                                                                   ? 'low'
                                                                                   : 'healthy';
+
                                                                         return (
                                                                             <span
                                                                                 key={
@@ -805,11 +842,11 @@ export default function InventoriesIndex({
                                                                                 );
                                                                             },
                                                                         )}
-                                                                             </tbody>
-                                                                 </table>
-                                                             </div>
-                                                         </TableCell>
-                                                     </TableRow>
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 )}
                                             </>
                                         );

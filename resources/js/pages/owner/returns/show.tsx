@@ -71,7 +71,8 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 approveForm.reset();
                 toast.success('Disetujui');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -82,24 +83,35 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                 rejectForm.reset();
                 toast.success('Ditolak');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
     const handleMarkReceived = () => {
-        router.post(`/owner/returns/${ret.id}/mark-received`, {}, {
-            preserveScroll: true,
-            onSuccess: () => toast.success('Diterima'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
-        });
+        router.post(
+            `/owner/returns/${ret.id}/mark-received`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Diterima'),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
+            },
+        );
     };
 
     const handleComplete = () => {
-        router.post(`/owner/returns/${ret.id}/complete`, {}, {
-            preserveScroll: true,
-            onSuccess: () => toast.success('Selesai'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
-        });
+        router.post(
+            `/owner/returns/${ret.id}/complete`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Selesai'),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
+            },
+        );
     };
 
     return (

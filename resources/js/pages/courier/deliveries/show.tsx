@@ -1,4 +1,4 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     AlertTriangle,
     CheckCircle2,
@@ -149,7 +149,10 @@ export default function CourierDeliveryShow({ delivery }: Props) {
 
     const whatsappCustomer = () => {
         if (recipientPhone) {
-            window.open(`https://wa.me/${normalizePhone(recipientPhone)}`, '_blank');
+            window.open(
+                `https://wa.me/${normalizePhone(recipientPhone)}`,
+                '_blank',
+            );
         }
     };
 

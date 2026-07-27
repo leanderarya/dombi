@@ -1,11 +1,12 @@
 import { router } from '@inertiajs/react';
-import { FormEventHandler, useState } from 'react';
+import { Banknote, Smartphone } from 'lucide-react';
+import type { FormEventHandler } from 'react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { toast } from 'sonner';
-import { Banknote, Smartphone } from 'lucide-react';
 import type { RefundDestinationType } from '@/types/refund';
 
 interface Props {
@@ -16,12 +17,24 @@ interface Props {
     onSaved?: () => void;
 }
 
-export default function RefundDestinationForm({ orderId, initialType, initialLabel, initialHolder, onSaved }: Props) {
-    const [type, setType] = useState<RefundDestinationType>(initialType ?? 'bank');
-    const [bankName, setBankName] = useState(initialType === 'bank' && initialLabel ? initialLabel : '');
+export default function RefundDestinationForm({
+    orderId,
+    initialType,
+    initialLabel,
+    initialHolder,
+    onSaved,
+}: Props) {
+    const [type, setType] = useState<RefundDestinationType>(
+        initialType ?? 'bank',
+    );
+    const [bankName, setBankName] = useState(
+        initialType === 'bank' && initialLabel ? initialLabel : '',
+    );
     const [accountNumber, setAccountNumber] = useState('');
     const [accountHolder, setAccountHolder] = useState(initialHolder ?? '');
-    const [ewalletProvider, setEwalletProvider] = useState(initialType === 'ewallet' && initialLabel ? initialLabel : '');
+    const [ewalletProvider, setEwalletProvider] = useState(
+        initialType === 'ewallet' && initialLabel ? initialLabel : '',
+    );
     const [ewalletNumber, setEwalletNumber] = useState('');
     const [ewalletHolder, setEwalletHolder] = useState(initialHolder ?? '');
     const [processing, setProcessing] = useState(false);
@@ -48,21 +61,28 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                   ewallet_holder: ewalletHolder,
               };
 
-        router.patch(`/customer/orders/${orderId}/refund-destination`, payload as any, {
-            preserveScroll: true,
-            onSuccess: () => {
-                setProcessing(false);
-                toast.success('Tujuan refund disimpan');
-                onSaved?.();
+        router.patch(
+            `/customer/orders/${orderId}/refund-destination`,
+            payload as any,
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setProcessing(false);
+                    toast.success('Tujuan refund disimpan');
+                    onSaved?.();
+                },
+                onError: (errs: any) => {
+                    setProcessing(false);
+                    setErrors(errs as Record<string, string>);
+                    const msg = Object.values(errs).flat().join(', ') as string;
+
+                    if (msg) {
+                        toast.error(msg);
+                    }
+                },
+                onFinish: () => setProcessing(false),
             },
-            onError: (errs: any) => {
-                setProcessing(false);
-                setErrors(errs as Record<string, string>);
-                const msg = Object.values(errs).flat().join(', ') as string;
-                if (msg) toast.error(msg);
-            },
-            onFinish: () => setProcessing(false),
-        });
+        );
     };
 
     return (
@@ -111,38 +131,55 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                                 className="min-h-11"
                             />
                             {errors.bank_name && (
-                                <p className="mt-1 text-[11px] text-red-500" role="alert">
+                                <p
+                                    className="mt-1 text-[11px] text-red-500"
+                                    role="alert"
+                                >
                                     {errors.bank_name}
                                 </p>
                             )}
                         </div>
                         <div>
-                            <Label htmlFor="account_number">Nomor Rekening</Label>
+                            <Label htmlFor="account_number">
+                                Nomor Rekening
+                            </Label>
                             <Input
                                 id="account_number"
                                 value={accountNumber}
-                                onChange={(e) => setAccountNumber(e.target.value)}
+                                onChange={(e) =>
+                                    setAccountNumber(e.target.value)
+                                }
                                 placeholder="Masukkan nomor rekening"
                                 inputMode="numeric"
                                 className="min-h-11"
                             />
                             {errors.account_number && (
-                                <p className="mt-1 text-[11px] text-red-500" role="alert">
+                                <p
+                                    className="mt-1 text-[11px] text-red-500"
+                                    role="alert"
+                                >
                                     {errors.account_number}
                                 </p>
                             )}
                         </div>
                         <div>
-                            <Label htmlFor="account_holder">Nama Pemilik Rekening</Label>
+                            <Label htmlFor="account_holder">
+                                Nama Pemilik Rekening
+                            </Label>
                             <Input
                                 id="account_holder"
                                 value={accountHolder}
-                                onChange={(e) => setAccountHolder(e.target.value)}
+                                onChange={(e) =>
+                                    setAccountHolder(e.target.value)
+                                }
                                 placeholder="Sesuai dengan nama di rekening"
                                 className="min-h-11"
                             />
                             {errors.account_holder && (
-                                <p className="mt-1 text-[11px] text-red-500" role="alert">
+                                <p
+                                    className="mt-1 text-[11px] text-red-500"
+                                    role="alert"
+                                >
                                     {errors.account_holder}
                                 </p>
                             )}
@@ -151,11 +188,15 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                 ) : (
                     <>
                         <div>
-                            <Label htmlFor="ewallet_provider">Provider E-Wallet</Label>
+                            <Label htmlFor="ewallet_provider">
+                                Provider E-Wallet
+                            </Label>
                             <Select
                                 id="ewallet_provider"
                                 value={ewalletProvider}
-                                onChange={(e) => setEwalletProvider(e.target.value)}
+                                onChange={(e) =>
+                                    setEwalletProvider(e.target.value)
+                                }
                                 options={[
                                     { value: 'GoPay', label: 'GoPay' },
                                     { value: 'OVO', label: 'OVO' },
@@ -167,17 +208,24 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                                 className="min-h-11"
                             />
                             {errors.ewallet_provider && (
-                                <p className="mt-1 text-[11px] text-red-500" role="alert">
+                                <p
+                                    className="mt-1 text-[11px] text-red-500"
+                                    role="alert"
+                                >
                                     {errors.ewallet_provider}
                                 </p>
                             )}
                         </div>
                         <div>
-                            <Label htmlFor="ewallet_number">Nomor Terdaftar</Label>
+                            <Label htmlFor="ewallet_number">
+                                Nomor Terdaftar
+                            </Label>
                             <Input
                                 id="ewallet_number"
                                 value={ewalletNumber}
-                                onChange={(e) => setEwalletNumber(e.target.value)}
+                                onChange={(e) =>
+                                    setEwalletNumber(e.target.value)
+                                }
                                 placeholder="Masukkan nomor HP terdaftar"
                                 inputMode="numeric"
                                 className="min-h-11"
@@ -186,22 +234,32 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                                 Nomor HP yang terdaftar di akun e-wallet
                             </p>
                             {errors.ewallet_number && (
-                                <p className="mt-1 text-[11px] text-red-500" role="alert">
+                                <p
+                                    className="mt-1 text-[11px] text-red-500"
+                                    role="alert"
+                                >
                                     {errors.ewallet_number}
                                 </p>
                             )}
                         </div>
                         <div>
-                            <Label htmlFor="ewallet_holder">Nama Pemilik Akun</Label>
+                            <Label htmlFor="ewallet_holder">
+                                Nama Pemilik Akun
+                            </Label>
                             <Input
                                 id="ewallet_holder"
                                 value={ewalletHolder}
-                                onChange={(e) => setEwalletHolder(e.target.value)}
+                                onChange={(e) =>
+                                    setEwalletHolder(e.target.value)
+                                }
                                 placeholder="Sesuai dengan nama di akun"
                                 className="min-h-11"
                             />
                             {errors.ewallet_holder && (
-                                <p className="mt-1 text-[11px] text-red-500" role="alert">
+                                <p
+                                    className="mt-1 text-[11px] text-red-500"
+                                    role="alert"
+                                >
                                     {errors.ewallet_holder}
                                 </p>
                             )}
@@ -210,7 +268,11 @@ export default function RefundDestinationForm({ orderId, initialType, initialLab
                 )}
             </div>
 
-            <Button type="submit" disabled={processing} className="min-h-11 w-full">
+            <Button
+                type="submit"
+                disabled={processing}
+                className="min-h-11 w-full"
+            >
                 {processing ? 'Menyimpan...' : 'Simpan Tujuan Refund'}
             </Button>
         </form>

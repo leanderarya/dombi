@@ -81,7 +81,8 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 approveForm.reset();
                 toast.success('Disetujui');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -92,16 +93,22 @@ export default function OwnerExchangesShow({ exchange }: any) {
                 rejectForm.reset();
                 toast.success('Ditolak');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
     const handleMarkShipped = () => {
-        router.post(`/owner/exchanges/${exchange.id}/mark-shipped`, {}, {
-            preserveScroll: true,
-            onSuccess: () => toast.success('Dikirim'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
-        });
+        router.post(
+            `/owner/exchanges/${exchange.id}/mark-shipped`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Dikirim'),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
+            },
+        );
     };
 
     return (
@@ -484,7 +491,12 @@ export default function OwnerExchangesShow({ exchange }: any) {
                                             setShowComplete(false);
                                             toast.success('Selesai');
                                         },
-                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
                                     },
                                 )
                             }

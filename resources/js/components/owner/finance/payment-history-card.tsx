@@ -1,5 +1,4 @@
 import { Eye, Check, X } from 'lucide-react';
-import { useState } from 'react';
 import { formatCurrency, formatDate } from '@/lib/format';
 import FinanceStatusBadge from './finance-status-badge';
 

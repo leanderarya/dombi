@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import Dialog from '@/components/ui/dialog';
+import { useOutlet } from '@/contexts/outlet-context';
+import { mutationFetch } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
-import { useOutlet } from '@/contexts/outlet-context';
-import { mutationFetch } from '@/lib/api';
 
 interface Variant {
     id: number;

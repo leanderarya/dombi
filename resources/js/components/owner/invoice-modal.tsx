@@ -1,8 +1,8 @@
 import { Copy, Check, ExternalLink } from 'lucide-react';
 import { useState } from 'react';
 import OwnerModalShell from '@/components/owner/owner-modal-shell';
-import { formatCurrency } from '@/lib/format';
 import { copyToClipboard } from '@/lib/clipboard';
+import { formatCurrency } from '@/lib/format';
 
 interface UnpaidItem {
     id: number;

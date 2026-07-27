@@ -15,7 +15,10 @@ export default function OutletList({ outlets, selectedId, onSelect }: Props) {
     const [search, setSearch] = useState('');
 
     const filtered = outlets.filter((o) => {
-        if (!search) return true;
+        if (!search) {
+            return true;
+        }
+
         return o.name.toLowerCase().includes(search.toLowerCase());
     });
 

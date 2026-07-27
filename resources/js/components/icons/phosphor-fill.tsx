@@ -18,6 +18,7 @@ function createFillIcon(path: string, displayName: string) {
         ),
     );
     Comp.displayName = displayName;
+
     return Comp;
 }
 

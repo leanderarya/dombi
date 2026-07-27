@@ -1,9 +1,3 @@
-import { useState } from 'react';
-import { router } from '@inertiajs/react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import RefundDestinationForm from './refund-destination-form';
 import {
     AlertCircle,
     Banknote,
@@ -13,10 +7,13 @@ import {
     Clock,
     ExternalLink,
     Smartphone,
-    Wallet,
     XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { CustomerRefundPayload, RefundHistoryItem } from '@/types/refund';
+import RefundDestinationForm from './refund-destination-form';
 
 interface Props {
     refund: CustomerRefundPayload;
@@ -41,7 +38,11 @@ export default function RefundStatusCard({ refund }: Props) {
         timeline,
     } = refund;
 
-    const fmtAmount = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+    const fmtAmount = new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        maximumFractionDigits: 0,
+    }).format(amount);
 
     const cardClass = 'border-0';
 
@@ -59,7 +60,8 @@ export default function RefundStatusCard({ refund }: Props) {
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} label="Total Refund" />
                     <div className="rounded-xl bg-amber-50 px-4 py-3.5 text-[13px] text-amber-800">
-                        Masukkan data tujuan transfer agar refund dapat diproses.
+                        Masukkan data tujuan transfer agar refund dapat
+                        diproses.
                     </div>
                     <div className="rounded-xl bg-surface-muted px-4 py-3.5">
                         <RefundDestinationForm orderId={order_id} />
@@ -83,11 +85,17 @@ export default function RefundStatusCard({ refund }: Props) {
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} label="Total Refund" />
                     <p className="text-xs text-text-muted">
-                        Data tujuan sudah diterima. Owner akan memproses refund dalam 1×24 jam.
+                        Data tujuan sudah diterima. Owner akan memproses refund
+                        dalam 1×24 jam.
                     </p>
                     <DestinationSummary dest={destination} />
                     {can_edit_destination && !editing && (
-                        <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="min-h-10 w-full">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setEditing(true)}
+                            className="min-h-10 w-full"
+                        >
                             Ubah Tujuan Refund
                         </Button>
                     )}
@@ -102,7 +110,11 @@ export default function RefundStatusCard({ refund }: Props) {
                             />
                         </div>
                     )}
-                    <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
+                    <TimelineToggle
+                        open={timelineOpen}
+                        onToggle={() => setTimelineOpen((p) => !p)}
+                        items={timeline}
+                    />
                 </CardContent>
             </Card>
         );
@@ -125,7 +137,11 @@ export default function RefundStatusCard({ refund }: Props) {
                         Owner sedang mentransfer dana ke tujuan refund Anda.
                     </p>
                     {destination && <DestinationSummary dest={destination} />}
-                    <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
+                    <TimelineToggle
+                        open={timelineOpen}
+                        onToggle={() => setTimelineOpen((p) => !p)}
+                        items={timeline}
+                    />
                 </CardContent>
             </Card>
         );
@@ -143,7 +159,11 @@ export default function RefundStatusCard({ refund }: Props) {
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-5">
-                    <AmountBlock amount={fmtAmount} label="Telah Ditransfer" variant="success" />
+                    <AmountBlock
+                        amount={fmtAmount}
+                        label="Telah Ditransfer"
+                        variant="success"
+                    />
                     {destination && <DestinationSummary dest={destination} />}
                     {proof_url && (
                         <a
@@ -157,14 +177,23 @@ export default function RefundStatusCard({ refund }: Props) {
                         </a>
                     )}
                     {(transfer_reference || transfer_note) && (
-                        <div className="rounded-lg bg-muted p-3 text-xs text-text-muted space-y-1">
+                        <div className="space-y-1 rounded-lg bg-muted p-3 text-xs text-text-muted">
                             {transfer_reference && (
-                                <p>Referensi: <span className="font-mono font-medium text-text">{transfer_reference}</span></p>
+                                <p>
+                                    Referensi:{' '}
+                                    <span className="font-mono font-medium text-text">
+                                        {transfer_reference}
+                                    </span>
+                                </p>
                             )}
                             {transfer_note && <p>Catatan: {transfer_note}</p>}
                         </div>
                     )}
-                    <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
+                    <TimelineToggle
+                        open={timelineOpen}
+                        onToggle={() => setTimelineOpen((p) => !p)}
+                        items={timeline}
+                    />
                 </CardContent>
             </Card>
         );
@@ -183,12 +212,21 @@ export default function RefundStatusCard({ refund }: Props) {
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} label="Total Refund" />
-                    <div className="rounded-xl bg-red-50 px-4 py-3.5 text-[13px] text-red-800 space-y-1">
-                        <p className="font-medium">{rejection?.label || rejection?.code}</p>
-                        {rejection?.note && <p className="text-red-600">{rejection.note}</p>}
+                    <div className="space-y-1 rounded-xl bg-red-50 px-4 py-3.5 text-[13px] text-red-800">
+                        <p className="font-medium">
+                            {rejection?.label || rejection?.code}
+                        </p>
+                        {rejection?.note && (
+                            <p className="text-red-600">{rejection.note}</p>
+                        )}
                     </div>
                     {!resubmitting && (
-                        <Button variant="outline" size="sm" onClick={() => setResubmitting(true)} className="min-h-10 w-full">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setResubmitting(true)}
+                            className="min-h-10 w-full"
+                        >
                             Perbaiki Data Refund
                         </Button>
                     )}
@@ -202,7 +240,11 @@ export default function RefundStatusCard({ refund }: Props) {
                             />
                         </div>
                     )}
-                    <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
+                    <TimelineToggle
+                        open={timelineOpen}
+                        onToggle={() => setTimelineOpen((p) => !p)}
+                        items={timeline}
+                    />
                 </CardContent>
             </Card>
         );
@@ -221,14 +263,23 @@ export default function RefundStatusCard({ refund }: Props) {
                 </CardHeader>
                 <CardContent className="space-y-5">
                     <AmountBlock amount={fmtAmount} label="Total Refund" />
-                    <div className="rounded-xl bg-red-50 px-4 py-3.5 text-[13px] text-red-800 space-y-1">
-                        <p className="font-medium">{rejection?.label || rejection?.code}</p>
-                        {rejection?.note && <p className="text-red-600">{rejection.note}</p>}
+                    <div className="space-y-1 rounded-xl bg-red-50 px-4 py-3.5 text-[13px] text-red-800">
+                        <p className="font-medium">
+                            {rejection?.label || rejection?.code}
+                        </p>
+                        {rejection?.note && (
+                            <p className="text-red-600">{rejection.note}</p>
+                        )}
                     </div>
                     <p className="rounded-xl bg-surface-muted px-4 py-3.5 text-xs text-text-muted">
-                        Silakan hubungi customer service untuk bantuan lebih lanjut.
+                        Silakan hubungi customer service untuk bantuan lebih
+                        lanjut.
                     </p>
-                    <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
+                    <TimelineToggle
+                        open={timelineOpen}
+                        onToggle={() => setTimelineOpen((p) => !p)}
+                        items={timeline}
+                    />
                 </CardContent>
             </Card>
         );
@@ -249,10 +300,15 @@ export default function RefundStatusCard({ refund }: Props) {
                     <AmountBlock amount={fmtAmount} label="Total Refund" />
                     {destination && <DestinationSummary dest={destination} />}
                     <p className="rounded-xl bg-red-50 px-4 py-3.5 text-xs text-red-700">
-                        Refund gagal diproses. Tim kami akan menghubungi Anda untuk proses ulang.
-                        Jika tidak dihubungi dalam 1×24 jam, silakan hubungi CS.
+                        Refund gagal diproses. Tim kami akan menghubungi Anda
+                        untuk proses ulang. Jika tidak dihubungi dalam 1×24 jam,
+                        silakan hubungi CS.
                     </p>
-                    <TimelineToggle open={timelineOpen} onToggle={() => setTimelineOpen((p) => !p)} items={timeline} />
+                    <TimelineToggle
+                        open={timelineOpen}
+                        onToggle={() => setTimelineOpen((p) => !p)}
+                        items={timeline}
+                    />
                 </CardContent>
             </Card>
         );
@@ -272,15 +328,14 @@ interface DestProps {
 
 function DestinationSummary({ dest }: DestProps) {
     const Icon = dest.type === 'ewallet' ? Smartphone : Banknote;
+
     return (
         <div className="flex items-start gap-3 rounded-xl border border-border bg-surface p-3">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
                 <Icon className="h-4 w-4 text-text-muted" />
             </span>
             <div className="min-w-0 flex-1 text-sm">
-                <p className="truncate font-medium text-text">
-                    {dest.label}
-                </p>
+                <p className="truncate font-medium text-text">{dest.label}</p>
                 <p className="truncate text-text-muted">{dest.holder}</p>
                 <p className="truncate font-mono text-[13px] text-text-subtle">
                     {dest.masked_number}
@@ -290,9 +345,19 @@ function DestinationSummary({ dest }: DestProps) {
     );
 }
 
-function AmountBlock({ amount, label, variant = 'default' }: { amount: string; label: string; variant?: 'default' | 'success' }) {
+function AmountBlock({
+    amount,
+    label,
+    variant = 'default',
+}: {
+    amount: string;
+    label: string;
+    variant?: 'default' | 'success';
+}) {
     const textColor = variant === 'success' ? 'text-emerald-700' : 'text-text';
-    const bgColor = variant === 'success' ? 'bg-emerald-50' : 'bg-surface-muted';
+    const bgColor =
+        variant === 'success' ? 'bg-emerald-50' : 'bg-surface-muted';
+
     return (
         <div className={`rounded-xl ${bgColor} px-4 py-3.5`}>
             <p className="text-xs text-text-muted">{label}</p>
@@ -303,9 +368,21 @@ function AmountBlock({ amount, label, variant = 'default' }: { amount: string; l
     );
 }
 
-function TimelineToggle({ open, onToggle, items }: { open: boolean; onToggle: () => void; items: RefundHistoryItem[] }) {
-    if (items.length === 0) return null;
+function TimelineToggle({
+    open,
+    onToggle,
+    items,
+}: {
+    open: boolean;
+    onToggle: () => void;
+    items: RefundHistoryItem[];
+}) {
+    if (items.length === 0) {
+        return null;
+    }
+
     const Icon = open ? ChevronUp : ChevronDown;
+
     return (
         <div className="border-t border-border pt-3">
             <button
@@ -349,9 +426,13 @@ function TimelineItem({ item }: { item: RefundHistoryItem }) {
                 <p className="text-xs font-medium text-text">
                     {EVENT_LABELS[item.event] ?? item.event}
                 </p>
-                {item.note && <p className="text-[11px] text-text-subtle">{item.note}</p>}
+                {item.note && (
+                    <p className="text-[11px] text-text-subtle">{item.note}</p>
+                )}
                 <p className="text-[11px] text-text-subtle">
-                    {item.created_at ? new Date(item.created_at).toLocaleString('id-ID') : ''}
+                    {item.created_at
+                        ? new Date(item.created_at).toLocaleString('id-ID')
+                        : ''}
                     {item.actor_type && ` · ${item.actor_type}`}
                 </p>
             </div>

@@ -12,34 +12,34 @@ export default function CustomerBottomNav() {
     return (
         <nav className="fixed inset-x-0 bottom-0 z-40">
             <div className="bg-white/95 pb-safe shadow-[0_-1px_3px_rgba(0,0,0,0.06)] backdrop-blur">
-            <div className="mx-auto grid h-14 max-w-lg grid-cols-3">
-                {navItems.map((item) => {
-                    const active =
-                        url === item.href ||
-                        url.startsWith(`${item.href}/`) ||
-                        (item.href === '/customer/home' &&
-                            url === '/customer/home');
-                    const Icon = item.icon;
+                <div className="mx-auto grid h-14 max-w-lg grid-cols-3">
+                    {navItems.map((item) => {
+                        const active =
+                            url === item.href ||
+                            url.startsWith(`${item.href}/`) ||
+                            (item.href === '/customer/home' &&
+                                url === '/customer/home');
+                        const Icon = item.icon;
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            replace
-                            className={`flex flex-col items-center justify-center gap-0.5 text-xs active:scale-95 transition-transform ${
-                                active
-                                    ? 'font-bold text-primary'
-                                    : 'font-medium text-zinc-400'
-                            }`}
-                        >
-                            <div className="p-1.5">
-                                <Icon active={active} />
-                            </div>
-                            <span>{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </div>
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                replace
+                                className={`flex flex-col items-center justify-center gap-0.5 text-xs transition-transform active:scale-95 ${
+                                    active
+                                        ? 'font-bold text-primary'
+                                        : 'font-medium text-zinc-400'
+                                }`}
+                            >
+                                <div className="p-1.5">
+                                    <Icon active={active} />
+                                </div>
+                                <span>{item.label}</span>
+                            </Link>
+                        );
+                    })}
+                </div>
             </div>
         </nav>
     );
