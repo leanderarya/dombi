@@ -4,10 +4,10 @@ namespace Tests\Feature\Services;
 
 use App\Exceptions\StockAdjustedException;
 use App\Models\Customer;
-use App\Models\OutletOperatingHours;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\OutletOperatingHours;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Services\OrderService;

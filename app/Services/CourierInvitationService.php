@@ -7,7 +7,6 @@ use App\Models\User;
 
 class CourierInvitationService
 {
-
     public function create(User $courier, User $owner, string $phone): CourierInvitation
     {
         return CourierInvitation::create([

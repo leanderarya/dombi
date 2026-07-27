@@ -31,7 +31,7 @@ class GuestCancelOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reason' => ['required', 'string', 'in:' . implode(',', OrderStatusService::cancellationReasons())],
+            'reason' => ['required', 'string', 'in:'.implode(',', OrderStatusService::cancellationReasons())],
             'note' => ['nullable', 'string', 'max:500'],
         ];
     }

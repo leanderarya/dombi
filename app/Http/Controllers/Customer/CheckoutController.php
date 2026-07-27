@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Enums\PaymentMethod;
 use App\Exceptions\DokuPaymentException;
 use App\Exceptions\StockAdjustedException;
 use App\Http\Controllers\Controller;
@@ -14,6 +15,7 @@ use App\Models\ProductVariant;
 use App\Services\DeliveryPricingService;
 use App\Services\DokuService;
 use App\Services\OrderService;
+use App\Services\PaymentFeeCalculator;
 use App\Services\RecommendOutletService;
 use App\Support\PhoneNormalizer;
 use Illuminate\Http\JsonResponse;
@@ -244,7 +246,9 @@ class CheckoutController extends Controller
             $bestDist = PHP_FLOAT_MAX;
 
             foreach ($savedAddresses as $addr) {
-                if (! $addr['latitude'] || ! $addr['longitude']) continue;
+                if (! $addr['latitude'] || ! $addr['longitude']) {
+                    continue;
+                }
                 $dist = $this->haversineDistance($userLat, $userLon, (float) $addr['latitude'], (float) $addr['longitude']);
                 if ($dist < $bestDist) {
                     $bestDist = $dist;
@@ -463,14 +467,15 @@ class CheckoutController extends Controller
         // Payment via DOKU — 4 metode, threshold subtotal only, full absorb <500k except CC
         $methods = config('doku.methods', []);
         $enabled = config('doku.enabled_methods', ['qris', 'transfer', 'ewallet', 'credit_card']);
-        $calculator = app(\App\Services\PaymentFeeCalculator::class);
+        $calculator = app(PaymentFeeCalculator::class);
 
         $paymentOptions = collect($enabled)
             ->map(fn ($key) => isset($methods[$key]) ? array_merge($methods[$key], ['value' => $key]) : null)
             ->filter()
             ->map(function ($m) use ($subtotal, $calculator) {
-                $methodEnum = \App\Enums\PaymentMethod::tryFrom($m['value']) ?? \App\Enums\PaymentMethod::Qris;
+                $methodEnum = PaymentMethod::tryFrom($m['value']) ?? PaymentMethod::Qris;
                 $feeResult = $calculator->calculate($methodEnum, (float) $subtotal);
+
                 return [
                     'value' => $m['value'],
                     'label' => $m['label'],
@@ -949,20 +954,23 @@ class CheckoutController extends Controller
 
     private function calculatePaymentFee(string $paymentMethod, float $subtotal): float
     {
-        $method = \App\Enums\PaymentMethod::tryFrom($paymentMethod) ?? \App\Enums\PaymentMethod::Qris;
-        return app(\App\Services\PaymentFeeCalculator::class)->calculate($method, $subtotal)['customer_fee'];
+        $method = PaymentMethod::tryFrom($paymentMethod) ?? PaymentMethod::Qris;
+
+        return app(PaymentFeeCalculator::class)->calculate($method, $subtotal)['customer_fee'];
     }
 
     private function calculateGatewayFee(string $paymentMethod, float $subtotal): float
     {
-        $method = \App\Enums\PaymentMethod::tryFrom($paymentMethod) ?? \App\Enums\PaymentMethod::Qris;
-        return app(\App\Services\PaymentFeeCalculator::class)->calculate($method, $subtotal)['gateway_fee'];
+        $method = PaymentMethod::tryFrom($paymentMethod) ?? PaymentMethod::Qris;
+
+        return app(PaymentFeeCalculator::class)->calculate($method, $subtotal)['gateway_fee'];
     }
 
     private function calculateAbsorbedFee(string $paymentMethod, float $subtotal): float
     {
-        $method = \App\Enums\PaymentMethod::tryFrom($paymentMethod) ?? \App\Enums\PaymentMethod::Qris;
-        return app(\App\Services\PaymentFeeCalculator::class)->calculate($method, $subtotal)['dombi_fee'];
+        $method = PaymentMethod::tryFrom($paymentMethod) ?? PaymentMethod::Qris;
+
+        return app(PaymentFeeCalculator::class)->calculate($method, $subtotal)['dombi_fee'];
     }
 
     private function normalizeIndonesianPhone(string $phone): string

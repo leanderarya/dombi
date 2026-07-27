@@ -1341,7 +1341,7 @@ class NotificationService
 
     private function createRefundOnce(RefundStatusHistory $history, string $userType, ?int $userId, ?int $customerId, string $type, string $title, string $message, array $data, string $url): void
     {
-        DB::transaction(function () use ($history, $userType, $userId, $customerId, $type, $title, $message, $data, $url) {
+        DB::transaction(function () use ($history, $userType, $userId, $customerId, $type, $title, $message, $data) {
             $history->fresh();
             RefundStatusHistory::lockForUpdate()->find($history->id);
 

@@ -53,7 +53,7 @@ class OrderController extends Controller
         // Cache stats for 10 seconds (scalar values only)
         $stats = Cache::remember('owner:order_stats', 10, function () {
             $today = now()->toDateString();
-            
+
             return [
                 'total_today' => Order::whereDate('created_at', $today)->count(),
                 'pending' => Order::whereIn('status', ['pending_confirmation', 'ready_for_pickup'])->count(),

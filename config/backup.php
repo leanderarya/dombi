@@ -23,12 +23,12 @@ return [
 
         'source' => [
             'files' => [
-            /*
+                /*
              * The list of directories and files that will be included in the backup.
              * For production: only database + essential uploads to keep backup small and fast.
              * Full base_path is too large and leaks secrets if not encrypted.
              */
-            'include' => [
+                'include' => [
                     // base_path() was here before — too large. Only backup what matters:
                     storage_path('app'),
                     storage_path('app/public'),

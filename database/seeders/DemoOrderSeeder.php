@@ -7,7 +7,6 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\ProductVariant;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -51,7 +50,7 @@ class DemoOrderSeeder extends Seeder
                 'customer_id' => $customer->id,
                 'outlet_id' => $outlet->id,
                 'recommended_outlet_id' => $outlet->id,
-                'order_code' => 'DEMO-' . $now->format('Ymd') . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'order_code' => 'DEMO-'.$now->format('Ymd').'-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT),
                 'recovery_token' => Str::random(8),
                 'status' => 'completed',
                 'fulfillment_type' => 'delivery_dombi',
@@ -64,7 +63,7 @@ class DemoOrderSeeder extends Seeder
                 'paid_at' => $completedAt->copy()->subMinutes(rand(10, 60)),
                 'customer_name' => $customer->name,
                 'customer_phone' => $customer->phone ?? '089000000001',
-                'customer_address' => 'Alamat dummy no ' . $i,
+                'customer_address' => 'Alamat dummy no '.$i,
                 'ordered_at' => $completedAt->copy()->subHours(rand(1, 3)),
                 'confirmed_at' => $completedAt->copy()->subHours(rand(0, 1)),
                 'completed_at' => $completedAt,

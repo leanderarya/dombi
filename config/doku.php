@@ -25,14 +25,14 @@ return [
 
     // Fee registry per method
     'methods' => [
-        'qris'        => ['label' => 'QRIS',          'doku_type' => 'QRIS',       'channel' => null,   'fee_rate' => env('DOKU_FEE_QRIS', 0.007)],
-        'transfer'    => ['label' => 'Transfer Bank', 'doku_type' => 'VA',         'channel' => 'BCA',  'fee_rate' => env('DOKU_FEE_TRANSFER', 0.004)],
-        'ewallet'     => ['label' => 'E-Wallet',      'doku_type' => 'EWALLET',    'channel' => 'GOPAY','fee_rate' => env('DOKU_FEE_EWALLET', 0.015)],
+        'qris' => ['label' => 'QRIS',          'doku_type' => 'QRIS',       'channel' => null,   'fee_rate' => env('DOKU_FEE_QRIS', 0.007)],
+        'transfer' => ['label' => 'Transfer Bank', 'doku_type' => 'VA',         'channel' => 'BCA',  'fee_rate' => env('DOKU_FEE_TRANSFER', 0.004)],
+        'ewallet' => ['label' => 'E-Wallet',      'doku_type' => 'EWALLET',    'channel' => 'GOPAY', 'fee_rate' => env('DOKU_FEE_EWALLET', 0.015)],
         'credit_card' => ['label' => 'Kartu Kredit',  'doku_type' => 'CREDIT_CARD', 'channel' => null,   'fee_rate' => env('DOKU_FEE_CC', 0.029)],
         // legacy aliases for old orders
-        'gopay'       => ['label' => 'GoPay',         'doku_type' => 'EWALLET',    'channel' => 'GOPAY',      'fee_rate' => env('DOKU_FEE_GOPAY', 0.015)],
-        'shopeepay'   => ['label' => 'ShopeePay',     'doku_type' => 'EWALLET',    'channel' => 'SHOPEEPAY',  'fee_rate' => env('DOKU_FEE_SHOPEEPAY', 0.015)],
-        'dana'        => ['label' => 'DANA',          'doku_type' => 'EWALLET',    'channel' => 'DANA',       'fee_rate' => env('DOKU_FEE_DANA', 0.015)],
+        'gopay' => ['label' => 'GoPay',         'doku_type' => 'EWALLET',    'channel' => 'GOPAY',      'fee_rate' => env('DOKU_FEE_GOPAY', 0.015)],
+        'shopeepay' => ['label' => 'ShopeePay',     'doku_type' => 'EWALLET',    'channel' => 'SHOPEEPAY',  'fee_rate' => env('DOKU_FEE_SHOPEEPAY', 0.015)],
+        'dana' => ['label' => 'DANA',          'doku_type' => 'EWALLET',    'channel' => 'DANA',       'fee_rate' => env('DOKU_FEE_DANA', 0.015)],
     ],
 
     'enabled_methods' => explode(',', env('DOKU_ENABLED_METHODS', 'qris,transfer,ewallet,credit_card')),

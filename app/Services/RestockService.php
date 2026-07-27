@@ -75,9 +75,9 @@ class RestockService
             foreach ($request->items as $requestItem) {
                 $approvedQuantity = (int) ($approvedByItemId->get($requestItem->id)['approved_quantity'] ?? 0);
                 if ($approvedQuantity > 0) {
-                    $variant = \App\Models\ProductVariant::lockForUpdate()->find($requestItem->product_variant_id);
+                    $variant = ProductVariant::lockForUpdate()->find($requestItem->product_variant_id);
                     if ($variant && $variant->center_stock < $approvedQuantity) {
-                        throw \Illuminate\Validation\ValidationException::withMessages([
+                        throw ValidationException::withMessages([
                             'items' => "Stok pusat tidak cukup untuk {$variant->name}. Tersedia: {$variant->center_stock}, diminta: {$approvedQuantity}",
                         ]);
                     }

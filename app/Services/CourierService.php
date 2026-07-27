@@ -71,12 +71,12 @@ class CourierService
 
     private function generateEmail(string $phone): string
     {
-        $base = 'courier.' . $phone . '@dombi.local';
+        $base = 'courier.'.$phone.'@dombi.local';
         $email = $base;
         $counter = 1;
 
         while (User::where('email', $email)->exists()) {
-            $email = 'courier.' . $phone . '.' . $counter . '@dombi.local';
+            $email = 'courier.'.$phone.'.'.$counter.'@dombi.local';
             $counter++;
         }
 

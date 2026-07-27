@@ -16,7 +16,7 @@ class CourierLocationServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new CourierLocationService();
+        $this->service = new CourierLocationService;
     }
 
     public function test_nearest_couriers_sorted_by_distance(): void
