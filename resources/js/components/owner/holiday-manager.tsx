@@ -1,4 +1,4 @@
-import { Plus, Trash2, X } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { formatDate } from '@/lib/format';
 import { toastMutation } from '@/lib/toast-mutation';
@@ -22,9 +22,14 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
     const [endDate, setEndDate] = useState('');
     const [reason, setReason] = useState('');
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleAdd = async () => {
-        if (!startDate || !endDate) return;
+        if (!startDate || !endDate) {
+            return;
+        }
+
+        setError(null);
         setSaving(true);
         await toastMutation(
             async () => {
@@ -45,7 +50,11 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                     }),
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error ?? 'Gagal menambah hari libur.');
+
+                if (!res.ok) {
+                    throw new Error(data.error ?? 'Gagal menambah hari libur.');
+                }
+
                 return data;
             },
             {
@@ -78,7 +87,10 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                         },
                     },
                 );
-                if (!res.ok) throw new Error('Gagal menghapus.');
+
+                if (!res.ok) {
+                    throw new Error('Gagal menghapus.');
+                }
             },
             {
                 success: 'Hari libur dihapus',
@@ -162,7 +174,9 @@ export default function HolidayManager({ outletId, initialHolidays }: Props) {
                         />
                     </label>
                     {error && (
-                        <p className="text-xs font-medium text-red-600">{error}</p>
+                        <p className="text-xs font-medium text-red-600">
+                            {error}
+                        </p>
                     )}
                     <div className="flex gap-2">
                         <button

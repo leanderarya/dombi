@@ -1,4 +1,4 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import {
     AlertCircle,
     Clock,
@@ -344,22 +344,22 @@ export default function ActiveOrderCard({ order }: Props) {
                             !isExpired &&
                             countdown &&
                             !refundPresentation.suppressActions && (
-                            <div
-                                className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${canRetryPayment ? 'text-red-500' : 'text-amber-600'}`}
-                            >
-                                <Clock className="h-3 w-3 shrink-0" />
-                                <span className="font-mono">
-                                    {formatTimeRemaining(
-                                        order.confirmation_expires_at!,
-                                    )}
-                                </span>
-                                <span className="text-text-subtle">
-                                    {canRetryPayment
-                                        ? 'waktu tersisa untuk bayar ulang'
-                                        : 'menit lagi'}
-                                </span>
-                            </div>
-                        )}
+                                <div
+                                    className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${canRetryPayment ? 'text-red-500' : 'text-amber-600'}`}
+                                >
+                                    <Clock className="h-3 w-3 shrink-0" />
+                                    <span className="font-mono">
+                                        {formatTimeRemaining(
+                                            order.confirmation_expires_at!,
+                                        )}
+                                    </span>
+                                    <span className="text-text-subtle">
+                                        {canRetryPayment
+                                            ? 'waktu tersisa untuk bayar ulang'
+                                            : 'menit lagi'}
+                                    </span>
+                                </div>
+                            )}
                         {/* Payment issue message */}
                         {canRetryPayment &&
                             !refundPresentation.suppressActions && (

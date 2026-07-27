@@ -3,7 +3,6 @@ import {
     Copy,
     Package,
     Pencil,
-    Plus,
     Trash2,
     ToggleLeft,
     ToggleRight,
@@ -28,7 +27,7 @@ import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
-import VariantForm, { DEFAULT_MARKUP_PERCENT } from './variant-form';
+import VariantForm from './variant-form';
 
 // ── Types ──
 interface Variant {
@@ -222,6 +221,7 @@ export default function ProductFamilyShow({ family }: Props) {
         setSelectedIds((prev) => {
             const next = new Set(prev);
             next.has(id) ? next.delete(id) : next.add(id);
+
             return next;
         });
     };
@@ -289,7 +289,11 @@ export default function ProductFamilyShow({ family }: Props) {
     };
     const handleUpdateVariant = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingVariant) return;
+
+        if (!editingVariant) {
+            return;
+        }
+
         variantForm.put(`/owner/variants/${editingVariant.id}`, {
             preserveScroll: true,
             onSuccess: () => {
@@ -620,16 +624,18 @@ export default function ProductFamilyShow({ family }: Props) {
                                                                 {},
                                                                 {
                                                                     preserveScroll: true,
-                                                                    onSuccess: () =>
-                                                                        toast.success(
-                                                                            v.is_active
-                                                                                ? 'Berhasil dinonaktifkan'
-                                                                                : 'Berhasil diaktifkan',
-                                                                        ),
-                                                                    onError: () =>
-                                                                        toast.error(
-                                                                            'Gagal mengubah status',
-                                                                        ),
+                                                                    onSuccess:
+                                                                        () =>
+                                                                            toast.success(
+                                                                                v.is_active
+                                                                                    ? 'Berhasil dinonaktifkan'
+                                                                                    : 'Berhasil diaktifkan',
+                                                                            ),
+                                                                    onError:
+                                                                        () =>
+                                                                            toast.error(
+                                                                                'Gagal mengubah status',
+                                                                            ),
                                                                 },
                                                             )
                                                         }
@@ -739,7 +745,9 @@ export default function ProductFamilyShow({ family }: Props) {
             <Dialog
                 open={showVariantForm || editingVariant !== null}
                 onOpenChange={(open) => {
-                    if (!open) cancelForm();
+                    if (!open) {
+                        cancelForm();
+                    }
                 }}
             >
                 <DialogContent className="sm:max-w-lg">
@@ -775,21 +783,30 @@ export default function ProductFamilyShow({ family }: Props) {
                             > = { variant_ids: [...selectedIds] } as {
                                 variant_ids: number[];
                             } & Record<string, string | number | boolean>;
-                            if (bulkForm.data.center_price)
+
+                            if (bulkForm.data.center_price) {
                                 payload.center_price = Number(
                                     bulkForm.data.center_price,
                                 );
-                            if (bulkForm.data.selling_price)
+                            }
+
+                            if (bulkForm.data.selling_price) {
                                 payload.selling_price = Number(
                                     bulkForm.data.selling_price,
                                 );
-                            if (bulkForm.data.center_stock)
+                            }
+
+                            if (bulkForm.data.center_stock) {
                                 payload.center_stock = Number(
                                     bulkForm.data.center_stock,
                                 );
-                            if (bulkForm.data.is_active !== '')
+                            }
+
+                            if (bulkForm.data.is_active !== '') {
                                 payload.is_active =
                                     bulkForm.data.is_active === '1';
+                            }
+
                             bulkForm.post(
                                 `/owner/product-families/${family.id}/variants/bulk-update`,
                                 {

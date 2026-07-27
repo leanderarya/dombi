@@ -1,6 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import { Button } from '@/components/ui/button';
 import {
@@ -58,7 +58,8 @@ export default function RekeningTab({
                     setShowForm(false);
                     setEditingId(null);
                 },
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             });
         } else {
             post('/owner/finance/payment-accounts', {
@@ -67,7 +68,8 @@ export default function RekeningTab({
                     reset();
                     setShowForm(false);
                 },
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             });
         }
     };
@@ -96,7 +98,8 @@ export default function RekeningTab({
         setDeleteDialogOpen(false);
         router.delete(`/owner/finance/payment-accounts/${deleteTargetId}`, {
             onSuccess: () => toast.success('Rekening dihapus'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
             onFinish: () => setDeleteTargetId(null),
         });
     };

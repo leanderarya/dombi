@@ -31,7 +31,9 @@ export function useFulfillmentOverlay() {
     const [overlayTarget, setOverlayTarget] = useState<'pickup' | 'delivery'>(
         'pickup',
     );
-    const timerRef = useRef<ReturnType<typeof setTimeout>>();
+    const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+        undefined,
+    );
 
     // Inject keyframes once
     useEffect(() => {

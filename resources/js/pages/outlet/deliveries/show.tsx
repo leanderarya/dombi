@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head } from '@inertiajs/react';
 
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import DeliveryTimeline from '@/components/operations/delivery-timeline';

@@ -1,5 +1,6 @@
-import { createContext, useContext, type ReactNode } from 'react';
 import { router } from '@inertiajs/react';
+import { createContext, useContext } from 'react';
+import type { ReactNode } from 'react';
 
 interface NavigationContextValue {
     back: () => void;

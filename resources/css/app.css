@@ -430,7 +430,8 @@ select:focus {
     font-weight: 600 !important;
     min-height: 44px !important;
     transition:
-        transform 150ms ease, opacity 150ms ease,
+        transform 150ms ease,
+        opacity 150ms ease,
         background-color 150ms ease !important;
 }
 
@@ -449,7 +450,8 @@ select:focus {
     font-weight: 600 !important;
     min-height: 44px !important;
     transition:
-        transform 150ms ease, opacity 150ms ease,
+        transform 150ms ease,
+        opacity 150ms ease,
         background-color 150ms ease !important;
 }
 
@@ -467,7 +469,8 @@ select:focus {
     font-weight: 600 !important;
     min-height: 44px !important;
     transition:
-        transform 150ms ease, opacity 150ms ease,
+        transform 150ms ease,
+        opacity 150ms ease,
         background-color 150ms ease !important;
 }
 

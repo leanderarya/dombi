@@ -5,13 +5,20 @@ import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
-import OwnerTable from '@/components/owner/owner-table';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 import { formatCurrency } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
 
@@ -161,12 +168,24 @@ export default function OwnerOrdersIndex({
                     <Table>
                         <TableHeader>
                             <tr className="bg-surface-muted/50">
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">Kode</TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">Customer</TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">Outlet</TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">Status</TableHead>
-                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">Total</TableHead>
-                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">Aksi</TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Kode
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Customer
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Outlet
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                    Status
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                    Total
+                                </TableHead>
+                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                    Aksi
+                                </TableHead>
                             </tr>
                         </TableHeader>
                         <TableBody>
@@ -188,7 +207,10 @@ export default function OwnerOrdersIndex({
                                             {order.outlet?.name ?? '—'}
                                         </TableCell>
                                         <TableCell className="px-4 py-3">
-                                            <StatusBadge variant={s.variant} size="sm">
+                                            <StatusBadge
+                                                variant={s.variant}
+                                                size="sm"
+                                            >
                                                 {s.label}
                                             </StatusBadge>
                                         </TableCell>
@@ -197,12 +219,29 @@ export default function OwnerOrdersIndex({
                                         </TableCell>
                                         <TableCell className="px-4 py-3">
                                             <div className="flex items-center justify-end gap-2">
-                                                {order.status === 'ready_for_pickup' && !order.delivery && (
-                                                    <Button size="sm" onClick={() => setAssignOrder(order)}>
-                                                        Assign
-                                                    </Button>
-                                                )}
-                                                <Button variant="ghost" size="sm" onClick={() => router.visit(`/owner/orders/${order.id}`)}>
+                                                {order.status ===
+                                                    'ready_for_pickup' &&
+                                                    !order.delivery && (
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                setAssignOrder(
+                                                                    order,
+                                                                )
+                                                            }
+                                                        >
+                                                            Assign
+                                                        </Button>
+                                                    )}
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() =>
+                                                        router.visit(
+                                                            `/owner/orders/${order.id}`,
+                                                        )
+                                                    }
+                                                >
                                                     Detail
                                                 </Button>
                                             </div>

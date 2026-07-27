@@ -6,12 +6,19 @@ import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Button, buttonVariants } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
 type FilterKey = 'all' | 'active' | 'inactive' | 'low_stock';

@@ -1,4 +1,4 @@
-import { ChevronDown, MapPin, Check, Navigation, Store } from 'lucide-react';
+import { ChevronDown, MapPin, Check, Store } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import { useCustomerLocation } from '@/lib/customer-location';
@@ -196,7 +196,10 @@ export default function PickupOutletSelector({
                             </div>
                             {selectedOutlet.is_open === false && (
                                 <span className="mt-1 inline-flex items-center rounded bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-600">
-                                    Sedang Tutup{selectedOutlet.next_open ? ` • Buka ${selectedOutlet.next_open}` : ''}
+                                    Sedang Tutup
+                                    {selectedOutlet.next_open
+                                        ? ` • Buka ${selectedOutlet.next_open}`
+                                        : ''}
                                 </span>
                             )}
                         </div>
@@ -264,7 +267,10 @@ export default function PickupOutletSelector({
                                                 </div>
                                                 {outlet.is_open === false && (
                                                     <span className="mt-0.5 inline-flex items-center rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
-                                                        Sedang Tutup{outlet.next_open ? ` • Buka ${outlet.next_open}` : ''}
+                                                        Sedang Tutup
+                                                        {outlet.next_open
+                                                            ? ` • Buka ${outlet.next_open}`
+                                                            : ''}
                                                     </span>
                                                 )}
                                             </div>

@@ -41,12 +41,12 @@ export default function StatusBadge(props: Props) {
     let variant: BadgeVariant;
     let label: React.ReactNode;
 
-    if (props.status) {
+    if (typeof props.status === 'string') {
         const resolved = resolveStatus(props.status);
         variant = resolved.variant;
         label = resolved.label;
     } else {
-        variant = props.variant;
+        variant = props.variant ?? 'neutral';
         label = props.children;
     }
 

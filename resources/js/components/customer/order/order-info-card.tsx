@@ -1,4 +1,3 @@
-import { Link } from '@inertiajs/react';
 import {
     AlertTriangle,
     MapPin,
@@ -74,6 +73,8 @@ export default function OrderInfoCard({
     customerName,
     orderCode,
 }: Props) {
+    const outletPhone = outlet?.phone;
+
     return (
         <div className="space-y-3">
             {/* Items */}
@@ -159,9 +160,9 @@ export default function OrderInfoCard({
                                     Navigasi
                                 </a>
                             )}
-                            {outlet.phone && (
+                            {outletPhone && (
                                 <a
-                                    href={waLinkWithMessage(outlet.phone, {
+                                    href={waLinkWithMessage(outletPhone, {
                                         order_code: orderCode ?? '',
                                         customer_name: customerName,
                                         outlet_name: outlet.name,
@@ -172,7 +173,7 @@ export default function OrderInfoCard({
                                     onClick={(e) => {
                                         e.preventDefault();
                                         window.open(
-                                            waLinkWithMessage(outlet.phone, {
+                                            waLinkWithMessage(outletPhone, {
                                                 order_code: orderCode ?? '',
                                                 customer_name: customerName,
                                                 outlet_name: outlet.name,

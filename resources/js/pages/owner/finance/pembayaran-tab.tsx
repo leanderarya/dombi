@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
-import { toast } from 'sonner';
-import { DollarSign, Clock, CheckCircle, Loader2 } from 'lucide-react';
+import { DollarSign, CheckCircle, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import PaymentHistoryCard from '@/components/owner/finance/payment-history-card';
 import PaymentProofModal from '@/components/owner/finance/payment-proof-modal';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
@@ -74,7 +74,8 @@ export default function PembayaranTab({
                 onSuccess: () => {
                     toast.success('Pembayaran diverifikasi');
                 },
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
                 onFinish: () => {
                     setProcessing(false);
                     setVerifyTargetId(null);
@@ -101,7 +102,8 @@ export default function PembayaranTab({
                         setRejectingId(null);
                         setRejectReason('');
                     },
-                    onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                    onError: (errors) =>
+                        toast.error(Object.values(errors).flat().join(', ')),
                     onFinish: () => setProcessing(false),
                 },
             );
@@ -123,7 +125,8 @@ export default function PembayaranTab({
             {},
             {
                 onSuccess: () => toast.success('Berhasil'),
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
                 onFinish: () => setBatchVerifying(false),
             },
         );

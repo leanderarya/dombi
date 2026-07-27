@@ -125,6 +125,7 @@ export default function OwnerRestocksIndex({
                     typeof av === 'string'
                         ? av.localeCompare(String(bv))
                         : Number(av) - Number(bv);
+
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
         [restocks.data, sortKey, sortDir],
@@ -338,7 +339,10 @@ function RestockActionModal({
     const rejectForm = useForm({ rejected_reason: '' });
 
     useEffect(() => {
-        if (!restock) return;
+        if (!restock) {
+            return;
+        }
+
         setLoading(true);
         fetch(`/owner/restocks/${restock.id}`, {
             headers: {
@@ -364,7 +368,9 @@ function RestockActionModal({
             .catch(() => setLoading(false));
     }, [restock?.id]);
 
-    if (!restock) return null;
+    if (!restock) {
+        return null;
+    }
 
     const isRequested = restock.status === 'requested';
 
@@ -391,7 +397,9 @@ function RestockActionModal({
             <Dialog
                 open={true}
                 onOpenChange={(open) => {
-                    if (!open) onClose();
+                    if (!open) {
+                        onClose();
+                    }
                 }}
             >
                 <DialogContent className="max-w-lg">

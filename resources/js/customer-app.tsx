@@ -1,137 +1,174 @@
 import { createInertiaApp } from '@inertiajs/react';
-import { createRoot } from 'react-dom/client';
 import { useEffect } from 'react';
+import type { ComponentType } from 'react';
+import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
-import CartConfirmationProvider from '@/providers/cart-confirmation-provider';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
+import CartConfirmationProvider from '@/providers/cart-confirmation-provider';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Dombi';
 
 function getCsrfToken(): string {
-  return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+    return (
+        document
+            .querySelector('meta[name="csrf-token"]')
+            ?.getAttribute('content') ?? ''
+    );
 }
 
 const PushInit = () => {
-  usePushSubscription();
+    usePushSubscription();
 
-  useEffect(() => {
-    let cleanup: (() => void) | null = null;
+    useEffect(() => {
+        const nativeListenersPromise = (async () => {
+            try {
+                const { PushNotifications } =
+                    await import('@capacitor/push-notifications');
+                const perm = await PushNotifications.requestPermissions();
 
-    (async () => {
-      try {
-        const { PushNotifications } = await import('@capacitor/push-notifications');
-        const perm = await PushNotifications.requestPermissions();
-        if (perm.receive !== 'granted') return;
+                if (perm.receive !== 'granted') {
+                    return [];
+                }
 
-        await PushNotifications.register();
+                await PushNotifications.register();
 
-        const regListener = PushNotifications.addListener('registration', (token) => {
-          fetch('/push/fcm-token', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() },
-            body: JSON.stringify({ token: token.value, device_type: 'android' }),
-          });
-        });
+                const regListener = await PushNotifications.addListener(
+                    'registration',
+                    (token) => {
+                        fetch('/push/fcm-token', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': getCsrfToken(),
+                            },
+                            body: JSON.stringify({
+                                token: token.value,
+                                device_type: 'android',
+                            }),
+                        });
+                    },
+                );
 
-        const actionListener = PushNotifications.addListener('pushNotificationActionPerformed', (notif) => {
-          const url = notif.notification.data?.url;
-          if (url) window.location.href = url;
-        });
+                const actionListener = await PushNotifications.addListener(
+                    'pushNotificationActionPerformed',
+                    (notif) => {
+                        const url = notif.notification.data?.url;
 
-        cleanup = () => {
-          regListener.remove();
-          actionListener.remove();
+                        if (url) {
+                            window.location.href = url;
+                        }
+                    },
+                );
+
+                return [regListener, actionListener];
+            } catch {
+                // Not running in Capacitor — skip native push
+                return [];
+            }
+        })();
+
+        // Listen for SW navigation messages (iOS PWA notification tap)
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'NAVIGATE' && event.data?.url) {
+                import('@inertiajs/react').then(({ router }) =>
+                    router.visit(event.data.url),
+                );
+            }
         };
-      } catch {
-        // Not running in Capacitor — skip native push
-      }
-    })();
+        navigator.serviceWorker.addEventListener('message', handleMessage);
 
-    // Listen for SW navigation messages (iOS PWA notification tap)
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'NAVIGATE' && event.data?.url) {
-        import('@inertiajs/react').then(({ router }) => router.visit(event.data.url));
-      }
-    };
-    navigator.serviceWorker.addEventListener('message', handleMessage);
-    cleanup = (() => {
-      const prev = cleanup;
-      return () => { prev?.(); navigator.serviceWorker.removeEventListener('message', handleMessage); };
-    })();
+        return () => {
+            void nativeListenersPromise.then((listeners) =>
+                Promise.all(listeners.map((listener) => listener.remove())),
+            );
+            navigator.serviceWorker.removeEventListener(
+                'message',
+                handleMessage,
+            );
+        };
+    }, []);
 
-    return () => { cleanup?.(); };
-  }, []);
-
-  return null;
+    return null;
 };
 
 createInertiaApp({
-  title: (title) => (title ? `${title} - ${appName}` : appName),
-  progress: {
-    color: '#047857',
-  },
-  resolve: (name) => {
-    const customerPages = import.meta.glob('./pages/customer/**/*.tsx', { eager: true });
-    const authPages = import.meta.glob('./pages/auth/**/*.tsx', { eager: true });
-    const rootPages = import.meta.glob('./pages/*.tsx', { eager: true });
-    const pages = { ...customerPages, ...authPages, ...rootPages };
-    const page = pages[`./pages/${name}.tsx`];
+    title: (title) => (title ? `${title} - ${appName}` : appName),
+    progress: {
+        color: '#047857',
+    },
+    resolve: (name) => {
+        const customerPages = import.meta.glob<{
+            default: ComponentType;
+        }>('./pages/customer/**/*.tsx', { eager: true });
+        const authPages = import.meta.glob<{ default: ComponentType }>(
+            './pages/auth/**/*.tsx',
+            { eager: true },
+        );
+        const rootPages = import.meta.glob<{ default: ComponentType }>(
+            './pages/*.tsx',
+            { eager: true },
+        );
+        const pages = { ...customerPages, ...authPages, ...rootPages };
+        const page = pages[`./pages/${name}.tsx`];
 
-    if (!page) {
-      throw new Error(`Page not found: ${name}`);
-    }
+        if (!page) {
+            throw new Error(`Page not found: ${name}`);
+        }
 
-    return page;
-  },
-  setup({ el, App, props }) {
-    const root = createRoot(el!);
-    root.render(
-      <>
-        <CartConfirmationProvider>
-          <App {...props} />
-        </CartConfirmationProvider>
-        <Toaster
-          position="top-center"
-          richColors
-          closeButton
-          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
-        />
-        <PushInit />
-      </>,
-    );
-  },
+        return page;
+    },
+    setup({ el, App, props }) {
+        const root = createRoot(el!);
+        root.render(
+            <>
+                <CartConfirmationProvider>
+                    <App {...props} />
+                </CartConfirmationProvider>
+                <Toaster
+                    position="top-center"
+                    richColors
+                    closeButton
+                    style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
+                />
+                <PushInit />
+            </>,
+        );
+    },
 });
 
 // Register service worker for PWA
 if (
-  typeof window !== 'undefined' &&
-  'serviceWorker' in navigator &&
-  import.meta.env.PROD
+    typeof window !== 'undefined' &&
+    'serviceWorker' in navigator &&
+    import.meta.env.PROD
 ) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // SW registration failed - non-critical
-    });
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {
+            // SW registration failed - non-critical
+        });
 
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (confirm('Update tersedia. Muat ulang?')) {
-        window.location.reload();
-      }
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (confirm('Update tersedia. Muat ulang?')) {
+                window.location.reload();
+            }
+        });
     });
-  });
 }
 
 // Global offline navigation — redirect to /offline when connectivity lost
 if (typeof window !== 'undefined') {
-  let onOfflinePage = false;
+    let onOfflinePage = false;
 
-  window.addEventListener('offline', () => {
-    if (onOfflinePage) return;
-    onOfflinePage = true;
-    window.location.href = '/offline';
-  });
+    window.addEventListener('offline', () => {
+        if (onOfflinePage) {
+            return;
+        }
 
-  window.addEventListener('online', () => {
-    onOfflinePage = false;
-  });
+        onOfflinePage = true;
+        window.location.href = '/offline';
+    });
+
+    window.addEventListener('online', () => {
+        onOfflinePage = false;
+    });
 }

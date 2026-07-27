@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import {
     createContext,
     useCallback,
@@ -8,7 +9,6 @@ import {
     useState,
 } from 'react';
 import type { ReactNode } from 'react';
-import { usePage } from '@inertiajs/react';
 import { registerOutletClosedHandler } from '@/lib/api';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { useOutletStore } from '@/lib/outlet-store';
@@ -118,6 +118,7 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         // User manually picked an outlet — keep it (even if GPS changes)
         if (!autoSelected && outletId !== null) {
             const saved = outlets.find((o) => o.id === outletId);
+
             if (saved && saved.is_open !== false) {
                 return saved;
             }
@@ -126,7 +127,10 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
 
         // Auto-select nearest open outlet
         const nearestOpen = openOutlets[0];
-        if (nearestOpen) return nearestOpen;
+
+        if (nearestOpen) {
+            return nearestOpen;
+        }
 
         // If everything closed, fallback to nearest (user will see Tutup label)
         return outlets[0];
@@ -167,7 +171,8 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN':
-                    document.querySelector('meta[name="csrf-token"]')
+                    document
+                        .querySelector('meta[name="csrf-token"]')
                         ?.getAttribute('content') ?? '',
             },
             body: JSON.stringify({ outlet_id: nearest.id }),
@@ -200,10 +205,10 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const markCurrentOutletClosed = useCallback(() => {
-        setOutlets(prev =>
-            prev.map(o =>
-                o.id === selectedOutlet?.id ? { ...o, is_open: false } : o
-            )
+        setOutlets((prev) =>
+            prev.map((o) =>
+                o.id === selectedOutlet?.id ? { ...o, is_open: false } : o,
+            ),
         );
     }, [selectedOutlet?.id]);
 
@@ -230,7 +235,15 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
             retry,
             markCurrentOutletClosed,
         }),
-        [selectedOutlet, selectManual, outlets, loading, error, retry, markCurrentOutletClosed],
+        [
+            selectedOutlet,
+            selectManual,
+            outlets,
+            loading,
+            error,
+            retry,
+            markCurrentOutletClosed,
+        ],
     );
 
     return (

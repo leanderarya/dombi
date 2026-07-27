@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import OwnerModalShell from '@/components/owner/owner-modal-shell';
 import { formatCurrency } from '@/lib/format';
 

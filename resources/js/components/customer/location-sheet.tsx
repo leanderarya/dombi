@@ -1,9 +1,7 @@
 import {
     CheckCircle2,
-    ChevronDown,
     LocateFixed,
     MapPin,
-    Plus,
     Search,
     Star,
     X,

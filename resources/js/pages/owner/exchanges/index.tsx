@@ -1,5 +1,4 @@
 import { router } from '@inertiajs/react';
-import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -179,7 +178,9 @@ export default function OwnerExchangesIndex({
                     <Table className="text-sm" aria-label="Tabel Tukar Produk">
                         <TableHeader>
                             <TableRow className="bg-surface-muted/50 text-xs font-medium text-text-muted">
-                                <TableHead className="px-3 py-2.5 text-left">Kode</TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
+                                    Kode
+                                </TableHead>
                                 <TableHead className="px-3 py-2.5 text-left">
                                     Outlet / Info
                                 </TableHead>
@@ -189,7 +190,9 @@ export default function OwnerExchangesIndex({
                                 <TableHead className="px-3 py-2.5 text-right">
                                     Nilai
                                 </TableHead>
-                                <TableHead className="px-3 py-2.5 text-right">Aksi</TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">
+                                    Aksi
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

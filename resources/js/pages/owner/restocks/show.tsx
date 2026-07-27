@@ -1,5 +1,4 @@
 import { router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import {
     CheckCircle2,
     XCircle,
@@ -10,6 +9,7 @@ import {
     Truck,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import {
@@ -168,6 +168,7 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                     const inv: any = inventoryByProduct.get(
                                         item.product_id,
                                     );
+
                                     return (
                                         <tr
                                             key={item.id}
@@ -372,8 +373,14 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                         {},
                                         {
                                             preserveScroll: true,
-                                            onSuccess: () => toast.success('Dikirim'),
-                                            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                            onSuccess: () =>
+                                                toast.success('Dikirim'),
+                                            onError: (errors) =>
+                                                toast.error(
+                                                    Object.values(errors)
+                                                        .flat()
+                                                        .join(', '),
+                                                ),
                                         },
                                     )
                                 }
@@ -486,7 +493,12 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                             setShowApprove(false);
                                             toast.success('Restock disetujui');
                                         },
-                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
                                     },
                                 )
                             }
@@ -544,7 +556,12 @@ export default function OwnerRestockShow({ restock, inventories }: any) {
                                             rejectForm.reset();
                                             toast.success('Restock ditolak');
                                         },
-                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
                                     },
                                 )
                             }

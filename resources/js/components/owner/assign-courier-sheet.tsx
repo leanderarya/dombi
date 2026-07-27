@@ -37,7 +37,8 @@ export default function AssignCourierSheet({
                 onClose();
                 toast.success('Kurir ditugaskan');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 

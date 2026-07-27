@@ -29,9 +29,13 @@ export default function OutletSheet({
     };
 
     return (
-        <Dialog open={open} onClose={onClose} title={fulfillmentType ? 'Outlet & Method' : 'Pilih Outlet'}>
+        <Dialog
+            open={open}
+            onClose={onClose}
+            title={fulfillmentType ? 'Outlet & Method' : 'Pilih Outlet'}
+        >
             {fulfillmentType && onFulfillmentChange && (
-                <div className="-mx-5 border-b border-border px-5 pb-3 pt-1">
+                <div className="-mx-5 border-b border-border px-5 pt-1 pb-3">
                     <FulfillmentToggle
                         value={fulfillmentType}
                         onChange={onFulfillmentChange}
@@ -126,23 +130,29 @@ export default function OutletSheet({
                                                 {outlet.name}
                                             </span>
                                             {outlet.distance_km !== null &&
-                                                outlet.distance_km !== undefined && (
+                                                outlet.distance_km !==
+                                                    undefined && (
                                                     <span className="shrink-0 text-[11px] text-text-muted tabular-nums">
-                                                        {outlet.distance_km.toFixed(1)} km
+                                                        {outlet.distance_km.toFixed(
+                                                            1,
+                                                        )}{' '}
+                                                        km
                                                     </span>
                                                 )}
-                                            <span className={`ml-auto shrink-0 text-[10px] font-semibold ${
-                                                outlet.is_open === false
-                                                    ? 'text-red-600'
-                                                    : outlet.stock_available
-                                                        ? 'text-emerald-600'
-                                                        : 'text-amber-600'
-                                            }`}>
+                                            <span
+                                                className={`ml-auto shrink-0 text-[10px] font-semibold ${
+                                                    outlet.is_open === false
+                                                        ? 'text-red-600'
+                                                        : outlet.stock_available
+                                                          ? 'text-emerald-600'
+                                                          : 'text-amber-600'
+                                                }`}
+                                            >
                                                 {outlet.is_open === false
                                                     ? 'Tutup'
                                                     : outlet.stock_available
-                                                        ? 'Tersedia'
-                                                        : 'Terbatas'}
+                                                      ? 'Tersedia'
+                                                      : 'Terbatas'}
                                             </span>
                                         </div>
                                         <div className="truncate text-[11px] text-text-subtle">
@@ -150,7 +160,10 @@ export default function OutletSheet({
                                         </div>
                                         {outlet.is_open === false && (
                                             <div className="mt-0.5 text-[11px] font-medium text-red-600">
-                                                Tutup{outlet.next_open ? ` • Buka ${outlet.next_open}` : ''}
+                                                Tutup
+                                                {outlet.next_open
+                                                    ? ` • Buka ${outlet.next_open}`
+                                                    : ''}
                                             </div>
                                         )}
                                     </div>
