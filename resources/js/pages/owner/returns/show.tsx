@@ -101,19 +101,6 @@ export default function OwnerReturnsShow({ return: ret }: any) {
         );
     };
 
-    const handleComplete = () => {
-        router.post(
-            `/owner/returns/${ret.id}/complete`,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => toast.success('Selesai'),
-                onError: (errors) =>
-                    toast.error(Object.values(errors).flat().join(', ')),
-            },
-        );
-    };
-
     return (
         <OwnerPageShell
             title={`Return #${ret.id}`}
@@ -240,17 +227,131 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                         )}
 
                         {ret.status === 'received_at_center' && (
-                            <Button
-                                size="sm"
-                                className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700"
-                                onClick={handleComplete}
-                            >
-                                <CheckCircle2
-                                    className="mr-1 h-3.5 w-3.5"
-                                    aria-hidden="true"
-                                />
-                                Selesai & Sesuaikan Settlement
-                            </Button>
+                            <>
+                                <div className="mt-4 mb-3 text-xs font-semibold text-text-subtle">
+                                    Status Item
+                                </div>
+                                {ret.items?.map((item: any) => {
+                                    const isDecided = item.disposition !== null;
+                                    const isStored = item.disposition === 'stored';
+
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className="mb-2 flex items-center justify-between rounded-lg border border-border p-3"
+                                        >
+                                            <div className="min-w-0 flex-1">
+                                                <div className="truncate text-sm font-medium text-text">
+                                                    {displayProductName(item.variant)} x{item.quantity}
+                                                </div>
+                                                <div className="text-xs text-text-muted">
+                                                    {formatCurrency(item.subtotal)}
+                                                </div>
+                                            </div>
+                                            <div className="ml-3 shrink-0">
+                                                {isDecided ? (
+                                                    <span
+                                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                            isStored
+                                                                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                                                                : 'bg-red-50 text-red-700 ring-1 ring-red-200'
+                                                        }`}
+                                                    >
+                                                        {isStored ? '✓ Disimpan' : '✗ Dibuang'}
+                                                    </span>
+                                                ) : (
+                                                    <div className="flex items-center gap-1.5">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                router.post(
+                                                                    `/owner/returns/${ret.id}/items/${item.id}/store`,
+                                                                    {},
+                                                                    {
+                                                                        preserveScroll: true,
+                                                                        onSuccess: () => toast.success('Item disimpan'),
+                                                                        onError: (errors) =>
+                                                                            toast.error(
+                                                                                Object.values(errors).flat().join(', '),
+                                                                            ),
+                                                                    },
+                                                                );
+                                                            }}
+                                                            className="rounded-md bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200 transition-colors hover:bg-emerald-100"
+                                                        >
+                                                            Simpan
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                router.post(
+                                                                    `/owner/returns/${ret.id}/items/${item.id}/dispose`,
+                                                                    {},
+                                                                    {
+                                                                        preserveScroll: true,
+                                                                        onSuccess: () => toast.success('Item dibuang'),
+                                                                        onError: (errors) =>
+                                                                            toast.error(
+                                                                                Object.values(errors).flat().join(', '),
+                                                                            ),
+                                                                    },
+                                                                );
+                                                            }}
+                                                            className="rounded-md bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 ring-1 ring-red-200 transition-colors hover:bg-red-100"
+                                                        >
+                                                            Buang
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+
+                                {/* Progress + Complete */}
+                                {(() => {
+                                    const total = ret.items?.length ?? 0;
+                                    const decided =
+                                        ret.items?.filter((i: any) => i.disposition !== null).length ?? 0;
+                                    const allDecided = decided === total;
+
+                                    return (
+                                        <div className="mt-3 space-y-3">
+                                            <div className="text-xs text-text-muted">
+                                                {allDecided
+                                                    ? 'Semua item sudah ditentukan'
+                                                    : `${decided}/${total} item ditentukan`}
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                className={`w-full ${
+                                                    allDecided
+                                                        ? 'bg-emerald-600 hover:bg-emerald-700'
+                                                        : 'cursor-not-allowed bg-border text-text-muted'
+                                                }`}
+                                                disabled={!allDecided}
+                                                onClick={() => {
+                                                    router.post(
+                                                        `/owner/returns/${ret.id}/complete`,
+                                                        {},
+                                                        {
+                                                            preserveScroll: true,
+                                                            onSuccess: () => toast.success('Return selesai'),
+                                                            onError: (errors) =>
+                                                                toast.error(Object.values(errors).flat().join(', ')),
+                                                        },
+                                                    );
+                                                }}
+                                            >
+                                                <CheckCircle2 className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                                                {allDecided
+                                                    ? 'Selesai & Sesuaikan Settlement'
+                                                    : `Selesaikan (${decided}/${total})`}
+                                            </Button>
+                                        </div>
+                                    );
+                                })()}
+                            </>
                         )}
 
                         {ret.status === 'completed' && (
