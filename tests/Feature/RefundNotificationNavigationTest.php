@@ -39,11 +39,12 @@ class RefundNotificationNavigationTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
+        $other = Customer::factory()->create();
 
         Notification::create([
             'id' => 99992,
             'user_type' => 'customer',
-            'customer_id' => 99999,
+            'customer_id' => $other->id,
             'type' => 'order.refund_processed',
             'title' => 'Refund Selesai',
             'message' => 'Refund telah diproses.',
