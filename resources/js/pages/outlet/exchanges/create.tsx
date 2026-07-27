@@ -316,9 +316,9 @@ export default function OutletExchangesCreate({
                     />
                 </div>
 
-                {form.errors.items && (
-                    <div className="mt-2 text-xs text-red-600">
-                        {form.errors.items}
+                {Object.keys(form.errors).length > 0 && (
+                    <div className="mt-2 rounded-lg bg-red-50 p-3 text-xs text-red-700">
+                        {Object.values(form.errors).flat().join(', ')}
                     </div>
                 )}
             </div>

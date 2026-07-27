@@ -1,21 +1,23 @@
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
+import { CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
-import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
-import {
-    Table,
-    TableHeader,
-    TableBody,
-    TableHead,
-    TableRow,
-    TableCell,
-} from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
 import { getExchangeStatus } from '@/lib/status-labels';
 
@@ -47,6 +49,10 @@ export default function PenukaranTab({
     dashboard,
     outlets,
 }: any) {
+    const [approveId, setApproveId] = useState<number | null>(null);
+    const [approveNotes, setApproveNotes] = useState('');
+    const [approving, setApproving] = useState(false);
+
     if (!exchanges || !dashboard) {
         return (
             <div className="space-y-4">
@@ -57,21 +63,6 @@ export default function PenukaranTab({
         );
     }
 
-    const handleApprove = (id: number, e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        router.post(
-            `/owner/exchanges/${id}/approve`,
-            {},
-            {
-                preserveScroll: true,
-                onSuccess: () => toast.success('Disetujui'),
-                onError: (errors) =>
-                    toast.error(Object.values(errors).flat().join(', ')),
-            },
-        );
-    };
-
     const currentStatus = filters.status ?? '';
 
     const navigate = (params: Record<string, string | undefined>) => {
@@ -79,6 +70,27 @@ export default function PenukaranTab({
             '/owner/returns',
             { tab: 'penukaran', ...filters, ...params },
             { preserveState: true, replace: true },
+        );
+    };
+
+    const handleApprove = () => {
+        if (approveId === null) return;
+        setApproving(true);
+        router.post(
+            `/owner/exchanges/${approveId}/approve`,
+            { notes: approveNotes },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    setApproveId(null);
+                    setApproving(false);
+                    toast.success('Disetujui');
+                },
+                onError: (errors) => {
+                    setApproving(false);
+                    toast.error(Object.values(errors).flat().join(', '));
+                },
+            },
         );
     };
 
@@ -160,7 +172,7 @@ export default function PenukaranTab({
                 onDateChange={(val) => navigate({ date: val || undefined })}
             />
 
-            {/* Table */}
+            {/* Cards */}
             {exchanges.data.length === 0 ? (
                 <EmptyState
                     icon="package"
@@ -168,92 +180,129 @@ export default function PenukaranTab({
                     description="Belum ada pengajuan penukaran dari outlet"
                 />
             ) : (
-                <OwnerTable minWidth="600px" aria-label="Tabel Penukaran">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-surface-muted/50 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                <TableHead className="px-3 py-2.5 text-left">
-                                    Kode
-                                </TableHead>
-                                <TableHead className="px-3 py-2.5 text-left">
-                                    Outlet / Info
-                                </TableHead>
-                                <TableHead className="px-3 py-2.5 text-left">
-                                    Status
-                                </TableHead>
-                                <TableHead className="px-3 py-2.5 text-right">
-                                    Nilai
-                                </TableHead>
-                                <TableHead className="px-3 py-2.5 text-right">
-                                    Aksi
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {exchanges.data.map((ex: any) => {
-                                const status = getExchangeStatus(ex.status);
+                <div className="space-y-3">
+                    {exchanges.data.map((ex: any) => {
+                        const status = getExchangeStatus(ex.status);
 
-                                return (
-                                    <TableRow
-                                        key={ex.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors last:border-b-0"
-                                    >
-                                        <TableCell className="px-3 py-2.5 font-bold text-text tabular-nums">
-                                            #{ex.id}
-                                        </TableCell>
-                                        <TableCell className="truncate px-3 py-2.5 text-text-muted">
-                                            {ex.outlet?.name ?? '-'} ·{' '}
-                                            {ex.return_request_id
-                                                ? `Return #${ex.return_request_id}`
-                                                : 'Tanpa return'}
-                                        </TableCell>
-                                        <TableCell className="px-3 py-2.5">
-                                            <StatusBadge
-                                                variant={status.variant}
-                                                size="sm"
-                                            >
-                                                {status.label}
-                                            </StatusBadge>
-                                        </TableCell>
-                                        <TableCell className="px-3 py-2.5 text-right font-semibold text-primary tabular-nums">
-                                            {formatCurrency(ex.exchange_value)}
-                                        </TableCell>
-                                        <TableCell className="px-3 py-2.5 text-right">
-                                            <div className="flex items-center justify-end gap-1">
-                                                {ex.status === 'submitted' && (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="default"
-                                                        onClick={(e) =>
-                                                            handleApprove(
-                                                                ex.id,
-                                                                e,
-                                                            )
-                                                        }
-                                                    >
-                                                        Setujui
-                                                    </Button>
-                                                )}
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={() =>
-                                                        router.visit(
-                                                            `/owner/exchanges/${ex.id}`,
-                                                        )
-                                                    }
-                                                >
-                                                    Tinjau
-                                                </Button>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </OwnerTable>
+                        return (
+                            <div
+                                key={ex.id}
+                                className="rounded-xl border border-border bg-white p-4"
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                router.visit(
+                                                    `/owner/exchanges/${ex.id}`,
+                                                )
+                                            }
+                                            className="text-sm font-bold text-text hover:text-primary"
+                                        >
+                                            Tukar #{ex.id}
+                                        </button>
+                                        <div className="mt-0.5 text-xs text-text-muted">
+                                            {ex.outlet?.name ?? '-'}
+                                            {ex.return_request_id && (
+                                                <> · Return #{ex.return_request_id}</>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <StatusBadge variant={status.variant} size="sm">
+                                        {status.label}
+                                    </StatusBadge>
+                                </div>
+                                <div className="mt-2 flex items-center justify-between">
+                                    <span className="text-xs text-text-subtle">
+                                        {ex.items?.length ?? 0} item
+                                    </span>
+                                    <span className="text-sm font-bold text-primary tabular-nums">
+                                        {formatCurrency(ex.exchange_value)}
+                                    </span>
+                                </div>
+                                {ex.status === 'submitted' ? (
+                                    <div className="mt-3 flex items-center gap-2 border-t border-border pt-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setApproveId(ex.id);
+                                                setApproveNotes('');
+                                            }}
+                                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-white active:bg-primary/90"
+                                        >
+                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                            Setujui
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                router.visit(
+                                                    `/owner/exchanges/${ex.id}`,
+                                                )
+                                            }
+                                            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text-muted active:bg-surface-muted"
+                                        >
+                                            Tinjau
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="mt-3 border-t border-border pt-3">
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                router.visit(
+                                                    `/owner/exchanges/${ex.id}`,
+                                                )
+                                            }
+                                            className="w-full rounded-lg border border-border px-3 py-2 text-xs font-semibold text-text-muted active:bg-surface-muted"
+                                        >
+                                            Lihat Detail
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             )}
+
+            {/* Approve Dialog */}
+            <Dialog
+                open={approveId !== null}
+                onOpenChange={(open) => {
+                    if (!open) setApproveId(null);
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Setujui Tukar Produk</DialogTitle>
+                        <DialogDescription>
+                            Berikan catatan untuk persetujuan ini (opsional).
+                        </DialogDescription>
+                    </DialogHeader>
+                    <Textarea
+                        value={approveNotes}
+                        onChange={(e) => setApproveNotes(e.target.value)}
+                        placeholder="Catatan (opsional)"
+                        rows={3}
+                    />
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => setApproveId(null)}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            onClick={handleApprove}
+                            disabled={approving}
+                        >
+                            {approving ? 'Memproses...' : 'Setujui'}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <Pagination links={exchanges.links} />
         </>
