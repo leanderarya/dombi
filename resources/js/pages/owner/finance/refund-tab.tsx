@@ -10,7 +10,6 @@ import {
     ChevronUp,
     Copy,
     ExternalLink,
-    Play,
     Smartphone,
     Undo2,
     User,
@@ -64,7 +63,6 @@ export default function RefundTab({
     refundCounts,
     refundFilter,
 }: Props) {
-    const [startConfirm, setStartConfirm] = useState<number | null>(null);
     const [completionOrder, setCompletionOrder] =
         useState<OwnerRefundPayload | null>(null);
     const [rejectionOrder, setRejectionOrder] =
@@ -75,21 +73,6 @@ export default function RefundTab({
         useState<OwnerRefundPayload | null>(null);
     const [copiedId, setCopiedId] = useState<number | null>(null);
     const [expandedId, setExpandedId] = useState<number | null>(null);
-
-    const handleStart = (orderId: number) => {
-        router.post(
-            `/owner/refunds/${orderId}/start`,
-            {},
-            {
-                onSuccess: () => {
-                    toast.success('Proses refund dimulai');
-                    setStartConfirm(null);
-                },
-                onError: (errors) =>
-                    toast.error(Object.values(errors).flat().join(', ')),
-            },
-        );
-    };
 
     const copyToClipboard = async (text: string, id: number) => {
         await navigator.clipboard.writeText(text);
@@ -183,7 +166,6 @@ export default function RefundTab({
                             } = refund;
 
                             const isExpanded = expandedId === order_id;
-                            const isConfirming = startConfirm === order_id;
 
                             return (
                                 <div
@@ -243,36 +225,16 @@ export default function RefundTab({
                                                 Isi Tujuan
                                             </button>
                                         )}
-                                        {can_start && !isConfirming && (
+                                        {(can_start || can_complete) && (
                                             <button
                                                 onClick={() =>
-                                                    setStartConfirm(order_id)
+                                                    setCompletionOrder(refund)
                                                 }
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white hover:bg-primary-hover"
+                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white hover:bg-primary/90"
                                             >
-                                                <Play className="h-3.5 w-3.5" />{' '}
-                                                Mulai
+                                                <Check className="h-3.5 w-3.5" />
+                                                Selesai
                                             </button>
-                                        )}
-                                        {can_start && isConfirming && (
-                                            <div className="flex gap-1">
-                                                <button
-                                                    onClick={() =>
-                                                        handleStart(order_id)
-                                                    }
-                                                    className="inline-flex min-h-9 items-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
-                                                >
-                                                    Konfirmasi
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        setStartConfirm(null)
-                                                    }
-                                                    className="inline-flex min-h-9 items-center gap-1 rounded-lg border border-border px-3 text-xs text-text-muted hover:bg-muted"
-                                                >
-                                                    Batal
-                                                </button>
-                                            </div>
                                         )}
                                         {can_reject && (
                                             <button
@@ -294,17 +256,6 @@ export default function RefundTab({
                                             >
                                                 <Undo2 className="h-3.5 w-3.5" />{' '}
                                                 Rollback
-                                            </button>
-                                        )}
-                                        {can_complete && (
-                                            <button
-                                                onClick={() =>
-                                                    setCompletionOrder(refund)
-                                                }
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white hover:bg-primary-hover"
-                                            >
-                                                <CheckCircle className="h-3.5 w-3.5" />{' '}
-                                                Selesai
                                             </button>
                                         )}
                                     </div>
