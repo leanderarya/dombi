@@ -165,12 +165,105 @@ class ReturnService
         });
     }
 
+    public function disposeItem(ReturnRequest $return, ReturnRequestItem $item, User $owner): ReturnRequestItem
+    {
+        return DB::transaction(function () use ($return, $item, $owner) {
+            if (! $return->isReceivedAtCenter()) {
+                throw ValidationException::withMessages([
+                    'status' => ['Return harus sudah diterima di pusat.'],
+                ]);
+            }
+
+            if ($item->return_request_id !== $return->id) {
+                throw ValidationException::withMessages([
+                    'item' => ['Item tidak sesuai dengan return ini.'],
+                ]);
+            }
+
+            if ($item->disposition !== null) {
+                throw ValidationException::withMessages([
+                    'item' => ['Item sudah ditentukan statusnya.'],
+                ]);
+            }
+
+            $variant = ProductVariant::lockForUpdate()->findOrFail($item->product_variant_id);
+
+            if ((int) $variant->center_stock < $item->quantity) {
+                throw ValidationException::withMessages([
+                    'stock' => ['Stok pusat tidak cukup untuk dibuang.'],
+                ]);
+            }
+
+            $before = (int) $variant->center_stock;
+            $variant->decrement('center_stock', $item->quantity);
+            $after = (int) $variant->fresh()->center_stock;
+
+            $item->update([
+                'disposition' => 'disposed',
+                'disposed_at' => now(),
+                'disposed_by' => $owner->id,
+            ]);
+
+            StockMovement::create([
+                'product_variant_id' => $item->product_variant_id,
+                'type' => 'disposal',
+                'quantity' => -$item->quantity,
+                'before_stock' => $before,
+                'after_stock' => $after,
+                'before_reserved' => 0,
+                'after_reserved' => 0,
+                'reference_type' => ReturnRequest::class,
+                'reference_id' => $return->id,
+                'notes' => 'Item dibuang dari return #'.$return->id,
+                'created_by' => $owner->id,
+            ]);
+
+            return $item->fresh();
+        });
+    }
+
+    public function storeItem(ReturnRequest $return, ReturnRequestItem $item, User $owner): ReturnRequestItem
+    {
+        return DB::transaction(function () use ($return, $item, $owner) {
+            if (! $return->isReceivedAtCenter()) {
+                throw ValidationException::withMessages([
+                    'status' => ['Return harus sudah diterima di pusat.'],
+                ]);
+            }
+
+            if ($item->return_request_id !== $return->id) {
+                throw ValidationException::withMessages([
+                    'item' => ['Item tidak sesuai dengan return ini.'],
+                ]);
+            }
+
+            if ($item->disposition !== null) {
+                throw ValidationException::withMessages([
+                    'item' => ['Item sudah ditentukan statusnya.'],
+                ]);
+            }
+
+            $item->update([
+                'disposition' => 'stored',
+            ]);
+
+            return $item->fresh();
+        });
+    }
+
     public function completeReturn(ReturnRequest $return, User $owner, ?string $notes = null, bool $recordAdjustment = true): ReturnRequest
     {
         return DB::transaction(function () use ($return, $owner, $notes, $recordAdjustment) {
             if (! $return->isReceivedAtCenter()) {
                 throw ValidationException::withMessages([
                     'status' => ['Only received requests can be completed.'],
+                ]);
+            }
+
+            $itemsWithoutDisposition = $return->items()->whereNull('disposition')->count();
+            if ($itemsWithoutDisposition > 0) {
+                throw ValidationException::withMessages([
+                    'status' => ['Semua item harus ditentukan (Simpan/Buang) sebelum menyelesaikan return.'],
                 ]);
             }
 
