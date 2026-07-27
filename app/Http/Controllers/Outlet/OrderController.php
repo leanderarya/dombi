@@ -136,6 +136,8 @@ class OrderController extends Controller
             externalName: $request->validated('external_courier_name'),
             externalPhone: $request->validated('external_courier_phone'),
             externalPlate: $request->validated('external_plate_number'),
+            externalProvider: $request->validated('external_provider'),
+            externalReference: $request->validated('external_reference'),
             courierCost: $request->float('courier_cost'),
         );
 
