@@ -1,5 +1,12 @@
 import { Search, ShieldCheck } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+    useCallback,
+    useEffect,
+    useEffectEvent,
+    useRef,
+    useState,
+} from 'react';
+import { runAutoRecovery } from '@/components/customer/recovery-auto-submit';
 import Dialog from '@/components/ui/dialog';
 import PhoneInput from '@/components/ui/phone-input';
 import { PENDING_PHONE_KEY } from '@/lib/constants';
@@ -44,6 +51,39 @@ export default function RecoverySheet({
         onClose();
     }, [onClose, onLoadingChange]);
 
+    const getAutoRecoveryEvents = useEffectEvent(() => ({
+        onLoadingChange: (nextLoading: boolean) => {
+            setLoading(nextLoading);
+            onLoadingChange?.(nextLoading);
+        },
+        onNotFound: () => {
+            setError('Pesanan tidak ditemukan untuk nomor ini.');
+        },
+        onVerificationRequired: (differentAccount: boolean) => {
+            setIsDifferentAccount(differentAccount);
+            setShowVerifyDialog(true);
+        },
+        onRecovered: (
+            recoveredPhone: string,
+            result: RecoveryResult,
+            orderCodes: string[],
+        ) => {
+            localStorage.removeItem(PENDING_PHONE_KEY);
+            saveRecovery(recoveredPhone, orderCodes);
+            onRecovered(result);
+            setPhone('');
+            setError(null);
+            setShowVerifyDialog(false);
+            setIsDifferentAccount(false);
+            setLoading(false);
+            onLoadingChange?.(false);
+            onClose();
+        },
+        onError: () => {
+            setError('Terjadi kesalahan. Coba lagi.');
+        },
+    }));
+
     // Auto-submit when opened — reads directly from localStorage
     useEffect(() => {
         if (!open) {
@@ -59,48 +99,13 @@ export default function RecoverySheet({
             setPhone(storedPhone);
 
             let cancelled = false;
-            const timer = setTimeout(async () => {
-                setLoading(true);
-                onLoadingChange?.(true);
-
-                try {
-                    const result = await recoverOrders(storedPhone);
-
-                    if (cancelled) {
-                        return;
-                    }
-
-                    if (!result.found) {
-                        setError('Pesanan tidak ditemukan untuk nomor ini.');
-                    } else if (result.requires_verification) {
-                        setIsDifferentAccount(
-                            result.is_different_account ?? false,
-                        );
-                        setShowVerifyDialog(true);
-                    } else {
-                        localStorage.removeItem(PENDING_PHONE_KEY);
-                        const orderCodes = [
-                            ...(result.active_orders ?? []),
-                            ...(result.recent_orders ?? []),
-                        ].map((o: any) => o.order_code);
-                        saveRecovery(storedPhone, orderCodes);
-                        onRecovered({
-                            ...result,
-                            active_orders: result.active_orders ?? [],
-                            recent_orders: result.recent_orders ?? [],
-                        });
-                        handleClose();
-                    }
-                } catch {
-                    if (!cancelled) {
-                        setError('Terjadi kesalahan. Coba lagi.');
-                    }
-                } finally {
-                    if (!cancelled) {
-                        setLoading(false);
-                        onLoadingChange?.(false);
-                    }
-                }
+            const timer = setTimeout(() => {
+                void runAutoRecovery({
+                    phone: storedPhone,
+                    recover: recoverOrders,
+                    isCancelled: () => cancelled,
+                    getEvents: getAutoRecoveryEvents,
+                });
             }, 100);
 
             return () => {
@@ -108,7 +113,7 @@ export default function RecoverySheet({
                 clearTimeout(timer);
             };
         }
-    }, [handleClose, onLoadingChange, onRecovered, open, saveRecovery]);
+    }, [open]);
 
     if (!open) {
         return null;
