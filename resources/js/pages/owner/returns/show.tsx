@@ -233,7 +233,8 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                 </div>
                                 {ret.items?.map((item: any) => {
                                     const isDecided = item.disposition !== null;
-                                    const isStored = item.disposition === 'stored';
+                                    const isStored =
+                                        item.disposition === 'stored';
 
                                     return (
                                         <div
@@ -242,10 +243,15 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                         >
                                             <div className="min-w-0 flex-1">
                                                 <div className="truncate text-sm font-medium text-text">
-                                                    {displayProductName(item.variant)} x{item.quantity}
+                                                    {displayProductName(
+                                                        item.variant,
+                                                    )}{' '}
+                                                    x{item.quantity}
                                                 </div>
                                                 <div className="text-xs text-text-muted">
-                                                    {formatCurrency(item.subtotal)}
+                                                    {formatCurrency(
+                                                        item.subtotal,
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="ml-3 shrink-0">
@@ -257,7 +263,9 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                 : 'bg-red-50 text-red-700 ring-1 ring-red-200'
                                                         }`}
                                                     >
-                                                        {isStored ? '✓ Disimpan' : '✗ Dibuang'}
+                                                        {isStored
+                                                            ? '✓ Disimpan'
+                                                            : '✗ Dibuang'}
                                                     </span>
                                                 ) : (
                                                     <div className="flex items-center gap-1.5">
@@ -269,11 +277,24 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     {},
                                                                     {
                                                                         preserveScroll: true,
-                                                                        onSuccess: () => toast.success('Item disimpan'),
-                                                                        onError: (errors) =>
-                                                                            toast.error(
-                                                                                Object.values(errors).flat().join(', '),
-                                                                            ),
+                                                                        onSuccess:
+                                                                            () =>
+                                                                                toast.success(
+                                                                                    'Item disimpan',
+                                                                                ),
+                                                                        onError:
+                                                                            (
+                                                                                errors,
+                                                                            ) =>
+                                                                                toast.error(
+                                                                                    Object.values(
+                                                                                        errors,
+                                                                                    )
+                                                                                        .flat()
+                                                                                        .join(
+                                                                                            ', ',
+                                                                                        ),
+                                                                                ),
                                                                     },
                                                                 );
                                                             }}
@@ -289,11 +310,24 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                                     {},
                                                                     {
                                                                         preserveScroll: true,
-                                                                        onSuccess: () => toast.success('Item dibuang'),
-                                                                        onError: (errors) =>
-                                                                            toast.error(
-                                                                                Object.values(errors).flat().join(', '),
-                                                                            ),
+                                                                        onSuccess:
+                                                                            () =>
+                                                                                toast.success(
+                                                                                    'Item dibuang',
+                                                                                ),
+                                                                        onError:
+                                                                            (
+                                                                                errors,
+                                                                            ) =>
+                                                                                toast.error(
+                                                                                    Object.values(
+                                                                                        errors,
+                                                                                    )
+                                                                                        .flat()
+                                                                                        .join(
+                                                                                            ', ',
+                                                                                        ),
+                                                                                ),
                                                                     },
                                                                 );
                                                             }}
@@ -312,7 +346,9 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                 {(() => {
                                     const total = ret.items?.length ?? 0;
                                     const decided =
-                                        ret.items?.filter((i: any) => i.disposition !== null).length ?? 0;
+                                        ret.items?.filter(
+                                            (i: any) => i.disposition !== null,
+                                        ).length ?? 0;
                                     const allDecided = decided === total;
 
                                     return (
@@ -336,14 +372,28 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                                         {},
                                                         {
                                                             preserveScroll: true,
-                                                            onSuccess: () => toast.success('Return selesai'),
+                                                            onSuccess: () =>
+                                                                toast.success(
+                                                                    'Return selesai',
+                                                                ),
                                                             onError: (errors) =>
-                                                                toast.error(Object.values(errors).flat().join(', ')),
+                                                                toast.error(
+                                                                    Object.values(
+                                                                        errors,
+                                                                    )
+                                                                        .flat()
+                                                                        .join(
+                                                                            ', ',
+                                                                        ),
+                                                                ),
                                                         },
                                                     );
                                                 }}
                                             >
-                                                <CheckCircle2 className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                                                <CheckCircle2
+                                                    className="mr-1 h-3.5 w-3.5"
+                                                    aria-hidden="true"
+                                                />
                                                 {allDecided
                                                     ? 'Selesai & Sesuaikan Settlement'
                                                     : `Selesaikan (${decided}/${total})`}

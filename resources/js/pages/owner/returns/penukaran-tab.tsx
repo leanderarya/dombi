@@ -205,11 +205,18 @@ export default function PenukaranTab({
                                         <div className="mt-0.5 text-xs text-text-muted">
                                             {ex.outlet?.name ?? '-'}
                                             {ex.return_request_id && (
-                                                <> · Return #{ex.return_request_id}</>
+                                                <>
+                                                    {' '}
+                                                    · Return #
+                                                    {ex.return_request_id}
+                                                </>
                                             )}
                                         </div>
                                     </div>
-                                    <StatusBadge variant={status.variant} size="sm">
+                                    <StatusBadge
+                                        variant={status.variant}
+                                        size="sm"
+                                    >
                                         {status.label}
                                     </StatusBadge>
                                 </div>
@@ -294,10 +301,7 @@ export default function PenukaranTab({
                         >
                             Batal
                         </Button>
-                        <Button
-                            onClick={handleApprove}
-                            disabled={approving}
-                        >
+                        <Button onClick={handleApprove} disabled={approving}>
                             {approving ? 'Memproses...' : 'Setujui'}
                         </Button>
                     </DialogFooter>
