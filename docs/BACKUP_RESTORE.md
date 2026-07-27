@@ -1,5 +1,10 @@
 # Backup & Restore — Production Readiness
 
+> **Scope Project Ini (2026-07-27): Hostinger Only — Offsite S3 WAIVED**
+> Backup local di Hostinger dianggap DONE. Offsite S3 + restore drill tetap best practice untuk scale, tapi tidak blocker rilis ini.
+
+# Backup & Restore — Production Readiness (Full Plan)
+
 ## Status Sekarang
 
 - `spatie/laravel-backup` sudah terpasang, scheduler aktif:

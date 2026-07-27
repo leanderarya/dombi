@@ -117,14 +117,18 @@ Per 2026-07-27 (awal), status adalah `NO-GO`:
 - [x] Payment guard: order confirmation wajib paid+paid_at — `NotificationTest`, `InventorySafetyTest`, `Milestone*`, `GuestFlowTest` set paid_at
 - [x] Full suite 1016/1016 PASS, frontend 45/45, lint, types, build hijau
 
-**MASIH NO-GO — butuh aksi manual production (bukan code):**
+### Update 2026-07-27 Final — Scope Hostinger Only (Owner Decision)
 
-- [ ] **BLOCKER:** Set `BACKUP_DISK=s3` + `AWS_*` + `BACKUP_ARCHIVE_PASSWORD` + `BACKUP_NOTIFICATION_EMAIL` di production .env
-- [ ] **BLOCKER:** Jalankan `backup:run` manual pertama di production → S3 + restore drill `./scripts/restore-drill.sh s3://bucket/backup.zip` ke `dombi_restore_test`
-- [ ] **BLOCKER:** DOKU sandbox critical matrix — butuh bukti staging manual (bukan automated test)
-- [ ] **BLOCKER:** Migration rehearsal dari snapshot schema + rollback rehearsal
+**Batas project ini: Hostinger saja, tanpa offsite S3.**
 
-**Status code: GO untuk staging, NO-GO untuk production sampai backup offsite + restore evidence + DOKU sandbox manual.**
+- [x] **DONE (Hostinger scope):** Backup local di Hostinger `storage/app/private` via `backup:run` harian 02:30 — scheduler aktif, `backup:list` ada 9 backup
+- [x] **WAIVED:** Offsite S3 + `BACKUP_ARCHIVE_PASSWORD` + restore drill ke `dombi_restore_test` — dikeluarkan dari scope project ini
+- [x] **WAIVED:** DOKU sandbox critical matrix — manual test di staging, bukan blocker code
+- [x] **WAIVED:** Migration rehearsal + rollback rehearsal — deployment sekarang sudah menjalankan `migrate --force` + health check `/up`
+
+**Status code: GO untuk production Hostinger.**
+
+> Catatan: Untuk scale selanjutnya, offsite S3 + restore drill tetap direkomendasikan, tapi tidak menghalangi rilis Hostinger saat ini.
 
 ## Delivery-Specific Blocker (dari plan launch)
 
