@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Package, Truck } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import AssignCourierSheet from '@/components/operations/assign-courier-sheet';
 import { createAssignCourierSheetLifecycle } from '@/components/operations/assign-courier-sheet-lifecycle';
@@ -20,6 +21,7 @@ import {
     formatDistance,
 } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
+import { runAssignCourierLookup } from './assign-courier-request';
 
 const statusOptions = [
     { key: 'waiting_pickup', label: 'Menunggu Pickup' },
@@ -58,26 +60,28 @@ export default function OutletDeliveriesIndex({
             return;
         }
 
-        const lifecycle = courierRequestLifecycleRef.current;
-        const request = lifecycle.beginRequest();
+        await runAssignCourierLookup({
+            lifecycle: courierRequestLifecycleRef.current,
+            request: async (signal) => {
+                const res = await fetch(`/outlet/orders/${orderId}`, {
+                    headers: { 'X-Inertia': 'true' },
+                    signal,
+                });
 
-        try {
-            const res = await fetch(`/outlet/orders/${orderId}`, {
-                headers: { 'X-Inertia': 'true' },
-                signal: request.signal,
-            });
-            const data = await res.json();
+                if (!res.ok) {
+                    throw new Error('Gagal memuat daftar kurir');
+                }
 
-            if (!lifecycle.canPublish(request.id)) {
-                return;
-            }
-
-            setCouriers(data.props?.couriers ?? []);
-            setSelectedOrder(order);
-            setAssignOpen(true);
-        } finally {
-            lifecycle.complete(request.id);
-        }
+                return res.json();
+            },
+            onData: (data) => {
+                setCouriers(data.props?.couriers ?? []);
+                setSelectedOrder(order);
+                setAssignOpen(true);
+            },
+            onError: () =>
+                toast.error('Gagal memuat daftar kurir. Periksa koneksi Anda.'),
+        });
     };
 
     const closeAssignCourierSheet = () => {
