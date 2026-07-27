@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\ReturnRequest;
 use App\Models\Outlet;
+use App\Models\ReturnRequest;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

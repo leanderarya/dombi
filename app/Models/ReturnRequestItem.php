@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ReturnRequestItem extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'return_request_id',
         'product_variant_id',
