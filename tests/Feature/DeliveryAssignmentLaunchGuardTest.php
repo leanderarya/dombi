@@ -38,6 +38,7 @@ class DeliveryAssignmentLaunchGuardTest extends TestCase
                 assignedBy: $operator,
                 courierType: 'eksternal',
                 externalName: 'Budi',
+                externalProvider: 'gojek',
                 courierCost: 15000,
             ),
             $order,
@@ -200,6 +201,7 @@ class DeliveryAssignmentLaunchGuardTest extends TestCase
             assignedBy: $operator,
             courierType: 'eksternal',
             externalName: 'Budi',
+            externalProvider: 'gojek',
             courierCost: 15000,
         );
     }
