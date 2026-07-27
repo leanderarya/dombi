@@ -100,6 +100,15 @@ Log utama:
 3. Jangan sekadar mengubah angka stok tanpa audit note.
 4. Pulihkan dengan adjustment tercatat, lalu tambah regression test.
 
+### External delivery incident
+
+1. Pastikan order masih di `ready_for_pickup` saat booking eksternal gagal.
+2. Jangan pernah menandai completed hanya berdasarkan keberhasilan booking.
+3. Perbarui status delivery hanya setelah konfirmasi operator, lengkap dengan actor dan timestamp.
+4. Rekonsiliasi ongkir customer secara terpisah dari biaya aktual kurir eksternal.
+5. Saat delivery gagal, catat alasan sebelum retry/return/cancel.
+6. Biaya aktual kurir eksternal tidak boleh mengubah jumlah yang sudah dibayar customer.
+
 ## Backup dan Restore
 
 Backup dianggap valid hanya jika:
