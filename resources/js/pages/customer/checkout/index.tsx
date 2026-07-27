@@ -23,7 +23,6 @@ export default function CheckoutIndex({
     summary,
     nearestOutlet,
     deliveryPreview,
-    deliveryTiers,
 }: any) {
     const { auth } = usePage().props as any;
     const isLoggedIn = !!auth?.user;

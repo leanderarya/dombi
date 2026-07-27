@@ -73,18 +73,18 @@ function formatTimeRemaining(expiresAt: string): string {
 /* ------------------------------------------------------------------ */
 
 function useCountdown(expiresAt: string | null | undefined) {
-    const deadline = parseExpiry(expiresAt);
+    const deadlineIso = parseExpiry(expiresAt)?.toISOString() ?? null;
     const [remaining, setRemaining] = useState(() =>
-        deadline ? calculateTimeRemaining(deadline.toISOString()) : null,
+        deadlineIso ? calculateTimeRemaining(deadlineIso) : null,
     );
 
     useEffect(() => {
-        if (!deadline) {
+        if (!deadlineIso) {
             return;
         }
 
         const tick = () => {
-            const r = calculateTimeRemaining(deadline.toISOString());
+            const r = calculateTimeRemaining(deadlineIso);
             setRemaining(r);
 
             if (r.total <= 0) {
@@ -96,9 +96,9 @@ function useCountdown(expiresAt: string | null | undefined) {
         const id = window.setInterval(tick, 1000);
 
         return () => clearInterval(id);
-    }, [expiresAt]);
+    }, [deadlineIso]);
 
-    return remaining;
+    return deadlineIso ? remaining : null;
 }
 
 /* ------------------------------------------------------------------ */

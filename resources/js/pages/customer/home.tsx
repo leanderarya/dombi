@@ -404,7 +404,7 @@ function PickupOverlay({
 }: {
     pickup: ReturnType<typeof usePickupFlow>;
 }) {
-    const { foundOutletName, retry, cancel } = pickup;
+    const { foundOutletName } = pickup;
 
     return (
         <div

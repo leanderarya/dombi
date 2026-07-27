@@ -1,5 +1,5 @@
 import { Search, ShieldCheck } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Dialog from '@/components/ui/dialog';
 import PhoneInput from '@/components/ui/phone-input';
 import { PENDING_PHONE_KEY } from '@/lib/constants';
@@ -34,6 +34,15 @@ export default function RecoverySheet({
     const [showVerifyDialog, setShowVerifyDialog] = useState(false);
     const [isDifferentAccount, setIsDifferentAccount] = useState(false);
     const autoSubmittedRef = useRef(false);
+
+    const handleClose = useCallback(() => {
+        setPhone('');
+        setError(null);
+        setShowVerifyDialog(false);
+        setIsDifferentAccount(false);
+        onLoadingChange?.(false);
+        onClose();
+    }, [onClose, onLoadingChange]);
 
     // Auto-submit when opened — reads directly from localStorage
     useEffect(() => {
@@ -99,19 +108,10 @@ export default function RecoverySheet({
                 clearTimeout(timer);
             };
         }
-    }, [open]);
+    }, [handleClose, onLoadingChange, onRecovered, open, saveRecovery]);
 
     if (!open) {
         return null;
-    }
-
-    function handleClose() {
-        setPhone('');
-        setError(null);
-        setShowVerifyDialog(false);
-        setIsDifferentAccount(false);
-        onLoadingChange?.(false);
-        onClose();
     }
 
     async function handleLogoutAndRedirect() {

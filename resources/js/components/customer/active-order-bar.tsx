@@ -1,6 +1,6 @@
 import { Link } from '@inertiajs/react';
 import { ChevronRight, Package, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { RefundBadge } from '@/lib/active-order-card-state';
 import { getActiveRefundPresentation } from '@/lib/active-order-card-state';
 import { orderStatusLabel } from '@/lib/customer-status';
@@ -34,13 +34,10 @@ interface Props {
 }
 
 export default function ActiveOrderBar({ order }: Props) {
-    const [dismissed, setDismissed] = useState(
-        () => getDismissedOrderCode() === order?.order_code,
+    const [dismissedOrderCode, setDismissedOrderCodeState] = useState(
+        getDismissedOrderCode,
     );
-
-    useEffect(() => {
-        setDismissed(getDismissedOrderCode() === order?.order_code);
-    }, [order?.order_code]);
+    const dismissed = dismissedOrderCode === order?.order_code;
 
     if (!order || dismissed) {
         return null;
@@ -48,7 +45,7 @@ export default function ActiveOrderBar({ order }: Props) {
 
     const handleDismiss = () => {
         setDismissedOrderCode(order.order_code);
-        setDismissed(true);
+        setDismissedOrderCodeState(order.order_code);
     };
 
     const bottom = 'calc(4.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem)';

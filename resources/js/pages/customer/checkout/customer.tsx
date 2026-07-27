@@ -8,7 +8,7 @@ import {
     Phone,
     User,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
 import PickupOutletSelector from '@/components/customer/pickup-outlet-selector';
 import StepButton from '@/components/customer/step-button';
@@ -17,6 +17,7 @@ import PhoneInput from '@/components/ui/phone-input';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { applyLocationToForm } from '@/lib/checkout-utils';
 import { useCustomerLocation } from '@/lib/customer-location';
+import type { CustomerLocation } from '@/lib/customer-location';
 import { formatCurrency, formatDistance } from '@/lib/format';
 import { haversineDistance } from '@/lib/geo';
 
@@ -91,8 +92,6 @@ function findNearest(
 export default function CheckoutCustomer({
     draft,
     authUser,
-    recipientDefaults,
-    savedRecipients = [],
     previewOutlet,
     pickupRecommendations,
     deliveryQuote,
@@ -140,6 +139,41 @@ export default function CheckoutCustomer({
             previewOutlet?.id ??
             null,
     });
+
+    const applyLocation = useCallback(
+        (loc: CustomerLocation) => {
+            const nextData = applyLocationToForm(
+                form.data,
+                loc,
+            ) as CustomerForm;
+            form.setData({
+                ...nextData,
+                address_id: loc.address_id ?? null,
+            });
+        },
+        [form],
+    );
+
+    const applySavedAddress = useCallback(
+        (addr: SavedAddress) => {
+            form.setData({
+                ...form.data,
+                address_id: addr.id,
+                address_line: addr.address_line ?? '',
+                address_detail: addr.address_detail ?? '',
+                province: addr.province ?? '',
+                city: addr.city ?? '',
+                district: addr.district ?? '',
+                village: addr.village ?? '',
+                postal_code: addr.postal_code ?? '',
+                latitude: addr.latitude,
+                longitude: addr.longitude,
+                landmark: addr.landmark ?? '',
+                delivery_notes: addr.delivery_notes ?? '',
+            });
+        },
+        [form],
+    );
 
     // Single auto-select effect with priority chain
     useEffect(() => {
@@ -200,6 +234,8 @@ export default function CheckoutCustomer({
         }
     }, [
         isDelivery,
+        applyLocation,
+        applySavedAddress,
         draft?.location,
         suggestedAddressId,
         savedAddresses,
@@ -207,8 +243,12 @@ export default function CheckoutCustomer({
     ]);
 
     // Debounced phone lookup
+    const customerName = form.data.customer_name;
+    const phoneNumber = form.data.phone_number;
+    const setFormData = form.setData;
+
     useEffect(() => {
-        const phone = form.data.phone_number.trim();
+        const phone = phoneNumber.trim();
 
         if (phone.length < 9) {
             return;
@@ -227,12 +267,8 @@ export default function CheckoutCustomer({
 
             const data = await res.json();
 
-            if (
-                data.found &&
-                data.customer?.name &&
-                !form.data.customer_name?.trim()
-            ) {
-                form.setData('customer_name', data.customer.name);
+            if (data.found && data.customer?.name && !customerName.trim()) {
+                setFormData('customer_name', data.customer.name);
             }
         }, 500);
 
@@ -240,7 +276,7 @@ export default function CheckoutCustomer({
             window.clearTimeout(timeout);
             controller.abort();
         };
-    }, [form.data.phone_number]);
+    }, [customerName, phoneNumber, setFormData]);
 
     const hasKnownLocation =
         isDelivery && !!form.data.latitude && !!form.data.longitude;
@@ -279,34 +315,6 @@ export default function CheckoutCustomer({
         }
 
         form.post('/customer/checkout/customer');
-    };
-
-    const applyLocation = (loc: Record<string, any>) => {
-        form.setData(applyLocationToForm(form.data, loc) as any);
-
-        if (loc.address_id) {
-            form.setData('address_id', loc.address_id);
-        } else {
-            form.setData('address_id', null);
-        }
-    };
-
-    const applySavedAddress = (addr: SavedAddress) => {
-        form.setData({
-            ...form.data,
-            address_id: addr.id,
-            address_line: addr.address_line ?? '',
-            address_detail: addr.address_detail ?? '',
-            province: addr.province ?? '',
-            city: addr.city ?? '',
-            district: addr.district ?? '',
-            village: addr.village ?? '',
-            postal_code: addr.postal_code ?? '',
-            latitude: addr.latitude,
-            longitude: addr.longitude,
-            landmark: addr.landmark ?? '',
-            delivery_notes: addr.delivery_notes ?? '',
-        });
     };
 
     const displayAddress =

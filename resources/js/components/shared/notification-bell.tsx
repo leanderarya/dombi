@@ -20,7 +20,8 @@ export default function NotificationBell({
     unreadCount: initialCount,
     onClick,
 }: Props) {
-    const [unreadCount, setUnreadCount] = useState(initialCount ?? 0);
+    const [polledUnreadCount, setPolledUnreadCount] = useState(0);
+    const unreadCount = initialCount ?? polledUnreadCount;
     const { pushState, requestEnable } = usePushSubscription();
     const lastIdRef = useRef<number>(0);
     const toastTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -40,8 +41,6 @@ export default function NotificationBell({
 
     useEffect(() => {
         if (initialCount !== undefined) {
-            setUnreadCount(initialCount);
-
             return;
         }
 
@@ -58,7 +57,7 @@ export default function NotificationBell({
                 }
 
                 const data = await res.json();
-                setUnreadCount(data.unread_count);
+                setPolledUnreadCount(data.unread_count);
 
                 if (data.latest?.length) {
                     for (const notif of data.latest as LatestNotif[]) {

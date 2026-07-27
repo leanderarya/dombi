@@ -63,9 +63,6 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
         const controller = new AbortController();
         abortRef.current = controller;
 
-        setLoading(true);
-        setError(null);
-
         const params = new URLSearchParams();
 
         if (location?.latitude !== undefined) {
@@ -76,14 +73,22 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
             params.set('longitude', String(location.longitude));
         }
 
-        fetch(`/customer/outlets?${params.toString()}`, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-            signal: controller.signal,
-        })
+        Promise.resolve()
+            .then(() => {
+                if (!controller.signal.aborted) {
+                    setLoading(true);
+                    setError(null);
+                }
+
+                return fetch(`/customer/outlets?${params.toString()}`, {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin',
+                    signal: controller.signal,
+                });
+            })
             .then(async (res) => {
                 if (!res.ok) {
                     throw new Error('Failed to load outlets');
@@ -221,7 +226,9 @@ export default function OutletProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (errors?.outlet_closed) {
-            markCurrentOutletClosed();
+            const timeout = window.setTimeout(markCurrentOutletClosed, 0);
+
+            return () => window.clearTimeout(timeout);
         }
     }, [errors?.outlet_closed, markCurrentOutletClosed]);
 
