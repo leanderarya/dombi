@@ -70,6 +70,13 @@ class Order extends Model
         self::STATUS_EXPIRED,
     ];
 
+    public const ACTIVE_REFUND_PAYMENT_STATUSES = [
+        PaymentStatus::RefundPending->value,
+        PaymentStatus::RefundInProgress->value,
+        PaymentStatus::RefundRejected->value,
+        PaymentStatus::RefundFailed->value,
+    ];
+
     public const FULFILLMENT_PICKUP = 'pickup';
 
     public const FULFILLMENT_DELIVERY_DOMBI = 'delivery_dombi';
@@ -182,6 +189,40 @@ class Order extends Model
             PaymentStatus::RefundRejected->value,
             PaymentStatus::RefundFailed->value,
         ]);
+    }
+
+    public function scopeVisibleAsCustomerActive(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where(function ($visibility) {
+            $visibility->where(function ($operational) {
+                $operational->whereIn('status', self::ACTIVE_STATUSES)
+                    ->where(function ($payment) {
+                        $payment->whereNull('payment_status')
+                            ->orWhere('payment_status', PaymentStatus::Pending->value)
+                            ->orWhere('payment_status', PaymentStatus::Paid->value)
+                            ->orWhere(function ($retryable) {
+                                $retryable->whereIn('payment_status', [
+                                    PaymentStatus::Failed->value,
+                                    PaymentStatus::Expired->value,
+                                ])->where('status', self::STATUS_PENDING_CONFIRMATION);
+                            });
+                    })
+                    ->where(function ($confirmation) {
+                        $confirmation->where('status', '!=', self::STATUS_PENDING_CONFIRMATION)
+                            ->orWhereNull('confirmation_expires_at')
+                            ->orWhere('confirmation_expires_at', '>', now());
+                    });
+            })->orWhereIn('payment_status', self::ACTIVE_REFUND_PAYMENT_STATUSES);
+        });
+    }
+
+    public function scopeVisibleAsCustomerHistory(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->whereIn('status', self::HISTORY_STATUSES)
+            ->where(function ($payment) {
+                $payment->whereNull('payment_status')
+                    ->orWhereNotIn('payment_status', self::ACTIVE_REFUND_PAYMENT_STATUSES);
+            });
     }
 
     private static function generateRecoveryToken(): string
