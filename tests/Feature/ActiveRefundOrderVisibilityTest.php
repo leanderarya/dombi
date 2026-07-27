@@ -68,4 +68,25 @@ class ActiveRefundOrderVisibilityTest extends TestCase
         $activeRefunds->each(fn (Order $order) => $this->assertTrue($activeIds->contains($order->id)));
         $this->assertFalse($activeIds->contains($refunded->id));
     }
+
+    public function test_guest_recovery_places_active_refunds_only_in_active_orders(): void
+    {
+        $customer = Customer::factory()->create([
+            'user_id' => null,
+            'is_registered' => false,
+            'phone' => '6281234567811',
+        ]);
+        [$activeRefunds, $refunded] = $this->createRefundOrders($customer);
+
+        $response = $this->postJson('/customer/orders/recovery', [
+            'phone' => '081234567811',
+        ])->assertOk();
+
+        $activeIds = collect($response->json('active_orders'))->pluck('id');
+        $recentIds = collect($response->json('recent_orders'))->pluck('id');
+
+        $activeRefunds->each(fn (Order $order) => $this->assertTrue($activeIds->contains($order->id)));
+        $activeRefunds->each(fn (Order $order) => $this->assertFalse($recentIds->contains($order->id)));
+        $this->assertTrue($recentIds->contains($refunded->id));
+    }
 }
