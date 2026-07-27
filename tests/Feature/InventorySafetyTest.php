@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Exceptions\InsufficientStockException;
+use App\Exceptions\InvalidOrderTransitionException;
 use App\Models\CourierProfile;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
@@ -21,7 +22,6 @@ use App\Services\OrderService;
 use App\Services\OrderStatusService;
 use App\Services\RestockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Exceptions\InvalidOrderTransitionException;
 use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 

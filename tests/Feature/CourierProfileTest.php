@@ -13,7 +13,9 @@ class CourierProfileTest extends TestCase
     use RefreshDatabase;
 
     private User $owner;
+
     private User $outletStaff;
+
     private Outlet $outlet;
 
     protected function setUp(): void
@@ -37,7 +39,7 @@ class CourierProfileTest extends TestCase
     public function test_outlet_can_nominate_courier(): void
     {
         $response = $this->actingAs($this->outletStaff)
-            ->post("/outlet/my-couriers/nominate", [
+            ->post('/outlet/my-couriers/nominate', [
                 'name' => 'Bambang',
                 'phone' => '081234567890',
             ]);

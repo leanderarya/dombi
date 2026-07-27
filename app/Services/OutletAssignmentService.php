@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Outlet;
+use App\Models\OutletInventory;
 use App\Services\Concerns\CalculatesDistance;
 use Illuminate\Support\Collection;
 
@@ -78,7 +79,7 @@ class OutletAssignmentService
         $inventories = null;
 
         if ($lockForUpdate) {
-            $inventories = \App\Models\OutletInventory::query()
+            $inventories = OutletInventory::query()
                 ->where('outlet_id', $outlet->id)
                 ->where('is_active', true)
                 ->lockForUpdate()

@@ -394,7 +394,7 @@ class InventoryService
                 ->firstOrFail();
 
             if ($actualCount < $inventory->reserved_stock) {
-                throw \Illuminate\Validation\ValidationException::withMessages([
+                throw ValidationException::withMessages([
                     'actual_count' => "Stok aktual ({$actualCount}) tidak boleh kurang dari stok dipesan ({$inventory->reserved_stock}).",
                 ]);
             }

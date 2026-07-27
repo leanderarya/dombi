@@ -326,6 +326,7 @@ class GuestCustomerCheckoutTest extends TestCase
     private function seedCheckoutDraft(array $session): self
     {
         $session['checkout.fulfillment']['selected_outlet_id'] = $this->outlet->id;
+
         return $this->withSession($session);
     }
 }

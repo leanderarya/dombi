@@ -2,16 +2,18 @@
 
 namespace App\Services;
 
+use App\Exceptions\DeliveryException;
 use App\Models\CourierProfile;
 use App\Models\Delivery;
 use App\Models\DeliveryResolutionLog;
 use App\Models\DeliveryStatusHistory;
 use App\Models\Order;
+use App\Models\OutletInventory;
+use App\Models\StockMovement;
 use App\Models\User;
 use App\Support\OperationalLog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use App\Exceptions\DeliveryException;
 use Illuminate\Validation\ValidationException;
 
 class DeliveryService
@@ -394,12 +396,12 @@ class DeliveryService
                         continue;
                     }
 
-                    $inventory = \App\Models\OutletInventory::query()
+                    $inventory = OutletInventory::query()
                         ->where('outlet_id', $order->outlet_id)
                         ->where('product_variant_id', $item->product_variant_id)
                         ->first();
 
-                    \App\Models\StockMovement::create([
+                    StockMovement::create([
                         'outlet_id' => $order->outlet_id,
                         'product_id' => $item->product_id,
                         'product_variant_id' => $item->product_variant_id,
@@ -409,9 +411,9 @@ class DeliveryService
                         'after_stock' => $inventory?->current_stock ?? 0,
                         'before_reserved' => $inventory?->reserved_stock ?? 0,
                         'after_reserved' => $inventory?->reserved_stock ?? 0,
-                        'reference_type' => \App\Models\Delivery::class,
+                        'reference_type' => Delivery::class,
                         'reference_id' => $delivery->id,
-                        'notes' => 'Pengiriman dikembalikan ke outlet untuk Order #' . $order->id,
+                        'notes' => 'Pengiriman dikembalikan ke outlet untuk Order #'.$order->id,
                         'created_by' => $outletUser->id,
                     ]);
                 }

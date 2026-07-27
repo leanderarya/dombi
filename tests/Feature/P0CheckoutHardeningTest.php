@@ -9,7 +9,6 @@ use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Tests\TestCase;

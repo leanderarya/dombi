@@ -2,15 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\Customer;
-use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\OutletPayable;
 use App\Models\Product;
 use App\Models\ProductFamily;
 use App\Models\ProductVariant;
-use App\Services\SettlementService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\WithTestOutlet;

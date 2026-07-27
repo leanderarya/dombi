@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\CourierProfile;
+use App\Models\Outlet;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,7 @@ class CourierManagementController extends Controller
             'pusat' => $pusat,
             'candidates' => $candidates,
             'rejected' => $rejected,
-            'outlets' => \App\Models\Outlet::where('status', 'active')->get(['id', 'name']),
+            'outlets' => Outlet::where('status', 'active')->get(['id', 'name']),
         ]);
     }
 
@@ -62,9 +63,9 @@ class CourierManagementController extends Controller
         }
 
         $user = User::create([
-            'name' => 'Kurir ' . $profile->outlet?->name,
-            'email' => 'kurir' . random_int(100, 999) . '@dombi.test',
-            'phone' => '08' . random_int(1000000000, 9999999999),
+            'name' => 'Kurir '.$profile->outlet?->name,
+            'email' => 'kurir'.random_int(100, 999).'@dombi.test',
+            'phone' => '08'.random_int(1000000000, 9999999999),
             'role' => 'courier',
             'is_active' => true,
             'password' => bcrypt('password'),

@@ -3,11 +3,11 @@
 namespace App\Services;
 
 use App\Models\Order;
-use Illuminate\Support\Facades\DB;
 use App\Models\Outlet;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SettlementReconciliationService
 {

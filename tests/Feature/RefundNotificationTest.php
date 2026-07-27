@@ -2,16 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Enums\RefundRejectionReason;
 use App\Models\Customer;
 use App\Models\Notification;
 use App\Models\Order;
-use App\Models\RefundStatusHistory;
 use App\Models\User;
 use App\Services\NotificationService;
 use App\Services\RefundService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class RefundNotificationTest extends TestCase

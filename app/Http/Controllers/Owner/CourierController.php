@@ -4,9 +4,10 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\StoreCourierRequest;
-use App\Models\CourierProfile;
+use App\Models\CourierInvitation;
 use App\Models\Delivery;
 use App\Models\User;
+use App\Services\CourierInvitationService;
 use App\Services\CourierService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,13 +75,13 @@ class CourierController extends Controller
             ->limit(10)
             ->get();
 
-        $invitation = \App\Models\CourierInvitation::where('courier_user_id', $courier->id)
+        $invitation = CourierInvitation::where('courier_user_id', $courier->id)
             ->where('status', 'pending')
             ->latest()
             ->first();
 
         $inviteUrl = $invitation && $invitation->expires_at->isFuture()
-            ? app(\App\Services\CourierInvitationService::class)->invitationUrl($invitation)
+            ? app(CourierInvitationService::class)->invitationUrl($invitation)
             : null;
 
         return Inertia::render('owner/couriers/show', [
@@ -94,7 +95,7 @@ class CourierController extends Controller
     {
         $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
-            'phone' => ['sometimes', 'string', 'max:20', 'unique:users,phone,' . $courier->id],
+            'phone' => ['sometimes', 'string', 'max:20', 'unique:users,phone,'.$courier->id],
             'vehicle_type' => ['nullable', 'in:motorcycle,bicycle,car'],
             'vehicle_plate' => ['nullable', 'string', 'max:20'],
             'is_active' => ['sometimes', 'boolean'],
@@ -114,7 +115,7 @@ class CourierController extends Controller
             ->count();
 
         if ($activeDeliveries > 0) {
-            return back()->with('error', 'Kurir masih memiliki ' . $activeDeliveries . ' pengiriman aktif. Selesaikan dulu sebelum menghapus.');
+            return back()->with('error', 'Kurir masih memiliki '.$activeDeliveries.' pengiriman aktif. Selesaikan dulu sebelum menghapus.');
         }
 
         $courier->delete();

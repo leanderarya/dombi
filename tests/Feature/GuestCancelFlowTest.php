@@ -106,7 +106,7 @@ class GuestCancelFlowTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-' . Str::random(8),
+            'slug' => 'susu-kambing-500ml-'.Str::random(8),
             'unit' => 'botol',
             'price' => 25000,
             'is_active' => true,
@@ -115,7 +115,7 @@ class GuestCancelFlowTest extends TestCase
         $data = array_merge([
             'customer_id' => $customer->id,
             'outlet_id' => $outlet->id,
-            'order_code' => 'DOMBI-GCF-' . strtoupper(Str::random(6)),
+            'order_code' => 'DOMBI-GCF-'.strtoupper(Str::random(6)),
             'status' => Order::STATUS_PENDING_CONFIRMATION,
             'fulfillment_type' => 'pickup',
             'subtotal' => 50000,
