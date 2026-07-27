@@ -52,10 +52,10 @@ jobs:
       - run: cp .env.example .env
       - run: php artisan key:generate
       - run: php artisan migrate:fresh --force
+      - run: npm run build
       - run: composer lint:check
       - run: npm run format:check
       - run: npm run lint:check
       - run: npm run types:check
       - run: php artisan test
       - run: npm test
-      - run: npm run build
