@@ -18,7 +18,7 @@ interface NavGroup {
     items: Array<{
         href: string;
         label: string;
-        badgeKey?: 'pendingReturns' | 'pendingExchanges';
+        badgeKey?: 'pendingReturns' | 'pendingExchanges' | 'pendingRefunds';
         isActive?: (url: string) => boolean;
     }>;
 }
@@ -54,11 +54,16 @@ const navGroups: NavGroup[] = [
                 label: 'Keuangan',
                 isActive: (url: string) => {
                     const path = url.split('?')[0];
-
                     return (
                         path === '/owner/finance' || path === '/owner/refunds'
                     );
                 },
+            },
+            {
+                href: '/owner/refunds',
+                label: 'Refund',
+                badgeKey: 'pendingRefunds',
+            },
             },
         ],
     },
