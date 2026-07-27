@@ -10,6 +10,10 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { reverseGeocode } from '@/lib/geocoding';
+import {
+    closeOutletLocationModal,
+    createOutletLocationFormDefaults,
+} from './outlet-modal-reset';
 
 const OutletLocationMap = lazy(() => import('./outlet-location-map'));
 
@@ -26,22 +30,13 @@ export default function OutletLocationModal({
     onClose,
     onSuccess,
 }: Props) {
-    const { data, setData, patch, processing, errors, reset } = useForm({
-        latitude: outlet.latitude ?? '',
-        longitude: outlet.longitude ?? '',
-        kelurahan: outlet.kelurahan ?? '',
-        kecamatan: outlet.kecamatan ?? '',
-        city: outlet.city ?? '',
-        province: outlet.province ?? '',
-        postal_code: outlet.postal_code ?? '',
-        address: outlet.address ?? '',
-    });
+    const { data, setData, patch, processing, errors, reset } = useForm(
+        createOutletLocationFormDefaults(outlet),
+    );
 
     const [geoLoading, setGeoLoading] = useState(false);
-    const closeModal = () => {
-        reset();
-        onClose();
-    };
+    const closeModal = () =>
+        closeOutletLocationModal({ resetForm: reset, onClose });
 
     const location = (() => {
         const lat = Number(data.latitude);
