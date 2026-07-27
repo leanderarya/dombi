@@ -49,12 +49,29 @@ class ActiveRefundOrderVisibilityTest extends TestCase
         $response = $this->actingAs($user)->get('/customer/orders')->assertOk();
         $props = $response->viewData('page')['props'];
 
-        $activeIds = collect($props['activeOrders'])->pluck('id');
+        $activeOrders = collect($props['activeOrders'])->keyBy('id');
+        $activeIds = $activeOrders->keys();
         $historyIds = collect($props['historyOrders']['data'])->pluck('id');
 
         $activeRefunds->each(fn (Order $order) => $this->assertTrue($activeIds->contains($order->id)));
         $activeRefunds->each(fn (Order $order) => $this->assertFalse($historyIds->contains($order->id)));
         $this->assertTrue($historyIds->contains($refunded->id));
+
+        $expectedLabels = [
+            'refund_pending' => 'Menunggu Diproses',
+            'refund_in_progress' => 'Sedang Diproses',
+            'refund_rejected' => 'Refund Ditolak',
+            'refund_failed' => 'Refund Gagal',
+        ];
+
+        $activeRefunds->each(function (Order $order) use ($activeOrders, $expectedLabels) {
+            $badge = $activeOrders->get($order->id)['refund_badge'] ?? null;
+
+            $this->assertNotNull($badge);
+            $this->assertSame($order->payment_status, $badge['payment_status']);
+            $this->assertSame($expectedLabels[$order->payment_status], $badge['status_label']);
+            $this->assertNotEmpty($badge['queue_state']);
+        });
     }
 
     public function test_customer_home_includes_active_refund_orders(): void
@@ -82,12 +99,29 @@ class ActiveRefundOrderVisibilityTest extends TestCase
             'phone' => '081234567811',
         ])->assertOk();
 
-        $activeIds = collect($response->json('active_orders'))->pluck('id');
+        $activeOrders = collect($response->json('active_orders'))->keyBy('id');
+        $activeIds = $activeOrders->keys();
         $recentIds = collect($response->json('recent_orders'))->pluck('id');
 
         $activeRefunds->each(fn (Order $order) => $this->assertTrue($activeIds->contains($order->id)));
         $activeRefunds->each(fn (Order $order) => $this->assertFalse($recentIds->contains($order->id)));
         $this->assertFalse($activeIds->contains($refunded->id));
         $this->assertTrue($recentIds->contains($refunded->id));
+
+        $expectedLabels = [
+            'refund_pending' => 'Menunggu Diproses',
+            'refund_in_progress' => 'Sedang Diproses',
+            'refund_rejected' => 'Refund Ditolak',
+            'refund_failed' => 'Refund Gagal',
+        ];
+
+        $activeRefunds->each(function (Order $order) use ($activeOrders, $expectedLabels) {
+            $badge = $activeOrders->get($order->id)['refund_badge'] ?? null;
+
+            $this->assertNotNull($badge);
+            $this->assertSame($order->payment_status, $badge['payment_status']);
+            $this->assertSame($expectedLabels[$order->payment_status], $badge['status_label']);
+            $this->assertNotEmpty($badge['queue_state']);
+        });
     }
 }
