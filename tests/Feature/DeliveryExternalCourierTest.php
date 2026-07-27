@@ -57,6 +57,7 @@ class DeliveryExternalCourierTest extends TestCase
         $response = $this->actingAs($this->outletStaff)
             ->post("/outlet/orders/{$this->order->id}/assign-courier", [
                 'courier_type' => 'eksternal',
+                'external_provider' => 'gojek',
                 'external_courier_name' => 'Gojek',
                 'external_courier_phone' => '081111111',
                 'external_plate_number' => 'B 1234 ABC',
@@ -124,6 +125,7 @@ class DeliveryExternalCourierTest extends TestCase
         $response = $this->actingAs($this->outletStaff)
             ->post("/outlet/orders/{$this->order->id}/assign-courier", [
                 'courier_type' => 'eksternal',
+                'external_provider' => 'gojek',
                 'courier_cost' => 25000,
             ]);
 
@@ -135,6 +137,7 @@ class DeliveryExternalCourierTest extends TestCase
         $response = $this->actingAs($this->outletStaff)
             ->post("/outlet/orders/{$this->order->id}/assign-courier", [
                 'courier_type' => 'eksternal',
+                'external_provider' => 'gojek',
                 'external_courier_name' => 'Gojek',
             ]);
 
@@ -148,6 +151,7 @@ class DeliveryExternalCourierTest extends TestCase
         $this->actingAs($this->outletStaff)
             ->post("/outlet/orders/{$this->order->id}/assign-courier", [
                 'courier_type' => 'eksternal',
+                'external_provider' => 'grab',
                 'external_courier_name' => 'Gojek',
                 'courier_cost' => 25000,
             ]);
@@ -174,6 +178,7 @@ class DeliveryExternalCourierTest extends TestCase
             assignedBy: $actor,
             courierType: 'eksternal',
             externalName: 'Gojek',
+            externalProvider: 'gojek',
             courierCost: 25000,
         );
     }

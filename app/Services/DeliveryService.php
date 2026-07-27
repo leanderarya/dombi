@@ -32,6 +32,8 @@ class DeliveryService
         ?string $externalName = null,
         ?string $externalPhone = null,
         ?string $externalPlate = null,
+        ?string $externalProvider = null,
+        ?string $externalReference = null,
         ?float $courierCost = null,
     ): Delivery {
         if (! $order->isDelivery()) {
@@ -47,7 +49,7 @@ class DeliveryService
         }
 
         if ($courierType === 'eksternal') {
-            return $this->assignEksternal($order, $assignedBy, $externalName, $externalPhone, $externalPlate, $courierCost);
+            return $this->assignEksternal($order, $assignedBy, $externalName, $externalPhone, $externalPlate, $externalProvider, $externalReference, $courierCost);
         }
 
         if ($order->fulfillment_type === 'delivery_ojol') {
@@ -167,9 +169,9 @@ class DeliveryService
         });
     }
 
-    private function assignEksternal(Order $order, User $actor, ?string $externalName, ?string $externalPhone, ?string $externalPlate, ?float $courierCost): Delivery
+    private function assignEksternal(Order $order, User $actor, ?string $externalName, ?string $externalPhone, ?string $externalPlate, ?string $externalProvider, ?string $externalReference, ?float $courierCost): Delivery
     {
-        return DB::transaction(function () use ($order, $actor, $externalName, $externalPhone, $externalPlate, $courierCost): Delivery {
+        return DB::transaction(function () use ($order, $actor, $externalName, $externalPhone, $externalPlate, $externalProvider, $externalReference, $courierCost): Delivery {
             $order = Order::query()->lockForUpdate()->findOrFail($order->id);
 
             if (! $order->isDelivery()) {
@@ -195,6 +197,8 @@ class DeliveryService
                 'courier_id' => null,
                 'courier_type' => 'eksternal',
                 'status' => 'delivering',
+                'external_provider' => $externalProvider,
+                'external_reference' => $externalReference,
                 'external_courier_name' => $externalName,
                 'external_courier_phone' => $externalPhone,
                 'external_plate_number' => $externalPlate,
