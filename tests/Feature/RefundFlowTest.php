@@ -2,9 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Enums\PaymentStatus;
-use App\Models\Outlet;
 use App\Models\Order;
+use App\Models\Outlet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;

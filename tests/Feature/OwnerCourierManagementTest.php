@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\CourierInvitation;
 use App\Models\CourierProfile;
+use App\Models\Delivery;
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -139,8 +141,8 @@ class OwnerCourierManagementTest extends TestCase
         $courier = User::factory()->create(['role' => 'courier']);
         CourierProfile::create(['user_id' => $courier->id, 'invitation_status' => 'accepted']);
 
-        $order = \App\Models\Order::factory()->create();
-        \App\Models\Delivery::create([
+        $order = Order::factory()->create();
+        Delivery::create([
             'order_id' => $order->id,
             'courier_id' => $courier->id,
             'status' => 'picked_up',

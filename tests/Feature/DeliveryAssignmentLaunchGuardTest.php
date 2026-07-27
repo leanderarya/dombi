@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CourierProfile;
 use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -225,8 +226,7 @@ class DeliveryAssignmentLaunchGuardTest extends TestCase
     private function context(
         string $paymentStatus,
         string $fulfillmentType = Order::FULFILLMENT_DELIVERY_DOMBI,
-    ): array
-    {
+    ): array {
         $outlet = Outlet::factory()->create();
         $operator = User::factory()->create([
             'role' => 'outlet',
@@ -239,7 +239,7 @@ class DeliveryAssignmentLaunchGuardTest extends TestCase
         ]);
 
         if ($fulfillmentType === Order::FULFILLMENT_DELIVERY_DOMBI) {
-            \App\Models\CourierProfile::create([
+            CourierProfile::create([
                 'user_id' => $courier->id,
                 'courier_source' => 'outlet',
                 'outlet_id' => $outlet->id,

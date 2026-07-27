@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\PaymentMethod;
+use App\Models\Order;
 use App\Services\PaymentFeeCalculator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -44,7 +45,7 @@ class PaymentFeeIntegrationTest extends TestCase
 
     public function test_order_has_fee_breakdown_columns(): void
     {
-        $order = \App\Models\Order::factory()->create([
+        $order = Order::factory()->create([
             'absorbed_fee' => 1500,
             'gateway_fee' => 2000,
             'payment_fee' => 0,

@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class AutoConfirmReturn extends Command
 {
     protected $signature = 'deliveries:auto-confirm-return';
+
     protected $description = 'Auto-confirm returns after 24 hours';
 
     public function handle(): int
@@ -25,6 +26,7 @@ class AutoConfirmReturn extends Command
         }
 
         $this->info("Auto-confirmed {$staleReturns->count()} returns.");
+
         return 0;
     }
 }

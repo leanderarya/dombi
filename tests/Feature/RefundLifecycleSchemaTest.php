@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Order;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Tests\TestCase;
-use App\Models\Order;
 
 class RefundLifecycleSchemaTest extends TestCase
 {

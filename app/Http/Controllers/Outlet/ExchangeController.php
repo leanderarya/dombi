@@ -10,6 +10,7 @@ use App\Models\ReturnRequest;
 use App\Services\ExchangeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -107,7 +108,7 @@ class ExchangeController extends Controller
         return redirect()->route('outlet.exchanges.show', $exchangeRequest)->with('success', 'Exchange request cancelled.');
     }
 
-    private function getOutletInventory(int $outletId): \Illuminate\Support\Collection
+    private function getOutletInventory(int $outletId): Collection
     {
         return OutletInventory::query()
             ->where('outlet_id', $outletId)
@@ -131,7 +132,7 @@ class ExchangeController extends Controller
             ->values();
     }
 
-    private function getActiveVariants(): \Illuminate\Support\Collection
+    private function getActiveVariants(): Collection
     {
         return ProductVariant::where('is_active', true)
             ->with('family:id,name')

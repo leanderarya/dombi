@@ -10,18 +10,29 @@ use LogicException;
 final class RefundStatusHistory extends Model
 {
     use HasFactory;
+
     public const UPDATED_AT = null;
 
     public const EVENT_REFUND_REQUESTED = 'refund_requested';
+
     public const EVENT_DESTINATION_SUBMITTED = 'destination_submitted';
+
     public const EVENT_DESTINATION_UPDATED = 'destination_updated';
+
     public const EVENT_GUEST_DESTINATION_SUBMITTED_BY_OWNER = 'guest_destination_submitted_by_owner';
+
     public const EVENT_GUEST_DESTINATION_UPDATED_BY_OWNER = 'guest_destination_updated_by_owner';
+
     public const EVENT_PROCESSING_STARTED = 'processing_started';
+
     public const EVENT_PROCESSING_ROLLED_BACK = 'processing_rolled_back';
+
     public const EVENT_REFUND_REJECTED = 'refund_rejected';
+
     public const EVENT_REFUND_REOPENED = 'refund_reopened';
+
     public const EVENT_REFUND_COMPLETED = 'refund_completed';
+
     public const EVENT_REFUND_FAILED = 'refund_failed';
 
     protected $fillable = [
@@ -38,8 +49,8 @@ final class RefundStatusHistory extends Model
 
     protected static function booted(): void
     {
-        static::updating(fn () => throw new LogicException('Refund history is immutable.'));
-        static::deleting(fn () => throw new LogicException('Refund history is immutable.'));
+        self::updating(fn () => throw new LogicException('Refund history is immutable.'));
+        self::deleting(fn () => throw new LogicException('Refund history is immutable.'));
     }
 
     public function order(): BelongsTo

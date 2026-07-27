@@ -99,7 +99,7 @@ class CourierProfile extends Model
     {
         return $query->where(function ($q) use ($outletId) {
             $q->where('courier_source', 'outlet')->where('outlet_id', $outletId)
-              ->orWhereHas('assignedOutlets', fn ($q) => $q->where('outlets.id', $outletId));
+                ->orWhereHas('assignedOutlets', fn ($q) => $q->where('outlets.id', $outletId));
         })->where('invitation_status', 'accepted');
     }
 }

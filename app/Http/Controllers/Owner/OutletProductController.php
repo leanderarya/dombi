@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Owner;
 
+use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\ProductVariant;
 use App\Services\InventoryService;
 use App\Services\OutletAuditService;
-use App\Exceptions\InsufficientStockException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -201,6 +201,7 @@ class OutletProductController extends Controller
             return response()->json(['error' => $e->getMessage()], 404);
         } catch (\Throwable $e) {
             report($e);
+
             return response()->json(['error' => 'Gagal melakukan restock.'], 500);
         }
     }

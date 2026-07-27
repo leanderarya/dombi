@@ -517,5 +517,4 @@ class MilestoneSixthTest extends TestCase
 
         return compact('owner', 'outletUser', 'outlet', 'product', 'variant', 'restock');
     }
-
 }

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Enums\RefundRejectionReason;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\User;
@@ -28,7 +29,7 @@ class ActiveRefundOrderVisibilityTest extends TestCase
         $rejectionReasons = [
             'refund_pending' => null,
             'refund_in_progress' => null,
-            'refund_rejected' => \App\Enums\RefundRejectionReason::InvalidDestination->value,
+            'refund_rejected' => RefundRejectionReason::InvalidDestination->value,
             'refund_failed' => null,
         ];
 
@@ -158,14 +159,14 @@ class ActiveRefundOrderVisibilityTest extends TestCase
             'customer_id' => $customer->id,
             'status' => Order::STATUS_CANCELLED_BY_CUSTOMER,
             'payment_status' => 'refund_rejected',
-            'refund_rejected_reason' => \App\Enums\RefundRejectionReason::InvalidDestination->value,
+            'refund_rejected_reason' => RefundRejectionReason::InvalidDestination->value,
         ]);
 
         $history = Order::factory()->create([
             'customer_id' => $customer->id,
             'status' => Order::STATUS_CANCELLED_BY_CUSTOMER,
             'payment_status' => 'refund_rejected',
-            'refund_rejected_reason' => \App\Enums\RefundRejectionReason::PaymentUnverified->value,
+            'refund_rejected_reason' => RefundRejectionReason::PaymentUnverified->value,
         ]);
 
         $response = $this->actingAs($user)->get('/customer/orders')->assertOk();

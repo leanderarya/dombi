@@ -7,6 +7,7 @@ use App\Http\Requests\Owner\ApproveRestockRequest;
 use App\Http\Requests\Owner\RejectRestockRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\ProductVariant;
 use App\Models\RestockRequest;
 use App\Services\RestockService;
 use Illuminate\Http\JsonResponse;
@@ -66,7 +67,7 @@ class RestockController extends Controller
             ->get();
 
         if ($request->expectsJson()) {
-            $centralStock = \App\Models\ProductVariant::whereIn('id', $restockRequest->items->pluck('product_variant_id'))
+            $centralStock = ProductVariant::whereIn('id', $restockRequest->items->pluck('product_variant_id'))
                 ->pluck('center_stock', 'id');
 
             return response()->json([

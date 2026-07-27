@@ -12,6 +12,7 @@ class OutletInlineEditTest extends TestCase
     use RefreshDatabase;
 
     protected User $owner;
+
     protected Outlet $outlet;
 
     protected function setUp(): void

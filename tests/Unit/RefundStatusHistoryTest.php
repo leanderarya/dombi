@@ -4,6 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\Order;
 use App\Models\RefundStatusHistory;
+use Carbon\CarbonInterface;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LogicException;
 use Tests\TestCase;
@@ -43,7 +44,7 @@ class RefundStatusHistoryTest extends TestCase
     {
         $history = RefundStatusHistory::factory()->create();
 
-        $this->assertInstanceOf(\Carbon\CarbonInterface::class, $history->created_at);
+        $this->assertInstanceOf(CarbonInterface::class, $history->created_at);
     }
 
     public function test_allows_mass_assignment_on_all_fillable_columns(): void

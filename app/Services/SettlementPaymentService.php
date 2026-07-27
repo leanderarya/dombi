@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
+use App\Models\SettlementPaymentAllocation;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -154,7 +155,7 @@ class SettlementPaymentService
                 $remaining -= $allocate;
 
                 if ($settlementPaymentId) {
-                    \App\Models\SettlementPaymentAllocation::create([
+                    SettlementPaymentAllocation::create([
                         'settlement_payment_id' => $settlementPaymentId,
                         'settlement_id' => $settlement->id,
                         'allocated_amount' => $allocate,
@@ -170,7 +171,7 @@ class SettlementPaymentService
             $last->recalculateStatus();
 
             if ($settlementPaymentId) {
-                \App\Models\SettlementPaymentAllocation::create([
+                SettlementPaymentAllocation::create([
                     'settlement_payment_id' => $settlementPaymentId,
                     'settlement_id' => $last->id,
                     'allocated_amount' => $remaining,

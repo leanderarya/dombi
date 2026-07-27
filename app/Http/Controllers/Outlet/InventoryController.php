@@ -37,7 +37,7 @@ class InventoryController extends Controller
         foreach ($activeRequests as $req) {
             foreach ($req->items as $item) {
                 $vid = $item->product_variant_id;
-                if (!isset($activeMap[$vid])) {
+                if (! isset($activeMap[$vid])) {
                     $activeMap[$vid] = [
                         'id' => $req->id,
                         'status' => $req->status,

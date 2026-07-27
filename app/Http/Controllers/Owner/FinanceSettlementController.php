@@ -237,7 +237,7 @@ class FinanceSettlementController extends Controller
         foreach ($validQueues as $queue) {
             $refundCounts[$queue] = 0;
         }
-        Order::refundable()->chunk(200, function ($orders) use (&$refundCounts, $validQueues): void {
+        Order::refundable()->chunk(200, function ($orders) use (&$refundCounts): void {
             foreach ($orders as $order) {
                 $queue = $this->refundPayloads->queueState($order);
                 if ($queue !== null && isset($refundCounts[$queue])) {

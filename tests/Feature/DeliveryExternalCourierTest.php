@@ -16,6 +16,7 @@ class DeliveryExternalCourierTest extends TestCase
     use RefreshDatabase;
 
     private User $outletStaff;
+
     private Order $order;
 
     protected function setUp(): void
