@@ -131,6 +131,8 @@ class ReturnExchangeBlockingBugTest extends TestCase
         app(ReturnService::class)->approveRequest($return, $context['owner']);
         app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
 
+        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
+
         $this->actingAs($context['owner'])
             ->post(route('owner.returns.complete', $return))
             ->assertRedirect();
@@ -153,6 +155,8 @@ class ReturnExchangeBlockingBugTest extends TestCase
 
         app(ReturnService::class)->approveRequest($return, $context['owner']);
         app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+
+        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
 
         $this->actingAs($context['owner'])
             ->post(route('owner.returns.complete', $return))
