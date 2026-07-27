@@ -69,12 +69,12 @@ class DeliveryExternalCourierTest extends TestCase
 
         $this->assertNotNull($delivery);
         $this->assertEquals('eksternal', $delivery->courier_type);
-        $this->assertEquals('delivering', $delivery->status);
+        $this->assertEquals('waiting_pickup', $delivery->status);
         $this->assertEquals('Gojek', $delivery->external_courier_name);
         $this->assertEquals(25000, (float) $delivery->courier_cost);
 
         $this->order->refresh();
-        $this->assertEquals(Order::STATUS_DELIVERING, $this->order->status);
+        $this->assertEquals(Order::STATUS_READY_FOR_PICKUP, $this->order->status);
     }
 
     public function test_external_assignment_records_outlet_actor_and_timestamps(): void
@@ -90,7 +90,7 @@ class DeliveryExternalCourierTest extends TestCase
         $this->assertTrue($delivery->assigned_at->equalTo($assignmentTime));
         $this->assertSame('outlet', $history->changed_by_type);
         $this->assertSame($this->outletStaff->id, $history->changed_by_id);
-        $this->assertSame('delivering', $history->to_status);
+        $this->assertSame('waiting_pickup', $history->to_status);
         $this->assertNotNull($history->created_at);
         $this->assertTrue($history->created_at->equalTo($assignmentTime));
     }
@@ -115,7 +115,7 @@ class DeliveryExternalCourierTest extends TestCase
         $this->assertTrue($delivery->assigned_at->equalTo($assignmentTime));
         $this->assertSame('owner', $history->changed_by_type);
         $this->assertSame($owner->id, $history->changed_by_id);
-        $this->assertSame('delivering', $history->to_status);
+        $this->assertSame('waiting_pickup', $history->to_status);
         $this->assertNotNull($history->created_at);
         $this->assertTrue($history->created_at->equalTo($assignmentTime));
     }
@@ -144,10 +144,8 @@ class DeliveryExternalCourierTest extends TestCase
         $response->assertSessionHasErrors('courier_cost');
     }
 
-    public function test_eksternal_delivery_can_be_marked_completed(): void
+    public function test_eksternal_delivery_can_be_completed_via_outlet_lifecycle(): void
     {
-        $courier = User::factory()->create(['role' => 'courier']);
-
         $this->actingAs($this->outletStaff)
             ->post("/outlet/orders/{$this->order->id}/assign-courier", [
                 'courier_type' => 'eksternal',
@@ -156,13 +154,14 @@ class DeliveryExternalCourierTest extends TestCase
                 'courier_cost' => 25000,
             ]);
 
-        $delivery = Delivery::where('order_id', $this->order->id)->first();
-        $delivery->update(['courier_id' => $courier->id]);
+        $delivery = Delivery::where('order_id', $this->order->id)->firstOrFail();
 
-        $response = $this->actingAs($courier)
-            ->post("/courier/deliveries/{$delivery->id}/complete", []);
+        foreach (['picked_up', 'delivering', 'completed'] as $status) {
+            $this->actingAs($this->outletStaff)
+                ->post("/outlet/deliveries/{$delivery->id}/status", ['status' => $status])
+                ->assertRedirect();
+        }
 
-        $response->assertRedirect();
         $delivery->refresh();
         $this->assertEquals('completed', $delivery->status);
 

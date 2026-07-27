@@ -345,6 +345,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/deliveries', [OutletDeliveryController::class, 'index'])->name('deliveries.index');
         Route::get('/deliveries/{delivery}', [OutletDeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('/deliveries/{delivery}/confirm-return', [OutletDeliveryController::class, 'confirmReturn'])->name('deliveries.confirm-return');
+        Route::post('/deliveries/{delivery}/status', [OutletDeliveryController::class, 'updateExternalStatus'])->name('deliveries.status');
         Route::get('/orders', [OutletOrderController::class, 'index'])->name('orders.index');
         Route::get('/orders/pending-count', [OutletOrderController::class, 'pendingCount'])->name('orders.pending-count');
         Route::get('/orders/{order}', [OutletOrderController::class, 'show'])->name('orders.show');

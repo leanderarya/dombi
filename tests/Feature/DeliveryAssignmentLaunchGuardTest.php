@@ -168,7 +168,7 @@ class DeliveryAssignmentLaunchGuardTest extends TestCase
         $delivery = $this->assignExternal($order, $operator);
 
         $this->assertSame('eksternal', $delivery->courier_type);
-        $this->assertSame('delivering', $delivery->status);
+        $this->assertSame('waiting_pickup', $delivery->status);
     }
 
     public function test_unpaid_ojol_order_cannot_be_assigned_to_external_courier(): void

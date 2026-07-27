@@ -196,7 +196,7 @@ class DeliveryService
                 'order_id' => $order->id,
                 'courier_id' => null,
                 'courier_type' => 'eksternal',
-                'status' => 'delivering',
+                'status' => 'waiting_pickup',
                 'external_provider' => $externalProvider,
                 'external_reference' => $externalReference,
                 'external_courier_name' => $externalName,
@@ -207,9 +207,7 @@ class DeliveryService
                 'assigned_at' => now(),
             ]);
 
-            $this->orderStatusService->updateStatus($order, Order::STATUS_DELIVERING);
-
-            $this->recordHistory($delivery, null, 'delivering', $actor, $actor->isOwner() ? 'owner' : 'outlet', 'Kurir eksternal (Gojek/Grab).');
+            $this->recordHistory($delivery, null, 'waiting_pickup', $actor, $actor->isOwner() ? 'owner' : 'outlet', 'Kurir eksternal (Gojek/Grab) dipilih manual.');
 
             return $delivery->load(['order.outlet', 'order.items.product', 'assignedBy']);
         });
@@ -422,6 +420,95 @@ class DeliveryService
             $this->recordHistory($delivery, 'returning_to_outlet', 'returned_to_outlet', $outletUser, 'outlet', $note ?? 'Outlet mengkonfirmasi penerimaan barang kembali.');
 
             return $delivery->fresh();
+        });
+    }
+
+    public function transitionExternal(
+        Delivery $delivery,
+        User $operator,
+        string $targetStatus,
+        ?string $reason = null,
+    ): Delivery {
+        return DB::transaction(function () use ($delivery, $operator, $targetStatus, $reason): Delivery {
+            $delivery = Delivery::query()
+                ->lockForUpdate()
+                ->with('order')
+                ->findOrFail($delivery->id);
+
+            if ($delivery->courier_type !== 'eksternal'
+                || $operator->outlet?->id !== $delivery->order->outlet_id) {
+                abort(403);
+            }
+
+            if ($targetStatus === 'returned_to_outlet') {
+                if ($delivery->status !== 'failed') {
+                    throw ValidationException::withMessages([
+                        'status' => 'Hanya delivery gagal yang dapat dikembalikan ke outlet.',
+                    ]);
+                }
+
+                return $this->resolveFailedDelivery(
+                    $delivery,
+                    $operator,
+                    'returned_to_outlet',
+                    $reason,
+                );
+            }
+
+            $allowed = [
+                'waiting_pickup' => ['picked_up'],
+                'picked_up' => ['delivering'],
+                'delivering' => ['completed', 'failed'],
+            ];
+
+            if (! in_array($targetStatus, $allowed[$delivery->status] ?? [], true)) {
+                throw ValidationException::withMessages([
+                    'status' => "Delivery tidak bisa diubah dari {$delivery->status} ke {$targetStatus}.",
+                ]);
+            }
+
+            if ($targetStatus === 'failed' && blank($reason)) {
+                throw ValidationException::withMessages([
+                    'reason' => 'Alasan kegagalan wajib diisi.',
+                ]);
+            }
+
+            $from = $delivery->status;
+            $attributes = ['status' => $targetStatus];
+            if ($targetStatus === 'picked_up') {
+                $attributes['pickup_time'] = now();
+            }
+            if ($targetStatus === 'completed') {
+                $attributes['delivered_time'] = now();
+            }
+            if ($targetStatus === 'failed') {
+                $attributes['failed_reason'] = $reason;
+            }
+
+            $delivery->update($attributes);
+
+            $orderStatus = match ($targetStatus) {
+                'picked_up' => Order::STATUS_PICKED_UP,
+                'delivering' => Order::STATUS_DELIVERING,
+                'completed' => Order::STATUS_COMPLETED,
+                'failed' => Order::STATUS_FAILED_DELIVERY,
+            };
+            $this->orderStatusService->updateStatus(
+                $delivery->order,
+                $orderStatus,
+                $operator,
+                $reason,
+            );
+            $this->recordHistory(
+                $delivery,
+                $from,
+                $targetStatus,
+                $operator,
+                'outlet',
+                $reason,
+            );
+
+            return $delivery->fresh(['order', 'statusHistories']);
         });
     }
 
