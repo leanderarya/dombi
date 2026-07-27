@@ -47,14 +47,20 @@ jobs:
           script: |
             cd domains/dombicenter.com/public_html/staging
             DEPLOY_SHA='${{ github.sha }}'
+            echo "Deploying SHA $DEPLOY_SHA to staging"
             git fetch --no-tags origin "$DEPLOY_SHA"
             git reset --hard "$DEPLOY_SHA"
             test "$(git rev-parse HEAD)" = "$DEPLOY_SHA"
+            echo "SHA verified, running composer install"
             composer install --no-dev --no-interaction --optimize-autoloader
+            echo "Running migrations"
+            php artisan migrate --force --no-interaction
             php artisan config:clear
             php artisan route:clear
             php artisan cache:clear
             php artisan view:clear
+            php artisan storage:link || true
+            echo "Staging code and migrations done"
 
       - name: Upload built assets via SCP
         uses: appleboy/scp-action@v0.1.7
@@ -66,3 +72,11 @@ jobs:
           source: "public/build/*"
           target: "domains/dombicenter.com/public_html/staging/"
           strip_components: 0
+
+      - name: Verify staging health
+        run: |
+          echo "Waiting 10s for app to boot"
+          sleep 10
+          curl --fail --max-time 30 --retry 3 --retry-delay 5 https://staging.dombicenter.com/up
+          echo "Staging health check passed"
+          curl --fail --max-time 30 https://staging.dombicenter.com/api/health || echo "api/health check attempted"

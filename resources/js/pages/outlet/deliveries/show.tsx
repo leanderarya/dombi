@@ -9,20 +9,32 @@ import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatDeliveryAge } from '@/lib/format';
 import { getDeliveryStatus } from '@/lib/status-labels';
 
-const nextExternalActions: Record<string, Array<{
-    status: string;
-    label: string;
-    destructive?: boolean;
-    requiresReason?: boolean;
-}>> = {
+const nextExternalActions: Record<
+    string,
+    Array<{
+        status: string;
+        label: string;
+        destructive?: boolean;
+        requiresReason?: boolean;
+    }>
+> = {
     waiting_pickup: [{ status: 'picked_up', label: 'Kurir sudah mengambil' }],
     picked_up: [{ status: 'delivering', label: 'Mulai pengiriman' }],
     delivering: [
         { status: 'completed', label: 'Pesanan diterima' },
-        { status: 'failed', label: 'Pengiriman gagal', destructive: true, requiresReason: true },
+        {
+            status: 'failed',
+            label: 'Pengiriman gagal',
+            destructive: true,
+            requiresReason: true,
+        },
     ],
     failed: [
-        { status: 'returned_to_outlet', label: 'Konfirmasi kembali ke outlet', requiresReason: true },
+        {
+            status: 'returned_to_outlet',
+            label: 'Konfirmasi kembali ke outlet',
+            requiresReason: true,
+        },
     ],
 };
 
@@ -31,7 +43,10 @@ export default function OutletDeliveryShow({ delivery }: any) {
     const isExternal = delivery.courier_type === 'eksternal';
     const actions = nextExternalActions[delivery.status] ?? [];
 
-    const [showReasonInput, setShowReasonInput] = useState<{ status: string; label: string } | null>(null);
+    const [showReasonInput, setShowReasonInput] = useState<{
+        status: string;
+        label: string;
+    } | null>(null);
     const [reason, setReason] = useState('');
 
     function handleAction(status: string, label: string) {
@@ -48,18 +63,22 @@ export default function OutletDeliveryShow({ delivery }: any) {
 
     function submitWithReason() {
         if (!showReasonInput || !reason.trim()) {
-return;
-}
+            return;
+        }
 
-        router.post(`/outlet/deliveries/${delivery.id}/status`, {
-            status: showReasonInput.status,
-            reason: reason.trim(),
-        }, {
-            onSuccess: () => {
-                setShowReasonInput(null);
-                setReason('');
+        router.post(
+            `/outlet/deliveries/${delivery.id}/status`,
+            {
+                status: showReasonInput.status,
+                reason: reason.trim(),
             },
-        });
+            {
+                onSuccess: () => {
+                    setShowReasonInput(null);
+                    setReason('');
+                },
+            },
+        );
     }
 
     return (
@@ -69,9 +88,10 @@ return;
             {/* Status Strip */}
             <div className="mt-4 mb-4 flex items-center justify-between">
                 <div className="text-sm text-text-muted">
-                    Kurir: {isExternal
+                    Kurir:{' '}
+                    {isExternal
                         ? `${delivery.external_provider ?? ''} - ${delivery.external_courier_name ?? ''}`
-                        : delivery.courier?.name ?? '-'}
+                        : (delivery.courier?.name ?? '-')}
                 </div>
                 <div className="flex items-center gap-2">
                     <StatusBadge status={delivery.status} />
@@ -89,7 +109,9 @@ return;
                             <button
                                 key={action.status}
                                 type="button"
-                                onClick={() => handleAction(action.status, action.label)}
+                                onClick={() =>
+                                    handleAction(action.status, action.label)
+                                }
                                 className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
                                     action.destructive
                                         ? 'bg-red-600 text-white hover:bg-red-700'
@@ -121,8 +143,9 @@ return;
                             <button
                                 type="button"
                                 onClick={() => {
- setShowReasonInput(null); setReason(''); 
-}}
+                                    setShowReasonInput(null);
+                                    setReason('');
+                                }}
                                 className="flex-1 rounded-lg border border-slate-200 py-2 text-xs font-semibold"
                             >
                                 Batal
@@ -144,14 +167,24 @@ return;
             <SectionCard label="Customer">
                 <div className="mt-2 space-y-1.5 text-sm">
                     <div className="font-medium">{delivery.customer_name}</div>
-                    <div className="text-text-muted">{delivery.customer_address}</div>
+                    <div className="text-text-muted">
+                        {delivery.customer_address}
+                    </div>
                     {delivery.customer_phone && (
-                        <div className="text-text-muted">{delivery.customer_phone}</div>
+                        <div className="text-text-muted">
+                            {delivery.customer_phone}
+                        </div>
                     )}
                     {delivery.delivery_age != null && (
                         <div>
                             <span className="text-text-muted">Usia:</span>{' '}
-                            <span className={delivery.delivery_age > 60 ? 'font-medium text-red-600' : ''}>
+                            <span
+                                className={
+                                    delivery.delivery_age > 60
+                                        ? 'font-medium text-red-600'
+                                        : ''
+                                }
+                            >
                                 {formatDeliveryAge(delivery.delivery_age)}
                             </span>
                         </div>
@@ -163,12 +196,21 @@ return;
             <SectionCard label="Pesanan">
                 <div className="mt-2 space-y-2">
                     {order.items.map((item: any) => (
-                        <div key={item.id} className="flex justify-between text-sm">
+                        <div
+                            key={item.id}
+                            className="flex justify-between text-sm"
+                        >
                             <div>
-                                <span className="font-medium">{item.product_name}</span>
-                                <span className="ml-2 text-text-muted">x{item.quantity}</span>
+                                <span className="font-medium">
+                                    {item.product_name}
+                                </span>
+                                <span className="ml-2 text-text-muted">
+                                    x{item.quantity}
+                                </span>
                             </div>
-                            <span className="font-medium">{formatCurrency(item.subtotal)}</span>
+                            <span className="font-medium">
+                                {formatCurrency(item.subtotal)}
+                            </span>
                         </div>
                     ))}
                 </div>
@@ -182,10 +224,16 @@ return;
             {delivery.failed_reason && (
                 <SectionCard>
                     <div className="flex items-center gap-2">
-                        <StatusBadge variant="danger" size="sm">Gagal</StatusBadge>
-                        <span className="text-xs font-bold tracking-wider text-text-subtle uppercase">Alasan Gagal</span>
+                        <StatusBadge variant="danger" size="sm">
+                            Gagal
+                        </StatusBadge>
+                        <span className="text-xs font-bold tracking-wider text-text-subtle uppercase">
+                            Alasan Gagal
+                        </span>
                     </div>
-                    <p className="mt-1 text-sm text-text">{delivery.failed_reason}</p>
+                    <p className="mt-1 text-sm text-text">
+                        {delivery.failed_reason}
+                    </p>
                 </SectionCard>
             )}
 
@@ -193,11 +241,17 @@ return;
             {delivery.resolution_status && (
                 <SectionCard>
                     <div className="flex items-center gap-2">
-                        <StatusBadge variant="warning" size="sm">Resolusi</StatusBadge>
+                        <StatusBadge variant="warning" size="sm">
+                            Resolusi
+                        </StatusBadge>
                     </div>
-                    <p className="mt-1 text-sm text-text">{getDeliveryStatus(delivery.resolution_status).label}</p>
+                    <p className="mt-1 text-sm text-text">
+                        {getDeliveryStatus(delivery.resolution_status).label}
+                    </p>
                     {delivery.resolution_notes && (
-                        <p className="mt-1 text-xs text-text-muted">{delivery.resolution_notes}</p>
+                        <p className="mt-1 text-xs text-text-muted">
+                            {delivery.resolution_notes}
+                        </p>
                     )}
                 </SectionCard>
             )}
@@ -205,7 +259,9 @@ return;
             {/* Timeline */}
             <SectionCard label="Timeline">
                 <div className="mt-2">
-                    <DeliveryTimeline histories={delivery.status_histories ?? []} />
+                    <DeliveryTimeline
+                        histories={delivery.status_histories ?? []}
+                    />
                 </div>
             </SectionCard>
         </OutletLayout>
