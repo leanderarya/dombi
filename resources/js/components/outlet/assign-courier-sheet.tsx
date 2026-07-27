@@ -1,7 +1,8 @@
 import { useForm } from '@inertiajs/react';
 import { MapPin, Truck, Phone, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { createCourierRequestLifecycle } from './assign-courier-sheet-lifecycle';
 
 interface NearestCourier {
     id: number;
@@ -29,11 +30,33 @@ export default function AssignCourierSheet({
     open,
     onClose,
 }: Props) {
+    if (!open) {
+        return null;
+    }
+
+    return (
+        <AssignCourierSheetContent
+            outletId={outletId}
+            orderId={orderId}
+            deliveryFee={deliveryFee}
+            onClose={onClose}
+        />
+    );
+}
+
+function AssignCourierSheetContent({
+    outletId,
+    orderId,
+    deliveryFee,
+    onClose,
+}: Omit<Props, 'open'>) {
     const [selectedCourier, setSelectedCourier] = useState<number | null>(null);
     const [couriers, setCouriers] = useState<NearestCourier[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const form = useForm({ courier_id: '' });
+    const lifecycleRef = useRef(createCourierRequestLifecycle());
+    const activeRequestRef = useRef<AbortController | null>(null);
 
     const [courierType, setCourierType] = useState<'dombi' | 'eksternal'>(
         'dombi',
@@ -47,31 +70,90 @@ export default function AssignCourierSheet({
     const margin = deliveryFee - costNum;
     const isLoss = margin < 0;
 
-    useEffect(() => {
-        if (open) {
-            fetchNearestCouriers();
-            setSelectedCourier(null);
-            form.reset();
-        }
-    }, [open]);
+    const fetchNearestCouriers = useCallback(
+        async (signal: AbortSignal, requestId: number) => {
+            try {
+                const response = await fetch(
+                    `/outlet/api/outlets/${outletId}/nearest-couriers`,
+                    { signal },
+                );
+
+                if (!response.ok) {
+                    throw new Error('Gagal memuat data kurir');
+                }
+
+                const data = (await response.json()) as NearestCourier[];
+
+                if (
+                    signal.aborted ||
+                    !lifecycleRef.current.isCurrent(requestId)
+                ) {
+                    return;
+                }
+
+                setCouriers(data);
+                setError(null);
+            } catch (err) {
+                if (
+                    signal.aborted ||
+                    !lifecycleRef.current.isCurrent(requestId)
+                ) {
+                    return;
+                }
+
+                setError(
+                    err instanceof Error ? err.message : 'Terjadi kesalahan',
+                );
+            } finally {
+                if (
+                    !signal.aborted &&
+                    lifecycleRef.current.isCurrent(requestId)
+                ) {
+                    setLoading(false);
+                }
+            }
+        },
+        [outletId],
+    );
 
     useEffect(() => {
-        if (open) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        const lifecycle = lifecycleRef.current;
+        const controller = new AbortController();
+        const requestId = lifecycle.begin();
+        activeRequestRef.current = controller;
+
+        void fetchNearestCouriers(controller.signal, requestId);
+
+        return () => {
+            controller.abort();
+            lifecycle.invalidate();
+
+            if (activeRequestRef.current === controller) {
+                activeRequestRef.current = null;
+            }
+        };
+    }, [fetchNearestCouriers]);
+
+    const retryFetchNearestCouriers = useCallback(() => {
+        activeRequestRef.current?.abort();
+
+        const controller = new AbortController();
+        const requestId = lifecycleRef.current.begin();
+        activeRequestRef.current = controller;
+        setLoading(true);
+        setError(null);
+        void fetchNearestCouriers(controller.signal, requestId);
+    }, [fetchNearestCouriers]);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
 
         return () => {
             document.body.style.overflow = '';
         };
-    }, [open]);
+    }, []);
 
     useEffect(() => {
-        if (!open) {
-            return;
-        }
-
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 onClose();
@@ -80,29 +162,7 @@ export default function AssignCourierSheet({
         document.addEventListener('keydown', handler);
 
         return () => document.removeEventListener('keydown', handler);
-    }, [open, onClose]);
-
-    async function fetchNearestCouriers() {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch(
-                `/outlet/api/outlets/${outletId}/nearest-couriers`,
-            );
-
-            if (!response.ok) {
-                throw new Error('Gagal memuat data kurir');
-            }
-
-            const data = await response.json();
-            setCouriers(data);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Terjadi kesalahan');
-        } finally {
-            setLoading(false);
-        }
-    }
+    }, [onClose]);
 
     function handleSubmit() {
         if (courierType === 'dombi') {
@@ -157,10 +217,6 @@ export default function AssignCourierSheet({
             default:
                 return <Truck className="h-4 w-4 text-slate-400" />;
         }
-    }
-
-    if (!open) {
-        return null;
     }
 
     return createPortal(
@@ -233,7 +289,7 @@ export default function AssignCourierSheet({
                                     </p>
                                     <button
                                         type="button"
-                                        onClick={fetchNearestCouriers}
+                                        onClick={retryFetchNearestCouriers}
                                         className="mt-2 text-sm font-medium text-red-700 underline"
                                     >
                                         Coba lagi

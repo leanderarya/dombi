@@ -61,9 +61,7 @@ export default function OutletLayout({
             <NotificationSheet
                 open={notificationOpen}
                 onClose={() => setNotificationOpen(false)}
-                onNavigate={(type, data) => {
-                    const outletId = (data as any)?.outlet_id;
-
+                onNavigate={(type) => {
                     if (type.startsWith('inventory.')) {
                         router.visit('/outlet/restocks');
                     }
