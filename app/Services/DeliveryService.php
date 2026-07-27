@@ -33,14 +33,20 @@ class DeliveryService
         ?string $externalPlate = null,
         ?float $courierCost = null,
     ): Delivery {
-        if ($courierType === 'eksternal') {
-            return $this->assignEksternal($order, $assignedBy, $externalName, $externalPhone, $externalPlate, $courierCost);
+        if (! $order->isDelivery()) {
+            throw ValidationException::withMessages([
+                'fulfillment_type' => 'Pesanan pickup tidak memerlukan kurir.',
+            ]);
         }
 
-        if ($order->fulfillment_type === 'pickup') {
+        if ($order->payment_status !== 'paid') {
             throw ValidationException::withMessages([
-                'courier_id' => 'Pesanan pickup tidak memerlukan kurir.',
+                'payment_status' => 'Pesanan harus sudah dibayar sebelum kurir dipilih.',
             ]);
+        }
+
+        if ($courierType === 'eksternal') {
+            return $this->assignEksternal($order, $assignedBy, $externalName, $externalPhone, $externalPlate, $courierCost);
         }
 
         if ($order->fulfillment_type === 'delivery_ojol') {
@@ -51,6 +57,12 @@ class DeliveryService
 
         return DB::transaction(function () use ($order, $courier, $assignedBy, $overrideCapacity, $overrideReason): Delivery {
             $order = Order::query()->lockForUpdate()->with('delivery')->findOrFail($order->id);
+
+            if ($order->payment_status !== 'paid') {
+                throw ValidationException::withMessages([
+                    'payment_status' => 'Pesanan harus sudah dibayar sebelum kurir dipilih.',
+                ]);
+            }
 
             // Lock courier row to prevent race condition on capacity check
             User::query()->where('id', $courier->id)->lockForUpdate()->firstOrFail();
@@ -133,6 +145,12 @@ class DeliveryService
     {
         return DB::transaction(function () use ($order, $actor, $externalName, $externalPhone, $externalPlate, $courierCost): Delivery {
             $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+
+            if ($order->payment_status !== 'paid') {
+                throw ValidationException::withMessages([
+                    'payment_status' => 'Pesanan harus sudah dibayar sebelum kurir dipilih.',
+                ]);
+            }
 
             if ($order->status !== 'ready_for_pickup') {
                 throw ValidationException::withMessages([
