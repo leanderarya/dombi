@@ -216,7 +216,11 @@ class ExchangeWorkflowHardeningTest extends TestCase
 
         $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
 
-        return app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+        $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+
+        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
+
+        return $return->fresh();
     }
 
     private function makeContext(
