@@ -64,7 +64,6 @@ const navGroups: NavGroup[] = [
                 label: 'Refund',
                 badgeKey: 'pendingRefunds',
             },
-            },
         ],
     },
     {
