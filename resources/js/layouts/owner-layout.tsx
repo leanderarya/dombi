@@ -124,6 +124,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
     const pendingCounts = ownerOperationalCounts ?? {
         pendingReturns: 0,
         pendingExchanges: 0,
+        pendingRefunds: 0,
     };
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [commandOpen, setCommandOpen] = useState(false);
