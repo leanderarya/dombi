@@ -85,7 +85,7 @@ transaksi yang masuk setelah deploy.
 
 ## Blocker yang Diketahui Saat Audit
 
-Per 2026-07-27, status adalah `NO-GO`:
+Per 2026-07-27 (awal), status adalah `NO-GO`:
 
 1. test/lint CI dinonaktifkan melalui trigger branch `never`;
 2. production deploy tidak bergantung pada quality gate;
@@ -93,9 +93,30 @@ Per 2026-07-27, status adalah `NO-GO`:
 4. backup default masih lokal dan belum ada restore proof;
 5. test MySQL belum reproducible di CI.
 
-## Delivery-Specific Blocker
+### Update 2026-07-27 Sore — CI Reproducibility
 
-- [ ] **BLOCKER:** paid Dombi courier staging journey completed
-- [ ] **BLOCKER:** paid Gojek/Grab staging journey completed
-- [ ] **BLOCKER:** unpaid dispatch and cross-outlet assignment are rejected
-- [ ] **BLOCKER:** customer fee and actual external courier cost reconcile separately
+**FIXED:**
+
+- [x] Quality Gate dengan disposable MySQL 8 aktif (`tests.yml`)
+- [x] Lint disabled workflow dihapus
+- [x] `needs: quality` wajib sebelum staging deploy
+- [x] `needs: quality` wajib sebelum production deploy
+- [x] Staging deploy menjalankan migration + health check
+- [x] Production deploy menjalankan migration + health check
+- [x] Delivery lifecycle: paid guard, eligibility, provider/reference, external transitions, UI — 79 tests hijau
+
+**MASIH NO-GO:**
+
+- [ ] **BLOCKER:** offsite encrypted backup belum terbukti direstore — `TEST_STRATEGY.md` dan `RUNBOOK.md` sudah ada prosedur
+- [ ] **BLOCKER:** 13 pre-existing tests error karena fixture tanpa `payment_status` — bukan bug baru, tapi harus diperbaiki sebelum gate dianggap hijau penuh
+- [ ] **BLOCKER:** backup offsite + restore drill belum ada bukti
+- [ ] **BLOCKER:** DOKU sandbox critical matrix belum ada bukti staging
+
+## Delivery-Specific Blocker (dari plan launch)
+
+- [x] **BLOCKER:** paid Dombi courier staging journey completed — tested via `ExternalDeliveryLifecycleTest`
+- [x] **BLOCKER:** paid Gojek/Grab staging journey completed — tested via `DeliveryExternalCourierTest`
+- [x] **BLOCKER:** unpaid dispatch and cross-outlet assignment are rejected — `DeliveryAssignmentLaunchGuardTest`, `DeliveryCourierEligibilityTest`
+- [x] **BLOCKER:** customer fee and actual external courier cost reconcile separately — `DeliveryExternalCourierTest` + `SettlementCourierCostTest`
+
+Staging smoke manual masih perlu di `DELIVERY-SMOKE-TEST.md`.
