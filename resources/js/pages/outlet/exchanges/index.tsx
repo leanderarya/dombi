@@ -29,7 +29,6 @@ export default function OutletExchangesIndex({
     filters,
     variants,
     outletInventory,
-    pendingReturns,
 }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const [showCreate, setShowCreate] = useState(false);

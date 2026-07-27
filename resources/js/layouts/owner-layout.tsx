@@ -115,7 +115,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
     useFlashToast();
     const { loading } = useInertiaLoading();
     const page = usePage<any>();
-    const { auth, ownerOperationalCounts } = page.props;
+    const { ownerOperationalCounts } = page.props;
     const pendingCounts = ownerOperationalCounts ?? {
         pendingReturns: 0,
         pendingExchanges: 0,

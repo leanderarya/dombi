@@ -37,12 +37,6 @@ interface Props {
         completedToday: number;
         failedToday: number;
     };
-    performance: {
-        successRate: number;
-        avgDeliveryTime: number | null;
-        capacityStatus: string;
-        activeDeliveries: number;
-    };
     tasks: {
         waitingPickup: TaskItem[];
         inTransit: TaskItem[];
@@ -51,12 +45,7 @@ interface Props {
     };
 }
 
-export default function CourierDashboard({
-    courier,
-    stats,
-    performance,
-    tasks,
-}: Props) {
+export default function CourierDashboard({ courier, stats, tasks }: Props) {
     usePolling(15000);
 
     const [loadingAction, setLoadingAction] = useState<string | null>(null);

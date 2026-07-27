@@ -38,12 +38,6 @@ export default function ReturnCreateDialog({
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const variantOptions = variants.map((v) => ({
-        value: String(v.id),
-        label: v.full_name ?? v.name,
-        subtitle: `Stok: ${v.available_stock}`,
-    }));
-
     const reasonOptions = Object.entries(reasons).map(([key, label]) => ({
         value: key,
         label: label,
