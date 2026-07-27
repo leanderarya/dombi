@@ -51,6 +51,10 @@ php artisan serve
 
 ## Testing
 
+Pull requests and pushes to `develop` or `main` run the GitHub Actions
+`Quality Gate`: PHP tests on disposable MySQL 8, PHP formatting, frontend
+format/lint/type checks, Vitest, and the production frontend build.
+
 ```bash
 # Run all tests
 php artisan test
