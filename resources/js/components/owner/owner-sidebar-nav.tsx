@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 interface NavItem {
     href: string;
     label: string;
-    badgeKey?: 'pendingReturns' | 'pendingExchanges';
+        badgeKey?: 'pendingReturns' | 'pendingExchanges' | 'pendingRefunds';
     isActive?: (url: string) => boolean;
 }
 
