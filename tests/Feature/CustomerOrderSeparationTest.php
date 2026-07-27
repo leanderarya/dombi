@@ -43,6 +43,7 @@ class CustomerOrderSeparationTest extends TestCase
             'customer_id' => $customer->id,
             'status' => Order::STATUS_CANCELLED_BY_CUSTOMER,
             'payment_status' => $paymentStatus,
+            'refund_rejected_reason' => $paymentStatus === 'refund_rejected' ? \App\Enums\RefundRejectionReason::InvalidDestination->value : null,
         ])
         );
 
