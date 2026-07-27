@@ -47,7 +47,10 @@ export default function PickupOutletSelector({
         initialRecommendations ?? { recommended: null, alternatives: [] },
     );
 
-    const alternatives = recommendations.alternatives ?? [];
+    const alternatives = useMemo(
+        () => recommendations.alternatives ?? [],
+        [recommendations.alternatives],
+    );
 
     useEffect(() => {
         let active = true;
@@ -61,15 +64,23 @@ export default function PickupOutletSelector({
             params.set('longitude', String(location.longitude));
         }
 
-        setLoading(true);
+        Promise.resolve()
+            .then(() => {
+                if (active) {
+                    setLoading(true);
+                }
 
-        fetch(`/customer/checkout/pickup-outlets?${params.toString()}`, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-            credentials: 'same-origin',
-        })
+                return fetch(
+                    `/customer/checkout/pickup-outlets?${params.toString()}`,
+                    {
+                        headers: {
+                            Accept: 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        credentials: 'same-origin',
+                    },
+                );
+            })
             .then(async (response) => {
                 if (!response.ok) {
                     throw new Error('Failed to load pickup outlets');

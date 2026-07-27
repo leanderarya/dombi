@@ -3,10 +3,6 @@ import { ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { useState, useCallback } from 'react';
 import PhoneInput from '@/components/ui/phone-input';
 
-interface Props {
-    user: { name: string; email: string; avatar?: string };
-}
-
 export default function VerifyPhone() {
     const [phone, setPhone] = useState('');
     const [step, setStep] = useState<'phone' | 'confirm' | 'done'>('phone');

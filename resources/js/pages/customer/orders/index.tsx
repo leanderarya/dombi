@@ -72,8 +72,7 @@ const filterOptions = [
 type ViewState = 'recovered' | 'empty';
 
 export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
-    const { phone, maskedPhone, saveRecovery, clearRecovery } =
-        useOrderRecovery();
+    const { maskedPhone, clearRecovery } = useOrderRecovery();
     const [filter, setFilter] = useState('all');
     usePolling(20000);
     const [recoverySheetOpen, setRecoverySheetOpen] = useState(false);
@@ -85,11 +84,13 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
 
     // Check for pending recovery phone on mount (after OAuth redirect)
     useEffect(() => {
-        const stored = localStorage.getItem(PENDING_PHONE_KEY);
+        const timeout = window.setTimeout(() => {
+            if (localStorage.getItem(PENDING_PHONE_KEY)) {
+                setRecoverySheetOpen(true);
+            }
+        }, 0);
 
-        if (stored) {
-            setRecoverySheetOpen(true);
-        }
+        return () => window.clearTimeout(timeout);
     }, []);
 
     const hasServerOrders =
@@ -101,7 +102,10 @@ export default function OrdersIndex({ activeOrders, historyOrders }: Props) {
         hasServerOrders || hasRecoveredOrders ? 'recovered' : 'empty';
 
     const displayActive = recoveredActive ?? activeOrders ?? [];
-    const displayHistory = recoveredHistory ?? historyOrders?.data ?? [];
+    const displayHistory = useMemo(
+        () => recoveredHistory ?? historyOrders?.data ?? [],
+        [historyOrders?.data, recoveredHistory],
+    );
 
     const filteredHistory = useMemo(() => {
         if (filter === 'all') {

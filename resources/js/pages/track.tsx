@@ -126,7 +126,7 @@ export default function TrackPage({
         }, 15000);
 
         return () => clearInterval(interval);
-    }, [isTerminal, order?.id]);
+    }, [isTerminal, order]);
 
     if (!found || !order) {
         return <NotFoundState />;

@@ -25,33 +25,38 @@ export default function AssignCourierSheet({
     onClose,
     assignUrl,
 }: Props) {
+    if (!open || !order) {
+        return null;
+    }
+
+    return (
+        <AssignCourierSheetContent
+            order={order}
+            couriers={couriers}
+            onClose={onClose}
+            assignUrl={assignUrl}
+        />
+    );
+}
+
+function AssignCourierSheetContent({
+    order,
+    couriers,
+    onClose,
+    assignUrl,
+}: Omit<Props, 'open'>) {
     const [selectedCourier, setSelectedCourier] = useState<number | null>(null);
     const form = useForm({ courier_id: '' });
 
     useEffect(() => {
-        if (!open) {
-            setSelectedCourier(null);
-            form.reset();
-        }
-    }, [open]);
-
-    useEffect(() => {
-        if (open) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
+        document.body.style.overflow = 'hidden';
 
         return () => {
             document.body.style.overflow = '';
         };
-    }, [open]);
+    }, []);
 
     useEffect(() => {
-        if (!open) {
-            return;
-        }
-
         const handler = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 onClose();
@@ -60,11 +65,7 @@ export default function AssignCourierSheet({
         document.addEventListener('keydown', handler);
 
         return () => document.removeEventListener('keydown', handler);
-    }, [open, onClose]);
-
-    if (!open || !order) {
-        return null;
-    }
+    }, [onClose]);
 
     const submitUrl = assignUrl ?? `/owner/orders/${order.id}/assign-courier`;
 

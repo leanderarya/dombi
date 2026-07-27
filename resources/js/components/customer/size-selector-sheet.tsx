@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Dialog from '@/components/ui/dialog';
 import { useOutlet } from '@/contexts/outlet-context';
 import { mutationFetch } from '@/lib/api';
@@ -26,15 +26,29 @@ interface Props {
     onAdded?: () => void;
 }
 
-export default function SizeSelectorSheet({
-    open,
+export default function SizeSelectorSheet({ open, ...props }: Props) {
+    if (!open) {
+        return null;
+    }
+
+    return <SizeSelectorSheetContent {...props} />;
+}
+
+function SizeSelectorSheetContent({
     onClose,
     familyName,
     flavorName,
     variants,
     onAdded,
-}: Props) {
-    const [selectedId, setSelectedId] = useState<number | null>(null);
+}: Omit<Props, 'open'>) {
+    const sortedVariants = useMemo(() => {
+        return [...variants].sort(
+            (a, b) => sizeToMl(a.size) - sizeToMl(b.size),
+        );
+    }, [variants]);
+    const [selectedId, setSelectedId] = useState<number | null>(
+        () => sortedVariants[0]?.id ?? null,
+    );
     const [quantity, setQuantity] = useState(1);
     const [adding, setAdding] = useState(false);
     const [maxQuantity, setMaxQuantity] = useState<number>(999);
@@ -42,21 +56,6 @@ export default function SizeSelectorSheet({
     const cart = useCart();
     const { selectedOutlet } = useOutlet();
     const isOutletClosed = selectedOutlet?.is_open === false;
-
-    const sortedVariants = useMemo(() => {
-        return [...variants].sort(
-            (a, b) => sizeToMl(a.size) - sizeToMl(b.size),
-        );
-    }, [variants]);
-
-    // Reset selection to smallest when sheet opens
-    useEffect(() => {
-        if (open && sortedVariants.length > 0) {
-            setSelectedId(sortedVariants[0].id);
-            setQuantity(1);
-            setMaxQuantity(999);
-        }
-    }, [open, sortedVariants]);
 
     const selectedVariant =
         sortedVariants.find((v) => v.id === selectedId) ?? sortedVariants[0];
@@ -107,7 +106,7 @@ export default function SizeSelectorSheet({
     const title = flavorName ? `${familyName} ${flavorName}` : familyName;
 
     return (
-        <Dialog open={open} onClose={onClose} title={title}>
+        <Dialog open onClose={onClose} title={title}>
             <div className="space-y-5">
                 {/* Size Options */}
                 <div className="space-y-2">

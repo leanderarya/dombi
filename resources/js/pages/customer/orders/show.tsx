@@ -1,12 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react';
-import {
-    AlertCircle,
-    AlertTriangle,
-    Clock,
-    Phone,
-    RotateCcw,
-    XCircle,
-} from 'lucide-react';
+import { AlertCircle, AlertTriangle, Phone, RotateCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import OrderHeader from '@/components/customer/order/order-header';
 import OrderInfoCard from '@/components/customer/order/order-info-card';
@@ -44,65 +37,6 @@ const REPORT_STATUS_LABELS: Record<string, { label: string; variant: string }> =
     };
 
 const CANCELLABLE_STATUSES = ['pending_confirmation'];
-
-const STATUS_GUIDANCE: Record<
-    string,
-    {
-        description: string;
-        nextStep?: string;
-        cta?: { label: string; href?: string; action?: string };
-    }
-> = {
-    pending_confirmation: {
-        description: 'Menunggu outlet mengkonfirmasi pesanan Anda',
-        nextStep: 'Biasanya dikonfirmasi dalam beberapa menit',
-    },
-    pending_confirmation_unpaid: {
-        description: 'Menunggu Pembayaran',
-        nextStep: 'Selesaikan pembayaran untuk melanjutkan pesanan',
-    },
-    confirmed: {
-        description: 'Pesanan sudah dikonfirmasi oleh outlet',
-        nextStep: 'Outlet sedang menyiapkan pesanan Anda',
-    },
-    preparing: {
-        description: 'Pesanan sedang disiapkan',
-        nextStep: 'Pesanan akan segera siap',
-    },
-    ready_for_pickup: {
-        description: 'Pesanan sudah siap diambil!',
-        nextStep: 'Silakan ambil di outlet sebelum jam tutup',
-        cta: { label: 'Navigasi ke Outlet', action: 'navigate' },
-    },
-    ready_for_pickup_delivery: {
-        description: 'Pesanan sudah siap, menunggu kurir',
-        nextStep: 'Kurir akan segera menjemput dan mengantar ke alamat Anda',
-    },
-    completed: {
-        description: 'Pesanan telah selesai',
-        nextStep: 'Terima kasih sudah pesan di Dombi!',
-    },
-    rejected_by_outlet: {
-        description: 'Outlet tidak dapat memproses pesanan',
-        nextStep: 'Silakan coba pesan dari outlet lain',
-    },
-    cancelled_by_customer: { description: 'Pesanan telah Anda batalkan' },
-    cancelled_by_outlet: {
-        description: 'Pesanan dibatalkan oleh outlet',
-        nextStep: 'Silakan coba pesan lagi',
-    },
-    failed_delivery: {
-        description: 'Pengiriman gagal',
-        nextStep: 'Silakan hubungi kami untuk bantuan',
-        cta: { label: 'Hubungi WhatsApp', action: 'wa_outlet' },
-    },
-    expired: {
-        description: 'Pesanan kadaluarsa',
-        nextStep: 'Outlet tidak konfirmasi dalam batas waktu',
-    },
-};
-
-const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
 
 /* ─── Main ─────────────────────────────────────────────────── */
 
@@ -348,110 +282,6 @@ function PaymentIssueBanner({
                     </button>
                 </div>
             </div>
-        </div>
-    );
-}
-
-interface StatusBannerOrder {
-    id: number;
-    status: string;
-    rejection_reason?: string | null;
-    rejection_note?: string | null;
-    cancellation_reason?: string | null;
-    cancellation_note?: string | null;
-}
-
-function StatusBanner({ order }: { order: StatusBannerOrder }) {
-    const { status } = order;
-    const reason =
-        status === 'rejected_by_outlet'
-            ? order.rejection_reason
-            : order.cancellation_reason;
-    const note =
-        status === 'rejected_by_outlet'
-            ? order.rejection_note
-            : order.cancellation_note;
-
-    if (status === 'rejected_by_outlet' && reason) {
-        return (
-            <ReasonBanner
-                icon={<XCircle className="h-4 w-4 text-red-500" />}
-                title="Pesanan Ditolak Outlet"
-                reason={reason}
-                note={note ?? undefined}
-            />
-        );
-    }
-
-    if (status === 'cancelled_by_customer' && reason) {
-        return (
-            <ReasonBanner
-                icon={<XCircle className="h-4 w-4 text-red-500" />}
-                title="Pesanan Dibatalkan"
-                reason={reason}
-                note={note ?? undefined}
-            />
-        );
-    }
-
-    if (status === 'cancelled_by_outlet' && reason) {
-        return (
-            <ReasonBanner
-                icon={<XCircle className="h-4 w-4 text-red-500" />}
-                title="Dibatalkan Outlet"
-                reason={reason}
-                note={note ?? undefined}
-            />
-        );
-    }
-
-    if (status === 'expired') {
-        return (
-            <div className="mt-4 rounded-xl border border-border bg-surface-muted p-4">
-                <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-text-muted" />
-                    <div className="text-[13px] text-text">
-                        Pesanan Kadaluarsa
-                    </div>
-                </div>
-                <div className="mt-2 text-sm text-text-muted">
-                    Outlet tidak memberikan konfirmasi dalam batas waktu.
-                </div>
-                <Link
-                    href={`/customer/orders/${order.id}/restore-cart`}
-                    className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-bold text-white active:opacity-80"
-                >
-                    <RotateCcw className="h-4 w-4" />
-                    Pesan Ulang
-                </Link>
-            </div>
-        );
-    }
-
-    return null;
-}
-
-function ReasonBanner({
-    icon,
-    title,
-    reason,
-    note,
-}: {
-    icon: React.ReactNode;
-    title: string;
-    reason: string;
-    note?: string;
-}) {
-    return (
-        <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4">
-            <div className="flex items-center gap-2">
-                {icon}
-                <div className="text-[13px] text-red-600">{title}</div>
-            </div>
-            <div className="mt-2 text-sm font-semibold text-red-800">
-                {reason}
-            </div>
-            {note && <div className="mt-1 text-xs text-red-700">{note}</div>}
         </div>
     );
 }

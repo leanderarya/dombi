@@ -58,30 +58,33 @@ export default function LocationSearchPanel({
     onUseSavedLocation,
     showSavedLocation = true,
 }: Props) {
-    const [query, setQuery] = useState(value.address_line ?? '');
+    const [draftQuery, setDraftQuery] = useState(value.address_line ?? '');
     const [searchState, setSearchState] = useState<
         'idle' | 'searching' | 'found' | 'empty' | 'error'
     >('idle');
     const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [pinUpdated, setPinUpdated] = useState(false);
-    const [showDetail, setShowDetail] = useState(false);
+    const [showDetail, setShowDetail] = useState(
+        () =>
+            Boolean((value.address_detail ?? '').trim()) ||
+            Boolean((value.landmark ?? '').trim()),
+    );
     const reverseTimeoutRef = useRef<number | null>(null);
     const lastReverseKey = useRef<string | null>(null);
     const suppressSearchRef = useRef(false);
 
-    useEffect(() => {
-        if (!value.address_line) {
-            return;
-        }
+    const query =
+        !showSuggestions && value.address_line
+            ? value.address_line
+            : draftQuery;
+    const normalizedQuery = query.trim();
+    const visibleSuggestions = normalizedQuery.length < 3 ? [] : suggestions;
+    const visibleSearchState =
+        normalizedQuery.length < 3 ? 'idle' : searchState;
 
-        if (value.address_line !== query && !showSuggestions) {
-            setQuery(value.address_line);
-        }
-    }, [query, showSuggestions, value.address_line]);
-
     useEffect(() => {
-        const normalized = query.trim();
+        const normalized = normalizedQuery;
 
         if (suppressSearchRef.current) {
             suppressSearchRef.current = false;
@@ -90,9 +93,6 @@ export default function LocationSearchPanel({
         }
 
         if (normalized.length < 3) {
-            setSuggestions([]);
-            setSearchState('idle');
-
             return;
         }
 
@@ -121,7 +121,7 @@ export default function LocationSearchPanel({
             window.clearTimeout(timeout);
             controller.abort();
         };
-    }, [query]);
+    }, [normalizedQuery]);
 
     const applyReverseGeocode = useCallback(
         (lat: number, lng: number) => {
@@ -142,7 +142,9 @@ export default function LocationSearchPanel({
 
                 if (!showSuggestions) {
                     suppressSearchRef.current = true;
-                    setQuery(cached.formatted_address || value.address_line);
+                    setDraftQuery(
+                        cached.formatted_address || value.address_line,
+                    );
                 }
 
                 return;
@@ -164,7 +166,7 @@ export default function LocationSearchPanel({
 
                     if (!showSuggestions) {
                         suppressSearchRef.current = true;
-                        setQuery(
+                        setDraftQuery(
                             result.formatted_address || value.address_line,
                         );
                     }
@@ -218,13 +220,13 @@ export default function LocationSearchPanel({
         [savedLocation?.district, savedLocation?.village],
     );
 
-    function selectSuggestion(suggestion: PlaceSuggestion) {
+    function selectSuggestion(suggestion: PlaceSuggestion, timestamp: number) {
         lastReverseKey.current = cacheKey(
             suggestion.latitude,
             suggestion.longitude,
         );
         suppressSearchRef.current = true;
-        setQuery(suggestion.formatted_address || suggestion.title);
+        setDraftQuery(suggestion.formatted_address || suggestion.title);
         setShowSuggestions(false);
         setSuggestions([]);
         onChange({
@@ -236,7 +238,7 @@ export default function LocationSearchPanel({
             postal_code: suggestion.postal_code,
             latitude: suggestion.latitude,
             longitude: suggestion.longitude,
-            timestamp: Date.now(),
+            timestamp,
         });
     }
 
@@ -252,16 +254,6 @@ export default function LocationSearchPanel({
     }
 
     const hasPin = value.latitude !== null && value.longitude !== null;
-
-    // Auto-expand if detail fields already have values
-    useEffect(() => {
-        if (
-            (value.address_detail ?? '').trim() ||
-            (value.landmark ?? '').trim()
-        ) {
-            setShowDetail(true);
-        }
-    }, []);
 
     return (
         <div className="space-y-4">
@@ -304,15 +296,16 @@ export default function LocationSearchPanel({
                     <input
                         value={query}
                         onChange={(event) => {
-                            setQuery(event.target.value);
+                            setDraftQuery(event.target.value);
                             setShowSuggestions(true);
                         }}
                         onFocus={() => {
                             if (
-                                suggestions.length > 0 ||
-                                searchState === 'error' ||
-                                searchState === 'empty'
+                                visibleSuggestions.length > 0 ||
+                                visibleSearchState === 'error' ||
+                                visibleSearchState === 'empty'
                             ) {
+                                setDraftQuery(query);
                                 setShowSuggestions(true);
                             }
                         }}
@@ -322,22 +315,26 @@ export default function LocationSearchPanel({
                 </div>
 
                 {showSuggestions &&
-                    (searchState !== 'idle' || suggestions.length > 0) && (
+                    (visibleSearchState !== 'idle' ||
+                        visibleSuggestions.length > 0) && (
                         <div className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-20 overflow-hidden rounded-xl border border-border bg-white shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
-                            {searchState === 'searching' && (
+                            {visibleSearchState === 'searching' && (
                                 <div className="px-4 py-3 text-sm text-text-muted">
                                     Mencari alamat...
                                 </div>
                             )}
 
-                            {searchState === 'found' &&
-                                suggestions.map((suggestion) => (
+                            {visibleSearchState === 'found' &&
+                                visibleSuggestions.map((suggestion) => (
                                     <button
                                         key={suggestion.id}
                                         type="button"
-                                        onClick={() =>
-                                            selectSuggestion(suggestion)
-                                        }
+                                        onClick={() => {
+                                            selectSuggestion(
+                                                suggestion,
+                                                Date.now(),
+                                            );
+                                        }}
                                         className="block w-full border-b border-border px-4 py-3 text-left last:border-b-0 active:bg-surface-muted"
                                     >
                                         <div className="text-sm font-semibold text-text">
@@ -350,14 +347,14 @@ export default function LocationSearchPanel({
                                     </button>
                                 ))}
 
-                            {searchState === 'empty' && (
+                            {visibleSearchState === 'empty' && (
                                 <div className="px-4 py-3 text-sm text-text-muted">
                                     Alamat belum ditemukan. Coba kata kunci
                                     lain.
                                 </div>
                             )}
 
-                            {searchState === 'error' && (
+                            {visibleSearchState === 'error' && (
                                 <div className="px-4 py-3 text-sm text-text-muted">
                                     Pencarian sedang bermasalah. Anda tetap bisa
                                     pilih titik di peta.

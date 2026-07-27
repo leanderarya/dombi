@@ -67,26 +67,27 @@ export function usePushSubscription(): {
     const [pushState, setPushState] = useState<PushState>('loading');
 
     useEffect(() => {
-        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-            setPushState('unsupported');
+        const timeout = window.setTimeout(() => {
+            if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+                setPushState('unsupported');
 
-            return;
-        }
+                return;
+            }
 
-        if (Notification.permission === 'denied') {
-            setPushState('denied');
+            if (Notification.permission === 'denied') {
+                setPushState('denied');
 
-            return;
-        }
+                return;
+            }
 
-        if (Notification.permission === 'granted') {
-            doSubscribe().then((ok) => setPushState(ok ? 'active' : 'denied'));
+            if (Notification.permission === 'granted') {
+                void doSubscribe().then((ok) =>
+                    setPushState(ok ? 'active' : 'denied'),
+                );
+            }
+        }, 0);
 
-            return;
-        }
-
-        // default — wait for user gesture
-        setPushState('loading');
+        return () => window.clearTimeout(timeout);
     }, []);
 
     const requestEnable = useCallback(async (): Promise<boolean> => {
