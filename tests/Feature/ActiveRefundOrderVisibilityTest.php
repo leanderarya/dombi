@@ -80,10 +80,27 @@ class ActiveRefundOrderVisibilityTest extends TestCase
         [$activeRefunds, $refunded] = $this->createRefundOrders($customer);
 
         $response = $this->actingAs($user)->get('/customer/home')->assertOk();
-        $activeIds = collect($response->viewData('page')['props']['activeOrders'])->pluck('id');
+        $activeOrders = collect($response->viewData('page')['props']['activeOrders'])->keyBy('id');
+        $activeIds = $activeOrders->keys();
 
         $activeRefunds->each(fn (Order $order) => $this->assertTrue($activeIds->contains($order->id)));
         $this->assertFalse($activeIds->contains($refunded->id));
+
+        $expectedLabels = [
+            'refund_pending' => 'Menunggu Diproses',
+            'refund_in_progress' => 'Sedang Diproses',
+            'refund_rejected' => 'Refund Ditolak',
+            'refund_failed' => 'Refund Gagal',
+        ];
+
+        $activeRefunds->each(function (Order $order) use ($activeOrders, $expectedLabels) {
+            $badge = $activeOrders->get($order->id)['refund_badge'] ?? null;
+
+            $this->assertNotNull($badge);
+            $this->assertSame($order->payment_status, $badge['payment_status']);
+            $this->assertSame($expectedLabels[$order->payment_status], $badge['status_label']);
+            $this->assertNotEmpty($badge['queue_state']);
+        });
     }
 
     public function test_guest_recovery_places_active_refunds_only_in_active_orders(): void

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\RefundPayloadService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -12,7 +13,7 @@ use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function __invoke(Request $request): Response
+    public function __invoke(Request $request, RefundPayloadService $refundPayloads): Response
     {
         $user = $request->user();
         $activeOrders = collect();
@@ -26,7 +27,19 @@ class HomeController extends Controller
                 ->with(['outlet:id,name', 'delivery', 'items.variant.family'])
                 ->latest()
                 ->limit(5)
-                ->get();
+                ->get()
+                ->map(function (Order $order) use ($refundPayloads) {
+                    $queue = $refundPayloads->queueState($order);
+                    if ($queue) {
+                        $order->setAttribute('refund_badge', [
+                            'payment_status' => $order->payment_status,
+                            'queue_state' => $queue,
+                            'status_label' => $refundPayloads->statusLabel($order),
+                        ]);
+                    }
+
+                    return $order;
+                });
 
             $lastOrder = Order::where('customer_id', $customerId)
                 ->where('status', 'completed')
