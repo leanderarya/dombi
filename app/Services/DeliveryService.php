@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\CourierProfile;
 use App\Models\Delivery;
 use App\Models\DeliveryResolutionLog;
 use App\Models\DeliveryStatusHistory;
@@ -107,6 +108,8 @@ class DeliveryService
                     'courier_id' => 'Kurir sedang offline.',
                 ]);
             }
+
+            $this->assertCourierAvailableForOutlet($courier, $order->outlet_id);
 
             if ($order->delivery && $order->delivery->status !== 'rejected_by_courier') {
                 throw ValidationException::withMessages([
@@ -597,5 +600,19 @@ class DeliveryService
 
             return $delivery->fresh(['order.outlet', 'order.items.product', 'order.statusHistories.actor', 'courier']);
         });
+    }
+
+    private function assertCourierAvailableForOutlet(User $courier, int $outletId): void
+    {
+        $available = CourierProfile::query()
+            ->availableForOutlet($outletId)
+            ->where('user_id', $courier->id)
+            ->exists();
+
+        if (! $available) {
+            throw ValidationException::withMessages([
+                'courier_id' => 'Kurir tidak tersedia untuk outlet pesanan ini.',
+            ]);
+        }
     }
 }

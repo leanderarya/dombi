@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CourierProfile;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -32,6 +33,13 @@ class DeliveryNotificationTest extends TestCase
             'longitude' => 106.8,
             'phone' => '08123456789',
             'status' => 'active',
+        ]);
+
+        CourierProfile::create([
+            'user_id' => $courier->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $outlet->id,
+            'invitation_status' => 'accepted',
         ]);
         $product = Product::create([
             'name' => 'Nasi Goreng',
