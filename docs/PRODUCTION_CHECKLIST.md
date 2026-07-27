@@ -92,3 +92,10 @@ Per 2026-07-27, status adalah `NO-GO`:
 3. production workflow tidak menjalankan migration atau post-deploy health check;
 4. backup default masih lokal dan belum ada restore proof;
 5. test MySQL belum reproducible di CI.
+
+## Delivery-Specific Blocker
+
+- [ ] **BLOCKER:** paid Dombi courier staging journey completed
+- [ ] **BLOCKER:** paid Gojek/Grab staging journey completed
+- [ ] **BLOCKER:** unpaid dispatch and cross-outlet assignment are rejected
+- [ ] **BLOCKER:** customer fee and actual external courier cost reconcile separately
