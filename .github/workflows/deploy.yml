@@ -10,7 +10,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  quality:
+    uses: ./.github/workflows/tests.yml
+
   build-and-deploy:
+    needs: quality
     runs-on: ubuntu-latest
     environment: production
     steps:
