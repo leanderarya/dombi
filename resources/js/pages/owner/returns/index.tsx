@@ -1,7 +1,8 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { SkeletonPage } from '@/components/ui/skeleton';
+import { getInitialOwnerTab } from '../tab-state';
 import PengembalianTab from './pengembalian-tab';
 import PenukaranTab from './penukaran-tab';
 
@@ -14,18 +15,13 @@ type TabKey = (typeof TABS)[number]['key'];
 
 export default function OwnerReturnsIndex(props: any) {
     const { tab: initialTab } = props;
-    const [activeTab, setActiveTab] = useState<TabKey>(
-        (initialTab as TabKey) ?? 'pengembalian',
+    const [activeTab, setActiveTab] = useState<TabKey>(() =>
+        getInitialOwnerTab(
+            TABS.map((tab) => tab.key),
+            'pengembalian',
+            initialTab,
+        ),
     );
-
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const t = params.get('tab');
-
-        if (t && TABS.some((tab) => tab.key === t)) {
-            setActiveTab(t as TabKey);
-        }
-    }, []);
 
     const handleTabChange = (t: TabKey) => {
         setActiveTab(t);

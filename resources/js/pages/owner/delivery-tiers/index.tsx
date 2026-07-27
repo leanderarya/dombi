@@ -1,6 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
 import { Edit2, GripVertical, Plus, Trash2, Truck } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
@@ -60,17 +60,16 @@ export default function DeliveryTiersIndex({
         is_active: true,
     });
 
-    useEffect(() => {
-        if (editingTier) {
-            editForm.setData({
-                min_km: String(editingTier.min_km),
-                max_km: String(editingTier.max_km),
-                fee: String(editingTier.fee),
-                sort_order: String(editingTier.sort_order),
-                is_active: editingTier.is_active,
-            });
-        }
-    }, [editingTier]);
+    const openEditDialog = (tier: DeliveryTier) => {
+        editForm.setData({
+            min_km: String(tier.min_km),
+            max_km: String(tier.max_km),
+            fee: String(tier.fee),
+            sort_order: String(tier.sort_order),
+            is_active: tier.is_active,
+        });
+        setEditingTier(tier);
+    };
 
     if (tiers === undefined || tiers === null) {
         return (
@@ -231,7 +230,7 @@ export default function DeliveryTiersIndex({
                                                     size="sm"
                                                     variant="ghost"
                                                     onClick={() =>
-                                                        setEditingTier(tier)
+                                                        openEditDialog(tier)
                                                     }
                                                     aria-label={`Edit tier ${tier.min_km}–${tier.max_km} km`}
                                                 >

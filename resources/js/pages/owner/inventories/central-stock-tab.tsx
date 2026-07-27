@@ -71,14 +71,8 @@ export default function CentralStockTab({
         }
     };
 
-    if (!variants || !stats) {
-        return (
-            <div className="h-20 animate-pulse rounded-lg border border-border bg-surface" />
-        );
-    }
-
     const filtered = useMemo(() => {
-        let list = variants.filter(Boolean);
+        let list = (variants ?? []).filter(Boolean);
 
         if (search) {
             const q = search.toLowerCase();
@@ -120,6 +114,12 @@ export default function CentralStockTab({
             }),
         [filtered, sortKey, sortDir],
     );
+
+    if (!variants || !stats) {
+        return (
+            <div className="h-20 animate-pulse rounded-lg border border-border bg-surface" />
+        );
+    }
 
     return (
         <>

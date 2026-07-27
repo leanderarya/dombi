@@ -1,6 +1,6 @@
 import { router } from '@inertiajs/react';
 import type { FormEventHandler } from 'react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,14 +40,6 @@ export default function RefundRejectionModal({
     const [note, setNote] = useState('');
     const [legacyRepair, setLegacyRepair] = useState(false);
     const [busy, setBusy] = useState(false);
-
-    useEffect(() => {
-        if (!open) {
-            setReason('');
-            setNote('');
-            setLegacyRepair(false);
-        }
-    }, [open]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();

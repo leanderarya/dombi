@@ -36,6 +36,22 @@ import type {
     SortKey,
 } from './types';
 
+function SortMarker({
+    col,
+    activeCol,
+    direction,
+}: {
+    col: SortKey;
+    activeCol: SortKey;
+    direction: SortDir;
+}) {
+    return activeCol === col ? (
+        <span className="ml-0.5 text-[10px] text-primary">
+            {direction === 'asc' ? '▲' : '▼'}
+        </span>
+    ) : null;
+}
+
 export default function OutletDetail({
     outlet,
     prices,
@@ -73,21 +89,18 @@ export default function OutletDetail({
         setConfirmOpen(true);
     };
 
-    if (!prices) {
-        return <SkeletonList count={5} />;
-    }
-
     // Summary stats
-    const customCount = prices.filter((p) => p.has_override).length;
+    const priceRows = useMemo(() => prices ?? [], [prices]);
+    const customCount = priceRows.filter((p) => p.has_override).length;
     const avgMargin =
-        prices.length > 0
-            ? prices.reduce((sum, p) => sum + p.margin, 0) / prices.length
+        priceRows.length > 0
+            ? priceRows.reduce((sum, p) => sum + p.margin, 0) / priceRows.length
             : 0;
-    const negativeCount = prices.filter((p) => p.margin < 0).length;
+    const negativeCount = priceRows.filter((p) => p.margin < 0).length;
 
     const filtered = useMemo(
         () =>
-            prices.filter((p) => {
+            priceRows.filter((p) => {
                 if (search) {
                     const q = search.toLowerCase();
 
@@ -116,7 +129,7 @@ export default function OutletDetail({
 
                 return true;
             }),
-        [prices, search, marginFilter],
+        [priceRows, search, marginFilter],
     );
 
     const sorted = useMemo(
@@ -153,6 +166,10 @@ export default function OutletDetail({
         () => Math.max(...sorted.map((r) => r.margin), 1),
         [sorted],
     );
+
+    if (!prices) {
+        return <SkeletonList count={5} />;
+    }
 
     const handleSave = (newPrice: number) => {
         if (!selectedRow || isNaN(newPrice)) {
@@ -237,13 +254,6 @@ export default function OutletDetail({
             });
         }
     };
-
-    const SortMarker = ({ col }: { col: SortKey }) =>
-        sortKey === col ? (
-            <span className="ml-0.5 text-[10px] text-primary">
-                {sortDir === 'asc' ? '▲' : '▼'}
-            </span>
-        ) : null;
 
     return (
         <div>
@@ -401,28 +411,44 @@ export default function OutletDetail({
                                     onClick={() => toggleSort('name')}
                                 >
                                     Produk
-                                    <SortMarker col="name" />
+                                    <SortMarker
+                                        col="name"
+                                        activeCol={sortKey}
+                                        direction={sortDir}
+                                    />
                                 </TableHead>
                                 <TableHead
                                     className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('center_price')}
                                 >
                                     HPP
-                                    <SortMarker col="center_price" />
+                                    <SortMarker
+                                        col="center_price"
+                                        activeCol={sortKey}
+                                        direction={sortDir}
+                                    />
                                 </TableHead>
                                 <TableHead
                                     className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('selling_price')}
                                 >
                                     Harga Jual
-                                    <SortMarker col="selling_price" />
+                                    <SortMarker
+                                        col="selling_price"
+                                        activeCol={sortKey}
+                                        direction={sortDir}
+                                    />
                                 </TableHead>
                                 <TableHead
                                     className="cursor-pointer px-6 py-3.5 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase select-none"
                                     onClick={() => toggleSort('margin')}
                                 >
                                     Margin
-                                    <SortMarker col="margin" />
+                                    <SortMarker
+                                        col="margin"
+                                        activeCol={sortKey}
+                                        direction={sortDir}
+                                    />
                                 </TableHead>
                                 <TableHead className="px-6 py-3.5 text-center text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                     Aksi

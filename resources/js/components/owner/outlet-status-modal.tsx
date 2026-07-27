@@ -1,5 +1,4 @@
 import { useForm } from '@inertiajs/react';
-import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -31,11 +30,10 @@ export default function OutletStatusModal({
         prep_estimate_minutes: outlet.prep_estimate_minutes ?? '',
     });
 
-    useEffect(() => {
-        if (!open) {
-            reset();
-        }
-    }, [open]);
+    const closeModal = () => {
+        reset();
+        onClose();
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -44,7 +42,7 @@ export default function OutletStatusModal({
             onSuccess: () => {
                 toast.success('Status & area layanan diperbarui');
                 onSuccess();
-                onClose();
+                closeModal();
             },
             onError: (errs) =>
                 toast.error(Object.values(errs).flat().join(', ')),
@@ -52,7 +50,7 @@ export default function OutletStatusModal({
     };
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && closeModal()}>
             <DialogContent className="z-[2000]" overlayClassName="z-[1999]">
                 <DialogHeader>
                     <DialogTitle>Edit Status & Area Layanan</DialogTitle>
@@ -94,7 +92,7 @@ export default function OutletStatusModal({
                         <Button
                             variant="outline"
                             type="button"
-                            onClick={onClose}
+                            onClick={closeModal}
                         >
                             Batal
                         </Button>

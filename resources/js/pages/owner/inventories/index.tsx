@@ -186,17 +186,6 @@ export default function InventoriesIndex({
         );
     };
 
-    if (!outletSections && !centralStock) {
-        return (
-            <OwnerPageShell
-                title="Inventaris"
-                subtitle="Pantau stok semua outlet dan pusat"
-            >
-                <SkeletonPage />
-            </OwnerPageShell>
-        );
-    }
-
     const outletList = useMemo(
         () =>
             (outletSections ?? []).map((s: any) => ({
@@ -272,6 +261,17 @@ export default function InventoriesIndex({
             }),
         [filtered, sortKey, sortDir],
     );
+
+    if (!outletSections && !centralStock) {
+        return (
+            <OwnerPageShell
+                title="Inventaris"
+                subtitle="Pantau stok semua outlet dan pusat"
+            >
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
 
     const toggleExpand = (variantId: number) => {
         setExpandedIds((prev) => {

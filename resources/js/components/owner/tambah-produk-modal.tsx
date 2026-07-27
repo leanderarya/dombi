@@ -23,6 +23,24 @@ export default function TambahProdukModal({
     outletId,
     onSuccess,
 }: Props) {
+    if (!open) {
+        return null;
+    }
+
+    return (
+        <TambahProdukModalContent
+            onClose={onClose}
+            outletId={outletId}
+            onSuccess={onSuccess}
+        />
+    );
+}
+
+function TambahProdukModalContent({
+    onClose,
+    outletId,
+    onSuccess,
+}: Omit<Props, 'open'>) {
     const [products, setProducts] = useState<AvailableProduct[]>([]);
     const [selected, setSelected] = useState<Set<number>>(new Set());
     const [search, setSearch] = useState('');
@@ -32,15 +50,6 @@ export default function TambahProdukModal({
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!open) {
-            return;
-        }
-
-        setLoading(true);
-        setSelected(new Set());
-        setSearch('');
-        setInitialStock('0');
-
         fetch(`/owner/outlets/${outletId}/products/available`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' },
         })
@@ -48,7 +57,7 @@ export default function TambahProdukModal({
             .then(setProducts)
             .catch(() => setProducts([]))
             .finally(() => setLoading(false));
-    }, [open, outletId]);
+    }, [outletId]);
 
     const toggle = (id: number) => {
         setSelected((prev) => {
@@ -124,7 +133,7 @@ export default function TambahProdukModal({
 
     return (
         <OwnerModalShell
-            open={open}
+            open
             onClose={onClose}
             title="Tambah Produk Outlet"
             maxWidth="max-w-lg"

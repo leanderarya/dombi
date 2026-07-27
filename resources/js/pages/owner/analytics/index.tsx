@@ -1,7 +1,8 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { SkeletonPage } from '@/components/ui/skeleton';
+import { getInitialOwnerTab } from '../tab-state';
 import { AuditTrailTab } from './audit-tab';
 import { DashboardTab } from './dashboard-tab';
 import { LaporanTab } from './laporan-tab';
@@ -33,16 +34,12 @@ interface Props {
 }
 
 export default function AnalyticsIndex(props: Props) {
-    const [activeTab, setActiveTab] = useState<TabKey>('dashboard');
-
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const tab = params.get('tab');
-
-        if (tab && TABS.some((t) => t.key === tab)) {
-            setActiveTab(tab as TabKey);
-        }
-    }, []);
+    const [activeTab, setActiveTab] = useState<TabKey>(() =>
+        getInitialOwnerTab(
+            TABS.map((tab) => tab.key),
+            'dashboard',
+        ),
+    );
 
     const handleTabChange = (tab: TabKey) => {
         setActiveTab(tab);

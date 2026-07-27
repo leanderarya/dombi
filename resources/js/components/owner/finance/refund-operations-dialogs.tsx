@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { Banknote, Check, Copy, Smartphone } from 'lucide-react';
 import type { FormEventHandler } from 'react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,19 +39,18 @@ export function GuestRefundDestinationDialog({
     const [busy, setBusy] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    useEffect(() => {
-        if (!open) {
-            setType('bank');
-            setBankName('');
-            setAccountNumber('');
-            setAccountHolder('');
-            setEwalletProvider('');
-            setEwalletNumber('');
-            setEwalletHolder('');
-            setPhoneVerified(false);
-            setCopied(false);
-        }
-    }, [open]);
+    const closeDialog = () => {
+        setType('bank');
+        setBankName('');
+        setAccountNumber('');
+        setAccountHolder('');
+        setEwalletProvider('');
+        setEwalletNumber('');
+        setEwalletHolder('');
+        setPhoneVerified(false);
+        setCopied(false);
+        onClose();
+    };
 
     const isBank = type === 'bank';
 
@@ -78,7 +77,7 @@ export function GuestRefundDestinationDialog({
             {
                 onSuccess: () => {
                     toast.success('Tujuan refund berhasil disimpan');
-                    onClose();
+                    closeDialog();
                 },
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
@@ -92,7 +91,7 @@ export function GuestRefundDestinationDialog({
     }
 
     return (
-        <Dialog open={open} onOpenChange={(v) => !v && !busy && onClose()}>
+        <Dialog open={open} onOpenChange={(v) => !v && !busy && closeDialog()}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle id="guest-dest-title">
@@ -271,7 +270,7 @@ export function GuestRefundDestinationDialog({
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={onClose}
+                            onClick={closeDialog}
                             disabled={busy}
                             className="min-h-11"
                         >
@@ -296,12 +295,11 @@ export function RefundRollbackDialog({ refund, open, onClose }: DialogProps) {
     const [reason, setReason] = useState('');
     const [busy, setBusy] = useState(false);
 
-    useEffect(() => {
-        if (!open) {
-            setMode('retry');
-            setReason('');
-        }
-    }, [open]);
+    const closeDialog = () => {
+        setMode('retry');
+        setReason('');
+        onClose();
+    };
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -320,7 +318,7 @@ export function RefundRollbackDialog({ refund, open, onClose }: DialogProps) {
             {
                 onSuccess: () => {
                     toast.success('Refund dikembalikan ke antrean');
-                    onClose();
+                    closeDialog();
                 },
                 onError: (errors) =>
                     toast.error(Object.values(errors).flat().join(', ')),
@@ -334,7 +332,7 @@ export function RefundRollbackDialog({ refund, open, onClose }: DialogProps) {
     }
 
     return (
-        <Dialog open={open} onOpenChange={(v) => !v && !busy && onClose()}>
+        <Dialog open={open} onOpenChange={(v) => !v && !busy && closeDialog()}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle id="rollback-dialog-title">
@@ -402,7 +400,7 @@ export function RefundRollbackDialog({ refund, open, onClose }: DialogProps) {
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={onClose}
+                            onClick={closeDialog}
                             disabled={busy}
                             className="min-h-11"
                         >
