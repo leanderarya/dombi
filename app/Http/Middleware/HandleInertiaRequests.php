@@ -3,7 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Models\ExchangeRequest;
+use App\Models\Order;
 use App\Models\ReturnRequest;
+use App\Enums\PaymentStatus;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -72,6 +74,7 @@ class HandleInertiaRequests extends Middleware
                 return [
                     'pendingReturns' => ReturnRequest::where('status', ReturnRequest::STATUS_SUBMITTED)->count(),
                     'pendingExchanges' => ExchangeRequest::where('status', ExchangeRequest::STATUS_SUBMITTED)->count(),
+                    'pendingRefunds' => Order::where('payment_status', PaymentStatus::RefundPending->value)->count(),
                 ];
             },
         ];
