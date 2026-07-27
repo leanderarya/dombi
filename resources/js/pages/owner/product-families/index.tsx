@@ -3,6 +3,7 @@ import { Package, Pencil, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -15,8 +16,6 @@ import {
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
-import { Textarea } from '@/components/ui/textarea';
-import OwnerTable from '@/components/owner/owner-table';
 import {
     Table,
     TableBody,
@@ -25,6 +24,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Variant {
     id: number;
@@ -216,144 +216,146 @@ export default function ProductFamiliesIndex({ families }: Props) {
                 >
                     <OwnerTable noWrapper>
                         <Table>
-                        <TableHeader>
-                            <TableRow className="border-b border-border/30 bg-surface-muted/50">
-                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                    Produk
-                                </TableHead>
-                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                    Gambar
-                                </TableHead>
-                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                    Merek
-                                </TableHead>
-                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                    Varian
-                                </TableHead>
-                                <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                    Status
-                                </TableHead>
-                                <TableHead className="px-6 py-4 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                    Aksi
-                                </TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody className="divide-y divide-border/20">
-                            {filteredFamilies.map((family) => (
-                                <TableRow
-                                    key={family.id}
-                                    className="hover:bg-mint-wash group transition-colors"
-                                >
-                                    {/* Produk */}
-                                    <TableCell className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <div className="bg-mint-wash flex h-8 w-8 items-center justify-center rounded-lg text-primary">
-                                                <Package className="h-4 w-4" />
+                            <TableHeader>
+                                <TableRow className="border-b border-border/30 bg-surface-muted/50">
+                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                        Produk
+                                    </TableHead>
+                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                        Gambar
+                                    </TableHead>
+                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                        Merek
+                                    </TableHead>
+                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                        Varian
+                                    </TableHead>
+                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                        Status
+                                    </TableHead>
+                                    <TableHead className="px-6 py-4 text-right text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+                                        Aksi
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody className="divide-y divide-border/20">
+                                {filteredFamilies.map((family) => (
+                                    <TableRow
+                                        key={family.id}
+                                        className="hover:bg-mint-wash group transition-colors"
+                                    >
+                                        {/* Produk */}
+                                        <TableCell className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-mint-wash flex h-8 w-8 items-center justify-center rounded-lg text-primary">
+                                                    <Package className="h-4 w-4" />
+                                                </div>
+                                                <span className="text-sm font-semibold text-text">
+                                                    {family.name}
+                                                </span>
                                             </div>
-                                            <span className="text-sm font-semibold text-text">
-                                                {family.name}
-                                            </span>
-                                        </div>
-                                    </TableCell>
+                                        </TableCell>
 
-                                    {/* Gambar */}
-                                    <TableCell className="px-6 py-4">
-                                        {family.image ? (
-                                            <img
-                                                src={`/storage/${family.image}`}
-                                                alt={family.name}
-                                                className="h-10 w-10 rounded object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-xs text-text-muted">
-                                                —
-                                            </span>
-                                        )}
-                                    </TableCell>
-
-                                    {/* Merek */}
-                                    <TableCell className="px-6 py-4 text-sm text-text-muted">
-                                        {family.brand || '-'}
-                                    </TableCell>
-
-                                    {/* Varian */}
-                                    <TableCell className="px-6 py-4">
-                                        <div className="flex flex-wrap gap-1.5">
-                                            {family.variants
-                                                .slice(0, 3)
-                                                .map((v) => (
-                                                    <span
-                                                        key={v.id}
-                                                        className={`rounded-full px-2 py-0.5 text-[11px] ${
-                                                            v.is_active
-                                                                ? 'border border-primary/10 bg-white text-primary'
-                                                                : 'bg-surface-muted text-text-muted'
-                                                        }`}
-                                                    >
-                                                        {v.name}
-                                                    </span>
-                                                ))}
-                                            {family.variants_count > 3 && (
-                                                <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted">
-                                                    +{family.variants_count - 3}{' '}
-                                                    lagi
+                                        {/* Gambar */}
+                                        <TableCell className="px-6 py-4">
+                                            {family.image ? (
+                                                <img
+                                                    src={`/storage/${family.image}`}
+                                                    alt={family.name}
+                                                    className="h-10 w-10 rounded object-cover"
+                                                />
+                                            ) : (
+                                                <span className="text-xs text-text-muted">
+                                                    —
                                                 </span>
                                             )}
-                                        </div>
-                                    </TableCell>
+                                        </TableCell>
 
-                                    {/* Status */}
-                                    <TableCell className="px-6 py-4">
-                                        {family.is_active ? (
-                                            <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
-                                                AKTIF
-                                            </span>
-                                        ) : (
-                                            <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-bold text-text-muted">
-                                                NONAKTIF
-                                            </span>
-                                        )}
-                                    </TableCell>
+                                        {/* Merek */}
+                                        <TableCell className="px-6 py-4 text-sm text-text-muted">
+                                            {family.brand || '-'}
+                                        </TableCell>
 
-                                    {/* Aksi */}
-                                    <TableCell className="px-6 py-4 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() =>
-                                                    router.get(
-                                                        `/owner/product-families/${family.id}`,
-                                                    )
-                                                }
-                                                className="flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline"
-                                            >
-                                                Kelola{' '}
-                                                <ChevronRight className="h-3 w-3" />
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    handleEdit(family)
-                                                }
-                                                className="p-1.5 text-text-muted transition-colors hover:text-primary"
-                                                aria-label={`Edit ${family.name}`}
-                                            >
-                                                <Pencil className="h-3.5 w-3.5" />
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    setDeleteId(family.id)
-                                                }
-                                                className="p-1.5 text-text-muted transition-colors hover:text-red-600"
-                                                aria-label={`Hapus ${family.name}`}
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </OwnerTable>
+                                        {/* Varian */}
+                                        <TableCell className="px-6 py-4">
+                                            <div className="flex flex-wrap gap-1.5">
+                                                {family.variants
+                                                    .slice(0, 3)
+                                                    .map((v) => (
+                                                        <span
+                                                            key={v.id}
+                                                            className={`rounded-full px-2 py-0.5 text-[11px] ${
+                                                                v.is_active
+                                                                    ? 'border border-primary/10 bg-white text-primary'
+                                                                    : 'bg-surface-muted text-text-muted'
+                                                            }`}
+                                                        >
+                                                            {v.name}
+                                                        </span>
+                                                    ))}
+                                                {family.variants_count > 3 && (
+                                                    <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted">
+                                                        +
+                                                        {family.variants_count -
+                                                            3}{' '}
+                                                        lagi
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+
+                                        {/* Status */}
+                                        <TableCell className="px-6 py-4">
+                                            {family.is_active ? (
+                                                <span className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+                                                    AKTIF
+                                                </span>
+                                            ) : (
+                                                <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-bold text-text-muted">
+                                                    NONAKTIF
+                                                </span>
+                                            )}
+                                        </TableCell>
+
+                                        {/* Aksi */}
+                                        <TableCell className="px-6 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() =>
+                                                        router.get(
+                                                            `/owner/product-families/${family.id}`,
+                                                        )
+                                                    }
+                                                    className="flex items-center gap-0.5 text-xs font-semibold text-primary hover:underline"
+                                                >
+                                                    Kelola{' '}
+                                                    <ChevronRight className="h-3 w-3" />
+                                                </button>
+                                                <button
+                                                    onClick={() =>
+                                                        handleEdit(family)
+                                                    }
+                                                    className="p-1.5 text-text-muted transition-colors hover:text-primary"
+                                                    aria-label={`Edit ${family.name}`}
+                                                >
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </button>
+                                                <button
+                                                    onClick={() =>
+                                                        setDeleteId(family.id)
+                                                    }
+                                                    className="p-1.5 text-text-muted transition-colors hover:text-red-600"
+                                                    aria-label={`Hapus ${family.name}`}
+                                                >
+                                                    <Trash2 className="h-3.5 w-3.5" />
+                                                </button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </OwnerTable>
                 </div>
             )}
 

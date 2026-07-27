@@ -35,7 +35,9 @@ export default function AssignCourierSheet({
     const [error, setError] = useState<string | null>(null);
     const form = useForm({ courier_id: '' });
 
-    const [courierType, setCourierType] = useState<'dombi' | 'eksternal'>('dombi');
+    const [courierType, setCourierType] = useState<'dombi' | 'eksternal'>(
+        'dombi',
+    );
     const [externalName, setExternalName] = useState('');
     const [externalPhone, setExternalPhone] = useState('');
     const [externalPlate, setExternalPlate] = useState('');
@@ -104,10 +106,19 @@ export default function AssignCourierSheet({
 
     function handleSubmit() {
         if (courierType === 'dombi') {
-            if (!selectedCourier) return;
-            form.transform(() => ({ courier_id: String(selectedCourier), courier_type: 'dombi' }));
+            if (!selectedCourier) {
+                return;
+            }
+
+            form.transform(() => ({
+                courier_id: String(selectedCourier),
+                courier_type: 'dombi',
+            }));
         } else {
-            if (!externalName || !courierCost) return;
+            if (!externalName || !courierCost) {
+                return;
+            }
+
             form.transform(() => ({
                 courier_type: 'eksternal',
                 external_courier_name: externalName,
@@ -180,12 +191,14 @@ export default function AssignCourierSheet({
                     </div>
 
                     {/* Tab Switch */}
-                    <div className="mt-3 flex rounded-lg border border-slate-200 p-0.5 bg-slate-50">
+                    <div className="mt-3 flex rounded-lg border border-slate-200 bg-slate-50 p-0.5">
                         <button
                             type="button"
                             onClick={() => setCourierType('dombi')}
                             className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                                courierType === 'dombi' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                                courierType === 'dombi'
+                                    ? 'bg-white text-slate-900 shadow-sm'
+                                    : 'text-slate-500'
                             }`}
                         >
                             Kurir Dombi
@@ -194,7 +207,9 @@ export default function AssignCourierSheet({
                             type="button"
                             onClick={() => setCourierType('eksternal')}
                             className={`flex-1 rounded-md py-2 text-sm font-medium transition-all ${
-                                courierType === 'eksternal' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500'
+                                courierType === 'eksternal'
+                                    ? 'bg-white text-slate-900 shadow-sm'
+                                    : 'text-slate-500'
                             }`}
                         >
                             Gojek / Grab
@@ -203,212 +218,257 @@ export default function AssignCourierSheet({
 
                     {/* Content */}
                     {courierType === 'dombi' ? (
-                    <div className="mt-4">
-                        {loading ? (
-                            <div className="flex items-center justify-center py-8">
-                                <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
-                                <span className="ml-2 text-sm text-slate-500">
-                                    Memuat kurir...
-                                </span>
-                            </div>
-                        ) : error ? (
-                            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
-                                <p className="text-sm text-red-600">{error}</p>
-                                <button
-                                    type="button"
-                                    onClick={fetchNearestCouriers}
-                                    className="mt-2 text-sm font-medium text-red-700 underline"
-                                >
-                                    Coba lagi
-                                </button>
-                            </div>
-                        ) : couriers.length === 0 ? (
-                            <div className="rounded-lg border border-slate-200 bg-white p-4 text-center">
-                                <User className="mx-auto h-8 w-8 text-slate-300" />
-                                <p className="mt-2 text-sm text-slate-500">
-                                    Tidak ada kurir tersedia di sekitar outlet.
-                                </p>
-                                <p className="mt-1 text-[11px] text-slate-400">
-                                    Pastikan kurir online dan dalam radius 50km.
-                                </p>
-                            </div>
-                        ) : (
-                            <>
-                                <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
-                                    Kurir Terdekat ({couriers.length})
+                        <div className="mt-4">
+                            {loading ? (
+                                <div className="flex items-center justify-center py-8">
+                                    <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
+                                    <span className="ml-2 text-sm text-slate-500">
+                                        Memuat kurir...
+                                    </span>
                                 </div>
-                                <div className="mt-2 space-y-2">
-                                    {couriers.map((courier) => {
-                                        const isSelected =
-                                            selectedCourier === courier.id;
-                                        const isBusy =
-                                            courier.active_delivery_count >= 3;
+                            ) : error ? (
+                                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center">
+                                    <p className="text-sm text-red-600">
+                                        {error}
+                                    </p>
+                                    <button
+                                        type="button"
+                                        onClick={fetchNearestCouriers}
+                                        className="mt-2 text-sm font-medium text-red-700 underline"
+                                    >
+                                        Coba lagi
+                                    </button>
+                                </div>
+                            ) : couriers.length === 0 ? (
+                                <div className="rounded-lg border border-slate-200 bg-white p-4 text-center">
+                                    <User className="mx-auto h-8 w-8 text-slate-300" />
+                                    <p className="mt-2 text-sm text-slate-500">
+                                        Tidak ada kurir tersedia di sekitar
+                                        outlet.
+                                    </p>
+                                    <p className="mt-1 text-[11px] text-slate-400">
+                                        Pastikan kurir online dan dalam radius
+                                        50km.
+                                    </p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="text-[11px] font-bold tracking-wider text-slate-400 uppercase">
+                                        Kurir Terdekat ({couriers.length})
+                                    </div>
+                                    <div className="mt-2 space-y-2">
+                                        {couriers.map((courier) => {
+                                            const isSelected =
+                                                selectedCourier === courier.id;
+                                            const isBusy =
+                                                courier.active_delivery_count >=
+                                                3;
 
-                                        return (
-                                            <button
-                                                key={courier.id}
-                                                type="button"
-                                                onClick={() =>
-                                                    setSelectedCourier(
-                                                        courier.id,
-                                                    )
-                                                }
-                                                className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-all duration-150 active:opacity-80 ${
-                                                    isSelected
-                                                        ? 'border-emerald-300 bg-emerald-50/30'
-                                                        : 'border-slate-200 bg-white'
-                                                } ${isBusy ? 'opacity-60' : ''}`}
-                                            >
-                                                {/* Radio */}
-                                                <div
-                                                    className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}
+                                            return (
+                                                <button
+                                                    key={courier.id}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        setSelectedCourier(
+                                                            courier.id,
+                                                        )
+                                                    }
+                                                    className={`flex w-full items-start gap-3 rounded-lg border p-3 text-left transition-all duration-150 active:opacity-80 ${
+                                                        isSelected
+                                                            ? 'border-emerald-300 bg-emerald-50/30'
+                                                            : 'border-slate-200 bg-white'
+                                                    } ${isBusy ? 'opacity-60' : ''}`}
                                                 >
-                                                    {isSelected && (
-                                                        <div className="h-1.5 w-1.5 rounded-full bg-white" />
-                                                    )}
-                                                </div>
-
-                                                {/* Avatar */}
-                                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100">
-                                                    {courier.photo ? (
-                                                        <img
-                                                            src={courier.photo}
-                                                            alt={courier.name}
-                                                            className="h-10 w-10 rounded-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <span className="text-sm font-bold text-slate-600">
-                                                            {courier.name.charAt(
-                                                                0,
-                                                            )}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                {/* Info */}
-                                                <div className="min-w-0 flex-1">
-                                                    <div className="flex items-center justify-between">
-                                                        <div className="text-sm font-semibold text-slate-900">
-                                                            {courier.name}
-                                                        </div>
-                                                        <div className="flex items-center gap-1 text-[11px] text-slate-500">
-                                                            <MapPin className="h-3 w-3" />
-                                                            {getDistanceText(
-                                                                courier.distance,
-                                                            )}
-                                                        </div>
+                                                    {/* Radio */}
+                                                    <div
+                                                        className={`mt-1 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}
+                                                    >
+                                                        {isSelected && (
+                                                            <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                                                        )}
                                                     </div>
 
-                                                    <div className="mt-1 flex items-center gap-3 text-[11px] text-slate-500">
-                                                        {courier.phone && (
-                                                            <div className="flex items-center gap-1">
-                                                                <Phone className="h-3 w-3" />
-                                                                {courier.phone}
-                                                            </div>
-                                                        )}
-                                                        {courier.vehicle_type && (
-                                                            <div className="flex items-center gap-1">
-                                                                {getVehicleIcon(
-                                                                    courier.vehicle_type,
-                                                                )}
-                                                                {
-                                                                    courier.vehicle_type
+                                                    {/* Avatar */}
+                                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100">
+                                                        {courier.photo ? (
+                                                            <img
+                                                                src={
+                                                                    courier.photo
                                                                 }
-                                                                {courier.vehicle_plate &&
-                                                                    ` • ${courier.vehicle_plate}`}
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="mt-1.5 flex items-center gap-2">
-                                                        <span
-                                                            className={`text-[11px] ${courier.active_delivery_count === 0 ? 'text-emerald-600' : isBusy ? 'text-amber-600' : 'text-blue-600'}`}
-                                                        >
-                                                            {courier.active_delivery_count ===
-                                                            0
-                                                                ? 'Tersedia'
-                                                                : `${courier.active_delivery_count} tugas aktif`}
-                                                        </span>
-                                                        {isBusy && (
-                                                            <span className="rounded bg-amber-100 px-1 py-0.5 text-[11px] font-bold text-amber-700">
-                                                                Sibuk
+                                                                alt={
+                                                                    courier.name
+                                                                }
+                                                                className="h-10 w-10 rounded-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-sm font-bold text-slate-600">
+                                                                {courier.name.charAt(
+                                                                    0,
+                                                                )}
                                                             </span>
                                                         )}
                                                     </div>
-                                                </div>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </>
-                        )}
-                    </div>
-                    ) : (
-                    <div className="mt-4 space-y-3">
-                        <div>
-                            <label className="text-xs font-semibold text-slate-500">Nama Kurir</label>
-                            <input
-                                type="text"
-                                value={externalName}
-                                onChange={e => setExternalName(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
-                                placeholder="Nama driver Gojek/Grab"
-                            />
-                        </div>
-                        <div className="flex gap-2">
-                            <div className="flex-1">
-                                <label className="text-xs font-semibold text-slate-500">No. HP</label>
-                                <input
-                                    type="text"
-                                    value={externalPhone}
-                                    onChange={e => setExternalPhone(e.target.value)}
-                                    className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
-                                    placeholder="0812..."
-                                />
-                            </div>
-                            <div className="flex-1">
-                                <label className="text-xs font-semibold text-slate-500">Plat</label>
-                                <input
-                                    type="text"
-                                    value={externalPlate}
-                                    onChange={e => setExternalPlate(e.target.value)}
-                                    className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
-                                    placeholder="B 1234 ABC"
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="text-xs font-semibold text-slate-500">Biaya Ongkir (Gojek)</label>
-                            <input
-                                type="number"
-                                value={courierCost}
-                                onChange={e => setCourierCost(e.target.value)}
-                                className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
-                                placeholder="25000"
-                                min={0}
-                            />
-                        </div>
 
-                        {costNum > 0 && (
-                            <div className={`rounded-lg border p-3 ${isLoss ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50'}`}>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-600">Ongkir Customer</span>
-                                    <span className="font-semibold">Rp {deliveryFee.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-slate-600">Biaya Gojek</span>
-                                    <span className="font-semibold">Rp {costNum.toLocaleString()}</span>
-                                </div>
-                                <div className={`mt-1 flex justify-between border-t pt-1 text-sm font-bold ${isLoss ? 'text-red-600' : 'text-emerald-600'}`}>
-                                    <span>Selisih</span>
-                                    <span>{isLoss ? '⚠️' : '✅'} Rp {Math.abs(margin).toLocaleString()} {isLoss ? 'RUGI' : 'UNTUNG'}</span>
-                                </div>
-                                {isLoss && (
-                                    <p className="mt-2 text-xs text-red-600">Pengiriman ini merugi. Lanjutkan?</p>
-                                )}
+                                                    {/* Info */}
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="text-sm font-semibold text-slate-900">
+                                                                {courier.name}
+                                                            </div>
+                                                            <div className="flex items-center gap-1 text-[11px] text-slate-500">
+                                                                <MapPin className="h-3 w-3" />
+                                                                {getDistanceText(
+                                                                    courier.distance,
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="mt-1 flex items-center gap-3 text-[11px] text-slate-500">
+                                                            {courier.phone && (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Phone className="h-3 w-3" />
+                                                                    {
+                                                                        courier.phone
+                                                                    }
+                                                                </div>
+                                                            )}
+                                                            {courier.vehicle_type && (
+                                                                <div className="flex items-center gap-1">
+                                                                    {getVehicleIcon(
+                                                                        courier.vehicle_type,
+                                                                    )}
+                                                                    {
+                                                                        courier.vehicle_type
+                                                                    }
+                                                                    {courier.vehicle_plate &&
+                                                                        ` • ${courier.vehicle_plate}`}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        <div className="mt-1.5 flex items-center gap-2">
+                                                            <span
+                                                                className={`text-[11px] ${courier.active_delivery_count === 0 ? 'text-emerald-600' : isBusy ? 'text-amber-600' : 'text-blue-600'}`}
+                                                            >
+                                                                {courier.active_delivery_count ===
+                                                                0
+                                                                    ? 'Tersedia'
+                                                                    : `${courier.active_delivery_count} tugas aktif`}
+                                                            </span>
+                                                            {isBusy && (
+                                                                <span className="rounded bg-amber-100 px-1 py-0.5 text-[11px] font-bold text-amber-700">
+                                                                    Sibuk
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="mt-4 space-y-3">
+                            <div>
+                                <label className="text-xs font-semibold text-slate-500">
+                                    Nama Kurir
+                                </label>
+                                <input
+                                    type="text"
+                                    value={externalName}
+                                    onChange={(e) =>
+                                        setExternalName(e.target.value)
+                                    }
+                                    className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                    placeholder="Nama driver Gojek/Grab"
+                                />
                             </div>
-                        )}
-                    </div>
+                            <div className="flex gap-2">
+                                <div className="flex-1">
+                                    <label className="text-xs font-semibold text-slate-500">
+                                        No. HP
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={externalPhone}
+                                        onChange={(e) =>
+                                            setExternalPhone(e.target.value)
+                                        }
+                                        className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                        placeholder="0812..."
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="text-xs font-semibold text-slate-500">
+                                        Plat
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={externalPlate}
+                                        onChange={(e) =>
+                                            setExternalPlate(e.target.value)
+                                        }
+                                        className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                        placeholder="B 1234 ABC"
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-xs font-semibold text-slate-500">
+                                    Biaya Ongkir (Gojek)
+                                </label>
+                                <input
+                                    type="number"
+                                    value={courierCost}
+                                    onChange={(e) =>
+                                        setCourierCost(e.target.value)
+                                    }
+                                    className="mt-1 w-full rounded-lg border border-slate-200 p-3 text-sm"
+                                    placeholder="25000"
+                                    min={0}
+                                />
+                            </div>
+
+                            {costNum > 0 && (
+                                <div
+                                    className={`rounded-lg border p-3 ${isLoss ? 'border-red-200 bg-red-50' : 'border-emerald-200 bg-emerald-50'}`}
+                                >
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-600">
+                                            Ongkir Customer
+                                        </span>
+                                        <span className="font-semibold">
+                                            Rp {deliveryFee.toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-slate-600">
+                                            Biaya Gojek
+                                        </span>
+                                        <span className="font-semibold">
+                                            Rp {costNum.toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div
+                                        className={`mt-1 flex justify-between border-t pt-1 text-sm font-bold ${isLoss ? 'text-red-600' : 'text-emerald-600'}`}
+                                    >
+                                        <span>Selisih</span>
+                                        <span>
+                                            {isLoss ? '⚠️' : '✅'} Rp{' '}
+                                            {Math.abs(margin).toLocaleString()}{' '}
+                                            {isLoss ? 'RUGI' : 'UNTUNG'}
+                                        </span>
+                                    </div>
+                                    {isLoss && (
+                                        <p className="mt-2 text-xs text-red-600">
+                                            Pengiriman ini merugi. Lanjutkan?
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     )}
 
                     {form.errors.courier_id && (
@@ -431,8 +491,12 @@ export default function AssignCourierSheet({
                             onClick={handleSubmit}
                             disabled={
                                 courierType === 'dombi'
-                                    ? !selectedCourier || form.processing || loading
-                                    : !externalName || !courierCost || form.processing
+                                    ? !selectedCourier ||
+                                      form.processing ||
+                                      loading
+                                    : !externalName ||
+                                      !courierCost ||
+                                      form.processing
                             }
                             className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-700 text-sm font-bold text-white transition-all duration-150 active:bg-emerald-800 active:opacity-80 disabled:bg-slate-300"
                         >

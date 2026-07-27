@@ -1,10 +1,9 @@
 import { useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import { Package, TriangleAlert } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
-import { formatDate } from '@/lib/format';
 
 interface Props {
     delivery: any;
@@ -81,7 +80,8 @@ export default function ResolveDeliverySheet({
                 onClose();
                 toast.success('Pengiriman diselesaikan');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     }
 

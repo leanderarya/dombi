@@ -2,27 +2,23 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import {
     CheckCircle2,
     Clock,
-    MapPin,
     MessageCircle,
-    Navigation,
     Phone,
     RotateCcw,
     Share2,
     XCircle,
     AlertTriangle,
-    UserCheck,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import GuestRefundStatusCard from '@/components/customer/order/guest-refund-status-card';
 import OrderHeader from '@/components/customer/order/order-header';
 import OrderInfoCard from '@/components/customer/order/order-info-card';
-import GuestRefundStatusCard from '@/components/customer/order/guest-refund-status-card';
 import StatusGuidanceCard from '@/components/customer/order/status-guidance-card';
 import OrderQRCard from '@/components/customer/order-qr-card';
 import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
 import Dialog from '@/components/ui/dialog';
 import StatusBadge from '@/components/ui/status-badge';
-import { formatCurrency } from '@/lib/format';
 import { waLinkWithMessage } from '@/lib/wa';
 import type { GuestRefundPayload } from '@/types/refund';
 
@@ -121,10 +117,14 @@ export default function TrackPage({
         'expired',
     ].includes(order?.status ?? '');
     useEffect(() => {
-        if (isTerminal || !order) return;
+        if (isTerminal || !order) {
+            return;
+        }
+
         const interval = setInterval(() => {
             router.reload({ only: ['order'] });
         }, 15000);
+
         return () => clearInterval(interval);
     }, [isTerminal, order?.id]);
 

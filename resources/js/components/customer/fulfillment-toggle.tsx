@@ -13,8 +13,10 @@ export default function FulfillmentToggle({
 }: Props) {
     const containerBg = variant === 'green' ? 'bg-white/20' : 'bg-gray-100';
     const activeStyle = 'bg-white text-primary shadow-sm';
-    const inactiveStyle = variant === 'green' ? 'text-white/70' : 'text-text-muted';
-    const disabledStyle = variant === 'green' ? 'text-white/40' : 'text-text-subtle';
+    const inactiveStyle =
+        variant === 'green' ? 'text-white/70' : 'text-text-muted';
+    const disabledStyle =
+        variant === 'green' ? 'text-white/40' : 'text-text-subtle';
 
     return (
         <div className="relative mx-4 flex justify-center">

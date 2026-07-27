@@ -199,8 +199,12 @@ function RevenueTrendChart({
 
     // Smooth cubic bezier curve
     const buildSmoothPath = useCallback((pts: { x: number; y: number }[]) => {
-        if (pts.length < 2) return '';
+        if (pts.length < 2) {
+            return '';
+        }
+
         let d = `M${pts[0].x},${pts[0].y}`;
+
         for (let i = 1; i < pts.length; i++) {
             const prev = pts[i - 1];
             const curr = pts[i];
@@ -208,6 +212,7 @@ function RevenueTrendChart({
             const cpx2 = prev.x + (curr.x - prev.x) * 0.6;
             d += ` C${cpx1},${prev.y} ${cpx2},${curr.y} ${curr.x},${curr.y}`;
         }
+
         return d;
     }, []);
 
@@ -233,16 +238,27 @@ function RevenueTrendChart({
     // Throttled mouse move via RAF — uses SVG getScreenCTM for accurate mapping
     const handleMouseMove = useCallback(
         (e: React.MouseEvent<SVGSVGElement>) => {
-            if (rafRef.current) return;
+            if (rafRef.current) {
+                return;
+            }
+
             rafRef.current = requestAnimationFrame(() => {
                 rafRef.current = null;
                 const svg = svgRef.current;
-                if (!svg) return;
+
+                if (!svg) {
+                    return;
+                }
+
                 const pt = svg.createSVGPoint();
                 pt.x = e.clientX;
                 pt.y = e.clientY;
                 const ctm = svg.getScreenCTM();
-                if (!ctm) return;
+
+                if (!ctm) {
+                    return;
+                }
+
                 const svgP = pt.matrixTransform(ctm.inverse());
                 const closest = points.reduce(
                     (best, p, i) =>
@@ -263,12 +279,15 @@ function RevenueTrendChart({
             cancelAnimationFrame(rafRef.current);
             rafRef.current = null;
         }
+
         setHoverIndex(null);
     }, []);
 
     useEffect(
         () => () => {
-            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+            if (rafRef.current) {
+                cancelAnimationFrame(rafRef.current);
+            }
         },
         [],
     );

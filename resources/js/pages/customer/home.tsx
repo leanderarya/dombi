@@ -1,4 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
+import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import {
     ChatCircleFill,
     MapPinFill,
@@ -6,15 +8,13 @@ import {
     StorefrontFill,
     TruckFill,
 } from '@/components/icons/phosphor-fill';
-import { useState } from 'react';
-import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
+import PushBanner from '@/components/shared/push-banner';
 import { useGoogleLogin } from '@/hooks/use-google-login';
 import { useHeroSlides } from '@/hooks/use-hero-slides';
 import { useLockSwipeBack } from '@/hooks/use-lock-swipe-back';
 import { useNearestOutlet } from '@/hooks/use-nearest-outlet';
 import { usePickupFlow } from '@/hooks/use-pickup-flow';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
-import PushBanner from '@/components/shared/push-banner';
 import { usePolling } from '@/lib/use-polling';
 
 /* ─── Main ─────────────────────────────────────────────────── */
@@ -280,7 +280,7 @@ interface ExploreCard {
     bg: string;
     title: string;
     subtitle: string;
-    href: string;
+    href?: string;
     isButton?: boolean;
     onClick?: () => void;
 }

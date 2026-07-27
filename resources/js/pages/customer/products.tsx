@@ -1,8 +1,8 @@
 import { Head, usePage } from '@inertiajs/react';
 import { Search, Store, ThumbsUp, Truck } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import CollapsedOutletBar from '@/components/customer/collapsed-outlet-bar';
 import CustomerBottomNav from '@/components/customer/bottom-nav';
+import CollapsedOutletBar from '@/components/customer/collapsed-outlet-bar';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import FloatingCartBar from '@/components/customer/floating-cart-bar';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
@@ -72,12 +72,16 @@ function ProductsInner() {
     const [barSheetOpen, setBarSheetOpen] = useState(false);
 
     useEffect(() => {
-        if (!sentinelRef.current) return;
+        if (!sentinelRef.current) {
+            return;
+        }
+
         const observer = new IntersectionObserver(
             ([entry]) => setShowBar(!entry.isIntersecting),
             { threshold: 0 },
         );
         observer.observe(sentinelRef.current);
+
         return () => observer.disconnect();
     }, []);
 

@@ -2,9 +2,8 @@ import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
-import SortableTh from '@/components/owner/sortable-th';
 import OwnerTable from '@/components/owner/owner-table';
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -18,6 +17,14 @@ import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import StatusBadge from '@/components/ui/status-badge';
+import {
+    Table,
+    TableHeader,
+    TableBody,
+    TableHead,
+    TableRow,
+    TableCell,
+} from '@/components/ui/table';
 import { displayProductName } from '@/lib/display';
 import { formatCurrency } from '@/lib/format';
 
@@ -64,10 +71,11 @@ export default function CentralStockTab({
         }
     };
 
-    if (!variants || !stats)
+    if (!variants || !stats) {
         return (
             <div className="h-20 animate-pulse rounded-lg border border-border bg-surface" />
         );
+    }
 
     const filtered = useMemo(() => {
         let list = variants.filter(Boolean);
@@ -107,6 +115,7 @@ export default function CentralStockTab({
                     typeof av === 'string'
                         ? av.localeCompare(String(bv))
                         : Number(av) - Number(bv);
+
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
         [filtered, sortKey, sortDir],
@@ -272,7 +281,9 @@ export default function CentralStockTab({
             <Dialog
                 open={!!editModal}
                 onOpenChange={(isOpen) => {
-                    if (!isOpen) setEditModal(null);
+                    if (!isOpen) {
+                        setEditModal(null);
+                    }
                 }}
             >
                 <DialogContent className="max-w-sm">
@@ -314,7 +325,10 @@ export default function CentralStockTab({
                         </Button>
                         <Button
                             onClick={() => {
-                                if (!editModal) return;
+                                if (!editModal) {
+                                    return;
+                                }
+
                                 setSaving(true);
                                 router.patch(
                                     `/owner/inventories/central-stock/${editModal.id}`,

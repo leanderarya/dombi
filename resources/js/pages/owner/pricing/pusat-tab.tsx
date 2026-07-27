@@ -1,5 +1,5 @@
 import { DollarSign, Package, TrendingDown, TrendingUp } from 'lucide-react';
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
@@ -7,9 +7,15 @@ import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import { SkeletonList } from '@/components/ui/skeleton';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { formatCurrency, formatMarginPercent } from '@/lib/format';
-import { marginColor } from '@/lib/pricing-utils';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
 import { GlobalPriceModal } from './pricing-modals';
 import { PaginationBar } from './pricing-shared';
 import type {
@@ -37,26 +43,39 @@ export function PusatTab({
         null,
     );
 
-    if (!variants || !kpis) return <SkeletonList count={5} />;
+    if (!variants || !kpis) {
+        return <SkeletonList count={5} />;
+    }
 
     const filtered = useMemo(
         () =>
             variants.filter((v) => {
                 if (search) {
                     const q = search.toLowerCase();
+
                     if (
                         !v.name.toLowerCase().includes(q) &&
                         !(v.family_name ?? '').toLowerCase().includes(q)
-                    )
+                    ) {
                         return false;
+                    }
                 }
-                if (marginFilter === 'high' && v.margin <= 20000) return false;
+
+                if (marginFilter === 'high' && v.margin <= 20000) {
+                    return false;
+                }
+
                 if (
                     marginFilter === 'low' &&
                     (v.margin < 5000 || v.margin > 20000)
-                )
+                ) {
                     return false;
-                if (marginFilter === 'negative' && v.margin >= 0) return false;
+                }
+
+                if (marginFilter === 'negative' && v.margin >= 0) {
+                    return false;
+                }
+
                 return true;
             }),
         [variants, search, marginFilter],
@@ -71,6 +90,7 @@ export function PusatTab({
                     typeof av === 'string'
                         ? av.localeCompare(String(bv))
                         : Number(av) - Number(bv);
+
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
         [filtered, sortKey, sortDir],
@@ -87,6 +107,7 @@ export function PusatTab({
             setSortKey(key);
             setSortDir('asc');
         }
+
         setPage(1);
     };
 

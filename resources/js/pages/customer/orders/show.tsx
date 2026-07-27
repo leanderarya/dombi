@@ -1,9 +1,11 @@
-import { Head, Link, router, useForm } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
 import {
     AlertCircle,
     AlertTriangle,
+    Clock,
     Phone,
     RotateCcw,
+    XCircle,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import OrderHeader from '@/components/customer/order/order-header';
@@ -15,15 +17,14 @@ import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
 import BottomSheet from '@/components/ui/bottom-sheet';
 import Dialog from '@/components/ui/dialog';
-import { waLinkWithMessage } from '@/lib/wa';
 import {
     useOrderCancel,
     useOrderPay,
     useOrderReport,
 } from '@/hooks/use-order-actions';
-import { formatCurrency } from '@/lib/format';
 import { useOrderRecovery } from '@/lib/order-recovery';
 import { usePolling } from '@/lib/use-polling';
+import { waLinkWithMessage } from '@/lib/wa';
 
 /* ─── Constants ────────────────────────────────────────────── */
 
@@ -257,9 +258,7 @@ export default function OrderShow({
                 />
 
                 {isCancellable ? (
-                    <CancelButton
-                        onClick={() => setCancelDialogOpen(true)}
-                    />
+                    <CancelButton onClick={() => setCancelDialogOpen(true)} />
                 ) : !isTerminal ? (
                     <NonCancellableNotice
                         phone={order.outlet?.phone}
@@ -353,14 +352,33 @@ function PaymentIssueBanner({
     );
 }
 
-function StatusBanner({ order }: { order: any }) {
+interface StatusBannerOrder {
+    id: number;
+    status: string;
+    rejection_reason?: string | null;
+    rejection_note?: string | null;
+    cancellation_reason?: string | null;
+    cancellation_note?: string | null;
+}
+
+function StatusBanner({ order }: { order: StatusBannerOrder }) {
+    const { status } = order;
+    const reason =
+        status === 'rejected_by_outlet'
+            ? order.rejection_reason
+            : order.cancellation_reason;
+    const note =
+        status === 'rejected_by_outlet'
+            ? order.rejection_note
+            : order.cancellation_note;
+
     if (status === 'rejected_by_outlet' && reason) {
         return (
             <ReasonBanner
                 icon={<XCircle className="h-4 w-4 text-red-500" />}
                 title="Pesanan Ditolak Outlet"
                 reason={reason}
-                note={note}
+                note={note ?? undefined}
             />
         );
     }
@@ -371,7 +389,7 @@ function StatusBanner({ order }: { order: any }) {
                 icon={<XCircle className="h-4 w-4 text-red-500" />}
                 title="Pesanan Dibatalkan"
                 reason={reason}
-                note={note}
+                note={note ?? undefined}
             />
         );
     }
@@ -382,7 +400,7 @@ function StatusBanner({ order }: { order: any }) {
                 icon={<XCircle className="h-4 w-4 text-red-500" />}
                 title="Dibatalkan Outlet"
                 reason={reason}
-                note={note}
+                note={note ?? undefined}
             />
         );
     }
@@ -600,7 +618,7 @@ function CancelDialog({
                 Pesanan yang dibatalkan tidak dapat dipulihkan.
             </p>
             {isPickup && isConfirmation && (
-        <div>
+                <div>
                     <label className="text-xs font-medium text-text-subtle">
                         4 digit terakhir nomor HP
                     </label>

@@ -1,5 +1,4 @@
 import { Link, router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import {
     Bike,
     Car,
@@ -12,6 +11,7 @@ import {
     User,
 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import DeliveryStatusBadge from '@/components/ui/delivery-status-badge';
@@ -25,9 +25,9 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { copyToClipboard } from '@/lib/clipboard';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
-import { copyToClipboard } from '@/lib/clipboard';
 
 export default function CourierShow({
     courier,
@@ -63,7 +63,8 @@ export default function CourierShow({
         toggleForm.put(`/owner/couriers/${courier.id}`, {
             preserveScroll: true,
             onSuccess: () => toast.success('Status kurir diperbarui'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -74,7 +75,8 @@ export default function CourierShow({
                 setShowDeleteConfirm(false);
                 toast.success('Kurir dihapus');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -218,7 +220,9 @@ export default function CourierShow({
                                             variant="outline"
                                             size="sm"
                                             onClick={async () => {
-                                                await copyToClipboard(inviteUrl);
+                                                await copyToClipboard(
+                                                    inviteUrl,
+                                                );
                                             }}
                                         >
                                             <Copy
@@ -233,7 +237,9 @@ export default function CourierShow({
                                                 const text = `Undangan kurir Dombi: ${inviteUrl}`;
 
                                                 if (navigator.share) {
-                                                    await navigator.share({ text });
+                                                    await navigator.share({
+                                                        text,
+                                                    });
                                                 } else {
                                                     await copyToClipboard(text);
                                                 }

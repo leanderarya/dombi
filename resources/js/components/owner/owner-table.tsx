@@ -8,14 +8,20 @@ interface Props {
     noWrapper?: boolean;
 }
 
-export default function OwnerTable({ children, minWidth = '600px', noWrapper = false }: Props) {
+export default function OwnerTable({
+    children,
+    minWidth = '600px',
+    noWrapper = false,
+}: Props) {
     const content = (
         <div className="w-full caption-bottom text-sm" style={{ minWidth }}>
             {children}
         </div>
     );
 
-    if (noWrapper) return content;
+    if (noWrapper) {
+        return content;
+    }
 
     return (
         <div className="overflow-x-auto rounded-xl bg-surface shadow-xs ring-1 ring-foreground/10">

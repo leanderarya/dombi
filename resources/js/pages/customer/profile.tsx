@@ -1,9 +1,9 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { HelpCircle, Info, LogOut, MapPin, Package, Bell } from 'lucide-react';
 import { useState } from 'react';
-import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import LoginDialog from '@/components/customer/login-dialog';
 import { usePushSubscription } from '@/hooks/use-push-subscription';
+import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 
 export default function Profile({ defaultAddress }: any) {
     const { auth, appVersion } = usePage<any>().props;
@@ -19,40 +19,51 @@ export default function Profile({ defaultAddress }: any) {
             .toUpperCase()
             .slice(0, 2) ?? 'U';
 
-function PushToggle() {
-    const { pushState, requestEnable } = usePushSubscription();
+    function PushToggle() {
+        const { pushState, requestEnable } = usePushSubscription();
 
-    if (pushState === 'active') return null;
-    if (pushState === 'unsupported') return null;
+        if (pushState === 'active') {
+            return null;
+        }
 
-    const label = {
-        loading: 'Aktifkan Notifikasi',
-        denied: 'Notifikasi Dimatikan',
-    }[pushState] ?? 'Notifikasi';
+        if (pushState === 'unsupported') {
+            return null;
+        }
 
-    const desc = {
-        loading: 'Dapatkan info pesanan real-time',
-        denied: 'Buka Settings → Notifikasi → Allow',
-    }[pushState] ?? '';
+        const label =
+            {
+                loading: 'Aktifkan Notifikasi',
+                denied: 'Notifikasi Dimatikan',
+            }[pushState] ?? 'Notifikasi';
 
-    return (
-        <button
-            type="button"
-            onClick={pushState === 'loading' ? requestEnable : undefined}
-            className="flex min-h-[52px] w-full items-center gap-3.5 rounded-xl px-1 active:opacity-80"
-        >
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
-                <Bell className="h-5 w-5 text-text-subtle" />
-            </div>
-            <div className="min-w-0 flex-1 text-left">
-                <span className="text-sm font-medium text-text">{label}</span>
-                {desc && (
-                    <p className="mt-0.5 text-[11px] text-text-muted">{desc}</p>
-                )}
-            </div>
-        </button>
-    );
-}
+        const desc =
+            {
+                loading: 'Dapatkan info pesanan real-time',
+                denied: 'Buka Settings → Notifikasi → Allow',
+            }[pushState] ?? '';
+
+        return (
+            <button
+                type="button"
+                onClick={pushState === 'loading' ? requestEnable : undefined}
+                className="flex min-h-[52px] w-full items-center gap-3.5 rounded-xl px-1 active:opacity-80"
+            >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-surface-muted">
+                    <Bell className="h-5 w-5 text-text-subtle" />
+                </div>
+                <div className="min-w-0 flex-1 text-left">
+                    <span className="text-sm font-medium text-text">
+                        {label}
+                    </span>
+                    {desc && (
+                        <p className="mt-0.5 text-[11px] text-text-muted">
+                            {desc}
+                        </p>
+                    )}
+                </div>
+            </button>
+        );
+    }
 
     return (
         <CustomerMobileLayout hideTopBar hideCartBar>

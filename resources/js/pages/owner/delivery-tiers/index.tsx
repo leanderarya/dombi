@@ -1,8 +1,9 @@
 import { router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
 import { Edit2, GripVertical, Plus, Trash2, Truck } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -16,8 +17,6 @@ import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
-import { formatCurrency } from '@/lib/format';
-import OwnerTable from '@/components/owner/owner-table';
 import {
     Table,
     TableBody,
@@ -26,6 +25,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
 
 interface DeliveryTier {
     id: number;
@@ -91,7 +91,8 @@ export default function DeliveryTiersIndex({
                 addForm.reset();
                 toast.success('Tier ongkir disimpan');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -106,7 +107,8 @@ export default function DeliveryTiersIndex({
                 setEditingTier(null);
                 toast.success('Tier ongkir disimpan');
             },
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
         });
     };
 
@@ -118,17 +120,23 @@ export default function DeliveryTiersIndex({
                     setDeleteId(null);
                     toast.success('Tier ongkir disimpan');
                 },
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             });
         }
     };
 
     const handleToggle = (tierId: number) => {
-        router.patch(`/owner/delivery-tiers/${tierId}/toggle`, {
-            preserveScroll: true,
-            onSuccess: () => toast.success('Tier ongkir disimpan'),
-            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
-        });
+        router.patch(
+            `/owner/delivery-tiers/${tierId}/toggle`,
+            {},
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Tier ongkir disimpan'),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
+            },
+        );
     };
 
     return (
@@ -160,91 +168,99 @@ export default function DeliveryTiersIndex({
                 >
                     <OwnerTable minWidth="500px">
                         <Table>
-                        <TableHeader>
-                            <TableRow className="bg-surface-muted text-xs font-medium text-text-muted">
-                                <TableHead className="w-10 px-4 py-3"></TableHead>
-                                <TableHead className="px-4 py-3 text-left">Jarak</TableHead>
-                                <TableHead className="px-4 py-3 text-left">Tarif</TableHead>
-                                <TableHead className="px-4 py-3 text-left">Status</TableHead>
-                                <TableHead className="px-4 py-3 text-right">Aksi</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {tiers.map((tier) => (
-                                <TableRow
-                                    key={tier.id}
-                                    className={`hover:bg-mint-wash border-t border-border/20 transition-colors ${!tier.is_active ? 'opacity-50' : ''}`}
-                                >
-                                    <TableCell className="px-4 py-3">
-                                        <GripVertical
-                                            className="h-4 w-4 text-text-subtle"
-                                            aria-hidden="true"
-                                        />
-                                    </TableCell>
-                                    <TableCell className="px-4 py-3 font-medium text-text">
-                                        {tier.min_km} – {tier.max_km} km
-                                    </TableCell>
-                                    <TableCell className="px-4 py-3 font-bold text-text tabular-nums">
-                                        {formatCurrency(tier.fee)}
-                                    </TableCell>
-                                    <TableCell className="px-4 py-3">
-                                        <button
-                                            type="button"
-                                            onClick={() =>
-                                                handleToggle(tier.id)
-                                            }
-                                            className="inline-flex"
-                                        >
-                                            <StatusBadge
-                                                variant={
-                                                    tier.is_active
-                                                        ? 'success'
-                                                        : 'muted'
-                                                }
-                                                size="sm"
-                                            >
-                                                {tier.is_active
-                                                    ? 'Aktif'
-                                                    : 'Nonaktif'}
-                                            </StatusBadge>
-                                        </button>
-                                    </TableCell>
-                                    <TableCell className="px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-1">
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() =>
-                                                    setEditingTier(tier)
-                                                }
-                                                aria-label={`Edit tier ${tier.min_km}–${tier.max_km} km`}
-                                            >
-                                                <Edit2
-                                                    className="h-3.5 w-3.5"
-                                                    aria-hidden="true"
-                                                />
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="ghost"
-                                                onClick={() =>
-                                                    setDeleteId(tier.id)
-                                                }
-                                                className="text-red-500 hover:bg-red-50 hover:text-red-600"
-                                                aria-label={`Hapus tier ${tier.min_km}–${tier.max_km} km`}
-                                            >
-                                                <Trash2
-                                                    className="h-3.5 w-3.5"
-                                                    aria-hidden="true"
-                                                />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
+                            <TableHeader>
+                                <TableRow className="bg-surface-muted text-xs font-medium text-text-muted">
+                                    <TableHead className="w-10 px-4 py-3"></TableHead>
+                                    <TableHead className="px-4 py-3 text-left">
+                                        Jarak
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left">
+                                        Tarif
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-left">
+                                        Status
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 text-right">
+                                        Aksi
+                                    </TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </OwnerTable>
+                            </TableHeader>
+                            <TableBody>
+                                {tiers.map((tier) => (
+                                    <TableRow
+                                        key={tier.id}
+                                        className={`hover:bg-mint-wash border-t border-border/20 transition-colors ${!tier.is_active ? 'opacity-50' : ''}`}
+                                    >
+                                        <TableCell className="px-4 py-3">
+                                            <GripVertical
+                                                className="h-4 w-4 text-text-subtle"
+                                                aria-hidden="true"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 font-medium text-text">
+                                            {tier.min_km} – {tier.max_km} km
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 font-bold text-text tabular-nums">
+                                            {formatCurrency(tier.fee)}
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3">
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    handleToggle(tier.id)
+                                                }
+                                                className="inline-flex"
+                                            >
+                                                <StatusBadge
+                                                    variant={
+                                                        tier.is_active
+                                                            ? 'success'
+                                                            : 'neutral'
+                                                    }
+                                                    size="sm"
+                                                >
+                                                    {tier.is_active
+                                                        ? 'Aktif'
+                                                        : 'Nonaktif'}
+                                                </StatusBadge>
+                                            </button>
+                                        </TableCell>
+                                        <TableCell className="px-4 py-3 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        setEditingTier(tier)
+                                                    }
+                                                    aria-label={`Edit tier ${tier.min_km}–${tier.max_km} km`}
+                                                >
+                                                    <Edit2
+                                                        className="h-3.5 w-3.5"
+                                                        aria-hidden="true"
+                                                    />
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="ghost"
+                                                    onClick={() =>
+                                                        setDeleteId(tier.id)
+                                                    }
+                                                    className="text-red-500 hover:bg-red-50 hover:text-red-600"
+                                                    aria-label={`Hapus tier ${tier.min_km}–${tier.max_km} km`}
+                                                >
+                                                    <Trash2
+                                                        className="h-3.5 w-3.5"
+                                                        aria-hidden="true"
+                                                    />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </OwnerTable>
                 </div>
             )}
 

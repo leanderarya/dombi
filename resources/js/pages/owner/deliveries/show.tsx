@@ -1,4 +1,4 @@
-import { MapPin, Truck } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import { useState } from 'react';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';

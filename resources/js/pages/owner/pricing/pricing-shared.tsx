@@ -2,7 +2,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
-import type { MarginFilter, OtherOutlet, SortDir, SortKey } from './types';
+import type { OtherOutlet, SortDir, SortKey } from './types';
 
 export function SortBar({
     sortKey,

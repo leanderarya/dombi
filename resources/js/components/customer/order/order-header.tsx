@@ -1,7 +1,6 @@
-import { router } from '@inertiajs/react';
 import { ChevronLeft, Share2 } from 'lucide-react';
-import { formatDate } from '@/lib/format';
 import { useShareTracking } from '@/hooks/use-order-actions';
+import { formatDate } from '@/lib/format';
 
 interface Props {
     orderCode: string;

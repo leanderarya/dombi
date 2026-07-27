@@ -1,8 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { useEffect } from 'react';
-import { Input } from '@/components/ui/input';
-import PhoneInput from '@/components/ui/phone-input';
-import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -10,8 +9,9 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import PhoneInput from '@/components/ui/phone-input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface Props {
     outlet: any;
@@ -20,7 +20,12 @@ interface Props {
     onSuccess: () => void;
 }
 
-export default function OutletInfoModal({ outlet, open, onClose, onSuccess }: Props) {
+export default function OutletInfoModal({
+    outlet,
+    open,
+    onClose,
+    onSuccess,
+}: Props) {
     const { data, setData, patch, processing, errors, reset } = useForm({
         name: outlet.name ?? '',
         phone: outlet.phone ?? '',
@@ -45,7 +50,8 @@ export default function OutletInfoModal({ outlet, open, onClose, onSuccess }: Pr
                 onSuccess();
                 onClose();
             },
-            onError: (errs) => toast.error(Object.values(errs).flat().join(', ')),
+            onError: (errs) =>
+                toast.error(Object.values(errs).flat().join(', ')),
         });
     };
 
@@ -56,15 +62,61 @@ export default function OutletInfoModal({ outlet, open, onClose, onSuccess }: Pr
                     <DialogTitle>Edit Informasi Outlet</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-3">
-                    <Input label="Nama Outlet *" value={data.name} onChange={(e) => setData('name', e.target.value)} error={errors.name} required />
-                    <PhoneInput label="Nomor Telepon" value={data.phone} onChange={(v) => setData('phone', v)} error={errors.phone} />
-                    <Input label="Nama PIC" value={data.pic_name} onChange={(e) => setData('pic_name', e.target.value)} error={errors.pic_name} />
-                    <PhoneInput label="No. HP PIC" value={data.pic_phone} onChange={(v) => setData('pic_phone', v)} error={errors.pic_phone} />
-                    <Input label="Jabatan PIC" value={data.pic_position} onChange={(e) => setData('pic_position', e.target.value)} error={errors.pic_position} />
-                    <Textarea label="Catatan Operasional" value={data.operational_notes} onChange={(e) => setData('operational_notes', e.target.value)} error={errors.operational_notes} rows={2} />
+                    <Input
+                        label="Nama Outlet *"
+                        value={data.name}
+                        onChange={(e) => setData('name', e.target.value)}
+                        error={errors.name}
+                        required
+                    />
+                    <PhoneInput
+                        label="Nomor Telepon"
+                        value={data.phone}
+                        onChange={(v) => setData('phone', v)}
+                        error={errors.phone}
+                    />
+                    <Input
+                        label="Nama PIC"
+                        value={data.pic_name}
+                        onChange={(e) => setData('pic_name', e.target.value)}
+                        error={errors.pic_name}
+                    />
+                    <PhoneInput
+                        label="No. HP PIC"
+                        value={data.pic_phone}
+                        onChange={(v) => setData('pic_phone', v)}
+                        error={errors.pic_phone}
+                    />
+                    <Input
+                        label="Jabatan PIC"
+                        value={data.pic_position}
+                        onChange={(e) =>
+                            setData('pic_position', e.target.value)
+                        }
+                        error={errors.pic_position}
+                    />
+                    <Textarea
+                        label="Catatan Operasional"
+                        value={data.operational_notes}
+                        onChange={(e) =>
+                            setData('operational_notes', e.target.value)
+                        }
+                        error={errors.operational_notes}
+                        rows={2}
+                    />
                     <DialogFooter>
-                        <Button variant="outline" type="button" onClick={onClose}>Batal</Button>
-                        <Button variant="primary" type="submit" disabled={processing}>
+                        <Button
+                            variant="outline"
+                            type="button"
+                            onClick={onClose}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            variant="primary"
+                            type="submit"
+                            disabled={processing}
+                        >
                             {processing ? 'Menyimpan...' : 'Simpan'}
                         </Button>
                     </DialogFooter>

@@ -91,7 +91,6 @@ export default function Help() {
                         />
                     </div>
                 </section>
-
             </main>
         </div>
     );

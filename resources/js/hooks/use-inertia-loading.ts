@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from 'react';
 
 export function useInertiaLoading() {
     const [loading, setLoading] = useState(false);
-    const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+    const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+        undefined,
+    );
 
     useEffect(() => {
         const removeStart = router.on('start', () => {

@@ -6,7 +6,6 @@ import {
     MapPin,
     Navigation,
     Phone,
-    Truck,
     User,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';

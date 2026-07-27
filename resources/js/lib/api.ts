@@ -21,6 +21,7 @@ export async function mutationFetch(
     if (res.status === 409) {
         try {
             const body = await res.clone().json();
+
             if (body?.error === 'outlet_closed') {
                 outletClosedHandler?.();
             }

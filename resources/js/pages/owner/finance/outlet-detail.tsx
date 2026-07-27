@@ -290,10 +290,20 @@ export default function OutletAccountStatement({
                                 label="Kurir Dombi"
                                 value={
                                     <span className="text-right">
-                                        <span>{deliveryStats?.dombi_count ?? 0} transaksi</span>
-                                        <span className="ml-2">{formatCurrency(deliveryStats?.dombi_fee ?? 0)}</span>
-                                        <span className="ml-2 text-emerald-600 font-semibold">
-                                            Net +{formatCurrency(deliveryStats?.dombi_net ?? 0)}
+                                        <span>
+                                            {deliveryStats?.dombi_count ?? 0}{' '}
+                                            transaksi
+                                        </span>
+                                        <span className="ml-2">
+                                            {formatCurrency(
+                                                deliveryStats?.dombi_fee ?? 0,
+                                            )}
+                                        </span>
+                                        <span className="ml-2 font-semibold text-emerald-600">
+                                            Net +
+                                            {formatCurrency(
+                                                deliveryStats?.dombi_net ?? 0,
+                                            )}
                                         </span>
                                     </span>
                                 }
@@ -302,18 +312,49 @@ export default function OutletAccountStatement({
                             <OwnerDetailRow
                                 label="Biaya Gojek/Grab"
                                 value={
-                                    !deliveryStats || deliveryStats.eksternal_count === 0 ? (
-                                        <span className="text-text-muted">Belum ada transaksi</span>
+                                    !deliveryStats ||
+                                    deliveryStats.eksternal_count === 0 ? (
+                                        <span className="text-text-muted">
+                                            Belum ada transaksi
+                                        </span>
                                     ) : (
-                                        <span className="text-right block">
-                                            <span>{deliveryStats.eksternal_count} transaksi</span>
-                                            <span className="ml-2">Fee {formatCurrency(deliveryStats.eksternal_fee ?? 0)}</span>
-                                            <span className="ml-2">Cost {formatCurrency(deliveryStats.eksternal_cost ?? 0)}</span>
-                                            <span className={`ml-2 font-semibold ${(deliveryStats.eksternal_net ?? 0) < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
-                                                Net {(deliveryStats.eksternal_net ?? 0) >= 0 ? '+' : ''}{formatCurrency(deliveryStats.eksternal_net ?? 0)}
+                                        <span className="block text-right">
+                                            <span>
+                                                {deliveryStats.eksternal_count}{' '}
+                                                transaksi
                                             </span>
-                                            {(deliveryStats.eksternal_net ?? 0) < 0 && (
-                                                <span className="ml-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-700">Rugi</span>
+                                            <span className="ml-2">
+                                                Fee{' '}
+                                                {formatCurrency(
+                                                    deliveryStats.eksternal_fee ??
+                                                        0,
+                                                )}
+                                            </span>
+                                            <span className="ml-2">
+                                                Cost{' '}
+                                                {formatCurrency(
+                                                    deliveryStats.eksternal_cost ??
+                                                        0,
+                                                )}
+                                            </span>
+                                            <span
+                                                className={`ml-2 font-semibold ${(deliveryStats.eksternal_net ?? 0) < 0 ? 'text-red-600' : 'text-emerald-600'}`}
+                                            >
+                                                Net{' '}
+                                                {(deliveryStats.eksternal_net ??
+                                                    0) >= 0
+                                                    ? '+'
+                                                    : ''}
+                                                {formatCurrency(
+                                                    deliveryStats.eksternal_net ??
+                                                        0,
+                                                )}
+                                            </span>
+                                            {(deliveryStats.eksternal_net ??
+                                                0) < 0 && (
+                                                <span className="ml-1 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-700">
+                                                    Rugi
+                                                </span>
                                             )}
                                         </span>
                                     )

@@ -1,10 +1,10 @@
 import { useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
-import { displayProductName } from '@/lib/display';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { displayProductName } from '@/lib/display';
 
 export default function EditInventory({ inventory }: any) {
     const form = useForm({
@@ -41,7 +41,10 @@ export default function EditInventory({ inventory }: any) {
                         form.put(`/owner/inventories/${inventory.id}`, {
                             preserveScroll: true,
                             onSuccess: () => toast.success('Stok diperbarui'),
-                            onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                            onError: (errors) =>
+                                toast.error(
+                                    Object.values(errors).flat().join(', '),
+                                ),
                         });
                     }}
                     className="space-y-4"

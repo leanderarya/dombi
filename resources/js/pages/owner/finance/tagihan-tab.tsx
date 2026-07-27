@@ -1,4 +1,4 @@
-import { DollarSign, Store, PartyPopper } from 'lucide-react';
+import { Store, PartyPopper } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import FinanceOutletCard from '@/components/owner/finance/finance-outlet-card';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';

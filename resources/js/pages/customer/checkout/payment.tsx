@@ -411,6 +411,7 @@ export default function CheckoutPayment({ draft, summary }: any) {
                                             (option.fee_rate ?? 0) *
                                             100,
                                     ) / 100;
+
                                 return (
                                     <button
                                         key={option.value}

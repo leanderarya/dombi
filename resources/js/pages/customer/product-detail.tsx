@@ -2,12 +2,12 @@ import { Head, Link, router } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import CustomerLocationBootstrap from '@/components/customer/customer-location-bootstrap';
 import ForeGreenHeader from '@/components/customer/fore-green-header';
+import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
+import { mutationFetch } from '@/lib/api';
 import { getCsrfToken } from '@/lib/csrf';
 import { formatCurrency } from '@/lib/format';
 import { sizeToMl } from '@/lib/size';
 import { useCart } from '@/lib/use-cart';
-import OutletProvider, { useOutlet } from '@/contexts/outlet-context';
-import { mutationFetch } from '@/lib/api';
 
 /* ─── Types ────────────────────────────────────────────────── */
 
@@ -265,9 +265,13 @@ function ProductDetailInner({
 
                 <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
                     <div className="mb-5 flex h-72 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 to-zinc-50">
-                        {!!(selectedVariant?.image ?? family.image) ? (
+                        {(selectedVariant?.image ?? family.image) ? (
                             <img
-                                src={selectedVariant?.image ?? family.image}
+                                src={
+                                    selectedVariant?.image ??
+                                    family.image ??
+                                    undefined
+                                }
                                 alt={family.name}
                                 className="h-full w-full object-cover"
                             />
@@ -642,7 +646,13 @@ function CartButton({ outletId }: { outletId: number | null }) {
     const { totalItems, items } = useCart();
 
     const handleCheckout = () => {
-        const payload: Record<string, unknown> = {
+        const payload: {
+            items: Array<{
+                product_variant_id: number;
+                quantity: number;
+            }>;
+            selected_outlet_id?: number;
+        } = {
             items: items.map((i) => ({
                 product_variant_id: i.product_variant_id,
                 quantity: i.quantity,

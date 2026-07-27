@@ -2,14 +2,12 @@ import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
+import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
 import Pagination from '@/components/ui/pagination';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
-import { formatCurrency } from '@/lib/format';
-import { getExchangeStatus } from '@/lib/status-labels';
-import OwnerTable from '@/components/owner/owner-table';
 import {
     Table,
     TableHeader,
@@ -18,6 +16,8 @@ import {
     TableRow,
     TableCell,
 } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/format';
+import { getExchangeStatus } from '@/lib/status-labels';
 
 const EXCHANGE_STATUS_FILTERS = [
     { key: '', label: 'Semua' },
@@ -66,7 +66,8 @@ export default function PenukaranTab({
             {
                 preserveScroll: true,
                 onSuccess: () => toast.success('Disetujui'),
-                onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
             },
         );
     };
@@ -171,7 +172,9 @@ export default function PenukaranTab({
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-surface-muted/50 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                <TableHead className="px-3 py-2.5 text-left">Kode</TableHead>
+                                <TableHead className="px-3 py-2.5 text-left">
+                                    Kode
+                                </TableHead>
                                 <TableHead className="px-3 py-2.5 text-left">
                                     Outlet / Info
                                 </TableHead>
@@ -181,7 +184,9 @@ export default function PenukaranTab({
                                 <TableHead className="px-3 py-2.5 text-right">
                                     Nilai
                                 </TableHead>
-                                <TableHead className="px-3 py-2.5 text-right">Aksi</TableHead>
+                                <TableHead className="px-3 py-2.5 text-right">
+                                    Aksi
+                                </TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>

@@ -5,8 +5,13 @@ import { useCart } from '@/lib/use-cart';
 function getSelectedOutletId(): number | null {
     try {
         const raw = localStorage.getItem('dombi_selected_outlet');
-        if (!raw) return null;
+
+        if (!raw) {
+            return null;
+        }
+
         const id = JSON.parse(raw);
+
         return typeof id === 'number' ? id : null;
     } catch {
         return null;
@@ -21,16 +26,24 @@ export default function FloatingCartBar() {
     }
 
     const handleCheckout = () => {
-        const payload: Record<string, unknown> = {
+        const payload: {
+            items: Array<{
+                product_variant_id: number;
+                quantity: number;
+            }>;
+            selected_outlet_id?: number;
+        } = {
             items: items.map((i) => ({
                 product_variant_id: i.product_variant_id,
                 quantity: i.quantity,
             })),
         };
         const outletId = getSelectedOutletId();
+
         if (outletId) {
             payload.selected_outlet_id = outletId;
         }
+
         router.post('/customer/checkout', payload);
     };
 

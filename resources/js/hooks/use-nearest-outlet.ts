@@ -41,7 +41,9 @@ export function useNearestOutlet() {
 
                     // Pick nearest open outlet
                     const allOutlets = data.alternatives ?? [];
-                    const openOutlets = allOutlets.filter((o: any) => o.is_open !== false);
+                    const openOutlets = allOutlets.filter(
+                        (o: any) => o.is_open !== false,
+                    );
                     const pick = openOutlets[0] ?? data.recommended;
 
                     if (pick) {

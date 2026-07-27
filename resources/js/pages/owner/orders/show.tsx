@@ -1,7 +1,7 @@
-import { router, useForm } from '@inertiajs/react';
-import { toast } from 'sonner';
+import { useForm } from '@inertiajs/react';
 import { ChevronDown, ChevronUp, MapPin, Truck } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OrderStatusChip from '@/components/owner/order-status-chip';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -300,8 +300,14 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                     `/owner/orders/${order.id}/assign-courier`,
                                     {
                                         preserveScroll: true,
-                                        onSuccess: () => toast.success('Kurir ditugaskan'),
-                                        onError: (errors) => toast.error(Object.values(errors).flat().join(', ')),
+                                        onSuccess: () =>
+                                            toast.success('Kurir ditugaskan'),
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
                                     },
                                 );
                             }}

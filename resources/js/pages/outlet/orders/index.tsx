@@ -5,9 +5,9 @@ import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import EmptyState from '@/components/ui/empty-state';
 import FilterChips from '@/components/ui/filter-chips';
 import Pagination from '@/components/ui/pagination';
-import { useOrderAlert } from '@/hooks/use-order-alert';
-import { useInertiaLoading } from '@/hooks/use-inertia-loading';
 import { SkeletonOrderList } from '@/components/ui/skeleton';
+import { useInertiaLoading } from '@/hooks/use-inertia-loading';
+import { useOrderAlert } from '@/hooks/use-order-alert';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency, formatRelativeDate } from '@/lib/format';
 import { getOrderStatus } from '@/lib/status-labels';
@@ -137,13 +137,17 @@ export default function OutletOrdersIndex({
                                 <span className="font-semibold text-amber-800">
                                     {count} pesanan menunggu konfirmasi
                                 </span>
-                                <span className="ml-1 text-amber-600">&rarr;</span>
+                                <span className="ml-1 text-amber-600">
+                                    &rarr;
+                                </span>
                             </button>
                         )}
 
                         {orders.data.length === 0 ? (
                             <EmptyState
-                                icon={<Package className="h-8 w-8 text-text-subtle" />}
+                                icon={
+                                    <Package className="h-8 w-8 text-text-subtle" />
+                                }
                                 title={
                                     isAktif
                                         ? 'Tidak ada pesanan aktif'
@@ -160,7 +164,8 @@ export default function OutletOrdersIndex({
                                     activeFilter
                                         ? {
                                               label: 'Reset Filter',
-                                              onClick: () => handleFilterChange(''),
+                                              onClick: () =>
+                                                  handleFilterChange(''),
                                           }
                                         : undefined
                                 }
@@ -169,7 +174,8 @@ export default function OutletOrdersIndex({
                             <div className="space-y-2">
                                 {orders.data.map((order: any) => {
                                     const dotColor =
-                                        statusDotColors[order.status] ?? 'bg-zinc-400';
+                                        statusDotColors[order.status] ??
+                                        'bg-zinc-400';
                                     const statusLabel = getOrderStatus(
                                         order.status,
                                     ).label;
@@ -179,7 +185,9 @@ export default function OutletOrdersIndex({
                                         ? getWaitMinutes(order.ordered_at)
                                         : null;
                                     const isUrgent =
-                                        isPending && waitMin !== null && waitMin > 15;
+                                        isPending &&
+                                        waitMin !== null &&
+                                        waitMin > 15;
 
                                     return (
                                         <Link
@@ -220,7 +228,8 @@ export default function OutletOrdersIndex({
                                                     <span className="mx-1 text-text-subtle">
                                                         ·
                                                     </span>
-                                                    {order.items?.length ?? 0} item
+                                                    {order.items?.length ?? 0}{' '}
+                                                    item
                                                     {order.ordered_at && (
                                                         <>
                                                             <span className="mx-1 text-text-subtle">
@@ -241,7 +250,9 @@ export default function OutletOrdersIndex({
                                                     )}
                                                 </span>
                                                 <span className="ml-2 shrink-0 text-xs font-semibold text-text tabular-nums">
-                                                    {formatCurrency(order.total)}
+                                                    {formatCurrency(
+                                                        order.total,
+                                                    )}
                                                 </span>
                                             </div>
                                         </Link>
