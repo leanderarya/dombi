@@ -20,12 +20,8 @@ class GuestCancelFlowTest extends TestCase
 
         $response = $this->get("/guest/orders/{$order->id}/cancel/{$order->guest_token}");
 
-        $response->assertOk();
-        $response->assertInertia(fn ($page) => $page
-            ->component('guest/cancel')
-            ->has('order')
-            ->has('token')
-        );
+        // Guest cancel page removed — should be 404
+        $response->assertNotFound();
     }
 
     public function test_cancel_page_returns_404_with_invalid_token(): void
@@ -45,9 +41,10 @@ class GuestCancelFlowTest extends TestCase
             'reason' => 'Salah Pesan',
         ]);
 
-        $response->assertRedirect();
+        // Guest cancel disabled — should be 404 or 403, not redirect
+        $this->assertTrue(in_array($response->status(), [403, 404], true));
         $order->refresh();
-        $this->assertSame(Order::STATUS_CANCELLED_BY_CUSTOMER, $order->status);
+        $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $order->status);
     }
 
     public function test_guest_cannot_cancel_with_invalid_token(): void
@@ -58,7 +55,7 @@ class GuestCancelFlowTest extends TestCase
             'reason' => 'Salah Pesan',
         ]);
 
-        $response->assertForbidden();
+        $this->assertTrue(in_array($response->status(), [403, 404], true));
         $order->refresh();
         $this->assertSame(Order::STATUS_PENDING_CONFIRMATION, $order->status);
     }
@@ -71,7 +68,8 @@ class GuestCancelFlowTest extends TestCase
             'reason' => 'Salah Pesan',
         ]);
 
-        $response->assertSessionHasErrors('status');
+        // Routes removed, so 404/403, not session errors
+        $this->assertTrue(in_array($response->status(), [403, 404], true));
     }
 
     public function test_guest_token_has_high_entropy(): void

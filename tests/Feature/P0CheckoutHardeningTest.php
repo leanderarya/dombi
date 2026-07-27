@@ -254,10 +254,13 @@ class P0CheckoutHardeningTest extends TestCase
         ]);
 
         // Old /track/{token}/cancel route removed.
-        // Guest cancel returns session error for completed orders.
-        $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
+        // Guest cancel is disabled — should return 404 (route absent) or 403, never leak exception
+        $response = $this->post("/guest/orders/{$order->id}/cancel/{$order->guest_token}", [
             'reason' => 'Tidak Jadi Membeli',
-        ])->assertSessionHasErrors('status');
+        ]);
+        $this->assertTrue(in_array($response->status(), [403, 404], true), 'Expected 403 or 404, got '.$response->status());
+        // Ensure no raw exception message leaked in body when 500 would occur
+        $response->assertDontSee('Exception', false);
     }
 
     private function createOrder(array $overrides = []): Order
