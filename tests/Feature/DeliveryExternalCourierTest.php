@@ -39,6 +39,7 @@ class DeliveryExternalCourierTest extends TestCase
             'order_code' => 'DOMBI-EXT-001',
             'status' => Order::STATUS_READY_FOR_PICKUP,
             'fulfillment_type' => 'delivery_dombi',
+            'payment_status' => 'paid',
             'subtotal' => 50000,
             'delivery_fee' => 15000,
             'total' => 65000,
