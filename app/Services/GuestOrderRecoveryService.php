@@ -12,6 +12,10 @@ class GuestOrderRecoveryService
 
     private const MAX_DAYS = 30;
 
+    public function __construct(
+        private readonly RefundPayloadService $refundPayloads,
+    ) {}
+
     /**
      * Recover orders using phone number.
      * Phone number is the sole proof of ownership — no second factor needed.
@@ -99,6 +103,13 @@ class GuestOrderRecoveryService
 
     private function formatOrder(Order $order): array
     {
+        $queueState = $this->refundPayloads->queueState($order);
+        $refundBadge = $queueState === null ? null : [
+            'payment_status' => $order->payment_status,
+            'queue_state' => $queueState,
+            'status_label' => $this->refundPayloads->statusLabel($order),
+        ];
+
         return [
             'id' => $order->id,
             'order_code' => $order->order_code,
@@ -106,6 +117,7 @@ class GuestOrderRecoveryService
             'tracking_url' => $order->tracking_url,
             'status' => $order->status,
             'payment_status' => $order->payment_status,
+            'refund_badge' => $refundBadge,
             'fulfillment_type' => $order->fulfillment_type,
             'total' => (float) $order->total,
             'customer_name' => $order->customer_name,
