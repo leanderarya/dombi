@@ -1,8 +1,9 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Package, Truck } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import AssignCourierSheet from '@/components/operations/assign-courier-sheet';
+import { createAssignCourierSheetLifecycle } from '@/components/operations/assign-courier-sheet-lifecycle';
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import { Button } from '@/components/ui/button';
@@ -40,19 +41,49 @@ export default function OutletDeliveriesIndex({
     const [assignOpen, setAssignOpen] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [couriers, setCouriers] = useState<any[]>([]);
+    const courierRequestLifecycleRef = useRef(
+        createAssignCourierSheetLifecycle(),
+    );
+
+    useEffect(() => {
+        const lifecycle = courierRequestLifecycleRef.current;
+
+        return () => lifecycle.close();
+    }, []);
 
     const handleAssignCourier = async (orderId: number) => {
         const order = unassignedOrders.find((o: any) => o.id === orderId);
 
-        if (order) {
+        if (!order) {
+            return;
+        }
+
+        const lifecycle = courierRequestLifecycleRef.current;
+        const request = lifecycle.beginRequest();
+
+        try {
             const res = await fetch(`/outlet/orders/${orderId}`, {
                 headers: { 'X-Inertia': 'true' },
+                signal: request.signal,
             });
             const data = await res.json();
+
+            if (!lifecycle.canPublish(request.id)) {
+                return;
+            }
+
             setCouriers(data.props?.couriers ?? []);
             setSelectedOrder(order);
             setAssignOpen(true);
+        } finally {
+            lifecycle.complete(request.id);
         }
+    };
+
+    const closeAssignCourierSheet = () => {
+        courierRequestLifecycleRef.current.close();
+        setAssignOpen(false);
+        setSelectedOrder(null);
     };
 
     return (
@@ -250,10 +281,7 @@ export default function OutletDeliveriesIndex({
                     order={selectedOrder}
                     couriers={couriers}
                     open={assignOpen}
-                    onClose={() => {
-                        setAssignOpen(false);
-                        setSelectedOrder(null);
-                    }}
+                    onClose={closeAssignCourierSheet}
                     assignUrl={`/outlet/orders/${selectedOrder.id}/assign-courier`}
                 />
             )}
