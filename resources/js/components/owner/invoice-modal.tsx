@@ -16,7 +16,6 @@ interface UnpaidItem {
 interface Props {
     open: boolean;
     onClose: () => void;
-    outletId: number;
     outletName: string;
     totalOutstanding: number;
     unpaidBreakdown: UnpaidItem[];
@@ -25,7 +24,6 @@ interface Props {
 export default function InvoiceModal({
     open,
     onClose,
-    outletId,
     outletName,
     totalOutstanding,
     unpaidBreakdown,

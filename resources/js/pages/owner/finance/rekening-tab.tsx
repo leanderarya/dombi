@@ -214,7 +214,6 @@ export default function RekeningTab({
                             data={data}
                             setData={setData}
                             errors={errors}
-                            editingId={editingId}
                         />
                     </form>
                     <DialogFooter>
@@ -268,7 +267,6 @@ function AccountForm({
     data,
     setData,
     errors,
-    editingId,
 }: {
     data: {
         bank_name: string;
@@ -278,7 +276,6 @@ function AccountForm({
     };
     setData: (key: string, value: any) => void;
     errors: Record<string, string>;
-    editingId: number | null;
 }) {
     return (
         <div className="space-y-3">

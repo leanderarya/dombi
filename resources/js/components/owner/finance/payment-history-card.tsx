@@ -41,7 +41,6 @@ export default function PaymentHistoryCard({
     processing,
 }: Props) {
     const isPending = payment.status === 'pending_verification';
-    const isRejected = payment.status === 'rejected';
 
     return (
         <div

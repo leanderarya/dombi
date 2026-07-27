@@ -1,7 +1,15 @@
 import { Link } from '@inertiajs/react';
 import { ChevronDown } from 'lucide-react';
 import type { FormEvent, ReactNode } from 'react';
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    lazy,
+    Suspense,
+    useEffect,
+    useEffectEvent,
+    useMemo,
+    useRef,
+    useState,
+} from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import PhoneInput from '@/components/ui/phone-input';
@@ -57,6 +65,19 @@ export default function OutletFormSheet({
         });
     };
 
+    const updateAddressFields = useEffectEvent(
+        (result: Awaited<ReturnType<typeof reverseGeocode>>) => {
+            form.setData({
+                ...form.data,
+                kelurahan: result.kelurahan || '',
+                kecamatan: result.kecamatan || '',
+                city: result.city || '',
+                province: result.province || '',
+                postal_code: result.postal_code || '',
+            });
+        },
+    );
+
     // Reverse geocode when marker moves — updates administrative address fields only
     useEffect(() => {
         if (!location) {
@@ -76,16 +97,9 @@ export default function OutletFormSheet({
                     location.lng,
                     controller.signal,
                 );
-                form.setData({
-                    ...form.data,
-                    kelurahan: result.kelurahan || '',
-                    kecamatan: result.kecamatan || '',
-                    city: result.city || '',
-                    province: result.province || '',
-                    postal_code: result.postal_code || '',
-                });
+                updateAddressFields(result);
                 setGeocodingState('success');
-            } catch (error) {
+            } catch {
                 if (!controller.signal.aborted) {
                     setGeocodingState('failed');
                 }
@@ -96,7 +110,7 @@ export default function OutletFormSheet({
             window.clearTimeout(timeout);
             controller.abort();
         };
-    }, [location?.lat, location?.lng]);
+    }, [location]);
 
     const isEdit = mode === 'edit';
     const title = isEdit ? `Edit ${outlet?.name ?? 'Outlet'}` : 'Tambah Outlet';

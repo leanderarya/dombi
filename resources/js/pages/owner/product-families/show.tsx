@@ -63,6 +63,22 @@ type SortKey =
     | 'center_stock';
 type VariantFilter = 'all' | 'active' | 'inactive' | 'low_margin';
 
+function SortMarker({
+    col,
+    activeCol,
+    direction,
+}: {
+    col: SortKey;
+    activeCol: SortKey;
+    direction: 'asc' | 'desc';
+}) {
+    return activeCol === col ? (
+        <span className="ml-0.5 text-[10px] text-primary">
+            {direction === 'asc' ? '▲' : '▼'}
+        </span>
+    ) : null;
+}
+
 const FILTERS: { key: VariantFilter; label: string }[] = [
     { key: 'all', label: 'Semua' },
     { key: 'active', label: 'Aktif' },
@@ -220,7 +236,12 @@ export default function ProductFamilyShow({ family }: Props) {
     const toggleSelect = (id: number) => {
         setSelectedIds((prev) => {
             const next = new Set(prev);
-            next.has(id) ? next.delete(id) : next.add(id);
+
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
 
             return next;
         });
@@ -334,13 +355,6 @@ export default function ProductFamilyShow({ family }: Props) {
         });
         setShowVariantForm(true);
     };
-
-    const SortMarker = ({ col }: { col: SortKey }) =>
-        sortKey === col ? (
-            <span className="ml-0.5 text-[10px] text-primary">
-                {sortDir === 'asc' ? '▲' : '▼'}
-            </span>
-        ) : null;
 
     if (family === undefined || family === null) {
         return (
@@ -482,7 +496,11 @@ export default function ProductFamilyShow({ family }: Props) {
                                         onClick={() => toggleSort('name')}
                                     >
                                         Nama
-                                        <SortMarker col="name" />
+                                        <SortMarker
+                                            col="name"
+                                            activeCol={sortKey}
+                                            direction={sortDir}
+                                        />
                                     </th>
                                     <th className="px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
                                         Gambar
@@ -494,7 +512,11 @@ export default function ProductFamilyShow({ family }: Props) {
                                         }
                                     >
                                         HPP
-                                        <SortMarker col="center_price" />
+                                        <SortMarker
+                                            col="center_price"
+                                            activeCol={sortKey}
+                                            direction={sortDir}
+                                        />
                                     </th>
                                     <th
                                         className="cursor-pointer px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
@@ -503,14 +525,22 @@ export default function ProductFamilyShow({ family }: Props) {
                                         }
                                     >
                                         Harga Jual
-                                        <SortMarker col="selling_price" />
+                                        <SortMarker
+                                            col="selling_price"
+                                            activeCol={sortKey}
+                                            direction={sortDir}
+                                        />
                                     </th>
                                     <th
                                         className="cursor-pointer px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
                                         onClick={() => toggleSort('margin')}
                                     >
                                         Margin
-                                        <SortMarker col="margin" />
+                                        <SortMarker
+                                            col="margin"
+                                            activeCol={sortKey}
+                                            direction={sortDir}
+                                        />
                                     </th>
                                     <th
                                         className="cursor-pointer px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase select-none"
@@ -519,7 +549,11 @@ export default function ProductFamilyShow({ family }: Props) {
                                         }
                                     >
                                         Stok
-                                        <SortMarker col="center_stock" />
+                                        <SortMarker
+                                            col="center_stock"
+                                            activeCol={sortKey}
+                                            direction={sortDir}
+                                        />
                                     </th>
                                     <th className="w-28 px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
                                         Aksi

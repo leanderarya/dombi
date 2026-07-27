@@ -411,7 +411,6 @@ export default function OutletAccountStatement({
                 <InvoiceModal
                     open={invoiceOpen}
                     onClose={() => setInvoiceOpen(false)}
-                    outletId={outlet.id}
                     outletName={outlet.name}
                     totalOutstanding={summary.outstanding}
                     unpaidBreakdown={unpaidBreakdown}

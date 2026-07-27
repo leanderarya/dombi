@@ -1,6 +1,6 @@
 import { useForm } from '@inertiajs/react';
 import { Package, TriangleAlert } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
@@ -57,13 +57,11 @@ export default function ResolveDeliverySheet({
     );
     const isDestructive = selectedOption?.destructive ?? false;
 
-    // Reset state when sheet opens/closes
-    useEffect(() => {
-        if (!open) {
-            form.reset();
-            setConfirmDestructive(false);
-        }
-    }, [open]);
+    const closeSheet = () => {
+        form.reset();
+        setConfirmDestructive(false);
+        onClose();
+    };
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
@@ -77,7 +75,7 @@ export default function ResolveDeliverySheet({
         form.post(`/owner/deliveries/${delivery.id}/resolve`, {
             preserveScroll: true,
             onSuccess: () => {
-                onClose();
+                closeSheet();
                 toast.success('Pengiriman diselesaikan');
             },
             onError: (errors) =>
@@ -90,7 +88,7 @@ export default function ResolveDeliverySheet({
     return (
         <Dialog
             open={open}
-            onClose={onClose}
+            onClose={closeSheet}
             title="Selesaikan Pengiriman Gagal"
         >
             <p className="text-sm text-text-muted">

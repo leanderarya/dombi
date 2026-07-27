@@ -49,7 +49,7 @@ export default function PembayaranTab({
                 { replace: true, preserveState: true },
             );
         }
-    }, []);
+    }, [statusFilter]);
 
     if (!payments) {
         return <SkeletonPage />;

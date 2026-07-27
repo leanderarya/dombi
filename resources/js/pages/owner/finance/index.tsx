@@ -1,7 +1,8 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { SkeletonPage } from '@/components/ui/skeleton';
+import { getInitialOwnerTab } from '../tab-state';
 import PembayaranTab from './pembayaran-tab';
 import RefundTab from './refund-tab';
 import RekeningTab from './rekening-tab';
@@ -28,21 +29,20 @@ const TABS = [
         label: 'Refund',
         description: 'Proses refund customer dan guest',
     },
-];
+] as const;
+
+type TabKey = (typeof TABS)[number]['key'];
 
 export default function FinanceIndex(props: any) {
-    const [activeTab, setActiveTab] = useState('tagihan');
+    const [activeTab, setActiveTab] = useState<TabKey>(() =>
+        getInitialOwnerTab(
+            TABS.map((tab) => tab.key),
+            'tagihan',
+            props.tab,
+        ),
+    );
 
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const tab = params.get('tab');
-
-        if (tab && TABS.some((t) => t.key === tab)) {
-            setActiveTab(tab);
-        }
-    }, []);
-
-    const handleTabChange = (tab: string) => {
+    const handleTabChange = (tab: TabKey) => {
         setActiveTab(tab);
         router.get(
             '/owner/finance',
