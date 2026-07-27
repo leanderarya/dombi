@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Owner;
 
-use App\Enums\RefundRejectionReason;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\UpdateRefundDestinationRequest;
+use App\Http\Requests\Owner\CompleteManualRefundRequest;
 use App\Http\Requests\Owner\RejectRefundRequest;
 use App\Http\Requests\Owner\RollbackRefundRequest;
 use App\Models\Order;
@@ -12,7 +12,6 @@ use App\Services\RefundService;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 
 class RefundController extends Controller
 {
@@ -95,7 +94,7 @@ class RefundController extends Controller
         }
     }
 
-    public function complete(Order $order, \App\Http\Requests\Owner\CompleteManualRefundRequest $request, RefundService $refunds): RedirectResponse
+    public function complete(Order $order, CompleteManualRefundRequest $request, RefundService $refunds): RedirectResponse
     {
         try {
             $relative = $request->file('proof')->store("refund-proofs/{$order->id}", 'local');
@@ -121,7 +120,7 @@ class RefundController extends Controller
         }
     }
 
-    public function completeDirect(Order $order, \App\Http\Requests\Owner\CompleteManualRefundRequest $request, RefundService $refunds): RedirectResponse
+    public function completeDirect(Order $order, CompleteManualRefundRequest $request, RefundService $refunds): RedirectResponse
     {
         try {
             $relative = $request->file('proof')->store("refund-proofs/{$order->id}", 'local');
@@ -142,6 +141,7 @@ class RefundController extends Controller
             return back()->with('success', 'Refund ditandai selesai.');
         } catch (DomainException $e) {
             Storage::disk('local')->delete($relative ?? '');
+
             return back()->with('error', $e->getMessage());
         }
     }

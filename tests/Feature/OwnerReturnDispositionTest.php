@@ -8,7 +8,6 @@ use App\Models\ProductVariant;
 use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
 use App\Models\User;
-use App\Models\StockMovement;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -17,7 +16,9 @@ class OwnerReturnDispositionTest extends TestCase
     use RefreshDatabase;
 
     private User $owner;
+
     private ReturnRequest $returnRequest;
+
     private ReturnRequestItem $item;
 
     protected function setUp(): void
