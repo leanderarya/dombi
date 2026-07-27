@@ -63,7 +63,7 @@ export default function RefundCompletionModal({
             fd.append('transfer_note', note);
         }
 
-        router.post(`/owner/refunds/${orderId}/complete`, fd, {
+        router.post(`/owner/refunds/${orderId}/complete-direct`, fd, {
             forceFormData: true,
             onSuccess: () => {
                 toast.success('Refund selesai');
