@@ -340,7 +340,10 @@ export default function ActiveOrderCard({ order }: Props) {
                             </div>
                         )}
                         {/* Countdown — show for all pending orders with expiry (including failed payment) */}
-                        {isPending && !isExpired && countdown && (
+                        {isPending &&
+                            !isExpired &&
+                            countdown &&
+                            !refundPresentation.suppressActions && (
                             <div
                                 className={`mt-0.5 flex items-center gap-1.5 text-[11px] ${canRetryPayment ? 'text-red-500' : 'text-amber-600'}`}
                             >
