@@ -320,6 +320,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('returns/{returnRequest}/reject', [OwnerReturnController::class, 'reject'])->name('returns.reject');
         Route::post('returns/{returnRequest}/mark-received', [OwnerReturnController::class, 'markReceived'])->name('returns.mark-received');
         Route::post('returns/{returnRequest}/complete', [OwnerReturnController::class, 'complete'])->name('returns.complete');
+        Route::post('returns/{returnRequest}/items/{item}/dispose', [OwnerReturnController::class, 'disposeItem'])->name('returns.dispose-item');
+        Route::post('returns/{returnRequest}/items/{item}/store', [OwnerReturnController::class, 'storeItem'])->name('returns.store-item');
         Route::get('exchanges', [OwnerExchangeController::class, 'index'])->name('exchanges.index');
         Route::get('exchanges/{exchangeRequest}', [OwnerExchangeController::class, 'show'])->name('exchanges.show');
         Route::post('exchanges/{exchangeRequest}/approve', [OwnerExchangeController::class, 'approve'])->name('exchanges.approve');
