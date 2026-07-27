@@ -105,15 +105,15 @@ Per 2026-07-27 (awal), status adalah `NO-GO`:
 - [x] Production deploy menjalankan migration + health check
 - [x] Delivery lifecycle: paid guard, eligibility, provider/reference, external transitions, UI — 79 tests hijau
 
-**MASIH NO-GO (update sore 2):**
+**MASIH NO-GO (update sore 3):**
 
 - [x] **DONE:** Backup config hardening — `storage/app` + DB only, encryption `default`, verify true, monitor disk = `BACKUP_DISK`
 - [x] **DONE:** `.env.example` + `BACKUP_RESTORE.md` + `scripts/restore-drill.sh` + scheduler sudah ada
-- [ ] **BLOCKER:** Set `BACKUP_DISK=s3` + `AWS_*` + `BACKUP_ARCHIVE_PASSWORD` + `BACKUP_NOTIFICATION_EMAIL` di production .env (belum bukti)
-- [ ] **BLOCKER:** Jalankan `backup:run` manual pertama di production → S3 (belum bukti)
-- [ ] **BLOCKER:** Restore drill ke `dombi_restore_test` + catat evidence di release table (belum bukti)
-- [ ] **BLOCKER:** 13 pre-existing tests error karena fixture tanpa `payment_status` — harus diperbaiki atau ditandai debt
-- [ ] **BLOCKER:** DOKU sandbox critical matrix staging
+- [x] **DONE:** 13 pre-existing delivery tests error diperbaiki — `InventorySafetyTest`, `MilestoneThirdTest`, `MilestoneSixthTest` sekarang 37/37, `Delivery|Courier` 187/187 PASS
+- [ ] **BLOCKER:** Set `BACKUP_DISK=s3` + `AWS_*` + `BACKUP_ARCHIVE_PASSWORD` + `BACKUP_NOTIFICATION_EMAIL` di production .env (butuh aksi manual production)
+- [ ] **BLOCKER:** Jalankan `backup:run` manual pertama di production → S3 + restore drill ke `dombi_restore_test` (butuh aksi manual production)
+- [ ] **BLOCKER:** DOKU sandbox critical matrix staging (2 test checkout hardening masih fail, tidak blocking delivery)
+- [ ] **BLOCKER:** 2 test `P0CheckoutHardening` + `TrackCancelOwnership` fail — tidak terkait delivery, tapi perlu fix sebelum gate hijau penuh
 
 ## Delivery-Specific Blocker (dari plan launch)
 
