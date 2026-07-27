@@ -384,6 +384,24 @@ class RefundService
         });
     }
 
+    public function startAndComplete(Order $order, int $actorId, string $proofPath, ?string $transferRef, ?string $transferNote): RefundStatusHistory
+    {
+        return DB::transaction(function () use ($order, $actorId, $proofPath, $transferRef, $transferNote) {
+            $locked = Order::lockForUpdate()->findOrFail($order->id);
+
+            if ($locked->payment_status === PaymentStatus::RefundPending->value) {
+                $this->start($order, $actorId);
+                $locked->refresh();
+            }
+
+            if ($locked->payment_status !== PaymentStatus::RefundInProgress->value) {
+                throw new DomainException('Order ini tidak dalam status refund yang bisa diselesaikan.');
+            }
+
+            return $this->complete($order, $actorId, $proofPath, $transferRef, $transferNote);
+        });
+    }
+
     private function isDestinationComplete(Order $order): bool
     {
         if ($order->refund_destination_type === 'bank') {
