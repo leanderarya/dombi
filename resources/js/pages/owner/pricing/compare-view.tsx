@@ -5,13 +5,9 @@ import { SkeletonList } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 import { marginColor } from '@/lib/pricing-utils';
+import { fetchCompareData, runCompareRequest } from './compare-request';
+import type { CompareData } from './compare-request';
 import type { OutletData, OutletPriceRow } from './types';
-
-interface CompareData {
-    outlet_id: number;
-    outlet_name: string;
-    prices: OutletPriceRow[];
-}
 
 interface Props {
     outletIds: number[];
@@ -20,27 +16,39 @@ interface Props {
 }
 
 export default function CompareView({ outletIds, outlets, onClose }: Props) {
-    const [data, setData] = useState<CompareData[]>([]);
-    const [loading, setLoading] = useState(true);
+    const requestKey = outletIds.join(',');
+    const [result, setResult] = useState<{
+        requestKey: string;
+        data: CompareData[];
+    } | null>(null);
 
     useEffect(() => {
-        void Promise.resolve().then(() => setLoading(true));
-        const params = new URLSearchParams();
-        outletIds.forEach((id) => params.append('outlet_ids[]', String(id)));
+        const controller = new AbortController();
+        const requestedOutletIds = requestKey
+            .split(',')
+            .filter(Boolean)
+            .map(Number);
 
-        fetch(`/owner/pricing/outlets/compare?${params.toString()}`, {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        })
-            .then((r) => r.json())
-            .then((json) => {
-                setData(json.data ?? []);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
-    }, [outletIds]);
+        void runCompareRequest({
+            outletIds: requestedOutletIds,
+            signal: controller.signal,
+            request: fetchCompareData,
+            onData: (data) => setResult({ requestKey, data }),
+            onError: () =>
+                setResult((current) => ({
+                    requestKey,
+                    data: current?.data ?? [],
+                })),
+        });
+
+        return () => controller.abort();
+    }, [requestKey]);
+
+    const loading = result?.requestKey !== requestKey;
+    const data = useMemo(
+        () => (result?.requestKey === requestKey ? result.data : []),
+        [requestKey, result],
+    );
 
     const matrix = useMemo(() => {
         const allVariantNames = new Set<string>();
