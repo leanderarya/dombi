@@ -87,6 +87,7 @@ class ActiveRefundOrderVisibilityTest extends TestCase
 
         $activeRefunds->each(fn (Order $order) => $this->assertTrue($activeIds->contains($order->id)));
         $activeRefunds->each(fn (Order $order) => $this->assertFalse($recentIds->contains($order->id)));
+        $this->assertFalse($activeIds->contains($refunded->id));
         $this->assertTrue($recentIds->contains($refunded->id));
     }
 }

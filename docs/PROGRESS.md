@@ -1,6 +1,6 @@
 # Dombi — Progress Roadmap
 
-**Updated:** 2026-07-26
+**Updated:** 2026-07-27
 **Current Branch:** `main`
 **Status:** Production-ready. 791 tests passing. Refund UI polish done. Next: Phase 8 continuation.
 
@@ -84,6 +84,7 @@
 | Task | Status |
 |------|--------|
 | Refund UI (customer + owner) | ✅ Done — AmountBlock, Timeline, DestinationSummary, filter badges, spacing |
+| Customer refund order visibility | ✅ Done — active refund states stay in Pesanan Aktif across Orders, Home, guest recovery |
 | Outlet bottom navigation | ❌ |
 | Outlet card-based layout | ❌ |
 | Outlet loading skeletons | ❌ |
