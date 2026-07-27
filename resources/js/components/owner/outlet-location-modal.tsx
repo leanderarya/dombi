@@ -1,5 +1,5 @@
 import { useForm } from '@inertiajs/react';
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,15 +38,10 @@ export default function OutletLocationModal({
     });
 
     const [geoLoading, setGeoLoading] = useState(false);
-    const mapKeyRef = useRef(0);
-
-    useEffect(() => {
-        if (!open) {
-            reset();
-        } else {
-            mapKeyRef.current += 1;
-        }
-    }, [open]);
+    const closeModal = () => {
+        reset();
+        onClose();
+    };
 
     const location = (() => {
         const lat = Number(data.latitude);
@@ -89,7 +84,7 @@ export default function OutletLocationModal({
             onSuccess: () => {
                 toast.success('Lokasi outlet diperbarui');
                 onSuccess();
-                onClose();
+                closeModal();
             },
             onError: (errs) =>
                 toast.error(Object.values(errs).flat().join(', ')),
@@ -97,7 +92,7 @@ export default function OutletLocationModal({
     };
 
     return (
-        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <Dialog open={open} onOpenChange={(isOpen) => !isOpen && closeModal()}>
             <DialogContent
                 className="z-[2000] max-w-2xl"
                 overlayClassName="z-[1999]"
@@ -114,7 +109,7 @@ export default function OutletLocationModal({
                         }
                     >
                         <OutletLocationMap
-                            key={mapKeyRef.current}
+                            key={`${outlet.id}-${open ? 'open' : 'closed'}`}
                             value={location}
                             onChange={setLocation}
                         />
@@ -172,7 +167,7 @@ export default function OutletLocationModal({
                         <Button
                             variant="outline"
                             type="button"
-                            onClick={onClose}
+                            onClick={closeModal}
                         >
                             Batal
                         </Button>

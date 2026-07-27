@@ -1,7 +1,8 @@
 import { router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import { Button } from '@/components/ui/button';
+import { getInitialOwnerTab } from '../tab-state';
 import { OutletTab } from './outlet-tab';
 import { PusatTab } from './pusat-tab';
 import { RiwayatTab } from './riwayat-tab';
@@ -35,18 +36,13 @@ interface Props {
 }
 
 export default function PricingIndex(props: Props) {
-    const [activeTab, setActiveTab] = useState<TabKey>(
-        (props.tab as TabKey) ?? 'pusat',
+    const [activeTab, setActiveTab] = useState<TabKey>(() =>
+        getInitialOwnerTab(
+            TABS.map((tab) => tab.key),
+            'pusat',
+            props.tab,
+        ),
     );
-
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const tab = params.get('tab');
-
-        if (tab && TABS.some((t) => t.key === tab)) {
-            setActiveTab(tab as TabKey);
-        }
-    }, []);
 
     const handleTabChange = (tab: TabKey) => {
         setActiveTab(tab);

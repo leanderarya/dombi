@@ -24,7 +24,7 @@ export default function CompareView({ outletIds, outlets, onClose }: Props) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        setLoading(true);
+        void Promise.resolve().then(() => setLoading(true));
         const params = new URLSearchParams();
         outletIds.forEach((id) => params.append('outlet_ids[]', String(id)));
 

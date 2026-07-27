@@ -1,6 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
 import { CheckCircle2, XCircle } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -53,6 +53,20 @@ const colorMap: Record<string, string> = {
 
 type SortKey = 'id' | 'outlet' | 'items' | 'date';
 
+interface RestockDetailItem {
+    id: number;
+    approved_quantity?: number | null;
+    requested_quantity: number;
+}
+
+interface RestockDetailResponse {
+    restock: {
+        owner_notes?: string | null;
+        items?: RestockDetailItem[];
+    };
+    centralStock?: Record<number, number>;
+}
+
 export default function OwnerRestocksIndex({
     restocks,
     filters,
@@ -61,8 +75,6 @@ export default function OwnerRestocksIndex({
     const [sortKey, setSortKey] = useState<SortKey>('id');
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
     const [approveModal, setApproveModal] = useState<any>(null);
-    const [rejectModal, setRejectModal] = useState<any>(null);
-    const [loadingDetail, setLoadingDetail] = useState(false);
 
     const toggleSort = (key: SortKey) => {
         if (sortKey === key) {
@@ -73,18 +85,7 @@ export default function OwnerRestocksIndex({
         }
     };
 
-    if (!restocks || !filters) {
-        return (
-            <OwnerPageShell
-                title="Restocks"
-                subtitle="Kelola permintaan restock dari outlet"
-            >
-                <SkeletonPage />
-            </OwnerPageShell>
-        );
-    }
-
-    const currentStatus = filters.status ?? '';
+    const currentStatus = filters?.status ?? '';
 
     const setFilter = (key: string, value: string) => {
         router.get(
@@ -96,7 +97,7 @@ export default function OwnerRestocksIndex({
 
     const sorted = useMemo(
         () =>
-            [...restocks.data].sort((a: any, b: any) => {
+            [...(restocks?.data ?? [])].sort((a: any, b: any) => {
                 let av: any, bv: any;
 
                 switch (sortKey) {
@@ -128,8 +129,19 @@ export default function OwnerRestocksIndex({
 
                 return sortDir === 'asc' ? cmp : -cmp;
             }),
-        [restocks.data, sortKey, sortDir],
+        [restocks?.data, sortKey, sortDir],
     );
+
+    if (!restocks || !filters) {
+        return (
+            <OwnerPageShell
+                title="Restocks"
+                subtitle="Kelola permintaan restock dari outlet"
+            >
+                <SkeletonPage />
+            </OwnerPageShell>
+        );
+    }
 
     const handleOpenApprove = (restock: any) => {
         setApproveModal(restock);
@@ -305,11 +317,13 @@ export default function OwnerRestocksIndex({
             <Pagination links={restocks.links} />
 
             {/* Approve/Detail Modal */}
-            <RestockActionModal
-                restock={approveModal}
-                onClose={() => setApproveModal(null)}
-                onSuccess={() => setApproveModal(null)}
-            />
+            {approveModal && (
+                <RestockActionModal
+                    restock={approveModal}
+                    onClose={() => setApproveModal(null)}
+                    onSuccess={() => setApproveModal(null)}
+                />
+            )}
         </OwnerPageShell>
     );
 }
@@ -325,11 +339,10 @@ function RestockActionModal({
     onSuccess: () => void;
 }) {
     const [detail, setDetail] = useState<any>(null);
-    const [inventories, setInventories] = useState<any[]>([]);
     const [centralStock, setCentralStock] = useState<Record<number, number>>(
         {},
     );
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [showReject, setShowReject] = useState(false);
 
     const approveForm = useForm({
@@ -337,14 +350,24 @@ function RestockActionModal({
         items: [] as any[],
     });
     const rejectForm = useForm({ rejected_reason: '' });
+    const restockId = restock.id;
+    const hydrateDetail = useEffectEvent((data: RestockDetailResponse) => {
+        setDetail(data.restock);
+        setCentralStock(data.centralStock ?? {});
+        approveForm.setData({
+            owner_notes: data.restock.owner_notes ?? '',
+            items: (data.restock.items ?? []).map((item) => ({
+                restock_request_item_id: item.id,
+                approved_quantity:
+                    item.approved_quantity ?? item.requested_quantity,
+            })),
+        });
+    });
 
     useEffect(() => {
-        if (!restock) {
-            return;
-        }
+        let cancelled = false;
 
-        setLoading(true);
-        fetch(`/owner/restocks/${restock.id}`, {
+        fetch(`/owner/restocks/${restockId}`, {
             headers: {
                 Accept: 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
@@ -352,25 +375,23 @@ function RestockActionModal({
         })
             .then((r) => r.json())
             .then((data) => {
-                setDetail(data.restock);
-                setInventories(data.inventories ?? []);
-                setCentralStock(data.centralStock ?? {});
-                approveForm.setData({
-                    owner_notes: data.restock.owner_notes ?? '',
-                    items: (data.restock.items ?? []).map((item: any) => ({
-                        restock_request_item_id: item.id,
-                        approved_quantity:
-                            item.approved_quantity ?? item.requested_quantity,
-                    })),
-                });
-                setLoading(false);
+                if (!cancelled) {
+                    hydrateDetail(data);
+                }
             })
-            .catch(() => setLoading(false));
-    }, [restock?.id]);
+            .catch(() => {
+                // Keep the dialog available so the owner can close and retry.
+            })
+            .finally(() => {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            });
 
-    if (!restock) {
-        return null;
-    }
+        return () => {
+            cancelled = true;
+        };
+    }, [restockId]);
 
     const isRequested = restock.status === 'requested';
 

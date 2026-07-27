@@ -1,7 +1,7 @@
 import { router } from '@inertiajs/react';
 import { Upload } from 'lucide-react';
 import type { FormEventHandler } from 'react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,15 +35,6 @@ export default function RefundCompletionModal({
     const [note, setNote] = useState('');
     const [busy, setBusy] = useState(false);
     const [preview, setPreview] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!open) {
-            setProof(null);
-            setReference('');
-            setNote('');
-            setPreview(null);
-        }
-    }, [open]);
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();

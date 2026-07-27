@@ -19,12 +19,8 @@ export default function TagihanTab({ kpis, outlets }: any) {
     const [filter, setFilter] = useState('action_needed');
     const [search, setSearch] = useState('');
 
-    if (!kpis || !outlets) {
-        return <SkeletonPage />;
-    }
-
     const filtered = useMemo(() => {
-        return outlets.filter((o: any) => {
+        return (outlets ?? []).filter((o: any) => {
             if (filter === 'action_needed') {
                 if (
                     o.display_status !== 'overdue' &&
@@ -45,6 +41,10 @@ export default function TagihanTab({ kpis, outlets }: any) {
             return true;
         });
     }, [outlets, filter, search]);
+
+    if (!kpis || !outlets) {
+        return <SkeletonPage />;
+    }
 
     return (
         <>
