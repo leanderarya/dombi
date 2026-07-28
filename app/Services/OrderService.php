@@ -10,7 +10,6 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductVariant;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -46,11 +45,11 @@ class OrderService
                 $adjustments = [];
 
                 foreach ($items as $index => $item) {
-                    $variantId = $item['product_variant_id'];
+                    $productId = $item['product_id'];
                     $requestedQty = $item['quantity'];
 
                     $inventory = OutletInventory::query()
-                        ->where('product_variant_id', $variantId)
+                        ->where('product_id', $productId)
                         ->where('outlet_id', $outletId)
                         ->lockForUpdate()
                         ->first();
@@ -63,7 +62,7 @@ class OrderService
 
                     if ($availableStock <= 0) {
                         $adjustments[] = [
-                            'variant_id' => $variantId,
+                            'product_id' => $productId,
                             'original_qty' => $requestedQty,
                             'adjusted_qty' => 0,
                             'available_stock' => 0,
@@ -71,7 +70,7 @@ class OrderService
                         unset($items[$index]);
                     } elseif ($availableStock < $requestedQty) {
                         $adjustments[] = [
-                            'variant_id' => $variantId,
+                            'product_id' => $productId,
                             'original_qty' => $requestedQty,
                             'adjusted_qty' => $availableStock,
                             'available_stock' => $availableStock,
@@ -247,7 +246,6 @@ class OrderService
     {
         $items = $previousOrder->items->map(function ($item) {
             return [
-                'product_variant_id' => $item->product_variant_id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
             ];
@@ -265,35 +263,35 @@ class OrderService
     /**
      * Restore cart items from a previous order.
      *
-     * Validates variants exist and are active, checks stock availability,
+     * Validates products exist and are active, checks stock availability,
      * and returns validated items with current pricing.
      *
      * @return array{items: array, warnings: array}
      */
     public function restoreCartFromOrder(Order $order): array
     {
-        $order->load('items.variant');
+        $order->load('items.product');
 
         $restoredItems = [];
         $warnings = [];
 
         foreach ($order->items as $item) {
-            $variant = $item->variant;
+            $product = $item->product;
             $originalQuantity = (int) $item->quantity;
-            $originalName = $item->product_name.($item->variant_name_snapshot ? " {$item->variant_name_snapshot}" : '');
+            $originalName = $item->product_name ?? $product?->name ?? 'Produk';
 
-            // Check variant exists and is active
-            if (! $variant || ! $variant->is_active) {
+            // Check product exists and is active
+            if (! $product || ! $product->is_active) {
                 $warnings[] = "{$originalName} sudah tidak tersedia.";
 
                 continue;
             }
 
             // Use current pricing, not old snapshot
-            $currentPrice = (float) $variant->selling_price;
+            $currentPrice = (float) $product->selling_price;
 
             // Check stock availability across all active outlets
-            $availableStock = $this->getMaxAvailableStock($variant->id);
+            $availableStock = $this->getMaxAvailableStock($product->id);
             $restoredQuantity = min($originalQuantity, $availableStock);
 
             if ($restoredQuantity <= 0) {
@@ -307,7 +305,7 @@ class OrderService
             }
 
             $restoredItems[] = [
-                'product_variant_id' => $variant->id,
+                'product_id' => $product->id,
                 'quantity' => $restoredQuantity,
             ];
         }
@@ -319,12 +317,12 @@ class OrderService
     }
 
     /**
-     * Get maximum available stock for a variant across all active outlets.
+     * Get maximum available stock for a product across all active outlets.
      */
-    private function getMaxAvailableStock(int $variantId): int
+    private function getMaxAvailableStock(int $productId): int
     {
         return (int) OutletInventory::query()
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->whereHas('outlet', fn ($q) => $q->where('status', 'active'))
             ->selectRaw('MAX(current_stock - reserved_stock) as max_available')
             ->value('max_available') ?? 0;
@@ -426,68 +424,43 @@ class OrderService
 
     private function buildOrderItems(array $rawItems): array
     {
-        // Support both product_id (legacy) and product_variant_id (new)
-        $variantIds = collect($rawItems)->pluck('product_variant_id')->filter()->all();
         $productIds = collect($rawItems)->pluck('product_id')->filter()->all();
-
-        $variants = ProductVariant::query()
-            ->whereIn('id', $variantIds)
-            ->where('is_active', true)
-            ->with('family')
-            ->get()
-            ->keyBy('id');
 
         $products = Product::query()
             ->whereIn('id', $productIds)
             ->where('is_active', true)
+            ->with('category')
             ->get()
             ->keyBy('id');
 
-        return collect($rawItems)->map(function (array $item) use ($variants, $products): array {
+        return collect($rawItems)->map(function (array $item) use ($products): array {
             $quantity = (int) $item['quantity'];
 
-            // Prefer variant over product
-            if (! empty($item['product_variant_id'])) {
-                $variant = $variants->get((int) $item['product_variant_id']);
-
-                if (! $variant) {
-                    throw ValidationException::withMessages(['items' => 'Varian produk tidak ditemukan atau tidak aktif.']);
-                }
-
-                return [
-                    'product_id' => $variant->product_id,
-                    'product_variant_id' => $variant->id,
-                    'product_name' => $variant->family?->name ?? $variant->name,
-                    'variant_name_snapshot' => $variant->name,
-                    'quantity' => $quantity,
-                    'price' => $variant->selling_price,
-                    'center_price_snapshot' => $variant->center_price,
-                    'selling_price_snapshot' => $variant->selling_price,
-                    'outlet_margin_snapshot' => $variant->outlet_margin,
-                    'subtotal' => $quantity * (float) $variant->selling_price,
-                ];
+            $productId = (int) ($item['product_id'] ?? 0);
+            if (! $productId) {
+                throw ValidationException::withMessages(['items' => 'Produk tidak ditemukan atau tidak aktif.']);
             }
 
-            // Legacy product flow
-            $product = $products->get((int) $item['product_id']);
+            $product = $products->get($productId);
 
             if (! $product) {
                 throw ValidationException::withMessages(['items' => 'Produk tidak ditemukan atau tidak aktif.']);
             }
 
-            $price = $product->selling_price > 0 ? $product->selling_price : $product->price;
+            $price = (float) $product->selling_price;
+            $centerPrice = (float) $product->center_price;
 
             return [
                 'product_id' => $product->id,
-                'product_variant_id' => null,
                 'product_name' => $product->name,
+                'product_name_snapshot' => $product->name,
                 'variant_name_snapshot' => null,
                 'quantity' => $quantity,
                 'price' => $price,
-                'center_price_snapshot' => $product->center_price > 0 ? $product->center_price : $product->price,
+                'center_price_snapshot' => $centerPrice,
                 'selling_price_snapshot' => $price,
-                'outlet_margin_snapshot' => $product->selling_price > 0 ? $product->selling_price - $product->center_price : 0,
-                'subtotal' => $quantity * (float) $price,
+                'outlet_margin_snapshot' => $price - $centerPrice,
+                'subtotal' => $quantity * $price,
             ];
         })->values()->all();
     }
@@ -512,18 +485,18 @@ class OrderService
      */
     private function applyOutletPricing(array $items, int $outletId): array
     {
-        $variantIds = collect($items)->pluck('product_variant_id')->filter()->all();
-        $variants = ProductVariant::whereIn('id', $variantIds)->get()->keyBy('id');
+        $productIds = collect($items)->pluck('product_id')->filter()->all();
+        $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
-        return array_map(function (array $item) use ($variants, $outletId) {
-            $variantId = $item['product_variant_id'] ?? null;
-            if (! $variantId || ! isset($variants[$variantId])) {
+        return array_map(function (array $item) use ($products, $outletId) {
+            $productId = $item['product_id'] ?? null;
+            if (! $productId || ! isset($products[$productId])) {
                 return $item;
             }
 
-            $variant = $variants[$variantId];
-            $outletPrice = $this->pricingService->getSellingPrice($variant, $outletId);
-            $centerPrice = (float) $variant->center_price;
+            $product = $products[$productId];
+            $outletPrice = $this->pricingService->getSellingPrice($product, $outletId);
+            $centerPrice = (float) $product->center_price;
             $quantity = (int) $item['quantity'];
 
             $item['price'] = $outletPrice;

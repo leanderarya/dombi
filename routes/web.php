@@ -57,6 +57,7 @@ use App\Http\Controllers\Owner\OutletOperatingHoursController;
 use App\Http\Controllers\Owner\OutletProductController;
 use App\Http\Controllers\Owner\PaymentAccountController;
 use App\Http\Controllers\Owner\PricingController;
+use App\Http\Controllers\Owner\ProductCategoryController as OwnerProductCategoryController;
 use App\Http\Controllers\Owner\ProductController as OwnerProductController;
 use App\Http\Controllers\Owner\ProductFamilyController;
 use App\Http\Controllers\Owner\ProductVariantController;
@@ -112,7 +113,9 @@ Route::middleware(['customer.inertia', 'enforce.session'])->group(function (): v
         Route::get('/outlets', [CustomerOutletController::class, 'index'])->name('outlets.index');
         Route::get('/products', [CustomerProductController::class, 'index'])->name('products.index');
         Route::get('/products/api', [CustomerProductApiController::class, 'index'])->name('products.api');
-        Route::get('/products/{family}', [CustomerProductController::class, 'show'])->name('products.show');
+        Route::get('/products/{category}', [CustomerProductController::class, 'show'])->name('products.show');
+        // Legacy alias for old {family} param
+        Route::get('/products/family/{family}', [CustomerProductController::class, 'show'])->name('products.show.legacy');
         Route::get('/orders', [CustomerOrderController::class, 'index'])->name('orders.index');
         Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
         Route::post('/select-outlet', [CartController::class, 'selectOutlet'])->name('select-outlet');
@@ -254,11 +257,20 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('outlets/{outlet}/products', [OutletProductController::class, 'index'])->name('outlets.products.index');
         Route::get('outlets/{outlet}/products/available', [OutletProductController::class, 'availableProducts'])->name('outlets.products.available');
         Route::post('outlets/{outlet}/products', [OutletProductController::class, 'addProducts'])->name('outlets.products.add');
-        Route::put('outlets/{outlet}/products/{variantId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle');
-        Route::delete('outlets/{outlet}/products/{variantId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove');
+        Route::put('outlets/{outlet}/products/{productId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle');
+        Route::put('outlets/{outlet}/products/{variantId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle.legacy');
+        Route::delete('outlets/{outlet}/products/{productId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove');
+        Route::delete('outlets/{outlet}/products/{variantId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove.legacy');
         Route::post('outlets/{outlet}/products/bulk-assign', [OutletProductController::class, 'bulkAssign'])->name('outlets.products.bulk-assign');
         Route::post('outlets/{outlet}/restock', [OutletProductController::class, 'restock'])->name('outlets.products.restock');
         Route::resource('products', OwnerProductController::class)->except(['show']);
+        // New ProductCategory / Product domain
+        Route::resource('product-categories', OwnerProductCategoryController::class)->parameters(['product-categories' => 'category'])->except(['create', 'edit']);
+        Route::post('product-categories/{category}/products', [OwnerProductController::class, 'store'])->name('product-categories.products.store');
+        Route::post('product-categories/{category}/products/bulk', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk-store');
+        Route::post('product-categories/{category}/products/bulk-update', [OwnerProductController::class, 'bulkUpdate'])->name('product-categories.products.bulk-update');
+        Route::patch('products/{product}/toggle', [OwnerProductController::class, 'toggle'])->name('products.toggle');
+        Route::post('products/{product}/duplicate', [OwnerProductController::class, 'duplicate'])->name('products.duplicate');
         Route::resource('product-families', ProductFamilyController::class)->parameters(['product-families' => 'family'])->except(['create', 'edit']);
         Route::post('product-families/{family}/variants', [ProductVariantController::class, 'store'])->name('product-families.variants.store');
         Route::post('product-families/{family}/variants/bulk-update', [ProductVariantController::class, 'bulkUpdate'])->name('product-families.variants.bulk-update');
@@ -268,6 +280,11 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('pricing/outlets/compare', [PricingController::class, 'compare'])->name('pricing.outlets.compare');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
         Route::get('pricing/outlets/{outlet}', [PricingController::class, 'show'])->name('pricing.outlets.show');
+        Route::patch('pricing/products/{product}', [PricingController::class, 'updateGlobal'])->name('pricing.products.update');
+        Route::get('pricing/products/{product}/impact', [PricingController::class, 'getImpact'])->name('pricing.products.impact');
+        Route::patch('pricing/outlets/{outlet}/products/{product}', [PricingController::class, 'updateOutlet'])->name('pricing.outlets.products.update');
+        Route::delete('pricing/outlets/{outlet}/products/{product}', [PricingController::class, 'resetOutlet'])->name('pricing.outlets.products.reset');
+        // Legacy pricing variant routes – backward compat
         Route::patch('pricing/variants/{variant}', [PricingController::class, 'updateGlobal'])->name('pricing.variants.update');
         Route::get('pricing/variants/{variant}/impact', [PricingController::class, 'getImpact'])->name('pricing.variants.impact');
         Route::patch('pricing/outlets/{outlet}/variants/{variant}', [PricingController::class, 'updateOutlet'])->name('pricing.outlets.variants.update');
@@ -279,7 +296,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('inventories', [OwnerInventoryController::class, 'store'])->name('inventories.store');
         Route::get('inventories/{inventory}/edit', [OwnerInventoryController::class, 'edit'])->name('inventories.edit');
         Route::put('inventories/{inventory}', [OwnerInventoryController::class, 'update'])->name('inventories.update');
-        Route::patch('inventories/central-stock/{variant}', [OwnerInventoryController::class, 'updateCenterStock'])->name('inventories.central-stock.update');
+        Route::patch('inventories/central-stock/{product}', [OwnerInventoryController::class, 'updateCenterStock'])->name('inventories.central-stock.update');
+        Route::patch('inventories/central-stock/variant/{variant}', [OwnerInventoryController::class, 'updateCenterStock'])->name('inventories.central-stock.update.legacy');
         Route::post('inventories/remind-stock', [OwnerInventoryController::class, 'remindStock'])->name('inventories.remind-stock');
         Route::get('orders', [OwnerOrderController::class, 'index'])->name('orders.index');
         Route::get('orders/{order}', [OwnerOrderController::class, 'show'])->name('orders.show');

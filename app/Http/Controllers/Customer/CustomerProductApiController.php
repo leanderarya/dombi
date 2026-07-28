@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProductFamily;
+use App\Models\ProductCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,9 +17,9 @@ class CustomerProductApiController extends Controller
 
         $outletId = $validated['outlet_id'] ?? null;
 
-        $families = ProductFamily::query()
+        $categories = ProductCategory::query()
             ->where('is_active', true)
-            ->with(['variants' => function ($query) use ($outletId) {
+            ->with(['products' => function ($query) use ($outletId) {
                 $query->where('is_active', true)->orderBy('name');
 
                 if ($outletId) {
@@ -34,50 +34,51 @@ class CustomerProductApiController extends Controller
             ->orderBy('name')
             ->get();
 
-        $result = $families->map(function ($family) use ($outletId) {
-            $variants = $family->variants->map(function ($variant) use ($outletId) {
+        $result = $categories->map(function ($category) use ($outletId) {
+            $products = $category->products->map(function ($product) use ($outletId) {
                 // Stock
                 $availableStock = 0;
                 $inventory = null;
-                if ($outletId && $variant->relationLoaded('inventories')) {
-                    $inventory = $variant->inventories->first();
-                    $availableStock = max(0, (int) $variant->inventories->sum(
+                if ($outletId && $product->relationLoaded('inventories')) {
+                    $inventory = $product->inventories->first();
+                    $availableStock = max(0, (int) $product->inventories->sum(
                         fn ($inv) => $inv->current_stock - $inv->reserved_stock
                     ));
                 }
 
                 // Price
-                $price = $outletId ? $variant->priceForOutlet($outletId) : (float) $variant->selling_price;
+                $price = $outletId ? $product->priceForOutlet($outletId) : (float) $product->selling_price;
 
                 $stockStatus = $availableStock <= 0
                     ? 'out_of_stock'
                     : ($inventory && $availableStock <= ($inventory->minimum_stock ?? 0) ? 'low' : 'available');
 
                 return [
-                    'id' => $variant->id,
-                    'name' => $variant->name,
-                    'flavor' => $variant->flavor,
-                    'size' => $variant->size,
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'flavor' => $product->flavor,
+                    'size' => $product->size,
                     'price' => $price,
-                    'sku' => $variant->sku,
-                    'image' => $this->resolveImage($variant->image, $variant->updated_at),
+                    'sku' => $product->sku,
+                    'image' => $this->resolveImage($product->image, $product->updated_at),
                     'available_stock' => $availableStock,
                     'stock_status' => $stockStatus,
-                    'is_active' => $variant->is_active,
+                    'is_active' => $product->is_active,
                 ];
             });
 
             return [
-                'id' => $family->id,
-                'name' => $family->name,
-                'brand' => $family->brand,
-                'description' => $family->description,
-                'image' => $this->resolveImage($family->image, $family->updated_at),
-                'variants' => $variants->values(),
+                'id' => $category->id,
+                'name' => $category->name,
+                'brand' => $category->brand,
+                'description' => $category->description,
+                'image' => $this->resolveImage($category->image, $category->updated_at),
+                'variants' => $products->values(), // backward compat key
+                'products' => $products->values(),
             ];
         });
 
-        return response()->json(['families' => $result]);
+        return response()->json(['families' => $result, 'categories' => $result]);
     }
 
     private function resolveImage(?string $image, $updatedAt): ?string

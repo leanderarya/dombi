@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Outlet\ConfirmDistributionReceivedRequest;
 use App\Http\Requests\Outlet\StoreRestockRequest;
 use App\Models\OutletInventory;
-use App\Models\ProductFamily;
+use App\Models\ProductCategory;
 use App\Models\RestockRequest;
 use App\Services\RestockService;
 use Illuminate\Http\RedirectResponse;
@@ -21,13 +21,13 @@ class RestockController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
-        $families = ProductFamily::where('is_active', true)
-            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+        $categories = ProductCategory::where('is_active', true)
+            ->with(['products' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
             ->orderBy('name')
             ->get();
 
         $inventories = OutletInventory::where('outlet_id', $outlet->id)
-            ->with('variant')
+            ->with('product')
             ->get();
 
         return Inertia::render('outlet/restocks/index', [
@@ -38,7 +38,8 @@ class RestockController extends Controller
                 ->paginate(20)
                 ->withQueryString(),
             'filters' => $request->only('status'),
-            'families' => $families,
+            'families' => $categories,
+            'categories' => $categories,
             'inventories' => $inventories,
         ]);
     }
@@ -48,14 +49,15 @@ class RestockController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
-        $families = ProductFamily::where('is_active', true)
-            ->with(['variants' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
+        $categories = ProductCategory::where('is_active', true)
+            ->with(['products' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
             ->orderBy('name')
             ->get();
 
         return Inertia::render('outlet/restocks/create', [
-            'families' => $families,
-            'inventories' => OutletInventory::with('variant.family')
+            'families' => $categories,
+            'categories' => $categories,
+            'inventories' => OutletInventory::with('product.category')
                 ->where('outlet_id', $outlet->id)
                 ->get(),
         ]);
@@ -74,7 +76,7 @@ class RestockController extends Controller
         abort_unless($outlet && $restockRequest->outlet_id === $outlet->id, 403);
 
         return Inertia::render('outlet/restocks/show', [
-            'restock' => $restockRequest->load(['outlet', 'items.product', 'items.variant.family']),
+            'restock' => $restockRequest->load(['outlet', 'items.product']),
         ]);
     }
 

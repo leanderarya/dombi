@@ -14,7 +14,7 @@ class BulkStoreProductsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'product_category_id' => ['required', 'exists:product_categories,id'],
+            'product_category_id' => ['sometimes', 'exists:product_categories,id'],
             'size' => ['nullable', 'string', 'max:50'],
             'center_price' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'gte:center_price'],
