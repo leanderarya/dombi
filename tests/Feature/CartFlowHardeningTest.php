@@ -33,14 +33,6 @@ class CartFlowHardeningTest extends TestCase
     {
         parent::setUp();
 
-        $this->product = Product::create([
-            'name' => 'Domilk Premium Taste',
-            'selling_price' => 18000,
-            'selling_price' => 25000,
-            'center_price' => 18000,
-            'is_active' => true,
-        ]);
-
         $this->family = ProductCategory::create([
             'name' => 'Domilk Premium Taste',
             'brand' => 'Domilk',
@@ -50,7 +42,6 @@ class CartFlowHardeningTest extends TestCase
 
         $this->variant = Product::create([
             'product_category_id' => $this->family->id,
-            'product_id' => $this->product->id,
             'name' => 'Coffee 1L',
             'flavor' => 'Coffee',
             'size' => '1L',
@@ -61,7 +52,6 @@ class CartFlowHardeningTest extends TestCase
 
         $this->variant2 = Product::create([
             'product_category_id' => $this->family->id,
-            'product_id' => $this->product->id,
             'name' => 'Vanilla 250ml',
             'flavor' => 'Vanilla',
             'size' => '250ml',
@@ -74,7 +64,6 @@ class CartFlowHardeningTest extends TestCase
 
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
-            'product_id' => $this->product->id,
             'product_id' => $this->variant->id,
             'current_stock' => 50,
             'reserved_stock' => 0,
@@ -83,7 +72,6 @@ class CartFlowHardeningTest extends TestCase
 
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
-            'product_id' => $this->product->id,
             'product_id' => $this->variant2->id,
             'current_stock' => 30,
             'reserved_stock' => 0,
@@ -299,7 +287,6 @@ class CartFlowHardeningTest extends TestCase
 
         OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $this->product->id,
             'product_id' => $this->variant->id,
             'product_name' => 'Domilk Premium Taste',
             'variant_name_snapshot' => 'Coffee 1L',
