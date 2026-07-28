@@ -13,7 +13,7 @@ export interface PusatVariant {
     outlet_override_count: number;
 }
 
-export interface PusatProduct extends PusatVariant {}
+export type PusatProduct = PusatVariant;
 
 export interface PusatKpis {
     total_variants?: number; // backward compat
