@@ -103,11 +103,18 @@ export default function OutletDetail({
             priceRows.filter((p) => {
                 if (search) {
                     const q = search.toLowerCase();
-
-                    if (
-                        !p.name.toLowerCase().includes(q) &&
-                        !(p.family_name ?? '').toLowerCase().includes(q)
-                    ) {
+                    const haystack = [
+                        p.name,
+                        p.category_name,
+                        p.family_name,
+                        p.sku,
+                        p.flavor,
+                        p.size,
+                    ]
+                        .filter(Boolean)
+                        .join(' ')
+                        .toLowerCase();
+                    if (!haystack.includes(q)) {
                         return false;
                     }
                 }
@@ -177,8 +184,9 @@ export default function OutletDetail({
         }
 
         setSaving(true);
+        const pid = selectedRow.product_id ?? selectedRow.variant_id;
         router.patch(
-            `/owner/pricing/outlets/${outlet.id}/variants/${selectedRow.variant_id}`,
+            `/owner/pricing/outlets/${outlet.id}/products/${pid}`,
             { selling_price: newPrice },
             {
                 onFinish: () => {
@@ -190,11 +198,11 @@ export default function OutletDetail({
         );
     };
 
-    const handleReset = (variantId: number, name: string) => {
+    const handleReset = (productId: number, name: string) => {
         showConfirm('Reset Harga', `Kembalikan ${name} ke harga pusat?`, () => {
             setSaving(true);
             router.delete(
-                `/owner/pricing/outlets/${outlet.id}/variants/${variantId}`,
+                `/owner/pricing/outlets/${outlet.id}/products/${productId}`,
                 { onFinish: () => setSaving(false) },
             );
         });
@@ -458,13 +466,15 @@ export default function OutletDetail({
                         <TableBody>
                             {paginated.map((row) => (
                                 <TableRow
-                                    key={row.variant_id}
+                                    key={row.product_id}
                                     className="hover:bg-mint-wash transition-colors"
                                 >
                                     <TableCell className="px-6 py-4">
                                         <div className="flex items-center gap-2">
                                             <span className="font-semibold text-text">
-                                                {row.name}
+                                                {row.category_name
+                                                    ? `${row.category_name} - ${row.name}`
+                                                    : row.name}
                                             </span>
                                             {row.has_override ? (
                                                 <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">
@@ -476,9 +486,19 @@ export default function OutletDetail({
                                                 </span>
                                             )}
                                         </div>
-                                        {row.family_name && (
+                                        {(row.category_name ||
+                                            row.flavor ||
+                                            row.size ||
+                                            row.sku) && (
                                             <div className="mt-0.5 text-xs text-text-muted">
-                                                {row.family_name}
+                                                {[
+                                                    row.category_name,
+                                                    row.flavor,
+                                                    row.size,
+                                                    row.sku,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' • ')}
                                             </div>
                                         )}
                                     </TableCell>
@@ -502,7 +522,8 @@ export default function OutletDetail({
                                                     type="button"
                                                     onClick={() =>
                                                         handleReset(
-                                                            row.variant_id,
+                                                            row.product_id ??
+                                                                row.variant_id!,
                                                             row.name,
                                                         )
                                                     }

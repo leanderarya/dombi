@@ -1,20 +1,22 @@
 /**
  * Canonical product name format used across ALL owner pages.
  *
- * Display format: "Family — Variant"
- * With SKU: line 1 "Family — Variant" bold, line 2 "SKU-XXX" muted
+ * Display format: "Category - Product"
+ * With SKU: line 1 "Category - Product" bold, line 2 "SKU-XXX" muted
  */
 
 export type ProductLike = {
     full_name?: string | null;
     name?: string | null;
+    category_name?: string | null;
     family_name?: string | null;
+    category?: { name?: string | null } | null;
     family?: { name?: string | null } | null;
     product?: { name?: string | null } | null;
     sku?: string | null;
 };
 
-/** Display product name: "Family — Variant" or full_name if available. */
+/** Display product name: "Category - Product" or full_name if available. */
 export function displayProductName(
     item: ProductLike | null | undefined,
 ): string {
@@ -26,15 +28,19 @@ export function displayProductName(
         return item.full_name;
     }
 
-    const variantName = item.name;
-    const familyName = item.family?.name ?? item.family_name;
+    const productName = item.name;
+    const categoryName =
+        item.category?.name ??
+        item.category_name ??
+        item.family?.name ??
+        item.family_name;
 
-    if (familyName && variantName) {
-        return `${familyName} — ${variantName}`;
+    if (categoryName && productName && categoryName !== productName) {
+        return `${categoryName} - ${productName}`;
     }
 
-    if (variantName) {
-        return variantName;
+    if (productName) {
+        return productName;
     }
 
     if (item.product?.name) {

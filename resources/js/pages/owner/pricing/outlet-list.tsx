@@ -65,8 +65,8 @@ export default function OutletList({ outlets, selectedId, onSelect }: Props) {
                                 </div>
                                 <div className="mt-0.5 text-xs text-text-muted">
                                     {o.override_count > 0
-                                        ? `${o.override_count}/${o.total_variants} custom`
-                                        : `${o.total_variants} produk`}
+                                        ? `${o.override_count}/${o.total_products ?? o.total_variants} custom`
+                                        : `${o.total_products ?? o.total_variants} produk`}
                                 </div>
                             </div>
                             {o.all_standard ? (

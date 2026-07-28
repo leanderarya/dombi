@@ -24,16 +24,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isOutletPriceRow(value: unknown): value is OutletPriceRow {
     return (
         isRecord(value) &&
-        typeof value.variant_id === 'number' &&
-        typeof value.name === 'string' &&
-        (typeof value.family_name === 'string' || value.family_name === null) &&
-        (typeof value.flavor === 'string' || value.flavor === null) &&
-        (typeof value.size === 'string' || value.size === null) &&
-        typeof value.center_price === 'number' &&
-        typeof value.selling_price === 'number' &&
-        typeof value.margin === 'number' &&
-        (typeof value.has_override === 'boolean' ||
-            value.has_override === undefined)
+        (typeof (value as any).product_id === 'number' ||
+            typeof (value as any).variant_id === 'number') &&
+        typeof (value as any).name === 'string' &&
+        typeof (value as any).center_price === 'number' &&
+        typeof (value as any).selling_price === 'number' &&
+        typeof (value as any).margin === 'number'
     );
 }
 
