@@ -36,7 +36,7 @@ class ExchangeController extends Controller
             'filters' => $request->only(['status']),
             'outletInventory' => $this->getOutletInventory($outlet->id),
             'variants' => $this->getActiveVariants(),
-            'pendingReturns' => $this->getPendingReturns($outlet->id),
+            'exchangeEligibleReturns' => $this->getExchangeEligibleReturns($outlet->id),
         ]);
     }
 
@@ -48,7 +48,7 @@ class ExchangeController extends Controller
         return Inertia::render('outlet/exchanges/create', [
             'outletInventory' => $this->getOutletInventory($outlet->id),
             'variants' => $this->getActiveVariants(),
-            'pendingReturns' => $this->getPendingReturns($outlet->id),
+            'exchangeEligibleReturns' => $this->getExchangeEligibleReturns($outlet->id),
         ]);
     }
 
@@ -70,7 +70,7 @@ class ExchangeController extends Controller
         abort_unless($outlet, 403);
 
         $validated = $request->validate([
-            'return_request_id' => 'nullable|integer|exists:return_requests,id',
+            'return_request_id' => 'required|integer|exists:return_requests,id',
             'notes' => 'nullable|string|max:1000',
             'items' => 'required|array|min:1',
             'items.*.product_variant_id' => 'required|integer|exists:product_variants,id',
@@ -146,10 +146,11 @@ class ExchangeController extends Controller
             ]);
     }
 
-    private function getPendingReturns(int $outletId): \Illuminate\Database\Eloquent\Collection
+    private function getExchangeEligibleReturns(int $outletId): \Illuminate\Database\Eloquent\Collection
     {
         return ReturnRequest::where('outlet_id', $outletId)
-            ->whereIn('status', ['approved', 'received_at_center'])
+            ->where('status', ReturnRequest::STATUS_RECEIVED_AT_CENTER)
+            ->whereDoesntHave('exchangeRequest')
             ->with('items.variant')
             ->get();
     }
