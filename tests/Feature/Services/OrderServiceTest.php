@@ -59,7 +59,7 @@ class OrderServiceTest extends TestCase
             ]);
         } catch (StockAdjustedException $e) {
             $this->assertCount(1, $e->adjustments);
-            $this->assertEquals($variant->id, $e->adjustments[0]['variant_id']);
+            $this->assertEquals($variant->id, $e->adjustments[0]['product_id']);
             $this->assertEquals(5, $e->adjustments[0]['original_qty']);
             $this->assertEquals(2, $e->adjustments[0]['adjusted_qty']);
             $this->assertEquals(2, $e->adjustments[0]['available_stock']);
@@ -149,7 +149,7 @@ class OrderServiceTest extends TestCase
             ]);
         } catch (StockAdjustedException $e) {
             $this->assertCount(1, $e->adjustments);
-            $this->assertEquals($variant->id, $e->adjustments[0]['variant_id']);
+            $this->assertEquals($variant->id, $e->adjustments[0]['product_id']);
             $this->assertEquals(5, $e->adjustments[0]['original_qty']);
             $this->assertEquals(0, $e->adjustments[0]['adjusted_qty']);
             $this->assertEquals(0, $e->adjustments[0]['available_stock']);
