@@ -7,7 +7,11 @@ interface Props {
     onSwitchToPickup?: () => void;
 }
 
-export default function DeliveryLoginSheet({ open, onClose, onSwitchToPickup }: Props) {
+export default function DeliveryLoginSheet({
+    open,
+    onClose,
+    onSwitchToPickup,
+}: Props) {
     return (
         <Dialog open={open} onClose={onClose} title="Login untuk Delivery">
             <div className="flex items-center gap-3">
