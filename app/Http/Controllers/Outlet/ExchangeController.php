@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\ExchangeRequest;
 use App\Models\OutletInventory;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\ReturnRequest;
 use App\Services\ExchangeService;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +21,7 @@ class ExchangeController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
-        $query = ExchangeRequest::with(['items.variant', 'returnRequest'])
+        $query = ExchangeRequest::with(['items.product', 'returnRequest'])
             ->where('outlet_id', $outlet->id)
             ->latest();
 
@@ -35,7 +35,7 @@ class ExchangeController extends Controller
             'exchanges' => $exchanges,
             'filters' => $request->only(['status']),
             'outletInventory' => $this->getOutletInventory($outlet->id),
-            'variants' => $this->getActiveVariants(),
+            'variants' => $this->getActiveProducts(),
             'exchangeEligibleReturns' => $this->getExchangeEligibleReturns($outlet->id),
         ]);
     }
@@ -47,7 +47,7 @@ class ExchangeController extends Controller
 
         return Inertia::render('outlet/exchanges/create', [
             'outletInventory' => $this->getOutletInventory($outlet->id),
-            'variants' => $this->getActiveVariants(),
+            'variants' => $this->getActiveProducts(),
             'exchangeEligibleReturns' => $this->getExchangeEligibleReturns($outlet->id),
         ]);
     }
@@ -57,7 +57,7 @@ class ExchangeController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet && $outlet->id === $exchangeRequest->outlet_id, 403);
 
-        $exchangeRequest->load(['items.variant', 'requester', 'reviewer', 'shipper', 'receiver', 'returnRequest.items.variant', 'statusHistories.actor']);
+        $exchangeRequest->load(['items.product', 'requester', 'reviewer', 'shipper', 'receiver', 'returnRequest.items.product', 'statusHistories.actor']);
 
         return Inertia::render('outlet/exchanges/show', [
             'exchange' => $exchangeRequest,
@@ -73,9 +73,18 @@ class ExchangeController extends Controller
             'return_request_id' => 'required|integer|exists:return_requests,id',
             'notes' => 'nullable|string|max:1000',
             'items' => 'required|array|min:1',
-            'items.*.product_variant_id' => 'required|integer|exists:product_variants,id',
+            'items.*.product_id' => 'sometimes|required|integer|exists:products,id',
+            'items.*.product_variant_id' => 'sometimes|required|integer|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
+
+        // Normalize product_variant_id -> product_id
+        foreach ($validated['items'] as &$itm) {
+            if (! isset($itm['product_id']) && isset($itm['product_variant_id'])) {
+                $itm['product_id'] = $itm['product_variant_id'];
+            }
+            unset($itm['product_variant_id']);
+        }
 
         $service->createRequest($outlet, $request->user(), $validated);
 
@@ -112,19 +121,19 @@ class ExchangeController extends Controller
     {
         return OutletInventory::query()
             ->where('outlet_id', $outletId)
-            ->whereNotNull('product_variant_id')
             ->where('current_stock', '>', 0)
-            ->with(['variant.family'])
+            ->with(['product.category'])
             ->get()
-            ->filter(fn (OutletInventory $inventory) => $inventory->variant && $inventory->variant->is_active)
+            ->filter(fn (OutletInventory $inventory) => $inventory->product && $inventory->product->is_active)
             ->map(function (OutletInventory $inventory) {
-                $variant = $inventory->variant;
+                $product = $inventory->product;
 
                 return [
-                    'product_variant_id' => $variant->id,
+                    'product_id' => $product->id,
+                    'product_variant_id' => $product->id, // backward compat
                     'variant' => [
-                        'id' => $variant->id,
-                        'name' => $variant->full_name,
+                        'id' => $product->id,
+                        'name' => $product->name,
                     ],
                     'current_stock' => $inventory->current_stock,
                 ];
@@ -132,17 +141,17 @@ class ExchangeController extends Controller
             ->values();
     }
 
-    private function getActiveVariants(): Collection
+    private function getActiveProducts(): Collection
     {
-        return ProductVariant::where('is_active', true)
-            ->with('family:id,name')
+        return Product::where('is_active', true)
+            ->with('category:id,name')
             ->orderBy('name')
             ->get()
-            ->map(fn (ProductVariant $v) => [
-                'id' => $v->id,
-                'name' => $v->name,
-                'full_name' => $v->full_name,
-                'selling_price' => $v->selling_price,
+            ->map(fn (Product $p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'full_name' => $p->full_display_name,
+                'selling_price' => $p->selling_price,
             ]);
     }
 
@@ -151,7 +160,7 @@ class ExchangeController extends Controller
         return ReturnRequest::where('outlet_id', $outletId)
             ->where('status', ReturnRequest::STATUS_RECEIVED_AT_CENTER)
             ->whereDoesntHave('exchangeRequest')
-            ->with('items.variant')
+            ->with('items.product')
             ->get();
     }
 }

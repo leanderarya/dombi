@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Models\Outlet;
-use App\Models\OutletVariantPrice;
+use App\Models\OutletProductPrice;
 use App\Models\PricingAuditLog;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Services\PricingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -35,34 +35,38 @@ class PricingController extends Controller
      */
     private function pusatTab(Request $request): Response
     {
-        $variants = ProductVariant::query()
+        $products = Product::query()
             ->where('is_active', true)
-            ->with('family:id,name')
+            ->with('category:id,name')
             ->orderBy('name')
             ->get()
-            ->map(fn (ProductVariant $v) => [
-                'variant_id' => $v->id,
-                'name' => $v->full_name,
-                'family_name' => $v->family?->name,
-                'flavor' => $v->flavor,
-                'size' => $v->size,
-                'center_price' => (float) $v->center_price,
-                'selling_price' => (float) $v->selling_price,
-                'margin' => (float) $v->selling_price - (float) $v->center_price,
-                'outlet_override_count' => OutletVariantPrice::where('product_variant_id', $v->id)->count(),
+            ->map(fn (Product $p) => [
+                'product_id' => $p->id,
+                'variant_id' => $p->id, // backward compat
+                'name' => $p->name,
+                'category_name' => $p->category?->name,
+                'family_name' => $p->category?->name, // backward compat
+                'flavor' => $p->flavor,
+                'size' => $p->size,
+                'center_price' => (float) $p->center_price,
+                'selling_price' => (float) $p->selling_price,
+                'margin' => (float) $p->selling_price - (float) $p->center_price,
+                'outlet_override_count' => OutletProductPrice::where('product_id', $p->id)->count(),
             ]);
 
         // KPIs
-        $totalVariants = $variants->count();
-        $avgHpp = $variants->avg('center_price');
-        $avgMargin = $variants->avg('margin');
-        $negativeMarginCount = $variants->filter(fn ($v) => $v['margin'] < 0)->count();
+        $total = $products->count();
+        $avgHpp = $products->avg('center_price');
+        $avgMargin = $products->avg('margin');
+        $negativeMarginCount = $products->filter(fn ($v) => $v['margin'] < 0)->count();
 
         return Inertia::render('owner/pricing/index', [
             'tab' => 'pusat',
-            'pusatVariants' => $variants,
+            'pusatVariants' => $products, // backward compat key
+            'pusatProducts' => $products,
             'pusatKpis' => [
-                'total_variants' => (int) $totalVariants,
+                'total_variants' => (int) $total,
+                'total_products' => (int) $total,
                 'avg_hpp' => (float) $avgHpp,
                 'avg_margin' => (float) $avgMargin,
                 'negative_margin_count' => (int) $negativeMarginCount,
@@ -76,20 +80,30 @@ class PricingController extends Controller
     private function outletTab(Request $request, PricingService $pricingService): Response
     {
         $outlets = Outlet::where('status', 'active')
-            ->withCount(['variantPrices'])
+            ->withCount(['productPrices'])
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $totalVariants = ProductVariant::where('is_active', true)->count();
+        // Fallback for old relation name variantPrices
+        $outlets = $outlets->map(function (Outlet $o) {
+            // If product_prices_count not loaded via new relation, try variant_prices_count
+            if (! isset($o->product_prices_count)) {
+                $o->setAttribute('product_prices_count', $o->variant_prices_count ?? 0);
+            }
+            return $o;
+        });
+
+        $totalProducts = Product::where('is_active', true)->count();
 
         $data = [
             'tab' => 'outlet',
             'outlets' => $outlets->map(fn (Outlet $o) => [
                 'id' => $o->id,
                 'name' => $o->name,
-                'override_count' => $o->variant_prices_count,
-                'total_variants' => $totalVariants,
-                'all_standard' => $o->variant_prices_count === 0,
+                'override_count' => $o->product_prices_count ?? $o->variant_prices_count ?? 0,
+                'total_variants' => $totalProducts,
+                'total_products' => $totalProducts,
+                'all_standard' => ($o->product_prices_count ?? $o->variant_prices_count ?? 0) === 0,
             ]),
         ];
 
@@ -116,7 +130,7 @@ class PricingController extends Controller
      */
     private function riwayatTab(Request $request): Response
     {
-        $query = PricingAuditLog::with(['outlet:id,name', 'changedBy:id,name'])
+        $query = PricingAuditLog::with(['outlet:id,name', 'changedBy:id,name', 'product'])
             ->orderByDesc('created_at');
 
         $actionFilter = $request->string('action', '')->toString();
@@ -132,7 +146,7 @@ class PricingController extends Controller
         $logs = $query->paginate(20)->withQueryString()->through(fn (PricingAuditLog $log) => [
             'id' => $log->id,
             'outlet' => $log->outlet_id === null ? 'Global' : ($log->outlet?->name ?? '-'),
-            'product' => $log->productVariant?->full_name ?? '-',
+            'product' => $log->product?->name ?? $log->productVariant?->full_name ?? '-',
             'old_price' => (float) $log->old_price,
             'new_price' => (float) $log->new_price,
             'action' => $log->action,
@@ -153,14 +167,12 @@ class PricingController extends Controller
                 'name' => $o->name,
                 'override_count' => 0,
                 'total_variants' => 0,
+                'total_products' => 0,
                 'all_standard' => true,
             ]),
         ]);
     }
 
-    /**
-     * Redirect from old outlet show route.
-     */
     /**
      * Compare prices across outlets (1-3).
      */
@@ -194,18 +206,26 @@ class PricingController extends Controller
     }
 
     /**
-     * Update global price (center_price and/or selling_price on ProductVariant).
+     * Update global price (center_price and/or selling_price on Product).
      */
-    public function updateGlobal(Request $request, ProductVariant $variant, PricingService $pricingService): RedirectResponse
+    public function updateGlobal(Request $request, Product $product = null, PricingService $pricingService = null): RedirectResponse
     {
+        if (! $product) {
+            $routeVal = $request->route('variant') ?? $request->route('product');
+            $id = is_object($routeVal) ? $routeVal->id : $routeVal;
+            $product = Product::findOrFail($id);
+        }
+        // Support both Product and ProductVariant route binding (legacy)
+        $model = $product;
+
         $validated = $request->validate([
             'center_price' => ['sometimes', 'numeric', 'min:0'],
             'selling_price' => ['sometimes', 'numeric', 'min:0'],
         ]);
 
         $updates = [];
-        $oldCenter = (float) $variant->center_price;
-        $oldSelling = (float) $variant->selling_price;
+        $oldCenter = (float) $model->center_price;
+        $oldSelling = (float) $model->selling_price;
 
         if (isset($validated['center_price'])) {
             $updates['center_price'] = (float) $validated['center_price'];
@@ -223,21 +243,21 @@ class PricingController extends Controller
             return back()->withErrors(['center_price' => 'Tidak ada perubahan.']);
         }
 
-        $variant->update($updates);
+        $model->update($updates);
 
         // Log audit for each changed field
         if (isset($updates['center_price'])) {
-            $this->logAudit(null, $variant->id, $oldCenter, $updates['center_price'], 'master_update', $request->user()->id);
+            $this->logAudit(null, $model->id, $oldCenter, $updates['center_price'], 'master_update', $request->user()->id);
         }
 
         if (isset($updates['selling_price'])) {
-            $this->logAudit(null, $variant->id, $oldSelling, $updates['selling_price'], 'master_update', $request->user()->id);
+            $this->logAudit(null, $model->id, $oldSelling, $updates['selling_price'], 'master_update', $request->user()->id);
         }
 
         // Warning if outlet overrides would have negative margin
         $warning = null;
         if (isset($updates['center_price'])) {
-            $impact = $pricingService->getCenterPriceImpact($variant->id, $updates['center_price']);
+            $impact = $pricingService->getCenterPriceImpact($model->id, $updates['center_price']);
             if ($impact['negative_margin_outlets'] > 0) {
                 $warning = "{$impact['negative_margin_outlets']} outlet akan memiliki margin negatif setelah perubahan ini.";
             }
@@ -254,8 +274,13 @@ class PricingController extends Controller
     /**
      * Update outlet-specific price.
      */
-    public function updateOutlet(Request $request, Outlet $outlet, ProductVariant $variant, PricingService $pricingService): RedirectResponse
+    public function updateOutlet(Request $request, Outlet $outlet, Product $product = null, PricingService $pricingService = null): RedirectResponse
     {
+        if (! $product) {
+            $routeVal = $request->route('variant') ?? $request->route('product');
+            $id = is_object($routeVal) ? $routeVal->id : $routeVal;
+            $product = Product::findOrFail($id);
+        }
         $validated = $request->validate([
             'selling_price' => ['required', 'numeric', 'min:0'],
         ]);
@@ -266,11 +291,11 @@ class PricingController extends Controller
             return back()->withErrors(['selling_price' => 'Harga jual tidak boleh nol.']);
         }
 
-        $pricingService->updatePrice($outlet->id, $variant->id, $newPrice, $request->user());
+        $pricingService->updatePrice($outlet->id, $product->id, $newPrice, $request->user());
 
         $response = back()->with('success', 'Harga berhasil diperbarui.');
 
-        if ($newPrice < (float) $variant->center_price) {
+        if ($newPrice < (float) $product->center_price) {
             $response->with('warning', 'Harga jual lebih rendah dari harga pusat. Margin akan negatif.');
         }
 
@@ -280,9 +305,14 @@ class PricingController extends Controller
     /**
      * Reset outlet price to global (delete override).
      */
-    public function resetOutlet(Request $request, Outlet $outlet, ProductVariant $variant, PricingService $pricingService): RedirectResponse
+    public function resetOutlet(Request $request, Outlet $outlet, Product $product = null, PricingService $pricingService = null): RedirectResponse
     {
-        $pricingService->resetToGlobal($outlet->id, $variant->id, $request->user());
+        if (! $product) {
+            $routeVal = $request->route('variant') ?? $request->route('product');
+            $id = is_object($routeVal) ? $routeVal->id : $routeVal;
+            $product = Product::findOrFail($id);
+        }
+        $pricingService->resetToGlobal($outlet->id, $product->id, $request->user());
 
         return back()->with('success', 'Harga berhasil direset ke harga pusat.');
     }
@@ -290,10 +320,16 @@ class PricingController extends Controller
     /**
      * Get impact preview for a center price change.
      */
-    public function getImpact(ProductVariant $variant, PricingService $pricingService): JsonResponse
+    public function getImpact(Request $request, Product $product = null, PricingService $pricingService = null): JsonResponse
     {
-        $newCenterPrice = (float) request('center_price', $variant->center_price);
-        $impact = $pricingService->getCenterPriceImpact($variant->id, $newCenterPrice);
+        if (! $product) {
+            $routeVal = $request->route('variant') ?? $request->route('product');
+            $id = is_object($routeVal) ? $routeVal->id : $routeVal;
+            $product = Product::findOrFail($id);
+        }
+        $pricingService = $pricingService ?? app(PricingService::class);
+        $newCenterPrice = (float) request('center_price', $product->center_price);
+        $impact = $pricingService->getCenterPriceImpact($product->id, $newCenterPrice);
 
         return response()->json($impact);
     }
@@ -329,12 +365,12 @@ class PricingController extends Controller
     /**
      * Log a pricing audit entry.
      */
-    private function logAudit(?int $outletId, int $variantId, ?float $oldPrice, float $newPrice, string $action, int $userId): void
+    private function logAudit(?int $outletId, int $productId, ?float $oldPrice, float $newPrice, string $action, int $userId): void
     {
         try {
             PricingAuditLog::create([
                 'outlet_id' => $outletId,
-                'product_variant_id' => $variantId,
+                'product_id' => $productId,
                 'old_price' => $oldPrice,
                 'new_price' => $newPrice,
                 'action' => $action,
@@ -343,7 +379,7 @@ class PricingController extends Controller
         } catch (\Exception $e) {
             logger()->warning('Pricing audit log failed', [
                 'outlet_id' => $outletId,
-                'variant_id' => $variantId,
+                'product_id' => $productId,
                 'error' => $e->getMessage(),
             ]);
         }
