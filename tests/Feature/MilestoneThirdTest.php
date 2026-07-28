@@ -9,8 +9,8 @@ use App\Models\Delivery;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\StockMovement;
 use App\Models\User;
 use App\Services\DeliveryService;
@@ -46,7 +46,7 @@ class MilestoneThirdTest extends TestCase
             ->assertRedirect(route('courier.deliveries.show', $delivery));
 
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->firstOrFail();
 
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'completed']);
@@ -68,7 +68,7 @@ class MilestoneThirdTest extends TestCase
             ->assertRedirect(route('courier.deliveries.show', $delivery));
 
         $inventory = OutletInventory::where('outlet_id', $context['outlet']->id)
-            ->where('product_variant_id', $context['variant']->id)
+            ->where('product_id', $context['variant']->id)
             ->firstOrFail();
 
         $this->assertDatabaseHas('orders', ['id' => $context['order']->id, 'status' => 'failed_delivery']);
@@ -138,15 +138,13 @@ class MilestoneThirdTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => uniqid('susu-kambing-'),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Original 500ml',
             'flavor' => 'Original',
@@ -159,7 +157,7 @@ class MilestoneThirdTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 0,
             'minimum_stock' => 1,
@@ -176,7 +174,7 @@ class MilestoneThirdTest extends TestCase
 
         $order = app(OrderService::class)->createCustomerOrder($customer, [
             'address_id' => $address->id,
-            'items' => [['product_variant_id' => $variant->id, 'quantity' => $quantity]],
+            'items' => [['product_id' => $variant->id, 'quantity' => $quantity]],
             'payment_method' => 'qris',
         ]);
         $order->update(['payment_status' => 'paid', 'paid_at' => now()]);

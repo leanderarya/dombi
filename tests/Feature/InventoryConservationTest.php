@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\User;
 use App\Services\ExchangeService;
 use App\Services\ReturnService;
@@ -28,7 +28,7 @@ class InventoryConservationTest extends TestCase
 
         $return = app(ReturnService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'reason' => 'slow_moving',
-            'items' => [['product_variant_id' => $ctx['variant']->id, 'quantity' => $returnQty]],
+            'items' => [['product_id' => $ctx['variant']->id, 'quantity' => $returnQty]],
         ]);
 
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
@@ -52,7 +52,7 @@ class InventoryConservationTest extends TestCase
 
         $return = app(ReturnService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'reason' => 'damaged_packaging',
-            'items' => [['product_variant_id' => $ctx['variant']->id, 'quantity' => 3]],
+            'items' => [['product_id' => $ctx['variant']->id, 'quantity' => 3]],
         ]);
 
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
@@ -63,13 +63,13 @@ class InventoryConservationTest extends TestCase
         );
 
         $this->assertDatabaseHas('stock_movements', [
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'return_out',
             'quantity' => -3,
         ]);
 
         $this->assertDatabaseHas('stock_movements', [
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'return_in',
             'quantity' => 3,
         ]);
@@ -92,8 +92,8 @@ class InventoryConservationTest extends TestCase
         $return = app(ReturnService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'reason' => 'slow_moving',
             'items' => [
-                ['product_variant_id' => $ctx['variant']->id, 'quantity' => 5],
-                ['product_variant_id' => $ctx['exchangeVariant']->id, 'quantity' => 8],
+                ['product_id' => $ctx['variant']->id, 'quantity' => 5],
+                ['product_id' => $ctx['exchangeVariant']->id, 'quantity' => 8],
             ],
         ]);
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
@@ -107,7 +107,7 @@ class InventoryConservationTest extends TestCase
         // Exchange 8 units of variant B
         $exchange = app(ExchangeService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $ctx['exchangeVariant']->id, 'quantity' => 8]],
+            'items' => [['product_id' => $ctx['exchangeVariant']->id, 'quantity' => 8]],
         ]);
         $exchange = app(ExchangeService::class)->approveRequest($exchange, $ctx['owner']);
         $exchange = app(ExchangeService::class)->markShipped($exchange->fresh(), $ctx['owner']);
@@ -125,8 +125,8 @@ class InventoryConservationTest extends TestCase
         $return = app(ReturnService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'reason' => 'slow_moving',
             'items' => [
-                ['product_variant_id' => $ctx['variant']->id, 'quantity' => 3],
-                ['product_variant_id' => $ctx['exchangeVariant']->id, 'quantity' => 5],
+                ['product_id' => $ctx['variant']->id, 'quantity' => 3],
+                ['product_id' => $ctx['exchangeVariant']->id, 'quantity' => 5],
             ],
         ]);
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
@@ -134,14 +134,14 @@ class InventoryConservationTest extends TestCase
 
         // Simpan return items ke pusat
         $return->fresh('items')->items->each(
-            fn ($i) => $i->product_variant_id === $ctx['variant']->id
+            fn ($i) => $i->product_id === $ctx['variant']->id
                 ? app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $ctx['owner'])
                 : null
         );
 
         $exchange = app(ExchangeService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $ctx['exchangeVariant']->id, 'quantity' => 5]],
+            'items' => [['product_id' => $ctx['exchangeVariant']->id, 'quantity' => 5]],
         ]);
         $exchange = app(ExchangeService::class)->approveRequest($exchange, $ctx['owner']);
         $exchange = app(ExchangeService::class)->markShipped($exchange->fresh(), $ctx['owner']);
@@ -149,28 +149,28 @@ class InventoryConservationTest extends TestCase
 
         // return_out: outlet returns to center
         $this->assertDatabaseHas('stock_movements', [
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'return_out',
             'quantity' => -3,
         ]);
 
         // return_in: center receives from outlet
         $this->assertDatabaseHas('stock_movements', [
-            'product_variant_id' => $ctx['variant']->id,
+            'product_id' => $ctx['variant']->id,
             'type' => 'return_in',
             'quantity' => 3,
         ]);
 
         // exchange_out: center ships replacement
         $this->assertDatabaseHas('stock_movements', [
-            'product_variant_id' => $ctx['exchangeVariant']->id,
+            'product_id' => $ctx['exchangeVariant']->id,
             'type' => 'exchange_out',
             'quantity' => -5,
         ]);
 
         // exchange_in: outlet receives replacement
         $this->assertDatabaseHas('stock_movements', [
-            'product_variant_id' => $ctx['exchangeVariant']->id,
+            'product_id' => $ctx['exchangeVariant']->id,
             'type' => 'exchange_in',
             'quantity' => 5,
         ]);
@@ -205,7 +205,7 @@ class InventoryConservationTest extends TestCase
         $inventory = OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $variant->product_id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => $outletStock,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -219,7 +219,7 @@ class InventoryConservationTest extends TestCase
             $exchangeInventory = OutletInventory::create([
                 'outlet_id' => $outlet->id,
                 'product_id' => $exchangeVariant->product_id,
-                'product_variant_id' => $exchangeVariant->id,
+                'product_id' => $exchangeVariant->id,
                 'current_stock' => $outletStockExchange ?? 0,
                 'reserved_stock' => 0,
                 'minimum_stock' => 2,
@@ -229,23 +229,21 @@ class InventoryConservationTest extends TestCase
         return compact('owner', 'outletUser', 'outlet', 'variant', 'inventory', 'exchangeVariant', 'exchangeInventory');
     }
 
-    private function makeVariant(string $name, int $sellingPrice, int $centerStock): ProductVariant
+    private function makeVariant(string $name, int $sellingPrice, int $centerStock): Product
     {
         $product = Product::create([
             'name' => $name,
-            'slug' => uniqid('conservation-'),
-            'unit' => 'botol',
-            'price' => $sellingPrice,
+            'selling_price' => $sellingPrice,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => $name,
             'brand' => 'Dombi',
         ]);
 
-        return ProductVariant::create([
-            'product_family_id' => $family->id,
+        return Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => $name,
             'flavor' => 'Original',
@@ -257,11 +255,11 @@ class InventoryConservationTest extends TestCase
         ]);
     }
 
-    private function totalInventory(array $ctx, ProductVariant $variant): int
+    private function totalInventory(array $ctx, Product $variant): int
     {
         $center = (int) $variant->fresh()->center_stock;
         $outlet = (int) OutletInventory::where('outlet_id', $ctx['outlet']->id)
-            ->where('product_variant_id', $variant->id)
+            ->where('product_id', $variant->id)
             ->first()?->current_stock ?? 0;
 
         return $center + $outlet;

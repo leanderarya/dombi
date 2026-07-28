@@ -222,7 +222,7 @@ class GuestOrderRecoveryTest extends TestCase
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'quantity' => 1,
-                'price' => $product->price,
+                'selling_price' => $product->price,
                 'subtotal' => 25000,
             ]);
 
@@ -537,7 +537,7 @@ class GuestOrderRecoveryTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'price' => 25000,
+            'selling_price' => 25000,
             'subtotal' => 50000,
         ]);
 
@@ -563,7 +563,7 @@ class GuestOrderRecoveryTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 1,
-            'price' => 25000,
+            'selling_price' => 25000,
             'subtotal' => 25000,
         ]);
 
@@ -587,9 +587,7 @@ class GuestOrderRecoveryTest extends TestCase
     {
         return Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-recovery',
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
     }

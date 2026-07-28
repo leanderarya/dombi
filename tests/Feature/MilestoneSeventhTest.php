@@ -6,8 +6,7 @@ use App\Models\Customer;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -38,11 +37,10 @@ class MilestoneSeventhTest extends TestCase
     public function test_owner_dashboard_shows_low_stock_alerts(): void
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
-        $family = ProductFamily::create(['name' => 'Susu', 'brand' => 'Dombi']);
-        $product = Product::create(['name' => 'Susu 1L', 'slug' => 'susu-test', 'unit' => 'botol', 'price' => 25000, 'is_active' => true]);
-        ProductVariant::create([
-            'product_family_id' => $family->id,
-            'product_id' => $product->id,
+        $family = ProductCategory::create(['name' => 'Susu', 'brand' => 'Dombi']);
+        $product = Product::create(['name' => 'Susu 1L', 'selling_price' => 25000, 'is_active' => true]);
+        Product::create([
+            'product_category_id' => $family->id,
             'name' => 'Susu 1L',
             'flavor' => 'Original',
             'size' => '1L',
@@ -68,7 +66,7 @@ class MilestoneSeventhTest extends TestCase
         $outletUser = User::factory()->create(['role' => 'outlet', 'is_active' => true]);
         $outlet = Outlet::create(['user_id' => $outletUser->id, 'name' => 'Outlet', 'kelurahan' => 'A', 'kecamatan' => 'B', 'address' => 'C', 'status' => 'active']);
         $outletUser->update(['outlet_id' => $outlet->id]);
-        $product = Product::create(['name' => 'Susu', 'slug' => 'susu-outlet', 'unit' => 'botol', 'price' => 25000, 'is_active' => true]);
+        $product = Product::create(['name' => 'Susu', 'selling_price' => 25000, 'is_active' => true]);
         OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 1, 'reserved_stock' => 0, 'minimum_stock' => 3]);
 
         $this->actingAs($outletUser)

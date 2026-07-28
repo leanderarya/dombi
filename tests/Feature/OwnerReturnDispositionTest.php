@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
 use App\Models\User;
@@ -28,11 +28,11 @@ class OwnerReturnDispositionTest extends TestCase
         $this->owner = User::factory()->create(['role' => 'owner']);
 
         $outlet = Outlet::factory()->create();
-        $variant = ProductVariant::factory()->create(['center_stock' => 20]);
+        $variant = Product::factory()->create(['center_stock' => 20]);
 
         OutletInventory::factory()->create([
             'outlet_id' => $outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
         ]);
 
@@ -43,7 +43,7 @@ class OwnerReturnDispositionTest extends TestCase
 
         $this->item = ReturnRequestItem::factory()->create([
             'return_request_id' => $this->returnRequest->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'quantity' => 3,
             'unit_price' => 10000,
             'subtotal' => 30000,
@@ -187,10 +187,10 @@ class OwnerReturnDispositionTest extends TestCase
 
     public function test_owner_can_dispose_and_store_mixed(): void
     {
-        $variant2 = ProductVariant::factory()->create(['center_stock' => 20]);
+        $variant2 = Product::factory()->create(['center_stock' => 20]);
         $item2 = ReturnRequestItem::factory()->create([
             'return_request_id' => $this->returnRequest->id,
-            'product_variant_id' => $variant2->id,
+            'product_id' => $variant2->id,
             'quantity' => 2,
             'unit_price' => 15000,
             'subtotal' => 30000,

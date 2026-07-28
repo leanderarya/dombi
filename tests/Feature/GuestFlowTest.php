@@ -153,9 +153,7 @@ class GuestFlowTest extends TestCase
         $customer = Customer::create(['name' => 'Guest', 'phone' => '628123456789'.rand(1000, 9999)]);
         $product = Product::create([
             'name' => 'Test Product',
-            'slug' => 'test-'.uniqid(),
-            'unit' => 'pcs',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
@@ -182,7 +180,7 @@ class GuestFlowTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'price' => $product->price,
+            'selling_price' => $product->price,
             'subtotal' => 50000,
         ]);
 

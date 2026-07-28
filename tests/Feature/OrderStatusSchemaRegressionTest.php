@@ -86,9 +86,7 @@ class OrderStatusSchemaRegressionTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Schema 500ml',
-            'slug' => uniqid('susu-schema-'),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
@@ -151,7 +149,7 @@ class OrderStatusSchemaRegressionTest extends TestCase
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'quantity' => 2,
-                'price' => 25000,
+                'selling_price' => 25000,
                 'subtotal' => 50000,
             ]);
         }

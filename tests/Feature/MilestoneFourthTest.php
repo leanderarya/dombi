@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Models\User;
 use App\Services\RestockService;
@@ -24,12 +24,12 @@ class MilestoneFourthTest extends TestCase
         $this->actingAs($context['outletUser'])
             ->post(route('outlet.restocks.store'), [
                 'notes' => 'Stok menipis',
-                'items' => [['product_variant_id' => $context['variant']->id, 'requested_quantity' => 6]],
+                'items' => [['product_id' => $context['variant']->id, 'requested_quantity' => 6]],
             ])
             ->assertRedirect();
 
         $this->assertDatabaseHas('restock_requests', ['outlet_id' => $context['outlet']->id, 'status' => 'requested']);
-        $this->assertDatabaseHas('restock_request_items', ['product_variant_id' => $context['variant']->id, 'requested_quantity' => 6]);
+        $this->assertDatabaseHas('restock_request_items', ['product_id' => $context['variant']->id, 'requested_quantity' => 6]);
     }
 
     public function test_owner_can_reject_request(): void
@@ -77,7 +77,7 @@ class MilestoneFourthTest extends TestCase
     {
         return app(RestockService::class)->createRequest($context['outletUser'], [
             'notes' => 'Perlu restock',
-            'items' => [['product_variant_id' => $context['variant']->id, 'requested_quantity' => 6]],
+            'items' => [['product_id' => $context['variant']->id, 'requested_quantity' => 6]],
         ])->load('items');
     }
 
@@ -98,15 +98,13 @@ class MilestoneFourthTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => uniqid('susu-kambing-'),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Original 500ml',
             'flavor' => 'Original',
@@ -120,7 +118,7 @@ class MilestoneFourthTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 2,
             'reserved_stock' => 0,
             'minimum_stock' => 2,

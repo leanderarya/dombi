@@ -43,8 +43,7 @@ class DeliveryStatusHistoryTest extends TestCase
         ]);
         $product = Product::create([
             'name' => 'Nasi Goreng',
-            'slug' => 'nasi-goreng-'.uniqid(),
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
         OutletInventory::create([
