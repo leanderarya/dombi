@@ -59,6 +59,8 @@ class HandleInertiaRequests extends Middleware
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'outlet_provisioning' => fn () => $request->session()->get('outlet_provisioning'),
+                'new_product_id' => fn () => $request->session()->get('new_product_id'),
+                'new_product_ids' => fn () => $request->session()->get('new_product_ids'),
             ],
             'guestMode' => fn () => session('guest_mode', false),
             'dev' => [
