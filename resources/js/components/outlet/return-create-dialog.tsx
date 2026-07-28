@@ -293,11 +293,19 @@ export default function ReturnCreateDialog({
                                                     >
                                                         <Minus className="h-3.5 w-3.5" />
                                                     </button>
-                                                    <span className="w-8 text-center text-sm font-bold text-text">
-                                                        {selectedVariants.get(
-                                                            v.id,
-                                                        ) ?? 1}
-                                                    </span>
+                                                    <input
+                                                        type="number"
+                                                        min={1}
+                                                        max={v.available_stock}
+                                                        value={selectedVariants.get(v.id) ?? 1}
+                                                        onChange={(e) =>
+                                                            updateQuantity(
+                                                                v.id,
+                                                                Number(e.target.value),
+                                                            )
+                                                        }
+                                                        className="w-14 text-center text-sm font-bold tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                    />
                                                     <button
                                                         type="button"
                                                         onClick={() =>
