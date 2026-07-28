@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Outlet;
 
 use App\Http\Controllers\Controller;
 use App\Models\OutletInventory;
-use App\Models\Product;
 use App\Models\ReturnRequest;
 use App\Services\ReturnService;
 use Illuminate\Http\RedirectResponse;

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Services\InventoryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -15,7 +16,7 @@ class InventoryServiceProductRefactorTest extends TestCase
     {
         $cat = ProductCategory::factory()->create();
         $product = Product::factory()->create(['product_category_id' => $cat->id, 'center_stock' => 0]);
-        app(\App\Services\InventoryService::class)->updateCenterStock($product->id, 100, 'Stok awal');
+        app(InventoryService::class)->updateCenterStock($product->id, 100, 'Stok awal');
         $this->assertDatabaseHas('stock_movements', ['product_id' => $product->id, 'type' => 'initial_stock', 'quantity' => 100]);
     }
 
@@ -23,7 +24,7 @@ class InventoryServiceProductRefactorTest extends TestCase
     {
         $cat = ProductCategory::factory()->create();
         $product = Product::factory()->create(['product_category_id' => $cat->id, 'center_stock' => 50]);
-        app(\App\Services\InventoryService::class)->updateCenterStock($product->id, 100, 'Penyesuaian rutin');
+        app(InventoryService::class)->updateCenterStock($product->id, 100, 'Penyesuaian rutin');
         $this->assertDatabaseHas('stock_movements', ['product_id' => $product->id, 'type' => 'stock_adjustment', 'quantity' => 50]);
     }
 
@@ -31,7 +32,7 @@ class InventoryServiceProductRefactorTest extends TestCase
     {
         $cat = ProductCategory::factory()->create();
         $product = Product::factory()->create(['product_category_id' => $cat->id, 'center_stock' => 0]);
-        app(\App\Services\InventoryService::class)->updateCenterStock($product->id, 10, 'First batch');
+        app(InventoryService::class)->updateCenterStock($product->id, 10, 'First batch');
         $this->assertDatabaseHas('stock_movements', ['product_id' => $product->id, 'type' => 'initial_stock']);
     }
 }

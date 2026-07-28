@@ -105,7 +105,7 @@ class InventoryController extends Controller
     /**
      * Update center stock for a product (quick edit from Stok Pusat tab).
      */
-    public function updateCenterStock(Request $request, Product $product = null): RedirectResponse
+    public function updateCenterStock(Request $request, ?Product $product = null): RedirectResponse
     {
         if (! $product) {
             $routeVal = $request->route('variant') ?? $request->route('product');

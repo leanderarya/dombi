@@ -59,8 +59,8 @@ class OfflineSaleController extends Controller
         abort_unless($outlet, 403);
 
         $validated = $request->validate([
-            'product_id' => ['sometimes','required', 'integer', 'exists:products,id'],
-            'variant_id' => ['sometimes','required', 'integer', 'exists:products,id'],
+            'product_id' => ['sometimes', 'required', 'integer', 'exists:products,id'],
+            'variant_id' => ['sometimes', 'required', 'integer', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);

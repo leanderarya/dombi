@@ -2,14 +2,14 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     private function dropFkByColumn(string $table, string $column): void
     {
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, $column)) {
+        if (! Schema::hasTable($table) || ! Schema::hasColumn($table, $column)) {
             return;
         }
 
@@ -18,23 +18,23 @@ return new class extends Migration
             Schema::table($table, function (Blueprint $t) use ($column) {
                 $t->dropForeign([$column]);
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
 
         // Query INFORMATION_SCHEMA for remaining FKs on that column
         try {
             $db = DB::getDatabaseName();
             $rows = DB::select(
-                "SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL",
+                'SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = ? AND TABLE_NAME = ? AND COLUMN_NAME = ? AND REFERENCED_TABLE_NAME IS NOT NULL',
                 [$db, $table, $column]
             );
             foreach ($rows as $row) {
                 try {
                     DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$row->CONSTRAINT_NAME}`");
-                } catch (\Throwable $ex) {
+                } catch (Throwable $ex) {
                 }
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
 
         // Also try known old names
@@ -47,14 +47,14 @@ return new class extends Migration
         ] as $fkName) {
             try {
                 DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$fkName}`");
-            } catch (\Throwable $ex) {
+            } catch (Throwable $ex) {
             }
         }
     }
 
     private function dropAllFks(string $table): void
     {
-        if (!Schema::hasTable($table)) {
+        if (! Schema::hasTable($table)) {
             return;
         }
         try {
@@ -66,16 +66,16 @@ return new class extends Migration
             foreach ($rows as $row) {
                 try {
                     DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$row->CONSTRAINT_NAME}`");
-                } catch (\Throwable $ex) {
+                } catch (Throwable $ex) {
                 }
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
     }
 
-    private function dropUniqueIfExists(string $table, array $columns, string $indexName = null): void
+    private function dropUniqueIfExists(string $table, array $columns, ?string $indexName = null): void
     {
-        if (!Schema::hasTable($table)) {
+        if (! Schema::hasTable($table)) {
             return;
         }
         // Try by columns
@@ -83,18 +83,18 @@ return new class extends Migration
             Schema::table($table, function (Blueprint $t) use ($columns) {
                 $t->dropUnique($columns);
             });
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
         if ($indexName) {
             try {
                 Schema::table($table, function (Blueprint $t) use ($indexName) {
                     $t->dropUnique($indexName);
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
             }
             try {
                 DB::statement("ALTER TABLE `{$table}` DROP INDEX `{$indexName}`");
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
             }
         }
     }
@@ -176,7 +176,7 @@ return new class extends Migration
                 });
             }
 
-            if (!Schema::hasColumn('products', 'description')) {
+            if (! Schema::hasColumn('products', 'description')) {
                 Schema::table('products', function (Blueprint $t) {
                     $t->text('description')->nullable()->after('name');
                 });
@@ -206,10 +206,10 @@ return new class extends Migration
         ];
 
         foreach ($renames as $table) {
-            if (!Schema::hasTable($table)) {
+            if (! Schema::hasTable($table)) {
                 continue;
             }
-            if (!Schema::hasColumn($table, 'product_variant_id')) {
+            if (! Schema::hasColumn($table, 'product_variant_id')) {
                 continue;
             }
 
@@ -220,11 +220,11 @@ return new class extends Migration
                     Schema::table($table, function (Blueprint $t) {
                         $t->dropColumn('product_id');
                     });
-                } catch (\Throwable $e) {
+                } catch (Throwable $e) {
                     // Try raw
                     try {
                         DB::statement("ALTER TABLE `{$table}` DROP COLUMN `product_id`");
-                    } catch (\Throwable $ex) {
+                    } catch (Throwable $ex) {
                     }
                 }
             }
@@ -235,11 +235,11 @@ return new class extends Migration
                 Schema::table($table, function (Blueprint $t) {
                     $t->renameColumn('product_variant_id', 'product_id');
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
                 // Fallback raw rename
                 try {
                     DB::statement("ALTER TABLE `{$table}` RENAME COLUMN `product_variant_id` TO `product_id`");
-                } catch (\Throwable $ex) {
+                } catch (Throwable $ex) {
                 }
             }
         }
@@ -263,7 +263,7 @@ return new class extends Migration
                 Schema::table('products', function (Blueprint $t) {
                     $t->foreign('product_category_id')->references('id')->on('product_categories')->cascadeOnDelete();
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
             }
         }
 
@@ -281,7 +281,7 @@ return new class extends Migration
         ];
 
         foreach ($fkDefs as $table => $onDelete) {
-            if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'product_id')) {
+            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'product_id')) {
                 continue;
             }
             try {
@@ -292,7 +292,7 @@ return new class extends Migration
                         $t->foreign('product_id')->references('id')->on('products')->cascadeOnDelete();
                     }
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
             }
         }
 
@@ -301,7 +301,7 @@ return new class extends Migration
                 Schema::table('exchange_request_items', function (Blueprint $t) {
                     $t->foreign('replacement_product_id')->references('id')->on('products')->nullOnDelete();
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
             }
         }
 
@@ -311,7 +311,7 @@ return new class extends Migration
                 Schema::table('outlet_inventories', function (Blueprint $t) {
                     $t->unique(['outlet_id', 'product_id']);
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
             }
         }
 
@@ -320,7 +320,7 @@ return new class extends Migration
                 Schema::table('outlet_product_prices', function (Blueprint $t) {
                     $t->unique(['outlet_id', 'product_id']);
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
             }
         }
 
@@ -329,7 +329,7 @@ return new class extends Migration
                 Schema::table('favorites', function (Blueprint $t) {
                     $t->unique(['customer_id', 'product_id']);
                 });
-            } catch (\Throwable $e) {
+            } catch (Throwable $e) {
             }
         }
     }
@@ -363,7 +363,7 @@ return new class extends Migration
         if (Schema::hasTable('product_categories') && Schema::hasTable('legacy_product_categories_backup')) {
             Schema::rename('product_categories', 'product_families');
             Schema::rename('legacy_product_categories_backup', 'product_categories');
-        } elseif (Schema::hasTable('product_categories') && !Schema::hasTable('product_families')) {
+        } elseif (Schema::hasTable('product_categories') && ! Schema::hasTable('product_families')) {
             // If no legacy backup, assume product_categories is the renamed families
             Schema::rename('product_categories', 'product_families');
         }
@@ -378,7 +378,7 @@ return new class extends Migration
                     $t->renameColumn('product_category_id', 'product_family_id');
                 });
             }
-            if (!Schema::hasColumn('product_variants', 'product_id')) {
+            if (! Schema::hasColumn('product_variants', 'product_id')) {
                 Schema::table('product_variants', function (Blueprint $t) {
                     $t->unsignedBigInteger('product_id')->nullable()->after('id');
                 });
@@ -391,7 +391,7 @@ return new class extends Migration
                 });
             }
             Schema::rename('products', 'product_variants');
-            if (!Schema::hasColumn('product_variants', 'product_id')) {
+            if (! Schema::hasColumn('product_variants', 'product_id')) {
                 Schema::table('product_variants', function (Blueprint $t) {
                     $t->unsignedBigInteger('product_id')->nullable()->after('id');
                 });
@@ -413,7 +413,7 @@ return new class extends Migration
         ];
 
         foreach ($reverseTables as $table) {
-            if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'product_id')) {
+            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'product_id')) {
                 continue;
             }
             $this->dropFkByColumn($table, 'product_id');
@@ -444,7 +444,7 @@ return new class extends Migration
                     $t->unique(['outlet_id', 'product_variant_id']);
                 });
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
         try {
             if (Schema::hasTable('outlet_variant_prices')) {
@@ -452,7 +452,7 @@ return new class extends Migration
                     $t->unique(['outlet_id', 'product_variant_id']);
                 });
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
         try {
             if (Schema::hasTable('favorites')) {
@@ -460,7 +460,7 @@ return new class extends Migration
                     $t->unique(['customer_id', 'product_variant_id']);
                 });
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
     }
 };

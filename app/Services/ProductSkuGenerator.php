@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Models\Product;
+use App\Models\ProductCategory;
 use Illuminate\Support\Str;
 
 class ProductSkuGenerator
@@ -21,13 +23,13 @@ class ProductSkuGenerator
 
     public function uniqueForCategory(int $categoryId, string $name, ?string $flavor, ?string $size): string
     {
-        $cat = \App\Models\ProductCategory::find($categoryId);
-        $existingCount = \App\Models\Product::where('product_category_id', $categoryId)->count();
+        $cat = ProductCategory::find($categoryId);
+        $existingCount = Product::where('product_category_id', $categoryId)->count();
         $seq = $existingCount + 1;
         $base = $this->generate($cat, $name, $flavor, $size, $seq);
         $candidate = $base;
         $i = 0;
-        while (\App\Models\Product::where('sku', $candidate)->exists()) {
+        while (Product::where('sku', $candidate)->exists()) {
             $i++;
             $candidate = $this->generate($cat, $name, $flavor, $size, $seq + $i);
         }

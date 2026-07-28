@@ -661,7 +661,7 @@ function CartButton({ outletId }: { outletId: number | null }) {
             selected_outlet_id?: number;
         } = {
             items: items.map((i) => ({
-                product_variant_id: i.product_variant_id,
+                product_variant_id: i.product_id,
                 quantity: i.quantity,
             })),
         };

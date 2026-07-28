@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ProductImage from '@/components/owner/product-image';
 import ProductSearchFilters from '@/components/owner/product-search-filters';
-import type { ProductFilterValue } from '@/components/owner/product-search-filters';
 import SetupCenterStockModal from '@/components/owner/setup-center-stock-modal';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +25,7 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
+import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
@@ -49,7 +49,7 @@ interface FlashProps {
 export default function ProductCategoryShow({ category }: Props) {
     const { props } = usePage<FlashProps>();
     const [search, setSearch] = useState('');
-    const [productFilter, setProductFilter] = useState<ProductFilterValue>('all');
+    const [productFilter, setProductFilter] = useState<string>('all');
 
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [deleteCatDialog, setDeleteCatDialog] = useState(false);

@@ -3,6 +3,8 @@
 namespace App\Policies;
 
 use App\Models\ExchangeRequestItem;
+use App\Models\OrderItem;
+use App\Models\OutletInventory;
 use App\Models\OutletProductPrice;
 use App\Models\ProductCategory;
 use App\Models\RestockRequestItem;
@@ -51,7 +53,7 @@ class ProductCategoryPolicy
      */
     public function delete(?User $user, ProductCategory $category): bool
     {
-        return !$this->hasActiveProducts($category) && !$this->hasProductsWithHistory($category);
+        return ! $this->hasActiveProducts($category) && ! $this->hasProductsWithHistory($category);
     }
 
     /**
@@ -67,7 +69,7 @@ class ProductCategoryPolicy
      */
     public function forceDelete(?User $user, ProductCategory $category): bool
     {
-        return !$this->hasActiveProducts($category) && !$this->hasProductsWithHistory($category);
+        return ! $this->hasActiveProducts($category) && ! $this->hasProductsWithHistory($category);
     }
 
     /**
@@ -93,12 +95,12 @@ class ProductCategoryPolicy
         // but for performance we do bulk exists checks per table.
 
         // Any product with order items
-        if (\App\Models\OrderItem::whereIn('product_id', $productIds)->exists()) {
+        if (OrderItem::whereIn('product_id', $productIds)->exists()) {
             return true;
         }
 
         // Any product with current_stock > 0 in inventories
-        if (\App\Models\OutletInventory::whereIn('product_id', $productIds)->where('current_stock', '>', 0)->exists()) {
+        if (OutletInventory::whereIn('product_id', $productIds)->where('current_stock', '>', 0)->exists()) {
             return true;
         }
 
