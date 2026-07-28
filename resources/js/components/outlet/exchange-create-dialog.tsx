@@ -12,17 +12,22 @@ interface VariantOption {
     selling_price?: number;
 }
 
-interface InventoryOption {
+interface ReturnItem {
     product_variant_id: number;
-    variant: { id: number; name: string; full_name?: string };
-    current_stock: number;
-    selling_price?: number;
+    quantity: number;
+    variant: { id: number; name: string; full_name?: string; selling_price?: number };
+}
+
+interface ReturnOption {
+    id: number;
+    total_value: number;
+    items: ReturnItem[];
 }
 
 interface Props {
     open: boolean;
     variants: VariantOption[];
-    outletInventory: InventoryOption[];
+    exchangeEligibleReturns: ReturnOption[];
     onClose: () => void;
 }
 
@@ -31,28 +36,25 @@ interface PairedItem {
     return_quantity: number;
     replacement_variant_id: number;
     replacement_quantity: number;
-    return_search: string;
     replacement_search: string;
 }
 
 export default function ExchangeCreateDialog({
     open,
     variants = [],
-    outletInventory = [],
+    exchangeEligibleReturns = [],
     onClose,
 }: Props) {
-    const [pairs, setPairs] = useState<PairedItem[]>([
-        {
-            return_variant_id: 0,
-            return_quantity: 1,
-            replacement_variant_id: 0,
-            replacement_quantity: 1,
-            return_search: '',
-            replacement_search: '',
-        },
-    ]);
-
+    const [selectedReturnId, setSelectedReturnId] = useState<number | null>(null);
+    const [pairs, setPairs] = useState<PairedItem[]>([]);
     const [notes, setNotes] = useState('');
+
+    const allVariants = variants ?? [];
+    const eligibleReturns = exchangeEligibleReturns ?? [];
+
+    const selectedReturn = selectedReturnId
+        ? eligibleReturns.find((r) => r.id === selectedReturnId)
+        : null;
 
     const form = useForm({
         items: [] as {
@@ -63,6 +65,14 @@ export default function ExchangeCreateDialog({
         }[],
         notes: '',
     });
+
+    const getReturnItemName = (variantId: number): string => {
+        if (!selectedReturn) return '-';
+        const item = selectedReturn.items.find(
+            (i) => i.product_variant_id === variantId,
+        );
+        return item?.variant?.full_name ?? item?.variant?.name ?? '-';
+    };
 
     const syncForm = (updated: PairedItem[], notesValue: string) => {
         form.setData({
@@ -81,6 +91,29 @@ export default function ExchangeCreateDialog({
         });
     };
 
+    const handleReturnSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const id = e.target.value ? Number(e.target.value) : null;
+        setSelectedReturnId(id);
+
+        if (id) {
+            const ret = eligibleReturns.find((r) => r.id === id);
+            if (ret) {
+                const newPairs: PairedItem[] = ret.items.map((item) => ({
+                    return_variant_id: item.product_variant_id,
+                    return_quantity: item.quantity,
+                    replacement_variant_id: 0,
+                    replacement_quantity: 1,
+                    replacement_search: '',
+                }));
+                setPairs(newPairs);
+                syncForm(newPairs, notes);
+            }
+        } else {
+            setPairs([]);
+            syncForm([], notes);
+        }
+    };
+
     const updatePair = (index: number, patch: Partial<PairedItem>) => {
         const updated = [...pairs];
         updated[index] = { ...updated[index], ...patch };
@@ -88,33 +121,8 @@ export default function ExchangeCreateDialog({
         syncForm(updated, notes);
     };
 
-    const updateReturnQty = (index: number, qty: number) => {
-        const inv = outletInventory.find(
-            (i) => i.product_variant_id === pairs[index].return_variant_id,
-        );
-        const max = Math.max(1, inv?.current_stock ?? 999);
-        const clamped = Math.min(max, Math.max(1, qty || 1));
-        updatePair(index, { return_quantity: clamped });
-    };
-
     const updateReplacementQty = (index: number, qty: number) => {
         updatePair(index, { replacement_quantity: Math.max(1, qty || 1) });
-    };
-
-    const addPair = () => {
-        const updated = [
-            ...pairs,
-            {
-                return_variant_id: 0,
-                return_quantity: 1,
-                replacement_variant_id: 0,
-                replacement_quantity: 1,
-                return_search: '',
-                replacement_search: '',
-            },
-        ];
-        setPairs(updated);
-        syncForm(updated, notes);
     };
 
     const removePair = (index: number) => {
@@ -131,13 +139,17 @@ export default function ExchangeCreateDialog({
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (!selectedReturnId) {
+            toast.error('Pilih return terlebih dahulu');
+            return;
+        }
+
         const valid = pairs.filter(
             (p) => p.return_variant_id > 0 && p.replacement_variant_id > 0,
         );
 
         if (valid.length === 0) {
             toast.error('Pilih minimal 1 pasangan produk');
-
             return;
         }
 
@@ -156,16 +168,8 @@ export default function ExchangeCreateDialog({
         form.post('/outlet/exchanges', {
             onSuccess: () => {
                 toast.success('Penukaran diajukan');
-                setPairs([
-                    {
-                        return_variant_id: 0,
-                        return_quantity: 1,
-                        replacement_variant_id: 0,
-                        replacement_quantity: 1,
-                        return_search: '',
-                        replacement_search: '',
-                    },
-                ]);
+                setSelectedReturnId(null);
+                setPairs([]);
                 setNotes('');
                 form.reset();
                 onClose();
@@ -216,26 +220,41 @@ export default function ExchangeCreateDialog({
                     className="flex min-h-0 flex-1 flex-col"
                 >
                     <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 pb-40">
+                        {/* Return Selection */}
+                        <div>
+                            <label className="text-xs font-semibold text-text-muted">
+                                Pilih Return
+                            </label>
+                            {eligibleReturns.length === 0 ? (
+                                <div className="mt-1 rounded-xl bg-red-50 p-3 text-center text-sm text-red-700">
+                                    Tidak ada return yang sudah diterima pusat.
+                                    Buat return terlebih dahulu.
+                                </div>
+                            ) : (
+                                <select
+                                    value={selectedReturnId ?? ''}
+                                    onChange={handleReturnSelect}
+                                    className="mt-1 w-full rounded-xl border border-border p-3 text-sm"
+                                >
+                                    <option value="">Pilih return...</option>
+                                    {eligibleReturns.map((r) => (
+                                        <option key={r.id} value={r.id}>
+                                            Return #{r.id} -{' '}
+                                            {formatCurrency(r.total_value)}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+
                         {pairs.map((pair, index) => {
-                            const filteredReturn = outletInventory.filter((v) =>
-                                (v.variant.full_name ?? v.variant.name)
-                                    .toLowerCase()
-                                    .includes(pair.return_search.toLowerCase()),
-                            );
-                            const filteredReplacement = variants.filter((v) =>
+                            const filteredReplacement = allVariants.filter((v) =>
                                 (v.full_name ?? v.name)
                                     .toLowerCase()
                                     .includes(
                                         pair.replacement_search.toLowerCase(),
                                     ),
                             );
-                            const selectedReturnInv = outletInventory.find(
-                                (i) =>
-                                    i.product_variant_id ===
-                                    pair.return_variant_id,
-                            );
-                            const availableStock =
-                                selectedReturnInv?.current_stock ?? 0;
 
                             return (
                                 <div
@@ -259,7 +278,7 @@ export default function ExchangeCreateDialog({
                                         )}
                                     </div>
 
-                                    {/* Return */}
+                                    {/* Return side - read-only */}
                                     <div className="space-y-2.5 rounded-xl border border-red-200 bg-red-50/50 p-2.5">
                                         <div className="flex items-center gap-2">
                                             <div className="h-2 w-2 shrink-0 rounded-full bg-red-500" />
@@ -267,139 +286,13 @@ export default function ExchangeCreateDialog({
                                                 Dikembalikan
                                             </span>
                                         </div>
-
-                                        <input
-                                            type="text"
-                                            placeholder="Cari produk di inventaris..."
-                                            value={pair.return_search}
-                                            onChange={(e) =>
-                                                updatePair(index, {
-                                                    return_search:
-                                                        e.target.value,
-                                                })
-                                            }
-                                            className="w-full rounded-xl border border-border bg-white p-3 text-sm"
-                                        />
-
-                                        <div className="max-h-36 space-y-2 overflow-y-auto">
-                                            {filteredReturn.length === 0 ? (
-                                                <div className="py-3 text-center text-xs text-text-muted">
-                                                    Tidak ada produk
-                                                </div>
-                                            ) : (
-                                                filteredReturn.map((inv) => {
-                                                    const isSelected =
-                                                        pair.return_variant_id ===
-                                                        inv.product_variant_id;
-
-                                                    return (
-                                                        <div
-                                                            key={
-                                                                inv.product_variant_id
-                                                            }
-                                                            className={`rounded-xl border p-3 transition-colors ${isSelected ? 'border-primary bg-primary-light' : 'border-border bg-white'}`}
-                                                        >
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    updatePair(
-                                                                        index,
-                                                                        {
-                                                                            return_variant_id:
-                                                                                isSelected
-                                                                                    ? 0
-                                                                                    : inv.product_variant_id,
-                                                                            return_quantity: 1,
-                                                                        },
-                                                                    )
-                                                                }
-                                                                disabled={
-                                                                    inv.current_stock <=
-                                                                    0
-                                                                }
-                                                                className="flex min-h-11 w-full items-center gap-3 text-left disabled:opacity-50"
-                                                            >
-                                                                <div
-                                                                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-primary' : 'border-border'}`}
-                                                                >
-                                                                    {isSelected && (
-                                                                        <div className="h-2.5 w-2.5 rounded-full bg-primary" />
-                                                                    )}
-                                                                </div>
-                                                                <div className="flex-1">
-                                                                    <div className="text-sm font-medium text-text">
-                                                                        {inv
-                                                                            .variant
-                                                                            .full_name ??
-                                                                            inv
-                                                                                .variant
-                                                                                .name}
-                                                                    </div>
-                                                                    <div className="text-xs text-text-muted">
-                                                                        tersedia{' '}
-                                                                        {
-                                                                            inv.current_stock
-                                                                        }
-                                                                    </div>
-                                                                </div>
-                                                            </button>
-                                                            {isSelected && (
-                                                                <div className="mt-2 flex items-center justify-end gap-2">
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() =>
-                                                                            updateReturnQty(
-                                                                                index,
-                                                                                pair.return_quantity -
-                                                                                    1,
-                                                                            )
-                                                                        }
-                                                                        className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted"
-                                                                    >
-                                                                        <Minus className="h-3.5 w-3.5" />
-                                                                    </button>
-                                                                    <input
-                                                                        type="number"
-                                                                        min={1}
-                                                                        max={
-                                                                            availableStock
-                                                                        }
-                                                                        value={
-                                                                            pair.return_quantity
-                                                                        }
-                                                                        onChange={(
-                                                                            e,
-                                                                        ) =>
-                                                                            updateReturnQty(
-                                                                                index,
-                                                                                Number(
-                                                                                    e
-                                                                                        .target
-                                                                                        .value,
-                                                                                ),
-                                                                            )
-                                                                        }
-                                                                        className="w-14 [appearance:textfield] text-center text-sm font-bold tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                                                    />
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={() =>
-                                                                            updateReturnQty(
-                                                                                index,
-                                                                                pair.return_quantity +
-                                                                                    1,
-                                                                            )
-                                                                        }
-                                                                        className="flex h-11 w-11 items-center justify-center rounded-lg border border-border text-text-muted"
-                                                                    >
-                                                                        <Plus className="h-3.5 w-3.5" />
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })
-                                            )}
+                                        <div className="flex items-center justify-between rounded-xl border border-red-200 bg-white/60 px-3 py-2.5 text-sm">
+                                            <span className="font-medium text-red-800">
+                                                {getReturnItemName(
+                                                    pair.return_variant_id,
+                                                )}{' '}
+                                                x{pair.return_quantity}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -545,15 +438,6 @@ export default function ExchangeCreateDialog({
                             );
                         })}
 
-                        <button
-                            type="button"
-                            onClick={addPair}
-                            className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-border py-3 text-sm font-medium text-text-muted active:bg-surface-muted"
-                        >
-                            <Plus className="h-4 w-4" />
-                            Tambah Pasangan
-                        </button>
-
                         <div>
                             <label className="text-sm font-semibold text-text">
                                 Catatan
@@ -583,7 +467,9 @@ export default function ExchangeCreateDialog({
                         </div>
                         <button
                             type="submit"
-                            disabled={form.processing || validCount === 0}
+                            disabled={
+                                form.processing || validCount === 0
+                            }
                             className="h-11 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                         >
                             {form.processing
