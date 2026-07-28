@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ExchangeRequest;
 use App\Models\OfflineSale;
 use App\Models\Order;
 use App\Models\Outlet;
@@ -77,14 +78,26 @@ class SettlementGeneratorService
             ],
         );
 
-        // Ensure status is correct after upsert
-        if ($settlement->wasRecentlyCreated) {
-            $settlement->status = Settlement::STATUS_GENERATED;
-            $settlement->save();
-            $this->notificationService->notifySettlementGenerated($settlement);
-        } else {
-            $settlement = Settlement::lockForUpdate()->find($settlement->id);
-            $settlement->recalculateStatus();
+        $wasRecentlyCreated = $settlement->wasRecentlyCreated;
+
+        // Sync exchange adjustments (return adjustments are ignored - consignment model)
+        $this->syncAdjustments($outlet, $date);
+
+        // Refresh after sync (adjustment_amount may have changed)
+        $settlement = Settlement::where('outlet_id', $outlet->id)
+            ->where('period_type', 'weekly')
+            ->where('period_start', $weekStart)
+            ->first();
+
+        if ($settlement) {
+            if ($wasRecentlyCreated) {
+                $settlement->status = Settlement::STATUS_GENERATED;
+                $settlement->save();
+                $this->notificationService->notifySettlementGenerated($settlement);
+            } else {
+                $settlement = Settlement::lockForUpdate()->find($settlement->id);
+                $settlement->recalculateStatus();
+            }
         }
 
         return $settlement;
@@ -143,16 +156,19 @@ class SettlementGeneratorService
     }
 
     /**
-     * Sync outlet_payables adjustments (returns/exchanges) to settlement.adjustment_amount.
-     * Single source of truth — called from ReturnService and ExchangeService after recording adjustments.
+     * Sync outlet_payables adjustments (exchanges only) to settlement.adjustment_amount.
+     * Return of unsold stock (consignment) must NOT affect settlement.
+     * Single source of truth — called from ExchangeService and ReturnService (cleanup).
      */
     public function syncAdjustments(Outlet $outlet, CarbonInterface $date): void
     {
         $weekStart = Carbon::parse($date)->startOfWeek(Carbon::MONDAY)->toDateString();
         $weekEnd = Carbon::parse($date)->endOfWeek(Carbon::SUNDAY)->toDateString();
 
+        // Only exchange adjustments affect settlement; return adjustments are ignored (consignment model)
         $adjustmentTotal = (float) OutletPayable::where('outlet_id', $outlet->id)
             ->where('type', 'adjustment')
+            ->where('reference_type', ExchangeRequest::class)
             ->whereBetween('created_at', [$weekStart, $weekEnd.' 23:59:59'])
             ->sum('amount');
 
