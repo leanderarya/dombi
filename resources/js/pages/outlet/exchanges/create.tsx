@@ -29,7 +29,9 @@ export default function OutletExchangesCreate({
         items: [] as FormItem[],
     });
 
-    const [selectedReturnId, setSelectedReturnId] = useState<number | null>(null);
+    const [selectedReturnId, setSelectedReturnId] = useState<number | null>(
+        null,
+    );
     const [pairs, setPairs] = useState<PairedItem[]>([]);
 
     const allVariants = variants ?? [];
@@ -40,10 +42,14 @@ export default function OutletExchangesCreate({
         : null;
 
     const getReturnItemName = (variantId: number): string => {
-        if (!selectedReturn) return '-';
+        if (!selectedReturn) {
+            return '-';
+        }
+
         const item = selectedReturn.items.find(
             (i: any) => i.product_variant_id === variantId,
         );
+
         return item?.variant?.full_name ?? item?.variant?.name ?? '-';
     };
 
@@ -54,6 +60,7 @@ export default function OutletExchangesCreate({
 
         if (id) {
             const ret = eligibleReturns.find((r: any) => r.id === id);
+
             if (ret) {
                 const newPairs: PairedItem[] = ret.items.map((item: any) => ({
                     return_variant_id: item.product_variant_id,
