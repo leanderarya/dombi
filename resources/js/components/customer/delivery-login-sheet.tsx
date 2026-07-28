@@ -4,9 +4,10 @@ import Dialog from '@/components/ui/dialog';
 interface Props {
     open: boolean;
     onClose: () => void;
+    onSwitchToPickup?: () => void;
 }
 
-export default function DeliveryLoginSheet({ open, onClose }: Props) {
+export default function DeliveryLoginSheet({ open, onClose, onSwitchToPickup }: Props) {
     return (
         <Dialog open={open} onClose={onClose} title="Login untuk Delivery">
             <div className="flex items-center gap-3">
@@ -60,7 +61,7 @@ export default function DeliveryLoginSheet({ open, onClose }: Props) {
 
             <button
                 type="button"
-                onClick={onClose}
+                onClick={onSwitchToPickup ?? onClose}
                 className="mt-3 flex min-h-11 w-full items-center justify-center text-sm font-semibold text-text-muted active:text-text"
             >
                 Tetap Pickup
