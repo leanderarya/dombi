@@ -51,7 +51,7 @@ class CheckoutController extends Controller
         $draftItems = collect($request->session()->get('checkout.cart', []));
 
         // Load variants with family info
-        $variantIds = $draftItems->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $variantIds = $draftItems->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
         $variants = $this->loadCartVariants($variantIds);
 
         $items = $this->mapVariantItems($draftItems, $variants);
@@ -168,7 +168,7 @@ class CheckoutController extends Controller
         $cart = collect($request->session()->get('checkout.cart', []));
 
         // Load variants with family info
-        $variantIds = $cart->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $variantIds = $cart->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
         $variants = $this->loadCartVariants($variantIds);
 
         $fulfillment = $request->session()->get('checkout.fulfillment.fulfillment_type');
@@ -434,7 +434,7 @@ class CheckoutController extends Controller
         $cart = collect($request->session()->get('checkout.cart', []));
 
         // Load variants with family info
-        $variantIds = $cart->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $variantIds = $cart->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
         $variants = $this->loadCartVariants($variantIds);
 
         $items = $this->mapVariantItems($cart, $variants);
@@ -580,14 +580,15 @@ class CheckoutController extends Controller
             Cache::put($idempotencyKey, $order->id, 60);
         } catch (StockAdjustedException $e) {
             // Batch load variants to avoid N+1
-            $variantIds = collect($e->adjustments)->pluck('variant_id')->unique()->toArray();
+            $variantIds = collect($e->adjustments)->pluck('product_id')->unique()->toArray();
             $variants = Product::whereIn('id', $variantIds)
                 ->with('category')
                 ->get()
                 ->keyBy('id');
 
             $warnings = collect($e->adjustments)->map(function ($adj) use ($variants) {
-                $variant = $variants->get($adj['variant_id']);
+                $variantId = $adj['product_id'] ?? $adj['variant_id'] ?? 0;
+                $variant = $variants->get($variantId);
                 $name = $variant?->category?->name ?? $variant?->name ?? 'Produk';
 
                 if ($adj['adjusted_qty'] <= 0) {
@@ -859,13 +860,14 @@ class CheckoutController extends Controller
         $variantMap = $variants->keyBy('id');
 
         return collect($rawItems)->map(function (array $item) use ($variantMap): array {
-            $variantId = (int) ($item['product_variant_id'] ?? 0);
+            $variantId = (int) ($item['product_id'] ?? $item['product_variant_id'] ?? 0);
             $variant = $variantMap->get($variantId);
             $quantity = (int) $item['quantity'];
 
             if ($variant) {
                 return [
-                    'product_variant_id' => $variantId,
+                    'product_id' => $variantId,
+                    'product_variant_id' => $variantId, // backward compat
                     'quantity' => $quantity,
                     'name' => $variant->category?->name ?? $variant->name ?? 'Produk',
                     'variant_name' => $variant->name ?? '',
@@ -875,6 +877,7 @@ class CheckoutController extends Controller
             }
 
             return [
+                'product_id' => $variantId,
                 'product_variant_id' => $variantId,
                 'quantity' => $quantity,
                 'name' => 'Produk',
@@ -895,9 +898,6 @@ class CheckoutController extends Controller
 
     private function calculateSubtotal(array $cart): float
     {
-        $variantIds = collect($cart)->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $variants = $this->loadCartVariants($variantIds)->keyBy('id');
-
         $productIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
         $products = Product::query()
             ->whereIn('id', $productIds)
@@ -905,20 +905,11 @@ class CheckoutController extends Controller
             ->get()
             ->keyBy('id');
 
-        return (float) collect($cart)->sum(function (array $item) use ($variants, $products): float {
-            // Prefer variant
-            $variantId = (int) ($item['product_variant_id'] ?? 0);
-            if ($variantId) {
-                $variant = $variants->get($variantId);
-
-                return $variant ? (float) $variant->selling_price * (int) $item['quantity'] : 0;
-            }
-
-            // Legacy: product fallback
-            $productId = (int) ($item['product_id'] ?? 0);
+        return (float) collect($cart)->sum(function (array $item) use ($products): float {
+            $productId = (int) ($item['product_id'] ?? $item['product_variant_id'] ?? 0);
             if ($productId) {
                 $product = $products->get($productId);
-                $price = $product?->selling_price > 0 ? $product->selling_price : ($product?->price ?? 0);
+                $price = $product?->selling_price > 0 ? $product->selling_price : 0;
 
                 return (float) $price * (int) $item['quantity'];
             }
