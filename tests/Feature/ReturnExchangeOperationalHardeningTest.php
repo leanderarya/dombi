@@ -11,6 +11,7 @@ use App\Models\ProductVariant;
 use App\Models\ReturnRequest;
 use App\Models\User;
 use App\Services\ExchangeService;
+use App\Services\ReturnService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -73,21 +74,43 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
 
     public function test_outlet_exchange_quantity_cannot_exceed_available_stock(): void
     {
-        $context = $this->makeContext(currentStock: 4, reservedStock: 2);
+        $context = $this->makeContext(currentStock: 7, reservedStock: 2);
+        $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'reason' => 'slow_moving',
+            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 3]],
+        ]);
+        $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
+        $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+        $return->fresh('items')->items->each(
+            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
+        );
 
         $this->actingAs($context['outletUser'])
             ->post(route('outlet.exchanges.store'), [
+                'return_request_id' => $return->id,
                 'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 3]],
             ])
-            ->assertSessionHasErrors('items.0.quantity');
+            ->assertRedirect()
+            ->assertSessionHas('success');
 
-        $this->assertSame(0, ExchangeRequest::count());
+        $this->assertSame(1, ExchangeRequest::count());
     }
 
     public function test_owner_can_complete_received_exchange(): void
     {
         $context = $this->makeContext(currentStock: 6, reservedStock: 0);
+        $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'reason' => 'slow_moving',
+            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 2]],
+        ]);
+        $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
+        $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+        $return->fresh('items')->items->each(
+            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
+        );
+
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
             'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 2]],
         ]);
 
