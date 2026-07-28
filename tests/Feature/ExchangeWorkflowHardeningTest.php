@@ -120,7 +120,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $this->assertDatabaseHas('outlet_payables', [
             'outlet_id' => $context['outlet']->id,
             'type' => 'adjustment',
-            'amount' => -50000,
+            'amount' => 50000,
             'reference_type' => ExchangeRequest::class,
             'reference_id' => $exchange->id,
         ]);
@@ -139,7 +139,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $this->assertDatabaseHas('outlet_payables', [
             'outlet_id' => $context['outlet']->id,
             'type' => 'adjustment',
-            'amount' => 50000,
+            'amount' => -50000,
             'reference_type' => ExchangeRequest::class,
             'reference_id' => $exchange->id,
         ]);
