@@ -13,13 +13,13 @@ return new class extends Migration
                 // Drop FK first if exists, make nullable, re-add FK
                 try {
                     $t->dropForeign(['product_category_id']);
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     // FK may not exist
                 }
                 $t->unsignedBigInteger('product_category_id')->nullable()->change();
                 try {
                     $t->foreign('product_category_id')->references('id')->on('product_categories')->cascadeOnDelete();
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     // FK re-creation may fail if not needed
                 }
             });
