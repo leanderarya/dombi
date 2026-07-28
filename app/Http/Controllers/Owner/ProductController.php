@@ -13,6 +13,7 @@ use App\Services\ProductSkuGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
@@ -145,7 +146,9 @@ class ProductController extends Controller
     {
         // Policy guard – ProductPolicy@delete checks business history
         if (Gate::denies('delete', $product)) {
-            return back()->with('error', 'Produk tidak dapat dihapus karena memiliki riwayat transaksi atau stok.');
+            throw ValidationException::withMessages([
+                'business_history' => 'Produk tidak dapat dihapus karena memiliki riwayat transaksi atau stok.',
+            ]);
         }
 
         // Additional guard via explicit policy check from model existence
