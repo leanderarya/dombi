@@ -25,17 +25,22 @@ export default function ImageUploadField({
 
     const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0] ?? null;
+
         if (file) {
             if (file.size > 4 * 1024 * 1024) {
                 alert('Max 4MB');
+
                 return;
             }
+
             if (preview) {
                 URL.revokeObjectURL(preview);
             }
+
             setPreview(URL.createObjectURL(file));
             onChange(file);
         }
+
         // Reset input value to allow re-selecting same file
         if (inputRef.current) {
             inputRef.current.value = '';
@@ -46,8 +51,10 @@ export default function ImageUploadField({
         if (preview) {
             URL.revokeObjectURL(preview);
         }
+
         setPreview(null);
         onChange(null);
+
         if (inputRef.current) {
             inputRef.current.value = '';
         }
