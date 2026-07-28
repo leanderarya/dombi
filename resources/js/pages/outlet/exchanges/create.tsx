@@ -1,6 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { ArrowRight, Plus, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
@@ -92,7 +93,11 @@ export default function OutletExchangesCreate({
     };
 
     const handleSubmit = () => {
-        form.post('/outlet/exchanges');
+        form.post('/outlet/exchanges', {
+            onSuccess: () => toast.success('Penukaran diajukan'),
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
+        });
     };
 
     const getVariantName = (id: number) =>
