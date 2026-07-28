@@ -95,6 +95,7 @@ export default function CentralStockTab({
                     .filter(Boolean)
                     .join(' ')
                     .toLowerCase();
+
                 return haystack.includes(q);
             });
         }

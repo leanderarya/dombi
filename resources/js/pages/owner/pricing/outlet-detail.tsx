@@ -114,6 +114,7 @@ export default function OutletDetail({
                         .filter(Boolean)
                         .join(' ')
                         .toLowerCase();
+
                     if (!haystack.includes(q)) {
                         return false;
                     }

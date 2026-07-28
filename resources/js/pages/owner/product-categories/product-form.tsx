@@ -1,6 +1,6 @@
 import { useForm, router } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
 import { X, Plus, Package, Layers, Sparkles, TrendingUp } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import ImageUploadField from '@/components/owner/image-upload-field';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,34 +50,19 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
     const [bulkFlavorsText, setBulkFlavorsText] = useState(''); // alternative textarea input
     const [bulkErrors, setBulkErrors] = useState<Record<string, string>>({});
 
-    // Sync editing product into form when prop changes
-    useEffect(() => {
-        if (editingProduct) {
-            setMode('single');
-            singleForm.setData({
-                name: editingProduct.name,
-                description: editingProduct.description ?? '',
-                flavor: editingProduct.flavor ?? '',
-                size: editingProduct.size ?? '',
-                sku: editingProduct.sku ?? '',
-                center_price: String(editingProduct.center_price),
-                selling_price: String(editingProduct.selling_price),
-                image: null,
-                is_active: editingProduct.is_active,
-                product_category_id: category.id,
-            });
-            setSingleImageExisting(editingProduct.image ?? null);
-            setSingleImageFile(null);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [editingProduct?.id]);
-
     // Single margin
     const singleMargin = useMemo(() => {
         const cp = Number(singleForm.data.center_price);
         const sp = Number(singleForm.data.selling_price);
-        if (!Number.isFinite(cp) || !Number.isFinite(sp)) return { amount: 0, pct: 0, valid: false };
-        if (cp <= 0) return { amount: sp - cp, pct: 0, valid: true };
+
+        if (!Number.isFinite(cp) || !Number.isFinite(sp)) {
+return { amount: 0, pct: 0, valid: false };
+}
+
+        if (cp <= 0) {
+return { amount: sp - cp, pct: 0, valid: true };
+}
+
         return { amount: sp - cp, pct: ((sp - cp) / cp) * 100, valid: true };
     }, [singleForm.data.center_price, singleForm.data.selling_price]);
 
@@ -85,8 +70,15 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
     const bulkMargin = useMemo(() => {
         const cp = Number(bulkForm.data.center_price);
         const sp = Number(bulkForm.data.selling_price);
-        if (!Number.isFinite(cp) || !Number.isFinite(sp)) return { amount: 0, pct: 0, valid: false };
-        if (cp <= 0) return { amount: sp - cp, pct: 0, valid: true };
+
+        if (!Number.isFinite(cp) || !Number.isFinite(sp)) {
+return { amount: 0, pct: 0, valid: false };
+}
+
+        if (cp <= 0) {
+return { amount: sp - cp, pct: 0, valid: true };
+}
+
         return { amount: sp - cp, pct: ((sp - cp) / cp) * 100, valid: true };
     }, [bulkForm.data.center_price, bulkForm.data.selling_price]);
 
@@ -101,26 +93,35 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
         const combined = [...fromChips, ...fromText];
         const seen = new Set<string>();
         const dedup: string[] = [];
+
         for (const f of combined) {
             const key = f.toLowerCase();
+
             if (!seen.has(key)) {
                 seen.add(key);
                 dedup.push(f);
             }
         }
+
         return dedup;
     }, [bulkForm.data.flavors, bulkFlavorsText]);
 
     const addFlavorChip = () => {
         const val = flavorInput.trim();
-        if (!val) return;
+
+        if (!val) {
+return;
+}
+
         const parts = val.split(/[,\n]/).map((s) => s.trim()).filter(Boolean);
         const newFlavors = [...bulkForm.data.flavors];
+
         for (const p of parts) {
             if (!newFlavors.some((f) => f.toLowerCase() === p.toLowerCase())) {
                 newFlavors.push(p);
             }
         }
+
         bulkForm.setData('flavors', newFlavors);
         setFlavorInput('');
     };
@@ -142,28 +143,48 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
     const generateSkuHint = (flavor: string, size: string) => {
         const f = (flavor || 'GEN').slice(0, 3).toUpperCase();
         const s = (size || '').replace(/\s+/g, '').toUpperCase() || 'STD';
+
         return `${f}-${s}-XXXX`;
     };
 
     const handleSingleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+
         // client validation
         if (Number(singleForm.data.selling_price) < Number(singleForm.data.center_price)) {
             singleForm.setError('selling_price', 'Harga jual harus >= HPP');
+
             return;
         }
 
         if (isEditing && editingProduct) {
             const fd = new FormData();
             fd.append('name', singleForm.data.name);
-            if (singleForm.data.description) fd.append('description', singleForm.data.description);
-            if (singleForm.data.flavor) fd.append('flavor', singleForm.data.flavor);
-            if (singleForm.data.size) fd.append('size', singleForm.data.size);
-            if (singleForm.data.sku) fd.append('sku', singleForm.data.sku);
+
+            if (singleForm.data.description) {
+fd.append('description', singleForm.data.description);
+}
+
+            if (singleForm.data.flavor) {
+fd.append('flavor', singleForm.data.flavor);
+}
+
+            if (singleForm.data.size) {
+fd.append('size', singleForm.data.size);
+}
+
+            if (singleForm.data.sku) {
+fd.append('sku', singleForm.data.sku);
+}
+
             fd.append('center_price', singleForm.data.center_price);
             fd.append('selling_price', singleForm.data.selling_price);
             fd.append('is_active', singleForm.data.is_active ? '1' : '0');
-            if (singleImageFile) fd.append('image', singleImageFile);
+
+            if (singleImageFile) {
+fd.append('image', singleImageFile);
+}
+
             fd.append('_method', 'PUT');
 
             router.post(`/owner/products/${editingProduct.id}`, fd, {
@@ -183,15 +204,31 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
         } else {
             const fd = new FormData();
             fd.append('name', singleForm.data.name);
-            if (singleForm.data.description) fd.append('description', singleForm.data.description);
-            if (singleForm.data.flavor) fd.append('flavor', singleForm.data.flavor);
-            if (singleForm.data.size) fd.append('size', singleForm.data.size);
-            if (singleForm.data.sku) fd.append('sku', singleForm.data.sku);
+
+            if (singleForm.data.description) {
+fd.append('description', singleForm.data.description);
+}
+
+            if (singleForm.data.flavor) {
+fd.append('flavor', singleForm.data.flavor);
+}
+
+            if (singleForm.data.size) {
+fd.append('size', singleForm.data.size);
+}
+
+            if (singleForm.data.sku) {
+fd.append('sku', singleForm.data.sku);
+}
+
             fd.append('center_price', singleForm.data.center_price);
             fd.append('selling_price', singleForm.data.selling_price);
             fd.append('is_active', singleForm.data.is_active ? '1' : '0');
             fd.append('product_category_id', String(category.id));
-            if (singleImageFile) fd.append('image', singleImageFile);
+
+            if (singleImageFile) {
+fd.append('image', singleImageFile);
+}
 
             router.post(`/owner/product-categories/${category.id}/products`, fd, {
                 forceFormData: true,
@@ -200,6 +237,7 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
                     const flash = page?.props?.flash ?? {};
                     const newId = flash.new_product_id;
                     const newIds = flash.new_product_ids;
+
                     if (newIds && Array.isArray(newIds)) {
                         onSuccess?.(newIds);
                     } else if (newId) {
@@ -207,6 +245,7 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
                     } else {
                         onSuccess?.([]);
                     }
+
                     onClose?.();
                     singleForm.reset();
                     setSingleImageFile(null);
@@ -224,14 +263,19 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
     const handleBulkSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const flavors = parsedFlavors;
+
         if (flavors.length === 0) {
             setBulkErrors({ flavors: 'Isi minimal 1 rasa' });
+
             return;
         }
+
         if (Number(bulkForm.data.selling_price) < Number(bulkForm.data.center_price)) {
             setBulkErrors({ selling_price: 'Harga jual harus >= HPP' });
+
             return;
         }
+
         setBulkErrors({});
 
         // Use Inertia router.post with JSON payload (as existing show.tsx did)
@@ -411,7 +455,10 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
                         onChange={(f) => {
                             setSingleImageFile(f);
                             singleForm.setData('image', f);
-                            if (f === null) setSingleImageExisting(null);
+
+                            if (f === null) {
+setSingleImageExisting(null);
+}
                         }}
                         label="Foto Produk"
                     />
@@ -573,6 +620,7 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
                                 parsedFlavors.map((flavor, idx) => {
                                     const name = `${flavor} ${bulkForm.data.size}`.trim();
                                     const skuPreview = generateSkuHint(flavor, bulkForm.data.size);
+
                                     return (
                                         <div key={`${flavor}-${idx}`} className="flex items-center justify-between gap-3 px-3 py-2">
                                             <div className="min-w-0 flex-1">

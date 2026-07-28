@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import {
     Copy,
     Package,
@@ -9,8 +9,9 @@ import {
     Plus,
     Layers,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import ImageUploadField from '@/components/owner/image-upload-field';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ProductImage from '@/components/owner/product-image';
 import ProductSearchFilters from '@/components/owner/product-search-filters';
@@ -28,26 +29,18 @@ import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
-import { formatCurrency, formatMarginPercent } from '@/lib/format';
+import { formatCurrency } from '@/lib/format';
 import type { ProductCategory, Product } from '@/types/product';
-import ImageUploadField from '@/components/owner/image-upload-field';
 
 interface Props {
     category: ProductCategory;
 }
 
-interface FlashProps {
-    flash?: {
-        success?: string;
-        error?: string;
-        new_product_id?: number;
-        new_product_ids?: number[];
-    };
-    [k: string]: any;
+interface Props {
+    category: ProductCategory;
 }
 
 export default function ProductCategoryShow({ category }: Props) {
-    const { props } = usePage<FlashProps>();
     const [search, setSearch] = useState('');
     const [productFilter, setProductFilter] = useState<string>('all');
 
@@ -69,18 +62,6 @@ export default function ProductCategoryShow({ category }: Props) {
     const [catImageFile, setCatImageFile] = useState<File | null>(null);
     const [catImageExisting, setCatImageExisting] = useState<string | null>(category?.image ?? null);
     const [catProcessing, setCatProcessing] = useState(false);
-
-    useEffect(() => {
-        if (category) {
-            setCatForm({
-                name: category.name,
-                brand: category.brand ?? '',
-                description: category.description ?? '',
-                is_active: category.is_active,
-            });
-            setCatImageExisting(category.image ?? null);
-        }
-    }, [category]);
 
     // Product create/edit
     const [showProductForm, setShowProductForm] = useState(false);
@@ -114,30 +95,11 @@ export default function ProductCategoryShow({ category }: Props) {
     const [showSetup, setShowSetup] = useState(false);
     const [newProducts, setNewProducts] = useState<Product[]>([]);
 
-    // Handle flash new_product_id(s) -> open setup modal
-    useEffect(() => {
-        const id = props.flash?.new_product_id;
-        const ids = props.flash?.new_product_ids;
-        let matched: Product[] = [];
-        if (id && category?.products) {
-            const p = category.products.find((x) => x.id === Number(id));
-            if (p) matched = [p];
-            else {
-                // If product not in current list yet (maybe reload needed), still create placeholder?
-                // But controller returns products reload, so should be in list.
-            }
-        }
-        if (ids && Array.isArray(ids) && category?.products) {
-            matched = category.products.filter((x) => ids.map(Number).includes(x.id));
-        }
-        if (matched.length > 0) {
-            setNewProducts(matched);
-            setShowSetup(true);
-        }
-    }, [props.flash?.new_product_id, props.flash?.new_product_ids, category?.products]);
-
     const filteredProducts = useMemo(() => {
-        if (!category?.products) return [];
+        if (!category?.products) {
+return [];
+}
+
         let list = [...category.products];
 
         if (search) {
@@ -174,17 +136,28 @@ export default function ProductCategoryShow({ category }: Props) {
         }
 
         return list;
-    }, [category?.products, search, productFilter]);
+    }, [category, search, productFilter]);
 
     const handleCatUpdate = (e: React.FormEvent) => {
         e.preventDefault();
         setCatProcessing(true);
         const fd = new FormData();
         fd.append('name', catForm.name);
-        if (catForm.brand) fd.append('brand', catForm.brand);
-        if (catForm.description) fd.append('description', catForm.description);
+
+        if (catForm.brand) {
+fd.append('brand', catForm.brand);
+}
+
+        if (catForm.description) {
+fd.append('description', catForm.description);
+}
+
         fd.append('is_active', catForm.is_active ? '1' : '0');
-        if (catImageFile) fd.append('image', catImageFile);
+
+        if (catImageFile) {
+fd.append('image', catImageFile);
+}
+
         fd.append('_method', 'PUT');
 
         router.post(`/owner/product-categories/${category.id}`, fd, {
@@ -249,14 +222,31 @@ export default function ProductCategoryShow({ category }: Props) {
         setProductProcessing(true);
         const fd = new FormData();
         fd.append('name', productForm.name);
-        if (productForm.flavor) fd.append('flavor', productForm.flavor);
-        if (productForm.size) fd.append('size', productForm.size);
-        if (productForm.sku) fd.append('sku', productForm.sku);
+
+        if (productForm.flavor) {
+fd.append('flavor', productForm.flavor);
+}
+
+        if (productForm.size) {
+fd.append('size', productForm.size);
+}
+
+        if (productForm.sku) {
+fd.append('sku', productForm.sku);
+}
+
         fd.append('center_price', productForm.center_price);
         fd.append('selling_price', productForm.selling_price);
-        if (productForm.description) fd.append('description', productForm.description);
+
+        if (productForm.description) {
+fd.append('description', productForm.description);
+}
+
         fd.append('is_active', productForm.is_active ? '1' : '0');
-        if (productImageFile) fd.append('image', productImageFile);
+
+        if (productImageFile) {
+fd.append('image', productImageFile);
+}
 
         if (editingProduct) {
             fd.append('_method', 'PUT');
@@ -288,10 +278,13 @@ export default function ProductCategoryShow({ category }: Props) {
     const handleBulkSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const flavors = bulkForm.flavorsText.split(/[,\n]/).map((s) => s.trim()).filter(Boolean);
+
         if (flavors.length === 0) {
             toast.error('Isi minimal 1 rasa');
+
             return;
         }
+
         setBulkProcessing(true);
         router.post(`/owner/product-categories/${category.id}/products/bulk`, {
             flavors,
@@ -312,7 +305,10 @@ export default function ProductCategoryShow({ category }: Props) {
     };
 
     const handleDeleteProduct = () => {
-        if (!deleteId) return;
+        if (!deleteId) {
+return;
+}
+
         router.delete(`/owner/products/${deleteId}`, {
             preserveScroll: true,
             onSuccess: () => {
@@ -321,6 +317,7 @@ export default function ProductCategoryShow({ category }: Props) {
             },
             onError: (errors) => {
                 const errMsg = Object.values(errors).flat().join(', ');
+
                 if (errMsg.toLowerCase().includes('riwayat') || errMsg.toLowerCase().includes('stok')) {
                     setDeleteId(null);
                     setSoftDeleteId(deleteId);
@@ -333,7 +330,10 @@ export default function ProductCategoryShow({ category }: Props) {
     };
 
     const handleSoftDeleteDeactivate = () => {
-        if (!softDeleteId) return;
+        if (!softDeleteId) {
+return;
+}
+
         router.patch(`/owner/products/${softDeleteId}/toggle`, {}, {
             preserveScroll: true,
             onSuccess: () => {
@@ -433,6 +433,7 @@ export default function ProductCategoryShow({ category }: Props) {
                                 const margin = Number(p.selling_price) - Number(p.center_price);
                                 const marginPct = Number(p.center_price) > 0 ? (margin / Number(p.center_price)) * 100 : 0;
                                 const hasNoStock = p.center_stock === 0;
+
                                 return (
                                     <tr key={p.id} className={`hover:bg-mint-wash/30 transition ${!p.is_active ? 'opacity-60' : ''}`}>
                                         <td className="px-3 py-3">
@@ -501,7 +502,13 @@ export default function ProductCategoryShow({ category }: Props) {
                         <Input label="Nama Kategori" value={catForm.name} onChange={(e) => setCatForm((p) => ({ ...p, name: e.target.value }))} required />
                         <Input label="Brand" value={catForm.brand} onChange={(e) => setCatForm((p) => ({ ...p, brand: e.target.value }))} />
                         <Textarea label="Deskripsi" value={catForm.description} onChange={(e) => setCatForm((p) => ({ ...p, description: e.target.value }))} rows={2} />
-                        <ImageUploadField value={catImageFile ? catImageFile : catImageExisting} onChange={(f) => { setCatImageFile(f); if (f===null) setCatImageExisting(null); }} label="Foto Kategori" />
+                        <ImageUploadField value={catImageFile ? catImageFile : catImageExisting} onChange={(f) => {
+ setCatImageFile(f);
+
+ if (f===null) {
+setCatImageExisting(null);
+} 
+}} label="Foto Kategori" />
                         <label className="flex items-center gap-2">
                             <input type="checkbox" checked={catForm.is_active} onChange={(e) => setCatForm((p) => ({ ...p, is_active: e.target.checked }))} className="rounded" />
                             <span className="text-sm">Aktif</span>
@@ -515,7 +522,11 @@ export default function ProductCategoryShow({ category }: Props) {
             </Dialog>
 
             {/* Product Form Dialog */}
-            <Dialog open={showProductForm} onOpenChange={(o) => { if (!o) { setShowProductForm(false); setEditingProduct(null);} }}>
+            <Dialog open={showProductForm} onOpenChange={(o) => {
+ if (!o) {
+ setShowProductForm(false); setEditingProduct(null);
+} 
+}}>
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
                         <DialogTitle>{editingProduct ? 'Edit Produk' : 'Tambah Produk'}</DialogTitle>
@@ -535,13 +546,21 @@ export default function ProductCategoryShow({ category }: Props) {
                             <Input label="Harga Jual (Rp)" type="number" value={productForm.selling_price} onChange={(e) => setProductForm((p) => ({ ...p, selling_price: e.target.value }))} required min={0} />
                         </div>
                         <Textarea label="Deskripsi" value={productForm.description} onChange={(e) => setProductForm((p) => ({ ...p, description: e.target.value }))} rows={2} />
-                        <ImageUploadField value={productImageFile ? productImageFile : productImageExisting} onChange={(f) => { setProductImageFile(f); if (f===null) setProductImageExisting(null); }} label="Foto Produk" />
+                        <ImageUploadField value={productImageFile ? productImageFile : productImageExisting} onChange={(f) => {
+ setProductImageFile(f);
+
+ if (f===null) {
+setProductImageExisting(null);
+} 
+}} label="Foto Produk" />
                         <label className="flex items-center gap-2">
                             <input type="checkbox" checked={productForm.is_active} onChange={(e) => setProductForm((p) => ({ ...p, is_active: e.target.checked }))} className="rounded" />
                             <span className="text-sm">Aktif</span>
                         </label>
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => { setShowProductForm(false); setEditingProduct(null); }}>Batal</Button>
+                            <Button type="button" variant="outline" onClick={() => {
+ setShowProductForm(false); setEditingProduct(null); 
+}}>Batal</Button>
                             <Button type="submit" disabled={productProcessing}>{productProcessing ? 'Menyimpan...' : editingProduct ? 'Update' : 'Simpan'}</Button>
                         </DialogFooter>
                     </form>
@@ -588,7 +607,11 @@ export default function ProductCategoryShow({ category }: Props) {
             </Dialog>
 
             {/* Soft Delete Guard → Deactivate Dialog */}
-            <Dialog open={softDeleteDialog} onOpenChange={(o) => { if (!o) { setSoftDeleteDialog(false); setSoftDeleteId(null); }}}>
+            <Dialog open={softDeleteDialog} onOpenChange={(o) => {
+ if (!o) {
+ setSoftDeleteDialog(false); setSoftDeleteId(null); 
+}
+}}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>Tidak Bisa Hapus</DialogTitle>
@@ -597,7 +620,9 @@ export default function ProductCategoryShow({ category }: Props) {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" onClick={() => { setSoftDeleteDialog(false); setSoftDeleteId(null); }}>Batal</Button>
+                        <Button variant="outline" onClick={() => {
+ setSoftDeleteDialog(false); setSoftDeleteId(null); 
+}}>Batal</Button>
                         <Button variant="default" onClick={handleSoftDeleteDeactivate}>Deactivate</Button>
                     </DialogFooter>
                 </DialogContent>
@@ -617,7 +642,9 @@ export default function ProductCategoryShow({ category }: Props) {
                 </DialogContent>
             </Dialog>
 
-            <SetupCenterStockModal products={newProducts} open={showSetup} onClose={() => { setShowSetup(false); setNewProducts([]); }} />
+            <SetupCenterStockModal products={newProducts} open={showSetup} onClose={() => {
+ setShowSetup(false); setNewProducts([]); 
+}} />
         </OwnerPageShell>
     );
 }

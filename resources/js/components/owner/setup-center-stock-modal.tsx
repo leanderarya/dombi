@@ -1,5 +1,6 @@
-import { useState } from 'react';
 import { router } from '@inertiajs/react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
@@ -7,7 +8,6 @@ import {
     DialogTitle,
     DialogFooter,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import type { Product } from '@/types/product';
 
@@ -28,6 +28,7 @@ export default function SetupCenterStockModal({
     const handleSave = () => {
         if (products.length === 0) {
             onClose();
+
             return;
         }
 
@@ -36,6 +37,7 @@ export default function SetupCenterStockModal({
 
         const finishOne = () => {
             done += 1;
+
             if (done === products.length) {
                 setProcessing(false);
                 onClose();
