@@ -27,7 +27,9 @@ class ProductDomainRegressionTest extends TestCase
             'center_stock' => 100,
             'sku' => 'BIO-ORI-1L',
         ]);
-        $this->assertDatabaseHas('product_variants', ['id' => $variant->id, 'center_stock' => 100]);
+        // After Task 2 refactor, table is products, keep backward compat check
+        $table = \Illuminate\Support\Facades\Schema::hasTable('product_variants') ? 'product_variants' : 'products';
+        $this->assertDatabaseHas($table, ['id' => $variant->id, 'center_stock' => 100]);
     }
 
     public function test_inventory_service_reserves_stock_using_variant_id(): void
