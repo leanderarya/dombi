@@ -77,13 +77,77 @@ class OwnerReturnDispositionTest extends TestCase
         ]);
 
         $variant->refresh();
-        $this->assertSame($beforeCenterStock - 3, (int) $variant->center_stock);
+        $this->assertSame($beforeCenterStock, (int) $variant->center_stock);
 
         $this->assertDatabaseHas('stock_movements', [
             'reference_type' => ReturnRequest::class,
             'reference_id' => $this->returnRequest->id,
             'type' => 'disposal',
-            'quantity' => -3,
+            'quantity' => 0,
+        ]);
+    }
+
+    public function test_owner_can_store_item_increases_center_stock(): void
+    {
+        $variant = $this->item->variant;
+        $beforeCenterStock = (int) $variant->center_stock;
+
+        $this->actingAs($this->owner)
+            ->post("/owner/returns/{$this->returnRequest->id}/items/{$this->item->id}/store")
+            ->assertSessionHas('success');
+
+        $variant->refresh();
+        $this->assertSame($beforeCenterStock + 3, (int) $variant->center_stock);
+
+        $this->assertDatabaseHas('stock_movements', [
+            'reference_type' => ReturnRequest::class,
+            'reference_id' => $this->returnRequest->id,
+            'type' => 'return_in',
+            'quantity' => 3,
+        ]);
+    }
+
+    public function test_owner_can_change_disposition_from_stored_to_disposed(): void
+    {
+        $this->actingAs($this->owner)
+            ->post("/owner/returns/{$this->returnRequest->id}/items/{$this->item->id}/store")
+            ->assertSessionHas('success');
+
+        $variant = $this->item->variant->fresh();
+        $this->assertSame(23, (int) $variant->center_stock);
+
+        $this->actingAs($this->owner)
+            ->post("/owner/returns/{$this->returnRequest->id}/items/{$this->item->id}/dispose")
+            ->assertSessionHas('success');
+
+        $variant->refresh();
+        $this->assertSame(20, (int) $variant->center_stock);
+
+        $this->assertDatabaseHas('return_request_items', [
+            'id' => $this->item->id,
+            'disposition' => 'disposed',
+        ]);
+    }
+
+    public function test_owner_can_change_disposition_from_disposed_to_stored(): void
+    {
+        $this->actingAs($this->owner)
+            ->post("/owner/returns/{$this->returnRequest->id}/items/{$this->item->id}/dispose")
+            ->assertSessionHas('success');
+
+        $variant = $this->item->variant->fresh();
+        $this->assertSame(20, (int) $variant->center_stock);
+
+        $this->actingAs($this->owner)
+            ->post("/owner/returns/{$this->returnRequest->id}/items/{$this->item->id}/store")
+            ->assertSessionHas('success');
+
+        $variant->refresh();
+        $this->assertSame(23, (int) $variant->center_stock);
+
+        $this->assertDatabaseHas('return_request_items', [
+            'id' => $this->item->id,
+            'disposition' => 'stored',
         ]);
     }
 

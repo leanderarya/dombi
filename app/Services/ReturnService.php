@@ -146,7 +146,6 @@ class ReturnService
 
             foreach ($return->items as $item) {
                 $this->adjustOutletInventory($return->outlet_id, $item->product_variant_id, -$item->quantity, $return->id, $owner->id);
-                $this->adjustCenterInventory($return->outlet_id, $item->product_variant_id, $item->quantity, $return->id, $owner->id);
             }
 
             $from = $return->status;
@@ -180,42 +179,59 @@ class ReturnService
                 ]);
             }
 
-            if ($item->disposition !== null) {
+            if ($item->disposition === 'disposed') {
                 throw ValidationException::withMessages([
-                    'item' => ['Item sudah ditentukan statusnya.'],
+                    'item' => ['Item sudah dibuang.'],
                 ]);
             }
 
             $variant = ProductVariant::lockForUpdate()->findOrFail($item->product_variant_id);
+            $before = (int) $variant->center_stock;
+            $after = $before;
 
-            if ((int) $variant->center_stock < $item->quantity) {
-                throw ValidationException::withMessages([
-                    'stock' => ['Stok pusat tidak cukup untuk dibuang.'],
+            if ($item->disposition === 'stored') {
+                if ($before < $item->quantity) {
+                    throw ValidationException::withMessages([
+                        'stock' => ['Stok pusat tidak cukup untuk dibuang.'],
+                    ]);
+                }
+
+                $variant->decrement('center_stock', $item->quantity);
+                $after = (int) $variant->fresh()->center_stock;
+
+                StockMovement::create([
+                    'product_variant_id' => $item->product_variant_id,
+                    'type' => 'disposal',
+                    'quantity' => -$item->quantity,
+                    'before_stock' => $before,
+                    'after_stock' => $after,
+                    'before_reserved' => 0,
+                    'after_reserved' => 0,
+                    'reference_type' => ReturnRequest::class,
+                    'reference_id' => $return->id,
+                    'notes' => 'Item dibuang dari return #'.$return->id.' (sebelumnya disimpan)',
+                    'created_by' => $owner->id,
+                ]);
+            } else {
+                StockMovement::create([
+                    'product_variant_id' => $item->product_variant_id,
+                    'type' => 'disposal',
+                    'quantity' => 0,
+                    'before_stock' => $before,
+                    'after_stock' => $after,
+                    'before_reserved' => 0,
+                    'after_reserved' => 0,
+                    'reference_type' => ReturnRequest::class,
+                    'reference_id' => $return->id,
+                    'notes' => 'Item dibuang dari return #'.$return->id,
+                    'created_by' => $owner->id,
                 ]);
             }
-
-            $before = (int) $variant->center_stock;
-            $variant->decrement('center_stock', $item->quantity);
-            $after = (int) $variant->fresh()->center_stock;
 
             $item->update([
                 'disposition' => 'disposed',
                 'disposed_at' => now(),
                 'disposed_by' => $owner->id,
-            ]);
-
-            StockMovement::create([
-                'product_variant_id' => $item->product_variant_id,
-                'type' => 'disposal',
-                'quantity' => -$item->quantity,
-                'before_stock' => $before,
-                'after_stock' => $after,
-                'before_reserved' => 0,
-                'after_reserved' => 0,
-                'reference_type' => ReturnRequest::class,
-                'reference_id' => $return->id,
-                'notes' => 'Item dibuang dari return #'.$return->id,
-                'created_by' => $owner->id,
             ]);
 
             return $item->fresh();
@@ -224,7 +240,7 @@ class ReturnService
 
     public function storeItem(ReturnRequest $return, ReturnRequestItem $item, User $owner): ReturnRequestItem
     {
-        return DB::transaction(function () use ($return, $item) {
+        return DB::transaction(function () use ($return, $item, $owner) {
             if (! $return->isReceivedAtCenter()) {
                 throw ValidationException::withMessages([
                     'status' => ['Return harus sudah diterima di pusat.'],
@@ -237,14 +253,35 @@ class ReturnService
                 ]);
             }
 
-            if ($item->disposition !== null) {
+            if ($item->disposition === 'stored') {
                 throw ValidationException::withMessages([
-                    'item' => ['Item sudah ditentukan statusnya.'],
+                    'item' => ['Item sudah disimpan.'],
                 ]);
             }
 
+            $variant = ProductVariant::lockForUpdate()->findOrFail($item->product_variant_id);
+            $before = (int) $variant->center_stock;
+            $variant->increment('center_stock', $item->quantity);
+            $after = (int) $variant->fresh()->center_stock;
+
             $item->update([
                 'disposition' => 'stored',
+                'disposed_at' => null,
+                'disposed_by' => null,
+            ]);
+
+            StockMovement::create([
+                'product_variant_id' => $item->product_variant_id,
+                'type' => 'return_in',
+                'quantity' => $item->quantity,
+                'before_stock' => $before,
+                'after_stock' => $after,
+                'before_reserved' => 0,
+                'after_reserved' => 0,
+                'reference_type' => ReturnRequest::class,
+                'reference_id' => $return->id,
+                'notes' => 'Return disimpan di pusat #'.$return->id,
+                'created_by' => $owner->id,
             ]);
 
             return $item->fresh();

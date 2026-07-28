@@ -56,7 +56,7 @@ const navGroups: NavGroup[] = [
                     const path = url.split('?')[0];
 
                     return (
-                        path === '/owner/finance' || path === '/owner/refunds'
+                        path === '/owner/finance' && !url.includes('tab=refund')
                     );
                 },
             },
@@ -64,6 +64,15 @@ const navGroups: NavGroup[] = [
                 href: '/owner/refunds',
                 label: 'Refund',
                 badgeKey: 'pendingRefunds',
+                isActive: (url: string) => {
+                    const path = url.split('?')[0];
+
+                    return (
+                        path === '/owner/refunds' ||
+                        (path === '/owner/finance' &&
+                            url.includes('tab=refund'))
+                    );
+                },
             },
         ],
     },
