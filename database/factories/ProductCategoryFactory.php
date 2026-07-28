@@ -12,10 +12,9 @@ class ProductCategoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->unique()->word() . ' ' . $this->faker->randomElement(['Goat', 'Milk', 'Dombi']),
-            'brand' => $this->faker->randomElement(['Dombi', 'Biogoat', 'Domilk']),
+            'name' => $this->faker->unique()->word().' '. $this->faker->randomElement(['Milk','Goat','Premium']),
+            'brand' => 'Dombi',
             'description' => $this->faker->sentence(),
-            'image' => null,
             'is_active' => true,
         ];
     }
