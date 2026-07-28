@@ -138,7 +138,7 @@ class Outlet extends Model
 
     public function variantPrices(): HasMany
     {
-        return $this->hasMany(OutletVariantPrice::class);
+        return $this->hasMany(OutletProductPrice::class);
     }
 
     public function productPrices(): HasMany

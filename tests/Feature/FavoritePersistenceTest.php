@@ -4,9 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Customer;
 use App\Models\Favorite;
-use App\Models\Product;
 use App\Models\ProductCategory;
-use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;

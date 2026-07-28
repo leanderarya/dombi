@@ -11,7 +11,6 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductVariant;
 use App\Services\DeliveryPricingService;
 use App\Services\DokuService;
 use App\Services\OrderService;
@@ -114,26 +113,13 @@ class CheckoutController extends Controller
     {
         $validated = $request->validate([
             'items' => ['required', 'array', 'min:1'],
-            'items.*.product_variant_id' => ['required_without:items.*.product_id', 'nullable', 'integer', Rule::exists('product_variants', 'id')->where('is_active', true)],
-            'items.*.product_id' => ['required_without:items.*.product_variant_id', 'nullable', 'integer'],
+            'items.*.product_id' => ['required', 'integer', Rule::exists('products', 'id')->where('is_active', true)],
             'items.*.quantity' => ['required', 'integer', 'min:1', 'max:999'],
             'fulfillment_type' => ['nullable', Rule::in(self::CHECKOUT_VISIBLE_FULFILLMENT_TYPES)],
             'selected_outlet_id' => ['nullable', 'integer', Rule::exists('outlets', 'id')],
         ]);
 
-        // Normalize items to use product_variant_id
         $items = collect($validated['items'])->map(function ($item) {
-            if (! empty($item['product_variant_id'])) {
-                return $item;
-            }
-            // Legacy: find variant from product_id
-            if (! empty($item['product_id'])) {
-                $variant = ProductVariant::where('product_id', $item['product_id'])->where('is_active', true)->first();
-                if ($variant) {
-                    $item['product_variant_id'] = $variant->id;
-                }
-            }
-
             return $item;
         })->toArray();
 
@@ -595,14 +581,14 @@ class CheckoutController extends Controller
         } catch (StockAdjustedException $e) {
             // Batch load variants to avoid N+1
             $variantIds = collect($e->adjustments)->pluck('variant_id')->unique()->toArray();
-            $variants = ProductVariant::whereIn('id', $variantIds)
-                ->with('family')
+            $variants = Product::whereIn('id', $variantIds)
+                ->with('category')
                 ->get()
                 ->keyBy('id');
 
             $warnings = collect($e->adjustments)->map(function ($adj) use ($variants) {
                 $variant = $variants->get($adj['variant_id']);
-                $name = $variant?->family?->name ?? $variant?->name ?? 'Produk';
+                $name = $variant?->category?->name ?? $variant?->name ?? 'Produk';
 
                 if ($adj['adjusted_qty'] <= 0) {
                     return "{$name}: stok habis, item dihapus dari pesanan";
@@ -758,25 +744,27 @@ class CheckoutController extends Controller
             ]);
         }
 
-        $variantIds = collect($cart)->pluck('product_variant_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $variants = ProductVariant::whereIn('id', $variantIds)
+        $variantIds = collect($cart)->pluck('product_id', 'product_variant_id')->filter()->map(fn ($id) => (int) $id)->values()->all();
+        if (empty($variantIds)) {
+            $variantIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
+        }
+        $variants = Product::whereIn('id', $variantIds)
             ->where('is_active', true)
-            ->with('family')
+            ->with('category')
             ->get()
             ->keyBy('id');
 
-        // Batch load inventories to avoid N+1
-        $inventories = OutletInventory::whereIn('product_variant_id', $variantIds)
+        $inventories = OutletInventory::whereIn('product_id', $variantIds)
             ->where('is_active', true)
             ->get()
-            ->keyBy('product_variant_id');
+            ->keyBy('product_id');
 
         $items = [];
         $warnings = [];
         $valid = true;
 
         foreach ($cart as $cartItem) {
-            $variantId = (int) $cartItem['product_variant_id'];
+            $variantId = (int) ($cartItem['product_id'] ?? $cartItem['product_variant_id'] ?? 0);
             $requestedQty = (int) $cartItem['quantity'];
             $variant = $variants->get($variantId);
 
@@ -799,17 +787,17 @@ class CheckoutController extends Controller
                 $adjustedQty = 0;
                 $removed = true;
                 $valid = false;
-                $warnings[] = "{$variant->family->name} {$variant->name}: stok habis, item dihapus dari pesanan";
+                $warnings[] = "{$variant->category->name} {$variant->name}: stok habis, item dihapus dari pesanan";
             } elseif ($availableStock < $requestedQty) {
                 $adjusted = true;
                 $adjustedQty = $availableStock;
                 $valid = false;
-                $warnings[] = "{$variant->family->name} {$variant->name}: jumlah dikurangi dari {$requestedQty} ke {$availableStock} (stok tersisa {$availableStock})";
+                $warnings[] = "{$variant->category->name} {$variant->name}: jumlah dikurangi dari {$requestedQty} ke {$availableStock} (stok tersisa {$availableStock})";
             }
 
             $items[] = [
                 'product_variant_id' => $variantId,
-                'name' => $variant->family->name ?? $variant->name,
+                'name' => $variant->category->name ?? $variant->name,
                 'variant_name' => $variant->name,
                 'requested_qty' => $requestedQty,
                 'available_stock' => $availableStock,
@@ -856,10 +844,10 @@ class CheckoutController extends Controller
             return $cache[$key];
         }
 
-        $cache[$key] = ProductVariant::query()
+        $cache[$key] = Product::query()
             ->whereIn('id', $variantIds)
             ->where('is_active', true)
-            ->with('family')
+            ->with('category')
             ->get();
 
         return $cache[$key];
@@ -869,43 +857,29 @@ class CheckoutController extends Controller
     {
         $variantMap = $variants->keyBy('id');
 
-        // Load legacy products for fallback
-        $productIds = collect($rawItems)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
-        $products = Product::query()
-            ->whereIn('id', $productIds)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('id');
-
-        return collect($rawItems)->map(function (array $item) use ($variantMap, $products): array {
+        return collect($rawItems)->map(function (array $item) use ($variantMap): array {
             $variantId = (int) ($item['product_variant_id'] ?? 0);
             $variant = $variantMap->get($variantId);
             $quantity = (int) $item['quantity'];
 
-            // If variant found, use variant data
             if ($variant) {
                 return [
                     'product_variant_id' => $variantId,
                     'quantity' => $quantity,
-                    'name' => $variant->family?->name ?? $variant->name ?? 'Produk',
+                    'name' => $variant->category?->name ?? $variant->name ?? 'Produk',
                     'variant_name' => $variant->name ?? '',
                     'price' => (float) $variant->selling_price,
                     'subtotal' => (float) $variant->selling_price * $quantity,
                 ];
             }
 
-            // Legacy fallback: use product data
-            $productId = (int) ($item['product_id'] ?? 0);
-            $product = $products->get($productId);
-            $price = $product && $product->selling_price > 0 ? (float) $product->selling_price : (float) ($product?->price ?? 0);
-
             return [
                 'product_variant_id' => $variantId,
                 'quantity' => $quantity,
-                'name' => $product?->name ?? 'Produk',
+                'name' => 'Produk',
                 'variant_name' => '',
-                'price' => $price,
-                'subtotal' => $price * $quantity,
+                'price' => 0,
+                'subtotal' => 0,
             ];
         })->values()->all();
     }

@@ -84,13 +84,13 @@ class OutletAssignmentService
                 ->where('is_active', true)
                 ->lockForUpdate()
                 ->get()
-                ->keyBy('product_variant_id');
+                ->keyBy('product_id');
         } else {
-            $inventories = $outlet->inventories->where('is_active', true)->keyBy('product_variant_id');
+            $inventories = $outlet->inventories->where('is_active', true)->keyBy('product_id');
         }
 
         foreach ($items as $item) {
-            $variantId = (int) ($item['product_variant_id'] ?? 0);
+            $variantId = (int) ($item['product_variant_id'] ?? $item['product_id'] ?? 0);
             if (! $variantId) {
                 continue;
             }

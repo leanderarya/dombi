@@ -6,7 +6,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -20,10 +20,9 @@ class DemoOrderSeeder extends Seeder
         $outlets = Outlet::whereIn('id', [1, 2])->get();
         abort_if($outlets->isEmpty(), 500, 'No outlets found. Run OutletSeeder first.');
 
-        $variants = ProductVariant::with('family')->orderBy('id')->limit(8)->get();
-        abort_if($variants->isEmpty(), 500, 'No product variants. Run ProductCatalogSeeder first.');
+        $products = Product::with('category')->orderBy('id')->limit(8)->get();
+        abort_if($products->isEmpty(), 500, 'No products. Run ProductCatalogSeeder first.');
 
-        // Clear old demo orders
         Order::where('order_code', 'like', 'DEMO-%')->delete();
 
         $now = now();
@@ -33,16 +32,16 @@ class DemoOrderSeeder extends Seeder
             $completedAt = $now->copy()->subDays($daysAgo)->subHours(rand(0, 12));
 
             $outlet = $outlets->random();
-            $variant1 = $variants->random();
+            $product1 = $products->random();
             $qty1 = rand(1, 4);
-            $variant2 = $variants->random();
+            $product2 = $products->random();
             $qty2 = rand(1, 3);
-            $variant3 = rand(0, 1) ? $variants->random() : null;
-            $qty3 = $variant3 ? rand(1, 2) : 0;
+            $product3 = rand(0, 1) ? $products->random() : null;
+            $qty3 = $product3 ? rand(1, 2) : 0;
 
-            $subtotal = ($variant1->selling_price * $qty1)
-                + ($variant2->selling_price * $qty2)
-                + ($variant3 ? $variant3->selling_price * $qty3 : 0);
+            $subtotal = ($product1->selling_price * $qty1)
+                + ($product2->selling_price * $qty2)
+                + ($product3 ? $product3->selling_price * $qty3 : 0);
             $fee = rand(1000, 3500);
             $total = $subtotal + $fee;
 
@@ -69,30 +68,30 @@ class DemoOrderSeeder extends Seeder
                 'completed_at' => $completedAt,
             ]);
 
-            $this->createItem($order, $variant1, $qty1);
-            $this->createItem($order, $variant2, $qty2);
+            $this->createItem($order, $product1, $qty1);
+            $this->createItem($order, $product2, $qty2);
 
-            if ($variant3) {
-                $this->createItem($order, $variant3, $qty3);
+            if ($product3) {
+                $this->createItem($order, $product3, $qty3);
             }
         }
 
         echo "DemoOrderSeeder: 30 orders spread across 2 outlets over 14 days.\n";
     }
 
-    private function createItem(Order $order, ProductVariant $variant, int $qty): void
+    private function createItem(Order $order, Product $product, int $qty): void
     {
         OrderItem::create([
             'order_id' => $order->id,
-            'product_variant_id' => $variant->id,
-            'product_name' => $variant->family?->name ?? 'Unknown',
-            'variant_name_snapshot' => $variant->name,
+            'product_id' => $product->id,
+            'product_name' => $product->category?->name ?? 'Unknown',
+            'variant_name_snapshot' => $product->name,
             'quantity' => $qty,
-            'price' => $variant->selling_price,
-            'center_price_snapshot' => $variant->center_price,
-            'selling_price_snapshot' => $variant->selling_price,
-            'outlet_margin_snapshot' => (float) $variant->selling_price - (float) $variant->center_price,
-            'subtotal' => $variant->selling_price * $qty,
+            'price' => $product->selling_price,
+            'center_price_snapshot' => $product->center_price,
+            'selling_price_snapshot' => $product->selling_price,
+            'outlet_margin_snapshot' => (float) $product->selling_price - (float) $product->center_price,
+            'subtotal' => $product->selling_price * $qty,
         ]);
     }
 }

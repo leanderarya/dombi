@@ -18,13 +18,12 @@ class ProductController extends Controller
 
     public function show(Request $request, ProductCategory $category = null): Response
     {
-        // Resolve category from either 'category' (new) or 'family' (legacy) route param
+        // Resolve category from route param
         if (! $category) {
-            $routeParam = $request->route('category') ?? $request->route('family');
+            $routeParam = $request->route('category');
             if ($routeParam instanceof ProductCategory) {
                 $category = $routeParam;
             } elseif ($routeParam) {
-                // Could be ProductFamily model instance or id – convert to ProductCategory
                 $id = is_object($routeParam) ? $routeParam->id : $routeParam;
                 $category = ProductCategory::findOrFail($id);
             } else {

@@ -11,7 +11,7 @@ class OrderItem extends Model
     use HasFactory;
 
     protected $fillable = [
-        'order_id', 'product_id', 'product_variant_id', 'product_name',
+        'order_id', 'product_id', 'product_name',
         'variant_name_snapshot', 'quantity', 'price',
         'center_price_snapshot', 'selling_price_snapshot', 'outlet_margin_snapshot',
         'subtotal',
@@ -46,20 +46,5 @@ class OrderItem extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'product_id');
-    }
-
-    public function getProductVariantIdAttribute(): ?int
-    {
-        return $this->attributes['product_id'] ?? null;
-    }
-
-    public function setProductVariantIdAttribute($value): void
-    {
-        $this->attributes['product_id'] = $value instanceof \Illuminate\Database\Eloquent\Model ? $value->getKey() : $value;
     }
 }

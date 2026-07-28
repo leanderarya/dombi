@@ -90,7 +90,6 @@ class OfflineSaleController extends Controller
             OfflineSale::create([
                 'outlet_id' => $outlet->id,
                 'product_id' => $product->id,
-                'product_variant_id' => $product->id, // backward compat if column still exists
                 'quantity' => $validated['quantity'],
                 'center_price' => $centerPrice,
                 'total_amount' => $totalAmount,
@@ -137,7 +136,7 @@ class OfflineSaleController extends Controller
 
         DB::transaction(function () use ($outlet, $offlineSale, $settlementGenerator, $request) {
             // Reverse stock with lock
-            $productId = $offlineSale->product_id ?? $offlineSale->product_variant_id;
+            $productId = $offlineSale->product_id;
             $inventory = OutletInventory::where('outlet_id', $outlet->id)
                 ->where('product_id', $productId)
                 ->lockForUpdate()

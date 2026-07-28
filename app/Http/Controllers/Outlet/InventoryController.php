@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Models\RestockRequest;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +19,7 @@ class InventoryController extends Controller
         $outlet = auth()->user()->outlet;
         abort_unless($outlet, 403);
 
-        $categories = ProductCategory::where('is_active', true)
+        $categories = \App\Models\ProductCategory::where('is_active', true)
             ->with(['products' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
             ->orderBy('name')
             ->get();
@@ -36,7 +35,7 @@ class InventoryController extends Controller
         $activeMap = [];
         foreach ($activeRequests as $req) {
             foreach ($req->items as $item) {
-                $pid = $item->product_id ?? $item->product_variant_id;
+                $pid = $item->product_id;
                 if (! isset($activeMap[$pid])) {
                     $activeMap[$pid] = [
                         'id' => $req->id,
@@ -61,7 +60,6 @@ class InventoryController extends Controller
                 ->where('outlet_id', $outlet->id)
                 ->orderBy('product_id')
                 ->get(),
-            'families' => $categories, // backward compat
             'categories' => $categories,
             'centerStocks' => $centerStocks,
             'activeRestocks' => $activeMap,
@@ -76,13 +74,12 @@ class InventoryController extends Controller
         abort_unless($outlet, 403);
 
         $validated = $request->validate([
-            'product_id' => ['sometimes','required', 'integer', 'exists:products,id'],
-            'product_variant_id' => ['sometimes','required', 'integer', 'exists:products,id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
             'actual_count' => ['required', 'integer', 'min:0'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $productId = $validated['product_id'] ?? $validated['product_variant_id'];
+        $productId = $validated['product_id'];
 
         $inventory = OutletInventory::where('outlet_id', $outlet->id)
             ->where('product_id', $productId)
