@@ -103,3 +103,4 @@ Schedule::command('queue:work --tries=3 --stop-when-empty')
     ->everyMinute()
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/queue-work.log'));
+
