@@ -25,7 +25,8 @@ type TabKey = (typeof TABS)[number]['key'];
 
 interface Props {
     tab?: string;
-    pusatVariants?: PusatVariant[];
+    pusatVariants?: PusatVariant[]; // backward compat
+    pusatProducts?: PusatVariant[];
     pusatKpis?: PusatKpis;
     outlets?: OutletData[];
     selectedOutlet?: { id: number; name: string };
@@ -83,6 +84,7 @@ export default function PricingIndex(props: Props) {
             {activeTab === 'pusat' && (
                 <PusatTab
                     variants={props.pusatVariants}
+                    products={props.pusatProducts ?? props.pusatVariants}
                     kpis={props.pusatKpis}
                 />
             )}

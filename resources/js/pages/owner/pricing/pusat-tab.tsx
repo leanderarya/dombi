@@ -44,9 +44,11 @@ function SortMarker({
 
 export function PusatTab({
     variants,
+    products,
     kpis,
 }: {
-    variants?: PusatVariant[];
+    variants?: PusatVariant[]; // backward compat
+    products?: PusatVariant[];
     kpis?: PusatKpis;
 }) {
     const [search, setSearch] = useState('');
@@ -55,22 +57,40 @@ export function PusatTab({
     const [sortDir, setSortDir] = useState<SortDir>('asc');
     const [page, setPage] = useState(1);
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedVariant, setSelectedVariant] = useState<PusatVariant | null>(
+    const [selectedProduct, setSelectedProduct] = useState<PusatVariant | null>(
         null,
     );
 
-    const variantRows = useMemo(() => variants ?? [], [variants]);
+    const productRows = useMemo(
+        () => products ?? variants ?? [],
+        [products, variants],
+    );
     const filtered = useMemo(
         () =>
-            variantRows.filter((v) => {
+            productRows.filter((v) => {
                 if (search) {
                     const q = search.toLowerCase();
+                    const haystack = [
+                        v.name,
+                        v.category_name,
+                        v.family_name,
+                        v.sku,
+                        v.flavor,
+                        v.size,
+                    ]
+                        .filter(Boolean)
+                        .join(' ')
+                        .toLowerCase();
 
-                    if (
-                        !v.name.toLowerCase().includes(q) &&
-                        !(v.family_name ?? '').toLowerCase().includes(q)
-                    ) {
-                        return false;
+                    if (!haystack.includes(q)) {
+                        // also check margin as string for live search?
+                        if (
+                            !String(v.margin).includes(q) &&
+                            !String(v.center_price).includes(q) &&
+                            !String(v.selling_price).includes(q)
+                        ) {
+                            return false;
+                        }
                     }
                 }
 
@@ -91,7 +111,7 @@ export function PusatTab({
 
                 return true;
             }),
-        [variantRows, search, marginFilter],
+        [productRows, search, marginFilter],
     );
 
     const sorted = useMemo(
@@ -129,14 +149,14 @@ export function PusatTab({
         [sorted],
     );
 
-    if (!variants || !kpis) {
+    if ((!variants && !products) || !kpis) {
         return <SkeletonList count={5} />;
     }
 
     const kpiItems = [
         {
             label: 'Total Produk',
-            value: kpis.total_variants,
+            value: kpis.total_products ?? kpis.total_variants ?? 0,
             icon: <Package className="h-5 w-5" />,
         },
         {
@@ -248,13 +268,26 @@ export function PusatTab({
                         <TableBody>
                             {paginated.map((v) => (
                                 <TableRow
-                                    key={v.variant_id}
+                                    key={v.product_id}
                                     className="hover:bg-mint-wash/30 transition-colors"
                                 >
                                     <TableCell className="px-3 py-3">
                                         <div className="font-semibold text-text">
-                                            {v.name}
+                                            {v.category_name
+                                                ? `${v.category_name} - ${v.name}`
+                                                : v.name}
                                         </div>
+                                        {(v.flavor || v.size || v.sku) && (
+                                            <div className="mt-0.5 text-xs text-text-muted">
+                                                {[
+                                                    v.flavor,
+                                                    v.size,
+                                                    v.sku,
+                                                ]
+                                                    .filter(Boolean)
+                                                    .join(' • ')}
+                                            </div>
+                                        )}
                                         {v.outlet_override_count > 0 && (
                                             <span className="mt-0.5 inline-block rounded bg-blue-50 px-1.5 py-0.5 text-xs font-bold text-blue-600">
                                                 {v.outlet_override_count}{' '}
@@ -281,7 +314,7 @@ export function PusatTab({
                                             size="sm"
                                             variant="ghost"
                                             onClick={() => {
-                                                setSelectedVariant(v);
+                                                setSelectedProduct(v);
                                                 setModalOpen(true);
                                             }}
                                             className="text-primary"
@@ -305,13 +338,14 @@ export function PusatTab({
                 />
             )}
 
-            {selectedVariant && (
+            {selectedProduct && (
                 <GlobalPriceModal
                     open={modalOpen}
-                    variant={selectedVariant}
+                    product={selectedProduct}
+                    variant={selectedProduct}
                     onClose={() => {
                         setModalOpen(false);
-                        setSelectedVariant(null);
+                        setSelectedProduct(null);
                     }}
                 />
             )}

@@ -48,9 +48,11 @@ const STOCK_FILTERS: { key: StockFilter; label: string }[] = [
 
 export default function CentralStockTab({
     variants,
+    products,
     stats,
 }: {
-    variants?: any[];
+    variants?: any[]; // backward compat
+    products?: any[];
     stats?: any;
 }) {
     const [search, setSearch] = useState('');
@@ -62,6 +64,11 @@ export default function CentralStockTab({
     const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
     const [stockFilter, setStockFilter] = useState<StockFilter>('all');
 
+    const productList = useMemo(
+        () => products ?? variants ?? [],
+        [products, variants],
+    );
+
     const toggleSort = (key: SortKey) => {
         if (sortKey === key) {
             setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
@@ -72,15 +79,24 @@ export default function CentralStockTab({
     };
 
     const filtered = useMemo(() => {
-        let list = (variants ?? []).filter(Boolean);
+        let list = (productList ?? []).filter(Boolean);
 
         if (search) {
             const q = search.toLowerCase();
-            list = list.filter(
-                (v: any) =>
-                    v.name.toLowerCase().includes(q) ||
-                    (v.sku ?? '').toLowerCase().includes(q),
-            );
+            list = list.filter((v: any) => {
+                const haystack = [
+                    v.name,
+                    v.category_name,
+                    v.family_name,
+                    v.sku,
+                    v.flavor,
+                    v.size,
+                ]
+                    .filter(Boolean)
+                    .join(' ')
+                    .toLowerCase();
+                return haystack.includes(q);
+            });
         }
 
         switch (stockFilter) {
@@ -98,7 +114,7 @@ export default function CentralStockTab({
         }
 
         return list;
-    }, [variants, search, stockFilter]);
+    }, [productList, search, stockFilter]);
 
     const sorted = useMemo(
         () =>
