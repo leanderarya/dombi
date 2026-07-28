@@ -21,6 +21,7 @@ class AuditOrphanExchanges extends Command
 
         if ($orphans->isEmpty()) {
             $this->info('No orphan exchanges found. Safe to add NOT NULL constraint.');
+
             return self::SUCCESS;
         }
 

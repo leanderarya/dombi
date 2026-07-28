@@ -224,6 +224,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
         $return->fresh('items')->items->each(
             fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
         );
+
         return $return->fresh();
     }
 

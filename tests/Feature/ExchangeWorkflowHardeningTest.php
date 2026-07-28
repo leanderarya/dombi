@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\ExchangeService;
 use App\Services\ReturnService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class ExchangeWorkflowHardeningTest extends TestCase
@@ -201,7 +202,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
     {
         $context = $this->makeContext();
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
 
         app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'items' => [['product_variant_id' => $context['exchangeVariant']->id, 'quantity' => 2]],
@@ -214,7 +215,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $otherContext = $this->makeContext();
         $return = $this->createReceivedReturn($context, quantity: 2);
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
 
         app(ExchangeService::class)->createRequest($otherContext['outlet'], $otherContext['outletUser'], [
             'return_request_id' => $return->id,
@@ -232,7 +233,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
         // status is 'approved', not 'received_at_center'
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
 
         app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
@@ -245,7 +246,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $context = $this->makeContext();
         $return = $this->createReceivedReturn($context, quantity: 2); // only 2 items returned
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
 
         app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
@@ -285,7 +286,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         ]);
 
         // Second exchange with same return should fail
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
 
         app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
@@ -307,7 +308,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         // revert return status so guard triggers
         $return->fresh()->update(['status' => ReturnRequest::STATUS_APPROVED]);
 
-        $this->expectException(\Illuminate\Validation\ValidationException::class);
+        $this->expectException(ValidationException::class);
 
         app(ExchangeService::class)->markShipped($exchange->fresh(), $context['owner']);
     }
