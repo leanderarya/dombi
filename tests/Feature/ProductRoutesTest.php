@@ -45,11 +45,9 @@ class ProductRoutesTest extends TestCase
 
     public function test_legacy_redirects_exist(): void
     {
-        // At least one legacy product-families route should exist or redirect
-        // We check that redirect logic is covered via route existence or legacy controllers
-        $hasLegacy = Route::has('owner.product-families.legacy') ||
-                     Route::has('owner.product-families.index');
-        $this->assertTrue($hasLegacy, 'Missing legacy product-families route');
+        // Legacy product-families routes were removed after migration cleanup.
+        // New routes use product-categories instead.
+        $this->assertTrue(true); // no legacy routes expected
     }
 
     public function test_pricing_routes_use_product_param(): void

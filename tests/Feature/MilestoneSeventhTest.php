@@ -38,9 +38,9 @@ class MilestoneSeventhTest extends TestCase
     {
         $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
         $family = ProductCategory::create(['name' => 'Susu', 'brand' => 'Dombi']);
-        $product = Product::create(['name' => 'Susu 1L', 'selling_price' => 25000, 'is_active' => true]);
         Product::create([
             'product_category_id' => $family->id,
+            'name' => 'Susu 1L',
             'name' => 'Susu 1L',
             'flavor' => 'Original',
             'size' => '1L',
