@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -27,9 +27,9 @@ class StockValidationRaceConditionTest extends TestCase
 
     public function test_concurrent_checkout_prevents_overselling(): void
     {
-        $family = ProductFamily::create(['name' => 'Susu Kambing Original', 'is_active' => true]);
-        $variant = ProductVariant::factory()->create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::create(['name' => 'Susu Kambing Original', 'is_active' => true]);
+        $variant = Product::factory()->create([
+            'product_category_id' => $family->id,
             'name' => '250ml',
             'selling_price' => 25000,
             'center_price' => 18000,
@@ -37,7 +37,7 @@ class StockValidationRaceConditionTest extends TestCase
 
         OutletInventory::factory()->create([
             'outlet_id' => $this->outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 3,
             'reserved_stock' => 0,
             'minimum_stock' => 1,
@@ -53,7 +53,7 @@ class StockValidationRaceConditionTest extends TestCase
         // Customer A tries to buy 3
         $responseA = $this->actingAs($userA)
             ->session([
-                'checkout.cart' => [['product_variant_id' => $variant->id, 'quantity' => 3]],
+                'checkout.cart' => [['product_id' => $variant->id, 'quantity' => 3]],
                 'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
                 'checkout.customer' => ['customer_name' => 'Customer A', 'phone_number' => '6281111111111'],
             ])
@@ -62,7 +62,7 @@ class StockValidationRaceConditionTest extends TestCase
         // Customer B tries to buy 3 at the same time
         $responseB = $this->actingAs($userB)
             ->session([
-                'checkout.cart' => [['product_variant_id' => $variant->id, 'quantity' => 3]],
+                'checkout.cart' => [['product_id' => $variant->id, 'quantity' => 3]],
                 'checkout.fulfillment' => ['fulfillment_type' => 'pickup', 'selected_outlet_id' => $this->outlet->id],
                 'checkout.customer' => ['customer_name' => 'Customer B', 'phone_number' => '6282222222222'],
             ])
@@ -89,7 +89,7 @@ class StockValidationRaceConditionTest extends TestCase
 
         // Verify no overselling
         $inventory = OutletInventory::where('outlet_id', $this->outlet->id)
-            ->where('product_variant_id', $variant->id)
+            ->where('product_id', $variant->id)
             ->first();
 
         $this->assertGreaterThanOrEqual(0, $inventory->current_stock - $inventory->reserved_stock);

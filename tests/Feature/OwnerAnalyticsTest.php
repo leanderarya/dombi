@@ -6,8 +6,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -187,22 +187,22 @@ class OwnerAnalyticsTest extends TestCase
         OrderItem::create([
             'order_id' => $order->id,
             'product_id' => $context['productLarge']->id,
-            'product_variant_id' => $context['variantLarge']->id,
+            'product_id' => $context['variantLarge']->id,
             'product_name' => 'Biogoat 1L',
             'variant_name_snapshot' => 'Original 1L',
             'quantity' => 3,
-            'price' => 55000,
+            'selling_price' => 55000,
             'subtotal' => 165000,
         ]);
 
         OrderItem::create([
             'order_id' => $order->id,
             'product_id' => $context['productSmall']->id,
-            'product_variant_id' => $context['variantSmall']->id,
+            'product_id' => $context['variantSmall']->id,
             'product_name' => 'Domilk Coffee 250ml',
             'variant_name_snapshot' => 'Coffee 250ml',
             'quantity' => 5,
-            'price' => 30000,
+            'selling_price' => 30000,
             'subtotal' => 150000,
         ]);
 
@@ -263,26 +263,22 @@ class OwnerAnalyticsTest extends TestCase
         $outletUserA->forceFill(['outlet_id' => $outletA->id])->save();
         $outletUserB->forceFill(['outlet_id' => $outletB->id])->save();
 
-        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        $family = ProductCategory::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
 
         $productLarge = Product::create([
             'name' => 'Biogoat 1L',
-            'slug' => uniqid('biogoat-'),
-            'unit' => 'botol',
-            'price' => 55000,
+            'selling_price' => 55000,
             'is_active' => true,
         ]);
 
         $productSmall = Product::create([
             'name' => 'Domilk Coffee 250ml',
-            'slug' => uniqid('domilk-'),
-            'unit' => 'botol',
-            'price' => 30000,
+            'selling_price' => 30000,
             'is_active' => true,
         ]);
 
-        $variantLarge = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variantLarge = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $productLarge->id,
             'name' => 'Biogoat 1L',
             'flavor' => 'Original',
@@ -293,8 +289,8 @@ class OwnerAnalyticsTest extends TestCase
             'is_active' => true,
         ]);
 
-        $variantSmall = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variantSmall = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $productSmall->id,
             'name' => 'Domilk Coffee 250ml',
             'flavor' => 'Coffee',

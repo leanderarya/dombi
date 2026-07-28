@@ -5,7 +5,7 @@ namespace Tests\Feature\Customer;
 use App\Models\Customer;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -28,11 +28,11 @@ class CartControllerTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $variant = ProductVariant::factory()->create();
+        $variant = Product::factory()->create();
 
         OutletInventory::factory()->create([
             'outlet_id' => $this->outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 3,
             'minimum_stock' => 2,
@@ -40,20 +40,20 @@ class CartControllerTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/customer/cart/add', [
-                'product_variant_id' => $variant->id,
+                'product_id' => $variant->id,
                 'quantity' => 5,
             ]);
 
         $response->assertOk()
             ->assertJsonStructure([
                 'success',
-                'item' => ['product_variant_id', 'quantity', 'available_stock', 'max_quantity'],
+                'item' => ['product_id', 'quantity', 'available_stock', 'max_quantity'],
                 'warning',
             ])
             ->assertJson([
                 'success' => true,
                 'item' => [
-                    'product_variant_id' => $variant->id,
+                    'product_id' => $variant->id,
                     'quantity' => 5,
                     'available_stock' => 7,
                     'max_quantity' => 7,
@@ -66,11 +66,11 @@ class CartControllerTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $variant = ProductVariant::factory()->create();
+        $variant = Product::factory()->create();
 
         OutletInventory::factory()->create([
             'outlet_id' => $this->outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 5,
             'minimum_stock' => 2,
@@ -78,7 +78,7 @@ class CartControllerTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/customer/cart/add', [
-                'product_variant_id' => $variant->id,
+                'product_id' => $variant->id,
                 'quantity' => 10,
             ]);
 
@@ -98,11 +98,11 @@ class CartControllerTest extends TestCase
     {
         $user = User::factory()->create(['role' => 'customer']);
         $customer = Customer::factory()->create(['user_id' => $user->id]);
-        $variant = ProductVariant::factory()->create();
+        $variant = Product::factory()->create();
 
         OutletInventory::factory()->create([
             'outlet_id' => $this->outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 10,
             'minimum_stock' => 2,
@@ -110,7 +110,7 @@ class CartControllerTest extends TestCase
 
         $response = $this->actingAs($user)
             ->postJson('/customer/cart/add', [
-                'product_variant_id' => $variant->id,
+                'product_id' => $variant->id,
                 'quantity' => 1,
             ]);
 

@@ -6,8 +6,8 @@ use App\Models\ExchangeRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\ReturnRequest;
 use App\Models\User;
 use App\Services\ExchangeService;
@@ -35,7 +35,7 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
 
         $this->assertDatabaseMissing('outlet_inventories', [
             'outlet_id' => $context['outlet']->id,
-            'product_variant_id' => $otherVariant->id,
+            'product_id' => $otherVariant->id,
         ]);
     }
 
@@ -54,7 +54,7 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
 
         $this->assertDatabaseMissing('outlet_inventories', [
             'outlet_id' => $context['outlet']->id,
-            'product_variant_id' => $otherVariant->id,
+            'product_id' => $otherVariant->id,
         ]);
     }
 
@@ -65,7 +65,7 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
         $this->actingAs($context['outletUser'])
             ->post(route('outlet.returns.store'), [
                 'reason' => 'slow_moving',
-                'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 3]],
+                'items' => [['product_id' => $context['variant']->id, 'quantity' => 3]],
             ])
             ->assertSessionHasErrors('items.0.quantity');
 
@@ -77,7 +77,7 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
         $context = $this->makeContext(currentStock: 7, reservedStock: 2);
         $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'reason' => 'slow_moving',
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 3]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => 3]],
         ]);
         $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
@@ -88,7 +88,7 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
         $this->actingAs($context['outletUser'])
             ->post(route('outlet.exchanges.store'), [
                 'return_request_id' => $return->id,
-                'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 3]],
+                'items' => [['product_id' => $context['variant']->id, 'quantity' => 3]],
             ])
             ->assertRedirect()
             ->assertSessionHas('success');
@@ -101,7 +101,7 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
         $context = $this->makeContext(currentStock: 6, reservedStock: 0);
         $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'reason' => 'slow_moving',
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => 2]],
         ]);
         $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
@@ -111,7 +111,7 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
 
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => 2]],
         ]);
 
         app(ExchangeService::class)->approveRequest($exchange, $context['owner']);
@@ -149,7 +149,7 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $variant->product_id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => $currentStock,
             'reserved_stock' => $reservedStock,
             'minimum_stock' => 2,
@@ -158,20 +158,18 @@ class ReturnExchangeOperationalHardeningTest extends TestCase
         return compact('owner', 'outletUser', 'outlet', 'variant');
     }
 
-    private function makeVariant(string $name): ProductVariant
+    private function makeVariant(string $name): Product
     {
         $product = Product::create([
             'name' => $name,
-            'slug' => uniqid('variant-test-'),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => $name, 'brand' => 'Dombi']);
+        $family = ProductCategory::create(['name' => $name, 'brand' => 'Dombi']);
 
-        return ProductVariant::create([
-            'product_family_id' => $family->id,
+        return Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => $name,
             'flavor' => 'Original',

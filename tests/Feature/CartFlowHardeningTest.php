@@ -8,8 +8,7 @@ use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -22,11 +21,11 @@ class CartFlowHardeningTest extends TestCase
 
     private Product $product;
 
-    private ProductFamily $family;
+    private ProductCategory $family;
 
-    private ProductVariant $variant;
+    private Product $variant;
 
-    private ProductVariant $variant2;
+    private Product $variant2;
 
     private Outlet $outlet;
 
@@ -36,23 +35,21 @@ class CartFlowHardeningTest extends TestCase
 
         $this->product = Product::create([
             'name' => 'Domilk Premium Taste',
-            'slug' => 'domilk-premium-cart',
-            'unit' => 'liter',
-            'price' => 18000,
+            'selling_price' => 18000,
             'selling_price' => 25000,
             'center_price' => 18000,
             'is_active' => true,
         ]);
 
-        $this->family = ProductFamily::create([
+        $this->family = ProductCategory::create([
             'name' => 'Domilk Premium Taste',
             'brand' => 'Domilk',
             'description' => 'Susu premium',
             'is_active' => true,
         ]);
 
-        $this->variant = ProductVariant::create([
-            'product_family_id' => $this->family->id,
+        $this->variant = Product::create([
+            'product_category_id' => $this->family->id,
             'product_id' => $this->product->id,
             'name' => 'Coffee 1L',
             'flavor' => 'Coffee',
@@ -62,8 +59,8 @@ class CartFlowHardeningTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->variant2 = ProductVariant::create([
-            'product_family_id' => $this->family->id,
+        $this->variant2 = Product::create([
+            'product_category_id' => $this->family->id,
             'product_id' => $this->product->id,
             'name' => 'Vanilla 250ml',
             'flavor' => 'Vanilla',
@@ -78,7 +75,7 @@ class CartFlowHardeningTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
             'product_id' => $this->product->id,
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'current_stock' => 50,
             'reserved_stock' => 0,
             'minimum_stock' => 5,
@@ -87,7 +84,7 @@ class CartFlowHardeningTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
             'product_id' => $this->product->id,
-            'product_variant_id' => $this->variant2->id,
+            'product_id' => $this->variant2->id,
             'current_stock' => 30,
             'reserved_stock' => 0,
             'minimum_stock' => 5,
@@ -99,7 +96,7 @@ class CartFlowHardeningTest extends TestCase
     public function test_add_single_item_to_cart_returns_json(): void
     {
         $response = $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 2,
         ]);
 
@@ -107,7 +104,7 @@ class CartFlowHardeningTest extends TestCase
             ->assertJson([
                 'success' => true,
                 'item' => [
-                    'product_variant_id' => $this->variant->id,
+                    'product_id' => $this->variant->id,
                     'quantity' => 2,
                     'available_stock' => 50,
                     'max_quantity' => 50,
@@ -118,20 +115,20 @@ class CartFlowHardeningTest extends TestCase
     public function test_add_item_stores_in_session(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 2,
         ])->assertOk();
 
         $cart = session('checkout.cart');
         $this->assertCount(1, $cart);
-        $this->assertEquals($this->variant->id, $cart[0]['product_variant_id']);
+        $this->assertEquals($this->variant->id, $cart[0]['product_id']);
         $this->assertEquals(2, $cart[0]['quantity']);
     }
 
     public function test_add_item_does_not_redirect(): void
     {
         $response = $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 1,
         ]);
 
@@ -145,12 +142,12 @@ class CartFlowHardeningTest extends TestCase
     public function test_add_multiple_variants_to_cart(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 2,
         ])->assertOk();
 
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant2->id,
+            'product_id' => $this->variant2->id,
             'quantity' => 1,
         ])->assertOk();
 
@@ -165,12 +162,12 @@ class CartFlowHardeningTest extends TestCase
     public function test_add_same_variant_merges_quantity(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 2,
         ])->assertOk();
 
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 3,
         ])->assertOk();
 
@@ -182,12 +179,12 @@ class CartFlowHardeningTest extends TestCase
     public function test_merge_returns_updated_cart_count(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 2,
         ])->assertJson([
             'success' => true,
             'item' => [
-                'product_variant_id' => $this->variant->id,
+                'product_id' => $this->variant->id,
                 'quantity' => 2,
                 'available_stock' => 50,
                 'max_quantity' => 50,
@@ -195,12 +192,12 @@ class CartFlowHardeningTest extends TestCase
         ]);
 
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 3,
         ])->assertJson([
             'success' => true,
             'item' => [
-                'product_variant_id' => $this->variant->id,
+                'product_id' => $this->variant->id,
                 'quantity' => 3,
                 'available_stock' => 50,
                 'max_quantity' => 50,
@@ -215,7 +212,7 @@ class CartFlowHardeningTest extends TestCase
         $this->variant->update(['is_active' => false]);
 
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 1,
         ])->assertUnprocessable();
     }
@@ -223,7 +220,7 @@ class CartFlowHardeningTest extends TestCase
     public function test_add_with_zero_quantity_rejected(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 0,
         ])->assertUnprocessable();
     }
@@ -231,7 +228,7 @@ class CartFlowHardeningTest extends TestCase
     public function test_add_nonexistent_variant_rejected(): void
     {
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => 99999,
+            'product_id' => 99999,
             'quantity' => 1,
         ])->assertUnprocessable();
     }
@@ -242,7 +239,7 @@ class CartFlowHardeningTest extends TestCase
     {
         // Add item via new endpoint
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 2,
         ])->assertOk();
 
@@ -252,7 +249,7 @@ class CartFlowHardeningTest extends TestCase
             ->assertInertia(fn ($page) => $page
                 ->component('customer/checkout/index')
                 ->has('draft.items', 1)
-                ->where('draft.items.0.product_variant_id', $this->variant->id)
+                ->where('draft.items.0.product_id', $this->variant->id)
                 ->where('draft.items.0.quantity', 2)
             );
     }
@@ -261,14 +258,14 @@ class CartFlowHardeningTest extends TestCase
     {
         // Add item
         $this->postJson('/customer/cart/add', [
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'quantity' => 2,
         ])->assertOk();
 
         // Submit checkout with fulfillment
         $this->post('/customer/checkout', [
             'items' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 2],
+                ['product_id' => $this->variant->id, 'quantity' => 2],
             ],
             'fulfillment_type' => 'pickup',
         ])->assertRedirect('/customer/checkout/customer');
@@ -303,11 +300,11 @@ class CartFlowHardeningTest extends TestCase
         OrderItem::create([
             'order_id' => $order->id,
             'product_id' => $this->product->id,
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'product_name' => 'Domilk Premium Taste',
             'variant_name_snapshot' => 'Coffee 1L',
             'quantity' => 2,
-            'price' => 25000,
+            'selling_price' => 25000,
             'subtotal' => 50000,
         ]);
 
@@ -323,6 +320,6 @@ class CartFlowHardeningTest extends TestCase
         $cart = session('checkout.cart');
         $this->assertNotNull($cart);
         $this->assertCount(1, $cart);
-        $this->assertEquals($this->variant->id, $cart[0]['product_variant_id']);
+        $this->assertEquals($this->variant->id, $cart[0]['product_id']);
     }
 }
