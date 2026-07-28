@@ -255,13 +255,13 @@ export default function CheckoutIndex({
                     <button
                         type="button"
                         onClick={() => {
+                            saveFulfillment('delivery_dombi');
+
                             if (!isLoggedIn) {
                                 setDeliverySheetOpen(true);
 
                                 return;
                             }
-
-                            saveFulfillment('delivery_dombi');
                         }}
                         className={`relative z-10 flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-semibold transition-colors duration-300 ${
                             fulfillmentType === 'delivery_dombi'
@@ -340,6 +340,10 @@ export default function CheckoutIndex({
                 <DeliveryLoginSheet
                     open={deliverySheetOpen}
                     onClose={() => setDeliverySheetOpen(false)}
+                    onSwitchToPickup={() => {
+                        saveFulfillment('pickup');
+                        setDeliverySheetOpen(false);
+                    }}
                 />
             </section>
             {/* Spacer for sticky footer */}
