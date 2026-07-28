@@ -28,7 +28,7 @@ export default function OutletExchangesIndex({
     exchanges,
     filters,
     variants,
-    outletInventory,
+    exchangeEligibleReturns,
 }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const [showCreate, setShowCreate] = useState(false);
@@ -122,7 +122,7 @@ export default function OutletExchangesIndex({
                 open={showCreate}
                 onClose={() => setShowCreate(false)}
                 variants={variants}
-                outletInventory={outletInventory}
+                exchangeEligibleReturns={exchangeEligibleReturns}
             />
         </OutletLayout>
     );
