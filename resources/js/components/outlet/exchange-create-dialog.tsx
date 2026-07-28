@@ -80,14 +80,20 @@ export default function ExchangeCreateDialog({
                 .join(' | '),
         };
 
-        form.transform(() => payload).post('/outlet/exchanges', {
+        form.transform(() => payload);
+
+        form.post('/outlet/exchanges', {
             onSuccess: () => {
                 toast.success('Penukaran diajukan');
                 onClose();
                 form.reset();
             },
-            onError: (errors) => {
-                toast.error(Object.values(errors).flat().join(', '));
+            onError: (errors: Record<string, string | string[]>) => {
+                const message = Object.values(errors)
+                    .flatMap((v) => (Array.isArray(v) ? v : [v]))
+                    .join(', ');
+
+                toast.error(message);
             },
         });
     };
