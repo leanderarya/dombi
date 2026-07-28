@@ -8,32 +8,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-/**
- * @deprecated Use ProductFamily & ProductVariant instead. This model is kept for legacy
- * data compatibility and will be removed in Phase 9. New code must use product_variant_id.
- */
 class Product extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'product_category_id', 'name', 'slug', 'description', 'size',
-        'unit', 'price', 'center_price', 'selling_price', 'image', 'is_active',
+        'product_category_id', 'name', 'description', 'flavor', 'size',
+        'sku', 'center_price', 'selling_price', 'center_stock', 'image', 'is_active',
     ];
 
     protected function casts(): array
     {
         return [
-            'price' => 'decimal:2',
             'center_price' => 'decimal:2',
             'selling_price' => 'decimal:2',
+            'center_stock' => 'integer',
             'is_active' => 'boolean',
         ];
-    }
-
-    public function getOutletMarginAttribute(): float
-    {
-        return (float) $this->selling_price - (float) $this->center_price;
     }
 
     public function category(): BelongsTo
@@ -51,8 +42,47 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
-    public function restockRequestItems(): HasMany
+    public function outletPrices(): HasMany
     {
-        return $this->hasMany(RestockRequestItem::class);
+        return $this->hasMany(OutletProductPrice::class);
+    }
+
+    public function getOutletMarginAttribute(): float
+    {
+        return (float) $this->selling_price - (float) $this->center_price;
+    }
+
+    public function getMarginPercentAttribute(): float
+    {
+        return $this->center_price > 0
+            ? (($this->selling_price - $this->center_price) / $this->center_price * 100)
+            : 0;
+    }
+
+    public function getFullDisplayNameAttribute(): string
+    {
+        return trim(($this->category?->name ? $this->category->name.' - ' : '').$this->name);
+    }
+
+    public function getAvailableStockAttribute(): int
+    {
+        return (int) $this->inventories->sum(fn ($inv) => $inv->current_stock - $inv->reserved_stock);
+    }
+
+    public function getStockStatusAttribute(): string
+    {
+        if ($this->center_stock <= 0 && $this->available_stock <= 0) {
+            return 'out_of_stock';
+        }
+        if ($this->center_stock <= 5 || $this->available_stock <= 5) {
+            return 'low';
+        }
+        return 'available';
+    }
+
+    public function priceForOutlet(int $outletId): float
+    {
+        $override = $this->outletPrices()->where('outlet_id', $outletId)->value('selling_price');
+        return $override !== null ? (float) $override : (float) $this->selling_price;
     }
 }

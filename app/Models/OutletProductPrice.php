@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OutletVariantPrice extends Model
+class OutletProductPrice extends Model
 {
     use HasFactory;
 
@@ -14,7 +14,6 @@ class OutletVariantPrice extends Model
 
     protected $fillable = [
         'outlet_id',
-        'product_variant_id',
         'product_id',
         'selling_price',
     ];
@@ -26,27 +25,18 @@ class OutletVariantPrice extends Model
         ];
     }
 
-    public function getProductVariantIdAttribute(): ?int
-    {
-        return $this->attributes['product_id'] ?? null;
-    }
-
-    public function setProductVariantIdAttribute($value): void
-    {
-        $this->attributes['product_id'] = $value instanceof \Illuminate\Database\Eloquent\Model ? $value->getKey() : $value;
-    }
-
     public function outlet(): BelongsTo
     {
         return $this->belongsTo(Outlet::class);
     }
 
-    public function productVariant(): BelongsTo
+    public function product(): BelongsTo
     {
-        return $this->belongsTo(ProductVariant::class, 'product_id');
+        return $this->belongsTo(Product::class);
     }
 
-    public function product(): BelongsTo
+    // Backward compat: old code may call productVariant()
+    public function productVariant(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_id');
     }
