@@ -50,7 +50,8 @@ class ReturnExchangeBlockingBugTest extends TestCase
     public function test_outlet_can_view_own_exchange_request(): void
     {
         $context = $this->makeContext();
-        $exchange = $this->createExchange($context);
+        $return = $this->createReceivedReturnForExchange($context);
+        $exchange = $this->createExchange($context, $return);
 
         $this->actingAs($context['outletUser'])
             ->get(route('outlet.exchanges.show', $exchange))
@@ -66,7 +67,9 @@ class ReturnExchangeBlockingBugTest extends TestCase
     {
         $context = $this->makeContext();
         $otherContext = $this->makeContext('Other Outlet', 'Other Exchange 1L');
-        $otherExchange = $this->createExchange($otherContext);
+        $return = $this->createReceivedReturnForExchange($context);
+        $otherReturn = $this->createReceivedReturnForExchange($otherContext);
+        $otherExchange = $this->createExchange($otherContext, $otherReturn);
 
         $this->actingAs($context['outletUser'])
             ->get(route('outlet.exchanges.show', $otherExchange))
@@ -210,9 +213,24 @@ class ReturnExchangeBlockingBugTest extends TestCase
         ]);
     }
 
-    private function createExchange(array $context, int $quantity = 2): ExchangeRequest
+    private function createReceivedReturnForExchange(array $context, int $quantity = 2): ReturnRequest
+    {
+        $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'reason' => 'slow_moving',
+            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => $quantity]],
+        ]);
+        $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
+        $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+        $return->fresh('items')->items->each(
+            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
+        );
+        return $return->fresh();
+    }
+
+    private function createExchange(array $context, ReturnRequest $return, int $quantity = 2): ExchangeRequest
     {
         return app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
             'notes' => 'Exchange request for blocking bug reproduction',
             'items' => [[
                 'product_variant_id' => $context['variant']->id,

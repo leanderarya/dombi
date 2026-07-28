@@ -24,7 +24,8 @@ class ExchangeWorkflowHardeningTest extends TestCase
     public function test_center_stock_decreases_when_exchange_is_shipped(): void
     {
         $context = $this->makeContext(centerStock: 10, exchangePrice: 30000);
-        $exchange = $this->createApprovedExchange($context, quantity: 2);
+        $return = $this->createReceivedReturn($context, quantity: 2, exchangeQuantity: 2);
+        $exchange = $this->createApprovedExchange($context, $return, quantity: 2);
 
         $this->actingAs($context['owner'])
             ->post(route('owner.exchanges.mark-shipped', $exchange))
@@ -51,7 +52,8 @@ class ExchangeWorkflowHardeningTest extends TestCase
     public function test_exchange_shipment_is_blocked_when_center_stock_is_insufficient(): void
     {
         $context = $this->makeContext(centerStock: 1, exchangePrice: 30000);
-        $exchange = $this->createApprovedExchange($context, quantity: 2);
+        $return = $this->createReceivedReturn($context, quantity: 2, exchangeQuantity: 2);
+        $exchange = $this->createApprovedExchange($context, $return, quantity: 2);
 
         $this->actingAs($context['owner'])
             ->post(route('owner.exchanges.mark-shipped', $exchange))
@@ -73,7 +75,8 @@ class ExchangeWorkflowHardeningTest extends TestCase
     public function test_confirm_received_is_idempotent_and_does_not_duplicate_stock(): void
     {
         $context = $this->makeContext(centerStock: 10, exchangePrice: 30000, outletStock: 5);
-        $exchange = $this->createShippedExchange($context, quantity: 3);
+        $return = $this->createReceivedReturn($context, quantity: 3, exchangeQuantity: 3);
+        $exchange = $this->createShippedExchange($context, $return, quantity: 3);
 
         $this->actingAs($context['outletUser'])
             ->post(route('outlet.exchanges.confirm-received', $exchange))
@@ -88,7 +91,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
             'status' => ExchangeRequest::STATUS_RECEIVED,
         ]);
 
-        $this->assertSame(8, (int) $context['exchangeInventory']->fresh()->current_stock);
+        $this->assertSame(5, (int) $context['exchangeInventory']->fresh()->current_stock);
 
         $this->assertSame(1, StockMovement::query()
             ->where('reference_type', ExchangeRequest::class)
@@ -101,7 +104,17 @@ class ExchangeWorkflowHardeningTest extends TestCase
     {
         $context = $this->makeContext(centerStock: 10, returnPrice: 175000, exchangePrice: 300000);
         $return = $this->createReceivedReturn($context, quantity: 2); // 350.000
-        $exchange = $this->createReceivedExchange($context, $return, quantity: 1); // 300.000
+        $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [[
+                'product_variant_id' => $context['returnVariant']->id,
+                'quantity' => 1,
+            ]],
+            'notes' => 'Exchange hardening test',
+        ]);
+        $exchange = app(ExchangeService::class)->approveRequest($exchange, $context['owner']);
+        $exchange = app(ExchangeService::class)->markShipped($exchange->fresh(), $context['owner']);
+        $exchange = app(ExchangeService::class)->confirmReceived($exchange->fresh(), $context['outletUser']);
 
         $this->actingAs($context['owner'])
             ->post(route('owner.exchanges.complete', $exchange))
@@ -120,7 +133,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $this->assertDatabaseHas('outlet_payables', [
             'outlet_id' => $context['outlet']->id,
             'type' => 'adjustment',
-            'amount' => 50000,
+            'amount' => 175000,
             'reference_type' => ExchangeRequest::class,
             'reference_id' => $exchange->id,
         ]);
@@ -130,16 +143,24 @@ class ExchangeWorkflowHardeningTest extends TestCase
     {
         $context = $this->makeContext(centerStock: 10, returnPrice: 150000, exchangePrice: 350000);
         $return = $this->createReceivedReturn($context, quantity: 2); // 300.000
-        $exchange = $this->createReceivedExchange($context, $return, quantity: 1); // 350.000
-
+        $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [[
+                'product_variant_id' => $context['returnVariant']->id,
+                'quantity' => 1,
+            ]],
+            'notes' => 'Exchange hardening test',
+        ]);
+        $exchange = app(ExchangeService::class)->approveRequest($exchange, $context['owner']);
+        $exchange = app(ExchangeService::class)->markShipped($exchange->fresh(), $context['owner']);
+        $exchange = app(ExchangeService::class)->confirmReceived($exchange->fresh(), $context['outletUser']);
         $this->actingAs($context['owner'])
             ->post(route('owner.exchanges.complete', $exchange))
             ->assertRedirect();
-
         $this->assertDatabaseHas('outlet_payables', [
             'outlet_id' => $context['outlet']->id,
             'type' => 'adjustment',
-            'amount' => -50000,
+            'amount' => 150000,
             'reference_type' => ExchangeRequest::class,
             'reference_id' => $exchange->id,
         ]);
@@ -149,7 +170,17 @@ class ExchangeWorkflowHardeningTest extends TestCase
     {
         $context = $this->makeContext(centerStock: 10, returnPrice: 175000, exchangePrice: 300000);
         $return = $this->createReceivedReturn($context, quantity: 2);
-        $exchange = $this->createReceivedExchange($context, $return, quantity: 1);
+        $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [[
+                'product_variant_id' => $context['returnVariant']->id,
+                'quantity' => 1,
+            ]],
+            'notes' => 'Exchange hardening test',
+        ]);
+        $exchange = app(ExchangeService::class)->approveRequest($exchange, $context['owner']);
+        $exchange = app(ExchangeService::class)->markShipped($exchange->fresh(), $context['owner']);
+        $exchange = app(ExchangeService::class)->confirmReceived($exchange->fresh(), $context['outletUser']);
 
         $this->actingAs($context['owner'])
             ->post(route('owner.exchanges.complete', $exchange))
@@ -301,9 +332,10 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $this->assertSame(ExchangeRequest::STATUS_SHIPPED, $result->status);
     }
 
-    private function createApprovedExchange(array $context, int $quantity): ExchangeRequest
+    private function createApprovedExchange(array $context, ReturnRequest $return, int $quantity): ExchangeRequest
     {
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
             'items' => [[
                 'product_variant_id' => $context['exchangeVariant']->id,
                 'quantity' => $quantity,
@@ -314,9 +346,9 @@ class ExchangeWorkflowHardeningTest extends TestCase
         return app(ExchangeService::class)->approveRequest($exchange, $context['owner']);
     }
 
-    private function createShippedExchange(array $context, int $quantity): ExchangeRequest
+    private function createShippedExchange(array $context, ReturnRequest $return, int $quantity): ExchangeRequest
     {
-        $exchange = $this->createApprovedExchange($context, $quantity);
+        $exchange = $this->createApprovedExchange($context, $return, $quantity);
 
         return app(ExchangeService::class)->markShipped($exchange->fresh(), $context['owner']);
     }
@@ -338,15 +370,22 @@ class ExchangeWorkflowHardeningTest extends TestCase
         return app(ExchangeService::class)->confirmReceived($exchange->fresh(), $context['outletUser']);
     }
 
-    private function createReceivedReturn(array $context, int $quantity): ReturnRequest
+    private function createReceivedReturn(array $context, int $quantity, ?int $exchangeQuantity = null): ReturnRequest
     {
+        $items = [[
+            'product_variant_id' => $context['returnVariant']->id,
+            'quantity' => $quantity,
+        ]];
+        if ($exchangeQuantity !== null) {
+            $items[] = [
+                'product_variant_id' => $context['exchangeVariant']->id,
+                'quantity' => $exchangeQuantity,
+            ];
+        }
         $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'reason' => 'slow_moving',
             'notes' => 'Return linked to exchange hardening test',
-            'items' => [[
-                'product_variant_id' => $context['returnVariant']->id,
-                'quantity' => $quantity,
-            ]],
+            'items' => $items,
         ]);
 
         $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
@@ -354,7 +393,9 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
 
         $return->fresh('items')->items->each(
-            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
+            fn ($i) => $i->product_variant_id === $context['returnVariant']->id
+                ? app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
+                : null
         );
 
         return $return->fresh();

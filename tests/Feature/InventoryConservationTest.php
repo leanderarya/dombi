@@ -88,15 +88,18 @@ class InventoryConservationTest extends TestCase
 
         $totalBefore = $this->totalInventoryAllVariants($ctx);
 
-        // Return 5 units of variant A
+        // Return 5 units of variant A, 8 units of exchange variant
         $return = app(ReturnService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'reason' => 'slow_moving',
-            'items' => [['product_variant_id' => $ctx['variant']->id, 'quantity' => 5]],
+            'items' => [
+                ['product_variant_id' => $ctx['variant']->id, 'quantity' => 5],
+                ['product_variant_id' => $ctx['exchangeVariant']->id, 'quantity' => 8],
+            ],
         ]);
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $ctx['owner']);
 
-        // Simpan return items ke pusat (storeItem menambah center stock + buat movement return_in)
+        // Simpan ALL return items ke pusat (storeItem menambah center stock + buat movement return_in)
         $return->fresh('items')->items->each(
             fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $ctx['owner'])
         );
@@ -121,14 +124,19 @@ class InventoryConservationTest extends TestCase
 
         $return = app(ReturnService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'reason' => 'slow_moving',
-            'items' => [['product_variant_id' => $ctx['variant']->id, 'quantity' => 3]],
+            'items' => [
+                ['product_variant_id' => $ctx['variant']->id, 'quantity' => 3],
+                ['product_variant_id' => $ctx['exchangeVariant']->id, 'quantity' => 5],
+            ],
         ]);
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $ctx['owner']);
 
         // Simpan return items ke pusat
         $return->fresh('items')->items->each(
-            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $ctx['owner'])
+            fn ($i) => $i->product_variant_id === $ctx['variant']->id
+                ? app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $ctx['owner'])
+                : null
         );
 
         $exchange = app(ExchangeService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
