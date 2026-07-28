@@ -25,7 +25,7 @@ export interface Product {
     center_stock: number;
     image: string | null;
     is_active: boolean;
-    stock_status?: 'available'|'low'|'out_of_stock';
+    stock_status?: 'available' | 'low' | 'out_of_stock';
     order_items_count?: number;
 }
 export interface ProductPricingRow {

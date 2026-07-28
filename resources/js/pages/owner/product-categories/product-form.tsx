@@ -17,11 +17,18 @@ interface ProductFormProps {
 
 type Mode = 'single' | 'bulk';
 
-export default function ProductForm({ category, editingProduct, onSuccess, onClose }: ProductFormProps) {
+export default function ProductForm({
+    category,
+    editingProduct,
+    onSuccess,
+    onClose,
+}: ProductFormProps) {
     const isEditing = !!editingProduct;
     const [mode, setMode] = useState<Mode>(isEditing ? 'single' : 'single');
     const [singleImageFile, setSingleImageFile] = useState<File | null>(null);
-    const [singleImageExisting, setSingleImageExisting] = useState<string | null>(editingProduct?.image ?? null);
+    const [singleImageExisting, setSingleImageExisting] = useState<
+        string | null
+    >(editingProduct?.image ?? null);
 
     // Single form using Inertia useForm
     const singleForm = useForm({
@@ -31,7 +38,9 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
         size: editingProduct?.size ?? '',
         sku: editingProduct?.sku ?? '',
         center_price: editingProduct ? String(editingProduct.center_price) : '',
-        selling_price: editingProduct ? String(editingProduct.selling_price) : '',
+        selling_price: editingProduct
+            ? String(editingProduct.selling_price)
+            : '',
         image: null as File | null,
         is_active: editingProduct?.is_active ?? true,
         product_category_id: category.id,
@@ -56,12 +65,12 @@ export default function ProductForm({ category, editingProduct, onSuccess, onClo
         const sp = Number(singleForm.data.selling_price);
 
         if (!Number.isFinite(cp) || !Number.isFinite(sp)) {
-return { amount: 0, pct: 0, valid: false };
-}
+            return { amount: 0, pct: 0, valid: false };
+        }
 
         if (cp <= 0) {
-return { amount: sp - cp, pct: 0, valid: true };
-}
+            return { amount: sp - cp, pct: 0, valid: true };
+        }
 
         return { amount: sp - cp, pct: ((sp - cp) / cp) * 100, valid: true };
     }, [singleForm.data.center_price, singleForm.data.selling_price]);
@@ -72,12 +81,12 @@ return { amount: sp - cp, pct: 0, valid: true };
         const sp = Number(bulkForm.data.selling_price);
 
         if (!Number.isFinite(cp) || !Number.isFinite(sp)) {
-return { amount: 0, pct: 0, valid: false };
-}
+            return { amount: 0, pct: 0, valid: false };
+        }
 
         if (cp <= 0) {
-return { amount: sp - cp, pct: 0, valid: true };
-}
+            return { amount: sp - cp, pct: 0, valid: true };
+        }
 
         return { amount: sp - cp, pct: ((sp - cp) / cp) * 100, valid: true };
     }, [bulkForm.data.center_price, bulkForm.data.selling_price]);
@@ -110,10 +119,13 @@ return { amount: sp - cp, pct: 0, valid: true };
         const val = flavorInput.trim();
 
         if (!val) {
-return;
-}
+            return;
+        }
 
-        const parts = val.split(/[,\n]/).map((s) => s.trim()).filter(Boolean);
+        const parts = val
+            .split(/[,\n]/)
+            .map((s) => s.trim())
+            .filter(Boolean);
         const newFlavors = [...bulkForm.data.flavors];
 
         for (const p of parts) {
@@ -133,7 +145,9 @@ return;
         );
     };
 
-    const handleFlavorInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleFlavorInputKeyDown = (
+        e: React.KeyboardEvent<HTMLInputElement>,
+    ) => {
         if (e.key === 'Enter' || e.key === ',') {
             e.preventDefault();
             addFlavorChip();
@@ -151,7 +165,10 @@ return;
         e.preventDefault();
 
         // client validation
-        if (Number(singleForm.data.selling_price) < Number(singleForm.data.center_price)) {
+        if (
+            Number(singleForm.data.selling_price) <
+            Number(singleForm.data.center_price)
+        ) {
             singleForm.setError('selling_price', 'Harga jual harus >= HPP');
 
             return;
@@ -162,28 +179,28 @@ return;
             fd.append('name', singleForm.data.name);
 
             if (singleForm.data.description) {
-fd.append('description', singleForm.data.description);
-}
+                fd.append('description', singleForm.data.description);
+            }
 
             if (singleForm.data.flavor) {
-fd.append('flavor', singleForm.data.flavor);
-}
+                fd.append('flavor', singleForm.data.flavor);
+            }
 
             if (singleForm.data.size) {
-fd.append('size', singleForm.data.size);
-}
+                fd.append('size', singleForm.data.size);
+            }
 
             if (singleForm.data.sku) {
-fd.append('sku', singleForm.data.sku);
-}
+                fd.append('sku', singleForm.data.sku);
+            }
 
             fd.append('center_price', singleForm.data.center_price);
             fd.append('selling_price', singleForm.data.selling_price);
             fd.append('is_active', singleForm.data.is_active ? '1' : '0');
 
             if (singleImageFile) {
-fd.append('image', singleImageFile);
-}
+                fd.append('image', singleImageFile);
+            }
 
             fd.append('_method', 'PUT');
 
@@ -206,20 +223,20 @@ fd.append('image', singleImageFile);
             fd.append('name', singleForm.data.name);
 
             if (singleForm.data.description) {
-fd.append('description', singleForm.data.description);
-}
+                fd.append('description', singleForm.data.description);
+            }
 
             if (singleForm.data.flavor) {
-fd.append('flavor', singleForm.data.flavor);
-}
+                fd.append('flavor', singleForm.data.flavor);
+            }
 
             if (singleForm.data.size) {
-fd.append('size', singleForm.data.size);
-}
+                fd.append('size', singleForm.data.size);
+            }
 
             if (singleForm.data.sku) {
-fd.append('sku', singleForm.data.sku);
-}
+                fd.append('sku', singleForm.data.sku);
+            }
 
             fd.append('center_price', singleForm.data.center_price);
             fd.append('selling_price', singleForm.data.selling_price);
@@ -227,36 +244,40 @@ fd.append('sku', singleForm.data.sku);
             fd.append('product_category_id', String(category.id));
 
             if (singleImageFile) {
-fd.append('image', singleImageFile);
-}
+                fd.append('image', singleImageFile);
+            }
 
-            router.post(`/owner/product-categories/${category.id}/products`, fd, {
-                forceFormData: true,
-                preserveScroll: true,
-                onSuccess: (page: any) => {
-                    const flash = page?.props?.flash ?? {};
-                    const newId = flash.new_product_id;
-                    const newIds = flash.new_product_ids;
+            router.post(
+                `/owner/product-categories/${category.id}/products`,
+                fd,
+                {
+                    forceFormData: true,
+                    preserveScroll: true,
+                    onSuccess: (page: any) => {
+                        const flash = page?.props?.flash ?? {};
+                        const newId = flash.new_product_id;
+                        const newIds = flash.new_product_ids;
 
-                    if (newIds && Array.isArray(newIds)) {
-                        onSuccess?.(newIds);
-                    } else if (newId) {
-                        onSuccess?.([newId]);
-                    } else {
-                        onSuccess?.([]);
-                    }
+                        if (newIds && Array.isArray(newIds)) {
+                            onSuccess?.(newIds);
+                        } else if (newId) {
+                            onSuccess?.([newId]);
+                        } else {
+                            onSuccess?.([]);
+                        }
 
-                    onClose?.();
-                    singleForm.reset();
-                    setSingleImageFile(null);
-                    setSingleImageExisting(null);
+                        onClose?.();
+                        singleForm.reset();
+                        setSingleImageFile(null);
+                        setSingleImageExisting(null);
+                    },
+                    onError: (errors) => {
+                        Object.entries(errors).forEach(([k, v]) => {
+                            singleForm.setError(k as any, v as string);
+                        });
+                    },
                 },
-                onError: (errors) => {
-                    Object.entries(errors).forEach(([k, v]) => {
-                        singleForm.setError(k as any, v as string);
-                    });
-                },
-            });
+            );
         }
     };
 
@@ -270,7 +291,10 @@ fd.append('image', singleImageFile);
             return;
         }
 
-        if (Number(bulkForm.data.selling_price) < Number(bulkForm.data.center_price)) {
+        if (
+            Number(bulkForm.data.selling_price) <
+            Number(bulkForm.data.center_price)
+        ) {
             setBulkErrors({ selling_price: 'Harga jual harus >= HPP' });
 
             return;
@@ -321,11 +345,15 @@ fd.append('image', singleImageFile);
                     <div className="flex items-center gap-2">
                         <Package className="h-4 w-4 text-primary" />
                         <h3 className="text-[13px] font-semibold tracking-wide text-text uppercase">
-                            {isEditing ? `Edit Produk - ${editingProduct?.name}` : `Tambah Produk ke ${category.name}`}
+                            {isEditing
+                                ? `Edit Produk - ${editingProduct?.name}`
+                                : `Tambah Produk ke ${category.name}`}
                         </h3>
                     </div>
                     {category.brand && (
-                        <p className="mt-1 text-xs text-text-muted">Brand: {category.brand}</p>
+                        <p className="mt-1 text-xs text-text-muted">
+                            Brand: {category.brand}
+                        </p>
                     )}
                 </div>
                 {isEditing && (
@@ -337,18 +365,18 @@ fd.append('image', singleImageFile);
 
             {/* Mode toggle - hidden when editing */}
             {!isEditing && (
-                <div className="flex items-center gap-1 rounded-full bg-surface-muted p-1 ring-1 ring-border/30 w-fit">
+                <div className="flex w-fit items-center gap-1 rounded-full bg-surface-muted p-1 ring-1 ring-border/30">
                     <button
                         type="button"
                         onClick={() => setMode('single')}
-                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${mode === 'single' ? 'bg-surface shadow-sm text-text ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
+                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${mode === 'single' ? 'bg-surface text-text shadow-sm ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
                     >
                         <Package className="h-3.5 w-3.5" /> Single
                     </button>
                     <button
                         type="button"
                         onClick={() => setMode('bulk')}
-                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${mode === 'bulk' ? 'bg-surface shadow-sm text-text ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
+                        className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${mode === 'bulk' ? 'bg-surface text-text shadow-sm ring-1 ring-border' : 'text-text-muted hover:text-text'}`}
                     >
                         <Layers className="h-3.5 w-3.5" /> Multi Rasa
                     </button>
@@ -363,7 +391,9 @@ fd.append('image', singleImageFile);
                             <Input
                                 label="Nama Produk *"
                                 value={singleForm.data.name}
-                                onChange={(e) => singleForm.setData('name', e.target.value)}
+                                onChange={(e) =>
+                                    singleForm.setData('name', e.target.value)
+                                }
                                 required
                                 placeholder="Original 200ml"
                                 error={singleForm.errors.name}
@@ -373,24 +403,34 @@ fd.append('image', singleImageFile);
                             <Input
                                 label="SKU (auto jika kosong)"
                                 value={singleForm.data.sku}
-                                onChange={(e) => singleForm.setData('sku', e.target.value)}
+                                onChange={(e) =>
+                                    singleForm.setData('sku', e.target.value)
+                                }
                                 placeholder="AUTO"
                                 error={singleForm.errors.sku}
                             />
                             <p className="flex items-center gap-1 text-[10px] text-text-subtle">
                                 <Sparkles className="h-3 w-3" />
-                                Kosongkan untuk auto-generate. Contoh: {generateSkuHint(singleForm.data.flavor, singleForm.data.size)}
+                                Kosongkan untuk auto-generate. Contoh:{' '}
+                                {generateSkuHint(
+                                    singleForm.data.flavor,
+                                    singleForm.data.size,
+                                )}
                             </p>
                         </div>
                         <div className="space-y-1">
                             <Input
                                 label="Rasa"
                                 value={singleForm.data.flavor}
-                                onChange={(e) => singleForm.setData('flavor', e.target.value)}
+                                onChange={(e) =>
+                                    singleForm.setData('flavor', e.target.value)
+                                }
                                 placeholder="Coklat, Vanilla, Stroberi"
                                 error={singleForm.errors.flavor}
                             />
-                            <p className="text-[10px] text-text-subtle">Optional - untuk varian rasa</p>
+                            <p className="text-[10px] text-text-subtle">
+                                Optional - untuk varian rasa
+                            </p>
                         </div>
                     </div>
 
@@ -398,7 +438,9 @@ fd.append('image', singleImageFile);
                         <Input
                             label="Ukuran"
                             value={singleForm.data.size}
-                            onChange={(e) => singleForm.setData('size', e.target.value)}
+                            onChange={(e) =>
+                                singleForm.setData('size', e.target.value)
+                            }
                             placeholder="200ml, 500ml, 1kg"
                             error={singleForm.errors.size}
                         />
@@ -407,13 +449,23 @@ fd.append('image', singleImageFile);
                                 <TrendingUp className="h-3 w-3" /> Live Margin
                             </div>
                             <div className="flex items-baseline gap-2">
-                                <span className={`text-sm font-bold tabular-nums ${singleMargin.amount < 0 ? 'text-red-600' : singleMargin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}>
-                                    {singleMargin.valid ? formatCurrency(singleMargin.amount) : '-'}
+                                <span
+                                    className={`text-sm font-bold tabular-nums ${singleMargin.amount < 0 ? 'text-red-600' : singleMargin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}
+                                >
+                                    {singleMargin.valid
+                                        ? formatCurrency(singleMargin.amount)
+                                        : '-'}
                                 </span>
-                                <span className={`text-xs tabular-nums ${singleMargin.amount < 0 ? 'text-red-600' : singleMargin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}>
-                                    {singleMargin.valid ? `${singleMargin.pct.toFixed(1)}%` : '-'}
+                                <span
+                                    className={`text-xs tabular-nums ${singleMargin.amount < 0 ? 'text-red-600' : singleMargin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}
+                                >
+                                    {singleMargin.valid
+                                        ? `${singleMargin.pct.toFixed(1)}%`
+                                        : '-'}
                                 </span>
-                                <span className="text-[10px] text-text-subtle">margin = jual - HPP, % = margin/HPP*100</span>
+                                <span className="text-[10px] text-text-subtle">
+                                    margin = jual - HPP, % = margin/HPP*100
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -424,7 +476,12 @@ fd.append('image', singleImageFile);
                             type="number"
                             min={0}
                             value={singleForm.data.center_price}
-                            onChange={(e) => singleForm.setData('center_price', e.target.value)}
+                            onChange={(e) =>
+                                singleForm.setData(
+                                    'center_price',
+                                    e.target.value,
+                                )
+                            }
                             required
                             placeholder="30000"
                             error={singleForm.errors.center_price}
@@ -434,66 +491,110 @@ fd.append('image', singleImageFile);
                             type="number"
                             min={0}
                             value={singleForm.data.selling_price}
-                            onChange={(e) => singleForm.setData('selling_price', e.target.value)}
+                            onChange={(e) =>
+                                singleForm.setData(
+                                    'selling_price',
+                                    e.target.value,
+                                )
+                            }
                             required
                             placeholder="40000"
-                            error={singleForm.errors.selling_price || (Number(singleForm.data.selling_price) < Number(singleForm.data.center_price) && singleForm.data.selling_price !== '' && singleForm.data.center_price !== '' ? 'Harus >= HPP' : undefined)}
+                            error={
+                                singleForm.errors.selling_price ||
+                                (Number(singleForm.data.selling_price) <
+                                    Number(singleForm.data.center_price) &&
+                                singleForm.data.selling_price !== '' &&
+                                singleForm.data.center_price !== ''
+                                    ? 'Harus >= HPP'
+                                    : undefined)
+                            }
                         />
                     </div>
 
                     <Textarea
                         label="Deskripsi"
                         value={singleForm.data.description}
-                        onChange={(e) => singleForm.setData('description', e.target.value)}
+                        onChange={(e) =>
+                            singleForm.setData('description', e.target.value)
+                        }
                         rows={2}
                         placeholder="Deskripsi produk (opsional)"
                         error={singleForm.errors.description}
                     />
 
                     <ImageUploadField
-                        value={singleImageFile ? singleImageFile : singleImageExisting}
+                        value={
+                            singleImageFile
+                                ? singleImageFile
+                                : singleImageExisting
+                        }
                         onChange={(f) => {
                             setSingleImageFile(f);
                             singleForm.setData('image', f);
 
                             if (f === null) {
-setSingleImageExisting(null);
-}
+                                setSingleImageExisting(null);
+                            }
                         }}
                         label="Foto Produk"
                     />
-                    {singleForm.errors.image && <p className="text-xs text-red-600">{singleForm.errors.image}</p>}
+                    {singleForm.errors.image && (
+                        <p className="text-xs text-red-600">
+                            {singleForm.errors.image}
+                        </p>
+                    )}
 
                     <label className="flex items-center gap-2 rounded-lg bg-surface-muted/40 px-3 py-2 ring-1 ring-border/20">
                         <input
                             type="checkbox"
                             checked={singleForm.data.is_active}
-                            onChange={(e) => singleForm.setData('is_active', e.target.checked)}
+                            onChange={(e) =>
+                                singleForm.setData(
+                                    'is_active',
+                                    e.target.checked,
+                                )
+                            }
                             className="rounded border-zinc-300 text-primary focus:ring-primary"
                         />
-                        <span className="text-sm font-medium text-text">Produk Aktif</span>
-                        <span className="ml-auto text-[11px] text-text-subtle">Nonaktifkan untuk sembunyikan dari outlet</span>
+                        <span className="text-sm font-medium text-text">
+                            Produk Aktif
+                        </span>
+                        <span className="ml-auto text-[11px] text-text-subtle">
+                            Nonaktifkan untuk sembunyikan dari outlet
+                        </span>
                     </label>
 
                     <div className="flex justify-end gap-2 pt-1">
-                        <Button type="button" variant="outline" onClick={() => onClose?.()}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onClose?.()}
+                        >
                             Batal
                         </Button>
                         <Button type="submit" disabled={singleForm.processing}>
-                            {singleForm.processing ? 'Menyimpan...' : isEditing ? 'Update Produk' : 'Simpan Produk'}
+                            {singleForm.processing
+                                ? 'Menyimpan...'
+                                : isEditing
+                                  ? 'Update Produk'
+                                  : 'Simpan Produk'}
                         </Button>
                     </div>
                 </form>
             ) : (
                 <form onSubmit={handleBulkSubmit} className="space-y-4">
                     {/* Bulk fields */}
-                    <div className="rounded-xl bg-surface border border-border/20 p-3 space-y-3">
-                        <h4 className="text-xs font-semibold tracking-wide text-text-muted uppercase">Konfigurasi Bersama</h4>
+                    <div className="space-y-3 rounded-xl border border-border/20 bg-surface p-3">
+                        <h4 className="text-xs font-semibold tracking-wide text-text-muted uppercase">
+                            Konfigurasi Bersama
+                        </h4>
                         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                             <Input
                                 label="Ukuran (shared)"
                                 value={bulkForm.data.size}
-                                onChange={(e) => bulkForm.setData('size', e.target.value)}
+                                onChange={(e) =>
+                                    bulkForm.setData('size', e.target.value)
+                                }
                                 placeholder="200ml"
                                 error={bulkForm.errors.size || bulkErrors.size}
                             />
@@ -502,37 +603,64 @@ setSingleImageExisting(null);
                                 type="number"
                                 min={0}
                                 value={bulkForm.data.center_price}
-                                onChange={(e) => bulkForm.setData('center_price', e.target.value)}
+                                onChange={(e) =>
+                                    bulkForm.setData(
+                                        'center_price',
+                                        e.target.value,
+                                    )
+                                }
                                 required
                                 placeholder="30000"
-                                error={bulkForm.errors.center_price || bulkErrors.center_price}
+                                error={
+                                    bulkForm.errors.center_price ||
+                                    bulkErrors.center_price
+                                }
                             />
                             <Input
                                 label="Harga Jual (Rp) *"
                                 type="number"
                                 min={0}
                                 value={bulkForm.data.selling_price}
-                                onChange={(e) => bulkForm.setData('selling_price', e.target.value)}
+                                onChange={(e) =>
+                                    bulkForm.setData(
+                                        'selling_price',
+                                        e.target.value,
+                                    )
+                                }
                                 required
                                 placeholder="40000"
-                                error={bulkForm.errors.selling_price || bulkErrors.selling_price}
+                                error={
+                                    bulkForm.errors.selling_price ||
+                                    bulkErrors.selling_price
+                                }
                             />
                         </div>
 
-                        <div className="rounded-lg bg-emerald-50/60 p-2.5 ring-1 ring-emerald-200 flex items-center justify-between">
+                        <div className="flex items-center justify-between rounded-lg bg-emerald-50/60 p-2.5 ring-1 ring-emerald-200">
                             <div>
-                                <div className="text-[11px] font-semibold text-emerald-700 flex items-center gap-1">
-                                    <TrendingUp className="h-3 w-3" /> Margin & Jumlah
+                                <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                                    <TrendingUp className="h-3 w-3" /> Margin &
+                                    Jumlah
                                 </div>
-                                <div className="mt-0.5 text-[11px] text-text-subtle">Live kalkulasi untuk semua varian</div>
+                                <div className="mt-0.5 text-[11px] text-text-subtle">
+                                    Live kalkulasi untuk semua varian
+                                </div>
                             </div>
                             <div className="text-right">
                                 <div className="flex items-center justify-end gap-2">
-                                    <span className={`text-sm font-bold tabular-nums ${bulkMargin.amount < 0 ? 'text-red-600' : bulkMargin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}>
-                                        {bulkMargin.valid ? formatCurrency(bulkMargin.amount) : '-'}
+                                    <span
+                                        className={`text-sm font-bold tabular-nums ${bulkMargin.amount < 0 ? 'text-red-600' : bulkMargin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}
+                                    >
+                                        {bulkMargin.valid
+                                            ? formatCurrency(bulkMargin.amount)
+                                            : '-'}
                                     </span>
-                                    <span className={`rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${bulkMargin.pct < 20 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                        {bulkMargin.valid ? `${bulkMargin.pct.toFixed(1)}%` : '-'}
+                                    <span
+                                        className={`rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${bulkMargin.pct < 20 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'}`}
+                                    >
+                                        {bulkMargin.valid
+                                            ? `${bulkMargin.pct.toFixed(1)}%`
+                                            : '-'}
                                     </span>
                                 </div>
                                 <div className="mt-1 text-xs font-medium text-text">
@@ -544,10 +672,15 @@ setSingleImageExisting(null);
                         <Textarea
                             label="Deskripsi (shared, opsional)"
                             value={bulkForm.data.description}
-                            onChange={(e) => bulkForm.setData('description', e.target.value)}
+                            onChange={(e) =>
+                                bulkForm.setData('description', e.target.value)
+                            }
                             rows={2}
                             placeholder="Deskripsi umum untuk semua rasa (opsional)"
-                            error={bulkForm.errors.description || bulkErrors.description}
+                            error={
+                                bulkForm.errors.description ||
+                                bulkErrors.description
+                            }
                         />
                     </div>
 
@@ -555,20 +688,30 @@ setSingleImageExisting(null);
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-text">
                             Daftar Rasa <span className="text-red-500">*</span>
-                            <span className="ml-2 text-[11px] font-normal text-text-subtle">Ketik + Enter atau koma untuk tambah chip</span>
+                            <span className="ml-2 text-[11px] font-normal text-text-subtle">
+                                Ketik + Enter atau koma untuk tambah chip
+                            </span>
                         </label>
                         <div className="flex gap-2">
                             <div className="relative flex-1">
                                 <Input
                                     value={flavorInput}
-                                    onChange={(e) => setFlavorInput(e.target.value)}
+                                    onChange={(e) =>
+                                        setFlavorInput(e.target.value)
+                                    }
                                     onKeyDown={handleFlavorInputKeyDown}
                                     placeholder="Coklat, Vanilla, lalu Enter"
                                     className="pr-10"
                                     error={bulkErrors.flavors}
                                 />
                             </div>
-                            <Button type="button" variant="outline" onClick={addFlavorChip} size="sm" className="h-9">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={addFlavorChip}
+                                size="sm"
+                                className="h-9"
+                            >
                                 <Plus className="h-4 w-4" /> Tambah
                             </Button>
                         </div>
@@ -582,7 +725,11 @@ setSingleImageExisting(null);
                                         className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary ring-1 ring-primary/20"
                                     >
                                         {f}
-                                        <button type="button" onClick={() => removeFlavorChip(f)} className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20">
+                                        <button
+                                            type="button"
+                                            onClick={() => removeFlavorChip(f)}
+                                            className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20"
+                                        >
                                             <X className="h-3 w-3" />
                                         </button>
                                     </span>
@@ -592,14 +739,21 @@ setSingleImageExisting(null);
 
                         {/* Alternative textarea for comma separated */}
                         <div className="space-y-1">
-                            <label className="text-[11px] font-medium text-text-muted">Atau paste daftar rasa dipisah koma / baris baru (auto dedup):</label>
+                            <label className="text-[11px] font-medium text-text-muted">
+                                Atau paste daftar rasa dipisah koma / baris baru
+                                (auto dedup):
+                            </label>
                             <Textarea
                                 value={bulkFlavorsText}
-                                onChange={(e) => setBulkFlavorsText(e.target.value)}
+                                onChange={(e) =>
+                                    setBulkFlavorsText(e.target.value)
+                                }
                                 placeholder="Coklat, Vanilla&#10;Stroberi&#10;Matcha, Taro"
                                 rows={2}
                             />
-                            <p className="text-[10px] text-text-subtle">Total unik: {parsedFlavors.length} rasa</p>
+                            <p className="text-[10px] text-text-subtle">
+                                Total unik: {parsedFlavors.length} rasa
+                            </p>
                         </div>
                     </div>
 
@@ -610,35 +764,60 @@ setSingleImageExisting(null);
                                 Preview Produk ({parsedFlavors.length})
                             </h4>
                             <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-medium text-text-muted">
-                                {category.name} + Rasa + {bulkForm.data.size || 'size'}
+                                {category.name} + Rasa +{' '}
+                                {bulkForm.data.size || 'size'}
                             </span>
                         </div>
-                        <div className="max-h-48 overflow-y-auto rounded-lg border border-border/20 divide-y divide-border/30 bg-surface">
+                        <div className="max-h-48 divide-y divide-border/30 overflow-y-auto rounded-lg border border-border/20 bg-surface">
                             {parsedFlavors.length === 0 ? (
-                                <div className="p-4 text-center text-xs text-text-subtle">Belum ada rasa - tambah minimal 1</div>
+                                <div className="p-4 text-center text-xs text-text-subtle">
+                                    Belum ada rasa - tambah minimal 1
+                                </div>
                             ) : (
                                 parsedFlavors.map((flavor, idx) => {
-                                    const name = `${flavor} ${bulkForm.data.size}`.trim();
-                                    const skuPreview = generateSkuHint(flavor, bulkForm.data.size);
+                                    const name =
+                                        `${flavor} ${bulkForm.data.size}`.trim();
+                                    const skuPreview = generateSkuHint(
+                                        flavor,
+                                        bulkForm.data.size,
+                                    );
 
                                     return (
-                                        <div key={`${flavor}-${idx}`} className="flex items-center justify-between gap-3 px-3 py-2">
+                                        <div
+                                            key={`${flavor}-${idx}`}
+                                            className="flex items-center justify-between gap-3 px-3 py-2"
+                                        >
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex items-center gap-2">
                                                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted">
                                                         {idx + 1}
                                                     </span>
-                                                    <span className="truncate text-sm font-medium text-text">{name}</span>
+                                                    <span className="truncate text-sm font-medium text-text">
+                                                        {name}
+                                                    </span>
                                                 </div>
-                                                <div className="ml-7 mt-0.5 flex items-center gap-2 text-[10px] text-text-subtle">
+                                                <div className="mt-0.5 ml-7 flex items-center gap-2 text-[10px] text-text-subtle">
                                                     <span>Rasa: {flavor}</span>
                                                     <span>•</span>
-                                                    <span className="font-mono">{skuPreview}</span>
+                                                    <span className="font-mono">
+                                                        {skuPreview}
+                                                    </span>
                                                 </div>
                                             </div>
                                             <div className="text-right tabular-nums">
-                                                <div className="text-xs font-semibold text-text">{formatCurrency(bulkForm.data.selling_price || 0)}</div>
-                                                <div className="text-[10px] text-text-subtle">HPP {formatCurrency(bulkForm.data.center_price || 0)}</div>
+                                                <div className="text-xs font-semibold text-text">
+                                                    {formatCurrency(
+                                                        bulkForm.data
+                                                            .selling_price || 0,
+                                                    )}
+                                                </div>
+                                                <div className="text-[10px] text-text-subtle">
+                                                    HPP{' '}
+                                                    {formatCurrency(
+                                                        bulkForm.data
+                                                            .center_price || 0,
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -647,15 +826,35 @@ setSingleImageExisting(null);
                         </div>
                     </div>
 
-                    {bulkErrors.flavors && <p className="text-xs text-red-600">{bulkErrors.flavors}</p>}
-                    {bulkErrors.selling_price && <p className="text-xs text-red-600">{bulkErrors.selling_price}</p>}
+                    {bulkErrors.flavors && (
+                        <p className="text-xs text-red-600">
+                            {bulkErrors.flavors}
+                        </p>
+                    )}
+                    {bulkErrors.selling_price && (
+                        <p className="text-xs text-red-600">
+                            {bulkErrors.selling_price}
+                        </p>
+                    )}
 
                     <div className="flex justify-end gap-2 pt-1">
-                        <Button type="button" variant="outline" onClick={() => onClose?.()}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onClose?.()}
+                        >
                             Batal
                         </Button>
-                        <Button type="submit" disabled={bulkForm.processing || parsedFlavors.length === 0}>
-                            {bulkForm.processing ? 'Membuat...' : `Buat ${parsedFlavors.length} Produk`}
+                        <Button
+                            type="submit"
+                            disabled={
+                                bulkForm.processing ||
+                                parsedFlavors.length === 0
+                            }
+                        >
+                            {bulkForm.processing
+                                ? 'Membuat...'
+                                : `Buat ${parsedFlavors.length} Produk`}
                         </Button>
                     </div>
                 </form>
@@ -664,9 +863,14 @@ setSingleImageExisting(null);
             {/* Validation summary */}
             {(singleForm.hasErrors || Object.keys(bulkErrors).length > 0) && (
                 <div className="rounded-lg bg-red-50 p-2.5 ring-1 ring-red-200">
-                    <p className="text-xs font-semibold text-red-700">Periksa kembali isian form:</p>
+                    <p className="text-xs font-semibold text-red-700">
+                        Periksa kembali isian form:
+                    </p>
                     <ul className="mt-1 list-disc pl-4 text-[11px] text-red-600">
-                        {Object.entries({ ...singleForm.errors, ...(mode === 'bulk' ? bulkErrors : {}) }).map(([k, v]) => (
+                        {Object.entries({
+                            ...singleForm.errors,
+                            ...(mode === 'bulk' ? bulkErrors : {}),
+                        }).map(([k, v]) => (
                             <li key={k}>
                                 {k}: {String(v)}
                             </li>

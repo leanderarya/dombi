@@ -169,11 +169,7 @@ class FavoritesStore {
 
             if (res.ok) {
                 const data = await res.json();
-                const ids = (
-                    data.product_ids ??
-                    data.variant_ids ??
-                    []
-                ).filter(
+                const ids = (data.product_ids ?? data.variant_ids ?? []).filter(
                     (id: unknown): id is number => typeof id === 'number',
                 );
                 this.favorites = new Set(ids);
@@ -206,11 +202,7 @@ class FavoritesStore {
 
             if (res.ok) {
                 const data = await res.json();
-                const ids = (
-                    data.product_ids ??
-                    data.variant_ids ??
-                    []
-                ).filter(
+                const ids = (data.product_ids ?? data.variant_ids ?? []).filter(
                     (id: unknown): id is number => typeof id === 'number',
                 );
                 this.favorites = new Set(ids);

@@ -26,9 +26,7 @@ export function GlobalPriceModal({
 }) {
     const row = product ?? variant!;
     const [centerPrice, setCenterPrice] = useState(String(row.center_price));
-    const [sellingPrice, setSellingPrice] = useState(
-        String(row.selling_price),
-    );
+    const [sellingPrice, setSellingPrice] = useState(String(row.selling_price));
     const [saving, setSaving] = useState(false);
 
     const margin =

@@ -20,8 +20,8 @@ export default function ProductImage({
 
     const resolve = (p: string | null): string | null => {
         if (!p) {
-return null;
-}
+            return null;
+        }
 
         return p.startsWith('http') ? p : `/storage/${p}`;
     };

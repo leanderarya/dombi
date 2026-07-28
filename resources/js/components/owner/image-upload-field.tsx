@@ -85,7 +85,8 @@ export default function ImageUploadField({
                         alt="Existing"
                         className="h-16 w-16 rounded object-cover ring-1 ring-slate-200"
                         onError={(ev) => {
-                            (ev.target as HTMLImageElement).style.display = 'none';
+                            (ev.target as HTMLImageElement).style.display =
+                                'none';
                         }}
                     />
                 ) : null}
