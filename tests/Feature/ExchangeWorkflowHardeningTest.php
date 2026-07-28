@@ -262,6 +262,45 @@ class ExchangeWorkflowHardeningTest extends TestCase
         ]);
     }
 
+    public function test_mark_shipped_fails_when_return_not_received_at_center(): void
+    {
+        $context = $this->makeContext();
+        $return = $this->createReceivedReturn($context, quantity: 2);
+
+        $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+        ]);
+        $exchange = app(ExchangeService::class)->approveRequest($exchange, $context['owner']);
+
+        // revert return status so guard triggers
+        $return->fresh()->update(['status' => ReturnRequest::STATUS_APPROVED]);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        app(ExchangeService::class)->markShipped($exchange->fresh(), $context['owner']);
+    }
+
+    public function test_mark_shipped_succeeds_when_return_is_completed(): void
+    {
+        $context = $this->makeContext();
+        $return = $this->createReceivedReturn($context, quantity: 2);
+
+        // Create exchange while return is received_at_center
+        $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+        ]);
+        $exchange = app(ExchangeService::class)->approveRequest($exchange, $context['owner']);
+
+        // Complete the return before shipping
+        app(ReturnService::class)->completeReturn($return->fresh('items'), $context['owner'], notes: 'completed');
+
+        $result = app(ExchangeService::class)->markShipped($exchange->fresh(), $context['owner']);
+
+        $this->assertSame(ExchangeRequest::STATUS_SHIPPED, $result->status);
+    }
+
     private function createApprovedExchange(array $context, int $quantity): ExchangeRequest
     {
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
@@ -314,7 +353,9 @@ class ExchangeWorkflowHardeningTest extends TestCase
 
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
 
-        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
+        $return->fresh('items')->items->each(
+            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
+        );
 
         return $return->fresh();
     }

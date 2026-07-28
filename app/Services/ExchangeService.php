@@ -224,6 +224,17 @@ class ExchangeService
                 ]);
             }
 
+            // Guard: return must be received at center (or completed)
+            $exchange->loadMissing('returnRequest');
+            if ($exchange->returnRequest) {
+                $returnStatus = $exchange->returnRequest->status;
+                if (! in_array($returnStatus, [ReturnRequest::STATUS_RECEIVED_AT_CENTER, ReturnRequest::STATUS_COMPLETED], true)) {
+                    throw ValidationException::withMessages([
+                        'return' => ['Return terkait harus sudah diterima di pusat sebelum pengiriman.'],
+                    ]);
+                }
+            }
+
             foreach ($exchange->items as $item) {
                 $this->deductCenterInventory($exchange, $item->product_variant_id, $item->quantity, $owner->id);
             }
