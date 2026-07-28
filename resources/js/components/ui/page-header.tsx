@@ -27,7 +27,7 @@ export default function PageHeader({ title, subtitle, backHref, right, below, tr
                             <ChevronLeft className="h-5 w-5" />
                         </Link>
                     )}
-                    {onMenuClick && (
+                    {!backHref && onMenuClick && (
                         <button
                             type="button"
                             onClick={onMenuClick}

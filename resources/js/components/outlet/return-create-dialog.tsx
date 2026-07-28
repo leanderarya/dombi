@@ -297,14 +297,21 @@ export default function ReturnCreateDialog({
                                                         type="number"
                                                         min={1}
                                                         max={v.available_stock}
-                                                        value={selectedVariants.get(v.id) ?? 1}
+                                                        value={
+                                                            selectedVariants.get(
+                                                                v.id,
+                                                            ) ?? 1
+                                                        }
                                                         onChange={(e) =>
                                                             updateQuantity(
                                                                 v.id,
-                                                                Number(e.target.value),
+                                                                Number(
+                                                                    e.target
+                                                                        .value,
+                                                                ),
                                                             )
                                                         }
-                                                        className="w-14 text-center text-sm font-bold tabular-nums [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                        className="w-14 [appearance:textfield] text-center text-sm font-bold tabular-nums [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                                     />
                                                     <button
                                                         type="button"
