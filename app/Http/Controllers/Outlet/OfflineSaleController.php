@@ -6,8 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\OfflineSale;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
-use App\Models\ProductVariant;
-use App\Models\Settlement;
+use App\Models\Product;
 use App\Models\StockMovement;
 use App\Services\SettlementGeneratorService;
 use Carbon\Carbon;
@@ -26,30 +25,31 @@ class OfflineSaleController extends Controller
         abort_unless($outlet, 403);
 
         $sales = OfflineSale::where('outlet_id', $outlet->id)
-            ->with(['variant' => function ($q) {
-                $q->select('id', 'product_family_id', 'name')
-                    ->with('family:id,name');
+            ->with(['product' => function ($q) {
+                $q->select('id', 'product_category_id', 'name')
+                    ->with('category:id,name');
             }])
             ->latest()
             ->paginate(20);
 
-        $variants = OutletInventory::where('outlet_id', $outlet->id)
+        $products = OutletInventory::where('outlet_id', $outlet->id)
             ->where('current_stock', '>', 0)
-            ->with(['variant' => function ($q) {
-                $q->select('id', 'product_family_id', 'name', 'center_price')
-                    ->with('family:id,name');
+            ->with(['product' => function ($q) {
+                $q->select('id', 'product_category_id', 'name', 'center_price')
+                    ->with('category:id,name');
             }])
             ->get()
             ->map(fn ($inv) => [
-                'id' => $inv->variant->id,
-                'name' => $inv->variant->family->name.' - '.$inv->variant->name,
-                'center_price' => (float) $inv->variant->center_price,
+                'id' => $inv->product->id,
+                'name' => $inv->product->category->name.' - '.$inv->product->name,
+                'center_price' => (float) $inv->product->center_price,
                 'stock' => $inv->current_stock,
             ]);
 
         return Inertia::render('outlet/offline-sales/index', [
             'sales' => $sales,
-            'variants' => $variants,
+            'variants' => $products, // backward compat key
+            'products' => $products,
         ]);
     }
 
@@ -59,17 +59,20 @@ class OfflineSaleController extends Controller
         abort_unless($outlet, 403);
 
         $validated = $request->validate([
-            'variant_id' => ['required', 'integer', 'exists:product_variants,id'],
+            'product_id' => ['sometimes','required', 'integer', 'exists:products,id'],
+            'variant_id' => ['sometimes','required', 'integer', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:500'],
         ]);
 
-        $variant = ProductVariant::findOrFail($validated['variant_id']);
-        $centerPrice = (float) $variant->center_price;
+        $productId = $validated['product_id'] ?? $validated['variant_id'];
+
+        $product = Product::findOrFail($productId);
+        $centerPrice = (float) $product->center_price;
         $totalAmount = $centerPrice * $validated['quantity'];
 
         $inventory = OutletInventory::where('outlet_id', $outlet->id)
-            ->where('product_variant_id', $variant->id)
+            ->where('product_id', $product->id)
             ->lockForUpdate()
             ->first();
 
@@ -80,13 +83,14 @@ class OfflineSaleController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($outlet, $variant, $validated, $centerPrice, $totalAmount, $inventory, $request, $settlementGenerator) {
+        DB::transaction(function () use ($outlet, $product, $validated, $centerPrice, $totalAmount, $inventory, $request, $settlementGenerator) {
             $before = $inventory->current_stock;
             $inventory->decrement('current_stock', $validated['quantity']);
 
             OfflineSale::create([
                 'outlet_id' => $outlet->id,
-                'product_variant_id' => $variant->id,
+                'product_id' => $product->id,
+                'product_variant_id' => $product->id, // backward compat if column still exists
                 'quantity' => $validated['quantity'],
                 'center_price' => $centerPrice,
                 'total_amount' => $totalAmount,
@@ -96,13 +100,12 @@ class OfflineSaleController extends Controller
 
             StockMovement::create([
                 'outlet_id' => $outlet->id,
-                'product_id' => $variant->product_id,
-                'product_variant_id' => $variant->id,
+                'product_id' => $product->id,
                 'type' => 'offline_sale',
                 'quantity' => -$validated['quantity'],
                 'before_stock' => $before,
                 'after_stock' => $before - $validated['quantity'],
-                'notes' => "Penjualan offline: {$validated['quantity']}x {$variant->name}",
+                'notes' => "Penjualan offline: {$validated['quantity']}x {$product->name}",
                 'created_by' => $request->user()->id,
             ]);
 
@@ -116,7 +119,7 @@ class OfflineSaleController extends Controller
                 'due_date' => now()->endOfWeek(Carbon::SUNDAY)->addDays(7)->toDateString(),
                 'paid_amount' => 0,
                 'remaining_amount' => $totalAmount,
-                'notes' => "Penjualan offline: {$validated['quantity']}x {$variant->name}",
+                'notes' => "Penjualan offline: {$validated['quantity']}x {$product->name}",
                 'created_by' => $request->user()->id,
             ]);
 
@@ -132,10 +135,11 @@ class OfflineSaleController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet && $offlineSale->outlet_id === $outlet->id, 403);
 
-        DB::transaction(function () use ($outlet, $offlineSale, $settlementGenerator) {
+        DB::transaction(function () use ($outlet, $offlineSale, $settlementGenerator, $request) {
             // Reverse stock with lock
+            $productId = $offlineSale->product_id ?? $offlineSale->product_variant_id;
             $inventory = OutletInventory::where('outlet_id', $outlet->id)
-                ->where('product_variant_id', $offlineSale->product_variant_id)
+                ->where('product_id', $productId)
                 ->lockForUpdate()
                 ->first();
 
@@ -146,13 +150,12 @@ class OfflineSaleController extends Controller
                 // Reversal StockMovement (keep original, add reversal)
                 StockMovement::create([
                     'outlet_id' => $outlet->id,
-                    'product_id' => $offlineSale->variant->product_id,
-                    'product_variant_id' => $offlineSale->product_variant_id,
+                    'product_id' => $productId,
                     'type' => 'stock_adjustment',
                     'quantity' => $offlineSale->quantity,
                     'before_stock' => $before,
                     'after_stock' => $inventory->fresh()->current_stock,
-                    'notes' => "Batal penjualan offline: {$offlineSale->quantity}x {$offlineSale->variant->name}",
+                    'notes' => "Batal penjualan offline: {$offlineSale->quantity}x {$offlineSale->product?->name}",
                     'created_by' => $request->user()->id,
                 ]);
             }
@@ -167,7 +170,7 @@ class OfflineSaleController extends Controller
                 'due_date' => now()->endOfWeek(Carbon::SUNDAY)->addDays(7)->toDateString(),
                 'paid_amount' => 0,
                 'remaining_amount' => 0,
-                'notes' => "Batal penjualan offline: {$offlineSale->quantity}x {$offlineSale->variant->name}",
+                'notes' => "Batal penjualan offline: {$offlineSale->quantity}x {$offlineSale->product?->name}",
                 'created_by' => $request->user()->id,
             ]);
 

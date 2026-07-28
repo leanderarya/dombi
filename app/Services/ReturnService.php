@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
 use App\Models\ReturnStatusHistory;
@@ -28,14 +28,14 @@ class ReturnService
             $this->assertOutletHasAvailableStock($outlet, $data['items']);
 
             foreach ($data['items'] as $item) {
-                $variant = ProductVariant::lockForUpdate()->findOrFail($item['product_variant_id']);
-                $subtotal = $variant->selling_price * $item['quantity'];
+                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
+                $subtotal = $product->selling_price * $item['quantity'];
                 $totalValue += $subtotal;
 
                 $items[] = [
-                    'product_variant_id' => $variant->id,
+                    'product_id' => $product->id,
                     'quantity' => $item['quantity'],
-                    'unit_price' => $variant->selling_price,
+                    'unit_price' => $product->selling_price,
                     'subtotal' => $subtotal,
                 ];
             }
@@ -61,9 +61,9 @@ class ReturnService
 
             $this->recordHistory($return, null, ReturnRequest::STATUS_SUBMITTED, $requester->id, $data['notes'] ?? null);
 
-            app(NotificationService::class)->notifyReturnRequestCreated($return->fresh(['outlet', 'items.variant.family']));
+            app(NotificationService::class)->notifyReturnRequestCreated($return->fresh(['outlet', 'items.product.category']));
 
-            return $return->load(['items.variant', 'outlet', 'requester']);
+            return $return->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -81,7 +81,7 @@ class ReturnService
 
             $this->recordHistory($return, $from, ReturnRequest::STATUS_CANCELLED, $user->id, $reason);
 
-            return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $return->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -106,7 +106,7 @@ class ReturnService
 
             app(NotificationService::class)->notifyReturnApproved($return);
 
-            return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $return->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -131,7 +131,7 @@ class ReturnService
 
             app(NotificationService::class)->notifyReturnRejected($return, $reason);
 
-            return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $return->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -145,7 +145,7 @@ class ReturnService
             }
 
             foreach ($return->items as $item) {
-                $this->adjustOutletInventory($return->outlet_id, $item->product_variant_id, -$item->quantity, $return->id, $owner->id);
+                $this->adjustOutletInventory($return->outlet_id, $item->product_id, -$item->quantity, $return->id, $owner->id);
             }
 
             $from = $return->status;
@@ -160,7 +160,7 @@ class ReturnService
 
             app(NotificationService::class)->notifyReturnReceived($return);
 
-            return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $return->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -185,8 +185,8 @@ class ReturnService
                 ]);
             }
 
-            $variant = ProductVariant::lockForUpdate()->findOrFail($item->product_variant_id);
-            $before = (int) $variant->center_stock;
+            $product = Product::lockForUpdate()->findOrFail($item->product_id);
+            $before = (int) $product->center_stock;
             $after = $before;
 
             if ($item->disposition === 'stored') {
@@ -196,11 +196,11 @@ class ReturnService
                     ]);
                 }
 
-                $variant->decrement('center_stock', $item->quantity);
-                $after = (int) $variant->fresh()->center_stock;
+                $product->decrement('center_stock', $item->quantity);
+                $after = (int) $product->fresh()->center_stock;
 
                 StockMovement::create([
-                    'product_variant_id' => $item->product_variant_id,
+                    'product_id' => $item->product_id,
                     'type' => 'disposal',
                     'quantity' => -$item->quantity,
                     'before_stock' => $before,
@@ -214,7 +214,7 @@ class ReturnService
                 ]);
             } else {
                 StockMovement::create([
-                    'product_variant_id' => $item->product_variant_id,
+                    'product_id' => $item->product_id,
                     'type' => 'disposal',
                     'quantity' => 0,
                     'before_stock' => $before,
@@ -259,10 +259,10 @@ class ReturnService
                 ]);
             }
 
-            $variant = ProductVariant::lockForUpdate()->findOrFail($item->product_variant_id);
-            $before = (int) $variant->center_stock;
-            $variant->increment('center_stock', $item->quantity);
-            $after = (int) $variant->fresh()->center_stock;
+            $product = Product::lockForUpdate()->findOrFail($item->product_id);
+            $before = (int) $product->center_stock;
+            $product->increment('center_stock', $item->quantity);
+            $after = (int) $product->fresh()->center_stock;
 
             $item->update([
                 'disposition' => 'stored',
@@ -271,7 +271,7 @@ class ReturnService
             ]);
 
             StockMovement::create([
-                'product_variant_id' => $item->product_variant_id,
+                'product_id' => $item->product_id,
                 'type' => 'return_in',
                 'quantity' => $item->quantity,
                 'before_stock' => $before,
@@ -305,9 +305,6 @@ class ReturnService
             }
 
             if ($recordAdjustment) {
-                // Return of unsold stock (consignment) should NOT affect settlement.
-                // Previously this created a negative adjustment that increased the bill.
-                // Now we only sync to clean any legacy return adjustments from settlement.
                 $outlet = $return->outlet;
                 if ($outlet) {
                     $this->settlementGeneratorService->syncAdjustments($outlet, $return->created_at);
@@ -323,7 +320,7 @@ class ReturnService
 
             app(NotificationService::class)->notifyReturnCompleted($return);
 
-            return $return->fresh()->load(['items.variant', 'outlet', 'requester']);
+            return $return->fresh()->load(['items.product', 'outlet', 'requester']);
         });
     }
 
@@ -337,7 +334,7 @@ class ReturnService
         $returnedValue = ReturnRequest::where('status', ReturnRequest::STATUS_COMPLETED)
             ->sum('total_value');
 
-        $mostReturnedVariants = ReturnRequestItem::select('product_variant_id')
+        $mostReturnedProducts = ReturnRequestItem::select('product_id')
             ->selectRaw('SUM(quantity) as total_qty')
             ->selectRaw('SUM(subtotal) as total_value')
             ->join('return_requests', 'return_request_id', '=', 'return_requests.id')
@@ -345,10 +342,10 @@ class ReturnService
                 ReturnRequest::STATUS_RECEIVED_AT_CENTER,
                 ReturnRequest::STATUS_COMPLETED,
             ])
-            ->groupBy('product_variant_id')
+            ->groupBy('product_id')
             ->orderByDesc('total_qty')
             ->limit(5)
-            ->with('variant')
+            ->with('product')
             ->get();
 
         $mostReturnedOutlets = ReturnRequest::select('outlet_id')
@@ -367,21 +364,22 @@ class ReturnService
         return [
             'pending_returns' => $pendingReturns,
             'returned_value' => $returnedValue,
-            'most_returned_variants' => $mostReturnedVariants,
+            'most_returned_variants' => $mostReturnedProducts,
+            'most_returned_products' => $mostReturnedProducts,
             'most_returned_outlets' => $mostReturnedOutlets,
         ];
     }
 
-    private function adjustOutletInventory(int $outletId, int $variantId, int $quantity, int $returnId, int $userId): void
+    private function adjustOutletInventory(int $outletId, int $productId, int $quantity, int $returnId, int $userId): void
     {
         $inventory = OutletInventory::lockForUpdate()
             ->where('outlet_id', $outletId)
-            ->where('product_variant_id', $variantId)
+            ->where('product_id', $productId)
             ->first();
 
         if (! $inventory) {
             throw ValidationException::withMessages([
-                'inventory' => ['Outlet inventory not found for this variant.'],
+                'inventory' => ['Outlet inventory not found for this product.'],
             ]);
         }
 
@@ -398,7 +396,7 @@ class ReturnService
 
         StockMovement::create([
             'outlet_id' => $outletId,
-            'product_variant_id' => $variantId,
+            'product_id' => $productId,
             'type' => 'return_out',
             'quantity' => $quantity,
             'before_stock' => $before,
@@ -422,39 +420,39 @@ class ReturnService
         $firstIndexes = [];
 
         foreach ($items as $index => $item) {
-            $variantId = (int) $item['product_variant_id'];
-            $requested[$variantId] = ($requested[$variantId] ?? 0) + (int) $item['quantity'];
-            $firstIndexes[$variantId] ??= $index;
+            $productId = (int) $item['product_id'];
+            $requested[$productId] = ($requested[$productId] ?? 0) + (int) $item['quantity'];
+            $firstIndexes[$productId] ??= $index;
         }
 
         $inventories = OutletInventory::lockForUpdate()
             ->where('outlet_id', $outlet->id)
-            ->whereIn('product_variant_id', array_keys($requested))
+            ->whereIn('product_id', array_keys($requested))
             ->get()
-            ->keyBy('product_variant_id');
+            ->keyBy('product_id');
 
-        foreach ($requested as $variantId => $quantity) {
-            $inventory = $inventories->get($variantId);
+        foreach ($requested as $productId => $quantity) {
+            $inventory = $inventories->get($productId);
             $available = $inventory ? ((int) $inventory->current_stock - (int) $inventory->reserved_stock) : 0;
 
             if ($available < $quantity) {
                 throw ValidationException::withMessages([
-                    'items.'.$firstIndexes[$variantId].'.quantity' => ["Stok tersedia hanya {$available}."],
+                    'items.'.$firstIndexes[$productId].'.quantity' => ["Stok tersedia hanya {$available}."],
                 ]);
             }
         }
     }
 
-    private function adjustCenterInventory(int $outletId, int $variantId, int $quantity, int $returnId, int $userId): void
+    private function adjustCenterInventory(int $outletId, int $productId, int $quantity, int $returnId, int $userId): void
     {
-        $variant = ProductVariant::lockForUpdate()->findOrFail($variantId);
-        $before = (int) $variant->center_stock;
-        $variant->increment('center_stock', $quantity);
-        $after = (int) $variant->fresh()->center_stock;
+        $product = Product::lockForUpdate()->findOrFail($productId);
+        $before = (int) $product->center_stock;
+        $product->increment('center_stock', $quantity);
+        $after = (int) $product->fresh()->center_stock;
 
         StockMovement::create([
             'outlet_id' => $outletId,
-            'product_variant_id' => $variantId,
+            'product_id' => $productId,
             'type' => 'return_in',
             'quantity' => $quantity,
             'before_stock' => $before,
