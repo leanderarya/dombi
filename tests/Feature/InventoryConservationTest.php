@@ -34,10 +34,13 @@ class InventoryConservationTest extends TestCase
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $ctx['owner']);
 
+        // Simpan return items ke pusat sebelum exchange test
+        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
+
         $totalAfter = $this->totalInventory($ctx, $ctx['variant']);
 
-        $this->assertSame($totalBefore, $totalAfter, 'Return must preserve total inventory (center + outlet).');
-        $this->assertSame(105, (int) $ctx['variant']->fresh()->center_stock);
+        $this->assertSame($totalBefore - $returnQty, $totalAfter, 'After markReceived, center stock not yet added — total decreases by returned qty.');
+        $this->assertSame(100, (int) $ctx['variant']->fresh()->center_stock);
         $this->assertSame(15, (int) $ctx['inventory']->fresh()->current_stock);
     }
 
@@ -53,11 +56,19 @@ class InventoryConservationTest extends TestCase
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $ctx['owner']);
 
+        // Simpan return items ke pusat sebelum exchange test
+        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
+
         $this->assertDatabaseHas('stock_movements', [
             'product_variant_id' => $ctx['variant']->id,
             'type' => 'return_out',
             'quantity' => -3,
         ]);
+
+        // return_in now created in storeItem, not markReceivedAtCenter
+        $return->fresh('items')->items->each(
+            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $ctx['owner'])
+        );
 
         $this->assertDatabaseHas('stock_movements', [
             'product_variant_id' => $ctx['variant']->id,
@@ -87,6 +98,9 @@ class InventoryConservationTest extends TestCase
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $ctx['owner']);
 
+        // Simpan return items ke pusat sebelum exchange test
+        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
+
         // Exchange 8 units of variant B
         $exchange = app(ExchangeService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'return_request_id' => $return->id,
@@ -111,6 +125,9 @@ class InventoryConservationTest extends TestCase
         ]);
         $return = app(ReturnService::class)->approveRequest($return, $ctx['owner']);
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $ctx['owner']);
+
+        // Simpan return items ke pusat sebelum exchange test
+        $return->fresh('items')->items->each->update(['disposition' => 'stored']);
 
         $exchange = app(ExchangeService::class)->createRequest($ctx['outlet'], $ctx['outletUser'], [
             'return_request_id' => $return->id,
