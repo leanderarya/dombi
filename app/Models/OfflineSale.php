@@ -51,7 +51,6 @@ class OfflineSale extends Model
     {
         $this->attributes['product_id'] = $value instanceof \Illuminate\Database\Eloquent\Model ? $value->getKey() : $value;
     }
-}
 
     public function creator(): BelongsTo
     {
