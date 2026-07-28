@@ -291,6 +291,7 @@ class CartFlowHardeningTest extends TestCase
             'product_name' => 'Domilk Premium Taste',
             'variant_name_snapshot' => 'Coffee 1L',
             'quantity' => 2,
+            'price' => 25000,
             'selling_price' => 25000,
             'subtotal' => 50000,
         ]);

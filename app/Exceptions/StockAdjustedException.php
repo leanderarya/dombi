@@ -7,7 +7,7 @@ use Exception;
 class StockAdjustedException extends Exception
 {
     /**
-     * @var array<int, array{variant_id: int, original_qty: int, adjusted_qty: int, available_stock: int}>
+     * @var array<int, array{product_id: int, original_qty: int, adjusted_qty: int, available_stock: int}>
      */
     public readonly array $adjustments;
 
