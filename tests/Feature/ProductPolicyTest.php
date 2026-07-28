@@ -27,14 +27,16 @@ class ProductPolicyTest extends TestCase
     use RefreshDatabase;
 
     private ProductPolicy $productPolicy;
+
     private ProductCategoryPolicy $categoryPolicy;
+
     private User $user;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->productPolicy = new ProductPolicy();
-        $this->categoryPolicy = new ProductCategoryPolicy();
+        $this->productPolicy = new ProductPolicy;
+        $this->categoryPolicy = new ProductCategoryPolicy;
         $this->user = User::factory()->create(['role' => 'owner']);
     }
 

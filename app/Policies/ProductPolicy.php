@@ -51,7 +51,7 @@ class ProductPolicy
      */
     public function delete(?User $user, Product $product): bool
     {
-        return !$this->hasBusinessHistory($product);
+        return ! $this->hasBusinessHistory($product);
     }
 
     /**
@@ -67,7 +67,7 @@ class ProductPolicy
      */
     public function forceDelete(?User $user, Product $product): bool
     {
-        return !$this->hasBusinessHistory($product);
+        return ! $this->hasBusinessHistory($product);
     }
 
     /**

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\ProductCategory;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Services\ProductSkuGenerator;
 use Illuminate\Database\Seeder;
 
@@ -11,7 +11,7 @@ class ProductCatalogSeeder extends Seeder
 {
     public function run(): void
     {
-        $skuGenerator = new ProductSkuGenerator();
+        $skuGenerator = new ProductSkuGenerator;
 
         $catalog = [
             [

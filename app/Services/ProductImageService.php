@@ -20,7 +20,7 @@ class ProductImageService
             Storage::disk('public')->delete($oldPath);
         }
 
-        $manager = new ImageManager(new Driver());
+        $manager = new ImageManager(new Driver);
 
         $image = method_exists($manager, 'read')
             ? $manager->read($file->getPathname())

@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
-use App\Models\ProductCategory;
 use App\Http\Requests\Owner\StoreProductCategoryRequest;
 use App\Http\Requests\Owner\UpdateProductCategoryRequest;
+use App\Models\ProductCategory;
 use App\Services\ProductImageService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;

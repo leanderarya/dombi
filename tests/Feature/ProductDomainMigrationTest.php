@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
 
 class ProductDomainMigrationTest extends TestCase
 {
@@ -68,6 +68,6 @@ class ProductDomainMigrationTest extends TestCase
     {
         // If legacy products table existed (it does from initial migration), it should be backed up
         // In fresh RefreshDatabase, initial products exists, so backup should exist after migration
-        $this->assertTrue(Schema::hasTable('legacy_products_backup') || !Schema::hasTable('product_variants'), 'legacy backup should exist or migration handled legacy');
+        $this->assertTrue(Schema::hasTable('legacy_products_backup') || ! Schema::hasTable('product_variants'), 'legacy backup should exist or migration handled legacy');
     }
 }
