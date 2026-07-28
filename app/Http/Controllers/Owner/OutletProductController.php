@@ -135,7 +135,9 @@ class OutletProductController extends Controller
      */
     public function toggle(Request $request, Outlet $outlet, OutletAuditService $auditService): JsonResponse
     {
-        $productId = (int) ($request->route('productId') ?? $request->route('variantId') ?? $request->route('product_id') ?? $request->route('variant_id') ?? 0);
+        $routeProduct = $request->route('product');
+        $routeProductId = $routeProduct instanceof \App\Models\Product ? $routeProduct->id : $routeProduct;
+        $productId = (int) ($routeProductId ?? $request->route('productId') ?? $request->route('variantId') ?? $request->route('product_id') ?? $request->route('variant_id') ?? 0);
 
         $inventory = OutletInventory::where('outlet_id', $outlet->id)
             ->where('product_id', $productId)
@@ -164,7 +166,9 @@ class OutletProductController extends Controller
      */
     public function remove(Request $request, Outlet $outlet, OutletAuditService $auditService): JsonResponse
     {
-        $productId = (int) ($request->route('productId') ?? $request->route('variantId') ?? $request->route('product_id') ?? $request->route('variant_id') ?? 0);
+        $routeProduct = $request->route('product');
+        $routeProductId = $routeProduct instanceof \App\Models\Product ? $routeProduct->id : $routeProduct;
+        $productId = (int) ($routeProductId ?? $request->route('productId') ?? $request->route('variantId') ?? $request->route('product_id') ?? $request->route('variant_id') ?? 0);
 
         $inventory = OutletInventory::where('outlet_id', $outlet->id)
             ->where('product_id', $productId)

@@ -34,6 +34,11 @@ class ProductController extends Controller
         return redirect()->route('owner.product-categories.index');
     }
 
+    public function show(Product $product): RedirectResponse
+    {
+        return redirect()->route('owner.product-categories.show', $product->product_category_id);
+    }
+
     /**
      * Store single product under a category.
      * Route: POST owner/product-categories/{category}/products

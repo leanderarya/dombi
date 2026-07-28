@@ -257,26 +257,37 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('outlets/{outlet}/products', [OutletProductController::class, 'index'])->name('outlets.products.index');
         Route::get('outlets/{outlet}/products/available', [OutletProductController::class, 'availableProducts'])->name('outlets.products.available');
         Route::post('outlets/{outlet}/products', [OutletProductController::class, 'addProducts'])->name('outlets.products.add');
-        Route::put('outlets/{outlet}/products/{productId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle');
+        Route::put('outlets/{outlet}/products/{product}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle');
+        Route::put('outlets/{outlet}/products/{productId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle.legacy.product');
         Route::put('outlets/{outlet}/products/{variantId}/toggle', [OutletProductController::class, 'toggle'])->name('outlets.products.toggle.legacy');
-        Route::delete('outlets/{outlet}/products/{productId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove');
+        Route::delete('outlets/{outlet}/products/{product}', [OutletProductController::class, 'remove'])->name('outlets.products.remove');
+        Route::delete('outlets/{outlet}/products/{productId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove.legacy.product');
         Route::delete('outlets/{outlet}/products/{variantId}', [OutletProductController::class, 'remove'])->name('outlets.products.remove.legacy');
         Route::post('outlets/{outlet}/products/bulk-assign', [OutletProductController::class, 'bulkAssign'])->name('outlets.products.bulk-assign');
         Route::post('outlets/{outlet}/restock', [OutletProductController::class, 'restock'])->name('outlets.products.restock');
         Route::resource('products', OwnerProductController::class)->except(['show']);
-        // New ProductCategory / Product domain
+        Route::get('products/{product}', [OwnerProductController::class, 'show'])->name('products.show');
+        // New ProductCategory / Product domain – Task 12 canonical routes
         Route::resource('product-categories', OwnerProductCategoryController::class)->parameters(['product-categories' => 'category'])->except(['create', 'edit']);
         Route::post('product-categories/{category}/products', [OwnerProductController::class, 'store'])->name('product-categories.products.store');
-        Route::post('product-categories/{category}/products/bulk', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk-store');
+        Route::post('product-categories/{category}/products/bulk', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk');
+        Route::post('product-categories/{category}/products/bulk-store', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk-store'); // backward compat alias – distinct URI
         Route::post('product-categories/{category}/products/bulk-update', [OwnerProductController::class, 'bulkUpdate'])->name('product-categories.products.bulk-update');
+        Route::put('products/{product}', [OwnerProductController::class, 'update'])->name('products.update');
+        Route::delete('products/{product}', [OwnerProductController::class, 'destroy'])->name('products.destroy');
         Route::patch('products/{product}/toggle', [OwnerProductController::class, 'toggle'])->name('products.toggle');
         Route::post('products/{product}/duplicate', [OwnerProductController::class, 'duplicate'])->name('products.duplicate');
+        // Legacy product-families resource – keep for 1 sprint backward compat
         Route::resource('product-families', ProductFamilyController::class)->parameters(['product-families' => 'family'])->except(['create', 'edit']);
         Route::post('product-families/{family}/variants', [ProductVariantController::class, 'store'])->name('product-families.variants.store');
         Route::post('product-families/{family}/variants/bulk-update', [ProductVariantController::class, 'bulkUpdate'])->name('product-families.variants.bulk-update');
         Route::put('variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
         Route::delete('variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
         Route::patch('variants/{variant}/toggle', [ProductVariantController::class, 'toggle'])->name('variants.toggle');
+        // Legacy redirects for 1 sprint – Task 12
+        Route::get('product-families', fn () => redirect()->route('owner.product-categories.index', [], 301))->name('product-families.legacy');
+        Route::get('product-families/{id}', fn ($id) => redirect()->route('owner.product-categories.show', $id, 301))->name('product-families.show.legacy');
+        Route::get('variants/{id}', fn ($id) => redirect()->route('owner.products.show', $id, 301))->name('variants.show.legacy');
         Route::get('pricing/outlets/compare', [PricingController::class, 'compare'])->name('pricing.outlets.compare');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
         Route::get('pricing/outlets/{outlet}', [PricingController::class, 'show'])->name('pricing.outlets.show');
