@@ -81,11 +81,12 @@ const navGroups: NavGroup[] = [
         icon: <MasterDataIcon />,
         items: [
             {
-                href: '/owner/products',
+                href: '/owner/product-categories',
                 label: 'Produk',
                 isActive: (url: string) =>
                     url.startsWith('/owner/products') ||
-                    url.startsWith('/owner/product-families'),
+                    url.startsWith('/owner/product-families') ||
+                    url.startsWith('/owner/product-categories'),
             },
             {
                 href: '/owner/pricing',
