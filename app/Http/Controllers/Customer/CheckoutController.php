@@ -796,7 +796,8 @@ class CheckoutController extends Controller
             }
 
             $items[] = [
-                'product_variant_id' => $variantId,
+                'product_id' => $variantId,
+                'product_variant_id' => $variantId, // backward compat
                 'name' => $variant->category->name ?? $variant->name,
                 'variant_name' => $variant->name,
                 'requested_qty' => $requestedQty,
