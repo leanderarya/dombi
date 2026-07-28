@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Http\Requests\Owner\BulkStoreProductsRequest;
 use App\Http\Requests\Owner\StoreProductRequest;
 use App\Http\Requests\Owner\UpdateProductRequest;
-use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Services\ProductImageService;
 use App\Services\ProductSkuGenerator;
 use Illuminate\Http\RedirectResponse;
@@ -17,9 +17,6 @@ use Illuminate\Validation\ValidationException;
 
 class ProductController extends Controller
 {
-    /**
-     * Legacy index – redirect to new categories index for backward compat.
-     */
     public function index(): RedirectResponse
     {
         return redirect()->route('owner.product-categories.index');
@@ -40,10 +37,6 @@ class ProductController extends Controller
         return redirect()->route('owner.product-categories.show', $product->product_category_id);
     }
 
-    /**
-     * Store single product under a category.
-     * Route: POST owner/product-categories/{category}/products
-     */
     public function store(
         StoreProductRequest $req,
         ProductCategory $category,
@@ -52,11 +45,9 @@ class ProductController extends Controller
     ): RedirectResponse {
         $data = $req->validated();
 
-        // Ensure product_category_id from route
         $data['product_category_id'] = $category->id;
         $data['center_stock'] = 0;
 
-        // Generate SKU if not provided
         $data['sku'] = $data['sku'] ?? $skuGen->uniqueForCategory(
             $category->id,
             $data['name'],
@@ -78,10 +69,6 @@ class ProductController extends Controller
             ->with('success', 'Produk berhasil dibuat.');
     }
 
-    /**
-     * Bulk store multi-flavor under a category.
-     * Route: POST owner/product-categories/{category}/products/bulk
-     */
     public function bulkStore(
         BulkStoreProductsRequest $req,
         ProductCategory $category,
@@ -115,9 +102,6 @@ class ProductController extends Controller
             ->with('success', count($newIds) . ' produk berhasil dibuat.');
     }
 
-    /**
-     * Update single product.
-     */
     public function update(
         UpdateProductRequest $req,
         Product $product,
@@ -128,7 +112,6 @@ class ProductController extends Controller
         if ($req->hasFile('image')) {
             $data['image'] = $img->store($req->file('image'), $product->image);
         } else {
-            // Don't overwrite image with null unless explicitly cleared
             if (array_key_exists('image', $data) && $data['image'] === null) {
                 unset($data['image']);
             }
@@ -139,22 +122,16 @@ class ProductController extends Controller
         return back()->with('success', 'Produk berhasil diperbarui.');
     }
 
-    /**
-     * Destroy with policy guard.
-     */
     public function destroy(Product $product): RedirectResponse
     {
-        // Policy guard – ProductPolicy@delete checks business history
         if (Gate::denies('delete', $product)) {
             throw ValidationException::withMessages([
                 'business_history' => 'Produk tidak dapat dihapus karena memiliki riwayat transaksi atau stok.',
             ]);
         }
 
-        // Additional guard via explicit policy check from model existence
         $product->delete();
 
-        // Determine redirect – if category exists, go to its show, else categories index
         if ($product->product_category_id) {
             return redirect()
                 ->route('owner.product-categories.show', $product->product_category_id)
@@ -166,9 +143,6 @@ class ProductController extends Controller
             ->with('success', 'Produk berhasil dihapus.');
     }
 
-    /**
-     * Toggle active status.
-     */
     public function toggle(Product $product): RedirectResponse
     {
         $product->update(['is_active' => ! $product->is_active]);
@@ -177,10 +151,6 @@ class ProductController extends Controller
         return back()->with('success', "Produk berhasil {$status}.");
     }
 
-    /**
-     * Duplicate product – copy category, description, image, flavor, size, pricing,
-     * reset sku+stock, generate new sku, create.
-     */
     public function duplicate(Product $product, ProductSkuGenerator $skuGen): RedirectResponse
     {
         $newSku = $skuGen->uniqueForCategory(
@@ -196,33 +166,22 @@ class ProductController extends Controller
         $copy->name = $product->name . ' Copy';
         $copy->save();
 
-        // Note: image is copied via replicate (same path). intentional per brief.
-
         return redirect()->back()->with('new_product_id', $copy->id)
             ->with('success', 'Produk berhasil diduplikasi.');
     }
 
-    /**
-     * Bulk update products within a category.
-     */
     public function bulkUpdate(Request $request, ProductCategory $category): RedirectResponse
     {
         $validated = $request->validate([
-            'product_ids' => ['sometimes', 'required', 'array', 'min:1'],
-            'variant_ids' => ['sometimes', 'required', 'array', 'min:1'],
+            'product_ids' => ['required', 'array', 'min:1'],
             'product_ids.*' => ['integer', 'exists:products,id'],
-            'variant_ids.*' => ['integer', 'exists:products,id'],
             'center_price' => ['nullable', 'numeric', 'min:0'],
             'selling_price' => ['nullable', 'numeric', 'min:0'],
             'center_stock' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
         ]);
 
-        $ids = $validated['product_ids'] ?? $validated['variant_ids'] ?? [];
-
-        if (empty($ids)) {
-            return back()->with('error', 'Tidak ada produk dipilih.');
-        }
+        $ids = $validated['product_ids'];
 
         $updates = array_filter([
             'center_price' => $validated['center_price'] ?? null,

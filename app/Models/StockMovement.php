@@ -12,7 +12,7 @@ class StockMovement extends Model
     use HasFactory;
 
     protected $fillable = [
-        'outlet_id', 'product_id', 'product_variant_id', 'type', 'quantity',
+        'outlet_id', 'product_id', 'type', 'quantity',
         'before_stock', 'after_stock', 'before_reserved', 'after_reserved',
         'reference_type', 'reference_id', 'notes', 'created_by',
     ];
@@ -36,21 +36,6 @@ class StockMovement extends Model
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'product_id');
-    }
-
-    public function getProductVariantIdAttribute(): ?int
-    {
-        return $this->attributes['product_id'] ?? null;
-    }
-
-    public function setProductVariantIdAttribute($value): void
-    {
-        $this->attributes['product_id'] = $value instanceof \Illuminate\Database\Eloquent\Model ? $value->getKey() : $value;
     }
 
     public function creator(): BelongsTo

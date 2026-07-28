@@ -13,7 +13,6 @@ class ReturnRequestItem extends Model
     protected $fillable = [
         'return_request_id',
         'product_id',
-        'product_variant_id',
         'quantity',
         'unit_price',
         'subtotal',
@@ -34,24 +33,9 @@ class ReturnRequestItem extends Model
         return $this->belongsTo(ReturnRequest::class);
     }
 
-    public function variant(): BelongsTo
-    {
-        return $this->belongsTo(ProductVariant::class, 'product_id');
-    }
-
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class, 'product_id');
-    }
-
-    public function getProductVariantIdAttribute(): ?int
-    {
-        return $this->attributes['product_id'] ?? null;
-    }
-
-    public function setProductVariantIdAttribute($value): void
-    {
-        $this->attributes['product_id'] = $value instanceof \Illuminate\Database\Eloquent\Model ? $value->getKey() : $value;
     }
 
     public function disposer(): BelongsTo

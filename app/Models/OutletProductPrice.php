@@ -34,10 +34,4 @@ class OutletProductPrice extends Model
     {
         return $this->belongsTo(Product::class);
     }
-
-    // Backward compat: old code may call productVariant()
-    public function productVariant(): BelongsTo
-    {
-        return $this->belongsTo(Product::class, 'product_id');
-    }
 }

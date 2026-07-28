@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Owner;
 use App\Http\Controllers\Controller;
 use App\Models\ExchangeRequest;
 use App\Models\Order;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
 use App\Models\SettlementPayment;
@@ -80,7 +80,7 @@ class DashboardController extends Controller
 
     /**
      * @return Collection<int, array{
-     *     variant: array{id:int,name:string,full_name:string,family_name:?string},
+     *     product: array{id:int,name:string,full_name:string,category_name:?string},
      *     centerStock:int,
      *     threshold:int,
      *     shortage:int,
@@ -89,24 +89,24 @@ class DashboardController extends Controller
      */
     private function criticalCenterStock(): Collection
     {
-        return ProductVariant::query()
-            ->with('family:id,name')
+        return Product::query()
+            ->with('category:id,name')
             ->where('is_active', true)
             ->get()
-            ->map(function (ProductVariant $variant): array {
-                $threshold = $this->centerStockThreshold($variant);
+            ->map(function (Product $product): array {
+                $threshold = $this->centerStockThreshold($product);
 
                 return [
-                    'variant' => [
-                        'id' => $variant->id,
-                        'name' => $variant->name,
-                        'full_name' => $variant->full_name,
-                        'family_name' => $variant->family?->name,
+                    'product' => [
+                        'id' => $product->id,
+                        'name' => $product->name,
+                        'full_name' => $product->full_display_name,
+                        'category_name' => $product->category?->name,
                     ],
-                    'centerStock' => (int) $variant->center_stock,
+                    'centerStock' => (int) $product->center_stock,
                     'threshold' => $threshold,
-                    'shortage' => max(0, $threshold - (int) $variant->center_stock),
-                    'detailHref' => '/owner/product-families/'.$variant->product_family_id,
+                    'shortage' => max(0, $threshold - (int) $product->center_stock),
+                    'detailHref' => '/owner/product-categories/'.$product->product_category_id,
                 ];
             })
             ->filter(fn (array $item) => $item['centerStock'] < $item['threshold'])
@@ -114,9 +114,9 @@ class DashboardController extends Controller
             ->values();
     }
 
-    private function centerStockThreshold(ProductVariant $variant): int
+    private function centerStockThreshold(Product $product): int
     {
-        $size = strtolower((string) $variant->size);
+        $size = strtolower((string) $product->size);
 
         if (str_contains($size, '1l')) {
             return 20;

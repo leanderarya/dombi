@@ -10,7 +10,7 @@ use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\Settlement;
 use App\Models\SettlementPayment;
 use App\Models\StockMovement;
@@ -43,7 +43,7 @@ echo "END-TO-END SETTLEMENT HARDENING TEST\n";
 echo "========================================\n\n";
 
 $outlet = Outlet::find(1);
-$variant = ProductVariant::find(1);
+$variant = Product::find(1);
 $outletUser = User::where('role', 'outlet')->first();
 $owner = User::where('role', 'owner')->first();
 $centerPrice = (float) $variant->center_price;
@@ -51,7 +51,7 @@ $sellingPrice = (float) $variant->selling_price;
 $qty = 3;
 $expectedCenterShare = $centerPrice * $qty;
 
-$inv = OutletInventory::where('outlet_id', 1)->where('product_variant_id', 1)->first();
+$inv = OutletInventory::where('outlet_id', 1)->where('product_id', 1)->first();
 $stockBefore = $inv->current_stock;
 
 // ══════════════════════════════════════════
@@ -78,10 +78,10 @@ $order = Order::create([
 
 OrderItem::create([
     'order_id' => $order->id,
-    'product_variant_id' => 1,
+    'product_id' => 1,
     'product_name' => $variant->family->name.' - '.$variant->name,
     'quantity' => $qty,
-    'price' => $sellingPrice,
+    'selling_price' => $sellingPrice,
     'subtotal' => $sellingPrice * $qty,
     'center_price_snapshot' => $centerPrice,
     'selling_price_snapshot' => $sellingPrice,
@@ -154,7 +154,7 @@ DB::transaction(function () use ($outlet, $variant, $offlineQty, $centerPrice, $
 
     OfflineSale::create([
         'outlet_id' => 1,
-        'product_variant_id' => $variant->id,
+        'product_id' => $variant->id,
         'quantity' => $offlineQty,
         'center_price' => $centerPrice,
         'total_amount' => $centerPrice * $offlineQty,
@@ -165,7 +165,7 @@ DB::transaction(function () use ($outlet, $variant, $offlineQty, $centerPrice, $
     StockMovement::create([
         'outlet_id' => 1,
         'product_id' => $variant->product_id,
-        'product_variant_id' => $variant->id,
+        'product_id' => $variant->id,
         'type' => 'offline_sale',
         'quantity' => -$offlineQty,
         'before_stock' => $beforeOfflineStock,

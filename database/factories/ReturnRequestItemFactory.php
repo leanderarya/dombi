@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -15,7 +15,7 @@ class ReturnRequestItemFactory extends Factory
     {
         return [
             'return_request_id' => ReturnRequest::factory(),
-            'product_variant_id' => ProductVariant::factory(),
+            'product_id' => Product::factory(),
             'quantity' => 1,
             'unit_price' => 10000,
             'subtotal' => 10000,
