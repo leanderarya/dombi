@@ -125,6 +125,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
 
     public function test_completing_received_return_creates_single_settlement_adjustment(): void
     {
+        // Return of unsold stock (consignment) should NOT affect settlement
         $context = $this->makeContext(currentStock: 10, reservedStock: 0);
         $return = $this->createReturn($context, quantity: 2);
 
@@ -142,7 +143,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
             'status' => ReturnRequest::STATUS_COMPLETED,
         ]);
 
-        $this->assertSame(1, OutletPayable::query()
+        $this->assertSame(0, OutletPayable::query()
             ->where('outlet_id', $context['outlet']->id)
             ->where('type', 'adjustment')
             ->count());
@@ -166,7 +167,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
             ->post(route('owner.returns.complete', $return))
             ->assertSessionHasErrors('status');
 
-        $this->assertSame(1, OutletPayable::query()
+        $this->assertSame(0, OutletPayable::query()
             ->where('outlet_id', $context['outlet']->id)
             ->where('type', 'adjustment')
             ->count());

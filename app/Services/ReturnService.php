@@ -305,8 +305,9 @@ class ReturnService
             }
 
             if ($recordAdjustment) {
-                $this->recordReturnAdjustment($return, $owner);
-                // Sync adjustment to settlement
+                // Return of unsold stock (consignment) should NOT affect settlement.
+                // Previously this created a negative adjustment that increased the bill.
+                // Now we only sync to clean any legacy return adjustments from settlement.
                 $outlet = $return->outlet;
                 if ($outlet) {
                     $this->settlementGeneratorService->syncAdjustments($outlet, $return->created_at);

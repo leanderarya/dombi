@@ -399,7 +399,9 @@ class ExchangeService
 
     private function recordExchangeAdjustment(ExchangeRequest $exchange, User $owner): void
     {
-        $difference = (float) $exchange->exchange_value - (float) $exchange->return_value;
+        // Credit when return_value > exchange_value (outlet gets cheaper replacement) => positive adjustment reduces bill
+        // Debit when exchange_value > return_value => negative adjustment increases bill
+        $difference = (float) $exchange->return_value - (float) $exchange->exchange_value;
 
         if (abs($difference) < 0.00001) {
             return;
@@ -422,7 +424,7 @@ class ExchangeService
             'reference_type' => ExchangeRequest::class,
             'reference_id' => $exchange->id,
             'notes' => sprintf(
-                'Exchange #%d adjustment | return_value=%s | replacement_value=%s | difference=%s',
+                'Exchange #%d adjustment | return_value=%s | replacement_value=%s | difference=%s (return - exchange)',
                 $exchange->id,
                 number_format((float) $exchange->return_value, 2, '.', ''),
                 number_format((float) $exchange->exchange_value, 2, '.', ''),
