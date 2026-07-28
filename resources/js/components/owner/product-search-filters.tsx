@@ -1,6 +1,13 @@
 import { Input } from '@/components/ui/input';
 
-export type ProductFilterValue = 'all' | 'active' | 'inactive' | 'out_of_stock' | 'low_stock' | 'has_image' | 'no_image';
+export type ProductFilterValue =
+    | 'all'
+    | 'active'
+    | 'inactive'
+    | 'out_of_stock'
+    | 'low_stock'
+    | 'has_image'
+    | 'no_image';
 
 const FILTERS: { key: ProductFilterValue; label: string }[] = [
     { key: 'all', label: 'Semua' },
@@ -19,7 +26,12 @@ interface Props {
     onFilterChange: (value: string) => void;
 }
 
-export default function ProductSearchFilters({ search, onSearch, filter, onFilterChange }: Props) {
+export default function ProductSearchFilters({
+    search,
+    onSearch,
+    filter,
+    onFilterChange,
+}: Props) {
     return (
         <>
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -37,7 +49,7 @@ export default function ProductSearchFilters({ search, onSearch, filter, onFilte
                         key={f.key}
                         type="button"
                         onClick={() => onFilterChange(f.key)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${filter === f.key ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
+                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${filter === f.key ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'}`}
                     >
                         {f.label}
                     </button>

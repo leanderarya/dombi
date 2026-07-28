@@ -279,11 +279,7 @@ export function PusatTab({
                                         </div>
                                         {(v.flavor || v.size || v.sku) && (
                                             <div className="mt-0.5 text-xs text-text-muted">
-                                                {[
-                                                    v.flavor,
-                                                    v.size,
-                                                    v.sku,
-                                                ]
+                                                {[v.flavor, v.size, v.sku]
                                                     .filter(Boolean)
                                                     .join(' • ')}
                                             </div>

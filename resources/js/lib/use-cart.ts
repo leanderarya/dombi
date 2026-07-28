@@ -172,8 +172,7 @@ class CartStore {
                                       ? i.product_variant_id
                                       : null,
                             quantity: i.quantity,
-                            price:
-                                typeof i.price === 'number' ? i.price : 0,
+                            price: typeof i.price === 'number' ? i.price : 0,
                         }))
                         .filter(
                             (i: any) =>

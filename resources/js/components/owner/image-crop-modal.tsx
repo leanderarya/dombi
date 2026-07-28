@@ -63,7 +63,8 @@ export default function ImageCropModal({
                 </div>
 
                 <p className="mt-2 text-[11px] text-text-subtle">
-                    Preview 1:1 – gambar akan dipotong persegi di server (max 800x800 WebP).
+                    Preview 1:1 – gambar akan dipotong persegi di server (max
+                    800x800 WebP).
                 </p>
 
                 <div className="mt-4 flex justify-end gap-2">
