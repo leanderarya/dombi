@@ -15,7 +15,12 @@ interface VariantOption {
 interface ReturnItem {
     product_variant_id: number;
     quantity: number;
-    variant: { id: number; name: string; full_name?: string; selling_price?: number };
+    variant: {
+        id: number;
+        name: string;
+        full_name?: string;
+        selling_price?: number;
+    };
 }
 
 interface ReturnOption {
@@ -45,7 +50,9 @@ export default function ExchangeCreateDialog({
     exchangeEligibleReturns = [],
     onClose,
 }: Props) {
-    const [selectedReturnId, setSelectedReturnId] = useState<number | null>(null);
+    const [selectedReturnId, setSelectedReturnId] = useState<number | null>(
+        null,
+    );
     const [pairs, setPairs] = useState<PairedItem[]>([]);
     const [notes, setNotes] = useState('');
 
@@ -67,10 +74,14 @@ export default function ExchangeCreateDialog({
     });
 
     const getReturnItemName = (variantId: number): string => {
-        if (!selectedReturn) return '-';
+        if (!selectedReturn) {
+            return '-';
+        }
+
         const item = selectedReturn.items.find(
             (i) => i.product_variant_id === variantId,
         );
+
         return item?.variant?.full_name ?? item?.variant?.name ?? '-';
     };
 
@@ -97,6 +108,7 @@ export default function ExchangeCreateDialog({
 
         if (id) {
             const ret = eligibleReturns.find((r) => r.id === id);
+
             if (ret) {
                 const newPairs: PairedItem[] = ret.items.map((item) => ({
                     return_variant_id: item.product_variant_id,
@@ -141,6 +153,7 @@ export default function ExchangeCreateDialog({
 
         if (!selectedReturnId) {
             toast.error('Pilih return terlebih dahulu');
+
             return;
         }
 
@@ -150,6 +163,7 @@ export default function ExchangeCreateDialog({
 
         if (valid.length === 0) {
             toast.error('Pilih minimal 1 pasangan produk');
+
             return;
         }
 
@@ -248,12 +262,13 @@ export default function ExchangeCreateDialog({
                         </div>
 
                         {pairs.map((pair, index) => {
-                            const filteredReplacement = allVariants.filter((v) =>
-                                (v.full_name ?? v.name)
-                                    .toLowerCase()
-                                    .includes(
-                                        pair.replacement_search.toLowerCase(),
-                                    ),
+                            const filteredReplacement = allVariants.filter(
+                                (v) =>
+                                    (v.full_name ?? v.name)
+                                        .toLowerCase()
+                                        .includes(
+                                            pair.replacement_search.toLowerCase(),
+                                        ),
                             );
 
                             return (
@@ -467,9 +482,7 @@ export default function ExchangeCreateDialog({
                         </div>
                         <button
                             type="submit"
-                            disabled={
-                                form.processing || validCount === 0
-                            }
+                            disabled={form.processing || validCount === 0}
                             className="h-11 w-full rounded-xl bg-emerald-600 text-sm font-bold text-white transition-colors active:opacity-80 disabled:bg-border disabled:text-text-subtle"
                         >
                             {form.processing
