@@ -39,7 +39,8 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
     public function test_submitted_exchange_appears_in_owner_index(): void
     {
         $context = $this->makeContext();
-        $exchange = $this->createExchange($context);
+        $return = $this->createReceivedReturn($context);
+        $exchange = $this->createExchange($context, $return);
 
         $this->actingAs($context['owner'])
             ->get('/owner/exchanges')
@@ -55,8 +56,9 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
     public function test_owner_dashboard_pending_counts_update_for_submitted_requests(): void
     {
         $context = $this->makeContext();
+        $return = $this->createReceivedReturn($context);
         $this->createReturn($context);
-        $this->createExchange($context);
+        $this->createExchange($context, $return);
 
         $this->actingAs($context['owner'])
             ->get('/owner/dashboard')
@@ -93,7 +95,8 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
     public function test_owner_notification_created_for_submitted_exchange(): void
     {
         $context = $this->makeContext();
-        $exchange = $this->createExchange($context);
+        $return = $this->createReceivedReturn($context);
+        $exchange = $this->createExchange($context, $return);
 
         $this->assertDatabaseHas('notifications', [
             'user_type' => 'owner',
@@ -124,7 +127,8 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
     public function test_rejecting_exchange_removes_pending_counts(): void
     {
         $context = $this->makeContext();
-        $exchange = $this->createExchange($context);
+        $return = $this->createReceivedReturn($context);
+        $exchange = $this->createExchange($context, $return);
 
         $this->actingAs($context['owner'])
             ->post(route('owner.exchanges.reject', $exchange), ['reason' => 'Tidak sesuai kebutuhan'])
@@ -147,9 +151,25 @@ class OwnerReturnExchangeVisibilityTest extends TestCase
         ]);
     }
 
-    private function createExchange(array $context): ExchangeRequest
+    private function createReceivedReturn(array $context, int $quantity = 2): ReturnRequest
+    {
+        $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'reason' => 'slow_moving',
+            'notes' => 'Return linked to exchange test',
+            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => $quantity]],
+        ]);
+        $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
+        $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
+        $return->fresh('items')->items->each(
+            fn ($i) => app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
+        );
+        return $return->fresh();
+    }
+
+    private function createExchange(array $context, ReturnRequest $return): ExchangeRequest
     {
         return app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
             'notes' => 'Perlu penggantian produk',
             'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => 2]],
         ]);
