@@ -166,9 +166,7 @@ class FulfillmentAwarenessTest extends TestCase
 
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-fa-'.uniqid(),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
@@ -194,7 +192,7 @@ class FulfillmentAwarenessTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'price' => $product->price,
+            'selling_price' => $product->price,
             'subtotal' => 50000,
         ]);
 

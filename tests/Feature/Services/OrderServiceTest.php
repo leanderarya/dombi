@@ -8,7 +8,7 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletOperatingHours;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\User;
 use App\Services\OrderService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,11 +32,11 @@ class OrderServiceTest extends TestCase
                 'is_closed' => false,
             ]);
         }
-        $variant = ProductVariant::factory()->create();
+        $variant = Product::factory()->create();
 
         OutletInventory::factory()->create([
             'outlet_id' => $outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 8,
             'minimum_stock' => 2,
@@ -49,7 +49,7 @@ class OrderServiceTest extends TestCase
         try {
             $orderService->createCheckoutOrder($user, [
                 'items' => [
-                    ['product_variant_id' => $variant->id, 'quantity' => 5],
+                    ['product_id' => $variant->id, 'quantity' => 5],
                 ],
                 'fulfillment_type' => 'pickup',
                 'selected_outlet_id' => $outlet->id,
@@ -81,11 +81,11 @@ class OrderServiceTest extends TestCase
                 'is_closed' => false,
             ]);
         }
-        $variant = ProductVariant::factory()->create();
+        $variant = Product::factory()->create();
 
         OutletInventory::factory()->create([
             'outlet_id' => $outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 3,
             'minimum_stock' => 2,
@@ -95,7 +95,7 @@ class OrderServiceTest extends TestCase
 
         $order = $orderService->createCheckoutOrder($user, [
             'items' => [
-                ['product_variant_id' => $variant->id, 'quantity' => 5],
+                ['product_id' => $variant->id, 'quantity' => 5],
             ],
             'fulfillment_type' => 'pickup',
             'selected_outlet_id' => $outlet->id,
@@ -122,11 +122,11 @@ class OrderServiceTest extends TestCase
                 'is_closed' => false,
             ]);
         }
-        $variant = ProductVariant::factory()->create();
+        $variant = Product::factory()->create();
 
         OutletInventory::factory()->create([
             'outlet_id' => $outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 10,
             'minimum_stock' => 2,
@@ -139,7 +139,7 @@ class OrderServiceTest extends TestCase
         try {
             $orderService->createCheckoutOrder($user, [
                 'items' => [
-                    ['product_variant_id' => $variant->id, 'quantity' => 5],
+                    ['product_id' => $variant->id, 'quantity' => 5],
                 ],
                 'fulfillment_type' => 'pickup',
                 'selected_outlet_id' => $outlet->id,

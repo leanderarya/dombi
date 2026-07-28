@@ -28,7 +28,7 @@ class OwnerOutletManagementTest extends TestCase
             'longitude' => 110.4375000,
             'status' => 'active',
         ]);
-        $product = Product::create(['name' => 'Susu 500ml', 'slug' => 'susu-500ml-test', 'unit' => 'botol', 'price' => 25000, 'is_active' => true]);
+        $product = Product::create(['name' => 'Susu 500ml', 'selling_price' => 25000, 'is_active' => true]);
         OutletInventory::create(['outlet_id' => $outlet->id, 'product_id' => $product->id, 'current_stock' => 1, 'reserved_stock' => 0, 'minimum_stock' => 2]);
 
         $this->actingAs($owner)

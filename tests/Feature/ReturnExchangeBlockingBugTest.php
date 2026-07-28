@@ -7,8 +7,8 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\ReturnRequest;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -103,7 +103,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
 
         $this->assertDatabaseHas('stock_movements', [
             'outlet_id' => $context['outlet']->id,
-            'product_variant_id' => $context['variant']->id,
+            'product_id' => $context['variant']->id,
             'type' => 'return_out',
             'quantity' => -4,
             'reference_type' => ReturnRequest::class,
@@ -207,7 +207,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
             'reason' => 'slow_moving',
             'notes' => 'Return request for blocking bug reproduction',
             'items' => [[
-                'product_variant_id' => $context['variant']->id,
+                'product_id' => $context['variant']->id,
                 'quantity' => $quantity,
             ]],
         ]);
@@ -217,7 +217,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
     {
         $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'reason' => 'slow_moving',
-            'items' => [['product_variant_id' => $context['variant']->id, 'quantity' => $quantity]],
+            'items' => [['product_id' => $context['variant']->id, 'quantity' => $quantity]],
         ]);
         $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
@@ -234,7 +234,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
             'return_request_id' => $return->id,
             'notes' => 'Exchange request for blocking bug reproduction',
             'items' => [[
-                'product_variant_id' => $context['variant']->id,
+                'product_id' => $context['variant']->id,
                 'quantity' => $quantity,
             ]],
         ]);
@@ -262,19 +262,17 @@ class ReturnExchangeBlockingBugTest extends TestCase
 
         $product = Product::create([
             'name' => $variantName,
-            'slug' => uniqid('return-bug-'),
-            'unit' => 'botol',
-            'price' => 55000,
+            'selling_price' => 55000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => $variantName,
             'brand' => 'Dombi',
         ]);
 
-        $variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => $variantName,
             'flavor' => 'Original',
@@ -287,7 +285,7 @@ class ReturnExchangeBlockingBugTest extends TestCase
         $inventory = OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $product->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => $currentStock,
             'reserved_stock' => $reservedStock,
             'minimum_stock' => 2,

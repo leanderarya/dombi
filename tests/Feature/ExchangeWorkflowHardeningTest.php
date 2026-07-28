@@ -7,8 +7,8 @@ use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\ReturnRequest;
 use App\Models\StockMovement;
 use App\Models\User;
@@ -42,7 +42,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
 
         $this->assertDatabaseHas('stock_movements', [
             'outlet_id' => $context['outlet']->id,
-            'product_variant_id' => $context['exchangeVariant']->id,
+            'product_id' => $context['exchangeVariant']->id,
             'type' => 'exchange_out',
             'quantity' => -2,
             'reference_type' => ExchangeRequest::class,
@@ -108,7 +108,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
             'items' => [[
-                'product_variant_id' => $context['returnVariant']->id,
+                'product_id' => $context['returnVariant']->id,
                 'quantity' => 1,
             ]],
             'notes' => 'Exchange hardening test',
@@ -147,7 +147,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
             'items' => [[
-                'product_variant_id' => $context['returnVariant']->id,
+                'product_id' => $context['returnVariant']->id,
                 'quantity' => 1,
             ]],
             'notes' => 'Exchange hardening test',
@@ -174,7 +174,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
             'items' => [[
-                'product_variant_id' => $context['returnVariant']->id,
+                'product_id' => $context['returnVariant']->id,
                 'quantity' => 1,
             ]],
             'notes' => 'Exchange hardening test',
@@ -205,7 +205,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $this->expectException(ValidationException::class);
 
         app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
-            'items' => [['product_variant_id' => $context['exchangeVariant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['exchangeVariant']->id, 'quantity' => 2]],
         ]);
     }
 
@@ -219,7 +219,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
 
         app(ExchangeService::class)->createRequest($otherContext['outlet'], $otherContext['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $otherContext['exchangeVariant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $otherContext['exchangeVariant']->id, 'quantity' => 2]],
         ]);
     }
 
@@ -228,7 +228,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $context = $this->makeContext();
         $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'reason' => 'slow_moving',
-            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['returnVariant']->id, 'quantity' => 2]],
         ]);
         $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
         // status is 'approved', not 'received_at_center'
@@ -237,7 +237,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
 
         app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $context['exchangeVariant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['exchangeVariant']->id, 'quantity' => 2]],
         ]);
     }
 
@@ -250,7 +250,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
 
         app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 3]], // 3 > 2
+            'items' => [['product_id' => $context['returnVariant']->id, 'quantity' => 3]], // 3 > 2
         ]);
     }
 
@@ -263,9 +263,9 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
             'items' => [[
-                'product_variant_id' => $context['returnVariant']->id,
+                'product_id' => $context['returnVariant']->id,
                 'quantity' => 2,
-                'replacement_variant_id' => $context['exchangeVariant']->id,
+                'replacement_product_id' => $context['exchangeVariant']->id,
                 'replacement_quantity' => 10, // > 2, value-based allowed
             ]],
         ]);
@@ -282,7 +282,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         // First exchange uses the return
         app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['returnVariant']->id, 'quantity' => 2]],
         ]);
 
         // Second exchange with same return should fail
@@ -290,7 +290,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
 
         app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['returnVariant']->id, 'quantity' => 2]],
         ]);
     }
 
@@ -301,7 +301,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
 
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['returnVariant']->id, 'quantity' => 2]],
         ]);
         $exchange = app(ExchangeService::class)->approveRequest($exchange, $context['owner']);
 
@@ -321,7 +321,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         // Create exchange while return is received_at_center
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
-            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+            'items' => [['product_id' => $context['returnVariant']->id, 'quantity' => 2]],
         ]);
         $exchange = app(ExchangeService::class)->approveRequest($exchange, $context['owner']);
 
@@ -338,7 +338,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
             'items' => [[
-                'product_variant_id' => $context['exchangeVariant']->id,
+                'product_id' => $context['exchangeVariant']->id,
                 'quantity' => $quantity,
             ]],
             'notes' => 'Exchange hardening test',
@@ -359,7 +359,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
             'return_request_id' => $return->id,
             'items' => [[
-                'product_variant_id' => $context['exchangeVariant']->id,
+                'product_id' => $context['exchangeVariant']->id,
                 'quantity' => $quantity,
             ]],
             'notes' => 'Exchange hardening test',
@@ -374,12 +374,12 @@ class ExchangeWorkflowHardeningTest extends TestCase
     private function createReceivedReturn(array $context, int $quantity, ?int $exchangeQuantity = null): ReturnRequest
     {
         $items = [[
-            'product_variant_id' => $context['returnVariant']->id,
+            'product_id' => $context['returnVariant']->id,
             'quantity' => $quantity,
         ]];
         if ($exchangeQuantity !== null) {
             $items[] = [
-                'product_variant_id' => $context['exchangeVariant']->id,
+                'product_id' => $context['exchangeVariant']->id,
                 'quantity' => $exchangeQuantity,
             ];
         }
@@ -394,7 +394,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $return = app(ReturnService::class)->markReceivedAtCenter($return->fresh('items'), $context['owner']);
 
         $return->fresh('items')->items->each(
-            fn ($i) => $i->product_variant_id === $context['returnVariant']->id
+            fn ($i) => $i->product_id === $context['returnVariant']->id
                 ? app(ReturnService::class)->storeItem($return->withoutRelations(), $i, $context['owner'])
                 : null
         );
@@ -428,7 +428,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $returnVariant->product_id,
-            'product_variant_id' => $returnVariant->id,
+            'product_id' => $returnVariant->id,
             'current_stock' => $outletStock,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -437,7 +437,7 @@ class ExchangeWorkflowHardeningTest extends TestCase
         $exchangeInventory = OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $exchangeVariant->product_id,
-            'product_variant_id' => $exchangeVariant->id,
+            'product_id' => $exchangeVariant->id,
             'current_stock' => $outletStock,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -446,23 +446,21 @@ class ExchangeWorkflowHardeningTest extends TestCase
         return compact('owner', 'outletUser', 'outlet', 'returnVariant', 'exchangeVariant', 'exchangeInventory');
     }
 
-    private function makeVariant(string $name, int $sellingPrice, int $centerStock): ProductVariant
+    private function makeVariant(string $name, int $sellingPrice, int $centerStock): Product
     {
         $product = Product::create([
             'name' => $name,
-            'slug' => uniqid('exchange-hardening-'),
-            'unit' => 'botol',
-            'price' => $sellingPrice,
+            'selling_price' => $sellingPrice,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => $name,
             'brand' => 'Dombi',
         ]);
 
-        return ProductVariant::create([
-            'product_family_id' => $family->id,
+        return Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => $name,
             'flavor' => 'Original',

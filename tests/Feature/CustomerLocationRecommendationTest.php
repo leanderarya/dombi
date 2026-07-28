@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use Tests\WithTestOutlet;
@@ -45,7 +45,7 @@ class CustomerLocationRecommendationTest extends TestCase
     public function test_pickup_outlet_recommendation_prioritizes_stock_over_shorter_distance(): void
     {
         $product = $this->createProduct();
-        $variant = ProductVariant::where('product_id', $product->id)->first();
+        $variant = Product::where('product_id', $product->id)->first();
 
         $nearEmpty = $this->createOutlet('Outlet Tembalang', -7.0530000, 110.4360000, 0, $product->id);
         $recommended = $this->createOutlet('Outlet Banyumanik', -7.0610000, 110.4310000, 10, $product->id);
@@ -53,7 +53,7 @@ class CustomerLocationRecommendationTest extends TestCase
 
         $this->withSession([
             'checkout.cart' => [
-                ['product_variant_id' => $variant->id, 'quantity' => 2],
+                ['product_id' => $variant->id, 'quantity' => 2],
             ],
         ])->getJson('/customer/checkout/pickup-outlets?latitude=-7.0523456&longitude=110.4345678')
             ->assertOk()
@@ -74,15 +74,13 @@ class CustomerLocationRecommendationTest extends TestCase
     {
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml',
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
-        ProductVariant::create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $product->id,
             'name' => 'Original 500ml',
             'flavor' => 'Original',
@@ -107,11 +105,11 @@ class CustomerLocationRecommendationTest extends TestCase
             'status' => 'active',
         ]);
 
-        $variant = ProductVariant::where('product_id', $productId)->first();
+        $variant = Product::where('product_id', $productId)->first();
         OutletInventory::create([
             'outlet_id' => $outlet->id,
             'product_id' => $productId,
-            'product_variant_id' => $variant?->id,
+            'product_id' => $variant?->id,
             'current_stock' => $stock,
             'reserved_stock' => 0,
             'minimum_stock' => 0,

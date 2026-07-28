@@ -7,8 +7,8 @@ use App\Models\ExchangeRequestItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
@@ -44,7 +44,7 @@ class OwnerDashboardDecisionCenterTest extends TestCase
 
         ReturnRequestItem::create([
             'return_request_id' => $return->id,
-            'product_variant_id' => $context['variantLarge']->id,
+            'product_id' => $context['variantLarge']->id,
             'quantity' => 4,
             'unit_price' => 45000,
             'subtotal' => 180000,
@@ -62,7 +62,7 @@ class OwnerDashboardDecisionCenterTest extends TestCase
 
         ExchangeRequestItem::create([
             'exchange_request_id' => $exchange->id,
-            'product_variant_id' => $context['variantSmall']->id,
+            'product_id' => $context['variantSmall']->id,
             'quantity' => 5,
             'unit_price' => 30000,
             'subtotal' => 150000,
@@ -202,26 +202,22 @@ class OwnerDashboardDecisionCenterTest extends TestCase
         $outletUserA->forceFill(['outlet_id' => $outletA->id])->save();
         $outletUserB->forceFill(['outlet_id' => $outletB->id])->save();
 
-        $family = ProductFamily::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
+        $family = ProductCategory::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
 
         $productLarge = Product::create([
             'name' => 'Biogoat 1L',
-            'slug' => uniqid('biogoat-'),
-            'unit' => 'botol',
-            'price' => 55000,
+            'selling_price' => 55000,
             'is_active' => true,
         ]);
 
         $productSmall = Product::create([
             'name' => 'Domilk Coffee 250ml',
-            'slug' => uniqid('domilk-'),
-            'unit' => 'botol',
-            'price' => 30000,
+            'selling_price' => 30000,
             'is_active' => true,
         ]);
 
-        $variantLarge = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variantLarge = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $productLarge->id,
             'name' => 'Biogoat 1L',
             'flavor' => 'Original',
@@ -232,8 +228,8 @@ class OwnerDashboardDecisionCenterTest extends TestCase
             'is_active' => true,
         ]);
 
-        $variantSmall = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $variantSmall = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $productSmall->id,
             'name' => 'Domilk Coffee 250ml',
             'flavor' => 'Coffee',
@@ -247,7 +243,7 @@ class OwnerDashboardDecisionCenterTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outletA->id,
             'product_id' => $productLarge->id,
-            'product_variant_id' => $variantLarge->id,
+            'product_id' => $variantLarge->id,
             'current_stock' => 0,
             'reserved_stock' => 0,
             'minimum_stock' => 2,
@@ -256,7 +252,7 @@ class OwnerDashboardDecisionCenterTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $outletB->id,
             'product_id' => $productSmall->id,
-            'product_variant_id' => $variantSmall->id,
+            'product_id' => $variantSmall->id,
             'current_stock' => 12,
             'reserved_stock' => 0,
             'minimum_stock' => 3,

@@ -7,8 +7,8 @@ use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -21,7 +21,7 @@ class RecipientCheckoutTest extends TestCase
 
     private Product $product;
 
-    private ProductVariant $variant;
+    private Product $variant;
 
     private Outlet $outlet;
 
@@ -35,22 +35,20 @@ class RecipientCheckoutTest extends TestCase
 
         $this->product = Product::create([
             'name' => 'Domilk Premium',
-            'slug' => 'domilk-premium-recipient-'.uniqid(),
-            'unit' => 'liter',
-            'price' => 18000,
+            'selling_price' => 18000,
             'selling_price' => 25000,
             'center_price' => 18000,
             'is_active' => true,
         ]);
 
-        $family = ProductFamily::create([
+        $family = ProductCategory::create([
             'name' => 'Domilk Premium',
             'brand' => 'Domilk',
             'is_active' => true,
         ]);
 
-        $this->variant = ProductVariant::create([
-            'product_family_id' => $family->id,
+        $this->variant = Product::create([
+            'product_category_id' => $family->id,
             'product_id' => $this->product->id,
             'name' => 'Coffee 1L',
             'flavor' => 'Coffee',
@@ -65,7 +63,7 @@ class RecipientCheckoutTest extends TestCase
         OutletInventory::create([
             'outlet_id' => $this->outlet->id,
             'product_id' => $this->product->id,
-            'product_variant_id' => $this->variant->id,
+            'product_id' => $this->variant->id,
             'current_stock' => 50,
             'reserved_stock' => 0,
             'minimum_stock' => 5,
@@ -91,7 +89,7 @@ class RecipientCheckoutTest extends TestCase
 
         $this->session([
             'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 2],
+                ['product_id' => $this->variant->id, 'quantity' => 2],
             ],
             'checkout.fulfillment' => ['fulfillment_type' => 'delivery_dombi', 'selected_outlet_id' => $this->outlet->id],
         ]);
@@ -110,7 +108,7 @@ class RecipientCheckoutTest extends TestCase
 
         $this->session([
             'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 2],
+                ['product_id' => $this->variant->id, 'quantity' => 2],
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',
@@ -153,7 +151,7 @@ class RecipientCheckoutTest extends TestCase
 
         $this->session([
             'checkout.cart' => [
-                ['product_variant_id' => $this->variant->id, 'quantity' => 2],
+                ['product_id' => $this->variant->id, 'quantity' => 2],
             ],
             'checkout.fulfillment' => [
                 'fulfillment_type' => 'delivery_dombi',

@@ -238,9 +238,7 @@ class GuestCheckoutAuthTest extends TestCase
     {
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
-            'slug' => 'susu-kambing-500ml-'.uniqid(),
-            'unit' => 'botol',
-            'price' => 25000,
+            'selling_price' => 25000,
             'is_active' => true,
         ]);
 

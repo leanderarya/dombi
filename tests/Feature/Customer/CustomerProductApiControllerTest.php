@@ -4,8 +4,8 @@ namespace Tests\Feature\Customer;
 
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -16,12 +16,12 @@ class CustomerProductApiControllerTest extends TestCase
     public function test_stock_status_uses_minimum_stock_threshold(): void
     {
         $outlet = Outlet::factory()->create();
-        $family = ProductFamily::factory()->create();
-        $variant = ProductVariant::factory()->create(['product_family_id' => $family->id]);
+        $family = ProductCategory::factory()->create();
+        $variant = Product::factory()->create(['product_category_id' => $family->id]);
 
         OutletInventory::factory()->create([
             'outlet_id' => $outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 2,
             'minimum_stock' => 10,
@@ -38,12 +38,12 @@ class CustomerProductApiControllerTest extends TestCase
     public function test_stock_status_out_of_stock(): void
     {
         $outlet = Outlet::factory()->create();
-        $family = ProductFamily::factory()->create();
-        $variant = ProductVariant::factory()->create(['product_family_id' => $family->id]);
+        $family = ProductCategory::factory()->create();
+        $variant = Product::factory()->create(['product_category_id' => $family->id]);
 
         OutletInventory::factory()->create([
             'outlet_id' => $outlet->id,
-            'product_variant_id' => $variant->id,
+            'product_id' => $variant->id,
             'current_stock' => 10,
             'reserved_stock' => 10,
             'minimum_stock' => 5,
