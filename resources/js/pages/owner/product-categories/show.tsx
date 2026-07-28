@@ -13,6 +13,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ProductImage from '@/components/owner/product-image';
+import ProductSearchFilters from '@/components/owner/product-search-filters';
+import type { ProductFilterValue } from '@/components/owner/product-search-filters';
 import SetupCenterStockModal from '@/components/owner/setup-center-stock-modal';
 import { Button } from '@/components/ui/button';
 import {
@@ -24,7 +26,6 @@ import {
     DialogFooter,
 } from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
-import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency, formatMarginPercent } from '@/lib/format';
@@ -34,18 +35,6 @@ import ImageUploadField from '@/components/owner/image-upload-field';
 interface Props {
     category: ProductCategory;
 }
-
-type ProductFilter = 'all' | 'active' | 'inactive' | 'out_of_stock' | 'low_stock' | 'has_image' | 'no_image';
-
-const FILTERS: { key: ProductFilter; label: string }[] = [
-    { key: 'all', label: 'Semua' },
-    { key: 'active', label: 'Aktif' },
-    { key: 'inactive', label: 'Nonaktif' },
-    { key: 'out_of_stock', label: 'Out Of Stock' },
-    { key: 'low_stock', label: 'Low Stock' },
-    { key: 'has_image', label: 'Has Image' },
-    { key: 'no_image', label: 'No Image' },
-];
 
 interface FlashProps {
     flash?: {
@@ -60,10 +49,14 @@ interface FlashProps {
 export default function ProductCategoryShow({ category }: Props) {
     const { props } = usePage<FlashProps>();
     const [search, setSearch] = useState('');
-    const [productFilter, setProductFilter] = useState<ProductFilter>('all');
+    const [productFilter, setProductFilter] = useState<ProductFilterValue>('all');
 
     const [deleteId, setDeleteId] = useState<number | null>(null);
     const [deleteCatDialog, setDeleteCatDialog] = useState(false);
+
+    // Soft delete guard dialog
+    const [softDeleteId, setSoftDeleteId] = useState<number | null>(null);
+    const [softDeleteDialog, setSoftDeleteDialog] = useState(false);
 
     // Category edit
     const [showCatEdit, setShowCatEdit] = useState(false);
@@ -326,7 +319,29 @@ export default function ProductCategoryShow({ category }: Props) {
                 toast.success('Produk berhasil dihapus');
                 setDeleteId(null);
             },
-            onError: () => toast.error('Gagal menghapus produk dengan riwayat transaksi atau stok'),
+            onError: (errors) => {
+                const errMsg = Object.values(errors).flat().join(', ');
+                if (errMsg.toLowerCase().includes('riwayat') || errMsg.toLowerCase().includes('stok')) {
+                    setDeleteId(null);
+                    setSoftDeleteId(deleteId);
+                    setSoftDeleteDialog(true);
+                } else {
+                    toast.error(errMsg || 'Gagal menghapus produk');
+                }
+            },
+        });
+    };
+
+    const handleSoftDeleteDeactivate = () => {
+        if (!softDeleteId) return;
+        router.patch(`/owner/products/${softDeleteId}/toggle`, {}, {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Produk dinonaktifkan');
+                setSoftDeleteDialog(false);
+                setSoftDeleteId(null);
+            },
+            onError: () => toast.error('Gagal menonaktifkan produk'),
         });
     };
 
@@ -379,39 +394,15 @@ export default function ProductCategoryShow({ category }: Props) {
                 </div>
             )}
 
-            {/* Search + Actions */}
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="flex items-center gap-3">
-                    <Input
-                        type="text"
-                        placeholder="Cari nama produk / SKU / rasa / ukuran..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-72"
-                    />
-                </div>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" onClick={() => setShowBulkForm(true)}>
-                        <Layers className="mr-1 h-4 w-4" /> Tambah Multi Rasa
-                    </Button>
-                    <Button onClick={openCreateProduct}>
-                        <Plus className="mr-1 h-4 w-4" /> Tambah Produk
-                    </Button>
-                </div>
-            </div>
+            <ProductSearchFilters search={search} onSearch={setSearch} filter={productFilter} onFilterChange={setProductFilter} />
 
-            {/* Filter chips */}
-            <div className="mb-4 flex flex-wrap items-center gap-2">
-                {FILTERS.map((f) => (
-                    <button
-                        key={f.key}
-                        type="button"
-                        onClick={() => setProductFilter(f.key)}
-                        className={`rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition ${productFilter === f.key ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
-                    >
-                        {f.label}
-                    </button>
-                ))}
+            <div className="mb-4 flex items-center justify-end gap-2">
+                <Button variant="outline" onClick={() => setShowBulkForm(true)}>
+                    <Layers className="mr-1 h-4 w-4" /> Tambah Multi Rasa
+                </Button>
+                <Button onClick={openCreateProduct}>
+                    <Plus className="mr-1 h-4 w-4" /> Tambah Produk
+                </Button>
             </div>
 
             {filteredProducts.length === 0 ? (
@@ -592,6 +583,22 @@ export default function ProductCategoryShow({ category }: Props) {
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDeleteId(null)}>Batal</Button>
                         <Button variant="destructive" onClick={handleDeleteProduct}>Hapus</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Soft Delete Guard → Deactivate Dialog */}
+            <Dialog open={softDeleteDialog} onOpenChange={(o) => { if (!o) { setSoftDeleteDialog(false); setSoftDeleteId(null); }}}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Tidak Bisa Hapus</DialogTitle>
+                        <DialogDescription>
+                            Tidak bisa hapus, produk sudah dipakai di pesanan. Nonaktifkan saja?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => { setSoftDeleteDialog(false); setSoftDeleteId(null); }}>Batal</Button>
+                        <Button variant="default" onClick={handleSoftDeleteDeactivate}>Deactivate</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
