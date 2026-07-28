@@ -4,7 +4,7 @@ namespace App\Http\Requests\Owner;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreProductRequest extends FormRequest
+class BulkStoreProductsRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -15,15 +15,12 @@ class StoreProductRequest extends FormRequest
     {
         return [
             'product_category_id' => ['required', 'exists:product_categories,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'flavor' => ['nullable', 'string', 'max:100'],
             'size' => ['nullable', 'string', 'max:50'],
-            'sku' => ['nullable', 'string', 'max:50', 'unique:products,sku'],
             'center_price' => ['required', 'numeric', 'min:0'],
             'selling_price' => ['required', 'numeric', 'gte:center_price'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
-            'is_active' => ['sometimes', 'boolean'],
+            'flavors' => ['required', 'array', 'min:1', 'max:20'],
+            'flavors.*' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:1000'],
         ];
     }
 }
