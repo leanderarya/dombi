@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Outlet;
 use App\Http\Controllers\Controller;
 use App\Models\OutletInventory;
 use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\RestockRequest;
 use App\Services\InventoryService;
 use Illuminate\Http\RedirectResponse;
@@ -19,7 +20,7 @@ class InventoryController extends Controller
         $outlet = auth()->user()->outlet;
         abort_unless($outlet, 403);
 
-        $categories = \App\Models\ProductCategory::where('is_active', true)
+        $categories = ProductCategory::where('is_active', true)
             ->with(['products' => fn ($q) => $q->where('is_active', true)->orderBy('name')])
             ->orderBy('name')
             ->get();

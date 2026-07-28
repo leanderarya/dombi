@@ -2,12 +2,10 @@
 
 namespace Tests\Regression;
 
-use App\Models\ProductCategory;
 use App\Models\Product;
-use App\Models\Outlet;
-use App\Services\InventoryService;
-use App\Services\OrderService;
+use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class ProductDomainRegressionTest extends TestCase
@@ -28,7 +26,7 @@ class ProductDomainRegressionTest extends TestCase
             'sku' => 'BIO-ORI-1L',
         ]);
         // After Task 2 refactor, table is products, keep backward compat check
-        $table = \Illuminate\Support\Facades\Schema::hasTable('product_variants') ? 'product_variants' : 'products';
+        $table = Schema::hasTable('product_variants') ? 'product_variants' : 'products';
         $this->assertDatabaseHas($table, ['id' => $variant->id, 'center_stock' => 100]);
     }
 

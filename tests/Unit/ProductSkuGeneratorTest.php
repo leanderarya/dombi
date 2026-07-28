@@ -2,13 +2,14 @@
 
 namespace Tests\Unit;
 
+use App\Services\ProductSkuGenerator;
 use Tests\TestCase;
 
 class ProductSkuGeneratorTest extends TestCase
 {
     public function test_generates_deterministic_sku(): void
     {
-        $gen = app(\App\Services\ProductSkuGenerator::class);
+        $gen = app(ProductSkuGenerator::class);
         $cat = (object) ['name' => 'Biogoat'];
         $sku = $gen->generate($cat, 'Original 1L', 'Original', '1L', 1);
         $this->assertEquals('BIO-ORI-1L-001', $sku);

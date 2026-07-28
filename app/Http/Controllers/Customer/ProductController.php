@@ -16,7 +16,7 @@ class ProductController extends Controller
         return Inertia::render('customer/products');
     }
 
-    public function show(Request $request, ProductCategory $category = null): Response
+    public function show(Request $request, ?ProductCategory $category = null): Response
     {
         // Resolve category from route param
         if (! $category) {

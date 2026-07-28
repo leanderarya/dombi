@@ -90,6 +90,7 @@ class PricingController extends Controller
             if (! isset($o->product_prices_count)) {
                 $o->setAttribute('product_prices_count', $o->variant_prices_count ?? 0);
             }
+
             return $o;
         });
 

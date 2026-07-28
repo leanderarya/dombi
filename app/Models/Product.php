@@ -77,12 +77,14 @@ class Product extends Model
         if ($this->center_stock <= 5 || $this->available_stock <= 5) {
             return 'low';
         }
+
         return 'available';
     }
 
     public function priceForOutlet(int $outletId): float
     {
         $override = $this->outletPrices()->where('outlet_id', $outletId)->value('selling_price');
+
         return $override !== null ? (float) $override : (float) $this->selling_price;
     }
 }

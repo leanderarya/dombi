@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Http\Requests\Owner\BulkStoreProductsRequest;
 use App\Http\Requests\Owner\StoreProductRequest;
 use App\Http\Requests\Owner\UpdateProductRequest;
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Services\ProductImageService;
 use App\Services\ProductSkuGenerator;
 use Illuminate\Http\RedirectResponse;
@@ -78,7 +78,7 @@ class ProductController extends Controller
         $newIds = [];
 
         foreach ($data['flavors'] as $flavor) {
-            $name = trim($flavor . ' ' . ($data['size'] ?? ''));
+            $name = trim($flavor.' '.($data['size'] ?? ''));
             $sku = $skuGen->uniqueForCategory($category->id, $name, $flavor, $data['size'] ?? null);
 
             $prod = $category->products()->create([
@@ -99,7 +99,7 @@ class ProductController extends Controller
         return redirect()
             ->route('owner.product-categories.show', $category)
             ->with('new_product_ids', $newIds)
-            ->with('success', count($newIds) . ' produk berhasil dibuat.');
+            ->with('success', count($newIds).' produk berhasil dibuat.');
     }
 
     public function update(
@@ -155,7 +155,7 @@ class ProductController extends Controller
     {
         $newSku = $skuGen->uniqueForCategory(
             $product->product_category_id,
-            $product->name . ' Copy',
+            $product->name.' Copy',
             $product->flavor,
             $product->size
         );
@@ -163,7 +163,7 @@ class ProductController extends Controller
         $copy = $product->replicate();
         $copy->sku = $newSku;
         $copy->center_stock = 0;
-        $copy->name = $product->name . ' Copy';
+        $copy->name = $product->name.' Copy';
         $copy->save();
 
         return redirect()->back()->with('new_product_id', $copy->id)

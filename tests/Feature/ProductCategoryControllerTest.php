@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\Product;
+use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -27,7 +29,7 @@ class ProductCategoryControllerTest extends TestCase
     public function test_owner_can_create_product_under_category(): void
     {
         $owner = User::factory()->create(['role' => 'owner']);
-        $category = \App\Models\ProductCategory::factory()->create(['name' => 'TestCat']);
+        $category = ProductCategory::factory()->create(['name' => 'TestCat']);
 
         $this->actingAs($owner)->post("/owner/product-categories/{$category->id}/products", [
             'name' => 'Original 1L',
@@ -41,7 +43,7 @@ class ProductCategoryControllerTest extends TestCase
     public function test_owner_can_bulk_create_products(): void
     {
         $owner = User::factory()->create(['role' => 'owner']);
-        $category = \App\Models\ProductCategory::factory()->create();
+        $category = ProductCategory::factory()->create();
 
         $this->actingAs($owner)->post("/owner/product-categories/{$category->id}/products/bulk", [
             'flavors' => ['Chocolate', 'Coffee'],
@@ -56,7 +58,7 @@ class ProductCategoryControllerTest extends TestCase
     public function test_owner_can_toggle_product(): void
     {
         $owner = User::factory()->create(['role' => 'owner']);
-        $product = \App\Models\Product::factory()->create(['is_active' => true]);
+        $product = Product::factory()->create(['is_active' => true]);
 
         $this->actingAs($owner)->patch("/owner/products/{$product->id}/toggle")->assertRedirect();
         $this->assertDatabaseHas('products', ['id' => $product->id, 'is_active' => false]);
@@ -65,7 +67,7 @@ class ProductCategoryControllerTest extends TestCase
     public function test_owner_can_duplicate_product(): void
     {
         $owner = User::factory()->create(['role' => 'owner']);
-        $product = \App\Models\Product::factory()->create(['name' => 'Original']);
+        $product = Product::factory()->create(['name' => 'Original']);
 
         $this->actingAs($owner)->post("/owner/products/{$product->id}/duplicate")->assertRedirect();
         $this->assertDatabaseHas('products', ['name' => 'Original Copy']);
