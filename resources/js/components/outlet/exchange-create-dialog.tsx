@@ -1,6 +1,7 @@
 import { useForm } from '@inertiajs/react';
 import { X, Plus, Minus } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
 import CustomSelect from '@/components/ui/custom-select';
 
 interface VariantOption {
@@ -54,7 +55,41 @@ export default function ExchangeCreateDialog({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post('/outlet/exchanges', { onSuccess: () => onClose() });
+
+        if (!form.data.return_variant_id || !form.data.replacement_variant_id) {
+            toast.error('Pilih produk yang dikembalikan dan penggantinya');
+
+            return;
+        }
+
+        const payload = {
+            items: [
+                {
+                    product_variant_id: Number(form.data.return_variant_id),
+                    quantity: Number(form.data.return_quantity),
+                    replacement_variant_id: Number(
+                        form.data.replacement_variant_id,
+                    ),
+                    replacement_quantity: Number(
+                        form.data.replacement_quantity,
+                    ),
+                },
+            ],
+            notes: [form.data.return_notes, form.data.replacement_notes]
+                .filter(Boolean)
+                .join(' | '),
+        };
+
+        form.transform(() => payload).post('/outlet/exchanges', {
+            onSuccess: () => {
+                toast.success('Penukaran diajukan');
+                onClose();
+                form.reset();
+            },
+            onError: (errors) => {
+                toast.error(Object.values(errors).flat().join(', '));
+            },
+        });
     };
 
     if (!open) {
@@ -279,6 +314,12 @@ export default function ExchangeCreateDialog({
                             </div>
                         </div>
                     </div>
+
+                    {Object.keys(form.errors).length > 0 && (
+                        <div className="mx-4 mt-2 rounded-lg bg-red-50 p-3 text-xs text-red-700">
+                            {Object.values(form.errors).flat().join(', ')}
+                        </div>
+                    )}
 
                     {/* Footer */}
                     <div className="border-t border-border bg-surface-muted/50 px-4 py-3">

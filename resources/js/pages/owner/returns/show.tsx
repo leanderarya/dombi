@@ -256,17 +256,54 @@ export default function OwnerReturnsShow({ return: ret }: any) {
                                             </div>
                                             <div className="ml-3 shrink-0">
                                                 {isDecided ? (
-                                                    <span
-                                                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
-                                                            isStored
-                                                                ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
-                                                                : 'bg-red-50 text-red-700 ring-1 ring-red-200'
-                                                        }`}
-                                                    >
-                                                        {isStored
-                                                            ? '✓ Disimpan'
-                                                            : '✗ Dibuang'}
-                                                    </span>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <span
+                                                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${
+                                                                isStored
+                                                                    ? 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200'
+                                                                    : 'bg-red-50 text-red-700 ring-1 ring-red-200'
+                                                            }`}
+                                                        >
+                                                            {isStored
+                                                                ? '✓ Disimpan'
+                                                                : '✗ Dibuang'}
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                router.post(
+                                                                    `/owner/returns/${ret.id}/items/${item.id}/${isStored ? 'dispose' : 'store'}`,
+                                                                    {},
+                                                                    {
+                                                                        preserveScroll: true,
+                                                                        onSuccess:
+                                                                            () =>
+                                                                                toast.success(
+                                                                                    isStored
+                                                                                        ? 'Diubah menjadi dibuang'
+                                                                                        : 'Diubah menjadi disimpan',
+                                                                                ),
+                                                                        onError:
+                                                                            (
+                                                                                errors,
+                                                                            ) =>
+                                                                                toast.error(
+                                                                                    Object.values(
+                                                                                        errors,
+                                                                                    )
+                                                                                        .flat()
+                                                                                        .join(
+                                                                                            ', ',
+                                                                                        ),
+                                                                                ),
+                                                                    },
+                                                                );
+                                                            }}
+                                                            className="rounded-md border border-border bg-white px-2 py-1 text-[11px] font-medium text-text-muted hover:bg-surface-muted"
+                                                        >
+                                                            Ubah
+                                                        </button>
+                                                    </div>
                                                 ) : (
                                                     <div className="flex items-center gap-1.5">
                                                         <button

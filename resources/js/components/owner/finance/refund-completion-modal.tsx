@@ -65,6 +65,7 @@ export default function RefundCompletionModal({
 
         router.post(`/owner/refunds/${orderId}/complete-direct`, fd, {
             forceFormData: true,
+            preserveScroll: true,
             onSuccess: () => {
                 toast.success('Refund selesai');
                 onClose();
