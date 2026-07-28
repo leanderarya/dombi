@@ -166,6 +166,102 @@ class ExchangeWorkflowHardeningTest extends TestCase
             ->count());
     }
 
+    public function test_create_exchange_requires_return_request_id(): void
+    {
+        $context = $this->makeContext();
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'items' => [['product_variant_id' => $context['exchangeVariant']->id, 'quantity' => 2]],
+        ]);
+    }
+
+    public function test_create_exchange_rejects_return_from_different_outlet(): void
+    {
+        $context = $this->makeContext();
+        $otherContext = $this->makeContext();
+        $return = $this->createReceivedReturn($context, quantity: 2);
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        app(ExchangeService::class)->createRequest($otherContext['outlet'], $otherContext['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [['product_variant_id' => $otherContext['exchangeVariant']->id, 'quantity' => 2]],
+        ]);
+    }
+
+    public function test_create_exchange_rejects_return_not_received_at_center(): void
+    {
+        $context = $this->makeContext();
+        $return = app(ReturnService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'reason' => 'slow_moving',
+            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+        ]);
+        $return = app(ReturnService::class)->approveRequest($return, $context['owner']);
+        // status is 'approved', not 'received_at_center'
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [['product_variant_id' => $context['exchangeVariant']->id, 'quantity' => 2]],
+        ]);
+    }
+
+    public function test_create_exchange_rejects_quantity_exceeding_return(): void
+    {
+        $context = $this->makeContext();
+        $return = $this->createReceivedReturn($context, quantity: 2); // only 2 items returned
+
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 3]], // 3 > 2
+        ]);
+    }
+
+    public function test_create_exchange_allows_replacement_qty_greater_than_return_qty(): void
+    {
+        // Value-based: replacement_quantity is free, settlement handles difference
+        $context = $this->makeContext();
+        $return = $this->createReceivedReturn($context, quantity: 2);
+
+        $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [[
+                'product_variant_id' => $context['returnVariant']->id,
+                'quantity' => 2,
+                'replacement_variant_id' => $context['exchangeVariant']->id,
+                'replacement_quantity' => 10, // > 2, value-based allowed
+            ]],
+        ]);
+
+        $this->assertNotNull($exchange);
+        $this->assertSame(10, $exchange->items->first()->replacement_quantity);
+    }
+
+    public function test_create_exchange_rejects_reused_return(): void
+    {
+        $context = $this->makeContext();
+        $return = $this->createReceivedReturn($context, quantity: 2);
+
+        // First exchange uses the return
+        app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+        ]);
+
+        // Second exchange with same return should fail
+        $this->expectException(\Illuminate\Validation\ValidationException::class);
+
+        app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
+            'return_request_id' => $return->id,
+            'items' => [['product_variant_id' => $context['returnVariant']->id, 'quantity' => 2]],
+        ]);
+    }
+
     private function createApprovedExchange(array $context, int $quantity): ExchangeRequest
     {
         $exchange = app(ExchangeService::class)->createRequest($context['outlet'], $context['outletUser'], [
