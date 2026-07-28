@@ -22,7 +22,6 @@ class InventoryService
 
     /**
      * Reserve stock for an order.
-     * Accepts both product_id (new) and product_variant_id (legacy fallback).
      */
     public function reserveStock(int $outletId, array $items, Order $order): void
     {

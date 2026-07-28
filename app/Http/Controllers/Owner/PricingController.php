@@ -208,14 +208,8 @@ class PricingController extends Controller
     /**
      * Update global price (center_price and/or selling_price on Product).
      */
-    public function updateGlobal(Request $request, Product $product = null, PricingService $pricingService = null): RedirectResponse
+    public function updateGlobal(Request $request, Product $product, PricingService $pricingService): RedirectResponse
     {
-        if (! $product) {
-            $routeVal = $request->route('variant') ?? $request->route('product');
-            $id = is_object($routeVal) ? $routeVal->id : $routeVal;
-            $product = Product::findOrFail($id);
-        }
-        // Support both Product and ProductVariant route binding (legacy)
         $model = $product;
 
         $validated = $request->validate([
@@ -274,13 +268,8 @@ class PricingController extends Controller
     /**
      * Update outlet-specific price.
      */
-    public function updateOutlet(Request $request, Outlet $outlet, Product $product = null, PricingService $pricingService = null): RedirectResponse
+    public function updateOutlet(Request $request, Outlet $outlet, Product $product, PricingService $pricingService): RedirectResponse
     {
-        if (! $product) {
-            $routeVal = $request->route('variant') ?? $request->route('product');
-            $id = is_object($routeVal) ? $routeVal->id : $routeVal;
-            $product = Product::findOrFail($id);
-        }
         $validated = $request->validate([
             'selling_price' => ['required', 'numeric', 'min:0'],
         ]);
@@ -305,13 +294,8 @@ class PricingController extends Controller
     /**
      * Reset outlet price to global (delete override).
      */
-    public function resetOutlet(Request $request, Outlet $outlet, Product $product = null, PricingService $pricingService = null): RedirectResponse
+    public function resetOutlet(Request $request, Outlet $outlet, Product $product, PricingService $pricingService): RedirectResponse
     {
-        if (! $product) {
-            $routeVal = $request->route('variant') ?? $request->route('product');
-            $id = is_object($routeVal) ? $routeVal->id : $routeVal;
-            $product = Product::findOrFail($id);
-        }
         $pricingService->resetToGlobal($outlet->id, $product->id, $request->user());
 
         return back()->with('success', 'Harga berhasil direset ke harga pusat.');
@@ -320,14 +304,8 @@ class PricingController extends Controller
     /**
      * Get impact preview for a center price change.
      */
-    public function getImpact(Request $request, Product $product = null, PricingService $pricingService = null): JsonResponse
+    public function getImpact(Request $request, Product $product, PricingService $pricingService): JsonResponse
     {
-        if (! $product) {
-            $routeVal = $request->route('variant') ?? $request->route('product');
-            $id = is_object($routeVal) ? $routeVal->id : $routeVal;
-            $product = Product::findOrFail($id);
-        }
-        $pricingService = $pricingService ?? app(PricingService::class);
         $newCenterPrice = (float) request('center_price', $product->center_price);
         $impact = $pricingService->getCenterPriceImpact($product->id, $newCenterPrice);
 

@@ -9,7 +9,6 @@ use App\Http\Requests\Owner\UpdateInventoryRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Models\ProductCategory;
 use App\Services\InventoryService;
 use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
@@ -131,11 +130,7 @@ class InventoryController extends Controller
     public function store(StoreInventoryRequest $request, InventoryService $inventoryService): RedirectResponse
     {
         $data = $request->validated();
-        // Backward compat: support product_variant_id if sent
-        $productId = $data['product_id'] ?? $data['product_variant_id'] ?? null;
-        if (! $productId && $request->has('product_variant_id')) {
-            $productId = $request->input('product_variant_id');
-        }
+        $productId = $data['product_id'] ?? null;
         $data['product_id'] = $productId;
 
         try {
@@ -188,11 +183,10 @@ class InventoryController extends Controller
     {
         $validated = $request->validate([
             'outlet_id' => ['required', 'exists:outlets,id'],
-            'product_id' => ['sometimes', 'required', 'exists:products,id'],
-            'product_variant_id' => ['sometimes', 'required', 'exists:products,id'],
+            'product_id' => ['required', 'exists:products,id'],
         ]);
 
-        $productId = $validated['product_id'] ?? $validated['product_variant_id'] ?? null;
+        $productId = $validated['product_id'];
 
         $inventory = OutletInventory::where('outlet_id', $validated['outlet_id'])
             ->where('product_id', $productId)

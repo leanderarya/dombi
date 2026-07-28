@@ -34,9 +34,6 @@ class ExchangeController extends Controller
         return Inertia::render('outlet/exchanges/index', [
             'exchanges' => $exchanges,
             'filters' => $request->only(['status']),
-            'outletInventory' => $this->getOutletInventory($outlet->id),
-            'variants' => $this->getActiveProducts(),
-            'exchangeEligibleReturns' => $this->getExchangeEligibleReturns($outlet->id),
         ]);
     }
 
@@ -45,10 +42,16 @@ class ExchangeController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
+        $returnRequests = ReturnRequest::with(['items.product'])
+            ->where('outlet_id', $outlet->id)
+            ->where('status', 'approved')
+            ->get();
+
+        $products = $this->getOutletInventory($outlet->id);
+
         return Inertia::render('outlet/exchanges/create', [
-            'outletInventory' => $this->getOutletInventory($outlet->id),
-            'variants' => $this->getActiveProducts(),
-            'exchangeEligibleReturns' => $this->getExchangeEligibleReturns($outlet->id),
+            'returnRequests' => $returnRequests,
+            'products' => $products,
         ]);
     }
 
@@ -73,18 +76,9 @@ class ExchangeController extends Controller
             'return_request_id' => 'required|integer|exists:return_requests,id',
             'notes' => 'nullable|string|max:1000',
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'sometimes|required|integer|exists:products,id',
-            'items.*.product_variant_id' => 'sometimes|required|integer|exists:products,id',
+            'items.*.product_id' => 'required|integer|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
         ]);
-
-        // Normalize product_variant_id -> product_id
-        foreach ($validated['items'] as &$itm) {
-            if (! isset($itm['product_id']) && isset($itm['product_variant_id'])) {
-                $itm['product_id'] = $itm['product_variant_id'];
-            }
-            unset($itm['product_variant_id']);
-        }
 
         $service->createRequest($outlet, $request->user(), $validated);
 
@@ -130,7 +124,6 @@ class ExchangeController extends Controller
 
                 return [
                     'product_id' => $product->id,
-                    'product_variant_id' => $product->id, // backward compat
                     'variant' => [
                         'id' => $product->id,
                         'name' => $product->name,
@@ -149,18 +142,8 @@ class ExchangeController extends Controller
             ->get()
             ->map(fn (Product $p) => [
                 'id' => $p->id,
-                'name' => $p->name,
-                'full_name' => $p->full_display_name,
-                'selling_price' => $p->selling_price,
+                'name' => $p->full_display_name,
+                'category' => $p->category?->name,
             ]);
-    }
-
-    private function getExchangeEligibleReturns(int $outletId): \Illuminate\Database\Eloquent\Collection
-    {
-        return ReturnRequest::where('outlet_id', $outletId)
-            ->where('status', ReturnRequest::STATUS_RECEIVED_AT_CENTER)
-            ->whereDoesntHave('exchangeRequest')
-            ->with('items.product')
-            ->get();
     }
 }

@@ -2,12 +2,9 @@
 
 namespace App\Http\Controllers\Owner;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Owner\ApproveRestockRequest;
-use App\Http\Requests\Owner\RejectRestockRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
-use App\Models\ProductVariant;
+use App\Models\Product;
 use App\Models\RestockRequest;
 use App\Services\RestockService;
 use Illuminate\Http\JsonResponse;
@@ -55,19 +52,18 @@ class RestockController extends Controller
             'requester',
             'approver',
             'rejecter',
-            'items.product',
-            'items.variant.family',
+            'items.product.category',
             'sender',
             'receiver',
         ]);
 
-        $inventories = OutletInventory::with('variant.family')
+        $inventories = OutletInventory::with('product.category')
             ->where('outlet_id', $restockRequest->outlet_id)
-            ->whereIn('product_variant_id', $restockRequest->items->pluck('product_variant_id'))
+            ->whereIn('product_id', $restockRequest->items->pluck('product_id'))
             ->get();
 
         if ($request->expectsJson()) {
-            $centralStock = ProductVariant::whereIn('id', $restockRequest->items->pluck('product_variant_id'))
+            $centralStock = Product::whereIn('id', $restockRequest->items->pluck('product_id'))
                 ->pluck('center_stock', 'id');
 
             return response()->json([

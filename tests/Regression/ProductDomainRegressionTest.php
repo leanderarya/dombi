@@ -2,8 +2,8 @@
 
 namespace Tests\Regression;
 
-use App\Models\ProductFamily;
-use App\Models\ProductVariant;
+use App\Models\ProductCategory;
+use App\Models\Product;
 use App\Models\Outlet;
 use App\Services\InventoryService;
 use App\Services\OrderService;
@@ -16,9 +16,9 @@ class ProductDomainRegressionTest extends TestCase
 
     public function test_product_variant_can_be_created_with_center_stock(): void
     {
-        $family = ProductFamily::factory()->create(['name' => 'Biogoat']);
-        $variant = ProductVariant::factory()->create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::factory()->create(['name' => 'Biogoat']);
+        $variant = Product::factory()->create([
+            'product_category_id' => $family->id,
             'name' => 'Original 1L',
             'flavor' => 'Original',
             'size' => '1L',
@@ -39,13 +39,13 @@ class ProductDomainRegressionTest extends TestCase
 
     public function test_order_service_builds_items_with_variant_id(): void
     {
-        $family = ProductFamily::factory()->create(['name' => 'Domilk']);
-        $variant = ProductVariant::factory()->create([
-            'product_family_id' => $family->id,
+        $family = ProductCategory::factory()->create(['name' => 'Domilk']);
+        $variant = Product::factory()->create([
+            'product_category_id' => $family->id,
             'center_price' => 10000,
             'selling_price' => 15000,
             'center_stock' => 50,
         ]);
-        $this->assertEquals($family->id, $variant->product_family_id);
+        $this->assertEquals($family->id, $variant->product_category_id);
     }
 }

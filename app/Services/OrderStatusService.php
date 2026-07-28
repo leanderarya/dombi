@@ -330,7 +330,6 @@ class OrderStatusService
         // Re-reserve stock when retrying from failed delivery
         if ($from === 'failed_delivery' && $to === 'preparing') {
             $items = $order->items->map(fn ($item) => [
-                'product_variant_id' => $item->product_variant_id,
                 'product_id' => $item->product_id,
                 'quantity' => $item->quantity,
             ])->all();

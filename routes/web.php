@@ -59,8 +59,6 @@ use App\Http\Controllers\Owner\PaymentAccountController;
 use App\Http\Controllers\Owner\PricingController;
 use App\Http\Controllers\Owner\ProductCategoryController as OwnerProductCategoryController;
 use App\Http\Controllers\Owner\ProductController as OwnerProductController;
-use App\Http\Controllers\Owner\ProductFamilyController;
-use App\Http\Controllers\Owner\ProductVariantController;
 use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
 use App\Http\Controllers\Owner\RefundController;
 use App\Http\Controllers\Owner\ReportController;
@@ -277,17 +275,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::delete('products/{product}', [OwnerProductController::class, 'destroy'])->name('products.destroy');
         Route::patch('products/{product}/toggle', [OwnerProductController::class, 'toggle'])->name('products.toggle');
         Route::post('products/{product}/duplicate', [OwnerProductController::class, 'duplicate'])->name('products.duplicate');
-        // Legacy product-families resource – keep for 1 sprint backward compat
-        Route::resource('product-families', ProductFamilyController::class)->parameters(['product-families' => 'family'])->except(['create', 'edit']);
-        Route::post('product-families/{family}/variants', [ProductVariantController::class, 'store'])->name('product-families.variants.store');
-        Route::post('product-families/{family}/variants/bulk-update', [ProductVariantController::class, 'bulkUpdate'])->name('product-families.variants.bulk-update');
-        Route::put('variants/{variant}', [ProductVariantController::class, 'update'])->name('variants.update');
-        Route::delete('variants/{variant}', [ProductVariantController::class, 'destroy'])->name('variants.destroy');
-        Route::patch('variants/{variant}/toggle', [ProductVariantController::class, 'toggle'])->name('variants.toggle');
-        // Legacy redirects for 1 sprint – Task 12
-        Route::get('product-families', fn () => redirect()->route('owner.product-categories.index', [], 301))->name('product-families.legacy');
-        Route::get('product-families/{id}', fn ($id) => redirect()->route('owner.product-categories.show', $id, 301))->name('product-families.show.legacy');
-        Route::get('variants/{id}', fn ($id) => redirect()->route('owner.products.show', $id, 301))->name('variants.show.legacy');
         Route::get('pricing/outlets/compare', [PricingController::class, 'compare'])->name('pricing.outlets.compare');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
         Route::get('pricing/outlets/{outlet}', [PricingController::class, 'show'])->name('pricing.outlets.show');
@@ -295,11 +282,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('pricing/products/{product}/impact', [PricingController::class, 'getImpact'])->name('pricing.products.impact');
         Route::patch('pricing/outlets/{outlet}/products/{product}', [PricingController::class, 'updateOutlet'])->name('pricing.outlets.products.update');
         Route::delete('pricing/outlets/{outlet}/products/{product}', [PricingController::class, 'resetOutlet'])->name('pricing.outlets.products.reset');
-        // Legacy pricing variant routes – backward compat
-        Route::patch('pricing/variants/{variant}', [PricingController::class, 'updateGlobal'])->name('pricing.variants.update');
-        Route::get('pricing/variants/{variant}/impact', [PricingController::class, 'getImpact'])->name('pricing.variants.impact');
-        Route::patch('pricing/outlets/{outlet}/variants/{variant}', [PricingController::class, 'updateOutlet'])->name('pricing.outlets.variants.update');
-        Route::delete('pricing/outlets/{outlet}/variants/{variant}', [PricingController::class, 'resetOutlet'])->name('pricing.outlets.variants.reset');
         Route::post('pricing/outlets/{outlet}/bulk-update', [PricingController::class, 'bulkUpdate'])->name('pricing.outlets.bulk-update');
         Route::post('pricing/outlets/{outlet}/copy', [PricingController::class, 'copy'])->name('pricing.outlets.copy');
         Route::get('inventories', [OwnerInventoryController::class, 'index'])->name('inventories.index');

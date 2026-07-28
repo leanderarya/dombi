@@ -392,19 +392,18 @@ class DeliveryService
             $order = $delivery->order;
             if ($order) {
                 foreach ($order->items as $item) {
-                    if (! $item->product_variant_id) {
+                    if (! $item->product_id) {
                         continue;
                     }
 
                     $inventory = OutletInventory::query()
                         ->where('outlet_id', $order->outlet_id)
-                        ->where('product_variant_id', $item->product_variant_id)
+                        ->where('product_id', $item->product_id)
                         ->first();
 
                     StockMovement::create([
                         'outlet_id' => $order->outlet_id,
                         'product_id' => $item->product_id,
-                        'product_variant_id' => $item->product_variant_id,
                         'type' => 'delivery_returned',
                         'quantity' => $item->quantity,
                         'before_stock' => $inventory?->current_stock ?? 0,
