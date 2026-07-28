@@ -19,7 +19,10 @@ export default function ProductImage({
     const [catError, setCatError] = useState(false);
 
     const resolve = (p: string | null): string | null => {
-        if (!p) return null;
+        if (!p) {
+return null;
+}
+
         return p.startsWith('http') ? p : `/storage/${p}`;
     };
 

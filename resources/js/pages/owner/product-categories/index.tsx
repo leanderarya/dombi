@@ -1,11 +1,11 @@
-import { router, usePage } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { Package, Pencil, Plus, Trash2, ChevronRight } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import ImageUploadField from '@/components/owner/image-upload-field';
-import ProductImage from '@/components/owner/product-image';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
+import ProductImage from '@/components/owner/product-image';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
-import { SkeletonPage } from '@/components/ui/skeleton';
 import {
     Table,
     TableBody,
@@ -68,32 +67,34 @@ export default function ProductCategoriesIndex({ categories }: Props) {
     const [imageExisting, setImageExisting] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    // Inertia flash toast already handled globally, but we reset errors on open
-    useEffect(() => {
-        if (!showForm) {
-            setErrors({});
-        }
-    }, [showForm]);
-
-    if (categories === undefined || categories === null) {
-        return (
-            <OwnerPageShell title="Kategori Produk" subtitle="Kelola kategori produk Anda">
-                <SkeletonPage />
-            </OwnerPageShell>
-        );
-    }
-
     const filtered = useMemo(() => {
+        if (!categories) {
+            return [];
+        }
+
         return categories.filter((c) => {
-            if (statusFilter === 'active' && !c.is_active) return false;
-            if (statusFilter === 'inactive' && c.is_active) return false;
-            if (statusFilter === 'no_image' && !!c.image) return false;
-            if (statusFilter === 'has_image' && !c.image) return false;
+            if (statusFilter === 'active' && !c.is_active) {
+return false;
+}
+
+            if (statusFilter === 'inactive' && c.is_active) {
+return false;
+}
+
+            if (statusFilter === 'no_image' && !!c.image) {
+return false;
+}
+
+            if (statusFilter === 'has_image' && !c.image) {
+return false;
+}
 
             if (search) {
                 const q = search.toLowerCase();
+
                 return c.name.toLowerCase().includes(q) || (c.brand?.toLowerCase().includes(q) ?? false);
             }
+
             return true;
         });
     }, [categories, search, statusFilter]);
@@ -124,12 +125,21 @@ export default function ProductCategoriesIndex({ categories }: Props) {
         setProcessing(true);
         const fd = new FormData();
         fd.append('name', form.name);
-        if (form.brand) fd.append('brand', form.brand);
-        if (form.description) fd.append('description', form.description);
+
+        if (form.brand) {
+fd.append('brand', form.brand);
+}
+
+        if (form.description) {
+fd.append('description', form.description);
+}
+
         fd.append('is_active', form.is_active ? '1' : '0');
+
         if (imageFile) {
             fd.append('image', imageFile);
         }
+
         // For update, spoof PUT
         if (editingId) {
             fd.append('_method', 'PUT');
@@ -154,7 +164,10 @@ export default function ProductCategoriesIndex({ categories }: Props) {
     };
 
     const handleDelete = () => {
-        if (!deleteId) return;
+        if (!deleteId) {
+return;
+}
+
         router.delete(`/owner/product-categories/${deleteId}`, {
             preserveScroll: true,
             onSuccess: () => {
@@ -294,7 +307,11 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                 </div>
             )}
 
-            <Dialog open={showForm} onOpenChange={(o) => { if (!o) { setShowForm(false); resetForm(); } }}>
+            <Dialog open={showForm} onOpenChange={(o) => {
+ if (!o) {
+ setShowForm(false); resetForm(); 
+} 
+}}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle>{editingId ? 'Edit Kategori' : 'Tambah Kategori'}</DialogTitle>
@@ -330,7 +347,10 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                 value={imageFile ? imageFile : imageExisting}
                                 onChange={(f) => {
                                     setImageFile(f);
-                                    if (f === null) setImageExisting(null);
+
+                                    if (f === null) {
+setImageExisting(null);
+}
                                 }}
                                 label="Foto Kategori"
                             />
@@ -346,7 +366,9 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                             </label>
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => { setShowForm(false); resetForm(); }}>Batal</Button>
+                            <Button type="button" variant="outline" onClick={() => {
+ setShowForm(false); resetForm(); 
+}}>Batal</Button>
                             <Button type="submit" disabled={processing}>{processing ? 'Menyimpan...' : editingId ? 'Update' : 'Simpan'}</Button>
                         </DialogFooter>
                     </form>

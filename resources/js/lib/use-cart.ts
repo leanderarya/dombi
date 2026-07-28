@@ -42,14 +42,17 @@ class CartStore {
 
         if (existing) {
             existing.quantity += qty;
+
             if (price > 0) {
                 existing.price = price;
             }
+
             // Ensure product_id is set for migrated entries
             if (!existing.product_id) {
                 existing.product_id =
                     (existing as any).product_variant_id ?? productId;
             }
+
             existing.product_id = productId;
         } else {
             this.items.push({
@@ -65,6 +68,7 @@ class CartStore {
     setQuantity(productId: number, quantity: number): void {
         if (quantity <= 0) {
             this.removeItem(productId);
+
             return;
         }
 
@@ -104,6 +108,7 @@ class CartStore {
 
     subscribe(listener: Listener): () => void {
         this.listeners.add(listener);
+
         return () => this.listeners.delete(listener);
     }
 
@@ -123,6 +128,7 @@ class CartStore {
         try {
             const data = JSON.stringify(this.items);
             sessionStorage.setItem('dombi_cart', data);
+
             // Also persist to localStorage for backward compat migration path
             try {
                 localStorage.setItem('dombi_cart', data);
@@ -138,11 +144,13 @@ class CartStore {
         try {
             // Try sessionStorage first, fallback to localStorage for migration
             let stored: string | null = null;
+
             try {
                 stored = sessionStorage.getItem('dombi_cart');
             } catch {
                 stored = null;
             }
+
             if (!stored) {
                 try {
                     stored = localStorage.getItem('dombi_cart');
@@ -153,6 +161,7 @@ class CartStore {
 
             if (stored) {
                 const parsed = JSON.parse(stored);
+
                 if (Array.isArray(parsed)) {
                     const migrated = parsed
                         .map((i: any) => ({
@@ -178,6 +187,7 @@ class CartStore {
                             price: i.price,
                         }));
                     this.items = migrated;
+
                     // Persist migrated format immediately
                     try {
                         this.persist();

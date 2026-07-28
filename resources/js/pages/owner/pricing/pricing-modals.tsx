@@ -50,6 +50,7 @@ export function GlobalPriceModal({
 
         if (Object.keys(updates).length === 0) {
             onClose();
+
             return;
         }
 

@@ -1,11 +1,11 @@
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 
 interface ImageCropModalProps {
     open: boolean;
@@ -40,6 +40,7 @@ export default function ImageCropModal({
             } catch {
                 // If conversion fails, still close – caller can handle original file
             }
+
             onClose();
         } finally {
             setProcessing(false);
