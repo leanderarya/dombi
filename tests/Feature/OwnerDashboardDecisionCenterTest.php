@@ -164,10 +164,10 @@ class OwnerDashboardDecisionCenterTest extends TestCase
             ->get('/owner/dashboard')
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->where('inventoryRisks.0.product.name', 'Biogoat 1L')
+                ->where('inventoryRisks.0.variant.name', 'Biogoat 1L')
                 ->where('inventoryRisks.0.centerStock', 8)
                 ->where('inventoryRisks.0.threshold', 20)
-                ->where('inventoryRisks.1.product.name', 'Domilk Coffee 250ml')
+                ->where('inventoryRisks.1.variant.name', 'Domilk Coffee 250ml')
                 ->where('inventoryRisks.1.centerStock', 5)
                 ->where('inventoryRisks.1.threshold', 10)
             );
