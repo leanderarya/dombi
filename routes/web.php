@@ -197,6 +197,11 @@ Route::middleware('internal.inertia')->group(function (): void {
     Route::post('/courier/invite/{token}', [CourierInvitationController::class, 'accept'])->name('courier.invite.accept');
 });
 
+Route::middleware(['enforce.session'])->group(function (): void {
+    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
+    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
+});
+
 Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): void {
     // System endpoints
     Route::get('/api/health', [SystemController::class, 'health'])->name('health');
@@ -204,9 +209,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
     Route::get('/api/status', [SystemController::class, 'status'])
         ->middleware(['auth', 'role:owner'])
         ->name('system.status');
-
-    Route::get('/login', [AuthenticatedSessionController::class, 'create'])->name('login');
-    Route::post('/login', [AuthenticatedSessionController::class, 'store'])->middleware('throttle:login');
 
     // Google OAuth
     Route::get('/oauth/google', [SocialAuthController::class, 'redirect'])->name('google.redirect');
