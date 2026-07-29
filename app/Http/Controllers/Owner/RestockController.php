@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Owner\ApproveRestockRequest;
+use App\Http\Requests\Owner\RejectRestockRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
-use App\Http\Requests\Owner\ApproveRestockRequest;
-use App\Http\Requests\Owner\RejectRestockRequest;
 use App\Models\RestockRequest;
 use App\Services\RestockService;
 use Illuminate\Http\RedirectResponse;
