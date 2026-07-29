@@ -722,6 +722,35 @@ export default function ProductForm({
                                 setSingleImageExisting(null);
                             }
                         }}
+                        onRemove={
+                            isEditing && editingProduct
+                                ? () => {
+                                    if (editingProduct.product_flavor_group_id) {
+                                        router.delete(
+                                            `/owner/product-flavor-groups/${editingProduct.product_flavor_group_id}/image`,
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () => {
+                                                    setSingleImageExisting(null);
+                                                    setSingleImageFile(null);
+                                                },
+                                            },
+                                        );
+                                    } else {
+                                        router.delete(
+                                            `/owner/products/${editingProduct.id}/image`,
+                                            {
+                                                preserveScroll: true,
+                                                onSuccess: () => {
+                                                    setSingleImageExisting(null);
+                                                    setSingleImageFile(null);
+                                                },
+                                            },
+                                        );
+                                    }
+                                }
+                                : undefined
+                        }
                         label="Foto Produk"
                     />
                     {singleForm.errors.image && (
