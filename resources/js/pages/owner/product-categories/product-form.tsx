@@ -160,8 +160,8 @@ export default function ProductForm({
 
     const autoSku = (size: string) => {
         if (!size) {
-return '';
-}
+            return '';
+        }
 
         const s = size.replace(/\s+/g, '').toUpperCase();
 
@@ -408,14 +408,14 @@ return '';
         const fd = new FormData();
 
         if (sharedImageFile) {
-fd.append('image', sharedImageFile);
-}
+            fd.append('image', sharedImageFile);
+        }
 
         fd.append('flavor', bulkSizeFlavor.trim());
 
         if (bulkSizeDescription.trim()) {
-fd.append('description', bulkSizeDescription.trim());
-}
+            fd.append('description', bulkSizeDescription.trim());
+        }
 
         fd.append(
             'sizes',
@@ -1074,8 +1074,8 @@ fd.append('description', bulkSizeDescription.trim());
                                 setSharedImageFile(f);
 
                                 if (f === null) {
-setSharedImageExisting(null);
-}
+                                    setSharedImageExisting(null);
+                                }
                             }}
                             label="Foto Rasa (shared untuk semua ukuran rasa ini)"
                             info="This image is shared by all Coffee sizes. Replacing it will update the image shown for every Coffee size."
