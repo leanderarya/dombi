@@ -4,14 +4,37 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\RefreshDatabaseState;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 class RefundLifecycleSchemaTest extends TestCase
 {
-    use RefreshDatabase;
+    // Intentionally NOT using RefreshDatabase trait.
+    // test_existing_destination_rows_backfill_valid_and_missing calls
+    // migrate:fresh inside test body, which auto-commits DDL and breaks
+    // the outer RefreshDatabase transaction, leaving dirty data visible
+    // to subsequent test classes. Instead, setUp/tearDown manage migration.
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->artisan('migrate:fresh', [
+            '--path' => 'database/migrations',
+            '--realpath' => false,
+        ])->assertSuccessful();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->artisan('migrate:fresh', [
+            '--path' => 'database/migrations',
+            '--realpath' => false,
+        ])->assertSuccessful();
+        RefreshDatabaseState::$migrated = false;
+        parent::tearDown();
+    }
 
     public function test_lifecycle_columns_and_history_table_exist(): void
     {
@@ -24,11 +47,6 @@ class RefundLifecycleSchemaTest extends TestCase
 
     public function test_existing_destination_rows_backfill_valid_and_missing(): void
     {
-        $this->artisan('migrate:fresh', [
-            '--path' => 'database/migrations',
-            '--realpath' => false,
-        ])->assertSuccessful();
-
         Schema::table('orders', function (Blueprint $table): void {
             $table->dropIndex('orders_refund_queue_index');
             $table->dropColumn('refund_destination_status');

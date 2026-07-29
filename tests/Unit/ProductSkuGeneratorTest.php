@@ -6,10 +6,13 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductFlavorGroup;
 use App\Services\ProductSkuGenerator;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ProductSkuGeneratorTest extends TestCase
 {
+    use RefreshDatabase;
+
     public function test_generates_deterministic_sku(): void
     {
         $gen = app(ProductSkuGenerator::class);
