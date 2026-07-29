@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
-use App\Models\User;
 use App\Models\ProductFlavorGroup;
+use App\Models\User;
 use App\Services\ProductImageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
