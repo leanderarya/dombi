@@ -22,4 +22,16 @@ class ProductFlavorGroupController extends Controller
 
         return back()->with('success', 'Foto rasa diperbarui untuk semua ukuran');
     }
+
+    public function deleteImage(ProductFlavorGroup $flavorGroup, ProductImageService $imgService): RedirectResponse
+    {
+        $oldPath = $flavorGroup->image;
+
+        if ($oldPath) {
+            $flavorGroup->update(['image' => null]);
+            $imgService->deleteIfUnreferenced($oldPath, excludingFlavorGroupId: $flavorGroup->id);
+        }
+
+        return back()->with('success', 'Foto rasa dihapus');
+    }
 }
