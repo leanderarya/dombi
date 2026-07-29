@@ -51,7 +51,7 @@ class ExchangeController extends Controller
 
         return Inertia::render('outlet/exchanges/create', [
             'returnRequests' => $returnRequests,
-            'products' => $products,
+            'variants' => $products,
         ]);
     }
 
