@@ -130,7 +130,15 @@ class ProductController extends Controller
         $data = $req->validated();
 
         if ($req->hasFile('image')) {
-            $data['image'] = $img->store($req->file('image'), $product->image);
+            if ($product->product_flavor_group_id) {
+                $group = $product->flavorGroup;
+                $oldImage = $group->image;
+                $newImage = $img->storeForFlavorGroup($req->file('image'), null, $group->id);
+                $group->update(['image' => $newImage]);
+                $img->deleteIfUnreferenced($oldImage, excludingFlavorGroupId: $group->id);
+            } else {
+                $data['image'] = $img->store($req->file('image'), $product->image);
+            }
         } else {
             if (array_key_exists('image', $data) && $data['image'] === null) {
                 unset($data['image']);
