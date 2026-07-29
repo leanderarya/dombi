@@ -7,7 +7,6 @@ use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class CustomerProductApiControllerTest extends TestCase
