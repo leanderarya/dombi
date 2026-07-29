@@ -53,7 +53,7 @@ class ProductPolicyTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 1,
-            'selling_price' => 10000,
+            'price' => 10000,
             'subtotal' => 10000,
         ]);
 
@@ -256,7 +256,7 @@ class ProductPolicyTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 1,
-            'selling_price' => 10000,
+            'price' => 10000,
             'subtotal' => 10000,
         ]);
 
@@ -304,7 +304,7 @@ class ProductPolicyTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 1,
-            'selling_price' => 10000,
+            'price' => 10000,
             'subtotal' => 10000,
         ]);
 

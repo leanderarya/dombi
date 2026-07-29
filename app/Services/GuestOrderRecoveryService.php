@@ -57,7 +57,7 @@ class GuestOrderRecoveryService
         $activeOrders = Order::query()
             ->where('customer_id', $customer->id)
             ->visibleAsCustomerActive()
-            ->with(['outlet:id,name', 'items.variant.family'])
+            ->with(['outlet:id,name', 'items.product.category'])
             ->latest()
             ->get()
             ->map(fn (Order $order) => $this->formatOrder($order));
@@ -68,7 +68,7 @@ class GuestOrderRecoveryService
                 ->where('customer_id', $customer->id)
                 ->visibleAsCustomerHistory()
                 ->where('ordered_at', '>=', now()->subDays(self::MAX_DAYS))
-                ->with(['outlet:id,name', 'items.variant.family'])
+                ->with(['outlet:id,name', 'items.product.category'])
                 ->latest()
                 ->limit(self::MAX_ORDERS)
                 ->get()
@@ -125,7 +125,7 @@ class GuestOrderRecoveryService
             'items' => $order->items->map(fn ($item) => [
                 'product_name' => $item->product_name,
                 'quantity' => $item->quantity,
-                'image' => $item->variant?->family?->image,
+                'image' => $item->product?->category?->image,
             ])->values()->all(),
             'ordered_at' => $order->ordered_at?->toISOString(),
             'created_at' => $order->ordered_at?->toISOString(),

@@ -148,7 +148,7 @@ class OutletOrderExpiryFilterTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'selling_price' => $product->price,
+            'price' => $product->selling_price,
             'subtotal' => 50000,
         ]);
 

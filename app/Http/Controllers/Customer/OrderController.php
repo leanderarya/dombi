@@ -36,7 +36,7 @@ class OrderController extends Controller
         if ($customer) {
             $activeOrders = $customer->orders()
                 ->visibleAsCustomerActive()
-                ->with(['outlet', 'items.variant.family'])
+                ->with(['outlet', 'items.product.category'])
                 ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
                 ->orderByDesc('ordered_at')
                 ->get()
@@ -107,7 +107,7 @@ class OrderController extends Controller
             ->where('customer_id', $customer->id)
             ->exists();
 
-        $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier', 'refundStatusHistories']);
+        $order->load(['outlet', 'items.product.category', 'statusHistories.actor', 'delivery.courier', 'refundStatusHistories']);
 
         $refund = $payloads->forCustomer($order);
 
@@ -136,7 +136,7 @@ class OrderController extends Controller
         }
 
         return Inertia::render('customer/orders/show', [
-            'order' => $order->load(['outlet', 'items.product', 'items.variant.family', 'statusHistories.actor', 'delivery.courier']),
+            'order' => $order->load(['outlet', 'items.product', 'items.product.category', 'statusHistories.actor', 'delivery.courier']),
             'cancellationReasons' => OrderStatusService::cancellationReasons(),
             'isConfirmation' => true,
         ]);

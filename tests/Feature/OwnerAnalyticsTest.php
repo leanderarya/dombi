@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -184,23 +185,23 @@ class OwnerAnalyticsTest extends TestCase
 
         OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $context['productLarge']->id,
             'product_id' => $context['variantLarge']->id,
             'product_name' => 'Biogoat 1L',
             'variant_name_snapshot' => 'Original 1L',
             'quantity' => 3,
-            'selling_price' => 55000,
+            'price' => 55000,
+            'selling_price_snapshot' => 55000,
             'subtotal' => 165000,
         ]);
 
         OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $context['productSmall']->id,
             'product_id' => $context['variantSmall']->id,
             'product_name' => 'Domilk Coffee 250ml',
             'variant_name_snapshot' => 'Coffee 250ml',
             'quantity' => 5,
-            'selling_price' => 30000,
+            'price' => 30000,
+            'selling_price_snapshot' => 30000,
             'subtotal' => 150000,
         ]);
 

@@ -149,7 +149,7 @@ class OrderStatusSchemaRegressionTest extends TestCase
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'quantity' => 2,
-                'selling_price' => 25000,
+                'price' => 25000,
                 'subtotal' => 50000,
             ]);
         }

@@ -81,7 +81,7 @@ OrderItem::create([
     'product_id' => 1,
     'product_name' => $variant->family->name.' - '.$variant->name,
     'quantity' => $qty,
-    'selling_price' => $sellingPrice,
+    'price' => $sellingPrice,
     'subtotal' => $sellingPrice * $qty,
     'center_price_snapshot' => $centerPrice,
     'selling_price_snapshot' => $sellingPrice,

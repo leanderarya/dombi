@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -252,7 +253,6 @@ class GuestReorderAccessTest extends TestCase
 
         OutletInventory::create([
             'outlet_id' => $outlet->id,
-            'product_id' => $product->id,
             'product_id' => $variant->id,
             'current_stock' => 100,
             'reserved_stock' => 0,
@@ -276,12 +276,12 @@ class GuestReorderAccessTest extends TestCase
 
         OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $product->id,
             'product_id' => $variant->id,
             'product_name' => $product->name,
             'variant_name_snapshot' => $variant->name,
             'quantity' => 2,
-            'selling_price' => 25000,
+            'price' => 25000,
+            'selling_price_snapshot' => 25000,
             'subtotal' => 50000,
         ]);
 

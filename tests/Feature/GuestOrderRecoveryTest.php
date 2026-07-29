@@ -222,7 +222,7 @@ class GuestOrderRecoveryTest extends TestCase
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'quantity' => 1,
-                'selling_price' => $product->price,
+                'price' => $product->selling_price,
                 'subtotal' => 25000,
             ]);
 
@@ -537,7 +537,7 @@ class GuestOrderRecoveryTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'selling_price' => 25000,
+            'price' => 25000,
             'subtotal' => 50000,
         ]);
 
@@ -563,7 +563,7 @@ class GuestOrderRecoveryTest extends TestCase
             'product_id' => $product->id,
             'product_name' => $product->name,
             'quantity' => 1,
-            'selling_price' => 25000,
+            'price' => 25000,
             'subtotal' => 25000,
         ]);
 

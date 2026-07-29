@@ -24,7 +24,7 @@ class HomeController extends Controller
 
             $activeOrders = Order::where('customer_id', $customerId)
                 ->visibleAsCustomerActive()
-                ->with(['outlet:id,name', 'delivery', 'items.variant.family'])
+                ->with(['outlet:id,name', 'delivery', 'items.product.category'])
                 ->latest()
                 ->limit(5)
                 ->get()
@@ -43,7 +43,7 @@ class HomeController extends Controller
 
             $lastOrder = Order::where('customer_id', $customerId)
                 ->where('status', 'completed')
-                ->with(['outlet:id,name', 'items.variant.family'])
+                ->with(['outlet:id,name', 'items.product.category'])
                 ->latest()
                 ->first();
         }
