@@ -2,10 +2,8 @@ import { router } from '@inertiajs/react';
 import { Package, Pencil, Plus, Trash2, ChevronRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import ImageUploadField from '@/components/owner/image-upload-field';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
-import ProductImage from '@/components/owner/product-image';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -36,8 +34,6 @@ const statusFilters = [
     { key: 'all', label: 'Semua' },
     { key: 'active', label: 'Aktif' },
     { key: 'inactive', label: 'Nonaktif' },
-    { key: 'no_image', label: 'No Image' },
-    { key: 'has_image', label: 'Has Image' },
 ] as const;
 
 type FilterKey = (typeof statusFilters)[number]['key'];
@@ -63,8 +59,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
         description: '',
         is_active: true,
     });
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [imageExisting, setImageExisting] = useState<string | null>(null);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     const filtered = useMemo(() => {
@@ -78,14 +72,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
             }
 
             if (statusFilter === 'inactive' && c.is_active) {
-                return false;
-            }
-
-            if (statusFilter === 'no_image' && !!c.image) {
-                return false;
-            }
-
-            if (statusFilter === 'has_image' && !c.image) {
                 return false;
             }
 
@@ -104,8 +90,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
 
     const resetForm = () => {
         setForm({ name: '', brand: '', description: '', is_active: true });
-        setImageFile(null);
-        setImageExisting(null);
         setErrors({});
         setEditingId(null);
     };
@@ -118,8 +102,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
             description: cat.description ?? '',
             is_active: cat.is_active,
         });
-        setImageExisting(cat.image ?? null);
-        setImageFile(null);
         setShowForm(true);
     };
 
@@ -138,10 +120,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
         }
 
         fd.append('is_active', form.is_active ? '1' : '0');
-
-        if (imageFile) {
-            fd.append('image', imageFile);
-        }
 
         // For update, spoof PUT
         if (editingId) {
@@ -259,9 +237,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                         Kategori
                                     </TableHead>
                                     <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                        Gambar
-                                    </TableHead>
-                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                         Merek
                                     </TableHead>
                                     <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
@@ -290,25 +265,8 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                                     <span className="text-sm font-semibold text-text">
                                                         {cat.name}
                                                     </span>
-                                                    {!cat.image && (
-                                                        <span className="mt-0.5 inline-flex w-fit rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-amber-200">
-                                                            No Image
-                                                        </span>
-                                                    )}
-                                                    {cat.image && (
-                                                        <span className="mt-0.5 inline-flex w-fit rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 ring-1 ring-emerald-200">
-                                                            Has Image
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="px-6 py-4">
-                                            <ProductImage
-                                                name={cat.name}
-                                                src={cat.image}
-                                                size="sm"
-                                            />
                                         </TableCell>
                                         <TableCell className="px-6 py-4 text-sm text-text-muted">
                                             {cat.brand || '-'}
@@ -390,7 +348,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                         <DialogDescription>
                             {editingId
                                 ? 'Perbarui data kategori.'
-                                : 'Tambah kategori baru dengan foto.'}
+                                : 'Tambah kategori baru.'}
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleSubmit} className="space-y-4">
@@ -434,22 +392,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                 rows={2}
                                 placeholder="Deskripsi kategori..."
                             />
-                            <ImageUploadField
-                                value={imageFile ? imageFile : imageExisting}
-                                onChange={(f) => {
-                                    setImageFile(f);
-
-                                    if (f === null) {
-                                        setImageExisting(null);
-                                    }
-                                }}
-                                label="Foto Kategori"
-                            />
-                            {errors.image && (
-                                <p className="text-xs text-red-600">
-                                    {errors.image}
-                                </p>
-                            )}
                             <label className="flex items-center gap-2 pt-1">
                                 <input
                                     type="checkbox"
