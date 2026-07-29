@@ -1,64 +1,72 @@
-# Product Image Reference
+# Product Images
 
-Panduan mengubah gambar product category & product di Dombi. Simpan di otak: gambar disimpan LOKAL, bukan URL eksternal.
+## Image Ownership
 
-**Terminology update:** `ProductFamily` → `ProductCategory`, `ProductVariant` → `Product`.
-All legacy terms replaced. See `PRODUCT_DOMAIN.md` for full spec.
+- **Flavored product** (has `product_flavor_group_id`): image belongs to `ProductFlavorGroup`. Shared across all sizes in that flavor group. `products.image` is always null for grouped products.
+- **Flavorless product** (no `product_flavor_group_id`): image belongs to `Product` directly.
 
-## Storage
+Categories do **not** carry images.
+
+## Fallback Chain
+
+```
+Flavored Product:
+  ProductFlavorGroup.image → 🥛 placeholder
+
+Flavorless Product:
+  Product.image → 🥛 placeholder
+```
+
+No cascading fallback. Placeholder rendering is a frontend concern.
+
+## API Response
+
+Product objects include image ownership metadata:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `image` | string\|null | Resolved image URL |
+| `image_owner` | `product`\|`flavor_group`\|`none` | Which entity owns the image |
+| `image_owner_id` | number\|null | ID of the owning entity |
+| `has_image` | boolean | Whether any image is set |
+
+Only flavored products have `image_owner = "flavor_group"`. Only flavorless products can have `image_owner = "product"`.
+
+## Upload
+
+- **Product with flavor**: upload to `PATCH /owner/product-flavor-groups/{id}/image`
+- **Product without flavor**: upload via `POST`/`PUT` to product endpoints
+- **Flavor group image**: shared, uploaded during product creation or via separate endpoint
+- **Bulk-size creation**: image attached to new/existing flavor group
+
+## Delete
+
+An image can be deleted via:
+
+- `DELETE /owner/products/{id}/image` — for flavorless products
+- `DELETE /owner/product-flavor-groups/{id}/image` — for flavor groups
+
+Deletion checks references across Products and FlavorGroups. File on disk is only removed when no other record references it.
+
+## File Storage
 
 - Disk: `public` (symlink `public/storage` → `storage/app/public`)
-- Path file: `storage/app/public/products/{nama}.{ext}`
-- URL hasil: `https://{domain}/storage/products/{nama}.{ext}`
-
-## Cara ganti gambar (hardcode — tanpa upload UI)
-
-1. Letakkan file di `storage/app/public/products/` (mis. `biogoat.webp`)
-2. Update DB:
-   ```php
-   // product_categories.image  (category)
-   // products.image           (product, fallback ke category)
-   DB::table('product_categories')->where('id', $id)->update(['image' => 'products/biogoat.webp']);
-   ```
-3. Selesai. `resolveImage()` di controller otomatis generate full URL + cache-busting `?v={updated_at}`.
-
-## Format & ukuran yang sesuai
-
-| Parameter | Rekomendasi |
-|---|---|
-| Aspect | **1:1 (square)** — crop modal paksa square |
-| Ukuran | **400×400px** (min 200×200, max 800×800) |
-| Format terbaik | **WebP** (quality 80%, ~30–80KB) |
-| Alternatif | JPG quality 85%, atau PNG kalau perlu transparansi |
-| Max file | 4MB (validation), ideal < 200KB biar PWA cepat |
-| Placeholder | SVG (vektor, tak pernah pecah) — lihat `storage/app/public/products/*.svg` |
-
-## Fallback chain (frontend)
-
-```
-product.image  →  category.image  →  placeholder (SVG)
-```
-
-- Product tanpa image → pakai category image
-- Category tanpa image → SVG placeholder
-- URL eksternal (http/https) di DB → langsung dipakai apa adanya (legacy Unsplash)
+- Path: `storage/app/public/products/{name}.webp`
+- URL: `/storage/products/{name}.webp`
+- Format: **800×800 WebP** at 80% quality
+- Max upload: **4MB**
+- Accept: `jpg`, `jpeg`, `png`, `webp`
 
 ## File terkait
 
 | File | Fungsi |
-|---|---|
-| `app/Http/Controllers/Customer/CustomerProductApiController.php` | `resolveImage()` — API list (product + category) |
-| `app/Http/Controllers/Customer/ProductController.php` | `resolveImage()` — halaman detail (Inertia) |
-| `app/Http/Controllers/Owner/ProductCategoryController.php` | upload category image (store/update/destroy) |
-| `app/Http/Controllers/Owner/ProductController.php` | upload product image (store/update/destroy + remove_image) |
-| `resources/js/components/owner/image-crop-modal.tsx` | crop square client-side (react-easy-crop) |
-| `resources/js/components/ui/image-upload-field.tsx` | field upload + tombol hapus |
-| `resources/js/hooks/use-products.ts` | tipe `Product.image` |
-| `resources/js/components/customer/product-list-item.tsx` | `product.image ?? categoryImage` |
-| `resources/js/pages/customer/product-detail.tsx` | hero `selectedProduct.image ?? category.image` |
-
-## Gotcha
-
-- **JANGAN** simpan URL Unsplash/eksternal di kolom `image` kalau mau pakai storage lokal — `resolveImage()` detect `http://`/`https://` dan return apa adanya tanpa prefix `storage/`.
-- Service worker (`public/sw.js`) pakai **network-first** untuk `.js/.css`. Kalau ganti JS, version `CACHE_NAME` sudah `dombi-v2` — otomatis invalidate. Kalau gambar tetap stale: DevTools → Application → Clear site data.
-- Storage symlink: kalau `public/storage` hilang, jalankan `php artisan storage:link`.
+|------|--------|
+| `app/Models/Product.php` | `display_image` accessor |
+| `app/Services/ProductImageService.php` | Upload, resize, deleteIfUnreferenced |
+| `app/Http/Controllers/Owner/ProductController.php` | Product CRUD + deleteImage |
+| `app/Http/Controllers/Owner/ProductFlavorGroupController.php` | FlavorGroup image upload + delete |
+| `app/Http/Controllers/Customer/CustomerProductApiController.php` | API response with image_owner metadata |
+| `resources/js/components/owner/image-upload-field.tsx` | Upload field + onRemove delete |
+| `resources/js/components/owner/product-image.tsx` | 3-level fallback component |
+| `resources/js/pages/owner/product-categories/product-form.tsx` | Product form with image upload |
+| `resources/js/components/customer/product-image.tsx` | Customer image display |
