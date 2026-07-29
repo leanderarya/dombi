@@ -6,7 +6,6 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductFlavorGroup;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ProductFlavorGroupBackfillTest extends TestCase
