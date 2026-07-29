@@ -20,6 +20,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // Guard: skip if column was already dropped (idempotent)
+        if (! Schema::hasColumn('product_categories', 'image')) {
+            return;
+        }
         // Phase 1: Capture category image paths
         Schema::create('__category_image_cleanup', function (Blueprint $table) {
             $table->id();
@@ -71,8 +75,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // Guard: only add if column doesn't exist
         Schema::table('product_categories', function (Blueprint $table) {
-            $table->string('image')->nullable()->after('description');
+            if (! Schema::hasColumn('product_categories', 'image')) {
+                $table->string('image')->nullable()->after('description');
+            }
         });
     }
 };
