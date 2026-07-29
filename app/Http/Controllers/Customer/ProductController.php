@@ -33,31 +33,8 @@ class ProductController extends Controller
 
         $outletId = $request->integer('outlet_id') ?: null;
 
-        $category->load([
-            'products' => function ($query) use ($outletId) {
-                $query->where('is_active', true)
-                    ->orderBy('name');
-
-                if ($outletId) {
-                    $query->with(['inventories' => function ($inv) use ($outletId) {
-                        $inv->where('outlet_id', $outletId)->where('is_active', true);
-                    }]);
-                    $query->with(['outletPrices' => function ($price) use ($outletId) {
-                        $price->where('outlet_id', $outletId);
-                    }]);
-                } else {
-                    $query->with('inventories');
-                }
-            },
-        ]);
-
-        // Resolve image URLs for Inertia serialization
-        $category->products->each(function ($product) {
-            $product->image = $this->resolveImage($product->display_image);
-        });
-
-        // Compute stock status and outlet price for each product
-        $category->products->each(function ($product) use ($outletId) {
+        // Build family structure matching frontend Variant interface
+        $products = $category->products->map(function ($product) use ($outletId) {
             $availableStock = 0;
             $minimumStock = 0;
             if ($product->relationLoaded('inventories')) {
@@ -67,24 +44,33 @@ class ProductController extends Controller
                 $minimumStock = (int) $product->inventories->sum('minimum_stock');
             }
 
-            $product->available_stock = $availableStock;
-            $product->stock_status = $availableStock <= 0
+            $stockStatus = $availableStock <= 0
                 ? 'out_of_stock'
                 : ($minimumStock > 0 && $availableStock <= $minimumStock ? 'low' : 'available');
 
-            $product->image_owner = $product->display_image
-                ? ($product->product_flavor_group_id ? 'flavor_group' : 'product')
-                : 'none';
-            $product->image_owner_id = $product->display_image
-                ? ($product->product_flavor_group_id ? (int) $product->product_flavor_group_id : (int) $product->id)
-                : null;
+            $price = $outletId ? $product->priceForOutlet($outletId) : $product->selling_price;
 
-            // Override selling_price with outlet-specific price if available
-            if ($outletId) {
-                $outletPrice = $product->priceForOutlet($outletId);
-                $product->selling_price = $outletPrice;
-            }
-        });
+            return [
+                'id' => $product->id,
+                'name' => $product->name,
+                'flavor' => $product->flavor,
+                'size' => $product->size,
+                'selling_price' => $price,
+                'is_active' => $product->is_active,
+                'image' => $this->resolveImage($product->display_image),
+                'available_stock' => $availableStock,
+                'stock_status' => $stockStatus,
+            ];
+        })->values()->toArray();
+
+        $family = [
+            'id' => $category->id,
+            'name' => $category->name,
+            'brand' => $category->brand,
+            'description' => $category->description,
+            'image' => null,
+            'variants' => $products,
+        ];
 
         // Other categories for cross-sell recommendations
         $otherCategories = ProductCategory::query()
@@ -93,7 +79,15 @@ class ProductController extends Controller
             ->with(['products' => fn ($q) => $q->where('is_active', true)])
             ->orderBy('name')
             ->limit(4)
-            ->get();
+            ->get()
+            ->map(fn ($cat) => [
+                'id' => $cat->id,
+                'name' => $cat->name,
+                'brand' => $cat->brand,
+                'variants' => $cat->products->map(fn ($p) => [
+                    'selling_price' => $outletId ? $p->priceForOutlet($outletId) : $p->selling_price,
+                ])->toArray(),
+            ]);
 
         $isOpen = true;
         if ($outletId) {
@@ -102,10 +96,8 @@ class ProductController extends Controller
         }
 
         return Inertia::render('customer/product-detail', [
-            'family' => $category, // backward compat key
-            'category' => $category,
-            'otherFamilies' => $otherCategories, // backward compat
-            'otherCategories' => $otherCategories,
+            'family' => $family,
+            'otherFamilies' => $otherCategories,
             'outletId' => $outletId,
             'is_open' => $isOpen,
         ]);
