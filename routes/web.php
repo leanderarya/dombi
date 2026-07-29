@@ -59,6 +59,7 @@ use App\Http\Controllers\Owner\PaymentAccountController;
 use App\Http\Controllers\Owner\PricingController;
 use App\Http\Controllers\Owner\ProductCategoryController as OwnerProductCategoryController;
 use App\Http\Controllers\Owner\ProductController as OwnerProductController;
+use App\Http\Controllers\Owner\ProductFlavorGroupController as OwnerProductFlavorGroupController;
 use App\Http\Controllers\Owner\ProfileController as OwnerProfileController;
 use App\Http\Controllers\Owner\RefundController;
 use App\Http\Controllers\Owner\ReportController;
@@ -270,10 +271,12 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('product-categories/{category}/products', [OwnerProductController::class, 'store'])->name('product-categories.products.store');
         Route::post('product-categories/{category}/products/bulk', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk');
         Route::post('product-categories/{category}/products/bulk-store', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk-store'); // backward compat alias – distinct URI
+        Route::post('product-categories/{category}/products/bulk-size', [OwnerProductController::class, 'bulkSize'])->name('product-categories.products.bulk-size');
         Route::post('product-categories/{category}/products/bulk-update', [OwnerProductController::class, 'bulkUpdate'])->name('product-categories.products.bulk-update');
         Route::delete('products/{product}', [OwnerProductController::class, 'destroy'])->name('products.destroy');
         Route::patch('products/{product}/toggle', [OwnerProductController::class, 'toggle'])->name('products.toggle');
         Route::post('products/{product}/duplicate', [OwnerProductController::class, 'duplicate'])->name('products.duplicate');
+        Route::patch('product-flavor-groups/{flavorGroup}/image', [OwnerProductFlavorGroupController::class, 'updateImage'])->name('product-flavor-groups.image.update');
         Route::get('pricing/outlets/compare', [PricingController::class, 'compare'])->name('pricing.outlets.compare');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
         Route::get('pricing/outlets/{outlet}', [PricingController::class, 'show'])->name('pricing.outlets.show');

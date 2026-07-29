@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use App\Models\ProductCategory;
+use App\Models\ProductFlavorGroup;
 use App\Services\ProductImageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -48,6 +50,91 @@ class ProductImageServiceTest extends TestCase
 
         $this->assertEquals($oldPath, $result);
         Storage::disk('public')->assertExists($oldPath);
+    }
+
+    public function test_store_for_flavor_group_stores_image(): void
+    {
+        Storage::fake('public');
+
+        $uploaded = UploadedFile::fake()->image('flavor.jpg', 800, 800);
+        $path = $this->service->storeForFlavorGroup($uploaded);
+
+        $this->assertStringEndsWith('.webp', $path);
+        $this->assertStringStartsWith('products/flavor-', $path);
+        Storage::disk('public')->assertExists($path);
+    }
+
+    public function test_store_for_flavor_group_returns_old_path_when_no_file(): void
+    {
+        Storage::fake('public');
+        $oldPath = 'products/flavor-old.webp';
+
+        $result = $this->service->storeForFlavorGroup(null, $oldPath);
+
+        $this->assertEquals($oldPath, $result);
+    }
+
+    public function test_store_for_flavor_group_keeps_file_when_other_group_uses_it(): void
+    {
+        Storage::fake('public');
+
+        $sharedPath = 'products/shared.webp';
+        Storage::disk('public')->put($sharedPath, 'content');
+
+        $category = ProductCategory::factory()->create();
+        ProductFlavorGroup::factory()->create(['image' => $sharedPath, 'product_category_id' => $category->id]);
+        $otherGroup = ProductFlavorGroup::factory()->create(['image' => $sharedPath, 'product_category_id' => $category->id]);
+
+        $uploaded = UploadedFile::fake()->image('new.jpg', 800, 800);
+        $this->service->storeForFlavorGroup($uploaded, $sharedPath, $otherGroup->id);
+
+        Storage::disk('public')->assertExists($sharedPath);
+    }
+
+    public function test_store_for_flavor_group_deletes_old_when_no_other_group_uses_it(): void
+    {
+        Storage::fake('public');
+
+        $oldPath = 'products/alone.webp';
+        Storage::disk('public')->put($oldPath, 'content');
+
+        $uploaded = UploadedFile::fake()->image('new.jpg', 800, 800);
+        $this->service->storeForFlavorGroup($uploaded, $oldPath);
+
+        Storage::disk('public')->assertMissing($oldPath);
+    }
+
+    public function test_flavor_group_deleting_removes_image(): void
+    {
+        Storage::fake('public');
+
+        $path = 'products/group-delete.webp';
+        Storage::disk('public')->put($path, 'content');
+
+        $category = ProductCategory::factory()->create();
+        $group = ProductFlavorGroup::factory()->create([
+            'image' => $path,
+            'product_category_id' => $category->id,
+        ]);
+
+        $group->delete();
+
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_flavor_group_deleting_does_not_fail_without_image(): void
+    {
+        Storage::fake('public');
+
+        $category = ProductCategory::factory()->create();
+        $group = ProductFlavorGroup::factory()->create([
+            'image' => null,
+            'product_category_id' => $category->id,
+        ]);
+
+        $group->delete();
+
+        $this->assertTrue(true);
     }
 
     public function test_store_returns_null_when_both_null(): void

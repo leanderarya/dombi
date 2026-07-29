@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductFlavorGroup;
 use App\Models\User;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -95,7 +96,7 @@ class ProductFlavorGroupTest extends TestCase
     {
         $cat = ProductCategory::factory()->create();
         ProductFlavorGroup::factory()->create(['product_category_id' => $cat->id, 'flavor' => 'Coffee']);
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
         ProductFlavorGroup::factory()->create(['product_category_id' => $cat->id, 'flavor' => ' coffee ']);
     }
 
@@ -108,7 +109,7 @@ class ProductFlavorGroupTest extends TestCase
             'product_flavor_group_id' => $fg->id,
             'size' => '200ml',
         ]);
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
         Product::factory()->create([
             'product_category_id' => $cat->id,
             'product_flavor_group_id' => $fg->id,

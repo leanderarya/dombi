@@ -57,6 +57,37 @@ function findSoleFlavor(variants: Variant[]): string | null {
     return flavors.length === 1 ? flavors[0] : null;
 }
 
+/* ─── resolveSelection ──────────────────────────────────── */
+
+function resolveSelection(
+    requestedFlavor: string | null,
+    requestedSize: string | null,
+    products: Variant[],
+): { product: Variant | null; effectiveFlavor: string | null; effectiveSize: string | null } {
+    if (!products.length) return { product: null, effectiveFlavor: null, effectiveSize: null };
+
+    const flavors = [
+        ...new Set(products.map((p) => p.flavor).filter(Boolean)),
+    ] as string[];
+    const flavor =
+        requestedFlavor && flavors.includes(requestedFlavor)
+            ? requestedFlavor
+            : (flavors[0] ?? null);
+
+    const sizesForFlavor = products
+        .filter((p) => p.flavor === flavor)
+        .map((p) => p.size)
+        .filter(Boolean) as string[];
+    const size =
+        requestedSize && sizesForFlavor.includes(requestedSize)
+            ? requestedSize
+            : (sizesForFlavor.sort((a, b) => sizeToMl(a) - sizeToMl(b))[0] ?? null);
+
+    const product =
+        products.find((p) => p.flavor === flavor && p.size === size) ?? null;
+    return { product, effectiveFlavor: flavor, effectiveSize: size };
+}
+
 /* ─── Hook: useAddToCart ───────────────────────────────────── */
 
 function useAddToCart() {
@@ -206,15 +237,27 @@ function ProductDetailInner({
         });
     }
 
-    const overriddenFlavor = selection.flavor;
-    const overriddenSize = selection.size;
-    const effectiveFlavor = overriddenFlavor ?? defaultFlavor;
-    const effectiveSize = overriddenSize ?? defaultSize;
-    const selectedVariant = family.variants.find(
-        (v) =>
-            (flavors.length === 0 || v.flavor === effectiveFlavor) &&
-            (sortedSizes.length === 0 || v.size === effectiveSize),
+    const resolved = useMemo(
+        () =>
+            resolveSelection(
+                selection.flavor,
+                selection.size,
+                family.variants,
+            ),
+        [selection.flavor, selection.size, family.variants],
     );
+    const effectiveFlavor = resolved.effectiveFlavor ?? defaultFlavor;
+    const effectiveSize = resolved.effectiveSize ?? defaultSize;
+    const selectedVariant = resolved.product;
+
+    const displayImage = useMemo(() => {
+        if (!effectiveFlavor) return family.image;
+        const flavorVariant = family.variants.find(
+            (v) => v.flavor === effectiveFlavor,
+        );
+        return flavorVariant?.image ?? family.image;
+    }, [effectiveFlavor, family.variants, family.image]);
+
     const stockStatus = selectedVariant?.stock_status ?? 'available';
     const isOutOfStock = stockStatus === 'out_of_stock';
     const variantSummary = [effectiveFlavor, effectiveSize]
@@ -261,13 +304,9 @@ function ProductDetailInner({
 
                 <main className="mx-auto max-w-lg px-4 pt-4 pb-32">
                     <div className="mb-5 flex h-72 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 to-zinc-50">
-                        {(selectedVariant?.image ?? family.image) ? (
+                        {displayImage ? (
                             <img
-                                src={
-                                    selectedVariant?.image ??
-                                    family.image ??
-                                    undefined
-                                }
+                                src={displayImage}
                                 alt={family.name}
                                 className="h-full w-full object-cover"
                             />

@@ -3,6 +3,7 @@ import { useState } from 'react';
 interface ProductImageProps {
     name: string;
     src: string | null;
+    flavorGroupImage?: string | null;
     categoryImage?: string | null;
     size?: 'sm' | 'md' | 'lg';
     className?: string;
@@ -11,11 +12,13 @@ interface ProductImageProps {
 export default function ProductImage({
     name,
     src,
+    flavorGroupImage,
     categoryImage,
     size = 'md',
     className = '',
 }: ProductImageProps) {
     const [error, setError] = useState(false);
+    const [fgError, setFgError] = useState(false);
     const [catError, setCatError] = useState(false);
 
     const resolve = (p: string | null): string | null => {
@@ -27,6 +30,7 @@ export default function ProductImage({
     };
 
     const productSrc = resolve(src);
+    const flavorSrc = resolve(flavorGroupImage ?? null);
     const catSrc = resolve(categoryImage ?? null);
 
     const sizeCls =
@@ -39,6 +43,17 @@ export default function ProductImage({
                 alt={name}
                 className={`${sizeCls} rounded object-cover ${className}`}
                 onError={() => setError(true)}
+            />
+        );
+    }
+
+    if (!fgError && flavorSrc) {
+        return (
+            <img
+                src={flavorSrc}
+                alt={name}
+                className={`${sizeCls} rounded object-cover ${className}`}
+                onError={() => setFgError(true)}
             />
         );
     }

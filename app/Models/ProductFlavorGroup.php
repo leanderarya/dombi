@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class ProductFlavorGroup extends Model
 {
@@ -31,6 +32,12 @@ class ProductFlavorGroup extends Model
                 trim(preg_replace('/\s+/', ' ', $model->flavor ?? '')),
                 'UTF-8'
             );
+        });
+
+        static::deleting(function (self $model) {
+            if ($model->image && Storage::disk('public')->exists($model->image)) {
+                Storage::disk('public')->delete($model->image);
+            }
         });
     }
 

@@ -25,7 +25,10 @@ class ProductCategoryController extends Controller
 
     public function show(ProductCategory $category): Response
     {
-        $category->load(['products' => fn ($q) => $q->withCount('orderItems')->orderBy('name')]);
+        $category->load([
+            'products' => fn ($q) => $q->with('flavorGroup')->withCount('orderItems')->orderBy('name'),
+            'flavorGroups',
+        ]);
 
         return Inertia::render('owner/product-categories/show', ['category' => $category]);
     }

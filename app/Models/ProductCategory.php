@@ -27,4 +27,9 @@ class ProductCategory extends Model
     {
         return $this->hasMany(Product::class)->where('is_active', true);
     }
+
+    public function flavorGroups(): HasMany
+    {
+        return $this->hasMany(ProductFlavorGroup::class);
+    }
 }
