@@ -79,7 +79,6 @@ class CustomerProductApiController extends Controller
             return [
                 'id' => $category->id,
                 'name' => $category->name,
-                'brand' => $category->brand,
                 'description' => $category->description,
                 'variants' => $products->values(), // backward compat key
                 'products' => $products->values(),

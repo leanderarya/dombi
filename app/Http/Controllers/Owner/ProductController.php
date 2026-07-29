@@ -98,10 +98,17 @@ class ProductController extends Controller
         $newIds = [];
 
         foreach ($data['flavors'] as $flavor) {
+            $normFlavor = mb_strtolower(trim(preg_replace('/\s+/', ' ', $flavor)), 'UTF-8');
+            $group = ProductFlavorGroup::firstOrCreate(
+                ['product_category_id' => $category->id, 'normalized_flavor' => $normFlavor],
+                ['flavor' => $flavor],
+            );
+
             $name = trim($flavor.' '.($data['size'] ?? ''));
             $sku = $skuGen->uniqueForCategory($category->id, $name, $flavor, $data['size'] ?? null);
 
             $prod = $category->products()->create([
+                'product_flavor_group_id' => $group->id,
                 'name' => $name,
                 'description' => $data['description'] ?? null,
                 'flavor' => $flavor,

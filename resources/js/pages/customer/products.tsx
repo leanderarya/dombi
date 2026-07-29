@@ -30,7 +30,6 @@ interface FlavorGroup {
     familyId: number;
     familyName: string;
     familyDescription: string | null;
-    familyBrand: string | null;
     variants: Family['variants'];
     lowestPrice: number;
     displayLabel: string;
@@ -40,7 +39,6 @@ interface FlavorGroup {
 interface FamilySection {
     familyId: number;
     familyName: string;
-    familyBrand: string | null;
     flavorGroups: FlavorGroup[];
     totalVariants: number;
 }
@@ -475,7 +473,6 @@ function buildSections(
                 familyId: family.id,
                 familyName: family.name,
                 familyDescription: family.description,
-                familyBrand: family.brand,
                 variants,
                 lowestPrice: sorted[0]?.price ?? 0,
                 displayLabel: flavor ? `${family.name} ${flavor}` : family.name,
@@ -486,7 +483,6 @@ function buildSections(
         sections.push({
             familyId: family.id,
             familyName: family.name,
-            familyBrand: family.brand,
             flavorGroups,
             totalVariants: active.length,
         });

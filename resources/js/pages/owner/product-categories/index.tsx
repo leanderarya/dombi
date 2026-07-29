@@ -40,7 +40,6 @@ type FilterKey = (typeof statusFilters)[number]['key'];
 
 interface FormData {
     name: string;
-    brand: string;
     description: string;
     is_active: boolean;
 }
@@ -55,7 +54,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
 
     const [form, setForm] = useState<FormData>({
         name: '',
-        brand: '',
         description: '',
         is_active: true,
     });
@@ -78,10 +76,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
             if (search) {
                 const q = search.toLowerCase();
 
-                return (
-                    c.name.toLowerCase().includes(q) ||
-                    (c.brand?.toLowerCase().includes(q) ?? false)
-                );
+                return c.name.toLowerCase().includes(q);
             }
 
             return true;
@@ -89,7 +84,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
     }, [categories, search, statusFilter]);
 
     const resetForm = () => {
-        setForm({ name: '', brand: '', description: '', is_active: true });
+        setForm({ name: '', description: '', is_active: true });
         setErrors({});
         setEditingId(null);
     };
@@ -98,7 +93,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
         setEditingId(cat.id);
         setForm({
             name: cat.name,
-            brand: cat.brand ?? '',
             description: cat.description ?? '',
             is_active: cat.is_active,
         });
@@ -110,10 +104,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
         setProcessing(true);
         const fd = new FormData();
         fd.append('name', form.name);
-
-        if (form.brand) {
-            fd.append('brand', form.brand);
-        }
 
         if (form.description) {
             fd.append('description', form.description);
@@ -188,7 +178,7 @@ export default function ProductCategoriesIndex({ categories }: Props) {
             <div className="mb-6 flex flex-wrap items-center gap-3">
                 <Input
                     type="text"
-                    placeholder="Cari kategori / brand..."
+                    placeholder="Cari kategori..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-64"
@@ -237,9 +227,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                         Kategori
                                     </TableHead>
                                     <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
-                                        Merek
-                                    </TableHead>
-                                    <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                                         Produk
                                     </TableHead>
                                     <TableHead className="px-6 py-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
@@ -267,9 +254,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                                     </span>
                                                 </div>
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="px-6 py-4 text-sm text-text-muted">
-                                            {cat.brand || '-'}
                                         </TableCell>
                                         <TableCell className="px-6 py-4">
                                             <span className="rounded-full bg-surface-muted px-2 py-0.5 text-[11px] text-text-muted">
@@ -366,19 +350,6 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                 required
                                 error={errors.name}
                                 placeholder="Biogoat"
-                            />
-                            <Input
-                                label="Merek / Brand"
-                                type="text"
-                                value={form.brand}
-                                onChange={(e) =>
-                                    setForm((p) => ({
-                                        ...p,
-                                        brand: e.target.value,
-                                    }))
-                                }
-                                placeholder="Dombi"
-                                error={errors.brand}
                             />
                             <Textarea
                                 label="Deskripsi"
