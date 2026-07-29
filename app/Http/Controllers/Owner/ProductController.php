@@ -190,6 +190,18 @@ class ProductController extends Controller
             ->with('success', 'Produk berhasil diduplikasi.');
     }
 
+    public function deleteImage(Product $product, ProductImageService $img): RedirectResponse
+    {
+        $oldPath = $product->image;
+
+        if ($oldPath) {
+            $product->update(['image' => null]);
+            $img->deleteIfUnreferenced($oldPath, excludingProductId: $product->id);
+        }
+
+        return back()->with('success', 'Foto produk dihapus');
+    }
+
     public function bulkSize(
         BulkStoreSizeProductsRequest $req,
         ProductCategory $category,
