@@ -66,10 +66,6 @@ export default function ProductCategoryShow({ category }: Props) {
         description: category?.description ?? '',
         is_active: category?.is_active ?? true,
     });
-    const [catImageFile, setCatImageFile] = useState<File | null>(null);
-    const [catImageExisting, setCatImageExisting] = useState<string | null>(
-        category?.image ?? null,
-    );
     const [catProcessing, setCatProcessing] = useState(false);
 
     // Product create/edit
@@ -270,10 +266,6 @@ export default function ProductCategoryShow({ category }: Props) {
         }
 
         fd.append('is_active', catForm.is_active ? '1' : '0');
-
-        if (catImageFile) {
-            fd.append('image', catImageFile);
-        }
 
         fd.append('_method', 'PUT');
 
@@ -636,7 +628,6 @@ export default function ProductCategoryShow({ category }: Props) {
                                         flavorGroupImage={
                                             section.flavorGroup?.image ?? null
                                         }
-                                        categoryImage={category.image}
                                         size="sm"
                                     />
                                     <div className="min-w-0 flex-1">
@@ -743,9 +734,6 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                             p
                                                                                 .flavor_group
                                                                                 ?.image
-                                                                        }
-                                                                        categoryImage={
-                                                                            category.image
                                                                         }
                                                                         size="sm"
                                                                     />
@@ -949,19 +937,6 @@ export default function ProductCategoryShow({ category }: Props) {
                                 }))
                             }
                             rows={2}
-                        />
-                        <ImageUploadField
-                            value={
-                                catImageFile ? catImageFile : catImageExisting
-                            }
-                            onChange={(f) => {
-                                setCatImageFile(f);
-
-                                if (f === null) {
-                                    setCatImageExisting(null);
-                                }
-                            }}
-                            label="Foto Kategori"
                         />
                         <label className="flex items-center gap-2">
                             <input
