@@ -2,6 +2,7 @@
 
 namespace Tests\Unit;
 
+use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductFlavorGroup;
 use App\Services\ProductImageService;
@@ -204,5 +205,83 @@ class ProductImageServiceTest extends TestCase
 
         $this->assertStringEndsWith('.webp', $path);
         Storage::disk('public')->assertExists($path);
+    }
+
+    public function test_delete_if_unreferenced_removes_file_when_no_references(): void
+    {
+        Storage::fake('public');
+
+        $path = 'products/unref.webp';
+        Storage::disk('public')->put($path, 'content');
+
+        $this->service->deleteIfUnreferenced($path);
+
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_delete_if_unreferenced_keeps_file_when_product_references(): void
+    {
+        Storage::fake('public');
+
+        $path = 'products/shared.webp';
+        Storage::disk('public')->put($path, 'content');
+
+        $category = ProductCategory::factory()->create();
+        Product::factory()->create([
+            'product_category_id' => $category->id,
+            'image' => $path,
+            'product_flavor_group_id' => null,
+        ]);
+
+        $this->service->deleteIfUnreferenced($path);
+
+        Storage::disk('public')->assertExists($path);
+    }
+
+    public function test_delete_if_unreferenced_keeps_file_when_flavor_group_references(): void
+    {
+        Storage::fake('public');
+
+        $path = 'products/shared-fg.webp';
+        Storage::disk('public')->put($path, 'content');
+
+        $category = ProductCategory::factory()->create();
+        ProductFlavorGroup::factory()->create([
+            'product_category_id' => $category->id,
+            'image' => $path,
+        ]);
+
+        $this->service->deleteIfUnreferenced($path);
+
+        Storage::disk('public')->assertExists($path);
+    }
+
+    public function test_delete_if_unreferenced_excludes_specified_ids(): void
+    {
+        Storage::fake('public');
+
+        $path = 'products/exclude.webp';
+        Storage::disk('public')->put($path, 'content');
+
+        $category = ProductCategory::factory()->create();
+        $product = Product::factory()->create([
+            'product_category_id' => $category->id,
+            'image' => $path,
+            'product_flavor_group_id' => null,
+        ]);
+
+        // Excluding this product → file should be deleted
+        $this->service->deleteIfUnreferenced($path, excludingProductId: $product->id);
+
+        Storage::disk('public')->assertMissing($path);
+    }
+
+    public function test_delete_if_unreferenced_handles_null_path(): void
+    {
+        Storage::fake('public');
+
+        $this->service->deleteIfUnreferenced(null);
+        // Should not throw
+        $this->assertTrue(true);
     }
 }

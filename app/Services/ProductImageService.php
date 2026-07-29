@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Product;
 use App\Models\ProductFlavorGroup;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -77,5 +78,32 @@ class ProductImageService
         Storage::disk('public')->put($filename, $encoded->toString());
 
         return $filename;
+    }
+
+    /**
+     * Delete file from disk only if no Product or FlavorGroup still references it.
+     *
+     * Safe for shared images: if another record uses the same path, the file stays.
+     */
+    public function deleteIfUnreferenced(
+        ?string $path,
+        ?int $excludingProductId = null,
+        ?int $excludingFlavorGroupId = null
+    ): void {
+        if (! $path || ! Storage::disk('public')->exists($path)) {
+            return;
+        }
+
+        $productRefs = Product::where('image', $path)
+            ->when($excludingProductId, fn ($q) => $q->where('id', '!=', $excludingProductId))
+            ->exists();
+
+        $groupRefs = ProductFlavorGroup::where('image', $path)
+            ->when($excludingFlavorGroupId, fn ($q) => $q->where('id', '!=', $excludingFlavorGroupId))
+            ->exists();
+
+        if (! $productRefs && ! $groupRefs) {
+            Storage::disk('public')->delete($path);
+        }
     }
 }
