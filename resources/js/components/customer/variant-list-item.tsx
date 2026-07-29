@@ -25,7 +25,6 @@ interface Props {
     variant: Variant;
     familyId: number;
     familyDescription: string | null;
-    familyImage?: string | null;
     displayPrice: number;
     displayLabel: string;
     variantCount?: number;
@@ -37,7 +36,6 @@ const VariantListItem = memo(function VariantListItem({
     variant,
     familyId,
     familyDescription,
-    familyImage,
     displayPrice,
     displayLabel,
     variantCount = 1,
@@ -136,7 +134,7 @@ const VariantListItem = memo(function VariantListItem({
                     <>
                         <ProductImage
                             name={variant.name}
-                            src={variant.image ?? familyImage}
+                            src={variant.image}
                             size="md"
                         />
                         {/* Favorite button */}

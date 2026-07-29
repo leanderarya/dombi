@@ -256,15 +256,18 @@ function ProductDetailInner({
 
     const displayImage = useMemo(() => {
         if (!effectiveFlavor) {
-            return family.image;
+            for (const v of family.variants) {
+                if (v.image) return v.image;
+            }
+            return null;
         }
 
         const flavorVariant = family.variants.find(
-            (v) => v.flavor === effectiveFlavor,
+            (v) => v.flavor === effectiveFlavor && v.image,
         );
 
-        return flavorVariant?.image ?? family.image;
-    }, [effectiveFlavor, family.variants, family.image]);
+        return flavorVariant?.image ?? null;
+    }, [effectiveFlavor, family.variants]);
 
     const stockStatus = selectedVariant?.stock_status ?? 'available';
     const isOutOfStock = stockStatus === 'out_of_stock';
