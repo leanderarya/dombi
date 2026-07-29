@@ -5,12 +5,13 @@ namespace Tests\Feature;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ProductFlavorGroup;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class ProductFlavorGroupBackfillTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     private function runBackfill(): void
     {
@@ -73,9 +74,15 @@ class ProductFlavorGroupBackfillTest extends TestCase
     {
         $cat = ProductCategory::factory()->create(['name' => 'Idem']);
 
-        Product::factory()->count(2)->create([
+        Product::factory()->create([
             'product_category_id' => $cat->id,
             'flavor' => 'Vanilla',
+            'size' => '200ml',
+        ]);
+        Product::factory()->create([
+            'product_category_id' => $cat->id,
+            'flavor' => 'Vanilla',
+            'size' => '500ml',
         ]);
 
         $this->runBackfill();

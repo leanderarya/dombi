@@ -33,7 +33,11 @@ import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
-import type { ProductCategory, Product, ProductFlavorGroup } from '@/types/product';
+import type {
+    ProductCategory,
+    Product,
+    ProductFlavorGroup,
+} from '@/types/product';
 
 interface Props {
     category: ProductCategory;
@@ -150,7 +154,10 @@ export default function ProductCategoryShow({ category }: Props) {
 
     // Group filtered products by flavor group
     const groupedSections = useMemo(() => {
-        const groups: { flavorGroup: ProductFlavorGroup | null; products: Product[] }[] = [];
+        const groups: {
+            flavorGroup: ProductFlavorGroup | null;
+            products: Product[];
+        }[] = [];
 
         if (!filteredProducts.length) return groups;
 
@@ -163,16 +170,22 @@ export default function ProductCategoryShow({ category }: Props) {
 
         // Sort flavor groups to match category.flavor_groups order
         const groupOrder = category.flavor_groups ?? [];
-        const groupMap = new Map(groupOrder.map(g => [g.id, g]));
+        const groupMap = new Map(groupOrder.map((g) => [g.id, g]));
 
         // Known groups first (in order), then unknown group IDs, then null
-        const knownIds = groupOrder.map(g => g.id);
-        const unknownIds = [...grouped.keys()].filter(k => k !== 'null' && !knownIds.includes(k as number));
-        const allKeys: (number | 'null')[] = [...knownIds.filter(k => grouped.has(k)), ...unknownIds];
+        const knownIds = groupOrder.map((g) => g.id);
+        const unknownIds = [...grouped.keys()].filter(
+            (k) => k !== 'null' && !knownIds.includes(k as number),
+        );
+        const allKeys: (number | 'null')[] = [
+            ...knownIds.filter((k) => grouped.has(k)),
+            ...unknownIds,
+        ];
         if (grouped.has('null')) allKeys.push('null');
 
         for (const key of allKeys) {
-            const fg = key === 'null' ? null : groupMap.get(key as number) ?? null;
+            const fg =
+                key === 'null' ? null : (groupMap.get(key as number) ?? null);
             groups.push({ flavorGroup: fg, products: grouped.get(key)! });
         }
 
@@ -180,7 +193,8 @@ export default function ProductCategoryShow({ category }: Props) {
     }, [filteredProducts, category.flavor_groups]);
 
     // Flavor group image upload
-    const [editingFlavorGroup, setEditingFlavorGroup] = useState<ProductFlavorGroup | null>(null);
+    const [editingFlavorGroup, setEditingFlavorGroup] =
+        useState<ProductFlavorGroup | null>(null);
     const [fgImageFile, setFgImageFile] = useState<File | null>(null);
     const [fgProcessing, setFgProcessing] = useState(false);
 
@@ -191,20 +205,27 @@ export default function ProductCategoryShow({ category }: Props) {
         const fd = new FormData();
         fd.append('image', fgImageFile);
         fd.append('_method', 'PATCH');
-        router.post(`/owner/product-flavor-groups/${editingFlavorGroup.id}/image`, fd, {
-            forceFormData: true,
-            preserveScroll: true,
-            onSuccess: () => {
-                toast.success('Gambar grup rasa diperbarui');
-                setEditingFlavorGroup(null);
-                setFgImageFile(null);
+        router.post(
+            `/owner/product-flavor-groups/${editingFlavorGroup.id}/image`,
+            fd,
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success('Gambar grup rasa diperbarui');
+                    setEditingFlavorGroup(null);
+                    setFgImageFile(null);
+                },
+                onError: (err) =>
+                    toast.error(Object.values(err).flat().join(', ')),
+                onFinish: () => setFgProcessing(false),
             },
-            onError: (err) => toast.error(Object.values(err).flat().join(', ')),
-            onFinish: () => setFgProcessing(false),
-        });
+        );
     };
 
-    const [expandedGroups, setExpandedGroups] = useState<Set<number | 'null'>>(new Set());
+    const [expandedGroups, setExpandedGroups] = useState<Set<number | 'null'>>(
+        new Set(),
+    );
 
     const toggleGroup = (key: number | 'null') => {
         setExpandedGroups((prev) => {
@@ -564,14 +585,23 @@ export default function ProductCategoryShow({ category }: Props) {
                     {groupedSections.map((section, idx) => {
                         const gKey = section.flavorGroup?.id ?? 'null';
                         const isExpanded = expandedGroups.has(gKey);
-                        const sizeCount = new Set(section.products.map(p => p.size)).size;
+                        const sizeCount = new Set(
+                            section.products.map((p) => p.size),
+                        ).size;
 
                         return (
-                            <div key={gKey === 'null' ? `null-${idx}` : `fg-${gKey}`} className="overflow-hidden rounded-xl bg-surface shadow-card ring-1 ring-border/20">
+                            <div
+                                key={
+                                    gKey === 'null'
+                                        ? `null-${idx}`
+                                        : `fg-${gKey}`
+                                }
+                                className="overflow-hidden rounded-xl bg-surface shadow-card ring-1 ring-border/20"
+                            >
                                 <button
                                     type="button"
                                     onClick={() => toggleGroup(gKey)}
-                                    className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left hover:bg-surface-muted/30 transition"
+                                    className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left transition hover:bg-surface-muted/30"
                                 >
                                     {isExpanded ? (
                                         <ChevronDown className="h-4 w-4 shrink-0 text-text-muted" />
@@ -579,31 +609,45 @@ export default function ProductCategoryShow({ category }: Props) {
                                         <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" />
                                     )}
                                     <ProductImage
-                                        name={section.flavorGroup?.flavor ?? 'Tanpa Rasa'}
+                                        name={
+                                            section.flavorGroup?.flavor ??
+                                            'Tanpa Rasa'
+                                        }
                                         src={null}
-                                        flavorGroupImage={section.flavorGroup?.image ?? null}
+                                        flavorGroupImage={
+                                            section.flavorGroup?.image ?? null
+                                        }
                                         categoryImage={category.image}
                                         size="sm"
                                     />
                                     <div className="min-w-0 flex-1">
                                         <span className="text-sm font-semibold text-text">
-                                            {section.flavorGroup?.flavor ?? 'Tanpa Rasa'}
+                                            {section.flavorGroup?.flavor ??
+                                                'Tanpa Rasa'}
                                         </span>
                                         <span className="ml-2 text-xs text-text-muted">
-                                            {section.products.length} varian · {sizeCount} ukuran
+                                            {section.products.length} varian ·{' '}
+                                            {sizeCount} ukuran
                                         </span>
                                     </div>
-                                    <div className="flex items-center gap-2 shrink-0">
-                                        {section.flavorGroup && !section.flavorGroup.image && (
-                                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 ring-1 ring-amber-200">
-                                                Missing Image
-                                            </span>
-                                        )}
+                                    <div className="flex shrink-0 items-center gap-2">
+                                        {section.flavorGroup &&
+                                            !section.flavorGroup.image && (
+                                                <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 ring-1 ring-amber-200">
+                                                    Missing Image
+                                                </span>
+                                            )}
                                         {section.flavorGroup && (
                                             <button
                                                 type="button"
-                                                onClick={(e) => { e.stopPropagation(); setEditingFlavorGroup(section.flavorGroup!); setFgImageFile(null); }}
-                                                className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setEditingFlavorGroup(
+                                                        section.flavorGroup!,
+                                                    );
+                                                    setFgImageFile(null);
+                                                }}
+                                                className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
                                                 title="Edit gambar grup"
                                             >
                                                 <Upload className="h-3.5 w-3.5" />
@@ -646,14 +690,21 @@ export default function ProductCategoryShow({ category }: Props) {
                                             <tbody className="divide-y divide-border/50">
                                                 {section.products.map((p) => {
                                                     const margin =
-                                                        Number(p.selling_price) -
+                                                        Number(
+                                                            p.selling_price,
+                                                        ) -
                                                         Number(p.center_price);
                                                     const marginPct =
-                                                        Number(p.center_price) > 0
-                                                            ? (margin / Number(p.center_price)) *
+                                                        Number(p.center_price) >
+                                                        0
+                                                            ? (margin /
+                                                                  Number(
+                                                                      p.center_price,
+                                                                  )) *
                                                               100
                                                             : 0;
-                                                    const hasNoStock = p.center_stock === 0;
+                                                    const hasNoStock =
+                                                        p.center_stock === 0;
 
                                                     return (
                                                         <tr
@@ -663,10 +714,16 @@ export default function ProductCategoryShow({ category }: Props) {
                                                             <td className="px-3 py-3">
                                                                 <div className="flex items-center gap-2.5">
                                                                     <ProductImage
-                                                                        name={p.name}
-                                                                        src={p.image}
+                                                                        name={
+                                                                            p.name
+                                                                        }
+                                                                        src={
+                                                                            p.image
+                                                                        }
                                                                         flavorGroupImage={
-                                                                            p.flavor_group?.image
+                                                                            p
+                                                                                .flavor_group
+                                                                                ?.image
                                                                         }
                                                                         categoryImage={
                                                                             category.image
@@ -675,7 +732,9 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                     />
                                                                     <div className="min-w-0">
                                                                         <div className="max-w-[200px] truncate font-semibold text-text">
-                                                                            {p.name}
+                                                                            {
+                                                                                p.name
+                                                                            }
                                                                         </div>
                                                                         <div className="mt-0.5 flex items-center gap-1.5">
                                                                             {!p.is_active && (
@@ -685,7 +744,8 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                             )}
                                                                             {!p.image && (
                                                                                 <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 ring-1 ring-amber-200">
-                                                                                    No Image
+                                                                                    No
+                                                                                    Image
                                                                                 </span>
                                                                             )}
                                                                         </div>
@@ -699,23 +759,35 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                 {p.sku || '-'}
                                                             </td>
                                                             <td className="px-3 py-3 text-right text-text-muted tabular-nums">
-                                                                {formatCurrency(p.center_price)}
+                                                                {formatCurrency(
+                                                                    p.center_price,
+                                                                )}
                                                             </td>
                                                             <td className="px-3 py-3 text-right font-semibold text-text tabular-nums">
-                                                                {formatCurrency(p.selling_price)}
+                                                                {formatCurrency(
+                                                                    p.selling_price,
+                                                                )}
                                                             </td>
                                                             <td className="px-3 py-3 text-right tabular-nums">
                                                                 <span
                                                                     className={
-                                                                        marginPct < 20
+                                                                        marginPct <
+                                                                        20
                                                                             ? 'text-amber-600'
                                                                             : 'text-emerald-700'
                                                                     }
                                                                 >
-                                                                    {marginPct.toFixed(1)}%
+                                                                    {marginPct.toFixed(
+                                                                        1,
+                                                                    )}
+                                                                    %
                                                                 </span>
                                                                 <span className="ml-1 text-[11px] text-text-subtle">
-                                                                    ({formatCurrency(margin)})
+                                                                    (
+                                                                    {formatCurrency(
+                                                                        margin,
+                                                                    )}
+                                                                    )
                                                                 </span>
                                                             </td>
                                                             <td className="px-3 py-3 text-right tabular-nums">
@@ -723,18 +795,23 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                     <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700 ring-1 ring-red-200">
                                                                         0
                                                                         <span className="ml-1 rounded bg-red-100 px-1 py-0 text-[9px]">
-                                                                            No Center Stock
+                                                                            No
+                                                                            Center
+                                                                            Stock
                                                                         </span>
                                                                     </span>
                                                                 ) : (
                                                                     <span
                                                                         className={
-                                                                            p.center_stock <= 5
+                                                                            p.center_stock <=
+                                                                            5
                                                                                 ? 'font-bold text-amber-600'
                                                                                 : 'text-text'
                                                                         }
                                                                     >
-                                                                        {p.center_stock}
+                                                                        {
+                                                                            p.center_stock
+                                                                        }
                                                                     </span>
                                                                 )}
                                                             </td>
@@ -743,7 +820,9 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                     <button
                                                                         title="Duplikat"
                                                                         onClick={() =>
-                                                                            handleDuplicate(p)
+                                                                            handleDuplicate(
+                                                                                p,
+                                                                            )
                                                                         }
                                                                         className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
                                                                     >
@@ -756,7 +835,9 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                                 : 'Aktifkan'
                                                                         }
                                                                         onClick={() =>
-                                                                            handleToggle(p)
+                                                                            handleToggle(
+                                                                                p,
+                                                                            )
                                                                         }
                                                                         className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
                                                                     >
@@ -769,7 +850,9 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                     <button
                                                                         title="Edit"
                                                                         onClick={() =>
-                                                                            openEditProduct(p)
+                                                                            openEditProduct(
+                                                                                p,
+                                                                            )
                                                                         }
                                                                         className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
                                                                     >
@@ -778,7 +861,9 @@ export default function ProductCategoryShow({ category }: Props) {
                                                                     <button
                                                                         title="Hapus"
                                                                         onClick={() =>
-                                                                            setDeleteId(p.id)
+                                                                            setDeleteId(
+                                                                                p.id,
+                                                                            )
                                                                         }
                                                                         className="rounded p-1 text-text-subtle hover:bg-red-50 hover:text-red-600"
                                                                     >
@@ -1243,18 +1328,28 @@ export default function ProductCategoryShow({ category }: Props) {
             {/* Flavor Group Image Dialog */}
             <Dialog
                 open={editingFlavorGroup !== null}
-                onOpenChange={(o) => { if (!o) { setEditingFlavorGroup(null); setFgImageFile(null); } }}
+                onOpenChange={(o) => {
+                    if (!o) {
+                        setEditingFlavorGroup(null);
+                        setFgImageFile(null);
+                    }
+                }}
             >
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>Gambar Grup Rasa: {editingFlavorGroup?.flavor}</DialogTitle>
+                        <DialogTitle>
+                            Gambar Grup Rasa: {editingFlavorGroup?.flavor}
+                        </DialogTitle>
                         <DialogDescription>
-                            Unggah gambar untuk grup rasa {editingFlavorGroup?.flavor}
+                            Unggah gambar untuk grup rasa{' '}
+                            {editingFlavorGroup?.flavor}
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleFgImageSubmit} className="space-y-3">
                         <ImageUploadField
-                            value={fgImageFile ?? editingFlavorGroup?.image ?? null}
+                            value={
+                                fgImageFile ?? editingFlavorGroup?.image ?? null
+                            }
                             onChange={setFgImageFile}
                             label="Foto Grup Rasa"
                         />
@@ -1262,11 +1357,17 @@ export default function ProductCategoryShow({ category }: Props) {
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => { setEditingFlavorGroup(null); setFgImageFile(null); }}
+                                onClick={() => {
+                                    setEditingFlavorGroup(null);
+                                    setFgImageFile(null);
+                                }}
                             >
                                 Batal
                             </Button>
-                            <Button type="submit" disabled={fgProcessing || !fgImageFile}>
+                            <Button
+                                type="submit"
+                                disabled={fgProcessing || !fgImageFile}
+                            >
                                 {fgProcessing ? 'Menyimpan...' : 'Simpan'}
                             </Button>
                         </DialogFooter>
