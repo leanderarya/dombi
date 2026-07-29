@@ -62,7 +62,6 @@ export default function ProductCategoryShow({ category }: Props) {
     const [showCatEdit, setShowCatEdit] = useState(false);
     const [catForm, setCatForm] = useState({
         name: category?.name ?? '',
-        brand: category?.brand ?? '',
         description: category?.description ?? '',
         is_active: category?.is_active ?? true,
     });
@@ -256,10 +255,6 @@ export default function ProductCategoryShow({ category }: Props) {
         setCatProcessing(true);
         const fd = new FormData();
         fd.append('name', catForm.name);
-
-        if (catForm.brand) {
-            fd.append('brand', catForm.brand);
-        }
 
         if (catForm.description) {
             fd.append('description', catForm.description);
@@ -526,7 +521,7 @@ export default function ProductCategoryShow({ category }: Props) {
     return (
         <OwnerPageShell
             title={`Kategori: ${category.name}`}
-            subtitle={category.brand ? `${category.brand}` : 'Detail kategori'}
+            subtitle={'Detail kategori'}
             backHref="/owner/product-categories"
             headerRight={
                 <div className="flex items-center gap-2">
@@ -916,16 +911,6 @@ export default function ProductCategoryShow({ category }: Props) {
                                 }))
                             }
                             required
-                        />
-                        <Input
-                            label="Brand"
-                            value={catForm.brand}
-                            onChange={(e) =>
-                                setCatForm((p) => ({
-                                    ...p,
-                                    brand: e.target.value,
-                                }))
-                            }
                         />
                         <Textarea
                             label="Deskripsi"

@@ -13,7 +13,6 @@ class ProductCategoryFactory extends Factory
     {
         return [
             'name' => $this->faker->unique()->word().' '.$this->faker->randomElement(['Milk', 'Goat', 'Premium']),
-            'brand' => 'Dombi',
             'description' => $this->faker->sentence(),
             'is_active' => true,
         ];

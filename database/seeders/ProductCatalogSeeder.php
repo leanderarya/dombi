@@ -16,7 +16,6 @@ class ProductCatalogSeeder extends Seeder
         $catalog = [
             [
                 'name' => 'Biogoat',
-                'brand' => 'Biogoat',
                 'description' => 'Susu kambing Biogoat berkualitas tinggi - murni dan bernutrisi',
                 'products' => [
                     ['name' => 'Original 1L', 'flavor' => 'Original', 'size' => '1L', 'center_price' => 35000, 'selling_price' => 42000],
@@ -26,7 +25,6 @@ class ProductCatalogSeeder extends Seeder
             ],
             [
                 'name' => 'Domilk Premium Taste',
-                'brand' => 'Domilk',
                 'description' => 'Susu kambing premium dengan berbagai pilihan rasa',
                 'products' => [
                     ['name' => 'Coffee 200ml', 'flavor' => 'Coffee', 'size' => '200ml', 'center_price' => 12000, 'selling_price' => 15000],

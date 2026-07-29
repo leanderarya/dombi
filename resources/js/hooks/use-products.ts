@@ -15,7 +15,6 @@ export interface Variant {
 export interface Family {
     id: number;
     name: string;
-    brand: string | null;
     description: string | null;
     variants: Variant[];
 }

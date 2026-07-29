@@ -84,7 +84,6 @@ class ProductController extends Controller
         $family = [
             'id' => $category->id,
             'name' => $category->name,
-            'brand' => $category->brand,
             'description' => $category->description,
             'image' => null,
             'variants' => $products,
@@ -101,7 +100,6 @@ class ProductController extends Controller
             ->map(fn ($cat) => [
                 'id' => $cat->id,
                 'name' => $cat->name,
-                'brand' => $cat->brand,
                 'variants' => $cat->products->map(fn ($p) => [
                     'selling_price' => $outletId ? $p->priceForOutlet($outletId) : $p->selling_price,
                 ])->toArray(),

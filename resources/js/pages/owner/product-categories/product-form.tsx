@@ -529,11 +529,6 @@ export default function ProductForm({
                                 : `Tambah Produk ke ${category.name}`}
                         </h3>
                     </div>
-                    {category.brand && (
-                        <p className="mt-1 text-xs text-text-muted">
-                            Brand: {category.brand}
-                        </p>
-                    )}
                 </div>
                 {isEditing && (
                     <span className="rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold tracking-wide text-amber-700 ring-1 ring-amber-200">
