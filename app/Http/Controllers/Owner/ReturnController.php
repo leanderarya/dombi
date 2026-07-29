@@ -28,7 +28,7 @@ class ReturnController extends Controller
 
     private function pengembalianTab(Request $request): Response
     {
-        $query = ReturnRequest::with(['outlet', 'requester', 'items.variant'])
+        $query = ReturnRequest::with(['outlet', 'requester', 'items.product'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -77,7 +77,7 @@ class ReturnController extends Controller
 
     private function penukaranTab(Request $request): Response
     {
-        $query = ExchangeRequest::with(['outlet', 'requester', 'items.variant', 'returnRequest'])
+        $query = ExchangeRequest::with(['outlet', 'requester', 'items.product', 'returnRequest'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -121,7 +121,7 @@ class ReturnController extends Controller
 
     public function show(ReturnRequest $returnRequest): Response
     {
-        $returnRequest->load(['outlet', 'requester', 'reviewer', 'receiver', 'items.variant', 'statusHistories.actor']);
+        $returnRequest->load(['outlet', 'requester', 'reviewer', 'receiver', 'items.product', 'statusHistories.actor']);
 
         return Inertia::render('owner/returns/show', [
             'return' => $returnRequest,

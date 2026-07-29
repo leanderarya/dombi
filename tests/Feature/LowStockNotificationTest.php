@@ -8,6 +8,7 @@ use App\Models\Notification;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
 use App\Services\InventoryService;
@@ -109,7 +110,7 @@ class LowStockNotificationTest extends TestCase
             ->first();
 
         $this->assertNotNull($notification);
-        $this->assertStringContainsString($context['variant']->full_name, $notification->message);
+        $this->assertStringContainsString($context['variant']->full_display_name, $notification->message);
         $this->assertStringContainsString('2', $notification->message); // available stock
         $this->assertStringContainsString('5', $notification->message); // minimum stock
     }

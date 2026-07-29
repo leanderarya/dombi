@@ -6,6 +6,7 @@ use App\Models\ExchangeRequest;
 use App\Models\ExchangeRequestItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\RestockRequest;
 use App\Models\ReturnRequest;

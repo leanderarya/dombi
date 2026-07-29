@@ -64,7 +64,7 @@ class OwnerReturnDispositionTest extends TestCase
 
     public function test_owner_can_dispose_item_and_stock_updated(): void
     {
-        $variant = $this->item->variant;
+        $variant = $this->item->product;
         $beforeCenterStock = (int) $variant->center_stock;
 
         $this->actingAs($this->owner)
@@ -89,7 +89,7 @@ class OwnerReturnDispositionTest extends TestCase
 
     public function test_owner_can_store_item_increases_center_stock(): void
     {
-        $variant = $this->item->variant;
+        $variant = $this->item->product;
         $beforeCenterStock = (int) $variant->center_stock;
 
         $this->actingAs($this->owner)
@@ -113,7 +113,7 @@ class OwnerReturnDispositionTest extends TestCase
             ->post("/owner/returns/{$this->returnRequest->id}/items/{$this->item->id}/store")
             ->assertSessionHas('success');
 
-        $variant = $this->item->variant->fresh();
+        $variant = $this->item->product->fresh();
         $this->assertSame(23, (int) $variant->center_stock);
 
         $this->actingAs($this->owner)
@@ -135,7 +135,7 @@ class OwnerReturnDispositionTest extends TestCase
             ->post("/owner/returns/{$this->returnRequest->id}/items/{$this->item->id}/dispose")
             ->assertSessionHas('success');
 
-        $variant = $this->item->variant->fresh();
+        $variant = $this->item->product->fresh();
         $this->assertSame(20, (int) $variant->center_stock);
 
         $this->actingAs($this->owner)

@@ -208,7 +208,7 @@ class CompletedOrderCtaTest extends TestCase
         $context = $this->createOrderContext('completed');
 
         // Change price
-        $context['variant']->update(['selling_price' => 30000]);
+        $context['variant']->update(['price' => 30000]);
 
         $response = $this->actingAs($context['user'])
             ->post('/customer/orders/'.$context['order']->id.'/repeat');
@@ -317,12 +317,13 @@ class CompletedOrderCtaTest extends TestCase
 
         OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $product2->id,
             'product_id' => $variant2->id,
             'product_name' => $product2->name,
             'variant_name_snapshot' => $variant2->name,
             'quantity' => 1,
-            'selling_price' => 15000,
+            'price' => 15000,
+            'price' => 15000,
+
             'subtotal' => 15000,
         ]);
 
@@ -408,12 +409,12 @@ class CompletedOrderCtaTest extends TestCase
 
         OrderItem::create([
             'order_id' => $order->id,
-            'product_id' => $product->id,
             'product_id' => $variant->id,
             'product_name' => $product->name,
             'variant_name_snapshot' => $variant->name,
             'quantity' => 2,
-            'selling_price' => 25000,
+            'price' => 25000,
+            'price' => 25000,
             'subtotal' => 50000,
         ]);
 

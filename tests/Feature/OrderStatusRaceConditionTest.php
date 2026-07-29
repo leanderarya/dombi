@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
 use App\Services\OrderStatusService;
@@ -194,11 +195,10 @@ class OrderStatusRaceConditionTest extends TestCase
         ]);
 
         $order->items()->create([
-            'product_id' => $product->id,
             'product_id' => $variant->id,
             'product_name' => $product->name,
             'quantity' => 2,
-            'selling_price' => 25000,
+            'price' => 25000,
             'subtotal' => 50000,
         ]);
 
