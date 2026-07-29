@@ -98,7 +98,7 @@ class DashboardController extends Controller
                 $threshold = $this->centerStockThreshold($product);
 
                 return [
-                    'product' => [
+                    'variant' => [
                         'id' => $product->id,
                         'name' => $product->name,
                         'full_name' => $product->full_display_name,
