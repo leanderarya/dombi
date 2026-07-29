@@ -257,8 +257,11 @@ function ProductDetailInner({
     const displayImage = useMemo(() => {
         if (!effectiveFlavor) {
             for (const v of family.variants) {
-                if (v.image) return v.image;
+                if (v.image) {
+                    return v.image;
+                }
             }
+
             return null;
         }
 
