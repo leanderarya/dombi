@@ -160,8 +160,8 @@ export default function ProductCategoryShow({ category }: Props) {
         }[] = [];
 
         if (!filteredProducts.length) {
-return groups;
-}
+            return groups;
+        }
 
         const grouped = new Map<number | 'null', Product[]>();
 
@@ -169,8 +169,8 @@ return groups;
             const key = p.product_flavor_group_id ?? 'null';
 
             if (!grouped.has(key)) {
-grouped.set(key, []);
-}
+                grouped.set(key, []);
+            }
 
             grouped.get(key)!.push(p);
         }
@@ -190,8 +190,8 @@ grouped.set(key, []);
         ];
 
         if (grouped.has('null')) {
-allKeys.push('null');
-}
+            allKeys.push('null');
+        }
 
         for (const key of allKeys) {
             const fg =
@@ -212,8 +212,8 @@ allKeys.push('null');
         e.preventDefault();
 
         if (!editingFlavorGroup || !fgImageFile) {
-return;
-}
+            return;
+        }
 
         setFgProcessing(true);
         const fd = new FormData();
@@ -246,10 +246,10 @@ return;
             const next = new Set(prev);
 
             if (next.has(key)) {
-next.delete(key);
-} else {
-next.add(key);
-}
+                next.delete(key);
+            } else {
+                next.add(key);
+            }
 
             return next;
         });

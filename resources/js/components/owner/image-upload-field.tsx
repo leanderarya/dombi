@@ -69,7 +69,11 @@ export default function ImageUploadField({
         <div className="space-y-2">
             <label className="text-[11px] font-medium text-text-subtle">
                 {label}
-                {info && <span className="ml-1 text-[10px] text-text-muted">— {info}</span>}
+                {info && (
+                    <span className="ml-1 text-[10px] text-text-muted">
+                        — {info}
+                    </span>
+                )}
             </label>
             <div className="flex items-center gap-3">
                 {preview ? (
