@@ -61,7 +61,9 @@ export default function ProductForm({
 
     // Bulk Size state
     const [sharedImageFile, setSharedImageFile] = useState<File | null>(null);
-    const [sharedImageExisting, setSharedImageExisting] = useState<string | null>(null);
+    const [sharedImageExisting, setSharedImageExisting] = useState<
+        string | null
+    >(null);
     interface BulkSizeRow {
         size: string;
         center_price: string;
@@ -73,7 +75,9 @@ export default function ProductForm({
     ]);
     const [bulkSizeFlavor, setBulkSizeFlavor] = useState('');
     const [bulkSizeDescription, setBulkSizeDescription] = useState('');
-    const [bulkSizeErrors, setBulkSizeErrors] = useState<Record<string, string>>({});
+    const [bulkSizeErrors, setBulkSizeErrors] = useState<
+        Record<string, string>
+    >({});
 
     // Single margin
     const singleMargin = useMemo(() => {
@@ -112,22 +116,44 @@ export default function ProductForm({
             const cp = Number(row.center_price);
             const sp = Number(row.selling_price);
             if (!Number.isFinite(cp) || !Number.isFinite(sp) || cp <= 0) {
-                return { amount: Number.isFinite(sp) && Number.isFinite(cp) ? sp - cp : 0, pct: 0, valid: Number.isFinite(cp) && Number.isFinite(sp) };
+                return {
+                    amount:
+                        Number.isFinite(sp) && Number.isFinite(cp)
+                            ? sp - cp
+                            : 0,
+                    pct: 0,
+                    valid: Number.isFinite(cp) && Number.isFinite(sp),
+                };
             }
-            return { amount: sp - cp, pct: ((sp - cp) / cp) * 100, valid: true };
+            return {
+                amount: sp - cp,
+                pct: ((sp - cp) / cp) * 100,
+                valid: true,
+            };
         });
     }, [bulkSizeRows]);
 
     const addBulkSizeRow = () => {
-        setBulkSizeRows(prev => [...prev, { size: '', center_price: '', selling_price: '', sku: '' }]);
+        setBulkSizeRows((prev) => [
+            ...prev,
+            { size: '', center_price: '', selling_price: '', sku: '' },
+        ]);
     };
 
     const removeBulkSizeRow = (index: number) => {
-        setBulkSizeRows(prev => prev.filter((_, i) => i !== index));
+        setBulkSizeRows((prev) => prev.filter((_, i) => i !== index));
     };
 
-    const updateBulkSizeRow = (index: number, field: keyof BulkSizeRow, value: string) => {
-        setBulkSizeRows(prev => prev.map((row, i) => i === index ? { ...row, [field]: value } : row));
+    const updateBulkSizeRow = (
+        index: number,
+        field: keyof BulkSizeRow,
+        value: string,
+    ) => {
+        setBulkSizeRows((prev) =>
+            prev.map((row, i) =>
+                i === index ? { ...row, [field]: value } : row,
+            ),
+        );
     };
 
     const autoSku = (size: string) => {
@@ -349,10 +375,12 @@ export default function ProductForm({
                 errs[`row_${i}_center_price`] = `HPP baris ${i + 1} wajib`;
             }
             if (!row.selling_price || Number(row.selling_price) < 0) {
-                errs[`row_${i}_selling_price`] = `Harga jual baris ${i + 1} wajib`;
+                errs[`row_${i}_selling_price`] =
+                    `Harga jual baris ${i + 1} wajib`;
             }
             if (Number(row.selling_price) < Number(row.center_price)) {
-                errs[`row_${i}_selling_price`] = `Harga jual baris ${i + 1} harus >= HPP`;
+                errs[`row_${i}_selling_price`] =
+                    `Harga jual baris ${i + 1} harus >= HPP`;
             }
         }
 
@@ -366,32 +394,49 @@ export default function ProductForm({
         const fd = new FormData();
         if (sharedImageFile) fd.append('image', sharedImageFile);
         fd.append('flavor', bulkSizeFlavor.trim());
-        if (bulkSizeDescription.trim()) fd.append('description', bulkSizeDescription.trim());
-        fd.append('sizes', JSON.stringify(bulkSizeRows.map(s => ({
-            size: s.size.trim(),
-            center_price: Number(s.center_price),
-            selling_price: Number(s.selling_price),
-            sku: s.sku.trim() || null,
-        }))));
+        if (bulkSizeDescription.trim())
+            fd.append('description', bulkSizeDescription.trim());
+        fd.append(
+            'sizes',
+            JSON.stringify(
+                bulkSizeRows.map((s) => ({
+                    size: s.size.trim(),
+                    center_price: Number(s.center_price),
+                    selling_price: Number(s.selling_price),
+                    sku: s.sku.trim() || null,
+                })),
+            ),
+        );
 
-        router.post(`/owner/product-categories/${category.id}/products/bulk-size`, fd, {
-            forceFormData: true,
-            preserveScroll: true,
-            onSuccess: (page: any) => {
-                const flash = page?.props?.flash ?? {};
-                const ids = flash.new_product_ids ?? [];
-                onSuccess?.(ids);
-                onClose?.();
-                setBulkSizeRows([{ size: '', center_price: '', selling_price: '', sku: '' }]);
-                setBulkSizeFlavor('');
-                setBulkSizeDescription('');
-                setSharedImageFile(null);
-                setSharedImageExisting(null);
+        router.post(
+            `/owner/product-categories/${category.id}/products/bulk-size`,
+            fd,
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onSuccess: (page: any) => {
+                    const flash = page?.props?.flash ?? {};
+                    const ids = flash.new_product_ids ?? [];
+                    onSuccess?.(ids);
+                    onClose?.();
+                    setBulkSizeRows([
+                        {
+                            size: '',
+                            center_price: '',
+                            selling_price: '',
+                            sku: '',
+                        },
+                    ]);
+                    setBulkSizeFlavor('');
+                    setBulkSizeDescription('');
+                    setSharedImageFile(null);
+                    setSharedImageExisting(null);
+                },
+                onError: (errors) => {
+                    setBulkSizeErrors(errors as Record<string, string>);
+                },
             },
-            onError: (errors) => {
-                setBulkSizeErrors(errors as Record<string, string>);
-            },
-        });
+        );
     };
 
     const handleBulkSubmit = (e: React.FormEvent) => {
@@ -995,7 +1040,9 @@ export default function ProductForm({
                         <Textarea
                             label="Deskripsi (shared, opsional)"
                             value={bulkSizeDescription}
-                            onChange={(e) => setBulkSizeDescription(e.target.value)}
+                            onChange={(e) =>
+                                setBulkSizeDescription(e.target.value)
+                            }
                             rows={2}
                             placeholder="Deskripsi umum untuk semua ukuran rasa ini (opsional)"
                             error={bulkSizeErrors.description}
@@ -1010,7 +1057,9 @@ export default function ProductForm({
                             info="This image is shared by all Coffee sizes. Replacing it will update the image shown for every Coffee size."
                         />
                         {bulkSizeErrors.image && (
-                            <p className="text-xs text-red-600">{bulkSizeErrors.image}</p>
+                            <p className="text-xs text-red-600">
+                                {bulkSizeErrors.image}
+                            </p>
                         )}
                     </div>
 
@@ -1020,7 +1069,12 @@ export default function ProductForm({
                             <h4 className="text-xs font-semibold tracking-wide text-text-muted uppercase">
                                 Daftar Ukuran & Harga ({bulkSizeRows.length})
                             </h4>
-                            <Button type="button" variant="outline" size="sm" onClick={addBulkSizeRow}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addBulkSizeRow}
+                            >
                                 <Plus className="h-3.5 w-3.5" /> Tambah Ukuran
                             </Button>
                         </div>
@@ -1029,13 +1083,27 @@ export default function ProductForm({
                             <table className="w-full text-left text-xs">
                                 <thead>
                                     <tr className="bg-surface-muted/60 text-text-muted">
-                                        <th className="px-2 py-2 font-semibold">#</th>
-                                        <th className="px-2 py-2 font-semibold">Ukuran</th>
-                                        <th className="px-2 py-2 font-semibold">HPP (Rp)</th>
-                                        <th className="px-2 py-2 font-semibold">Harga Jual (Rp)</th>
-                                        <th className="px-2 py-2 font-semibold">SKU AUTO</th>
-                                        <th className="px-2 py-2 font-semibold">Margin%</th>
-                                        <th className="px-2 py-2 font-semibold">Margin Rp</th>
+                                        <th className="px-2 py-2 font-semibold">
+                                            #
+                                        </th>
+                                        <th className="px-2 py-2 font-semibold">
+                                            Ukuran
+                                        </th>
+                                        <th className="px-2 py-2 font-semibold">
+                                            HPP (Rp)
+                                        </th>
+                                        <th className="px-2 py-2 font-semibold">
+                                            Harga Jual (Rp)
+                                        </th>
+                                        <th className="px-2 py-2 font-semibold">
+                                            SKU AUTO
+                                        </th>
+                                        <th className="px-2 py-2 font-semibold">
+                                            Margin%
+                                        </th>
+                                        <th className="px-2 py-2 font-semibold">
+                                            Margin Rp
+                                        </th>
                                         <th className="px-2 py-2"></th>
                                     </tr>
                                 </thead>
@@ -1044,15 +1112,30 @@ export default function ProductForm({
                                         const margin = bulkSizeRowMargins[i];
                                         const skuHint = autoSku(row.size);
                                         return (
-                                            <tr key={i} className="group hover:bg-surface-muted/30">
-                                                <td className="px-2 py-1.5 text-text-subtle">{i + 1}</td>
+                                            <tr
+                                                key={i}
+                                                className="group hover:bg-surface-muted/30"
+                                            >
+                                                <td className="px-2 py-1.5 text-text-subtle">
+                                                    {i + 1}
+                                                </td>
                                                 <td className="px-2 py-1.5">
                                                     <Input
                                                         value={row.size}
-                                                        onChange={(e) => updateBulkSizeRow(i, 'size', e.target.value)}
+                                                        onChange={(e) =>
+                                                            updateBulkSizeRow(
+                                                                i,
+                                                                'size',
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         placeholder="200ml"
                                                         className="h-8 text-xs"
-                                                        error={bulkSizeErrors[`row_${i}_size`]}
+                                                        error={
+                                                            bulkSizeErrors[
+                                                                `row_${i}_size`
+                                                            ]
+                                                        }
                                                     />
                                                 </td>
                                                 <td className="px-2 py-1.5">
@@ -1060,25 +1143,52 @@ export default function ProductForm({
                                                         type="number"
                                                         min={0}
                                                         value={row.center_price}
-                                                        onChange={(e) => updateBulkSizeRow(i, 'center_price', e.target.value)}
+                                                        onChange={(e) =>
+                                                            updateBulkSizeRow(
+                                                                i,
+                                                                'center_price',
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         placeholder="30000"
                                                         className="h-8 text-xs"
-                                                        error={bulkSizeErrors[`row_${i}_center_price`]}
+                                                        error={
+                                                            bulkSizeErrors[
+                                                                `row_${i}_center_price`
+                                                            ]
+                                                        }
                                                     />
                                                 </td>
                                                 <td className="px-2 py-1.5">
                                                     <Input
                                                         type="number"
                                                         min={0}
-                                                        value={row.selling_price}
-                                                        onChange={(e) => updateBulkSizeRow(i, 'selling_price', e.target.value)}
+                                                        value={
+                                                            row.selling_price
+                                                        }
+                                                        onChange={(e) =>
+                                                            updateBulkSizeRow(
+                                                                i,
+                                                                'selling_price',
+                                                                e.target.value,
+                                                            )
+                                                        }
                                                         placeholder="40000"
                                                         className="h-8 text-xs"
                                                         error={
-                                                            bulkSizeErrors[`row_${i}_selling_price`] ||
-                                                            (Number(row.selling_price) < Number(row.center_price) &&
-                                                                row.selling_price !== '' &&
-                                                                row.center_price !== ''
+                                                            bulkSizeErrors[
+                                                                `row_${i}_selling_price`
+                                                            ] ||
+                                                            (Number(
+                                                                row.selling_price,
+                                                            ) <
+                                                                Number(
+                                                                    row.center_price,
+                                                                ) &&
+                                                            row.selling_price !==
+                                                                '' &&
+                                                            row.center_price !==
+                                                                ''
                                                                 ? 'Harus >= HPP'
                                                                 : undefined)
                                                         }
@@ -1089,34 +1199,57 @@ export default function ProductForm({
                                                         <div className="flex items-center gap-1">
                                                             <Input
                                                                 value={row.sku}
-                                                                onChange={(e) => updateBulkSizeRow(i, 'sku', e.target.value)}
+                                                                onChange={(e) =>
+                                                                    updateBulkSizeRow(
+                                                                        i,
+                                                                        'sku',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
                                                                 placeholder="AUTO"
-                                                                className="h-8 text-xs font-mono"
+                                                                className="h-8 font-mono text-xs"
                                                             />
                                                         </div>
-                                                        {!row.sku.trim() && skuHint && (
-                                                            <p className="text-[10px] text-text-subtle">
-                                                                {skuHint}
-                                                            </p>
-                                                        )}
+                                                        {!row.sku.trim() &&
+                                                            skuHint && (
+                                                                <p className="text-[10px] text-text-subtle">
+                                                                    {skuHint}
+                                                                </p>
+                                                            )}
                                                     </div>
                                                 </td>
                                                 <td className="px-2 py-1.5">
-                                                    <span className={`inline-block rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${margin.amount < 0 ? 'text-red-600' : margin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}>
-                                                        {margin.valid ? `${margin.pct.toFixed(1)}%` : '-'}
+                                                    <span
+                                                        className={`inline-block rounded px-1.5 py-0.5 text-xs font-bold tabular-nums ${margin.amount < 0 ? 'text-red-600' : margin.pct < 20 ? 'text-amber-600' : 'text-emerald-700'}`}
+                                                    >
+                                                        {margin.valid
+                                                            ? `${margin.pct.toFixed(1)}%`
+                                                            : '-'}
                                                     </span>
                                                 </td>
                                                 <td className="px-2 py-1.5">
-                                                    <span className={`text-xs font-bold tabular-nums ${margin.amount < 0 ? 'text-red-600' : 'text-emerald-700'}`}>
-                                                        {margin.valid ? formatCurrency(margin.amount) : '-'}
+                                                    <span
+                                                        className={`text-xs font-bold tabular-nums ${margin.amount < 0 ? 'text-red-600' : 'text-emerald-700'}`}
+                                                    >
+                                                        {margin.valid
+                                                            ? formatCurrency(
+                                                                  margin.amount,
+                                                              )
+                                                            : '-'}
                                                     </span>
                                                 </td>
                                                 <td className="px-2 py-1.5">
-                                                    {bulkSizeRows.length > 1 && (
+                                                    {bulkSizeRows.length >
+                                                        1 && (
                                                         <button
                                                             type="button"
-                                                            onClick={() => removeBulkSizeRow(i)}
-                                                            className="rounded p-1 text-text-muted opacity-0 transition hover:bg-red-50 hover:text-red-600 group-hover:opacity-100"
+                                                            onClick={() =>
+                                                                removeBulkSizeRow(
+                                                                    i,
+                                                                )
+                                                            }
+                                                            className="rounded p-1 text-text-muted opacity-0 transition group-hover:opacity-100 hover:bg-red-50 hover:text-red-600"
                                                         >
                                                             <X className="h-3.5 w-3.5" />
                                                         </button>
@@ -1131,57 +1264,94 @@ export default function ProductForm({
                     </div>
 
                     {/* Preview list */}
-                    {bulkSizeFlavor.trim() && bulkSizeRows.some(r => r.size.trim()) && (
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between">
-                                <h4 className="text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    Preview Produk ({bulkSizeRows.filter(r => r.size.trim()).length})
-                                </h4>
-                                <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-medium text-text-muted">
-                                    {bulkSizeFlavor.trim()} + Ukuran
-                                </span>
+                    {bulkSizeFlavor.trim() &&
+                        bulkSizeRows.some((r) => r.size.trim()) && (
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                        Preview Produk (
+                                        {
+                                            bulkSizeRows.filter((r) =>
+                                                r.size.trim(),
+                                            ).length
+                                        }
+                                        )
+                                    </h4>
+                                    <span className="rounded-full bg-surface-muted px-2.5 py-0.5 text-[11px] font-medium text-text-muted">
+                                        {bulkSizeFlavor.trim()} + Ukuran
+                                    </span>
+                                </div>
+                                <div className="divide-y divide-border/30 rounded-lg border border-border/20 bg-surface">
+                                    {bulkSizeRows
+                                        .filter((r) => r.size.trim())
+                                        .map((row, idx) => (
+                                            <div
+                                                key={idx}
+                                                className="flex items-center justify-between gap-3 px-3 py-2"
+                                            >
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted">
+                                                            {idx + 1}
+                                                        </span>
+                                                        <span className="truncate text-sm font-medium text-text">
+                                                            {`${bulkSizeFlavor.trim()} ${row.size}`}
+                                                        </span>
+                                                    </div>
+                                                    <div className="mt-0.5 ml-7 flex items-center gap-2 text-[10px] text-text-subtle">
+                                                        <span>
+                                                            Ukuran: {row.size}
+                                                        </span>
+                                                        <span>•</span>
+                                                        <span className="font-mono">
+                                                            {row.sku.trim() ||
+                                                                autoSku(
+                                                                    row.size,
+                                                                )}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <div className="text-right tabular-nums">
+                                                    <div className="text-xs font-semibold text-text">
+                                                        {formatCurrency(
+                                                            Number(
+                                                                row.selling_price,
+                                                            ) || 0,
+                                                        )}
+                                                    </div>
+                                                    <div className="text-[10px] text-text-subtle">
+                                                        HPP{' '}
+                                                        {formatCurrency(
+                                                            Number(
+                                                                row.center_price,
+                                                            ) || 0,
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
                             </div>
-                            <div className="divide-y divide-border/30 rounded-lg border border-border/20 bg-surface">
-                                {bulkSizeRows.filter(r => r.size.trim()).map((row, idx) => (
-                                    <div key={idx} className="flex items-center justify-between gap-3 px-3 py-2">
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-muted text-[10px] font-bold text-text-muted">
-                                                    {idx + 1}
-                                                </span>
-                                                <span className="truncate text-sm font-medium text-text">
-                                                    {`${bulkSizeFlavor.trim()} ${row.size}`}
-                                                </span>
-                                            </div>
-                                            <div className="mt-0.5 ml-7 flex items-center gap-2 text-[10px] text-text-subtle">
-                                                <span>Ukuran: {row.size}</span>
-                                                <span>•</span>
-                                                <span className="font-mono">{row.sku.trim() || autoSku(row.size)}</span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right tabular-nums">
-                                            <div className="text-xs font-semibold text-text">
-                                                {formatCurrency(Number(row.selling_price) || 0)}
-                                            </div>
-                                            <div className="text-[10px] text-text-subtle">
-                                                HPP {formatCurrency(Number(row.center_price) || 0)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
+                        )}
 
                     {bulkSizeErrors.rows && (
-                        <p className="text-xs text-red-600">{bulkSizeErrors.rows}</p>
+                        <p className="text-xs text-red-600">
+                            {bulkSizeErrors.rows}
+                        </p>
                     )}
 
                     <div className="flex justify-end gap-2 pt-1">
-                        <Button type="button" variant="outline" onClick={() => onClose?.()}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onClose?.()}
+                        >
                             Batal
                         </Button>
-                        <Button type="submit" disabled={bulkSizeRows.length === 0}>
+                        <Button
+                            type="submit"
+                            disabled={bulkSizeRows.length === 0}
+                        >
                             Buat {bulkSizeRows.length} Produk
                         </Button>
                     </div>
@@ -1189,7 +1359,9 @@ export default function ProductForm({
             )}
 
             {/* Validation summary */}
-            {(singleForm.hasErrors || Object.keys(bulkErrors).length > 0 || Object.keys(bulkSizeErrors).length > 0) && (
+            {(singleForm.hasErrors ||
+                Object.keys(bulkErrors).length > 0 ||
+                Object.keys(bulkSizeErrors).length > 0) && (
                 <div className="rounded-lg bg-red-50 p-2.5 ring-1 ring-red-200">
                     <p className="text-xs font-semibold text-red-700">
                         Periksa kembali isian form:

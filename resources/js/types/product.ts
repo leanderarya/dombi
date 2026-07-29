@@ -44,7 +44,7 @@ export interface Product {
     display_image: string | null;
     has_flavor_image: boolean;
     is_active: boolean;
-    stock_status?: 'available'|'low'|'out_of_stock';
+    stock_status?: 'available' | 'low' | 'out_of_stock';
 }
 export interface ProductPricingRow {
     product_id: number;
