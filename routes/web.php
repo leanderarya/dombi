@@ -277,6 +277,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::patch('products/{product}/toggle', [OwnerProductController::class, 'toggle'])->name('products.toggle');
         Route::post('products/{product}/duplicate', [OwnerProductController::class, 'duplicate'])->name('products.duplicate');
         Route::patch('product-flavor-groups/{flavorGroup}/image', [OwnerProductFlavorGroupController::class, 'updateImage'])->name('product-flavor-groups.image.update');
+        Route::delete('products/{product}/image', [OwnerProductController::class, 'deleteImage'])->name('products.image.destroy');
+        Route::delete('product-flavor-groups/{flavorGroup}/image', [OwnerProductFlavorGroupController::class, 'deleteImage'])->name('product-flavor-groups.image.destroy');
         Route::get('pricing/outlets/compare', [PricingController::class, 'compare'])->name('pricing.outlets.compare');
         Route::get('pricing', [PricingController::class, 'index'])->name('pricing.index');
         Route::get('pricing/outlets/{outlet}', [PricingController::class, 'show'])->name('pricing.outlets.show');
