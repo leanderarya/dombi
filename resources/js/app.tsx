@@ -1,4 +1,5 @@
 import { createInertiaApp } from '@inertiajs/react';
+import type { ComponentType } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Toaster } from 'sonner';
 import DevToolbar from '@/components/dev-toolbar';
@@ -11,6 +12,19 @@ createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
     progress: {
         color: '#047857',
+    },
+    resolve: (name) => {
+        const pages = import.meta.glob<{ default: ComponentType }>(
+            './pages/**/*.tsx',
+            { eager: true },
+        );
+        const page = pages[`./pages/${name}.tsx`];
+
+        if (!page) {
+            throw new Error(`Page not found: ${name}`);
+        }
+
+        return page;
     },
     setup({ el, App, props }) {
         const root = createRoot(el!);
