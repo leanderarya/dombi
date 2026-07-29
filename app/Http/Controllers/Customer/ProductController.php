@@ -52,7 +52,6 @@ class ProductController extends Controller
         ]);
 
         // Resolve image URLs for Inertia serialization
-        $category->image = $this->resolveImage($category->image);
         $category->products->each(function ($product) {
             $product->image = $this->resolveImage($product->display_image);
         });
@@ -72,6 +71,13 @@ class ProductController extends Controller
             $product->stock_status = $availableStock <= 0
                 ? 'out_of_stock'
                 : ($minimumStock > 0 && $availableStock <= $minimumStock ? 'low' : 'available');
+
+            $product->image_owner = $product->display_image
+                ? ($product->product_flavor_group_id ? 'flavor_group' : 'product')
+                : 'none';
+            $product->image_owner_id = $product->display_image
+                ? ($product->product_flavor_group_id ? (int) $product->product_flavor_group_id : (int) $product->id)
+                : null;
 
             // Override selling_price with outlet-specific price if available
             if ($outletId) {
