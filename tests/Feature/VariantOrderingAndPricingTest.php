@@ -44,10 +44,10 @@ class VariantOrderingAndPricingTest extends TestCase
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/product-detail')
-                ->has('family.products', 2)
+                ->has('family.variants', 2)
             );
 
-        $variants = $response->viewData('page')['props']['family']['products'];
+        $variants = $response->viewData('page')['props']['family']['variants'];
         $sizes = array_column($variants, 'size');
 
         $this->assertContains('250ml', $sizes);
@@ -86,7 +86,7 @@ class VariantOrderingAndPricingTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/product-detail')
-                ->has('family.products', 1)
+                ->has('family.variants', 1)
             );
     }
 
@@ -112,10 +112,10 @@ class VariantOrderingAndPricingTest extends TestCase
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('customer/product-detail')
-                ->has('family.products', 1)
+                ->has('family.variants', 1)
             );
 
-        $variants = $response->viewData('page')['props']['family']['products'];
+        $variants = $response->viewData('page')['props']['family']['variants'];
         $this->assertEquals('1L', $variants[0]['size']);
         $this->assertEquals('30000.00', $variants[0]['selling_price']);
     }
@@ -185,10 +185,10 @@ class VariantOrderingAndPricingTest extends TestCase
         $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->has('family.products', 4)
+                ->has('family.variants', 4)
             );
 
-        $variants = $response->viewData('page')['props']['family']['products'];
+        $variants = $response->viewData('page')['props']['family']['variants'];
         $sizesReturned = array_column($variants, 'size');
 
         $this->assertContains('250ml', $sizesReturned);
@@ -218,7 +218,7 @@ class VariantOrderingAndPricingTest extends TestCase
         $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
-        $variants = $response->viewData('page')['props']['family']['products'];
+        $variants = $response->viewData('page')['props']['family']['variants'];
         $this->assertEquals('32000.00', $variants[0]['selling_price']);
     }
 
@@ -247,7 +247,7 @@ class VariantOrderingAndPricingTest extends TestCase
         $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
-        $variants = $response->viewData('page')['props']['family']['products'];
+        $variants = $response->viewData('page')['props']['family']['variants'];
         $sizesReturned = array_column($variants, 'size');
 
         foreach ($expectedSizes as $size) {
@@ -278,8 +278,8 @@ class VariantOrderingAndPricingTest extends TestCase
         $this->get('/customer/products/'.$family->id)
             ->assertOk()
             ->assertInertia(fn ($page) => $page
-                ->has('family.products', 1)
-                ->has('family.products.0', fn ($v) => $v
+                ->has('family.variants', 1)
+                ->has('family.variants.0', fn ($v) => $v
                     ->where('flavor', 'Fresh')
                     ->where('size', '1L')
                     ->where('selling_price', '30000.00')
@@ -318,7 +318,7 @@ class VariantOrderingAndPricingTest extends TestCase
         $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
-        $variants = $response->viewData('page')['props']['family']['products'];
+        $variants = $response->viewData('page')['props']['family']['variants'];
         $this->assertCount(4, $variants);
 
         $flavors = array_unique(array_column($variants, 'flavor'));
@@ -361,7 +361,7 @@ class VariantOrderingAndPricingTest extends TestCase
         $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
-        $variants = $response->viewData('page')['props']['family']['products'];
+        $variants = $response->viewData('page')['props']['family']['variants'];
 
         // Find the 250ml variant
         $v250 = collect($variants)->firstWhere('size', '250ml');
@@ -403,7 +403,7 @@ class VariantOrderingAndPricingTest extends TestCase
         $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
-        $variants = $response->viewData('page')['props']['family']['products'];
+        $variants = $response->viewData('page')['props']['family']['variants'];
 
         // Both variants have same flavor
         $flavors = array_unique(array_column($variants, 'flavor'));
@@ -447,7 +447,7 @@ class VariantOrderingAndPricingTest extends TestCase
         $response = $this->get('/customer/products/'.$family->id);
         $response->assertOk();
 
-        $variants = $response->viewData('page')['props']['family']['products'];
+        $variants = $response->viewData('page')['props']['family']['variants'];
         $this->assertCount(2, $variants);
 
         foreach ($variants as $v) {
