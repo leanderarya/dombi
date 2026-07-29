@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 interface ImageUploadFieldProps {
     value: File | null | string;
     onChange: (f: File | null) => void;
+    onRemove?: () => void;
     label?: string;
     info?: string;
 }
@@ -11,11 +12,13 @@ interface ImageUploadFieldProps {
 export default function ImageUploadField({
     value,
     onChange,
+    onRemove,
     label = 'Foto Produk',
     info,
 }: ImageUploadFieldProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [preview, setPreview] = useState<string | null>(null);
+    const [confirmingRemove, setConfirmingRemove] = useState(false);
 
     useEffect(() => {
         return () => {
@@ -41,28 +44,44 @@ export default function ImageUploadField({
 
             setPreview(URL.createObjectURL(file));
             onChange(file);
+            setConfirmingRemove(false);
         }
-
-        // Reset input value to allow re-selecting same file
-        if (inputRef.current) {
-            inputRef.current.value = '';
-        }
-    };
-
-    const handleRemove = () => {
-        if (preview) {
-            URL.revokeObjectURL(preview);
-        }
-
-        setPreview(null);
-        onChange(null);
 
         if (inputRef.current) {
             inputRef.current.value = '';
         }
     };
 
-    // Determine if we have an existing string image to hint (not preview)
+    const handleLocalRemove = () => {
+        if (onRemove) {
+            if (!confirmingRemove) {
+                setConfirmingRemove(true);
+                return;
+            }
+            setConfirmingRemove(false);
+            if (preview) {
+                URL.revokeObjectURL(preview);
+            }
+            setPreview(null);
+            onChange(null);
+            onRemove();
+        } else {
+            if (preview) {
+                URL.revokeObjectURL(preview);
+            }
+            setPreview(null);
+            onChange(null);
+        }
+
+        if (inputRef.current) {
+            inputRef.current.value = '';
+        }
+    };
+
+    const handleCancelRemove = () => {
+        setConfirmingRemove(false);
+    };
+
     const hasExistingString = typeof value === 'string' && !!value;
 
     return (
@@ -113,10 +132,43 @@ export default function ImageUploadField({
                 >
                     Pilih Foto
                 </Button>
-                {(preview || hasExistingString) && (
+                {(preview || hasExistingString) && onRemove && (
+                    <>
+                        {confirmingRemove ? (
+                            <>
+                                <span className="text-xs text-amber-600">
+                                    Yakin hapus?
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={handleLocalRemove}
+                                    className="text-xs font-medium text-red-600 hover:text-red-700"
+                                >
+                                    Ya
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={handleCancelRemove}
+                                    className="text-xs text-text-muted hover:text-text"
+                                >
+                                    Batal
+                                </button>
+                            </>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={handleLocalRemove}
+                                className="text-xs font-medium text-red-600 hover:text-red-700"
+                            >
+                                Hapus
+                            </button>
+                        )}
+                    </>
+                )}
+                {(preview || hasExistingString) && !onRemove && (
                     <button
                         type="button"
-                        onClick={handleRemove}
+                        onClick={handleLocalRemove}
                         className="text-xs font-medium text-red-600 hover:text-red-700"
                     >
                         Hapus
