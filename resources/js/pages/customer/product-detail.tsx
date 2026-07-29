@@ -64,7 +64,9 @@ function resolveSelection(
     requestedSize: string | null,
     products: Variant[],
 ): { product: Variant | null; effectiveFlavor: string | null; effectiveSize: string | null } {
-    if (!products.length) return { product: null, effectiveFlavor: null, effectiveSize: null };
+    if (!products.length) {
+return { product: null, effectiveFlavor: null, effectiveSize: null };
+}
 
     const flavors = [
         ...new Set(products.map((p) => p.flavor).filter(Boolean)),
@@ -85,6 +87,7 @@ function resolveSelection(
 
     const product =
         products.find((p) => p.flavor === flavor && p.size === size) ?? null;
+
     return { product, effectiveFlavor: flavor, effectiveSize: size };
 }
 
@@ -251,10 +254,14 @@ function ProductDetailInner({
     const selectedVariant = resolved.product;
 
     const displayImage = useMemo(() => {
-        if (!effectiveFlavor) return family.image;
+        if (!effectiveFlavor) {
+return family.image;
+}
+
         const flavorVariant = family.variants.find(
             (v) => v.flavor === effectiveFlavor,
         );
+
         return flavorVariant?.image ?? family.image;
     }, [effectiveFlavor, family.variants, family.image]);
 

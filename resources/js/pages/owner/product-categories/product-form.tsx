@@ -115,6 +115,7 @@ export default function ProductForm({
         return bulkSizeRows.map((row) => {
             const cp = Number(row.center_price);
             const sp = Number(row.selling_price);
+
             if (!Number.isFinite(cp) || !Number.isFinite(sp) || cp <= 0) {
                 return {
                     amount:
@@ -125,6 +126,7 @@ export default function ProductForm({
                     valid: Number.isFinite(cp) && Number.isFinite(sp),
                 };
             }
+
             return {
                 amount: sp - cp,
                 pct: ((sp - cp) / cp) * 100,
@@ -157,8 +159,12 @@ export default function ProductForm({
     };
 
     const autoSku = (size: string) => {
-        if (!size) return '';
+        if (!size) {
+return '';
+}
+
         const s = size.replace(/\s+/g, '').toUpperCase();
+
         return `${s}-${(bulkSizeFlavor || 'GEN').slice(0, 3).toUpperCase()}-XXXX`;
     };
 
@@ -357,27 +363,34 @@ export default function ProductForm({
 
         if (!bulkSizeFlavor.trim()) {
             setBulkSizeErrors({ flavor: 'Flavor wajib diisi' });
+
             return;
         }
 
         if (bulkSizeRows.length === 0) {
             setBulkSizeErrors({ rows: 'Minimal 1 ukuran' });
+
             return;
         }
 
         const errs: Record<string, string> = {};
+
         for (let i = 0; i < bulkSizeRows.length; i++) {
             const row = bulkSizeRows[i];
+
             if (!row.size.trim()) {
                 errs[`row_${i}_size`] = `Ukuran baris ${i + 1} wajib`;
             }
+
             if (!row.center_price || Number(row.center_price) < 0) {
                 errs[`row_${i}_center_price`] = `HPP baris ${i + 1} wajib`;
             }
+
             if (!row.selling_price || Number(row.selling_price) < 0) {
                 errs[`row_${i}_selling_price`] =
                     `Harga jual baris ${i + 1} wajib`;
             }
+
             if (Number(row.selling_price) < Number(row.center_price)) {
                 errs[`row_${i}_selling_price`] =
                     `Harga jual baris ${i + 1} harus >= HPP`;
@@ -386,16 +399,24 @@ export default function ProductForm({
 
         if (Object.keys(errs).length > 0) {
             setBulkSizeErrors(errs);
+
             return;
         }
 
         setBulkSizeErrors({});
 
         const fd = new FormData();
-        if (sharedImageFile) fd.append('image', sharedImageFile);
+
+        if (sharedImageFile) {
+fd.append('image', sharedImageFile);
+}
+
         fd.append('flavor', bulkSizeFlavor.trim());
-        if (bulkSizeDescription.trim())
-            fd.append('description', bulkSizeDescription.trim());
+
+        if (bulkSizeDescription.trim()) {
+fd.append('description', bulkSizeDescription.trim());
+}
+
         fd.append(
             'sizes',
             JSON.stringify(
@@ -1051,7 +1072,10 @@ export default function ProductForm({
                             value={sharedImageFile || sharedImageExisting}
                             onChange={(f) => {
                                 setSharedImageFile(f);
-                                if (f === null) setSharedImageExisting(null);
+
+                                if (f === null) {
+setSharedImageExisting(null);
+}
                             }}
                             label="Foto Rasa (shared untuk semua ukuran rasa ini)"
                             info="This image is shared by all Coffee sizes. Replacing it will update the image shown for every Coffee size."
@@ -1111,6 +1135,7 @@ export default function ProductForm({
                                     {bulkSizeRows.map((row, i) => {
                                         const margin = bulkSizeRowMargins[i];
                                         const skuHint = autoSku(row.size);
+
                                         return (
                                             <tr
                                                 key={i}
