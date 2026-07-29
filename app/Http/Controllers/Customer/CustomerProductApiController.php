@@ -62,10 +62,14 @@ class CustomerProductApiController extends Controller
                     'size' => $product->size,
                     'price' => $price,
                     'sku' => $product->sku,
-                    'display_image' => $product->flavorGroup?->image ? $this->resolveImage($product->flavorGroup->image, $product->updated_at) : null,
-                    'has_flavor_image' => ! empty($product->flavorGroup?->image),
-                    'category_image' => $product->category->image ? $this->resolveImage($product->category->image, $product->updated_at) : null,
-                    'image' => $this->resolveImage($product->image, $product->updated_at),
+                    'image' => $this->resolveImage($product->display_image, $product->updated_at),
+                    'image_owner' => $product->display_image
+                        ? ($product->product_flavor_group_id ? 'flavor_group' : 'product')
+                        : 'none',
+                    'image_owner_id' => $product->display_image
+                        ? ($product->product_flavor_group_id ? $product->product_flavor_group_id : $product->id)
+                        : null,
+                    'has_image' => $product->display_image !== null,
                     'available_stock' => $availableStock,
                     'stock_status' => $stockStatus,
                     'is_active' => $product->is_active,
@@ -77,7 +81,6 @@ class CustomerProductApiController extends Controller
                 'name' => $category->name,
                 'brand' => $category->brand,
                 'description' => $category->description,
-                'image' => $this->resolveImage($category->image, $category->updated_at),
                 'variants' => $products->values(), // backward compat key
                 'products' => $products->values(),
             ];
