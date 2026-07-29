@@ -53,12 +53,22 @@ class Product extends Model
 
     public function getDisplayImageAttribute(): ?string
     {
-        return $this->flavorGroup?->image;
+        // Flavored product → flavor group image only (shared across all sizes)
+        if ($this->product_flavor_group_id) {
+            return $this->flavorGroup?->image;
+        }
+
+        // Flavorless product → own image
+        return $this->image;
     }
 
     public function getHasFlavorImageAttribute(): bool
     {
-        return ! empty($this->flavorGroup?->image);
+        if ($this->product_flavor_group_id) {
+            return ! empty($this->flavorGroup?->image);
+        }
+
+        return false;
     }
 
     public function inventories(): HasMany
