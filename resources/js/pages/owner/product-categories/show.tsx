@@ -12,7 +12,7 @@ import {
     Layers,
     Upload,
 } from 'lucide-react';
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import ImageUploadField from '@/components/owner/image-upload-field';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -159,12 +159,19 @@ export default function ProductCategoryShow({ category }: Props) {
             products: Product[];
         }[] = [];
 
-        if (!filteredProducts.length) return groups;
+        if (!filteredProducts.length) {
+return groups;
+}
 
         const grouped = new Map<number | 'null', Product[]>();
+
         for (const p of filteredProducts) {
             const key = p.product_flavor_group_id ?? 'null';
-            if (!grouped.has(key)) grouped.set(key, []);
+
+            if (!grouped.has(key)) {
+grouped.set(key, []);
+}
+
             grouped.get(key)!.push(p);
         }
 
@@ -181,7 +188,10 @@ export default function ProductCategoryShow({ category }: Props) {
             ...knownIds.filter((k) => grouped.has(k)),
             ...unknownIds,
         ];
-        if (grouped.has('null')) allKeys.push('null');
+
+        if (grouped.has('null')) {
+allKeys.push('null');
+}
 
         for (const key of allKeys) {
             const fg =
@@ -200,7 +210,11 @@ export default function ProductCategoryShow({ category }: Props) {
 
     const handleFgImageSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!editingFlavorGroup || !fgImageFile) return;
+
+        if (!editingFlavorGroup || !fgImageFile) {
+return;
+}
+
         setFgProcessing(true);
         const fd = new FormData();
         fd.append('image', fgImageFile);
@@ -230,8 +244,13 @@ export default function ProductCategoryShow({ category }: Props) {
     const toggleGroup = (key: number | 'null') => {
         setExpandedGroups((prev) => {
             const next = new Set(prev);
-            if (next.has(key)) next.delete(key);
-            else next.add(key);
+
+            if (next.has(key)) {
+next.delete(key);
+} else {
+next.add(key);
+}
+
             return next;
         });
     };
