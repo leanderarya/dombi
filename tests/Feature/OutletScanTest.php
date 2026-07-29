@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
+use App\Models\OutletInventory;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -209,6 +210,14 @@ class OutletScanTest extends TestCase
         $order = $this->createOrder($outlet, [
             'status' => Order::STATUS_READY_FOR_PICKUP,
             'fulfillment_type' => 'pickup',
+        ]);
+
+        // Must have inventory record for complete-pickup stock management
+        OutletInventory::create([
+            'outlet_id' => $outlet->id,
+            'product_id' => $order->items->first()->product_id,
+            'current_stock' => 10,
+            'reserved_stock' => 2,
         ]);
 
         // Step 1: Scan lookup returns order

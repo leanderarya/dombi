@@ -179,7 +179,7 @@ class VariantCommerceFlowTest extends TestCase
             ],
             'fulfillment_type' => 'pickup',
         ])->assertRedirect('/customer/checkout/customer')
-            ->assertSessionHas('checkout.cart.0.product_id', $this->variant->id);
+            ->assertSessionHas('checkout.cart.0.product_id', $this->product->id);
     }
 
     public function test_inactive_variant_rejected_at_checkout(): void
