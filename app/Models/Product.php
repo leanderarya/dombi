@@ -13,7 +13,8 @@ class Product extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'product_category_id', 'name', 'description', 'flavor', 'size',
+        'product_category_id', 'product_flavor_group_id', 'name', 'description',
+        'flavor', 'size', 'normalized_size', 'size_value', 'size_unit',
         'sku', 'center_price', 'selling_price', 'center_stock', 'image', 'is_active',
     ];
 
@@ -30,6 +31,34 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(ProductCategory::class, 'product_category_id');
+    }
+
+    public function flavorGroup(): BelongsTo
+    {
+        return $this->belongsTo(ProductFlavorGroup::class, 'product_flavor_group_id');
+    }
+
+    protected static function booted(): void
+    {
+        static::saving(function (self $model) {
+            if ($model->size) {
+                $model->normalized_size = strtolower(str_replace(' ', '', trim($model->size)));
+                if (preg_match('/(\d+)\s*(ml|l|g|kg)/i', $model->size, $m)) {
+                    $model->size_value = (int) $m[1];
+                    $model->size_unit = strtolower($m[2]);
+                }
+            }
+        });
+    }
+
+    public function getDisplayImageAttribute(): ?string
+    {
+        return $this->flavorGroup?->image;
+    }
+
+    public function getHasFlavorImageAttribute(): bool
+    {
+        return ! empty($this->flavorGroup?->image);
     }
 
     public function inventories(): HasMany
