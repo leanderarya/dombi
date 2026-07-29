@@ -12,7 +12,6 @@ export interface ProductFlavorGroup {
 export interface ProductCategory {
     id: number;
     name: string;
-    brand: string | null;
     description: string | null;
     is_active: boolean;
     products_count?: number;

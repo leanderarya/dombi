@@ -300,13 +300,7 @@ function ProductDetailInner({
                             <ForeGreenHeader
                                 title={family.name}
                                 backHref="/customer/products"
-                            >
-                                {family.brand && (
-                                    <p className="mt-1 text-center text-[11px] text-white/60">
-                                        {family.brand}
-                                    </p>
-                                )}
-                            </ForeGreenHeader>
+                            />
                             {totalItems > 0 && (
                                 <CartButton outletId={outletId ?? null} />
                             )}
