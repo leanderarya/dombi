@@ -33,6 +33,24 @@ class ProductController extends Controller
 
         $outletId = $request->integer('outlet_id') ?: null;
 
+        $category->load([
+            'products' => function ($query) use ($outletId) {
+                $query->where('is_active', true)
+                    ->orderBy('name');
+
+                if ($outletId) {
+                    $query->with(['inventories' => function ($inv) use ($outletId) {
+                        $inv->where('outlet_id', $outletId)->where('is_active', true);
+                    }]);
+                    $query->with(['outletPrices' => function ($price) use ($outletId) {
+                        $price->where('outlet_id', $outletId);
+                    }]);
+                } else {
+                    $query->with('inventories');
+                }
+            },
+        ]);
+
         // Build family structure matching frontend Variant interface
         $products = $category->products->map(function ($product) use ($outletId) {
             $availableStock = 0;
