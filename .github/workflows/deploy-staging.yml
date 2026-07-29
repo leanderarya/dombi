@@ -14,7 +14,7 @@ jobs:
     uses: ./.github/workflows/tests.yml
 
   deploy:
-    #needs: quality
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
