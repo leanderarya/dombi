@@ -105,7 +105,7 @@ class OwnerDashboardDecisionCenterTest extends TestCase
                 ->where('hero.outstandingAmount', 430000)
                 ->where('hero.ctaHref', '/owner/finance')
                 ->where('kpis.pendingActions', 4)
-                ->where('kpis.criticalStock', 4)
+                ->where('kpis.criticalStock', 2)
                 ->where('actionRequired.restocks', 1)
                 ->where('actionRequired.returns', 1)
                 ->where('actionRequired.exchanges', 1)

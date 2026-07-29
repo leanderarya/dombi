@@ -92,6 +92,7 @@ class DashboardController extends Controller
         return Product::query()
             ->with('category:id,name')
             ->where('is_active', true)
+            ->whereNotNull('product_category_id')
             ->get()
             ->map(function (Product $product): array {
                 $threshold = $this->centerStockThreshold($product);

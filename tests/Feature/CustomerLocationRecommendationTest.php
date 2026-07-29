@@ -45,9 +45,9 @@ class CustomerLocationRecommendationTest extends TestCase
     {
         [$product, $variant] = $this->createProduct();
 
-        $nearEmpty = $this->createOutlet('Outlet Tembalang', -7.0530000, 110.4360000, 0, $product->id);
-        $recommended = $this->createOutlet('Outlet Banyumanik', -7.0610000, 110.4310000, 10, $product->id);
-        $alternative = $this->createOutlet('Outlet Pedurungan', -7.0000000, 110.4700000, 20, $product->id);
+        $nearEmpty = $this->createOutlet('Outlet Tembalang', -7.0530000, 110.4360000, 0, $variant->id);
+        $recommended = $this->createOutlet('Outlet Banyumanik', -7.0610000, 110.4310000, 10, $variant->id);
+        $alternative = $this->createOutlet('Outlet Pedurungan', -7.0000000, 110.4700000, 20, $variant->id);
 
         $this->withSession([
             'checkout.cart' => [
