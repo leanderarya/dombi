@@ -125,7 +125,7 @@ class GuestOrderRecoveryService
             'items' => $order->items->map(fn ($item) => [
                 'product_name' => $item->product_name,
                 'quantity' => $item->quantity,
-                'image' => $item->product?->category?->image,
+                'image' => $item->product?->display_image ?? $item->product?->image,
             ])->values()->all(),
             'ordered_at' => $order->ordered_at?->toISOString(),
             'created_at' => $order->ordered_at?->toISOString(),
