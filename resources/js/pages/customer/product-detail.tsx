@@ -63,10 +63,14 @@ function resolveSelection(
     requestedFlavor: string | null,
     requestedSize: string | null,
     products: Variant[],
-): { product: Variant | null; effectiveFlavor: string | null; effectiveSize: string | null } {
+): {
+    product: Variant | null;
+    effectiveFlavor: string | null;
+    effectiveSize: string | null;
+} {
     if (!products.length) {
-return { product: null, effectiveFlavor: null, effectiveSize: null };
-}
+        return { product: null, effectiveFlavor: null, effectiveSize: null };
+    }
 
     const flavors = [
         ...new Set(products.map((p) => p.flavor).filter(Boolean)),
@@ -83,7 +87,8 @@ return { product: null, effectiveFlavor: null, effectiveSize: null };
     const size =
         requestedSize && sizesForFlavor.includes(requestedSize)
             ? requestedSize
-            : (sizesForFlavor.sort((a, b) => sizeToMl(a) - sizeToMl(b))[0] ?? null);
+            : (sizesForFlavor.sort((a, b) => sizeToMl(a) - sizeToMl(b))[0] ??
+              null);
 
     const product =
         products.find((p) => p.flavor === flavor && p.size === size) ?? null;
@@ -242,11 +247,7 @@ function ProductDetailInner({
 
     const resolved = useMemo(
         () =>
-            resolveSelection(
-                selection.flavor,
-                selection.size,
-                family.variants,
-            ),
+            resolveSelection(selection.flavor, selection.size, family.variants),
         [selection.flavor, selection.size, family.variants],
     );
     const effectiveFlavor = resolved.effectiveFlavor ?? defaultFlavor;
@@ -255,8 +256,8 @@ function ProductDetailInner({
 
     const displayImage = useMemo(() => {
         if (!effectiveFlavor) {
-return family.image;
-}
+            return family.image;
+        }
 
         const flavorVariant = family.variants.find(
             (v) => v.flavor === effectiveFlavor,
