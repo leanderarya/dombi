@@ -43,7 +43,7 @@ class FavoritePersistenceTest extends TestCase
         $this->actingAs($user)
             ->getJson('/customer/favorites')
             ->assertOk()
-            ->assertJson(['variant_ids' => [$variant->id]]);
+            ->assertJson(['product_ids' => [$variant->id]]);
 
         // Favorite persists in DB regardless of session
         $this->assertDatabaseHas('favorites', [
@@ -65,7 +65,7 @@ class FavoritePersistenceTest extends TestCase
         $this->actingAs($user)
             ->getJson('/customer/favorites')
             ->assertOk()
-            ->assertJson(['variant_ids' => [$variant->id]]);
+            ->assertJson(['product_ids' => [$variant->id]]);
 
         // DB unchanged
         $this->assertDatabaseHas('favorites', [
@@ -85,7 +85,7 @@ class FavoritePersistenceTest extends TestCase
 
         // Guest had variant2 — merge it
         $this->actingAs($user)
-            ->postJson('/customer/favorites/merge', ['variant_ids' => [$variant2->id]])
+            ->postJson('/customer/favorites/merge', ['product_ids' => [$variant2->id]])
             ->assertOk()
             ->assertJson(['merged' => true]);
 
@@ -98,7 +98,7 @@ class FavoritePersistenceTest extends TestCase
             ->getJson('/customer/favorites')
             ->assertOk()
             ->assertJson(fn ($json) => $json
-                ->where('variant_ids', [$variant1->id, $variant2->id])
+                ->where('product_ids', [$variant1->id, $variant2->id])
                 ->etc()
             );
     }
@@ -113,7 +113,7 @@ class FavoritePersistenceTest extends TestCase
 
         // Merge with same variant — should not duplicate
         $this->actingAs($user)
-            ->postJson('/customer/favorites/merge', ['variant_ids' => [$variant->id]])
+            ->postJson('/customer/favorites/merge', ['product_ids' => [$variant->id]])
             ->assertOk();
 
         $count = Favorite::where('customer_id', $customer->id)
@@ -136,7 +136,7 @@ class FavoritePersistenceTest extends TestCase
         $this->actingAs($user1)
             ->getJson('/customer/favorites')
             ->assertOk()
-            ->assertJson(['variant_ids' => []]);
+            ->assertJson(['product_ids' => []]);
 
         // user1 should NOT be able to remove customer2's favorite
         $this->actingAs($user1)
@@ -194,7 +194,7 @@ class FavoritePersistenceTest extends TestCase
     {
         $variant = $this->createVariant();
 
-        $this->postJson('/customer/favorites/merge', ['variant_ids' => [$variant->id]])
+        $this->postJson('/customer/favorites/merge', ['product_ids' => [$variant->id]])
             ->assertUnauthorized();
     }
 
@@ -287,7 +287,7 @@ class FavoritePersistenceTest extends TestCase
             ->getJson('/customer/favorites')
             ->assertOk()
             ->assertJson(fn ($json) => $json
-                ->where('variant_ids', [$variant1->id, $variant2->id])
+                ->where('product_ids', [$variant1->id, $variant2->id])
                 ->etc()
             );
 
@@ -305,7 +305,7 @@ class FavoritePersistenceTest extends TestCase
 
         // Merge with empty array (simulates empty guest store on login)
         $this->actingAs($user)
-            ->postJson('/customer/favorites/merge', ['variant_ids' => []])
+            ->postJson('/customer/favorites/merge', ['product_ids' => []])
             ->assertOk();
 
         // Favorite still exists
@@ -318,7 +318,7 @@ class FavoritePersistenceTest extends TestCase
         $this->actingAs($user)
             ->getJson('/customer/favorites')
             ->assertOk()
-            ->assertJson(['variant_ids' => [$variant->id]]);
+            ->assertJson(['product_ids' => [$variant->id]]);
     }
 
     public function test_login_merge_is_union_not_replace(): void
@@ -334,7 +334,7 @@ class FavoritePersistenceTest extends TestCase
 
         // Guest had variant2 (overlap) and variant3 (new)
         $this->actingAs($user)
-            ->postJson('/customer/favorites/merge', ['variant_ids' => [$variant2->id, $variant3->id]])
+            ->postJson('/customer/favorites/merge', ['product_ids' => [$variant2->id, $variant3->id]])
             ->assertOk();
 
         // All three should exist (union)
