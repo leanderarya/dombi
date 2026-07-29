@@ -5,12 +5,15 @@ namespace Tests\Unit;
 use App\Models\ProductCategory;
 use App\Models\ProductFlavorGroup;
 use App\Services\ProductImageService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ProductImageServiceTest extends TestCase
 {
+    use RefreshDatabase;
+
     private ProductImageService $service;
 
     protected function setUp(): void
