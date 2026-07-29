@@ -17,7 +17,6 @@ class StoreProductCategoryRequest extends FormRequest
             'name' => ['required', 'string', 'max:255', 'unique:product_categories,name'],
             'brand' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }

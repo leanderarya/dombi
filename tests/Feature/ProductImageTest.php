@@ -27,23 +27,11 @@ class ProductImageTest extends TestCase
         Storage::disk('public')->assertExists($path);
     }
 
-    public function test_image_fallback_chain(): void
+    public function test_category_has_no_image_field(): void
     {
-        $cat = ProductCategory::factory()->create(['image' => 'products/cat.webp']);
-        $product = Product::factory()->create([
-            'product_category_id' => $cat->id,
-            'image' => null,
-        ]);
-
-        $this->assertNull($product->image);
-        $this->assertEquals('products/cat.webp', $product->category->image);
-
-        $productWithImage = Product::factory()->create([
-            'product_category_id' => $cat->id,
-            'image' => 'products/prod.webp',
-        ]);
-
-        $this->assertEquals('products/prod.webp', $productWithImage->image);
+        // Factory does not set image, so it's null via $fillable not including it
+        $category = ProductCategory::factory()->create(['name' => 'Test Category']);
+        $this->assertNull($category->getAttributes()['image'] ?? null);
     }
 
     public function test_display_image_flavored_returns_flavor_group_only(): void

@@ -25,7 +25,6 @@ class UpdateProductCategoryRequest extends FormRequest
             'name' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('product_categories', 'name')->ignore($categoryId)],
             'brand' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
-            'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }
