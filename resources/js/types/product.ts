@@ -14,7 +14,6 @@ export interface ProductCategory {
     name: string;
     brand: string | null;
     description: string | null;
-    image: string | null;
     is_active: boolean;
     products_count?: number;
     flavor_groups?: ProductFlavorGroup[];
@@ -41,8 +40,10 @@ export interface Product {
     margin_percent?: number;
     center_stock: number;
     image: string | null;
+    image_owner: 'product' | 'flavor_group' | 'none';
+    image_owner_id: number | null;
+    has_image: boolean;
     display_image: string | null;
-    has_flavor_image: boolean;
     is_active: boolean;
     stock_status?: 'available' | 'low' | 'out_of_stock';
 }

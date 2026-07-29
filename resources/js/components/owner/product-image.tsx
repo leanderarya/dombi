@@ -4,7 +4,6 @@ interface ProductImageProps {
     name: string;
     src: string | null;
     flavorGroupImage?: string | null;
-    categoryImage?: string | null;
     size?: 'sm' | 'md' | 'lg';
     className?: string;
 }
@@ -13,13 +12,11 @@ export default function ProductImage({
     name,
     src,
     flavorGroupImage,
-    categoryImage,
     size = 'md',
     className = '',
 }: ProductImageProps) {
     const [error, setError] = useState(false);
     const [fgError, setFgError] = useState(false);
-    const [catError, setCatError] = useState(false);
 
     const resolve = (p: string | null): string | null => {
         if (!p) {
@@ -31,7 +28,6 @@ export default function ProductImage({
 
     const productSrc = resolve(src);
     const flavorSrc = resolve(flavorGroupImage ?? null);
-    const catSrc = resolve(categoryImage ?? null);
 
     const sizeCls =
         size === 'sm' ? 'h-8 w-8' : size === 'lg' ? 'h-24 w-24' : 'h-10 w-10';
@@ -54,17 +50,6 @@ export default function ProductImage({
                 alt={name}
                 className={`${sizeCls} rounded object-cover ${className}`}
                 onError={() => setFgError(true)}
-            />
-        );
-    }
-
-    if (!catError && catSrc) {
-        return (
-            <img
-                src={catSrc}
-                alt={name}
-                className={`${sizeCls} rounded object-cover ${className}`}
-                onError={() => setCatError(true)}
             />
         );
     }
