@@ -5,12 +5,14 @@ interface ImageUploadFieldProps {
     value: File | null | string;
     onChange: (f: File | null) => void;
     label?: string;
+    info?: string;
 }
 
 export default function ImageUploadField({
     value,
     onChange,
     label = 'Foto Produk',
+    info,
 }: ImageUploadFieldProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [preview, setPreview] = useState<string | null>(null);
@@ -67,6 +69,7 @@ export default function ImageUploadField({
         <div className="space-y-2">
             <label className="text-[11px] font-medium text-text-subtle">
                 {label}
+                {info && <span className="ml-1 text-[10px] text-text-muted">— {info}</span>}
             </label>
             <div className="flex items-center gap-3">
                 {preview ? (

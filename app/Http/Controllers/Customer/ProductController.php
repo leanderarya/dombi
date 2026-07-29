@@ -54,7 +54,7 @@ class ProductController extends Controller
         // Resolve image URLs for Inertia serialization
         $category->image = $this->resolveImage($category->image);
         $category->products->each(function ($product) {
-            $product->image = $this->resolveImage($product->image);
+            $product->image = $this->resolveImage($product->display_image);
         });
 
         // Compute stock status and outlet price for each product

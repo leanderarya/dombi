@@ -1,5 +1,7 @@
 import { router } from '@inertiajs/react';
 import {
+    ChevronDown,
+    ChevronRight,
     Copy,
     Package,
     Pencil,
@@ -8,8 +10,9 @@ import {
     ToggleRight,
     Plus,
     Layers,
+    Upload,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import ImageUploadField from '@/components/owner/image-upload-field';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -30,7 +33,7 @@ import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
-import type { ProductCategory, Product } from '@/types/product';
+import type { ProductCategory, Product, ProductFlavorGroup } from '@/types/product';
 
 interface Props {
     category: ProductCategory;
@@ -144,6 +147,73 @@ export default function ProductCategoryShow({ category }: Props) {
 
         return list;
     }, [category, search, productFilter]);
+
+    // Group filtered products by flavor group
+    const groupedSections = useMemo(() => {
+        const groups: { flavorGroup: ProductFlavorGroup | null; products: Product[] }[] = [];
+
+        if (!filteredProducts.length) return groups;
+
+        const grouped = new Map<number | 'null', Product[]>();
+        for (const p of filteredProducts) {
+            const key = p.product_flavor_group_id ?? 'null';
+            if (!grouped.has(key)) grouped.set(key, []);
+            grouped.get(key)!.push(p);
+        }
+
+        // Sort flavor groups to match category.flavor_groups order
+        const groupOrder = category.flavor_groups ?? [];
+        const groupMap = new Map(groupOrder.map(g => [g.id, g]));
+
+        // Known groups first (in order), then unknown group IDs, then null
+        const knownIds = groupOrder.map(g => g.id);
+        const unknownIds = [...grouped.keys()].filter(k => k !== 'null' && !knownIds.includes(k as number));
+        const allKeys: (number | 'null')[] = [...knownIds.filter(k => grouped.has(k)), ...unknownIds];
+        if (grouped.has('null')) allKeys.push('null');
+
+        for (const key of allKeys) {
+            const fg = key === 'null' ? null : groupMap.get(key as number) ?? null;
+            groups.push({ flavorGroup: fg, products: grouped.get(key)! });
+        }
+
+        return groups;
+    }, [filteredProducts, category.flavor_groups]);
+
+    // Flavor group image upload
+    const [editingFlavorGroup, setEditingFlavorGroup] = useState<ProductFlavorGroup | null>(null);
+    const [fgImageFile, setFgImageFile] = useState<File | null>(null);
+    const [fgProcessing, setFgProcessing] = useState(false);
+
+    const handleFgImageSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!editingFlavorGroup || !fgImageFile) return;
+        setFgProcessing(true);
+        const fd = new FormData();
+        fd.append('image', fgImageFile);
+        fd.append('_method', 'PATCH');
+        router.post(`/owner/product-flavor-groups/${editingFlavorGroup.id}/image`, fd, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Gambar grup rasa diperbarui');
+                setEditingFlavorGroup(null);
+                setFgImageFile(null);
+            },
+            onError: (err) => toast.error(Object.values(err).flat().join(', ')),
+            onFinish: () => setFgProcessing(false),
+        });
+    };
+
+    const [expandedGroups, setExpandedGroups] = useState<Set<number | 'null'>>(new Set());
+
+    const toggleGroup = (key: number | 'null') => {
+        setExpandedGroups((prev) => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+        });
+    };
 
     const handleCatUpdate = (e: React.FormEvent) => {
         e.preventDefault();
@@ -490,188 +560,242 @@ export default function ProductCategoryShow({ category }: Props) {
                     }
                 />
             ) : (
-                <div className="overflow-x-auto rounded-xl bg-surface shadow-card ring-1 ring-border/20">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="border-b border-border bg-surface-muted/50 text-left">
-                                <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    Produk
-                                </th>
-                                <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    Rasa
-                                </th>
-                                <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    Ukuran
-                                </th>
-                                <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    SKU
-                                </th>
-                                <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    HPP
-                                </th>
-                                <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    Hrg Jual
-                                </th>
-                                <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    Margin%
-                                </th>
-                                <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    Stok Pusat
-                                </th>
-                                <th className="px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
-                                    Aksi
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/50">
-                            {filteredProducts.map((p) => {
-                                const margin =
-                                    Number(p.selling_price) -
-                                    Number(p.center_price);
-                                const marginPct =
-                                    Number(p.center_price) > 0
-                                        ? (margin / Number(p.center_price)) *
-                                          100
-                                        : 0;
-                                const hasNoStock = p.center_stock === 0;
+                <div className="space-y-4">
+                    {groupedSections.map((section, idx) => {
+                        const gKey = section.flavorGroup?.id ?? 'null';
+                        const isExpanded = expandedGroups.has(gKey);
+                        const sizeCount = new Set(section.products.map(p => p.size)).size;
 
-                                return (
-                                    <tr
-                                        key={p.id}
-                                        className={`hover:bg-mint-wash/30 transition ${!p.is_active ? 'opacity-60' : ''}`}
-                                    >
-                                        <td className="px-3 py-3">
-                                            <div className="flex items-center gap-2.5">
-                                                <ProductImage
-                                                    name={p.name}
-                                                    src={p.image}
-                                                    categoryImage={
-                                                        category.image
-                                                    }
-                                                    size="sm"
-                                                />
-                                                <div className="min-w-0">
-                                                    <div className="max-w-[200px] truncate font-semibold text-text">
-                                                        {category.name} -{' '}
-                                                        {p.name}
-                                                    </div>
-                                                    <div className="mt-0.5 flex items-center gap-1.5">
-                                                        {!p.is_active && (
-                                                            <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[10px] font-bold text-text-muted">
-                                                                NONAKTIF
-                                                            </span>
-                                                        )}
-                                                        {!p.image && (
-                                                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 ring-1 ring-amber-200">
-                                                                No Image
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-3 text-text-muted">
-                                            {p.flavor || '-'}
-                                        </td>
-                                        <td className="px-3 py-3 text-text-muted">
-                                            {p.size || '-'}
-                                        </td>
-                                        <td className="px-3 py-3 font-mono text-xs text-text-muted">
-                                            {p.sku || '-'}
-                                        </td>
-                                        <td className="px-3 py-3 text-right text-text-muted tabular-nums">
-                                            {formatCurrency(p.center_price)}
-                                        </td>
-                                        <td className="px-3 py-3 text-right font-semibold text-text tabular-nums">
-                                            {formatCurrency(p.selling_price)}
-                                        </td>
-                                        <td className="px-3 py-3 text-right tabular-nums">
-                                            <span
-                                                className={
-                                                    marginPct < 20
-                                                        ? 'text-amber-600'
-                                                        : 'text-emerald-700'
-                                                }
+                        return (
+                            <div key={gKey === 'null' ? `null-${idx}` : `fg-${gKey}`} className="overflow-hidden rounded-xl bg-surface shadow-card ring-1 ring-border/20">
+                                <button
+                                    type="button"
+                                    onClick={() => toggleGroup(gKey)}
+                                    className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left hover:bg-surface-muted/30 transition"
+                                >
+                                    {isExpanded ? (
+                                        <ChevronDown className="h-4 w-4 shrink-0 text-text-muted" />
+                                    ) : (
+                                        <ChevronRight className="h-4 w-4 shrink-0 text-text-muted" />
+                                    )}
+                                    <ProductImage
+                                        name={section.flavorGroup?.flavor ?? 'Tanpa Rasa'}
+                                        src={null}
+                                        flavorGroupImage={section.flavorGroup?.image ?? null}
+                                        categoryImage={category.image}
+                                        size="sm"
+                                    />
+                                    <div className="min-w-0 flex-1">
+                                        <span className="text-sm font-semibold text-text">
+                                            {section.flavorGroup?.flavor ?? 'Tanpa Rasa'}
+                                        </span>
+                                        <span className="ml-2 text-xs text-text-muted">
+                                            {section.products.length} varian · {sizeCount} ukuran
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {section.flavorGroup && !section.flavorGroup.image && (
+                                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 ring-1 ring-amber-200">
+                                                Missing Image
+                                            </span>
+                                        )}
+                                        {section.flavorGroup && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => { e.stopPropagation(); setEditingFlavorGroup(section.flavorGroup!); setFgImageFile(null); }}
+                                                className="rounded p-1 text-text-subtle hover:bg-mint-wash hover:text-text"
+                                                title="Edit gambar grup"
                                             >
-                                                {marginPct.toFixed(1)}%
-                                            </span>
-                                            <span className="ml-1 text-[11px] text-text-subtle">
-                                                ({formatCurrency(margin)})
-                                            </span>
-                                        </td>
-                                        <td className="px-3 py-3 text-right tabular-nums">
-                                            {hasNoStock ? (
-                                                <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700 ring-1 ring-red-200">
-                                                    0
-                                                    <span className="ml-1 rounded bg-red-100 px-1 py-0 text-[9px]">
-                                                        No Center Stock
-                                                    </span>
-                                                </span>
-                                            ) : (
-                                                <span
-                                                    className={
-                                                        p.center_stock <= 5
-                                                            ? 'font-bold text-amber-600'
-                                                            : 'text-text'
-                                                    }
-                                                >
-                                                    {p.center_stock}
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-3">
-                                            <div className="flex items-center justify-center gap-0.5">
-                                                <button
-                                                    title="Duplikat"
-                                                    onClick={() =>
-                                                        handleDuplicate(p)
-                                                    }
-                                                    className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
-                                                >
-                                                    <Copy className="h-3.5 w-3.5" />
-                                                </button>
-                                                <button
-                                                    title={
-                                                        p.is_active
-                                                            ? 'Nonaktifkan'
-                                                            : 'Aktifkan'
-                                                    }
-                                                    onClick={() =>
-                                                        handleToggle(p)
-                                                    }
-                                                    className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
-                                                >
-                                                    {p.is_active ? (
-                                                        <ToggleRight className="h-3.5 w-3.5 text-primary" />
-                                                    ) : (
-                                                        <ToggleLeft className="h-3.5 w-3.5" />
-                                                    )}
-                                                </button>
-                                                <button
-                                                    title="Edit"
-                                                    onClick={() =>
-                                                        openEditProduct(p)
-                                                    }
-                                                    className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
-                                                >
-                                                    <Pencil className="h-3.5 w-3.5" />
-                                                </button>
-                                                <button
-                                                    title="Hapus"
-                                                    onClick={() =>
-                                                        setDeleteId(p.id)
-                                                    }
-                                                    className="rounded p-1 text-text-subtle hover:bg-red-50 hover:text-red-600"
-                                                >
-                                                    <Trash2 className="h-3.5 w-3.5" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                                <Upload className="h-3.5 w-3.5" />
+                                            </button>
+                                        )}
+                                    </div>
+                                </button>
+
+                                {isExpanded && (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm">
+                                            <thead>
+                                                <tr className="border-b border-border bg-surface-muted/50 text-left">
+                                                    <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                        Produk
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                        Ukuran
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                        SKU
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                        HPP
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                        Hrg Jual
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                        Margin%
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-right text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                        Stok Pusat
+                                                    </th>
+                                                    <th className="px-3 py-2.5 text-center text-xs font-semibold tracking-wide text-text-muted uppercase">
+                                                        Aksi
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border/50">
+                                                {section.products.map((p) => {
+                                                    const margin =
+                                                        Number(p.selling_price) -
+                                                        Number(p.center_price);
+                                                    const marginPct =
+                                                        Number(p.center_price) > 0
+                                                            ? (margin / Number(p.center_price)) *
+                                                              100
+                                                            : 0;
+                                                    const hasNoStock = p.center_stock === 0;
+
+                                                    return (
+                                                        <tr
+                                                            key={p.id}
+                                                            className={`hover:bg-mint-wash/30 transition ${!p.is_active ? 'opacity-60' : ''}`}
+                                                        >
+                                                            <td className="px-3 py-3">
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <ProductImage
+                                                                        name={p.name}
+                                                                        src={p.image}
+                                                                        flavorGroupImage={
+                                                                            p.flavor_group?.image
+                                                                        }
+                                                                        categoryImage={
+                                                                            category.image
+                                                                        }
+                                                                        size="sm"
+                                                                    />
+                                                                    <div className="min-w-0">
+                                                                        <div className="max-w-[200px] truncate font-semibold text-text">
+                                                                            {p.name}
+                                                                        </div>
+                                                                        <div className="mt-0.5 flex items-center gap-1.5">
+                                                                            {!p.is_active && (
+                                                                                <span className="rounded bg-surface-muted px-1.5 py-0.5 text-[10px] font-bold text-text-muted">
+                                                                                    NONAKTIF
+                                                                                </span>
+                                                                            )}
+                                                                            {!p.image && (
+                                                                                <span className="rounded bg-amber-50 px-1.5 py-0.5 text-[10px] text-amber-700 ring-1 ring-amber-200">
+                                                                                    No Image
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-3 py-3 text-text-muted">
+                                                                {p.size || '-'}
+                                                            </td>
+                                                            <td className="px-3 py-3 font-mono text-xs text-text-muted">
+                                                                {p.sku || '-'}
+                                                            </td>
+                                                            <td className="px-3 py-3 text-right text-text-muted tabular-nums">
+                                                                {formatCurrency(p.center_price)}
+                                                            </td>
+                                                            <td className="px-3 py-3 text-right font-semibold text-text tabular-nums">
+                                                                {formatCurrency(p.selling_price)}
+                                                            </td>
+                                                            <td className="px-3 py-3 text-right tabular-nums">
+                                                                <span
+                                                                    className={
+                                                                        marginPct < 20
+                                                                            ? 'text-amber-600'
+                                                                            : 'text-emerald-700'
+                                                                    }
+                                                                >
+                                                                    {marginPct.toFixed(1)}%
+                                                                </span>
+                                                                <span className="ml-1 text-[11px] text-text-subtle">
+                                                                    ({formatCurrency(margin)})
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-3 py-3 text-right tabular-nums">
+                                                                {hasNoStock ? (
+                                                                    <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-semibold text-red-700 ring-1 ring-red-200">
+                                                                        0
+                                                                        <span className="ml-1 rounded bg-red-100 px-1 py-0 text-[9px]">
+                                                                            No Center Stock
+                                                                        </span>
+                                                                    </span>
+                                                                ) : (
+                                                                    <span
+                                                                        className={
+                                                                            p.center_stock <= 5
+                                                                                ? 'font-bold text-amber-600'
+                                                                                : 'text-text'
+                                                                        }
+                                                                    >
+                                                                        {p.center_stock}
+                                                                    </span>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-3 py-3">
+                                                                <div className="flex items-center justify-center gap-0.5">
+                                                                    <button
+                                                                        title="Duplikat"
+                                                                        onClick={() =>
+                                                                            handleDuplicate(p)
+                                                                        }
+                                                                        className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
+                                                                    >
+                                                                        <Copy className="h-3.5 w-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        title={
+                                                                            p.is_active
+                                                                                ? 'Nonaktifkan'
+                                                                                : 'Aktifkan'
+                                                                        }
+                                                                        onClick={() =>
+                                                                            handleToggle(p)
+                                                                        }
+                                                                        className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
+                                                                    >
+                                                                        {p.is_active ? (
+                                                                            <ToggleRight className="h-3.5 w-3.5 text-primary" />
+                                                                        ) : (
+                                                                            <ToggleLeft className="h-3.5 w-3.5" />
+                                                                        )}
+                                                                    </button>
+                                                                    <button
+                                                                        title="Edit"
+                                                                        onClick={() =>
+                                                                            openEditProduct(p)
+                                                                        }
+                                                                        className="hover:bg-mint-wash rounded p-1 text-text-subtle hover:text-text"
+                                                                    >
+                                                                        <Pencil className="h-3.5 w-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        title="Hapus"
+                                                                        onClick={() =>
+                                                                            setDeleteId(p.id)
+                                                                        }
+                                                                        className="rounded p-1 text-text-subtle hover:bg-red-50 hover:text-red-600"
+                                                                    >
+                                                                        <Trash2 className="h-3.5 w-3.5" />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 
@@ -1113,6 +1237,40 @@ export default function ProductCategoryShow({ category }: Props) {
                             Hapus
                         </Button>
                     </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Flavor Group Image Dialog */}
+            <Dialog
+                open={editingFlavorGroup !== null}
+                onOpenChange={(o) => { if (!o) { setEditingFlavorGroup(null); setFgImageFile(null); } }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Gambar Grup Rasa: {editingFlavorGroup?.flavor}</DialogTitle>
+                        <DialogDescription>
+                            Unggah gambar untuk grup rasa {editingFlavorGroup?.flavor}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={handleFgImageSubmit} className="space-y-3">
+                        <ImageUploadField
+                            value={fgImageFile ?? editingFlavorGroup?.image ?? null}
+                            onChange={setFgImageFile}
+                            label="Foto Grup Rasa"
+                        />
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => { setEditingFlavorGroup(null); setFgImageFile(null); }}
+                            >
+                                Batal
+                            </Button>
+                            <Button type="submit" disabled={fgProcessing || !fgImageFile}>
+                                {fgProcessing ? 'Menyimpan...' : 'Simpan'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
                 </DialogContent>
             </Dialog>
 

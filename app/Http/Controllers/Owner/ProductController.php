@@ -4,14 +4,17 @@ namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\BulkStoreProductsRequest;
+use App\Http\Requests\Owner\BulkStoreSizeProductsRequest;
 use App\Http\Requests\Owner\StoreProductRequest;
 use App\Http\Requests\Owner\UpdateProductRequest;
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductFlavorGroup;
 use App\Services\ProductImageService;
 use App\Services\ProductSkuGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 
@@ -48,18 +51,33 @@ class ProductController extends Controller
         $data['product_category_id'] = $category->id;
         $data['center_stock'] = 0;
 
+        if (! empty($data['flavor'])) {
+            $normFlavor = mb_strtolower(trim(preg_replace('/\s+/', ' ', $data['flavor'])), 'UTF-8');
+            $group = ProductFlavorGroup::firstOrCreate(
+                ['product_category_id' => $category->id, 'normalized_flavor' => $normFlavor],
+                ['flavor' => $data['flavor']],
+            );
+            $data['product_flavor_group_id'] = $group->id;
+
+            if ($req->hasFile('image')) {
+                $newImage = $img->storeForFlavorGroup($req->file('image'), $group->image, $group->id);
+                $group->update(['image' => $newImage]);
+            }
+            unset($data['image']);
+        } else {
+            if ($req->hasFile('image')) {
+                $data['image'] = $img->store($req->file('image'));
+            } else {
+                unset($data['image']);
+            }
+        }
+
         $data['sku'] = $data['sku'] ?? $skuGen->uniqueForCategory(
             $category->id,
             $data['name'],
             $data['flavor'] ?? null,
             $data['size'] ?? null
         );
-
-        if ($req->hasFile('image')) {
-            $data['image'] = $img->store($req->file('image'));
-        } else {
-            unset($data['image']);
-        }
 
         $product = $category->products()->create($data);
 
@@ -168,6 +186,93 @@ class ProductController extends Controller
 
         return redirect()->back()->with('new_product_id', $copy->id)
             ->with('success', 'Produk berhasil diduplikasi.');
+    }
+
+    public function bulkSize(
+        BulkStoreSizeProductsRequest $req,
+        ProductCategory $category,
+        ProductImageService $imgService,
+        ProductSkuGenerator $skuGen
+    ): RedirectResponse {
+        $data = $req->validated();
+        $newIds = [];
+        $newImagePath = null;
+        $oldGroupImage = null;
+        $isNewGroup = false;
+
+        DB::beginTransaction();
+        try {
+            $normFlavor = mb_strtolower(trim(preg_replace('/\s+/', ' ', $data['flavor'])), 'UTF-8');
+            $group = ProductFlavorGroup::where('product_category_id', $category->id)
+                ->where('normalized_flavor', $normFlavor)
+                ->first();
+
+            if (! $group) {
+                $group = ProductFlavorGroup::create([
+                    'product_category_id' => $category->id,
+                    'flavor' => $data['flavor'],
+                    'normalized_flavor' => $normFlavor,
+                    'description' => $data['description'] ?? null,
+                ]);
+                $isNewGroup = true;
+            }
+            $oldGroupImage = $group->image;
+
+            if ($req->hasFile('image')) {
+                $newImagePath = $imgService->storeForFlavorGroup($req->file('image'), $oldGroupImage, $group->id);
+                $group->update(['image' => $newImagePath]);
+            }
+
+            foreach ($data['sizes'] as $row) {
+                $sizeNorm = strtolower(str_replace(' ', '', trim($row['size'])));
+                if (Product::where('product_flavor_group_id', $group->id)
+                    ->where('normalized_size', $sizeNorm)
+                    ->exists()
+                ) {
+                    throw ValidationException::withMessages([
+                        'sizes' => "Ukuran {$row['size']} sudah ada di rasa {$data['flavor']}",
+                    ]);
+                }
+
+                $name = trim($data['flavor'].' '.$row['size']);
+                $sku = $row['sku'] ?? $skuGen->uniqueForGroup($group->id, $name, $data['flavor'], $row['size']);
+
+                $prod = Product::create([
+                    'product_category_id' => $category->id,
+                    'product_flavor_group_id' => $group->id,
+                    'name' => $name,
+                    'description' => $data['description'] ?? null,
+                    'flavor' => $data['flavor'],
+                    'size' => $row['size'],
+                    'normalized_size' => $sizeNorm,
+                    'sku' => $sku,
+                    'center_price' => $row['center_price'],
+                    'selling_price' => $row['selling_price'],
+                    'center_stock' => 0,
+                    'is_active' => true,
+                ]);
+                $newIds[] = $prod->id;
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            if ($newImagePath && $isNewGroup) {
+                $imgService->delete($newImagePath);
+            } elseif ($newImagePath && $newImagePath !== $oldGroupImage) {
+                $imgService->delete($newImagePath);
+                if ($oldGroupImage) {
+                    $group?->update(['image' => $oldGroupImage]);
+                }
+            }
+
+            throw $e;
+        }
+
+        return redirect()
+            ->route('owner.product-categories.show', $category)
+            ->with('new_product_ids', $newIds);
     }
 
     public function bulkUpdate(Request $request, ProductCategory $category): RedirectResponse
