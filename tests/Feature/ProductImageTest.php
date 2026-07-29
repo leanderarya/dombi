@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductFlavorGroup;
 use App\Services\ProductImageService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -43,5 +44,63 @@ class ProductImageTest extends TestCase
         ]);
 
         $this->assertEquals('products/prod.webp', $productWithImage->image);
+    }
+
+    public function test_display_image_flavored_returns_flavor_group_only(): void
+    {
+        $category = ProductCategory::factory()->create();
+        $flavorGroup = ProductFlavorGroup::factory()->create([
+            'product_category_id' => $category->id,
+            'image' => 'products/flavor-test.webp',
+        ]);
+
+        // Product with flavor group AND its own image — must return flavorGroup image only
+        $product = Product::factory()->create([
+            'product_category_id' => $category->id,
+            'product_flavor_group_id' => $flavorGroup->id,
+            'image' => 'products/override.webp', // should be ignored
+        ]);
+
+        $this->assertSame('products/flavor-test.webp', $product->display_image);
+        $this->assertTrue($product->has_flavor_image);
+    }
+
+    public function test_display_image_flavorless_returns_own_image(): void
+    {
+        $product = Product::factory()->create([
+            'product_flavor_group_id' => null,
+            'image' => 'products/no-flavor.webp',
+        ]);
+
+        $this->assertSame('products/no-flavor.webp', $product->display_image);
+        $this->assertFalse($product->has_flavor_image);
+    }
+
+    public function test_display_image_flavorless_no_image_returns_null(): void
+    {
+        $product = Product::factory()->create([
+            'product_flavor_group_id' => null,
+            'image' => null,
+        ]);
+
+        $this->assertNull($product->display_image);
+        $this->assertFalse($product->has_flavor_image);
+    }
+
+    public function test_display_image_flavored_no_flavor_group_image_returns_null(): void
+    {
+        $category = ProductCategory::factory()->create();
+        $flavorGroup = ProductFlavorGroup::factory()->create([
+            'product_category_id' => $category->id,
+            'image' => null,
+        ]);
+        $product = Product::factory()->create([
+            'product_category_id' => $category->id,
+            'product_flavor_group_id' => $flavorGroup->id,
+            'image' => null,
+        ]);
+
+        $this->assertNull($product->display_image);
+        $this->assertFalse($product->has_flavor_image);
     }
 }
