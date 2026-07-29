@@ -6,6 +6,7 @@ use App\Models\ExchangeRequest;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\OutletPayable;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\ReturnRequest;
 use App\Models\StockMovement;

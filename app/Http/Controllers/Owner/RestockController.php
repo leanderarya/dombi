@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Owner;
 
+use App\Http\Controllers\Controller;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\Product;
@@ -19,7 +20,7 @@ class RestockController extends Controller
     {
         return Inertia::render('owner/restocks/index', [
             'restocks' => RestockRequest::query()
-                ->with(['outlet', 'items.variant.family'])
+                ->with(['outlet', 'items.product.category'])
                 ->when($request->filled('status'), fn ($query) => $query->where('status', $request->string('status')->toString()))
                 ->when($request->filled('outlet_id'), fn ($query) => $query->where('outlet_id', $request->integer('outlet_id')))
                 ->when($request->filled('search'), fn ($query) => $query->where(function ($searchQuery) use ($request): void {

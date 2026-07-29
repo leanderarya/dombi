@@ -734,11 +734,11 @@ class NotificationService
 
     public function notifyReturnRequestCreated(ReturnRequest $return): void
     {
-        $return->loadMissing(['outlet', 'items.variant.family']);
+        $return->loadMissing(['outlet', 'items.product.category']);
 
         $firstItem = $return->items->first();
         $itemSummary = $firstItem
-            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk')." x{$firstItem->quantity}")
+            ? (($firstItem->product?->full_display_name ?: $firstItem->product?->name ?: 'Produk')." x{$firstItem->quantity}")
             : 'Tanpa item';
 
         foreach ($this->getOwners() as $ownerId) {
@@ -763,11 +763,11 @@ class NotificationService
 
     public function notifyExchangeRequestCreated(ExchangeRequest $exchange): void
     {
-        $exchange->loadMissing(['outlet', 'items.variant.family', 'returnRequest']);
+        $exchange->loadMissing(['outlet', 'items.product.category', 'returnRequest']);
 
         $firstItem = $exchange->items->first();
         $itemSummary = $firstItem
-            ? (($firstItem->variant?->full_name ?: $firstItem->variant?->name ?: 'Produk')." x{$firstItem->quantity}")
+            ? (($firstItem->product?->full_display_name ?: $firstItem->product?->name ?: 'Produk')." x{$firstItem->quantity}")
             : 'Tanpa item';
 
         foreach ($this->getOwners() as $ownerId) {
@@ -794,7 +794,7 @@ class NotificationService
 
     public function notifyReturnApproved(ReturnRequest $return): void
     {
-        $return->loadMissing(['outlet', 'items.variant.family']);
+        $return->loadMissing(['outlet', 'items.product.category']);
 
         $outletUser = $this->getOutletUser($return->outlet_id);
         if ($outletUser) {

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -42,8 +43,7 @@ class CustomerLocationRecommendationTest extends TestCase
 
     public function test_pickup_outlet_recommendation_prioritizes_stock_over_shorter_distance(): void
     {
-        $product = $this->createProduct();
-        $variant = Product::where('product_id', $product->id)->first();
+        [$product, $variant] = $this->createProduct();
 
         $nearEmpty = $this->createOutlet('Outlet Tembalang', -7.0530000, 110.4360000, 0, $product->id);
         $recommended = $this->createOutlet('Outlet Banyumanik', -7.0610000, 110.4310000, 10, $product->id);
@@ -68,7 +68,7 @@ class CustomerLocationRecommendationTest extends TestCase
         $response->assertOk();
     }
 
-    private function createProduct(): Product
+    private function createProduct(): array
     {
         $product = Product::create([
             'name' => 'Susu Kambing 500ml',
@@ -77,9 +77,8 @@ class CustomerLocationRecommendationTest extends TestCase
         ]);
 
         $family = ProductCategory::create(['name' => 'Susu Kambing', 'brand' => 'Dombi']);
-        Product::create([
+        $variant = Product::create([
             'product_category_id' => $family->id,
-            'product_id' => $product->id,
             'name' => 'Original 500ml',
             'flavor' => 'Original',
             'size' => '500ml',
@@ -88,7 +87,7 @@ class CustomerLocationRecommendationTest extends TestCase
             'is_active' => true,
         ]);
 
-        return $product;
+        return [$product, $variant];
     }
 
     private function createOutlet(string $name, float $latitude, float $longitude, int $stock, int $productId): Outlet

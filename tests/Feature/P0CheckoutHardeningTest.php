@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\Product;
 use App\Models\ProductCategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
@@ -37,7 +38,6 @@ class P0CheckoutHardeningTest extends TestCase
 
         $this->product = Product::create([
             'name' => 'Domilk Premium',
-            'selling_price' => 18000,
             'selling_price' => 25000,
             'center_price' => 18000,
             'is_active' => true,
@@ -45,7 +45,6 @@ class P0CheckoutHardeningTest extends TestCase
 
         $this->variant = Product::create([
             'product_category_id' => $this->family->id,
-            'product_id' => $this->product->id,
             'name' => 'Coffee 1L',
             'flavor' => 'Coffee',
             'size' => '1L',
@@ -287,7 +286,7 @@ class P0CheckoutHardeningTest extends TestCase
             'product_id' => $this->product->id,
             'product_name' => $this->product->name,
             'quantity' => 2,
-            'selling_price' => $this->product->price,
+            'price' => $this->product->selling_price,
             'subtotal' => 50000,
         ]);
 
