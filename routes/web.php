@@ -271,7 +271,6 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('product-categories/{category}/products/bulk', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk');
         Route::post('product-categories/{category}/products/bulk-store', [OwnerProductController::class, 'bulkStore'])->name('product-categories.products.bulk-store'); // backward compat alias – distinct URI
         Route::post('product-categories/{category}/products/bulk-update', [OwnerProductController::class, 'bulkUpdate'])->name('product-categories.products.bulk-update');
-        Route::put('products/{product}', [OwnerProductController::class, 'update'])->name('products.update');
         Route::delete('products/{product}', [OwnerProductController::class, 'destroy'])->name('products.destroy');
         Route::patch('products/{product}/toggle', [OwnerProductController::class, 'toggle'])->name('products.toggle');
         Route::post('products/{product}/duplicate', [OwnerProductController::class, 'duplicate'])->name('products.duplicate');
