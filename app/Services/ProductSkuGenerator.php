@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Product;
 use App\Models\ProductCategory;
+use App\Models\ProductFlavorGroup;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class ProductSkuGenerator
@@ -35,5 +37,30 @@ class ProductSkuGenerator
         }
 
         return $candidate;
+    }
+
+    public function uniqueForGroup(int $groupId, string $name, ?string $flavor, ?string $size): string
+    {
+        return DB::transaction(function () use ($groupId, $name, $flavor, $size) {
+            $group = ProductFlavorGroup::lockForUpdate()->findOrFail($groupId);
+            $cat = $group->category;
+            $maxSeq = 0;
+            $existingSkus = Product::where('product_flavor_group_id', $groupId)->pluck('sku');
+            foreach ($existingSkus as $sku) {
+                if (preg_match('/-(\d+)$/', $sku, $m)) {
+                    $maxSeq = max($maxSeq, (int) $m[1]);
+                }
+            }
+            $seq = $maxSeq + 1;
+            $candidate = $this->generate($cat, $name, $flavor, $size, $seq);
+            $retries = 0;
+            while (Product::where('sku', $candidate)->exists() && $retries < 5) {
+                $retries++;
+                $seq++;
+                $candidate = $this->generate($cat, $name, $flavor, $size, $seq);
+            }
+
+            return $candidate;
+        });
     }
 }

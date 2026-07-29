@@ -30,6 +30,8 @@ class CustomerProductApiController extends Controller
                         $price->where('outlet_id', $outletId);
                     }]);
                 }
+
+                $query->with('flavorGroup');
             }])
             ->orderBy('name')
             ->get();
@@ -60,6 +62,9 @@ class CustomerProductApiController extends Controller
                     'size' => $product->size,
                     'price' => $price,
                     'sku' => $product->sku,
+                    'display_image' => $product->flavorGroup?->image ? $this->resolveImage($product->flavorGroup->image, $product->updated_at) : null,
+                    'has_flavor_image' => ! empty($product->flavorGroup?->image),
+                    'category_image' => $product->category->image ? $this->resolveImage($product->category->image, $product->updated_at) : null,
                     'image' => $this->resolveImage($product->image, $product->updated_at),
                     'available_stock' => $availableStock,
                     'stock_status' => $stockStatus,
