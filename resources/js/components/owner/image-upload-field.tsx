@@ -56,12 +56,16 @@ export default function ImageUploadField({
         if (onRemove) {
             if (!confirmingRemove) {
                 setConfirmingRemove(true);
+
                 return;
             }
+
             setConfirmingRemove(false);
+
             if (preview) {
                 URL.revokeObjectURL(preview);
             }
+
             setPreview(null);
             onChange(null);
             onRemove();
@@ -69,6 +73,7 @@ export default function ImageUploadField({
             if (preview) {
                 URL.revokeObjectURL(preview);
             }
+
             setPreview(null);
             onChange(null);
         }
