@@ -60,8 +60,10 @@ class ProductController extends Controller
             $data['product_flavor_group_id'] = $group->id;
 
             if ($req->hasFile('image')) {
-                $newImage = $img->storeForFlavorGroup($req->file('image'), $group->image, $group->id);
+                $oldImage = $group->image;
+                $newImage = $img->storeForFlavorGroup($req->file('image'), null, $group->id);
                 $group->update(['image' => $newImage]);
+                $img->deleteIfUnreferenced($oldImage, excludingFlavorGroupId: $group->id);
             }
             unset($data['image']);
         } else {
@@ -219,7 +221,7 @@ class ProductController extends Controller
             $oldGroupImage = $group->image;
 
             if ($req->hasFile('image')) {
-                $newImagePath = $imgService->storeForFlavorGroup($req->file('image'), $oldGroupImage, $group->id);
+                $newImagePath = $imgService->storeForFlavorGroup($req->file('image'), null, $group->id);
                 $group->update(['image' => $newImagePath]);
             }
 
@@ -255,16 +257,17 @@ class ProductController extends Controller
             }
 
             DB::commit();
+
+            // After successful commit, clean up old image
+            if ($req->hasFile('image') && $oldGroupImage) {
+                $imgService->deleteIfUnreferenced($oldGroupImage, excludingFlavorGroupId: $group->id);
+            }
         } catch (\Exception $e) {
             DB::rollBack();
 
-            if ($newImagePath && $isNewGroup) {
+            // Clean up newly stored file since DB wasn't committed
+            if (isset($newImagePath)) {
                 $imgService->delete($newImagePath);
-            } elseif ($newImagePath && $newImagePath !== $oldGroupImage) {
-                $imgService->delete($newImagePath);
-                if ($oldGroupImage) {
-                    $group?->update(['image' => $oldGroupImage]);
-                }
             }
 
             throw $e;

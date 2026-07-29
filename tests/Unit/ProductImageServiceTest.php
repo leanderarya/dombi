@@ -78,36 +78,6 @@ class ProductImageServiceTest extends TestCase
         $this->assertEquals($oldPath, $result);
     }
 
-    public function test_store_for_flavor_group_keeps_file_when_other_group_uses_it(): void
-    {
-        Storage::fake('public');
-
-        $sharedPath = 'products/shared.webp';
-        Storage::disk('public')->put($sharedPath, 'content');
-
-        $category = ProductCategory::factory()->create();
-        ProductFlavorGroup::factory()->create(['image' => $sharedPath, 'product_category_id' => $category->id]);
-        $otherGroup = ProductFlavorGroup::factory()->create(['image' => $sharedPath, 'product_category_id' => $category->id]);
-
-        $uploaded = UploadedFile::fake()->image('new.jpg', 800, 800);
-        $this->service->storeForFlavorGroup($uploaded, $sharedPath, $otherGroup->id);
-
-        Storage::disk('public')->assertExists($sharedPath);
-    }
-
-    public function test_store_for_flavor_group_deletes_old_when_no_other_group_uses_it(): void
-    {
-        Storage::fake('public');
-
-        $oldPath = 'products/alone.webp';
-        Storage::disk('public')->put($oldPath, 'content');
-
-        $uploaded = UploadedFile::fake()->image('new.jpg', 800, 800);
-        $this->service->storeForFlavorGroup($uploaded, $oldPath);
-
-        Storage::disk('public')->assertMissing($oldPath);
-    }
-
     public function test_flavor_group_deleting_removes_image(): void
     {
         Storage::fake('public');

@@ -54,13 +54,6 @@ class ProductImageService
             return $oldPath;
         }
 
-        if ($oldPath && Storage::disk('public')->exists($oldPath)) {
-            $otherCount = ProductFlavorGroup::where('image', $oldPath)->where('id', '!=', $groupId)->count();
-            if ($otherCount === 0) {
-                Storage::disk('public')->delete($oldPath);
-            }
-        }
-
         $manager = new ImageManager(new Driver);
 
         $image = method_exists($manager, 'read')
@@ -76,6 +69,9 @@ class ProductImageService
             : $image->encodeUsingFormat(Format::WEBP, quality: 80);
 
         Storage::disk('public')->put($filename, $encoded->toString());
+
+        // NOTE: deletion of old path happens via deleteIfUnreferenced()
+        // after the caller has successfully updated the DB record.
 
         return $filename;
     }
