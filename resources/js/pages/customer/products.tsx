@@ -233,13 +233,6 @@ function ProductsInner() {
                                                             familyDescription={
                                                                 group.familyDescription
                                                             }
-                                                            familyImage={
-                                                                families.find(
-                                                                    (f) =>
-                                                                        f.id ===
-                                                                        group.familyId,
-                                                                )?.image ?? null
-                                                            }
                                                             displayPrice={
                                                                 group.lowestPrice
                                                             }

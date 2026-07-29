@@ -17,7 +17,6 @@ export interface Family {
     name: string;
     brand: string | null;
     description: string | null;
-    image: string | null;
     variants: Variant[];
 }
 
