@@ -21,20 +21,6 @@ class HandleInertiaRequests extends Middleware
     protected $rootView = 'app';
 
     /**
-     * Use internal-app layout for owner/outlet/courier roles.
-     */
-    public function rootView(Request $request): string
-    {
-        $user = $request->user();
-
-        if ($user && in_array($user->role, ['owner', 'outlet', 'courier'], true)) {
-            return 'internal-app';
-        }
-
-        return $this->rootView;
-    }
-
-    /**
      * Determines the current asset version.
      *
      * @see https://inertiajs.com/asset-versioning
