@@ -102,11 +102,10 @@ class CustomerLocationRecommendationTest extends TestCase
             'status' => 'active',
         ]);
 
-        $variant = Product::where('product_id', $productId)->first();
+        $variant = $productId ? Product::find($productId) : null;
         OutletInventory::create([
             'outlet_id' => $outlet->id,
-            'product_id' => $productId,
-            'product_id' => $variant?->id,
+            'product_id' => $variant?->id ?? $productId,
             'current_stock' => $stock,
             'reserved_stock' => 0,
             'minimum_stock' => 0,

@@ -29,7 +29,8 @@ class FavoriteController extends Controller
     public function toggle(Request $request): JsonResponse
     {
         $request->validate([
-            'product_id' => 'required|integer|exists:products,id',
+            'product_id' => 'sometimes|integer|exists:products,id',
+            'variant_id' => 'sometimes|integer|exists:products,id',
         ]);
 
         $user = $request->user();
@@ -39,7 +40,7 @@ class FavoriteController extends Controller
         }
 
         $customerId = $user->getCustomerOrCreate()->id;
-        $productId = $request->input('product_id');
+        $productId = $request->input('product_id') ?? $request->input('variant_id');
 
         $existing = Favorite::where('customer_id', $customerId)
             ->where('product_id', $productId)
@@ -64,6 +65,8 @@ class FavoriteController extends Controller
         $request->validate([
             'product_ids' => 'array|max:200',
             'product_ids.*' => 'integer|exists:products,id',
+            'variant_ids' => 'array|max:200',
+            'variant_ids.*' => 'integer|exists:products,id',
         ]);
 
         $user = $request->user();
@@ -73,7 +76,7 @@ class FavoriteController extends Controller
         }
 
         $customerId = $user->customer->id;
-        $productIds = $request->input('product_ids', []);
+        $productIds = $request->input('product_ids') ?? $request->input('variant_ids') ?? [];
 
         foreach ($productIds as $productId) {
             Favorite::firstOrCreate([
