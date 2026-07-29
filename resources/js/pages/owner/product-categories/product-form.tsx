@@ -28,7 +28,7 @@ export default function ProductForm({
     const [singleImageFile, setSingleImageFile] = useState<File | null>(null);
     const [singleImageExisting, setSingleImageExisting] = useState<
         string | null
-    >(editingProduct?.image ?? null);
+    >(editingProduct?.display_image ?? null);
 
     // Single form using Inertia useForm
     const singleForm = useForm({

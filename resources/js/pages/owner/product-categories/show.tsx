@@ -323,7 +323,7 @@ export default function ProductCategoryShow({ category }: Props) {
             description: p.description ?? '',
             is_active: p.is_active,
         });
-        setProductImageExisting(p.image ?? null);
+        setProductImageExisting(p.display_image ?? null);
         setProductImageFile(null);
         setShowProductForm(true);
     };
@@ -1091,6 +1091,45 @@ export default function ProductCategoryShow({ category }: Props) {
                                     setProductImageExisting(null);
                                 }
                             }}
+                            onRemove={
+                                editingProduct
+                                    ? () => {
+                                          if (
+                                              editingProduct.product_flavor_group_id
+                                          ) {
+                                              router.delete(
+                                                  `/owner/product-flavor-groups/${editingProduct.product_flavor_group_id}/image`,
+                                                  {
+                                                      preserveScroll: true,
+                                                      onSuccess: () => {
+                                                          setProductImageExisting(
+                                                              null,
+                                                          );
+                                                          setProductImageFile(
+                                                              null,
+                                                          );
+                                                      },
+                                                  },
+                                              );
+                                          } else {
+                                              router.delete(
+                                                  `/owner/products/${editingProduct.id}/image`,
+                                                  {
+                                                      preserveScroll: true,
+                                                      onSuccess: () => {
+                                                          setProductImageExisting(
+                                                              null,
+                                                          );
+                                                          setProductImageFile(
+                                                              null,
+                                                          );
+                                                      },
+                                                  },
+                                              );
+                                          }
+                                      }
+                                    : undefined
+                            }
                             label="Foto Produk"
                         />
                         <label className="flex items-center gap-2">
