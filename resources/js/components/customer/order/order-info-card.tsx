@@ -8,7 +8,7 @@ import {
     UserCheck,
 } from 'lucide-react';
 import { formatCurrency } from '@/lib/format';
-import { waLinkWithMessage } from '@/lib/wa';
+import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 
 const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
 
@@ -54,6 +54,7 @@ interface Props {
     fulfillmentType?: string;
     customerName?: string;
     orderCode?: string;
+    status?: string;
 }
 
 export default function OrderInfoCard({
@@ -70,8 +71,23 @@ export default function OrderInfoCard({
     longitude,
     customerName,
     orderCode,
+    status,
+    fulfillmentType,
 }: Props) {
     const outletPhone = outlet?.phone;
+    const outletWaHref = outletPhone
+        ? waLinkWithText(
+              outletPhone,
+              whatsAppDefaultMessage({
+                  order_code: orderCode ?? '',
+                  status: status ?? '',
+                  fulfillment_type: fulfillmentType ?? '',
+                  customer_name: customerName,
+                  outlet_name: outlet?.name,
+                  total,
+              }),
+          )
+        : null;
 
     return (
         <div className="space-y-3">
@@ -158,25 +174,15 @@ export default function OrderInfoCard({
                                     Navigasi
                                 </a>
                             )}
-                            {outletPhone && (
+                            {outletWaHref && (
                                 <a
-                                    href={waLinkWithMessage(outletPhone, {
-                                        order_code: orderCode ?? '',
-                                        customer_name: customerName,
-                                        outlet_name: outlet.name,
-                                        total,
-                                    })}
+                                    href={outletWaHref}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => {
                                         e.preventDefault();
                                         window.open(
-                                            waLinkWithMessage(outletPhone, {
-                                                order_code: orderCode ?? '',
-                                                customer_name: customerName,
-                                                outlet_name: outlet.name,
-                                                total,
-                                            }),
+                                            outletWaHref,
                                             '_blank',
                                             'noopener,noreferrer',
                                         );

@@ -38,3 +38,7 @@ export function waLinkWithMessage(
 ): string {
     return `${waLink(phone)}?text=${waMessage(order)}`;
 }
+
+export function waLinkWithText(phone: string, text: string): string {
+    return `${waLink(phone)}?text=${encodeURIComponent(text)}`;
+}

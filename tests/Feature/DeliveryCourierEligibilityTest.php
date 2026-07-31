@@ -77,6 +77,111 @@ class DeliveryCourierEligibilityTest extends TestCase
         $this->assertSame($courier->id, $delivery->courier_id);
     }
 
+    public function test_outlet_assign_courier_endpoint_requires_courier_type(): void
+    {
+        $outlet = Outlet::factory()->create();
+        $operator = User::factory()->create([
+            'role' => 'outlet',
+            'outlet_id' => $outlet->id,
+        ]);
+        $courier = User::factory()->create([
+            'role' => 'courier',
+            'is_active' => true,
+            'is_online' => true,
+        ]);
+        CourierProfile::create([
+            'user_id' => $courier->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $outlet->id,
+            'invitation_status' => 'accepted',
+        ]);
+        $order = Order::factory()->create([
+            'outlet_id' => $outlet->id,
+            'fulfillment_type' => Order::FULFILLMENT_DELIVERY_DOMBI,
+            'status' => Order::STATUS_READY_FOR_PICKUP,
+            'payment_status' => 'paid',
+        ]);
+
+        $this->actingAs($operator)
+            ->post("/outlet/orders/{$order->id}/assign-courier", [
+                'courier_id' => $courier->id,
+            ])
+            ->assertSessionHasErrors('courier_type');
+    }
+
+    public function test_outlet_assign_courier_endpoint_succeeds_with_valid_internal_courier(): void
+    {
+        $outlet = Outlet::factory()->create();
+        $operator = User::factory()->create([
+            'role' => 'outlet',
+            'outlet_id' => $outlet->id,
+        ]);
+        $courier = User::factory()->create([
+            'role' => 'courier',
+            'is_active' => true,
+            'is_online' => true,
+        ]);
+        CourierProfile::create([
+            'user_id' => $courier->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $outlet->id,
+            'invitation_status' => 'accepted',
+        ]);
+        $order = Order::factory()->create([
+            'outlet_id' => $outlet->id,
+            'fulfillment_type' => Order::FULFILLMENT_DELIVERY_DOMBI,
+            'status' => Order::STATUS_READY_FOR_PICKUP,
+            'payment_status' => 'paid',
+        ]);
+
+        $this->actingAs($operator)
+            ->post("/outlet/orders/{$order->id}/assign-courier", [
+                'courier_type' => 'dombi',
+                'courier_id' => $courier->id,
+            ])
+            ->assertRedirect();
+
+        $this->assertDatabaseHas('deliveries', [
+            'order_id' => $order->id,
+            'courier_id' => $courier->id,
+        ]);
+    }
+
+    public function test_outlet_assign_courier_endpoint_rejects_offline_courier(): void
+    {
+        $outlet = Outlet::factory()->create();
+        $operator = User::factory()->create([
+            'role' => 'outlet',
+            'outlet_id' => $outlet->id,
+        ]);
+        $courier = User::factory()->create([
+            'role' => 'courier',
+            'is_active' => true,
+            'is_online' => false,
+        ]);
+        CourierProfile::create([
+            'user_id' => $courier->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $outlet->id,
+            'invitation_status' => 'accepted',
+        ]);
+        $order = Order::factory()->create([
+            'outlet_id' => $outlet->id,
+            'fulfillment_type' => Order::FULFILLMENT_DELIVERY_DOMBI,
+            'status' => Order::STATUS_READY_FOR_PICKUP,
+            'payment_status' => 'paid',
+        ]);
+
+        $this->actingAs($operator)
+            ->from("/outlet/orders/{$order->id}")
+            ->post("/outlet/orders/{$order->id}/assign-courier", [
+                'courier_type' => 'dombi',
+                'courier_id' => $courier->id,
+            ])
+            ->assertRedirect("/outlet/orders/{$order->id}")
+            ->assertSessionHasErrors('courier_id');
+    }
+
     public function test_unaccepted_courier_cannot_be_assigned(): void
     {
         $outlet = Outlet::factory()->create();

@@ -745,27 +745,32 @@ class CheckoutController extends Controller
             ]);
         }
 
-        $variantIds = collect($cart)->pluck('product_id', 'product_variant_id')->filter()->map(fn ($id) => (int) $id)->values()->all();
-        if (empty($variantIds)) {
-            $variantIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
-        }
+        $variantIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->values()->all();
         $variants = Product::whereIn('id', $variantIds)
             ->where('is_active', true)
             ->with('category')
             ->get()
             ->keyBy('id');
 
-        $inventories = OutletInventory::whereIn('product_id', $variantIds)
-            ->where('is_active', true)
-            ->get()
-            ->keyBy('product_id');
+        $outletId = $request->session()->get('checkout.fulfillment.selected_outlet_id')
+            ?: $request->session()->get('checkout.selected_outlet_id');
+
+        $inventoriesQuery = OutletInventory::whereIn('product_id', $variantIds)
+            ->where('is_active', true);
+
+        if ($outletId) {
+            $inventoriesQuery->where('outlet_id', (int) $outletId);
+        }
+
+        $inventories = $inventoriesQuery->get()->keyBy('product_id');
 
         $items = [];
         $warnings = [];
         $valid = true;
+        $updatedCart = $cart;
 
-        foreach ($cart as $cartItem) {
-            $variantId = (int) ($cartItem['product_id'] ?? $cartItem['product_variant_id'] ?? 0);
+        foreach ($cart as $index => $cartItem) {
+            $variantId = (int) ($cartItem['product_id'] ?? 0);
             $requestedQty = (int) $cartItem['quantity'];
             $variant = $variants->get($variantId);
 
@@ -789,11 +794,13 @@ class CheckoutController extends Controller
                 $removed = true;
                 $valid = false;
                 $warnings[] = "{$variant->category->name} {$variant->name}: stok habis, item dihapus dari pesanan";
+                $updatedCart[$index]['quantity'] = 0;
             } elseif ($availableStock < $requestedQty) {
                 $adjusted = true;
                 $adjustedQty = $availableStock;
                 $valid = false;
                 $warnings[] = "{$variant->category->name} {$variant->name}: jumlah dikurangi dari {$requestedQty} ke {$availableStock} (stok tersisa {$availableStock})";
+                $updatedCart[$index]['quantity'] = $availableStock;
             }
 
             $items[] = [
@@ -808,6 +815,12 @@ class CheckoutController extends Controller
                 'removed' => $removed,
             ];
         }
+
+        $updatedCart = collect($updatedCart)
+            ->filter(fn ($item) => ((int) $item['quantity']) > 0)
+            ->values()
+            ->toArray();
+        $request->session()->put('checkout.cart', $updatedCart);
 
         return response()->json([
             'valid' => $valid,

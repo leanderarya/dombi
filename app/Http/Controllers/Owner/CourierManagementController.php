@@ -98,6 +98,10 @@ class CourierManagementController extends Controller
 
     public function updateAssignments(Request $request, CourierProfile $profile): RedirectResponse
     {
+        if ($profile->courier_source !== 'pusat') {
+            return back()->with('error', 'Hanya kurir pusat yang dapat diplot ke outlet.');
+        }
+
         $validated = $request->validate([
             'outlet_ids' => ['required', 'array'],
             'outlet_ids.*' => ['integer', 'exists:outlets,id'],
