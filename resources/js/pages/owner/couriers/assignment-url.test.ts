@@ -10,4 +10,10 @@ describe('buildCourierOutletAssignmentUrl', () => {
             }),
         ).toBe('/owner/couriers/12/outlets');
     });
+
+    it('throws when courier profile is missing', () => {
+        expect(() => buildCourierOutletAssignmentUrl({ id: 77 })).toThrow(
+            'Courier profile id required for outlet assignment.',
+        );
+    });
 });

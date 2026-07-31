@@ -268,7 +268,13 @@ class DeliveryCourierEligibilityTest extends TestCase
                 ->component('outlet/orders/show')
                 ->has('couriers', 2)
                 ->where('couriers.0.name', 'Owned Courier')
-                ->where('couriers.1.name', 'Plotted Courier'));
+                ->where('couriers.0.is_online', true)
+                ->where('couriers.0.at_capacity', false)
+                ->missing('couriers.0.invitation_accepted')
+                ->where('couriers.1.name', 'Plotted Courier')
+                ->where('couriers.1.is_online', true)
+                ->where('couriers.1.at_capacity', false)
+                ->missing('couriers.1.invitation_accepted'));
     }
 
     public function test_outlet_order_page_keeps_offline_eligible_courier_visible(): void

@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class CourierController extends Controller
 {
@@ -63,6 +64,7 @@ class CourierController extends Controller
 
     public function show(User $courier): Response
     {
+        $courier = $this->courierUser($courier);
         $courier->load('courierProfile');
         $courier->loadCount([
             'courierDeliveries as total_deliveries_count',
@@ -91,11 +93,18 @@ class CourierController extends Controller
             'inviteUrl' => $inviteUrl,
             'outlets' => Outlet::where('status', 'active')->get(['id', 'name']),
             'assignedOutlets' => $courier->courierProfile?->assignedOutlets->pluck('id') ?? collect(),
+            'legacyClassification' => [
+                'isLegacy' => $courier->courierProfile !== null && $courier->courierProfile->courier_source === null,
+                'source' => $courier->courierProfile?->courier_source,
+                'outletId' => $courier->courierProfile?->outlet_id,
+            ],
         ]);
     }
 
     public function update(Request $request, User $courier): RedirectResponse
     {
+        $courier = $this->courierUser($courier);
+
         $request->validate([
             'name' => ['sometimes', 'string', 'max:255'],
             'phone' => ['sometimes', 'string', 'max:20', 'unique:users,phone,'.$courier->id],
@@ -113,6 +122,8 @@ class CourierController extends Controller
 
     public function destroy(User $courier): RedirectResponse
     {
+        $courier = $this->courierUser($courier);
+
         $activeDeliveries = Delivery::where('courier_id', $courier->id)
             ->whereIn('status', ['waiting_assignment', 'waiting_pickup', 'picked_up', 'delivering'])
             ->count();
@@ -126,5 +137,14 @@ class CourierController extends Controller
         return redirect()
             ->route('owner.couriers.index')
             ->with('success', 'Kurir berhasil dihapus.');
+    }
+
+    private function courierUser(User $courier): User
+    {
+        if ($courier->role !== 'courier') {
+            throw new NotFoundHttpException;
+        }
+
+        return $courier;
     }
 }

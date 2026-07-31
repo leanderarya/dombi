@@ -38,10 +38,15 @@ class MyCourierController extends Controller
 
     public function nominate(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $normalized = [
+            'name' => trim((string) $request->input('name')),
+            'phone' => preg_replace('/\D+/', '', (string) $request->input('phone')) ?? '',
+        ];
+
+        $validated = validator($normalized, [
             'name' => ['required', 'string', 'max:255'],
-            'phone' => ['required', 'string', 'max:20'],
-        ]);
+            'phone' => ['required', 'string', 'min:10', 'max:20'],
+        ])->validate();
 
         $outlet = $request->user()->outlet;
 
@@ -49,6 +54,8 @@ class MyCourierController extends Controller
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
             'nominated_by' => $request->user()->id,
+            'nominee_name' => $validated['name'],
+            'nominee_phone' => $validated['phone'],
             'invitation_status' => 'pending',
         ]);
 

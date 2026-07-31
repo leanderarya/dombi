@@ -36,8 +36,10 @@ class CourierService
             CourierProfile::create([
                 'user_id' => $courier->id,
                 'courier_source' => 'pusat',
+                'outlet_id' => null,
                 'invitation_status' => 'pending',
                 'invited_at' => now(),
+                'accepted_at' => null,
             ]);
 
             $invitation = $this->invitationService->create($courier, $owner, $data['phone']);

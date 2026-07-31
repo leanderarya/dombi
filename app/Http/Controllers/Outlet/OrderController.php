@@ -101,7 +101,6 @@ class OrderController extends Controller
                 'id' => $courier->id,
                 'name' => $courier->name,
                 'is_online' => $courier->is_online,
-                'invitation_accepted' => $courier->courierProfile?->invitation_status === 'accepted',
                 'at_capacity' => $courier->active_deliveries_count >= config('delivery.capacity.max_active_deliveries', 3),
             ]);
 

@@ -39,9 +39,12 @@ export default function OutletOrderShow({
     cancellationReasons = [],
 }: any) {
     const { errors } = usePage<any>().props;
+    const firstAssignableCourier = couriers.find(
+        (courier: any) => courier.is_online !== false && !courier.at_capacity,
+    );
     const assignForm = useForm({
         courier_type: 'dombi',
-        courier_id: couriers[0]?.id ?? '',
+        courier_id: firstAssignableCourier?.id ?? '',
     });
     const rejectForm = useForm({ reason: '', note: '' });
     const statusForm = useForm({ status: '' });
@@ -512,19 +515,16 @@ export default function OutletOrderShow({
                                     key={courier.id}
                                     value={courier.id}
                                     disabled={
-                                        courier.invitation_accepted === false ||
                                         courier.is_online === false ||
                                         courier.at_capacity
                                     }
                                 >
                                     {courier.name}
-                                    {courier.invitation_accepted === false
-                                        ? ' (undangan belum diterima)'
-                                        : courier.is_online === false
-                                          ? ' (offline)'
-                                          : courier.at_capacity
-                                            ? ' (kapasitas penuh)'
-                                            : ''}
+                                    {courier.is_online === false
+                                        ? ' (offline)'
+                                        : courier.at_capacity
+                                          ? ' (kapasitas penuh)'
+                                          : ''}
                                 </option>
                             ))}
                         </select>
@@ -544,7 +544,9 @@ export default function OutletOrderShow({
                     </div>
                     <button
                         type="submit"
-                        disabled={assignForm.processing}
+                        disabled={
+                            assignForm.processing || !assignForm.data.courier_id
+                        }
                         className="flex min-h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                     >
                         {assignForm.processing
