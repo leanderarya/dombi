@@ -40,6 +40,11 @@ class OrderController extends Controller
                 ->select(['id', 'order_code', 'status', 'payment_status', 'fulfillment_type', 'total', 'ordered_at', 'created_at', 'outlet_id', 'recovery_token', 'customer_address', 'refund_destination_status', 'refund_requested_at', 'refund_started_at', 'refund_amount'])
                 ->orderByDesc('ordered_at')
                 ->get()
+                ->map(function (Order $order) {
+                    $order->setAttribute('cancellation_reasons', OrderStatusService::cancellationReasons());
+
+                    return $order;
+                })
                 ->map(function (Order $order) use ($refundPayloads) {
                     $queue = $refundPayloads->queueState($order);
                     if ($queue) {

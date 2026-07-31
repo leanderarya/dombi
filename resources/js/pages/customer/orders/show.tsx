@@ -17,7 +17,7 @@ import {
 } from '@/hooks/use-order-actions';
 import { useOrderRecovery } from '@/lib/order-recovery';
 import { usePolling } from '@/lib/use-polling';
-import { waLinkWithMessage } from '@/lib/wa';
+import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 
 /* ─── Constants ────────────────────────────────────────────── */
 
@@ -189,6 +189,7 @@ export default function OrderShow({
                     fulfillmentType={order.fulfillment_type}
                     customerName={order.customer_name}
                     orderCode={order.order_code}
+                    status={order.status}
                 />
 
                 {isCancellable ? (
@@ -199,6 +200,8 @@ export default function OrderShow({
                         outletName={order.outlet?.name}
                         customerName={order.customer_name}
                         orderCode={order.order_code}
+                        status={order.status}
+                        fulfillmentType={order.fulfillment_type}
                     />
                 ) : order.status !== 'completed' ? (
                     <ReorderLink orderId={order.id} />
@@ -308,37 +311,42 @@ function NonCancellableNotice({
     outletName,
     customerName,
     orderCode,
+    status,
+    fulfillmentType,
 }: {
     phone?: string;
     outletName?: string;
     customerName?: string;
     orderCode?: string;
+    status?: string;
+    fulfillmentType?: string;
 }) {
+    const href = phone
+        ? waLinkWithText(
+              phone,
+              whatsAppDefaultMessage({
+                  order_code: orderCode ?? '',
+                  status: status ?? '',
+                  fulfillment_type: fulfillmentType ?? '',
+                  customer_name: customerName,
+                  outlet_name: outletName,
+              }),
+          )
+        : null;
+
     return (
         <div className="flex items-center justify-between gap-2 rounded-lg bg-surface-muted px-3 py-2">
             <span className="text-[11px] text-text-muted">
                 Pesanan diproses, tidak dapat dibatalkan
             </span>
-            {phone && (
+            {href && (
                 <a
-                    href={waLinkWithMessage(phone, {
-                        order_code: orderCode ?? '',
-                        customer_name: customerName,
-                        outlet_name: outletName,
-                    })}
+                    href={href}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => {
                         e.preventDefault();
-                        window.open(
-                            waLinkWithMessage(phone, {
-                                order_code: orderCode ?? '',
-                                customer_name: customerName,
-                                outlet_name: outletName,
-                            }),
-                            '_blank',
-                            'noopener,noreferrer',
-                        );
+                        window.open(href, '_blank', 'noopener,noreferrer');
                     }}
                     className="flex items-center gap-1 text-[11px] font-semibold text-primary active:opacity-80"
                 >

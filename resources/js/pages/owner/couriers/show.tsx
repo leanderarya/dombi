@@ -33,9 +33,14 @@ export default function CourierShow({
     courier,
     recentDeliveries,
     inviteUrl,
+    outlets,
+    assignedOutlets,
 }: any) {
-    const toggleForm = useForm({ is_active: !courier.is_active });
+    const toggleForm = useForm({ is_active: !courier?.is_active });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const assignmentForm = useForm({
+        outlet_ids: (assignedOutlets ?? []).map((id: number) => String(id)),
+    });
 
     if (!courier) {
         return (
@@ -75,6 +80,27 @@ export default function CourierShow({
                 setShowDeleteConfirm(false);
                 toast.success('Kurir dihapus');
             },
+            onError: (errors) =>
+                toast.error(Object.values(errors).flat().join(', ')),
+        });
+    };
+
+    const toggleOutlet = (outletId: number, checked: boolean) => {
+        const current = new Set(assignmentForm.data.outlet_ids);
+
+        if (checked) {
+            current.add(String(outletId));
+        } else {
+            current.delete(String(outletId));
+        }
+
+        assignmentForm.setData('outlet_ids', Array.from(current));
+    };
+
+    const handleSaveAssignments = () => {
+        assignmentForm.put(`/owner/couriers/${courier.id}/outlets`, {
+            preserveScroll: true,
+            onSuccess: () => toast.success('Plot outlet diperbarui'),
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
         });
@@ -388,6 +414,55 @@ export default function CourierShow({
                                 Lihat Pesanan
                             </Link>
                         </div>
+                    </div>
+
+                    {/* Outlet Assignment */}
+                    <div
+                        className="rounded-lg border border-border p-4"
+                        aria-label="Plot Outlet"
+                    >
+                        <div className="mb-3 text-xs font-semibold text-text-subtle">
+                            Plot Outlet
+                        </div>
+                        <div className="space-y-2">
+                            {(outlets ?? []).length === 0 ? (
+                                <div className="text-xs text-text-muted">
+                                    Tidak ada outlet aktif.
+                                </div>
+                            ) : (
+                                outlets.map((o: any) => (
+                                    <label
+                                        key={o.id}
+                                        className="flex items-center gap-2 text-sm text-text"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={assignmentForm.data.outlet_ids.includes(
+                                                String(o.id),
+                                            )}
+                                            onChange={(e) =>
+                                                toggleOutlet(
+                                                    o.id,
+                                                    e.target.checked,
+                                                )
+                                            }
+                                            className="h-4 w-4 rounded border-border text-primary"
+                                        />
+                                        {o.name}
+                                    </label>
+                                ))
+                            )}
+                        </div>
+                        <Button
+                            size="sm"
+                            className="mt-4 w-full"
+                            disabled={assignmentForm.processing}
+                            onClick={handleSaveAssignments}
+                        >
+                            {assignmentForm.processing
+                                ? 'Menyimpan...'
+                                : 'Simpan Plot Outlet'}
+                        </Button>
                     </div>
                 </div>
             </div>

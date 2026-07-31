@@ -75,7 +75,17 @@ export default function OutletDeliveriesIndex({
                 return res.json();
             },
             onData: (data) => {
-                setCouriers(data.props?.couriers ?? []);
+                const rawCouriers = data.props?.couriers ?? [];
+                setCouriers(
+                    rawCouriers.map((c: any) => ({
+                        id: c.id,
+                        name: c.name,
+                        is_online: c.is_online ?? false,
+                        invitation_accepted: c.invitation_accepted ?? false,
+                        outlet_eligible: c.outlet_eligible ?? false,
+                        at_capacity: c.at_capacity ?? false,
+                    })),
+                );
                 setSelectedOrder(order);
                 setAssignOpen(true);
             },

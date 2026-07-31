@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Owner\StoreCourierRequest;
 use App\Models\CourierInvitation;
 use App\Models\Delivery;
+use App\Models\Outlet;
 use App\Models\User;
 use App\Services\CourierInvitationService;
 use App\Services\CourierService;
@@ -88,6 +89,8 @@ class CourierController extends Controller
             'courier' => $courier,
             'recentDeliveries' => $recentDeliveries,
             'inviteUrl' => $inviteUrl,
+            'outlets' => Outlet::where('status', 'active')->get(['id', 'name']),
+            'assignedOutlets' => $courier->courierProfile?->assignedOutlets->pluck('id') ?? collect(),
         ]);
     }
 

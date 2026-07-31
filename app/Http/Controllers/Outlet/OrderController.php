@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignCourierRequest;
 use App\Http\Requests\Outlet\RejectOrderRequest;
 use App\Http\Requests\Outlet\UpdateOrderStatusRequest;
+use App\Models\CourierProfile;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\DeliveryService;
@@ -87,9 +88,29 @@ class OrderController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet && $order->outlet_id === $outlet->id, 403);
 
+        $outlet = $request->user()->outlet;
+
+        $couriers = User::where('role', 'courier')
+            ->where('is_active', true)
+            ->with('courierProfile')
+            ->withCount([
+                'courierDeliveries as active_deliveries_count' => fn ($query) => $query->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering']),
+            ])
+            ->orderBy('name')
+            ->get(['id', 'name', 'is_online'])
+            ->map(fn (User $courier) => [
+                'id' => $courier->id,
+                'name' => $courier->name,
+                'is_online' => $courier->is_online,
+                'invitation_accepted' => $courier->courierProfile?->invitation_status === 'accepted',
+                'outlet_eligible' => $courier->courierProfile !== null
+                    && CourierProfile::availableForOutlet($outlet->id)->where('user_id', $courier->id)->exists(),
+                'at_capacity' => $courier->active_deliveries_count >= config('delivery.capacity.max_active_deliveries', 3),
+            ]);
+
         return Inertia::render('outlet/orders/show', [
             'order' => $order->load(['items.product', 'statusHistories.actor', 'delivery.courier']),
-            'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
+            'couriers' => $couriers,
             'rejectionReasons' => OrderStatusService::rejectionReasons(),
             'cancellationReasons' => OrderStatusService::outletCancellationReasons(),
         ]);

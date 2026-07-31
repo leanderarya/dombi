@@ -127,6 +127,20 @@ export default function CheckoutPayment({ draft, summary }: any) {
 
                     return;
                 }
+
+                const fallbackError =
+                    data.message ||
+                    (data.errors
+                        ? Object.values(data.errors).flat()[0]
+                        : 'Terjadi kesalahan. Silakan coba lagi.');
+                setSubmitError(
+                    typeof fallbackError === 'string'
+                        ? fallbackError
+                        : 'Terjadi kesalahan. Silakan coba lagi.',
+                );
+                setProcessing(false);
+
+                return;
             }
 
             if (!response.ok) {
@@ -163,47 +177,8 @@ export default function CheckoutPayment({ draft, summary }: any) {
         setAdjustmentModal(null);
         setProcessing(true);
 
-        try {
-            const response = await fetch('/customer/checkout/payment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Accept: 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') ?? '',
-                },
-                body: JSON.stringify({
-                    payment_method: paymentMethod,
-                    confirm_adjusted: true,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                setSubmitError(
-                    data.message || 'Terjadi kesalahan. Silakan coba lagi.',
-                );
-                setProcessing(false);
-
-                return;
-            }
-
-            if (data.payment_url) {
-                cart.clear();
-                markUsedForOrder();
-                window.location.replace(data.payment_url);
-            } else {
-                setSubmitError('Tidak ada URL pembayaran. Silakan coba lagi.');
-                setProcessing(false);
-            }
-        } catch {
-            setSubmitError('Terjadi kesalahan jaringan. Silakan coba lagi.');
-            setProcessing(false);
-        }
+        // validateStock has already updated the session cart to adjusted quantities.
+        submit();
     };
 
     return (

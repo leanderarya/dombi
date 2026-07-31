@@ -8,6 +8,10 @@ interface Courier {
     id: number;
     name: string;
     active_deliveries?: number;
+    is_online?: boolean;
+    invitation_accepted?: boolean;
+    outlet_eligible?: boolean;
+    at_capacity?: boolean;
 }
 
 interface Props {
@@ -40,6 +44,26 @@ export default function AssignCourierSheet({
     );
 }
 
+function disabledReason(courier: Courier): string | null {
+    if (courier.invitation_accepted === false) {
+        return 'Undangan belum diterima';
+    }
+
+    if (courier.outlet_eligible === false) {
+        return 'Bukan kurir outlet ini';
+    }
+
+    if (courier.is_online === false) {
+        return 'Sedang offline';
+    }
+
+    if (courier.at_capacity) {
+        return 'Kapasitas penuh';
+    }
+
+    return null;
+}
+
 function AssignCourierSheetContent({
     order,
     couriers,
@@ -49,7 +73,10 @@ function AssignCourierSheetContent({
     const [sheetState, setSheetState] = useState(
         createInitialAssignCourierSheetState,
     );
-    const form = useForm({ courier_id: '' });
+    const form = useForm<{ courier_type: string; courier_id: string }>({
+        courier_type: 'dombi',
+        courier_id: '',
+    });
 
     const closeSheet = useCallback(() => {
         form.cancel();
@@ -88,9 +115,15 @@ function AssignCourierSheetContent({
             return;
         }
 
-        form.transform(() => ({ courier_id: String(selectedCourier) }));
+        form.transform(() => ({
+            courier_type: 'dombi',
+            courier_id: String(selectedCourier),
+        }));
         form.post(submitUrl, {
             onSuccess: closeSheet,
+            onError: () => {
+                // errors are surfaced below the list and via flash toasts
+            },
             preserveScroll: true,
         });
     }
@@ -155,14 +188,14 @@ function AssignCourierSheetContent({
                                     const isSelected =
                                         sheetState.selectedCourier ===
                                         courier.id;
-                                    const activeCount =
-                                        courier.active_deliveries ?? 0;
-                                    const isBusy = activeCount >= 3;
+                                    const reason = disabledReason(courier);
+                                    const isDisabled = reason !== null;
 
                                     return (
                                         <button
                                             key={courier.id}
                                             type="button"
+                                            disabled={isDisabled}
                                             onClick={() =>
                                                 setSheetState({
                                                     selectedCourier: courier.id,
@@ -172,7 +205,7 @@ function AssignCourierSheetContent({
                                                 isSelected
                                                     ? 'border-emerald-300 bg-emerald-50/30'
                                                     : 'border-slate-200 bg-white'
-                                            } ${isBusy ? 'opacity-60' : ''}`}
+                                            } ${isDisabled ? 'opacity-60' : ''}`}
                                         >
                                             <div
                                                 className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 ${isSelected ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'}`}
@@ -189,18 +222,11 @@ function AssignCourierSheetContent({
                                                     {courier.name}
                                                 </div>
                                                 <div className="flex items-center gap-2">
-                                                    <span
-                                                        className={`text-[11px] ${activeCount === 0 ? 'text-emerald-600' : isBusy ? 'text-amber-600' : 'text-blue-600'}`}
-                                                    >
-                                                        {activeCount === 0
-                                                            ? 'Tersedia'
-                                                            : `${activeCount} tugas aktif`}
+                                                    <span className="text-[11px] text-slate-500">
+                                                        {isDisabled
+                                                            ? reason
+                                                            : 'Tersedia'}
                                                     </span>
-                                                    {isBusy && (
-                                                        <span className="rounded bg-amber-100 px-1 py-0.5 text-[11px] font-bold text-amber-700">
-                                                            Sibuk
-                                                        </span>
-                                                    )}
                                                 </div>
                                             </div>
                                         </button>
@@ -210,10 +236,19 @@ function AssignCourierSheetContent({
                         </div>
                     </div>
 
-                    {form.errors.courier_id && (
-                        <p className="mt-2 text-xs text-red-600">
-                            {form.errors.courier_id}
-                        </p>
+                    {(form.errors.courier_id || form.errors.courier_type) && (
+                        <div className="mt-2 space-y-1">
+                            {[form.errors.courier_type, form.errors.courier_id]
+                                .filter(Boolean)
+                                .map((err) => (
+                                    <p
+                                        key={err}
+                                        className="text-xs text-red-600"
+                                    >
+                                        {err}
+                                    </p>
+                                ))}
+                        </div>
                     )}
 
                     {/* Actions */}
