@@ -35,6 +35,7 @@ class CourierService
 
             CourierProfile::create([
                 'user_id' => $courier->id,
+                'courier_source' => 'pusat',
                 'invitation_status' => 'pending',
                 'invited_at' => now(),
             ]);

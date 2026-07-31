@@ -186,6 +186,35 @@ class OwnerOutletManagementTest extends TestCase
             );
     }
 
+    public function test_owner_outlet_detail_loads_with_inventory_rows(): void
+    {
+        $owner = User::factory()->create(['role' => 'owner', 'is_active' => true]);
+        $outlet = Outlet::create([
+            'name' => 'Outlet Inventory',
+            'kelurahan' => 'Test',
+            'kecamatan' => 'Test',
+            'address' => 'Jl. Test',
+            'status' => 'active',
+        ]);
+
+        $product = Product::factory()->create();
+        OutletInventory::factory()->create([
+            'outlet_id' => $outlet->id,
+            'product_id' => $product->id,
+            'current_stock' => 12,
+            'reserved_stock' => 2,
+        ]);
+
+        $this->actingAs($owner)
+            ->get(route('owner.outlets.show', $outlet))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('owner/outlets/show')
+                ->where('outlet.id', $outlet->id)
+                ->has('inventoryHealth')
+            );
+    }
+
     private function validOutletPayload(array $overrides = []): array
     {
         return [

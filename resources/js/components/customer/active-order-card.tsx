@@ -143,9 +143,13 @@ function useCancelOrder() {
 
                 if (!res.ok) {
                     const data = await res.json().catch(() => null);
+                    const fieldErrors = data?.errors
+                        ? Object.values(data.errors).flat()
+                        : [];
 
                     throw new Error(
-                        data?.message ??
+                        fieldErrors[0] ??
+                            data?.message ??
                             `Gagal membatalkan pesanan (${res.status})`,
                     );
                 }
@@ -195,6 +199,7 @@ type Props = {
         outlet: { id: number; name: string };
         items: OrderItem[];
         refund_badge?: RefundBadge | null;
+        cancellation_reasons?: string[];
     };
 };
 
@@ -230,12 +235,7 @@ export default function ActiveOrderCard({ order }: Props) {
     const [cancelReason, setCancelReason] = useState('');
     const [cancelNote, setCancelNote] = useState('');
 
-    const cancellationReasons = [
-        'Berubah pikiran',
-        'Salah pesan',
-        'Tidak jadi',
-        'Lainnya',
-    ];
+    const cancellationReasons = order.cancellation_reasons ?? [];
 
     const {
         cancel,
@@ -572,10 +572,18 @@ export default function ActiveOrderCard({ order }: Props) {
                     </div>
                 )}
 
+                {cancelError && (
+                    <p className="mt-2 text-xs text-red-600">{cancelError}</p>
+                )}
+
                 <button
                     type="button"
                     onClick={handleCancelConfirm}
-                    disabled={!cancelReason || cancelLoading}
+                    disabled={
+                        !cancelReason ||
+                        cancelLoading ||
+                        (cancelReason === 'Lainnya' && cancelNote.trim() === '')
+                    }
                     className="mt-4 flex min-h-11 w-full items-center justify-center rounded-xl bg-red-600 text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
                 >
                     {cancelLoading ? 'Membatalkan...' : 'Batalkan Pesanan'}

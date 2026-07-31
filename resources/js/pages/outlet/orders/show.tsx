@@ -39,7 +39,10 @@ export default function OutletOrderShow({
     cancellationReasons = [],
 }: any) {
     const { errors } = usePage<any>().props;
-    const assignForm = useForm({ courier_id: couriers[0]?.id ?? '' });
+    const assignForm = useForm({
+        courier_type: 'dombi',
+        courier_id: couriers[0]?.id ?? '',
+    });
     const rejectForm = useForm({ reason: '', note: '' });
     const statusForm = useForm({ status: '' });
     const cancelForm = useForm({
@@ -505,14 +508,40 @@ export default function OutletOrderShow({
                             className="min-h-11 w-full rounded-xl border border-border px-4 text-sm"
                         >
                             {couriers.map((courier: any) => (
-                                <option key={courier.id} value={courier.id}>
+                                <option
+                                    key={courier.id}
+                                    value={courier.id}
+                                    disabled={
+                                        courier.outlet_eligible === false ||
+                                        courier.invitation_accepted === false ||
+                                        courier.is_online === false ||
+                                        courier.at_capacity
+                                    }
+                                >
                                     {courier.name}
+                                    {courier.outlet_eligible === false
+                                        ? ' (bukan kurir outlet ini)'
+                                        : courier.invitation_accepted === false
+                                          ? ' (undangan belum diterima)'
+                                          : courier.is_online === false
+                                            ? ' (offline)'
+                                            : courier.at_capacity
+                                              ? ' (kapasitas penuh)'
+                                              : ''}
                                 </option>
                             ))}
                         </select>
-                        {assignForm.errors.courier_id && (
-                            <div className="mt-1 text-xs text-red-600">
-                                {assignForm.errors.courier_id}
+                        {(assignForm.errors.courier_id ||
+                            assignForm.errors.courier_type) && (
+                            <div className="mt-1 space-y-1 text-xs text-red-600">
+                                {[
+                                    assignForm.errors.courier_type,
+                                    assignForm.errors.courier_id,
+                                ]
+                                    .filter(Boolean)
+                                    .map((err) => (
+                                        <p key={err}>{err}</p>
+                                    ))}
                             </div>
                         )}
                     </div>

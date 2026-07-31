@@ -126,6 +126,43 @@ class CourierProfileTest extends TestCase
         ]);
     }
 
+    public function test_owner_cannot_plot_non_pusat_courier_to_outlets(): void
+    {
+        $outletUser = User::factory()->create(['role' => 'courier']);
+        $profile = CourierProfile::create([
+            'user_id' => $outletUser->id,
+            'courier_source' => 'outlet',
+            'outlet_id' => $this->outlet->id,
+            'invitation_status' => 'accepted',
+        ]);
+
+        $response = $this->actingAs($this->owner)
+            ->put("/owner/couriers/{$profile->id}/outlets", [
+                'outlet_ids' => [$this->outlet->id],
+            ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseMissing('courier_outlet_assignments', [
+            'courier_profile_id' => $profile->id,
+            'outlet_id' => $this->outlet->id,
+        ]);
+    }
+
+    public function test_owner_created_courier_has_pusat_source(): void
+    {
+        $response = $this->actingAs($this->owner)
+            ->post('/owner/couriers', [
+                'name' => 'Kurir Pusat Baru',
+                'phone' => '081234567890',
+                'vehicle_type' => 'motorcycle',
+            ]);
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('courier_profiles', [
+            'courier_source' => 'pusat',
+        ]);
+    }
+
     public function test_scope_available_for_outlet_returns_assigned_pusat_and_owned_outlet(): void
     {
         $pusatUser = User::factory()->create(['role' => 'courier']);

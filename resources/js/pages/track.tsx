@@ -19,7 +19,7 @@ import OrderTimeline from '@/components/customer/order-timeline';
 import OfflineBanner from '@/components/shared/offline-banner';
 import Dialog from '@/components/ui/dialog';
 import StatusBadge from '@/components/ui/status-badge';
-import { waLinkWithMessage } from '@/lib/wa';
+import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 import type { GuestRefundPayload } from '@/types/refund';
 
 type TrackOrder = {
@@ -328,6 +328,9 @@ export default function TrackPage({
                     latitude={order.outlet?.latitude}
                     longitude={order.outlet?.longitude}
                     fulfillmentType={order.fulfillment_type}
+                    customerName={order.customer_name}
+                    orderCode={order.order_code}
+                    status={order.status}
                 />
 
                 {/* Rejection / Cancellation */}
@@ -404,12 +407,18 @@ export default function TrackPage({
                         </div>
                         {order.outlet?.phone && (
                             <a
-                                href={waLinkWithMessage(order.outlet.phone, {
-                                    order_code: order.order_code,
-                                    customer_name: order.customer_name,
-                                    outlet_name: order.outlet?.name,
-                                    total: order.total,
-                                })}
+                                href={waLinkWithText(
+                                    order.outlet.phone,
+                                    whatsAppDefaultMessage({
+                                        order_code: order.order_code,
+                                        status: order.status,
+                                        fulfillment_type:
+                                            order.fulfillment_type,
+                                        customer_name: order.customer_name,
+                                        outlet_name: order.outlet?.name,
+                                        total: order.total,
+                                    }),
+                                )}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 text-sm font-bold text-white active:opacity-80"
@@ -533,12 +542,18 @@ export default function TrackPage({
                         </div>
                         {order.outlet?.phone && (
                             <a
-                                href={waLinkWithMessage(order.outlet.phone, {
-                                    order_code: order.order_code,
-                                    customer_name: order.customer_name,
-                                    outlet_name: order.outlet?.name,
-                                    total: order.total,
-                                })}
+                                href={waLinkWithText(
+                                    order.outlet.phone,
+                                    whatsAppDefaultMessage({
+                                        order_code: order.order_code,
+                                        status: order.status,
+                                        fulfillment_type:
+                                            order.fulfillment_type,
+                                        customer_name: order.customer_name,
+                                        outlet_name: order.outlet?.name,
+                                        total: order.total,
+                                    }),
+                                )}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="mt-2 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm font-semibold text-primary active:opacity-80"

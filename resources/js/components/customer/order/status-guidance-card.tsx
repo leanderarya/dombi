@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { Clock, MapPin, Phone } from 'lucide-react';
 import StatusBadge from '@/components/ui/status-badge';
 import { useCountdown } from '@/hooks/use-countdown';
-import { waLinkWithMessage } from '@/lib/wa';
+import { whatsAppDefaultMessage, waLinkWithText } from '@/lib/whatsapp-message';
 
 const MAPS_LINK = 'https://www.google.com/maps/dir/?api=1&destination=';
 
@@ -187,21 +187,35 @@ export default function StatusGuidanceCard({
                         ) : guidance.cta.action === 'wa_outlet' &&
                           outletPhone ? (
                             <a
-                                href={waLinkWithMessage(outletPhone, {
-                                    order_code: orderCode ?? '',
-                                    customer_name: customerName,
-                                    outlet_name: outletName,
-                                })}
+                                href={waLinkWithText(
+                                    outletPhone,
+                                    whatsAppDefaultMessage({
+                                        order_code: orderCode ?? '',
+                                        status,
+                                        fulfillment_type: isPickup
+                                            ? 'pickup'
+                                            : 'delivery',
+                                        customer_name: customerName,
+                                        outlet_name: outletName,
+                                    }),
+                                )}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => {
                                     e.preventDefault();
                                     window.open(
-                                        waLinkWithMessage(outletPhone, {
-                                            order_code: orderCode ?? '',
-                                            customer_name: customerName,
-                                            outlet_name: outletName,
-                                        }),
+                                        waLinkWithText(
+                                            outletPhone,
+                                            whatsAppDefaultMessage({
+                                                order_code: orderCode ?? '',
+                                                status,
+                                                fulfillment_type: isPickup
+                                                    ? 'pickup'
+                                                    : 'delivery',
+                                                customer_name: customerName,
+                                                outlet_name: outletName,
+                                            }),
+                                        ),
                                         '_blank',
                                         'noopener,noreferrer',
                                     );
