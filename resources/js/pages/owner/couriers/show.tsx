@@ -28,6 +28,7 @@ import StatusBadge from '@/components/ui/status-badge';
 import { copyToClipboard } from '@/lib/clipboard';
 import { formatDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
+import { buildCourierOutletAssignmentUrl } from './assignment-url';
 
 export default function CourierShow({
     courier,
@@ -98,7 +99,7 @@ export default function CourierShow({
     };
 
     const handleSaveAssignments = () => {
-        assignmentForm.put(`/owner/couriers/${courier.id}/outlets`, {
+        assignmentForm.put(buildCourierOutletAssignmentUrl(courier), {
             preserveScroll: true,
             onSuccess: () => toast.success('Plot outlet diperbarui'),
             onError: (errors) =>

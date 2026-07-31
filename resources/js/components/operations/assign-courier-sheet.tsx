@@ -10,7 +10,6 @@ interface Courier {
     active_deliveries?: number;
     is_online?: boolean;
     invitation_accepted?: boolean;
-    outlet_eligible?: boolean;
     at_capacity?: boolean;
 }
 
@@ -47,10 +46,6 @@ export default function AssignCourierSheet({
 function disabledReason(courier: Courier): string | null {
     if (courier.invitation_accepted === false) {
         return 'Undangan belum diterima';
-    }
-
-    if (courier.outlet_eligible === false) {
-        return 'Bukan kurir outlet ini';
     }
 
     if (courier.is_online === false) {
