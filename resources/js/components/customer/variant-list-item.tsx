@@ -96,18 +96,22 @@ const VariantListItem = memo(function VariantListItem({
             const token = document
                 .querySelector('meta[name="csrf-token"]')
                 ?.getAttribute('content');
-            await mutationFetch('/customer/cart/add', {
+            const res = await mutationFetch('/customer/cart/add', {
                 method: 'POST',
                 headers: {
                     ...(token ? { 'X-CSRF-TOKEN': token } : {}),
                 },
                 body: JSON.stringify({
-                    product_variant_id: variant.id,
+                    product_id: variant.id,
                     quantity: 1,
                 }),
             });
+
+            if (!res.ok) {
+                throw new Error('Failed to add item');
+            }
         } catch {
-            // Frontend cart already updated
+            cart.removeItem(variant.id);
         }
 
         setAdding(false);

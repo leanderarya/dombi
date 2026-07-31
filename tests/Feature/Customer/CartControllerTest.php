@@ -124,4 +124,64 @@ class CartControllerTest extends TestCase
                 ],
             ]);
     }
+
+    public function test_add_to_cart_rejects_legacy_product_variant_id_key(): void
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        Customer::factory()->create(['user_id' => $user->id]);
+        $variant = Product::factory()->create();
+
+        OutletInventory::factory()->create([
+            'outlet_id' => $this->outlet->id,
+            'product_id' => $variant->id,
+            'current_stock' => 10,
+            'reserved_stock' => 0,
+            'minimum_stock' => 2,
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/customer/cart/add', [
+                'product_variant_id' => $variant->id,
+                'quantity' => 1,
+            ])
+            ->assertUnprocessable()
+            ->assertInvalid('product_id');
+    }
+
+    public function test_set_quantity_and_remove_use_product_id(): void
+    {
+        $user = User::factory()->create(['role' => 'customer']);
+        Customer::factory()->create(['user_id' => $user->id]);
+        $variant = Product::factory()->create();
+
+        OutletInventory::factory()->create([
+            'outlet_id' => $this->outlet->id,
+            'product_id' => $variant->id,
+            'current_stock' => 10,
+            'reserved_stock' => 0,
+            'minimum_stock' => 2,
+        ]);
+
+        $this->actingAs($user)
+            ->postJson('/customer/cart/add', [
+                'product_id' => $variant->id,
+                'quantity' => 3,
+            ])
+            ->assertOk();
+
+        $this->actingAs($user)
+            ->postJson('/customer/cart/quantity', [
+                'product_id' => $variant->id,
+                'quantity' => 2,
+            ])
+            ->assertOk()
+            ->assertJson(['cart_count' => 2]);
+
+        $this->actingAs($user)
+            ->postJson('/customer/cart/remove', [
+                'product_id' => $variant->id,
+            ])
+            ->assertOk()
+            ->assertJson(['cart_count' => 0]);
+    }
 }
