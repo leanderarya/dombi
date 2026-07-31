@@ -512,22 +512,19 @@ export default function OutletOrderShow({
                                     key={courier.id}
                                     value={courier.id}
                                     disabled={
-                                        courier.outlet_eligible === false ||
                                         courier.invitation_accepted === false ||
                                         courier.is_online === false ||
                                         courier.at_capacity
                                     }
                                 >
                                     {courier.name}
-                                    {courier.outlet_eligible === false
-                                        ? ' (bukan kurir outlet ini)'
-                                        : courier.invitation_accepted === false
-                                          ? ' (undangan belum diterima)'
-                                          : courier.is_online === false
-                                            ? ' (offline)'
-                                            : courier.at_capacity
-                                              ? ' (kapasitas penuh)'
-                                              : ''}
+                                    {courier.invitation_accepted === false
+                                        ? ' (undangan belum diterima)'
+                                        : courier.is_online === false
+                                          ? ' (offline)'
+                                          : courier.at_capacity
+                                            ? ' (kapasitas penuh)'
+                                            : ''}
                                 </option>
                             ))}
                         </select>

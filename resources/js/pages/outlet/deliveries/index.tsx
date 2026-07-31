@@ -82,7 +82,6 @@ export default function OutletDeliveriesIndex({
                         name: c.name,
                         is_online: c.is_online ?? false,
                         invitation_accepted: c.invitation_accepted ?? false,
-                        outlet_eligible: c.outlet_eligible ?? false,
                         at_capacity: c.at_capacity ?? false,
                     })),
                 );

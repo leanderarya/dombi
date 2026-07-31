@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignCourierRequest;
 use App\Http\Requests\Outlet\RejectOrderRequest;
 use App\Http\Requests\Outlet\UpdateOrderStatusRequest;
-use App\Models\CourierProfile;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\DeliveryService;
@@ -88,10 +87,10 @@ class OrderController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet && $order->outlet_id === $outlet->id, 403);
 
-        $outlet = $request->user()->outlet;
-
-        $couriers = User::where('role', 'courier')
+        $couriers = User::query()
+            ->where('role', 'courier')
             ->where('is_active', true)
+            ->whereHas('courierProfile', fn ($query) => $query->availableForOutlet($outlet->id))
             ->with('courierProfile')
             ->withCount([
                 'courierDeliveries as active_deliveries_count' => fn ($query) => $query->whereIn('status', ['waiting_pickup', 'picked_up', 'delivering']),
@@ -103,8 +102,6 @@ class OrderController extends Controller
                 'name' => $courier->name,
                 'is_online' => $courier->is_online,
                 'invitation_accepted' => $courier->courierProfile?->invitation_status === 'accepted',
-                'outlet_eligible' => $courier->courierProfile !== null
-                    && CourierProfile::availableForOutlet($outlet->id)->where('user_id', $courier->id)->exists(),
                 'at_capacity' => $courier->active_deliveries_count >= config('delivery.capacity.max_active_deliveries', 3),
             ]);
 
