@@ -6,10 +6,12 @@ import DeliveryLoginSheet from '@/components/customer/delivery-login-sheet';
 import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
+import { mutationFetch } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
 
 type DraftItem = {
+    product_id: number;
     product_variant_id: number;
     quantity: number;
     name: string;
@@ -58,31 +60,23 @@ export default function CheckoutIndex({
     );
 
     const updateQuantity = useCallback(
-        (variantId: number, newQty: number) => {
+        async (variantId: number, newQty: number) => {
             if (newQty <= 0) {
                 setItems((prev) =>
-                    prev.filter((i) => i.product_variant_id !== variantId),
+                    prev.filter((i) => i.product_id !== variantId),
                 );
                 cart.removeItem(variantId);
-                fetch('/customer/cart/remove', {
+                mutationFetch('/customer/cart/remove', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN':
-                            document
-                                .querySelector('meta[name="csrf-token"]')
-                                ?.getAttribute('content') ?? '',
-                    },
-                    body: JSON.stringify({ product_variant_id: variantId }),
-                });
+                    body: JSON.stringify({ product_id: variantId }),
+                }).catch(() => {});
 
                 return;
             }
 
             setItems((prev) =>
                 prev.map((i) => {
-                    if (i.product_variant_id === variantId) {
+                    if (i.product_id === variantId) {
                         return {
                             ...i,
                             quantity: newQty,
@@ -94,43 +88,25 @@ export default function CheckoutIndex({
                 }),
             );
             cart.setQuantity(variantId, newQty);
-            fetch('/customer/cart/quantity', {
+            mutationFetch('/customer/cart/quantity', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') ?? '',
-                },
                 body: JSON.stringify({
-                    product_variant_id: variantId,
+                    product_id: variantId,
                     quantity: newQty,
                 }),
-            });
+            }).catch(() => {});
         },
         [cart],
     );
 
     const removeItem = useCallback(
         (variantId: number) => {
-            setItems((prev) =>
-                prev.filter((i) => i.product_variant_id !== variantId),
-            );
+            setItems((prev) => prev.filter((i) => i.product_id !== variantId));
             cart.removeItem(variantId);
-            fetch('/customer/cart/remove', {
+            mutationFetch('/customer/cart/remove', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN':
-                        document
-                            .querySelector('meta[name="csrf-token"]')
-                            ?.getAttribute('content') ?? '',
-                },
-                body: JSON.stringify({ product_variant_id: variantId }),
-            });
+                body: JSON.stringify({ product_id: variantId }),
+            }).catch(() => {});
         },
         [cart],
     );
@@ -141,7 +117,7 @@ export default function CheckoutIndex({
             '/customer/checkout',
             {
                 items: items.map((i) => ({
-                    product_variant_id: i.product_variant_id,
+                    product_id: i.product_id,
                     quantity: i.quantity,
                 })),
                 fulfillment_type: fulfillmentType,
@@ -205,7 +181,7 @@ export default function CheckoutIndex({
                     </h2>
                     {items.map((item) => (
                         <CheckoutItemCard
-                            key={item.product_variant_id}
+                            key={item.product_id}
                             name={
                                 item.variant_name
                                     ? `${item.name} - ${item.variant_name}`
@@ -214,9 +190,9 @@ export default function CheckoutIndex({
                             price={item.price}
                             quantity={item.quantity}
                             onQuantityChange={(qty) =>
-                                updateQuantity(item.product_variant_id, qty)
+                                updateQuantity(item.product_id, qty)
                             }
-                            onRemove={() => removeItem(item.product_variant_id)}
+                            onRemove={() => removeItem(item.product_id)}
                         />
                     ))}
                     <div className="mt-3 flex items-center justify-between border-t border-border pt-3">

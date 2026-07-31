@@ -129,13 +129,13 @@ function useAddToCart() {
                         'X-CSRF-TOKEN': getCsrfToken(),
                     },
                     body: JSON.stringify({
-                        product_variant_id: variant.id,
+                        product_id: variant.id,
                         quantity: qty,
                     }),
                 });
                 await res.json();
             } catch {
-                /* frontend cart already updated */
+                cart.removeItem(variant.id);
             }
 
             setAdding(false);
@@ -698,17 +698,24 @@ function OtherProducts({
 
 function CartButton({ outletId }: { outletId: number | null }) {
     const { totalItems, items } = useCart();
+    const [processing, setProcessing] = useState(false);
 
     const handleCheckout = () => {
+        if (processing) {
+            return;
+        }
+
+        setProcessing(true);
+
         const payload: {
             items: Array<{
-                product_variant_id: number;
+                product_id: number;
                 quantity: number;
             }>;
             selected_outlet_id?: number;
         } = {
             items: items.map((i) => ({
-                product_variant_id: i.product_id,
+                product_id: i.product_id,
                 quantity: i.quantity,
             })),
         };
@@ -717,7 +724,10 @@ function CartButton({ outletId }: { outletId: number | null }) {
             payload.selected_outlet_id = outletId;
         }
 
-        router.post('/customer/checkout', payload);
+        router.post('/customer/checkout', payload, {
+            preserveScroll: true,
+            onFinish: () => setProcessing(false),
+        });
     };
 
     return (
