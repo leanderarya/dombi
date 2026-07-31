@@ -84,7 +84,7 @@ function SizeSelectorSheetContent({
                     ...(token ? { 'X-CSRF-TOKEN': token } : {}),
                 },
                 body: JSON.stringify({
-                    product_variant_id: selectedVariant.id,
+                    product_id: selectedVariant.id,
                     quantity,
                 }),
             });
@@ -94,7 +94,7 @@ function SizeSelectorSheetContent({
                 setMaxQuantity(data.item.max_quantity);
             }
         } catch {
-            // Frontend cart already updated
+            cart.removeItem(selectedVariant.id);
         }
 
         setAdding(false);
