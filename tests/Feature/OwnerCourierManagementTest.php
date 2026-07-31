@@ -63,6 +63,65 @@ class OwnerCourierManagementTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_owner_cannot_open_non_courier_user_through_courier_detail(): void
+    {
+        $outletUser = User::factory()->create(['role' => 'outlet']);
+
+        $response = $this->actingAs($this->owner)->get("/owner/couriers/{$outletUser->id}");
+
+        $response->assertNotFound();
+    }
+
+    public function test_owner_cannot_update_non_courier_user_through_courier_route(): void
+    {
+        $outletUser = User::factory()->create(['role' => 'outlet', 'name' => 'Outlet Lama']);
+
+        $response = $this->actingAs($this->owner)->put("/owner/couriers/{$outletUser->id}", [
+            'name' => 'Outlet Baru',
+        ]);
+
+        $response->assertNotFound();
+        $this->assertDatabaseHas('users', [
+            'id' => $outletUser->id,
+            'name' => 'Outlet Lama',
+        ]);
+    }
+
+    public function test_owner_cannot_delete_non_courier_user_through_courier_route(): void
+    {
+        $outletUser = User::factory()->create(['role' => 'outlet']);
+
+        $response = $this->actingAs($this->owner)->delete("/owner/couriers/{$outletUser->id}");
+
+        $response->assertNotFound();
+        $this->assertDatabaseHas('users', ['id' => $outletUser->id]);
+    }
+
+    public function test_owner_can_open_management_page_without_resource_collision(): void
+    {
+        $response = $this->actingAs($this->owner)->get('/owner/couriers/management');
+
+        $response->assertStatus(200);
+    }
+
+    public function test_management_page_includes_nominee_identity_for_candidates(): void
+    {
+        CourierProfile::create([
+            'courier_source' => 'outlet',
+            'outlet_id' => null,
+            'nominee_name' => 'Bambang Outlet',
+            'nominee_phone' => '081234567890',
+            'invitation_status' => 'pending',
+        ]);
+
+        $this->actingAs($this->owner)
+            ->get('/owner/couriers/management')
+            ->assertInertia(fn ($page) => $page
+                ->component('owner/courier-management/index')
+                ->where('candidates.0.nominee_name', 'Bambang Outlet')
+                ->where('candidates.0.nominee_phone', '081234567890'));
+    }
+
     public function test_courier_can_view_invite_page(): void
     {
         $this->actingAs($this->owner)->post('/owner/couriers', [

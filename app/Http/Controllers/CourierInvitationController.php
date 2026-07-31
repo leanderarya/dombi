@@ -7,6 +7,7 @@ use App\Models\CourierProfile;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -64,20 +65,37 @@ class CourierInvitationController extends Controller
             return back()->withErrors(['token' => 'Kurir tidak ditemukan.']);
         }
 
-        $user->update([
-            'password' => Hash::make($request->input('password')),
-            'must_change_password' => false,
-        ]);
+        $acceptedAt = now();
 
-        $invitation->update([
-            'status' => 'accepted',
-            'accepted_at' => now(),
-        ]);
+        DB::transaction(function () use ($request, $invitation, $user, $acceptedAt): void {
+            $lockedInvitation = CourierInvitation::query()
+                ->whereKey($invitation->id)
+                ->lockForUpdate()
+                ->first();
+            $profile = CourierProfile::query()
+                ->where('user_id', $user->id)
+                ->lockForUpdate()
+                ->first();
 
-        CourierProfile::where('user_id', $user->id)->update([
-            'invitation_status' => 'accepted',
-            'accepted_at' => now(),
-        ]);
+            if (! $lockedInvitation || ! $profile || $profile->invitation_status !== 'pending' || $lockedInvitation->status !== 'pending' || $lockedInvitation->isExpired()) {
+                abort(409, 'Undangan kurir tidak valid.');
+            }
+
+            $profile->update([
+                'invitation_status' => 'accepted',
+                'accepted_at' => $acceptedAt,
+            ]);
+
+            $lockedInvitation->update([
+                'status' => 'accepted',
+                'accepted_at' => $acceptedAt,
+            ]);
+
+            $user->update([
+                'password' => Hash::make($request->input('password')),
+                'must_change_password' => false,
+            ]);
+        });
 
         Auth::login($user);
 

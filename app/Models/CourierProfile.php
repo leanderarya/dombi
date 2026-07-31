@@ -13,6 +13,8 @@ class CourierProfile extends Model
         'courier_source',
         'outlet_id',
         'nominated_by',
+        'nominee_name',
+        'nominee_phone',
         'approved_by',
         'approved_at',
         'invitation_status',

@@ -306,6 +306,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
         Route::resource('delivery-tiers', DeliveryTierController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::patch('delivery-tiers/{tier}/toggle', [DeliveryTierController::class, 'toggle'])->name('delivery-tiers.toggle');
+        Route::get('couriers/management', [CourierManagementController::class, 'index'])->name('couriers.management.index');
         Route::resource('couriers', CourierController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);
         Route::get('reports/export-csv', [ReportController::class, 'exportCsv'])->middleware('throttle:export')->name('reports.export-csv');
         Route::get('reports/orders/export', [ReportController::class, 'exportOrders'])->name('reports.orders.export');
@@ -346,9 +347,9 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::post('exchanges/{exchangeRequest}/mark-preparing', [OwnerExchangeController::class, 'markPreparing'])->name('exchanges.mark-preparing');
         Route::post('exchanges/{exchangeRequest}/mark-shipped', [OwnerExchangeController::class, 'markShipped'])->name('exchanges.mark-shipped');
         Route::post('exchanges/{exchangeRequest}/complete', [OwnerExchangeController::class, 'complete'])->name('exchanges.complete');
-        Route::get('couriers/management', [CourierManagementController::class, 'index'])->name('couriers.management.index');
         Route::post('couriers/{profile}/approve', [CourierManagementController::class, 'approve'])->name('couriers.approve');
         Route::post('couriers/{profile}/reject', [CourierManagementController::class, 'reject'])->name('couriers.reject');
+        Route::post('couriers/{profile}/classify', [CourierManagementController::class, 'classifyLegacyProfile'])->name('couriers.classify');
         Route::put('couriers/{profile}/outlets', [CourierManagementController::class, 'updateAssignments'])->name('couriers.outlets');
     });
 
