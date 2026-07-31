@@ -36,11 +36,18 @@ export default function CourierShow({
     inviteUrl,
     outlets,
     assignedOutlets,
+    legacyClassification,
 }: any) {
     const toggleForm = useForm({ is_active: !courier?.is_active });
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const assignmentForm = useForm({
         outlet_ids: (assignedOutlets ?? []).map((id: number) => String(id)),
+    });
+    const classificationForm = useForm({
+        courier_source: legacyClassification?.source ?? 'pusat',
+        outlet_id: legacyClassification?.outletId
+            ? String(legacyClassification.outletId)
+            : '',
     });
 
     if (!courier) {
@@ -105,6 +112,18 @@ export default function CourierShow({
             onError: (errors) =>
                 toast.error(Object.values(errors).flat().join(', ')),
         });
+    };
+
+    const handleSaveClassification = () => {
+        classificationForm.post(
+            `/owner/couriers/${courier.courier_profile?.id}/classify`,
+            {
+                preserveScroll: true,
+                onSuccess: () => toast.success('Klasifikasi kurir diperbarui'),
+                onError: (errors) =>
+                    toast.error(Object.values(errors).flat().join(', ')),
+            },
+        );
     };
 
     const vehicleIcon = courier.vehicle_type === 'car' ? Car : Bike;
@@ -418,6 +437,112 @@ export default function CourierShow({
                     </div>
 
                     {/* Outlet Assignment */}
+                    {legacyClassification?.isLegacy && (
+                        <div
+                            className="rounded-lg border border-amber-200 bg-amber-50 p-4"
+                            aria-label="Klasifikasi Kurir Legacy"
+                        >
+                            <div className="mb-1 text-xs font-semibold text-amber-900">
+                                Klasifikasi Kurir Legacy
+                            </div>
+                            <p className="text-xs text-amber-800">
+                                Profil lama belum punya sumber kurir.
+                                Klasifikasikan dulu sebelum plotting outlet.
+                            </p>
+                            <div className="mt-3 space-y-3">
+                                <div className="space-y-2 text-sm text-text">
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="courier_source"
+                                            value="pusat"
+                                            checked={
+                                                classificationForm.data
+                                                    .courier_source === 'pusat'
+                                            }
+                                            onChange={(e) =>
+                                                classificationForm.setData(
+                                                    'courier_source',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="h-4 w-4 border-border text-primary"
+                                        />
+                                        Kurir pusat
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            name="courier_source"
+                                            value="outlet"
+                                            checked={
+                                                classificationForm.data
+                                                    .courier_source === 'outlet'
+                                            }
+                                            onChange={(e) =>
+                                                classificationForm.setData(
+                                                    'courier_source',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="h-4 w-4 border-border text-primary"
+                                        />
+                                        Kurir milik outlet
+                                    </label>
+                                </div>
+                                {classificationForm.data.courier_source ===
+                                    'outlet' && (
+                                    <div>
+                                        <label className="mb-1 block text-xs font-medium text-text-muted">
+                                            Outlet pemilik
+                                        </label>
+                                        <select
+                                            value={
+                                                classificationForm.data
+                                                    .outlet_id
+                                            }
+                                            onChange={(e) =>
+                                                classificationForm.setData(
+                                                    'outlet_id',
+                                                    e.target.value,
+                                                )
+                                            }
+                                            className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-text"
+                                        >
+                                            <option value="">
+                                                Pilih outlet
+                                            </option>
+                                            {(outlets ?? []).map((o: any) => (
+                                                <option key={o.id} value={o.id}>
+                                                    {o.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        {classificationForm.errors
+                                            .outlet_id && (
+                                            <p className="mt-1 text-xs text-red-600">
+                                                {
+                                                    classificationForm.errors
+                                                        .outlet_id
+                                                }
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                                <Button
+                                    size="sm"
+                                    className="w-full"
+                                    disabled={classificationForm.processing}
+                                    onClick={handleSaveClassification}
+                                >
+                                    {classificationForm.processing
+                                        ? 'Menyimpan...'
+                                        : 'Simpan Klasifikasi'}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
                     <div
                         className="rounded-lg border border-border p-4"
                         aria-label="Plot Outlet"
@@ -425,6 +550,7 @@ export default function CourierShow({
                         <div className="mb-3 text-xs font-semibold text-text-subtle">
                             Plot Outlet
                         </div>
+
                         <div className="space-y-2">
                             {(outlets ?? []).length === 0 ? (
                                 <div className="text-xs text-text-muted">
@@ -457,7 +583,10 @@ export default function CourierShow({
                         <Button
                             size="sm"
                             className="mt-4 w-full"
-                            disabled={assignmentForm.processing}
+                            disabled={
+                                assignmentForm.processing ||
+                                legacyClassification?.isLegacy
+                            }
                             onClick={handleSaveAssignments}
                         >
                             {assignmentForm.processing

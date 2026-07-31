@@ -9,7 +9,6 @@ interface Courier {
     name: string;
     active_deliveries?: number;
     is_online?: boolean;
-    invitation_accepted?: boolean;
     at_capacity?: boolean;
 }
 
@@ -44,10 +43,6 @@ export default function AssignCourierSheet({
 }
 
 function disabledReason(courier: Courier): string | null {
-    if (courier.invitation_accepted === false) {
-        return 'Undangan belum diterima';
-    }
-
     if (courier.is_online === false) {
         return 'Sedang offline';
     }
