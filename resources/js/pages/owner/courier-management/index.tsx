@@ -1,6 +1,23 @@
 import { router, usePage } from '@inertiajs/react';
+import { MapPin, Truck, Users, Wallet } from 'lucide-react';
 import { useState } from 'react';
-import OwnerLayout from '@/layouts/owner-layout';
+import OwnerDetailRow from '@/components/owner/owner-detail-row';
+import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
+import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
+import OwnerTable from '@/components/owner/owner-table';
+import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import EmptyState from '@/components/ui/empty-state';
+import StatusBadge from '@/components/ui/status-badge';
+import { formatCurrency } from '@/lib/format';
 
 interface CourierPusat {
     id: number;
@@ -35,13 +52,6 @@ interface RejectedCourier {
     id: number;
     outlet_name: string;
 }
-
-const formatRupiah = (value: number): string =>
-    new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        maximumFractionDigits: 0,
-    }).format(value);
 
 type Tab = 'pusat' | 'kandidat' | 'riwayat' | 'pendapatan';
 
@@ -111,309 +121,388 @@ export default function CourierManagement() {
         );
     };
 
-    const kpis: { label: string; value: string }[] = [
+    const kpiItems = [
         {
             label: 'Ongkir Masuk',
-            value: formatRupiah(revenueSummary?.delivery_fee ?? 0),
+            value: formatCurrency(revenueSummary?.delivery_fee ?? 0),
+            icon: <Wallet className="h-5 w-5" />,
+            accentColor: '#2563EB',
         },
         {
             label: 'Cost Eksternal',
-            value: formatRupiah(revenueSummary?.external_cost ?? 0),
+            value: formatCurrency(revenueSummary?.external_cost ?? 0),
+            icon: <Truck className="h-5 w-5" />,
+            accentColor: '#D97706',
         },
         {
             label: 'Net',
-            value: formatRupiah(revenueSummary?.net ?? 0),
+            value: formatCurrency(revenueSummary?.net ?? 0),
+            icon: <Wallet className="h-5 w-5" />,
+            accentColor: '#16A34A',
+            valueClassName:
+                (revenueSummary?.net ?? 0) < 0 ? 'text-red-600' : 'text-text',
         },
         {
             label: 'Jumlah Delivery',
             value: String(revenueSummary?.deliveries ?? 0),
+            icon: <Users className="h-5 w-5" />,
+            accentColor: '#4F46E5',
         },
     ];
 
     return (
-        <OwnerLayout>
-            <div className="p-4">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
+        <OwnerPageShell
+            title="Kurir"
+            subtitle="Kelola kurir, kandidat outlet, dan pendapatan ongkir"
+        >
+            <div className="space-y-6">
+                <OwnerKpiStrip cols={4} items={kpiItems} />
+
+                <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                        Periode
+                    </span>
                     {PERIODS.map((p) => (
-                        <button
+                        <Button
                             key={p.key}
+                            size="sm"
+                            variant={period === p.key ? 'primary' : 'outline'}
                             onClick={() => changePeriod(p.key)}
-                            className={`rounded-full px-3 py-1 text-sm font-medium ${
-                                period === p.key
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-slate-100 text-slate-600'
-                            }`}
                         >
                             {p.label}
-                        </button>
+                        </Button>
                     ))}
                 </div>
 
-                <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {kpis.map((kpi) => (
-                        <div
-                            key={kpi.label}
-                            className="rounded-lg border bg-white p-3"
-                        >
-                            <div className="text-xs text-slate-500">
-                                {kpi.label}
-                            </div>
-                            <div className="mt-1 text-lg font-bold tabular-nums">
-                                {kpi.value}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-                    {tabs.map((t) => (
-                        <button
-                            key={t.key}
-                            onClick={() => setActiveTab(t.key)}
-                            className={`flex-1 rounded-md py-2 text-sm font-medium ${
-                                activeTab === t.key
-                                    ? 'bg-white shadow-sm'
-                                    : 'text-slate-500'
-                            }`}
-                        >
-                            {t.label}
-                        </button>
-                    ))}
-                </div>
+                <OwnerSegmentedTabs
+                    tabs={tabs}
+                    activeTab={activeTab}
+                    onChange={(key) => setActiveTab(key as Tab)}
+                />
 
                 {activeTab === 'pusat' && (
-                    <div className="mt-4 space-y-3">
-                        {pusat.map((c: CourierPusat) => (
-                            <div key={c.id} className="rounded-lg border p-3">
-                                <div className="flex justify-between">
-                                    <div>
-                                        <div className="font-semibold">
-                                            {c.name}
-                                        </div>
-                                        <div className="text-sm text-slate-500">
-                                            {c.total_deliveries} delivery
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => {
-                                            setPlottingId(c.id);
-                                            setSelectedOutlets(
-                                                c.assigned_outlets,
-                                            );
-                                        }}
-                                        className="text-sm font-medium text-emerald-600"
+                    <OwnerTable>
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    <th className="px-4 py-3">Nama</th>
+                                    <th className="px-4 py-3">Delivery</th>
+                                    <th className="px-4 py-3">Outlet</th>
+                                    <th className="px-4 py-3 text-right">
+                                        Aksi
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {pusat.map((c: CourierPusat) => (
+                                    <tr
+                                        key={c.id}
+                                        className="hover:bg-surface-muted/60"
                                     >
-                                        Plot Outlet
-                                    </button>
-                                </div>
-                                <div className="mt-1 text-xs text-slate-400">
-                                    Outlet:{' '}
-                                    {c.assigned_outlet_names.join(', ') ||
-                                        'Belum diplot'}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                                        <td className="px-4 py-3 font-medium text-text">
+                                            {c.name}
+                                        </td>
+                                        <td className="px-4 py-3 text-text-muted tabular-nums">
+                                            {c.total_deliveries} delivery
+                                        </td>
+                                        <td className="px-4 py-3 text-xs text-text-muted">
+                                            {c.assigned_outlet_names.join(
+                                                ', ',
+                                            ) || 'Belum diplot'}
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    setPlottingId(c.id);
+                                                    setSelectedOutlets(
+                                                        c.assigned_outlets,
+                                                    );
+                                                }}
+                                            >
+                                                Plot Outlet
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </OwnerTable>
                 )}
 
                 {activeTab === 'kandidat' && (
-                    <div className="mt-4 space-y-3">
-                        {candidates.map((c: Candidate) => (
-                            <div key={c.id} className="rounded-lg border p-3">
-                                <div className="font-semibold">
-                                    {c.outlet_name}
-                                </div>
-                                <div className="text-sm text-slate-500">
-                                    Dicalonkan oleh: {c.nominated_by_name}
-                                </div>
-                                <div className="mt-2 flex gap-2">
-                                    <button
-                                        onClick={() =>
-                                            router.post(
-                                                `/owner/couriers/${c.id}/approve`,
-                                            )
-                                        }
-                                        className="rounded bg-emerald-600 px-3 py-1 text-sm font-medium text-white"
+                    <OwnerTable>
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    <th className="px-4 py-3">Outlet</th>
+                                    <th className="px-4 py-3">
+                                        Dicalonkan oleh
+                                    </th>
+                                    <th className="px-4 py-3 text-right">
+                                        Aksi
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {candidates.map((c: Candidate) => (
+                                    <tr
+                                        key={c.id}
+                                        className="hover:bg-surface-muted/60"
                                     >
-                                        Setujui
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            router.post(
-                                                `/owner/couriers/${c.id}/reject`,
-                                            )
-                                        }
-                                        className="rounded bg-red-600 px-3 py-1 text-sm font-medium text-white"
-                                    >
-                                        Tolak
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                                        <td className="px-4 py-3 font-medium text-text">
+                                            {c.outlet_name}
+                                        </td>
+                                        <td className="px-4 py-3 text-text-muted">
+                                            {c.nominated_by_name}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex justify-end gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="primary"
+                                                    onClick={() =>
+                                                        router.post(
+                                                            `/owner/couriers/${c.id}/approve`,
+                                                        )
+                                                    }
+                                                >
+                                                    Setujui
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="danger"
+                                                    onClick={() =>
+                                                        router.post(
+                                                            `/owner/couriers/${c.id}/reject`,
+                                                        )
+                                                    }
+                                                >
+                                                    Tolak
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </OwnerTable>
                 )}
 
                 {activeTab === 'riwayat' && (
-                    <div className="mt-4 space-y-3">
-                        {rejected.map((r: RejectedCourier) => (
-                            <div
-                                key={r.id}
-                                className="rounded-lg border p-3 text-sm text-slate-500"
-                            >
-                                {r.outlet_name} — Ditolak
-                            </div>
-                        ))}
-                    </div>
+                    <OwnerTable>
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    <th className="px-4 py-3">Outlet</th>
+                                    <th className="px-4 py-3">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {rejected.map((r: RejectedCourier) => (
+                                    <tr
+                                        key={r.id}
+                                        className="hover:bg-surface-muted/60"
+                                    >
+                                        <td className="px-4 py-3 font-medium text-text">
+                                            {r.outlet_name}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <StatusBadge variant="danger">
+                                                Ditolak
+                                            </StatusBadge>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </OwnerTable>
                 )}
 
                 {activeTab === 'pendapatan' && (
-                    <div className="mt-4 space-y-3">
-                        {revenueOutlets?.map((row: RevenueRow) => (
-                            <button
-                                key={row.outlet.id}
-                                onClick={() => setDetailOutlet(row)}
-                                className="w-full rounded-lg border bg-white p-3 text-left"
-                            >
-                                <div className="flex justify-between">
-                                    <div className="font-semibold">
-                                        {row.outlet.name}
-                                    </div>
-                                    <div className="text-sm font-bold text-primary tabular-nums">
-                                        {formatRupiah(row.net)}
-                                    </div>
-                                </div>
-                                <div className="mt-1 text-xs text-slate-500">
-                                    {row.deliveries} delivery · Ongkir{' '}
-                                    {formatRupiah(row.delivery_fee)} · Cost{' '}
-                                    {formatRupiah(row.external_cost)}
-                                </div>
-                            </button>
-                        ))}
-                    </div>
+                    <OwnerTable>
+                        <table className="w-full">
+                            <thead>
+                                <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    <th className="px-4 py-3">Outlet</th>
+                                    <th className="px-4 py-3 text-right">
+                                        Delivery
+                                    </th>
+                                    <th className="px-4 py-3 text-right">
+                                        Ongkir
+                                    </th>
+                                    <th className="px-4 py-3 text-right">
+                                        Cost Eksternal
+                                    </th>
+                                    <th className="px-4 py-3 text-right">
+                                        Net
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-border">
+                                {revenueOutlets?.map((row: RevenueRow) => (
+                                    <tr
+                                        key={row.outlet.id}
+                                        onClick={() => setDetailOutlet(row)}
+                                        className="cursor-pointer hover:bg-surface-muted/60"
+                                    >
+                                        <td className="px-4 py-3 font-medium text-text">
+                                            {row.outlet.name}
+                                        </td>
+                                        <td className="px-4 py-3 text-right text-text-muted tabular-nums">
+                                            {row.deliveries}
+                                        </td>
+                                        <td className="px-4 py-3 text-right tabular-nums">
+                                            {formatCurrency(row.delivery_fee)}
+                                        </td>
+                                        <td className="px-4 py-3 text-right tabular-nums">
+                                            {formatCurrency(row.external_cost)}
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-semibold text-primary tabular-nums">
+                                            {formatCurrency(row.net)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </OwnerTable>
+                )}
+
+                {activeTab === 'pendapatan' && revenueOutlets?.length === 0 && (
+                    <EmptyState
+                        icon={<MapPin className="h-8 w-8" />}
+                        title="Belum ada data pendapatan"
+                        description="Tidak ada delivery selesai pada periode ini"
+                    />
                 )}
 
                 {/* Plot Modal */}
-                {plottingId && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-                        onClick={() => setPlottingId(null)}
-                    >
-                        <div
-                            className="w-full max-w-md rounded-xl bg-white p-4"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h3 className="font-bold">Plot Kurir ke Outlet</h3>
-                            <div className="mt-3 space-y-2">
-                                {outlets.map((o: Outlet) => (
-                                    <label
-                                        key={o.id}
-                                        className="flex items-center gap-2 text-sm"
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            checked={selectedOutlets.includes(
-                                                o.id,
-                                            )}
-                                            onChange={() => {
-                                                setSelectedOutlets((prev) =>
-                                                    prev.includes(o.id)
-                                                        ? prev.filter(
-                                                              (id) =>
-                                                                  id !== o.id,
-                                                          )
-                                                        : [...prev, o.id],
-                                                );
-                                            }}
-                                        />
-                                        {o.name}
-                                    </label>
-                                ))}
-                            </div>
-                            <div className="mt-4 flex gap-2">
-                                <button
-                                    onClick={() => setPlottingId(null)}
-                                    className="flex-1 rounded-lg border py-2 text-sm font-medium"
+                <Dialog
+                    open={plottingId !== null}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setPlottingId(null);
+                        }
+                    }}
+                >
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Plot Kurir ke Outlet</DialogTitle>
+                            <DialogDescription>
+                                Pilih outlet yang boleh memakai kurir pusat ini.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-2">
+                            {outlets.map((o: Outlet) => (
+                                <label
+                                    key={o.id}
+                                    className="flex cursor-pointer items-center gap-2 text-sm"
                                 >
-                                    Batal
-                                </button>
-                                <button
-                                    onClick={() => {
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedOutlets.includes(o.id)}
+                                        onChange={() => {
+                                            setSelectedOutlets((prev) =>
+                                                prev.includes(o.id)
+                                                    ? prev.filter(
+                                                          (id) => id !== o.id,
+                                                      )
+                                                    : [...prev, o.id],
+                                            );
+                                        }}
+                                    />
+                                    {o.name}
+                                </label>
+                            ))}
+                        </div>
+                        <DialogFooter className="mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setPlottingId(null)}
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                variant="primary"
+                                onClick={() => {
+                                    if (plottingId !== null) {
                                         router.put(
                                             `/owner/couriers/${plottingId}/outlets`,
                                             { outlet_ids: selectedOutlets },
                                         );
-                                        setPlottingId(null);
-                                    }}
-                                    className="flex-1 rounded-lg bg-emerald-600 py-2 text-sm font-medium text-white"
-                                >
-                                    Simpan
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                                    }
+
+                                    setPlottingId(null);
+                                }}
+                            >
+                                Simpan
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Outlet Revenue Detail Modal */}
-                {detailOutlet && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-                        onClick={() => setDetailOutlet(null)}
-                    >
-                        <div
-                            className="w-full max-w-md rounded-xl bg-white p-4"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <h3 className="font-bold">
-                                {detailOutlet.outlet.name}
-                            </h3>
-                            <div className="mt-3 space-y-2 text-sm">
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">
-                                        Jumlah Delivery
-                                    </span>
-                                    <span className="font-semibold tabular-nums">
-                                        {detailOutlet.deliveries}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">
-                                        Ongkir
-                                    </span>
-                                    <span className="font-semibold tabular-nums">
-                                        {formatRupiah(
-                                            detailOutlet.delivery_fee,
-                                        )}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">
-                                        Cost Eksternal
-                                    </span>
-                                    <span className="font-semibold tabular-nums">
-                                        {formatRupiah(
-                                            detailOutlet.external_cost,
-                                        )}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between border-t pt-2">
-                                    <span className="font-medium">Net</span>
-                                    <span className="font-bold text-primary tabular-nums">
-                                        {formatRupiah(detailOutlet.net)}
-                                    </span>
-                                </div>
+                <Dialog
+                    open={detailOutlet !== null}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setDetailOutlet(null);
+                        }
+                    }}
+                >
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>
+                                {detailOutlet?.outlet.name}
+                            </DialogTitle>
+                            <DialogDescription>
+                                Ringkasan pendapatan ongkir periode{' '}
+                                {PERIODS.find(
+                                    (p) => p.key === period,
+                                )?.label.toLowerCase()}
+                            </DialogDescription>
+                        </DialogHeader>
+                        {detailOutlet && (
+                            <div>
+                                <OwnerDetailRow
+                                    label="Jumlah Delivery"
+                                    value={detailOutlet.deliveries}
+                                    bold
+                                />
+                                <OwnerDetailRow
+                                    label="Ongkir"
+                                    value={formatCurrency(
+                                        detailOutlet.delivery_fee,
+                                    )}
+                                    bold
+                                />
+                                <OwnerDetailRow
+                                    label="Cost Eksternal"
+                                    value={formatCurrency(
+                                        detailOutlet.external_cost,
+                                    )}
+                                    bold
+                                />
+                                <OwnerDetailRow
+                                    label="Net"
+                                    value={formatCurrency(detailOutlet.net)}
+                                    bold
+                                    danger={detailOutlet.net < 0}
+                                />
                             </div>
-                            <div className="mt-4">
-                                <button
-                                    onClick={() => setDetailOutlet(null)}
-                                    className="w-full rounded-lg border py-2 text-sm font-medium"
-                                >
-                                    Tutup
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                        )}
+                        <DialogFooter className="mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDetailOutlet(null)}
+                            >
+                                Tutup
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
-        </OwnerLayout>
+        </OwnerPageShell>
     );
 }
