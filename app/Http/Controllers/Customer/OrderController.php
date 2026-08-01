@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Customer\CancelOrderRequest;
 use App\Http\Requests\Customer\StoreOrderRequest;
 use App\Http\Requests\Customer\UpdateRefundDestinationRequest;
+use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\OrderReport;
 use App\Models\PaymentTransaction;
@@ -113,6 +114,7 @@ class OrderController extends Controller
             ->exists();
 
         $order->load(['outlet', 'items.product.category', 'statusHistories.actor', 'delivery.courier', 'refundStatusHistories']);
+        $order->setRelation('delivery', $this->publicDeliveryShape($order->delivery));
 
         $refund = $payloads->forCustomer($order);
 
@@ -140,8 +142,11 @@ class OrderController extends Controller
             abort(403, 'Token tidak valid.');
         }
 
+        $order->load(['outlet', 'items.product', 'items.product.category', 'statusHistories.actor', 'delivery.courier']);
+        $order->setRelation('delivery', $this->publicDeliveryShape($order->delivery));
+
         return Inertia::render('customer/orders/show', [
-            'order' => $order->load(['outlet', 'items.product', 'items.product.category', 'statusHistories.actor', 'delivery.courier']),
+            'order' => $order,
             'cancellationReasons' => OrderStatusService::cancellationReasons(),
             'isConfirmation' => true,
         ]);
@@ -464,5 +469,30 @@ class OrderController extends Controller
         } else {
             abort(403, 'Unauthorized');
         }
+    }
+
+    /**
+     * Shape the delivery payload for customers: identity only, never contact
+     * info (phone) or location data.
+     */
+    private function publicDeliveryShape(?Delivery $delivery): ?Delivery
+    {
+        if (! $delivery) {
+            return null;
+        }
+
+        $delivery->setRelation('courier', $delivery->courier
+            ? $delivery->courier->setVisible(['name', 'vehicle_plate'])
+            : null);
+
+        $delivery->setVisible([
+            'courier',
+            'external_courier_name',
+            'external_plate_number',
+            'failed_reason',
+            'status',
+        ]);
+
+        return $delivery;
     }
 }
