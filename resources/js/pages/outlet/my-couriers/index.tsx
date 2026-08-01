@@ -1,5 +1,13 @@
 import { router } from '@inertiajs/react';
+import { Plus, UserRound } from 'lucide-react';
 import { useState } from 'react';
+import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import BottomSheet from '@/components/ui/bottom-sheet';
+import { Button } from '@/components/ui/button';
+import EmptyState from '@/components/ui/empty-state';
+import FilterChips from '@/components/ui/filter-chips';
+import SectionCard from '@/components/ui/section-card';
+import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
 
 interface ActiveCourier {
@@ -24,6 +32,12 @@ interface MyCouriersProps {
     rejected: Nominee[];
 }
 
+const TABS: { key: Tab; label: string }[] = [
+    { key: 'aktif', label: 'Aktif' },
+    { key: 'menunggu', label: 'Menunggu' },
+    { key: 'ditolak', label: 'Ditolak' },
+];
+
 export default function MyCouriers({
     active,
     pending,
@@ -34,153 +48,201 @@ export default function MyCouriers({
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
 
-    const tabs: { key: Tab; label: string; count: number }[] = [
-        { key: 'aktif', label: 'Aktif', count: active.length },
-        { key: 'menunggu', label: 'Menunggu', count: pending.length },
-        { key: 'ditolak', label: 'Ditolak', count: rejected.length },
-    ];
+    const countFor = (key: Tab): number =>
+        key === 'aktif'
+            ? active.length
+            : key === 'menunggu'
+              ? pending.length
+              : rejected.length;
 
     const handleNominate = () => {
         router.post('/outlet/my-couriers/nominate', { name, phone });
     };
 
     return (
-        <OutletLayout title="Kurir Saya">
-            <div className="p-4">
-                <div className="mb-4 flex items-center justify-between">
-                    <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
-                        {tabs.map((t) => (
-                            <button
-                                key={t.key}
-                                onClick={() => setTab(t.key)}
-                                className={`rounded-md px-3 py-1.5 text-sm font-medium ${
-                                    tab === t.key
-                                        ? 'bg-white shadow-sm'
-                                        : 'text-slate-500'
-                                }`}
-                            >
-                                {t.label} ({t.count})
-                            </button>
-                        ))}
-                    </div>
-                    <button
-                        onClick={() => setShowNominate(true)}
-                        className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white"
-                    >
-                        + Calonkan Kurir
-                    </button>
-                </div>
+        <OutletLayout
+            title="Kurir Saya"
+            subtitle="Kelola kurir outlet dan kandidat"
+            headerRight={
+                <Button
+                    size="md"
+                    variant="primary"
+                    onClick={() => setShowNominate(true)}
+                >
+                    <Plus className="h-4 w-4" />
+                    Calonkan
+                </Button>
+            }
+        >
+            <OutletPageShell>
+                <FilterChips
+                    options={TABS.map((t) => ({
+                        key: t.key,
+                        label: `${t.label} (${countFor(t.key)})`,
+                    }))}
+                    active={tab}
+                    onChange={(key) => setTab(key as Tab)}
+                />
 
                 {tab === 'aktif' && (
-                    <div className="space-y-3">
-                        {active.map((c) => (
-                            <div key={c.id} className="rounded-lg border p-3">
-                                <div className="font-semibold">{c.name}</div>
-                                <div className="text-sm text-slate-500">
-                                    {c.source === 'pusat'
-                                        ? 'Kurir Pusat'
-                                        : 'Kurir Outlet'}{' '}
-                                    · {c.total_deliveries} delivery
-                                </div>
-                            </div>
-                        ))}
-                        {active.length === 0 && (
-                            <div className="rounded-lg border p-3 text-sm text-slate-400">
-                                Tidak ada kurir aktif.
+                    <SectionCard label="Kurir Aktif">
+                        {active.length === 0 ? (
+                            <EmptyState
+                                icon={<UserRound className="h-8 w-8" />}
+                                title="Tidak ada kurir aktif"
+                                description="Calonkan kurir baru atau hubungi Owner untuk plotting kurir pusat."
+                            />
+                        ) : (
+                            <div className="space-y-3">
+                                {active.map((c) => (
+                                    <div
+                                        key={c.id}
+                                        className="flex items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0"
+                                    >
+                                        <div>
+                                            <div className="font-semibold text-text">
+                                                {c.name}
+                                            </div>
+                                            <div className="mt-0.5 text-sm text-text-muted">
+                                                {c.total_deliveries} delivery
+                                            </div>
+                                        </div>
+                                        <StatusBadge
+                                            variant={
+                                                c.source === 'pusat'
+                                                    ? 'info'
+                                                    : 'success'
+                                            }
+                                        >
+                                            {c.source === 'pusat'
+                                                ? 'Kurir Pusat'
+                                                : 'Kurir Outlet'}
+                                        </StatusBadge>
+                                    </div>
+                                ))}
                             </div>
                         )}
-                    </div>
+                    </SectionCard>
                 )}
 
                 {tab === 'menunggu' && (
-                    <div className="space-y-3">
-                        {pending.map((c) => (
-                            <div key={c.id} className="rounded-lg border p-3">
-                                <div className="font-semibold">
-                                    {c.nominee_name}
-                                </div>
-                                <div className="text-sm text-slate-500">
-                                    {c.nominee_phone} · Menunggu persetujuan
-                                    Owner
-                                </div>
-                            </div>
-                        ))}
-                        {pending.length === 0 && (
-                            <div className="rounded-lg border p-3 text-sm text-slate-400">
-                                Tidak ada kandidat menunggu.
+                    <SectionCard label="Menunggu Persetujuan">
+                        {pending.length === 0 ? (
+                            <EmptyState
+                                icon={<UserRound className="h-8 w-8" />}
+                                title="Tidak ada kandidat menunggu"
+                                description="Kandidat yang diajukan akan muncul di sini sampai disetujui Owner."
+                            />
+                        ) : (
+                            <div className="space-y-3">
+                                {pending.map((c) => (
+                                    <div
+                                        key={c.id}
+                                        className="flex items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0"
+                                    >
+                                        <div>
+                                            <div className="font-semibold text-text">
+                                                {c.nominee_name}
+                                            </div>
+                                            <div className="mt-0.5 text-sm text-text-muted">
+                                                {c.nominee_phone}
+                                            </div>
+                                        </div>
+                                        <StatusBadge variant="warning">
+                                            Menunggu
+                                        </StatusBadge>
+                                    </div>
+                                ))}
                             </div>
                         )}
-                    </div>
+                    </SectionCard>
                 )}
 
                 {tab === 'ditolak' && (
-                    <div className="space-y-3">
-                        {rejected.map((c) => (
-                            <div key={c.id} className="rounded-lg border p-3">
-                                <div className="font-semibold">
-                                    {c.nominee_name}
-                                </div>
-                                <div className="text-sm text-slate-500">
-                                    {c.nominee_phone} · Ditolak
-                                </div>
-                            </div>
-                        ))}
-                        {rejected.length === 0 && (
-                            <div className="rounded-lg border p-3 text-sm text-slate-400">
-                                Tidak ada kandidat ditolak.
+                    <SectionCard label="Ditolak">
+                        {rejected.length === 0 ? (
+                            <EmptyState
+                                icon={<UserRound className="h-8 w-8" />}
+                                title="Tidak ada kandidat ditolak"
+                            />
+                        ) : (
+                            <div className="space-y-3">
+                                {rejected.map((c) => (
+                                    <div
+                                        key={c.id}
+                                        className="flex items-center justify-between border-b border-border pb-3 last:border-b-0 last:pb-0"
+                                    >
+                                        <div>
+                                            <div className="font-semibold text-text">
+                                                {c.nominee_name}
+                                            </div>
+                                            <div className="mt-0.5 text-sm text-text-muted">
+                                                {c.nominee_phone}
+                                            </div>
+                                        </div>
+                                        <StatusBadge variant="danger">
+                                            Ditolak
+                                        </StatusBadge>
+                                    </div>
+                                ))}
                             </div>
                         )}
-                    </div>
+                    </SectionCard>
                 )}
+            </OutletPageShell>
 
-                {showNominate && (
-                    <div
-                        className="fixed inset-0 z-50 flex items-end bg-black/40"
-                        onClick={() => setShowNominate(false)}
-                    >
-                        <div
-                            className="w-full max-w-lg rounded-t-2xl bg-white p-4"
-                            onClick={(e) => e.stopPropagation()}
+            <BottomSheet
+                open={showNominate}
+                onClose={() => setShowNominate(false)}
+                title="Calonkan Kurir Baru"
+            >
+                <div className="space-y-4">
+                    <p className="text-xs text-text-muted">
+                        Owner akan menyetujui sebelum kurir aktif.
+                    </p>
+                    <label className="block space-y-1">
+                        <span className="text-sm font-medium text-text">
+                            Nama
+                        </span>
+                        <input
+                            type="text"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Nama kurir"
+                            className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                        />
+                    </label>
+                    <label className="block space-y-1">
+                        <span className="text-sm font-medium text-text">
+                            No. HP
+                        </span>
+                        <input
+                            type="tel"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="08xxxxxxxxxx"
+                            className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                        />
+                    </label>
+                    <div className="flex gap-2 pt-2">
+                        <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => setShowNominate(false)}
                         >
-                            <h3 className="font-bold">Calonkan Kurir Baru</h3>
-                            <p className="mt-1 text-xs text-slate-500">
-                                Owner akan menyetujui sebelum kurir aktif.
-                            </p>
-                            <div className="mt-3 space-y-3">
-                                <input
-                                    type="text"
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Nama"
-                                    className="w-full rounded-lg border p-3 text-sm"
-                                />
-                                <input
-                                    type="text"
-                                    value={phone}
-                                    onChange={(e) => setPhone(e.target.value)}
-                                    placeholder="No. HP"
-                                    className="w-full rounded-lg border p-3 text-sm"
-                                />
-                            </div>
-                            <div className="mt-4 flex gap-2">
-                                <button
-                                    onClick={() => setShowNominate(false)}
-                                    className="flex-1 rounded-lg border py-3 text-sm font-medium"
-                                >
-                                    Batal
-                                </button>
-                                <button
-                                    onClick={handleNominate}
-                                    disabled={!name}
-                                    className="flex-1 rounded-lg bg-emerald-600 py-3 text-sm font-medium text-white disabled:bg-slate-300"
-                                >
-                                    Ajukan
-                                </button>
-                            </div>
-                        </div>
+                            Batal
+                        </Button>
+                        <Button
+                            variant="primary"
+                            className="flex-1"
+                            disabled={!name}
+                            onClick={handleNominate}
+                        >
+                            Ajukan
+                        </Button>
                     </div>
-                )}
-            </div>
+                </div>
+            </BottomSheet>
         </OutletLayout>
     );
 }
