@@ -14,6 +14,7 @@ import {
     Receipt,
     DollarSign,
     LogOut,
+    UserRound,
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import SideSheet from '@/components/ui/side-sheet';
@@ -125,6 +126,11 @@ const navGroups: NavGroup[] = [
                 label: 'Riwayat Pembayaran',
                 icon: <Receipt className="h-5 w-5" />,
                 badgeKey: 'payments',
+            },
+            {
+                href: '/outlet/my-couriers',
+                label: 'Kurir Saya',
+                icon: <UserRound className="h-5 w-5" />,
             },
         ],
     },
