@@ -86,9 +86,10 @@ class CourierRevenueService
     private function window(string $period): array
     {
         return match ($period) {
+            'harian' => [today(), today()->addDay()],
             'mingguan' => [now()->startOfWeek(), now()->startOfWeek()->addWeek()],
             'bulanan' => [now()->startOfMonth(), now()->startOfMonth()->addMonth()],
-            default => [today(), today()->addDay()],
+            default => throw new \InvalidArgumentException("Periode tidak dikenal: {$period}"),
         };
     }
 }
