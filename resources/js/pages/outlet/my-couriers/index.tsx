@@ -74,6 +74,11 @@ export default function MyCouriers({ active, pending, rejected }: any) {
                                 </div>
                             </div>
                         ))}
+                        {active.length === 0 && (
+                            <div className="rounded-lg border p-3 text-sm text-slate-400">
+                                Tidak ada kurir aktif.
+                            </div>
+                        )}
                     </div>
                 )}
 
