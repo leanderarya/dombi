@@ -46,7 +46,6 @@ export default function OutletOrderShow({
         'cancelled_by_customer',
         'cancelled_by_outlet',
         'rejected_by_outlet',
-        'failed_delivery',
         'expired',
     ].includes(order.status);
     usePolling(15000, [], !isTerminal);
