@@ -36,7 +36,18 @@ const navGroups: NavGroup[] = [
             { href: '/owner/outlets', label: 'Outlet' },
             { href: '/owner/orders', label: 'Pesanan' },
             { href: '/owner/deliveries', label: 'Pengiriman' },
-            { href: '/owner/couriers', label: 'Kurir' },
+            {
+                href: '/owner/couriers/management',
+                label: 'Kurir',
+                isActive: (url: string) => {
+                    const path = url.split('?')[0];
+
+                    return (
+                        path === '/owner/couriers/management' ||
+                        path === '/owner/couriers'
+                    );
+                },
+            },
             {
                 href: '/owner/returns',
                 label: 'Return & Tukar',
