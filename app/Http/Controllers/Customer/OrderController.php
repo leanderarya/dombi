@@ -114,7 +114,7 @@ class OrderController extends Controller
             ->exists();
 
         $order->load(['outlet', 'items.product.category', 'statusHistories.actor', 'delivery.courier', 'refundStatusHistories']);
-        $order->setRelation('delivery', $this->publicDeliveryShape($order->delivery));
+        $order->setRelation('delivery', $this->customerDeliveryPayload($order->delivery));
 
         $refund = $payloads->forCustomer($order);
 
@@ -143,7 +143,7 @@ class OrderController extends Controller
         }
 
         $order->load(['outlet', 'items.product', 'items.product.category', 'statusHistories.actor', 'delivery.courier']);
-        $order->setRelation('delivery', $this->publicDeliveryShape($order->delivery));
+        $order->setRelation('delivery', $this->customerDeliveryPayload($order->delivery));
 
         return Inertia::render('customer/orders/show', [
             'order' => $order,
@@ -473,19 +473,22 @@ class OrderController extends Controller
 
     /**
      * Shape the delivery payload for customers: identity only, never contact
-     * info (phone) or location data.
+     * info (phone) or location data. Operates on clones so the loaded
+     * Delivery/User models are never mutated.
      */
-    private function publicDeliveryShape(?Delivery $delivery): ?Delivery
+    private function customerDeliveryPayload(?Delivery $delivery): ?Delivery
     {
         if (! $delivery) {
             return null;
         }
 
-        $delivery->setRelation('courier', $delivery->courier
-            ? $delivery->courier->setVisible(['name', 'vehicle_plate'])
-            : null);
+        $redacted = $delivery->replicate();
+        $courier = $delivery->courier;
 
-        $delivery->setVisible([
+        $redacted->setRelation('courier', $courier
+            ? $courier->replicate()->setVisible(['name', 'vehicle_plate'])
+            : null);
+        $redacted->setVisible([
             'courier',
             'external_courier_name',
             'external_plate_number',
@@ -493,6 +496,6 @@ class OrderController extends Controller
             'status',
         ]);
 
-        return $delivery;
+        return $redacted;
     }
 }
