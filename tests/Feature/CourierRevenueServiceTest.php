@@ -125,4 +125,11 @@ class CourierRevenueServiceTest extends TestCase
         $this->assertEquals(4000, $detail['external_cost']);
         $this->assertEquals(6000, $detail['net']);
     }
+
+    public function test_invalid_period_rejected(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        app(CourierRevenueService::class)->revenue('decade');
+    }
 }
