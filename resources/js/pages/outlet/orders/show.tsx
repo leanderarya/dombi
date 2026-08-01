@@ -10,6 +10,8 @@ import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 import { isDifferentRecipient } from '@/lib/recipient';
 import { getOrderStatus } from '@/lib/status-labels';
+import { usePolling } from '@/lib/use-polling';
+import { waLink } from '@/lib/wa';
 
 const STATUS_CONFIRM_LABELS: Record<
     string,
@@ -39,6 +41,23 @@ export default function OutletOrderShow({
     cancellationReasons = [],
 }: any) {
     const { errors } = usePage<any>().props;
+    const isTerminal = [
+        'completed',
+        'cancelled_by_customer',
+        'cancelled_by_outlet',
+        'rejected_by_outlet',
+        'failed_delivery',
+        'expired',
+    ].includes(order.status);
+    usePolling(15000, [], !isTerminal);
+    const deliveryCourierName =
+        order.delivery?.courier?.name ?? order.delivery?.external_courier_name;
+    const deliveryCourierPhone =
+        order.delivery?.courier?.phone ??
+        order.delivery?.external_courier_phone;
+    const deliveryCourierPlate =
+        order.delivery?.courier?.vehicle_plate ??
+        order.delivery?.external_plate_number;
     const firstAssignableCourier = couriers.find(
         (courier: any) => courier.is_online !== false && !courier.at_capacity,
     );
@@ -209,7 +228,7 @@ export default function OutletOrderShow({
                     {isDifferentRecipient(order) && (
                         <div className="mb-3 inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-700 ring-1 ring-red-200">
                             <AlertTriangle className="h-3 w-3" />
-                            BEDA PENERIMA
+                            Dikirim ke orang lain
                         </div>
                     )}
 
@@ -218,15 +237,25 @@ export default function OutletOrderShow({
                             {order.customer_name}
                         </div>
                         {order.customer_phone && (
-                            <a
-                                href={`tel:${order.customer_phone}`}
-                                className="inline-flex items-center gap-1.5 text-text-muted active:text-primary"
-                            >
-                                <span>{order.customer_phone}</span>
-                                <span className="text-[10px] font-bold text-primary">
-                                    📞 Hubungi
-                                </span>
-                            </a>
+                            <div className="flex flex-wrap items-center gap-2">
+                                <a
+                                    href={`tel:${order.customer_phone}`}
+                                    className="inline-flex items-center gap-1.5 text-text-muted active:text-primary"
+                                >
+                                    <span>{order.customer_phone}</span>
+                                    <span className="text-[10px] font-bold text-primary">
+                                        📞 Hubungi
+                                    </span>
+                                </a>
+                                <a
+                                    href={waLink(order.customer_phone)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="rounded-md bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-primary"
+                                >
+                                    WA
+                                </a>
+                            </div>
                         )}
                         {!order.customer_phone && (
                             <div className="text-text-muted">-</div>
@@ -255,9 +284,26 @@ export default function OutletOrderShow({
                                 <div className="font-semibold text-text">
                                     {order.recipient_name}
                                 </div>
-                                <div className="text-text-muted">
-                                    {order.recipient_phone ?? '-'}
-                                </div>
+                                {order.recipient_phone ? (
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <a
+                                            href={`tel:${order.recipient_phone}`}
+                                            className="text-text-muted active:text-primary"
+                                        >
+                                            {order.recipient_phone}
+                                        </a>
+                                        <a
+                                            href={waLink(order.recipient_phone)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="rounded-md bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-primary"
+                                        >
+                                            WA
+                                        </a>
+                                    </div>
+                                ) : (
+                                    <div className="text-text-muted">-</div>
+                                )}
                             </div>
                         </div>
                     )}
@@ -283,9 +329,35 @@ export default function OutletOrderShow({
                             <div className="text-sm text-text-muted">
                                 Kurir:{' '}
                                 <span className="font-medium text-text">
-                                    {order.delivery.courier?.name ?? '-'}
+                                    {deliveryCourierName ?? '-'}
                                 </span>
                             </div>
+                            {deliveryCourierPhone && (
+                                <div className="flex flex-wrap items-center gap-2 text-sm text-text-muted">
+                                    <a
+                                        href={`tel:${deliveryCourierPhone}`}
+                                        className="font-medium text-primary"
+                                    >
+                                        {deliveryCourierPhone}
+                                    </a>
+                                    <a
+                                        href={waLink(deliveryCourierPhone)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="rounded-md bg-surface-muted px-2 py-0.5 text-[10px] font-bold text-primary"
+                                    >
+                                        WA
+                                    </a>
+                                </div>
+                            )}
+                            {deliveryCourierPlate && (
+                                <div className="text-sm text-text-muted">
+                                    Plat:{' '}
+                                    <span className="font-medium text-text">
+                                        {deliveryCourierPlate}
+                                    </span>
+                                </div>
+                            )}
                             {order.delivery.pickup_time && (
                                 <div className="text-sm text-text-muted">
                                     Pickup:{' '}
@@ -301,6 +373,14 @@ export default function OutletOrderShow({
                                         order.delivery.delivered_time,
                                     ).toLocaleString('id-ID')}
                                 </div>
+                            )}
+                            {order.delivery.id && (
+                                <a
+                                    href={`/outlet/deliveries/${order.delivery.id}`}
+                                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary active:opacity-80"
+                                >
+                                    Lihat Detail Pengiriman
+                                </a>
                             )}
                         </div>
                     ) : isReadyForCustomerPickup ? (
