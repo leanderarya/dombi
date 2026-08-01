@@ -63,17 +63,24 @@ class CourierManagementRevenueTest extends TestCase
         $response->assertSessionHasErrors('period');
     }
 
-    public function test_index_accepts_each_period(): void
+    public function test_index_filters_by_period(): void
     {
-        $order = $this->completedOrder(10000);
-        Delivery::create(['order_id' => $order->id, 'courier_type' => 'dombi', 'courier_cost' => null, 'status' => 'completed']);
+        Delivery::create(['order_id' => $this->completedOrder(10000)->id, 'courier_type' => 'dombi', 'courier_cost' => null, 'status' => 'completed']);
+        Delivery::create(['order_id' => $this->completedOrder(4000, ['created_at' => now()->subDays(3)])->id, 'courier_type' => 'dombi', 'courier_cost' => null, 'status' => 'completed']);
+        Delivery::create(['order_id' => $this->completedOrder(2000, ['created_at' => now()->subDays(45)])->id, 'courier_type' => 'dombi', 'courier_cost' => null, 'status' => 'completed']);
 
-        foreach (['harian', 'mingguan', 'bulanan'] as $period) {
+        $periods = [
+            'harian' => [1, 10000],
+            'mingguan' => [2, 14000],
+            'bulanan' => [1, 10000],
+        ];
+
+        foreach ($periods as $period => [$count, $fee]) {
             $this->actingAs($this->owner)
                 ->get("/owner/couriers/management?period={$period}")
                 ->assertInertia(fn ($page) => $page
-                    ->where('revenueSummary.deliveries', 1)
-                    ->where('revenueSummary.delivery_fee', 10000)
+                    ->where('revenueSummary.deliveries', $count)
+                    ->where('revenueSummary.delivery_fee', $fee)
                 );
         }
     }
