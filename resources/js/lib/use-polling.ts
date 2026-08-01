@@ -11,6 +11,7 @@ export function usePolling(
 
     const handleOnline = useCallback(() => {
         isOnline.current = true;
+
         // Reload immediately when coming back online
         if (enabled) {
             router.reload({ only: only.length > 0 ? only : undefined });
