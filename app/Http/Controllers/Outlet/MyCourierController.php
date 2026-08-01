@@ -15,7 +15,7 @@ class MyCourierController extends Controller
     {
         $outlet = request()->user()->outlet;
 
-        $couriers = CourierProfile::with('user')
+        $active = CourierProfile::with('user')
             ->availableForOutlet($outlet->id)
             ->get()
             ->map(fn ($p) => [
@@ -28,11 +28,29 @@ class MyCourierController extends Controller
         $pending = CourierProfile::where('outlet_id', $outlet->id)
             ->where('courier_source', 'outlet')
             ->where('invitation_status', 'pending')
-            ->count();
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'nominee_name' => $p->nominee_name,
+                'nominee_phone' => $p->nominee_phone,
+                'created_at' => $p->created_at->toISOString(),
+            ]);
+
+        $rejected = CourierProfile::where('outlet_id', $outlet->id)
+            ->where('courier_source', 'outlet')
+            ->where('invitation_status', 'rejected')
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'nominee_name' => $p->nominee_name,
+                'nominee_phone' => $p->nominee_phone,
+                'created_at' => $p->created_at->toISOString(),
+            ]);
 
         return Inertia::render('outlet/my-couriers/index', [
-            'couriers' => $couriers,
-            'pending_count' => $pending,
+            'active' => $active,
+            'pending' => $pending,
+            'rejected' => $rejected,
         ]);
     }
 
