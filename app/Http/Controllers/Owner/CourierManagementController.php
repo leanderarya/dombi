@@ -8,6 +8,7 @@ use App\Models\CourierProfile;
 use App\Models\Outlet;
 use App\Models\User;
 use App\Services\CourierInvitationService;
+use App\Services\CourierRevenueService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -17,8 +18,13 @@ use Inertia\Response;
 
 class CourierManagementController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request, CourierRevenueService $revenueService): Response
     {
+        $period = $request->validate([
+            'period' => ['sometimes', 'string', 'in:harian,mingguan,bulanan'],
+        ])['period'] ?? 'harian';
+
+        $revenue = $revenueService->revenue($period);
         $pusat = CourierProfile::with(['user', 'assignedOutlets'])
             ->pusat()
             ->get()
@@ -61,6 +67,13 @@ class CourierManagementController extends Controller
             'candidates' => $candidates,
             'rejected' => $rejected,
             'outlets' => Outlet::where('status', 'active')->get(['id', 'name']),
+            'revenueSummary' => [
+                'deliveries' => $revenue['summary']['total_deliveries'],
+                'delivery_fee' => $revenue['summary']['delivery_fee'],
+                'external_cost' => $revenue['summary']['external_cost'],
+                'net' => $revenue['summary']['net'],
+            ],
+            'revenueOutlets' => $revenue['outlets'],
         ]);
     }
 
