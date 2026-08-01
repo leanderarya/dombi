@@ -100,6 +100,7 @@ export default function CourierManagement() {
 
     const changePeriod = (next: Period) => {
         setPeriod(next);
+        setDetailOutlet(null);
         router.get(
             '/owner/couriers/management',
             { period: next },

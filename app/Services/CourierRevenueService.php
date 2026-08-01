@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Order;
-use App\Models\Outlet;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -17,17 +16,19 @@ class CourierRevenueService
         [$from, $to] = $this->window($period);
 
         $rows = $this->baseQuery($from, $to)
+            ->join('outlets', 'orders.outlet_id', '=', 'outlets.id')
             ->selectRaw('
                 orders.outlet_id,
+                outlets.name as outlet_name,
                 COUNT(*) as deliveries,
                 SUM(orders.delivery_fee) as delivery_fee,
                 SUM(CASE WHEN deliveries.courier_type = ? THEN deliveries.courier_cost ELSE 0 END) as external_cost
             ', ['eksternal'])
-            ->groupBy('orders.outlet_id')
+            ->groupBy('orders.outlet_id', 'outlets.name')
             ->get();
 
         $outlets = $rows->map(fn ($row) => [
-            'outlet' => ['id' => (int) $row->outlet_id, 'name' => Outlet::find($row->outlet_id)?->name ?? 'Outlet #'.$row->outlet_id],
+            'outlet' => ['id' => (int) $row->outlet_id, 'name' => $row->outlet_name],
             'deliveries' => (int) $row->deliveries,
             'delivery_fee' => (float) $row->delivery_fee,
             'external_cost' => (float) $row->external_cost,
@@ -76,6 +77,7 @@ class CourierRevenueService
         return DB::table('deliveries')
             ->join('orders', 'deliveries.order_id', '=', 'orders.id')
             ->where('orders.status', Order::STATUS_COMPLETED)
+            ->where('deliveries.status', 'completed')
             ->when($from, fn ($q) => $q->where('orders.created_at', '>=', $from))
             ->when($to, fn ($q) => $q->where('orders.created_at', '<', $to));
     }
