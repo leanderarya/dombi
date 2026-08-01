@@ -30,11 +30,13 @@ interface OutletInfo {
 
 interface CourierInfo {
     name: string;
-    phone?: string;
+    vehicle_plate?: string | null;
 }
 
 interface DeliveryInfo {
-    courier?: CourierInfo;
+    courier?: CourierInfo | null;
+    external_courier_name?: string | null;
+    external_plate_number?: string | null;
     failed_reason?: string | null;
 }
 
@@ -228,8 +230,8 @@ export default function OrderInfoCard({
                 </div>
             )}
 
-            {/* Courier */}
-            {delivery?.courier && (
+            {/* Courier (identity only — no contact) */}
+            {(delivery?.courier?.name || delivery?.external_courier_name) && (
                 <div className="rounded-xl border border-border bg-white p-3">
                     <div className="flex items-center gap-2">
                         <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-muted">
@@ -240,8 +242,17 @@ export default function OrderInfoCard({
                                 Kurir
                             </div>
                             <div className="text-xs font-semibold text-text">
-                                {delivery.courier.name}
+                                {delivery?.courier?.name ??
+                                    delivery?.external_courier_name}
                             </div>
+                            {(delivery?.courier?.vehicle_plate ||
+                                delivery?.external_plate_number) && (
+                                <div className="text-[10px] text-text-muted">
+                                    Plat:{' '}
+                                    {delivery?.courier?.vehicle_plate ??
+                                        delivery?.external_plate_number}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
