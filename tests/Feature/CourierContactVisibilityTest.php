@@ -123,6 +123,46 @@ class CourierContactVisibilityTest extends TestCase
                 ->where('order.delivery.courier.vehicle_plate', 'B 1234 XYZ'));
     }
 
+    public function test_customer_confirmation_payload_redacts_courier_contact(): void
+    {
+        $outlet = Outlet::factory()->create();
+        $user = User::factory()->create(['role' => 'customer', 'is_active' => true]);
+        $customer = Customer::create([
+            'user_id' => $user->id,
+            'name' => 'Test Customer',
+            'phone' => '628123456789',
+            'is_registered' => true,
+        ]);
+        $courier = User::factory()->create([
+            'role' => 'courier',
+            'phone' => '628555000111',
+            'vehicle_plate' => 'B 1234 XYZ',
+        ]);
+        $order = Order::factory()->create([
+            'customer_id' => $customer->id,
+            'outlet_id' => $outlet->id,
+            'status' => Order::STATUS_DELIVERING,
+            'fulfillment_type' => Order::FULFILLMENT_DELIVERY_DOMBI,
+            'payment_status' => 'paid',
+        ]);
+        $order->delivery()->create([
+            'courier_id' => $courier->id,
+            'status' => 'delivering',
+            'assigned_at' => now(),
+        ]);
+
+        $this->actingAs($user)
+            ->get("/customer/orders/{$order->id}/confirmation/{$order->recovery_token}")
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/orders/show')
+                ->where('order.delivery.courier.name', $courier->name)
+                ->where('order.delivery.courier.vehicle_plate', 'B 1234 XYZ')
+                ->missing('order.delivery.courier.phone')
+                ->missing('order.delivery.courier.latitude')
+                ->missing('order.delivery.external_courier_phone'));
+    }
+
     public function test_outlet_order_payload_includes_external_courier_contact(): void
     {
         $outlet = Outlet::factory()->create();
