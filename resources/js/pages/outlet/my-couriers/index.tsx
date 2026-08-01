@@ -18,7 +18,17 @@ interface Nominee {
 
 type Tab = 'aktif' | 'menunggu' | 'ditolak';
 
-export default function MyCouriers({ active, pending, rejected }: any) {
+interface MyCouriersProps {
+    active: ActiveCourier[];
+    pending: Nominee[];
+    rejected: Nominee[];
+}
+
+export default function MyCouriers({
+    active,
+    pending,
+    rejected,
+}: MyCouriersProps) {
     const [tab, setTab] = useState<Tab>('aktif');
     const [showNominate, setShowNominate] = useState(false);
     const [name, setName] = useState('');
@@ -63,7 +73,7 @@ export default function MyCouriers({ active, pending, rejected }: any) {
 
                 {tab === 'aktif' && (
                     <div className="space-y-3">
-                        {(active as ActiveCourier[]).map((c) => (
+                        {active.map((c) => (
                             <div key={c.id} className="rounded-lg border p-3">
                                 <div className="font-semibold">{c.name}</div>
                                 <div className="text-sm text-slate-500">
@@ -84,7 +94,7 @@ export default function MyCouriers({ active, pending, rejected }: any) {
 
                 {tab === 'menunggu' && (
                     <div className="space-y-3">
-                        {(pending as Nominee[]).map((c) => (
+                        {pending.map((c) => (
                             <div key={c.id} className="rounded-lg border p-3">
                                 <div className="font-semibold">
                                     {c.nominee_name}
@@ -105,7 +115,7 @@ export default function MyCouriers({ active, pending, rejected }: any) {
 
                 {tab === 'ditolak' && (
                     <div className="space-y-3">
-                        {(rejected as Nominee[]).map((c) => (
+                        {rejected.map((c) => (
                             <div key={c.id} className="rounded-lg border p-3">
                                 <div className="font-semibold">
                                     {c.nominee_name}
