@@ -7,6 +7,7 @@ import StepButton from '@/components/customer/step-button';
 import StepHeader from '@/components/customer/step-header';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { mutationFetch } from '@/lib/api';
+import { checkoutFulfillmentType } from '@/lib/checkout-fulfillment';
 import { formatCurrency } from '@/lib/format';
 import { getStoredOutletId } from '@/lib/outlet-store';
 import { useCart } from '@/lib/use-cart';
@@ -35,23 +36,21 @@ export default function CheckoutIndex({
     const [fulfillmentType, setFulfillmentType] = useState<string>(() => {
         // Prioritize localStorage (survives navigation), fallback to server draft
         if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem('dombi_fulfillment_type');
+            const stored = checkoutFulfillmentType(
+                localStorage.getItem('dombi_fulfillment_type'),
+            );
 
-            if (stored === 'delivery') {
-                return 'delivery_dombi';
-            }
-
-            if (stored === 'pickup') {
-                return 'pickup';
+            if (stored) {
+                return stored;
             }
         }
 
-        return draft?.fulfillment?.fulfillment_type ?? '';
+        return checkoutFulfillmentType(draft?.fulfillment?.fulfillment_type);
     });
     const [processing, setProcessing] = useState(false);
 
     const saveFulfillment = (type: string) => {
-        const normalized = type === 'delivery' ? 'delivery_dombi' : type;
+        const normalized = checkoutFulfillmentType(type);
 
         setFulfillmentType(normalized);
         localStorage.setItem('dombi_fulfillment_type', normalized);
