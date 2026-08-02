@@ -1,5 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/format';
 import { getStoredOutletId } from '@/lib/outlet-store';
 import { useCart } from '@/lib/use-cart';
@@ -7,7 +8,6 @@ import { useCart } from '@/lib/use-cart';
 export default function FloatingCartBar() {
     const { items, totalItems, totalPrice } = useCart();
     const [processing, setProcessing] = useState(false);
-    const [error, setError] = useState<string | null>(null);
 
     if (totalItems === 0) {
         return null;
@@ -19,7 +19,6 @@ export default function FloatingCartBar() {
         }
 
         setProcessing(true);
-        setError(null);
 
         const payload: {
             items: Array<{
@@ -42,7 +41,7 @@ export default function FloatingCartBar() {
         router.post('/customer/checkout', payload, {
             preserveScroll: true,
             onError: (errors) => {
-                setError(
+                toast.error(
                     Object.values(errors).flat().join(', ') ||
                         'Gagal memproses checkout',
                 );
@@ -61,11 +60,6 @@ export default function FloatingCartBar() {
             className="fixed inset-x-0 z-30 px-4 transition-[bottom] duration-300 ease-in-out"
             style={{ bottom }}
         >
-            {error && (
-                <div className="mx-auto mb-2 max-w-lg rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-200">
-                    {error}
-                </div>
-            )}
             <button
                 type="button"
                 onClick={handleCheckout}
