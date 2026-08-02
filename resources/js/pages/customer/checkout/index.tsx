@@ -8,8 +8,8 @@ import StepHeader from '@/components/customer/step-header';
 import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { mutationFetch } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
-import { useCart } from '@/lib/use-cart';
 import { getStoredOutletId } from '@/lib/outlet-store';
+import { useCart } from '@/lib/use-cart';
 
 type DraftItem = {
     product_id: number;
