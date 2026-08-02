@@ -37,8 +37,12 @@ export default function CheckoutIndex({
         if (typeof window !== 'undefined') {
             const stored = localStorage.getItem('dombi_fulfillment_type');
 
-            if (stored === 'delivery' || stored === 'pickup') {
-                return stored;
+            if (stored === 'delivery') {
+                return 'delivery_dombi';
+            }
+
+            if (stored === 'pickup') {
+                return 'pickup';
             }
         }
 
@@ -47,8 +51,10 @@ export default function CheckoutIndex({
     const [processing, setProcessing] = useState(false);
 
     const saveFulfillment = (type: string) => {
-        setFulfillmentType(type);
-        localStorage.setItem('dombi_fulfillment_type', type);
+        const normalized = type === 'delivery' ? 'delivery_dombi' : type;
+
+        setFulfillmentType(normalized);
+        localStorage.setItem('dombi_fulfillment_type', normalized);
     };
 
     const subtotal = items.reduce(

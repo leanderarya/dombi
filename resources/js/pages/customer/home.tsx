@@ -46,7 +46,7 @@ export default function Home({ customerName, activeOrders }: any) {
         if (!isLoggedIn) {
             setDeliverySheetOpen(true);
         } else {
-            localStorage.setItem('dombi_fulfillment_type', 'delivery');
+            localStorage.setItem('dombi_fulfillment_type', 'delivery_dombi');
             router.get('/customer/products');
         }
     };
