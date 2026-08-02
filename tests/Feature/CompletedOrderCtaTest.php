@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\OutletOperatingHours;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
@@ -360,6 +361,14 @@ class CompletedOrderCtaTest extends TestCase
             'status' => 'active',
         ]);
 
+        OutletOperatingHours::create([
+            'outlet_id' => $outlet->id,
+            'day_of_week' => (int) now('Asia/Jakarta')->format('w'),
+            'open_time' => '00:00',
+            'close_time' => '23:59',
+            'is_closed' => false,
+        ]);
+
         $product = Product::create([
             'name' => 'Test Product',
             'selling_price' => 25000,
@@ -426,5 +435,31 @@ class CompletedOrderCtaTest extends TestCase
             'variant' => $variant,
             'order' => $order->fresh('items'),
         ];
+    }
+
+    public function test_restore_cart_is_blocked_when_outlet_closed(): void
+    {
+        $context = $this->createOrderContext('completed');
+
+        $context['outlet']->operatingHours()->update(['is_closed' => true]);
+
+        $response = $this->actingAs($context['user'])
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart');
+
+        $response->assertRedirect('/customer/orders/'.$context['order']->id);
+        $response->assertSessionHas('error');
+        $this->assertNull(session('checkout.cart'));
+    }
+
+    public function test_restore_cart_sets_order_outlet_in_checkout_session(): void
+    {
+        $context = $this->createOrderContext('completed');
+
+        $this->actingAs($context['user'])
+            ->get('/customer/orders/'.$context['order']->id.'/restore-cart')
+            ->assertRedirect('/customer/checkout');
+
+        $this->assertEquals($context['outlet']->id, session('checkout.fulfillment.selected_outlet_id'));
+        $this->assertEquals($context['outlet']->id, session('checkout.selected_outlet_id'));
     }
 }

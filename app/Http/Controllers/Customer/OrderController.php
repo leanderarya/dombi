@@ -415,6 +415,16 @@ class OrderController extends Controller
 
     private function restoreCartAndRedirect(Order $order, OrderService $orderService): RedirectResponse
     {
+        $outlet = $order->outlet;
+
+        if ($outlet && ! $outlet->isOpen()) {
+            $errorRedirect = auth()->check()
+                ? redirect()->route('customer.orders.show', $order)
+                : redirect()->route('track', ['token' => $order->recovery_token]);
+
+            return $errorRedirect->with('error', 'Toko sedang tutup. Silakan kembali saat jam operasional.');
+        }
+
         $result = $orderService->restoreCartFromOrder($order->load('items'));
 
         if (empty($result['items'])) {
@@ -427,6 +437,12 @@ class OrderController extends Controller
 
         // Store restored items in session cart for checkout
         session()->put('checkout.cart', $result['items']);
+
+        // Restore the order's outlet so checkout quotes from the right store
+        if ($outlet) {
+            session()->put('checkout.fulfillment.selected_outlet_id', $outlet->id);
+            session()->put('checkout.selected_outlet_id', $outlet->id);
+        }
 
         session()->forget([
             'checkout.location',
