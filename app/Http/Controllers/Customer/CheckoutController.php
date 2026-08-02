@@ -192,7 +192,7 @@ class CheckoutController extends Controller
             )
             : ['recommended' => null, 'alternatives' => []];
         $deliveryQuote = $fulfillment === 'delivery_dombi'
-            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService)
+            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService, $this->selectedOutletId($request))
             : null;
 
         $user = $request->user();
@@ -391,7 +391,9 @@ class CheckoutController extends Controller
         $fulfillmentDraft = $request->session()->get('checkout.fulfillment', []);
         $request->session()->put('checkout.fulfillment', [
             ...$fulfillmentDraft,
-            'selected_outlet_id' => ! $isDelivery ? ($validated['selected_outlet_id'] ?? null) : null,
+            'selected_outlet_id' => ! $isDelivery
+                ? ($validated['selected_outlet_id'] ?? null)
+                : $this->selectedOutletId($request),
         ]);
 
         if ($isDelivery) {
@@ -447,7 +449,7 @@ class CheckoutController extends Controller
             ? Outlet::query()->find($request->session()->get('checkout.fulfillment.selected_outlet_id'), ['id', 'name', 'address', 'kelurahan', 'kecamatan'])
             : null;
         $deliveryQuote = $fulfillmentType === 'delivery_dombi'
-            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService)
+            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService, $this->selectedOutletId($request))
             : null;
 
         // Payment via DOKU — 4 metode, threshold subtotal only, full absorb <500k except CC
@@ -545,7 +547,7 @@ class CheckoutController extends Controller
 
         $subtotal = $this->calculateSubtotal($cart);
         $deliveryQuote = $fulfillmentType === 'delivery_dombi'
-            ? $this->resolveDeliveryQuote($cart, $location, $recommendOutletService, $deliveryPricingService)
+            ? $this->resolveDeliveryQuote($cart, $location, $recommendOutletService, $deliveryPricingService, $this->selectedOutletId($request))
             : null;
 
         if ($fulfillmentType === 'delivery_dombi' && (! $deliveryQuote || ! ($deliveryQuote['is_serviceable'] ?? false))) {
@@ -957,26 +959,44 @@ class CheckoutController extends Controller
         return PhoneNormalizer::normalize($phone);
     }
 
-    private function resolveDeliveryQuote(array $cart, $location, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): ?array
+    private function selectedOutletId(Request $request): ?int
+    {
+        $id = $request->session()->get('checkout.selected_outlet_id')
+            ?? $request->session()->get('checkout.fulfillment.selected_outlet_id');
+
+        return $id !== null ? (int) $id : null;
+    }
+
+    private function resolveDeliveryQuote(array $cart, $location, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService, ?int $selectedOutletId = null): ?array
     {
         if (! is_array($location) || ! isset($location['latitude'], $location['longitude'])) {
             return null;
         }
 
-        $recommendedOutlet = $recommendOutletService->recommendForDelivery(
-            (float) $location['latitude'],
-            (float) $location['longitude'],
-            $cart
-        );
+        $outlet = null;
 
-        if (! $recommendedOutlet) {
-            return null;
+        if ($selectedOutletId) {
+            $outlet = Outlet::query()
+                ->active()
+                ->find($selectedOutletId, ['id', 'name', 'address', 'kelurahan', 'kecamatan', 'latitude', 'longitude']);
         }
 
-        $outlet = Outlet::query()->find($recommendedOutlet['id'], ['id', 'name', 'address', 'kelurahan', 'kecamatan', 'latitude', 'longitude']);
-
         if (! $outlet || $outlet->latitude === null || $outlet->longitude === null) {
-            return null;
+            $recommendedOutlet = $recommendOutletService->recommendForDelivery(
+                (float) $location['latitude'],
+                (float) $location['longitude'],
+                $cart
+            );
+
+            if (! $recommendedOutlet) {
+                return null;
+            }
+
+            $outlet = Outlet::query()->find($recommendedOutlet['id'], ['id', 'name', 'address', 'kelurahan', 'kecamatan', 'latitude', 'longitude']);
+
+            if (! $outlet || $outlet->latitude === null || $outlet->longitude === null) {
+                return null;
+            }
         }
 
         $quote = $deliveryPricingService->quote(

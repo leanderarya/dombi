@@ -5,7 +5,9 @@ namespace Tests\Feature;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\OutletOperatingHours;
 use App\Models\Product;
+use App\Models\User;
 use App\Services\DeliveryPricingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -239,5 +241,135 @@ class DeliveryPricingTest extends TestCase
             'landmark' => 'Dekat minimarket',
             'delivery_notes' => 'Rumah pagar hijau',
         ];
+    }
+
+    private function createOutlet(float $lat, float $lng): Outlet
+    {
+        $outlet = Outlet::factory()->create([
+            'status' => 'active',
+            'latitude' => $lat,
+            'longitude' => $lng,
+        ]);
+
+        OutletOperatingHours::factory()->create([
+            'outlet_id' => $outlet->id,
+            'day_of_week' => (int) now('Asia/Jakarta')->format('w'),
+            'open_time' => '00:00',
+            'close_time' => '23:59',
+            'is_closed' => false,
+        ]);
+
+        return $outlet;
+    }
+
+    private function withStock(Outlet $outlet, Product $product): void
+    {
+        OutletInventory::create([
+            'outlet_id' => $outlet->id,
+            'product_id' => $product->id,
+            'current_stock' => 10,
+            'reserved_stock' => 0,
+            'minimum_stock' => 0,
+        ]);
+    }
+
+    public function test_checkout_quote_honors_selected_outlet_when_serviceable(): void
+    {
+        $product = $this->createStockedProduct();
+        $farOutlet = $this->createOutlet(-7.0300000, 110.4500000);
+        $this->withStock($farOutlet, $product);
+
+        $this->withSession([
+            'checkout.cart' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'checkout.fulfillment' => [
+                'fulfillment_type' => 'delivery_dombi',
+            ],
+            'checkout.selected_outlet_id' => $farOutlet->id,
+            'checkout.customer' => [
+                'customer_name' => 'Sarah Dombi',
+                'phone_number' => '6281234567890',
+            ],
+            'checkout.location' => $this->locationDraft(),
+        ])->get('/customer/checkout/payment')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/checkout/payment')
+                ->where('summary.delivery_quote.outlet.id', $farOutlet->id)
+                ->where('summary.delivery_fee', 8000)
+            );
+    }
+
+    public function test_checkout_quote_marks_selected_outlet_unserviceable_when_out_of_range(): void
+    {
+        $product = $this->createStockedProduct();
+        $farOutlet = $this->createOutlet(-6.9000000, 110.7000000);
+        $this->withStock($farOutlet, $product);
+
+        $this->withSession([
+            'checkout.cart' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'checkout.fulfillment' => [
+                'fulfillment_type' => 'delivery_dombi',
+            ],
+            'checkout.selected_outlet_id' => $farOutlet->id,
+            'checkout.customer' => [
+                'customer_name' => 'Sarah Dombi',
+                'phone_number' => '6281234567890',
+            ],
+            'checkout.location' => $this->locationDraft(),
+        ])->get('/customer/checkout/payment')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/checkout/payment')
+                ->where('summary.delivery_quote.outlet.id', $farOutlet->id)
+                ->where('summary.delivery_quote.is_serviceable', false)
+            );
+    }
+
+    public function test_store_customer_preserves_selected_outlet_for_delivery(): void
+    {
+        $product = $this->createStockedProduct();
+        $farOutlet = $this->createOutlet(-7.0300000, 110.4500000);
+        $this->withStock($farOutlet, $product);
+
+        $user = User::factory()->create(['role' => 'customer']);
+        $user->customer()->create([
+            'name' => 'Test Customer',
+            'phone' => '6281234567890',
+        ]);
+
+        $this->actingAs($user)->withSession([
+            'checkout.cart' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'checkout.fulfillment' => [
+                'fulfillment_type' => 'delivery_dombi',
+            ],
+            'checkout.selected_outlet_id' => $farOutlet->id,
+        ])->post('/customer/checkout/customer', [
+            'customer_name' => 'Sarah Dombi',
+            'phone_number' => '6281234567890',
+            'address_line' => 'Jl. Ngesrep Timur V No. 12',
+            'province' => 'Jawa Tengah',
+            'city' => 'Kota Semarang',
+            'district' => 'Banyumanik',
+            'village' => 'Sumurboto',
+            'postal_code' => '50269',
+            'latitude' => -7.0523456,
+            'longitude' => 110.4345678,
+            'landmark' => 'Dekat minimarket',
+            'delivery_notes' => 'Rumah pagar hijau',
+        ])->assertRedirect('/customer/checkout/payment');
+
+        $this->get('/customer/checkout/payment')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('customer/checkout/payment')
+                ->where('summary.delivery_quote.outlet.id', $farOutlet->id)
+                ->where('summary.delivery_fee', 8000)
+            );
     }
 }
