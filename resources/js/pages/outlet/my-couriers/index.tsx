@@ -1,4 +1,4 @@
-import { router } from '@inertiajs/react';
+import { useForm } from '@inertiajs/react';
 import { Plus, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
@@ -45,8 +45,10 @@ export default function MyCouriers({
 }: MyCouriersProps) {
     const [tab, setTab] = useState<Tab>('aktif');
     const [showNominate, setShowNominate] = useState(false);
-    const [name, setName] = useState('');
-    const [phone, setPhone] = useState('');
+    const { data, setData, post, processing, errors, reset } = useForm({
+        name: '',
+        phone: '',
+    });
 
     const countFor = (key: Tab): number =>
         key === 'aktif'
@@ -56,7 +58,13 @@ export default function MyCouriers({
               : rejected.length;
 
     const handleNominate = () => {
-        router.post('/outlet/my-couriers/nominate', { name, phone });
+        post('/outlet/my-couriers/nominate', {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset();
+                setShowNominate(false);
+            },
+        });
     };
 
     return (
@@ -206,11 +214,16 @@ export default function MyCouriers({
                         </span>
                         <input
                             type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            value={data.name}
+                            onChange={(e) => setData('name', e.target.value)}
                             placeholder="Nama kurir"
                             className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                         />
+                        {errors.name && (
+                            <span className="text-xs text-red-600">
+                                {errors.name}
+                            </span>
+                        )}
                     </label>
                     <label className="block space-y-1">
                         <span className="text-sm font-medium text-text">
@@ -218,27 +231,36 @@ export default function MyCouriers({
                         </span>
                         <input
                             type="tel"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
+                            value={data.phone}
+                            onChange={(e) => setData('phone', e.target.value)}
                             placeholder="08xxxxxxxxxx"
                             className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                         />
+                        {errors.phone && (
+                            <span className="text-xs text-red-600">
+                                {errors.phone}
+                            </span>
+                        )}
                     </label>
                     <div className="flex gap-2 pt-2">
                         <Button
                             variant="outline"
                             className="flex-1"
-                            onClick={() => setShowNominate(false)}
+                            disabled={processing}
+                            onClick={() => {
+                                reset();
+                                setShowNominate(false);
+                            }}
                         >
                             Batal
                         </Button>
                         <Button
                             variant="primary"
                             className="flex-1"
-                            disabled={!name}
+                            disabled={!data.name || !data.phone || processing}
                             onClick={handleNominate}
                         >
-                            Ajukan
+                            {processing ? 'Mengirim...' : 'Ajukan'}
                         </Button>
                     </div>
                 </div>

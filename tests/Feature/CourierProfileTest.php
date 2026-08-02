@@ -55,6 +55,57 @@ class CourierProfileTest extends TestCase
         ]);
     }
 
+    public function test_duplicate_pending_nomination_is_blocked_for_same_outlet_and_phone(): void
+    {
+        $this->actingAs($this->outletStaff)
+            ->post('/outlet/my-couriers/nominate', [
+                'name' => 'Bambang',
+                'phone' => '081234567890',
+            ]);
+
+        $response = $this->actingAs($this->outletStaff)
+            ->post('/outlet/my-couriers/nominate', [
+                'name' => 'Bambang',
+                'phone' => '081234567890',
+            ]);
+
+        $response->assertRedirect();
+        $this->assertEquals(1, CourierProfile::where('outlet_id', $this->outlet->id)
+            ->where('nominee_phone', '081234567890')
+            ->where('invitation_status', 'pending')
+            ->count());
+    }
+
+    public function test_rejected_nomination_can_be_resubmitted_for_same_phone(): void
+    {
+        $profile = CourierProfile::create([
+            'courier_source' => 'outlet',
+            'outlet_id' => $this->outlet->id,
+            'nominated_by' => $this->outletStaff->id,
+            'nominee_name' => 'Bambang',
+            'nominee_phone' => '081234567890',
+            'invitation_status' => 'rejected',
+            'approved_by' => $this->owner->id,
+            'approved_at' => now(),
+        ]);
+
+        $this->actingAs($this->outletStaff)
+            ->post('/outlet/my-couriers/nominate', [
+                'name' => 'Bambang Baru',
+                'phone' => '081234567890',
+            ])
+            ->assertRedirect();
+
+        $profile->refresh();
+        $this->assertEquals('pending', $profile->invitation_status);
+        $this->assertNull($profile->approved_at);
+        $this->assertNull($profile->approved_by);
+        $this->assertSame('Bambang Baru', $profile->nominee_name);
+        $this->assertEquals(1, CourierProfile::where('outlet_id', $this->outlet->id)
+            ->where('nominee_phone', '081234567890')
+            ->count());
+    }
+
     public function test_owner_can_approve_nominated_courier(): void
     {
         $profile = CourierProfile::create([
