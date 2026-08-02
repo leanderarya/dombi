@@ -68,6 +68,27 @@ class MyCourierController extends Controller
 
         $outlet = $request->user()->outlet;
 
+        $existing = CourierProfile::where('outlet_id', $outlet->id)
+            ->where('nominee_phone', $validated['phone'])
+            ->latest('id')
+            ->first();
+
+        if ($existing && $existing->invitation_status === 'pending') {
+            return back()->with('error', 'Kandidat dengan nomor ini sudah menunggu persetujuan Owner.');
+        }
+
+        if ($existing && $existing->invitation_status === 'rejected') {
+            $existing->update([
+                'nominee_name' => $validated['name'],
+                'nominee_phone' => $validated['phone'],
+                'invitation_status' => 'pending',
+                'approved_at' => null,
+                'approved_by' => null,
+            ]);
+
+            return back()->with('success', 'Kandidat kurir diajukan ulang. Menunggu persetujuan Owner.');
+        }
+
         CourierProfile::create([
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,

@@ -30,6 +30,8 @@ interface CourierPusat {
 
 interface Candidate {
     id: number;
+    nominee_name: string;
+    nominee_phone: string;
     outlet_name: string;
     nominated_by_name: string;
     created_at: string;
@@ -236,6 +238,7 @@ export default function CourierManagement() {
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    <th className="px-4 py-3">Kandidat</th>
                                     <th className="px-4 py-3">Outlet</th>
                                     <th className="px-4 py-3">
                                         Dicalonkan oleh
@@ -251,7 +254,15 @@ export default function CourierManagement() {
                                         key={c.id}
                                         className="hover:bg-surface-muted/60"
                                     >
-                                        <td className="px-4 py-3 font-medium text-text">
+                                        <td className="px-4 py-3">
+                                            <div className="font-medium text-text">
+                                                {c.nominee_name}
+                                            </div>
+                                            <div className="text-xs text-text-muted tabular-nums">
+                                                {c.nominee_phone}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-text-muted">
                                             {c.outlet_name}
                                         </td>
                                         <td className="px-4 py-3 text-text-muted">
