@@ -1,23 +1,8 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/format';
+import { getStoredOutletId } from '@/lib/outlet-store';
 import { useCart } from '@/lib/use-cart';
-
-function getSelectedOutletId(): number | null {
-    try {
-        const raw = localStorage.getItem('dombi_selected_outlet');
-
-        if (!raw) {
-            return null;
-        }
-
-        const id = JSON.parse(raw);
-
-        return typeof id === 'number' ? id : null;
-    } catch {
-        return null;
-    }
-}
 
 export default function FloatingCartBar() {
     const { items, totalItems, totalPrice } = useCart();
@@ -48,7 +33,7 @@ export default function FloatingCartBar() {
                 quantity: i.quantity,
             })),
         };
-        const outletId = getSelectedOutletId();
+        const outletId = getStoredOutletId();
 
         if (outletId) {
             payload.selected_outlet_id = outletId;
