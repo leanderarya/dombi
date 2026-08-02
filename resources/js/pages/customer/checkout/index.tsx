@@ -9,6 +9,7 @@ import CustomerMobileLayout from '@/layouts/customer-mobile-layout';
 import { mutationFetch } from '@/lib/api';
 import { formatCurrency } from '@/lib/format';
 import { useCart } from '@/lib/use-cart';
+import { getStoredOutletId } from '@/lib/outlet-store';
 
 type DraftItem = {
     product_id: number;
@@ -113,6 +114,7 @@ export default function CheckoutIndex({
 
     const submit = () => {
         setProcessing(true);
+        const outletId = getStoredOutletId();
         router.post(
             '/customer/checkout',
             {
@@ -121,6 +123,7 @@ export default function CheckoutIndex({
                     quantity: i.quantity,
                 })),
                 fulfillment_type: fulfillmentType,
+                ...(outletId ? { selected_outlet_id: outletId } : {}),
             },
             {
                 onFinish: () => setProcessing(false),
@@ -288,6 +291,12 @@ export default function CheckoutIndex({
                                     Kurir Dombi
                                 </span>
                             </div>
+                            {nearestOutlet && (
+                                <div className="mt-1.5 text-[11px] text-text-muted">
+                                    {nearestOutlet.name} ·{' '}
+                                    {nearestOutlet.distance_km?.toFixed(1)} km
+                                </div>
+                            )}
                             {deliveryPreview?.delivery_fee !== undefined ? (
                                 <>
                                     <div className="mt-1.5 text-[11px] text-text-muted">
