@@ -106,7 +106,7 @@ class MilestoneThirdTest extends TestCase
             'outlet_id' => $context['outlet']->id,
         ], [
             'courier_source' => 'outlet',
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $context['order']->update(['payment_status' => 'paid', 'paid_at' => now()]);
         $orderStatusService = app(OrderStatusService::class);

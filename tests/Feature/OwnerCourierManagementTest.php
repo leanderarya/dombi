@@ -39,14 +39,14 @@ class OwnerCourierManagementTest extends TestCase
         $courier = User::where('phone', '6281234567890')->first();
         $this->assertDatabaseHas('courier_profiles', [
             'user_id' => $courier->id,
-            'invitation_status' => 'pending',
+            'invitation_status' => CourierProfile::STATUS_AWAITING_ACTIVATION,
         ]);
     }
 
     public function test_owner_can_list_couriers(): void
     {
         $courier = User::factory()->create(['role' => 'courier']);
-        CourierProfile::create(['user_id' => $courier->id, 'invitation_status' => 'accepted']);
+        CourierProfile::create(['user_id' => $courier->id, 'invitation_status' => CourierProfile::STATUS_ACTIVE]);
 
         $response = $this->actingAs($this->owner)->get('/owner/couriers');
 
@@ -56,7 +56,7 @@ class OwnerCourierManagementTest extends TestCase
     public function test_owner_can_view_courier_detail(): void
     {
         $courier = User::factory()->create(['role' => 'courier']);
-        CourierProfile::create(['user_id' => $courier->id, 'invitation_status' => 'accepted']);
+        CourierProfile::create(['user_id' => $courier->id, 'invitation_status' => CourierProfile::STATUS_ACTIVE]);
 
         $response = $this->actingAs($this->owner)->get("/owner/couriers/{$courier->id}");
 
@@ -111,7 +111,10 @@ class OwnerCourierManagementTest extends TestCase
             'outlet_id' => null,
             'nominee_name' => 'Bambang Outlet',
             'nominee_phone' => '081234567890',
-            'invitation_status' => 'pending',
+            'nominee_vehicle_plate' => 'AB 1234 CD',
+            'nominee_face_photo' => 'faces/a.jpg',
+            'nominee_vehicle_photo' => 'vehicles/b.jpg',
+            'invitation_status' => CourierProfile::STATUS_SUBMITTED,
         ]);
 
         $this->actingAs($this->owner)
@@ -158,7 +161,7 @@ class OwnerCourierManagementTest extends TestCase
         $this->assertFalse($courier->fresh()->must_change_password);
 
         $profile = CourierProfile::where('user_id', $courier->id)->first();
-        $this->assertEquals('accepted', $profile->invitation_status);
+        $this->assertEquals(CourierProfile::STATUS_ACTIVE, $profile->invitation_status);
     }
 
     public function test_expired_invite_shows_expired_page(): void
@@ -186,7 +189,7 @@ class OwnerCourierManagementTest extends TestCase
     public function test_owner_can_delete_courier(): void
     {
         $courier = User::factory()->create(['role' => 'courier']);
-        CourierProfile::create(['user_id' => $courier->id, 'invitation_status' => 'accepted']);
+        CourierProfile::create(['user_id' => $courier->id, 'invitation_status' => CourierProfile::STATUS_ACTIVE]);
 
         $response = $this->actingAs($this->owner)->delete("/owner/couriers/{$courier->id}");
 
@@ -198,7 +201,7 @@ class OwnerCourierManagementTest extends TestCase
     public function test_owner_cannot_delete_courier_with_active_deliveries(): void
     {
         $courier = User::factory()->create(['role' => 'courier']);
-        CourierProfile::create(['user_id' => $courier->id, 'invitation_status' => 'accepted']);
+        CourierProfile::create(['user_id' => $courier->id, 'invitation_status' => CourierProfile::STATUS_ACTIVE]);
 
         $order = Order::factory()->create();
         Delivery::create([

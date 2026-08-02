@@ -295,7 +295,7 @@ class InventorySafetyTest extends TestCase
             'outlet_id' => $context['outlet']->id,
         ], [
             'courier_source' => 'outlet',
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         // Mark order as paid before operational transitions — include paid_at so refund can compute trusted amount
         $context['order']->update(['payment_status' => 'paid', 'paid_at' => now()]);

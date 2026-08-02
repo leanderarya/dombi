@@ -32,7 +32,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $courier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $secondOutlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $order = Order::factory()->create([
             'outlet_id' => $firstOutlet->id,
@@ -62,7 +62,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $courier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $order = Order::factory()->create([
             'outlet_id' => $outlet->id,
@@ -93,7 +93,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $courier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $order = Order::factory()->create([
             'outlet_id' => $outlet->id,
@@ -125,7 +125,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $courier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $order = Order::factory()->create([
             'outlet_id' => $outlet->id,
@@ -163,7 +163,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $courier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $order = Order::factory()->create([
             'outlet_id' => $outlet->id,
@@ -201,7 +201,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $ownedCourier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $plottedCourier = User::factory()->create([
@@ -213,7 +213,7 @@ class DeliveryCourierEligibilityTest extends TestCase
         $plottedProfile = CourierProfile::create([
             'user_id' => $plottedCourier->id,
             'courier_source' => 'pusat',
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $plottedProfile->assignedOutlets()->attach($outlet->id);
 
@@ -227,7 +227,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $foreignCourier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $otherOutlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $unplottedPusatCourier = User::factory()->create([
@@ -239,7 +239,7 @@ class DeliveryCourierEligibilityTest extends TestCase
         CourierProfile::create([
             'user_id' => $unplottedPusatCourier->id,
             'courier_source' => 'pusat',
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $pendingCourier = User::factory()->create([
@@ -252,7 +252,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $pendingCourier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'pending',
+            'invitation_status' => CourierProfile::STATUS_AWAITING_ACTIVATION,
         ]);
 
         $order = Order::factory()->create([
@@ -294,7 +294,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $offlineCourier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $order = Order::factory()->create([
             'outlet_id' => $outlet->id,
@@ -329,7 +329,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $courier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $order = Order::factory()->create([
             'outlet_id' => $outlet->id,
@@ -376,7 +376,7 @@ class DeliveryCourierEligibilityTest extends TestCase
             'user_id' => $courier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'pending',
+            'invitation_status' => CourierProfile::STATUS_AWAITING_ACTIVATION,
         ]);
         $order = Order::factory()->create([
             'outlet_id' => $outlet->id,

@@ -42,14 +42,14 @@ class DeliverySafetyTest extends TestCase
             'user_id' => $courier->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         CourierProfile::create([
             'user_id' => $courier2->id,
             'courier_source' => 'outlet',
             'outlet_id' => $outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         return compact('owner', 'courier', 'courier2', 'customer', 'outlet', 'outletUser');
