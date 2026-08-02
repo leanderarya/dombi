@@ -5,9 +5,18 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CourierProfile extends Model
 {
+    public const STATUS_SUBMITTED = 'submitted';
+
+    public const STATUS_AWAITING_ACTIVATION = 'approved_pending_activation';
+
+    public const STATUS_ACTIVE = 'active';
+
+    public const STATUS_REJECTED = 'rejected';
+
     protected $fillable = [
         'user_id',
         'courier_source',
@@ -15,11 +24,16 @@ class CourierProfile extends Model
         'nominated_by',
         'nominee_name',
         'nominee_phone',
+        'nominee_vehicle_plate',
+        'nominee_face_photo',
+        'nominee_vehicle_photo',
         'approved_by',
         'approved_at',
         'invitation_status',
         'invited_at',
         'accepted_at',
+        'rejection_reason',
+        'resubmitted_at',
         'total_deliveries',
         'rating',
         'notes',
@@ -31,6 +45,7 @@ class CourierProfile extends Model
             'invited_at' => 'datetime',
             'accepted_at' => 'datetime',
             'approved_at' => 'datetime',
+            'resubmitted_at' => 'datetime',
             'total_deliveries' => 'integer',
             'rating' => 'decimal:2',
         ];
@@ -41,19 +56,24 @@ class CourierProfile extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function isPending(): bool
+    public function isSubmitted(): bool
     {
-        return $this->invitation_status === 'pending';
+        return $this->invitation_status === self::STATUS_SUBMITTED;
     }
 
-    public function isAccepted(): bool
+    public function isAwaitingActivation(): bool
     {
-        return $this->invitation_status === 'accepted';
+        return $this->invitation_status === self::STATUS_AWAITING_ACTIVATION;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->invitation_status === self::STATUS_ACTIVE;
     }
 
     public function isRejected(): bool
     {
-        return $this->invitation_status === 'rejected';
+        return $this->invitation_status === self::STATUS_REJECTED;
     }
 
     public function incrementDeliveries(): void
@@ -82,6 +102,11 @@ class CourierProfile extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(CourierNominationReview::class, 'courier_profile_id');
+    }
+
     public function scopePusat($query)
     {
         return $query->where('courier_source', 'pusat');
@@ -92,9 +117,24 @@ class CourierProfile extends Model
         return $query->where('courier_source', 'outlet');
     }
 
-    public function scopePending($query)
+    public function scopeSubmitted($query)
     {
-        return $query->where('invitation_status', 'pending');
+        return $query->where('invitation_status', self::STATUS_SUBMITTED);
+    }
+
+    public function scopeAwaitingActivation($query)
+    {
+        return $query->where('invitation_status', self::STATUS_AWAITING_ACTIVATION);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('invitation_status', self::STATUS_ACTIVE);
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('invitation_status', self::STATUS_REJECTED);
     }
 
     public function scopeAvailableForOutlet($query, int $outletId)
@@ -102,6 +142,6 @@ class CourierProfile extends Model
         return $query->where(function ($q) use ($outletId) {
             $q->where('courier_source', 'outlet')->where('outlet_id', $outletId)
                 ->orWhereHas('assignedOutlets', fn ($q) => $q->where('outlets.id', $outletId));
-        })->where('invitation_status', 'accepted');
+        })->where('invitation_status', self::STATUS_ACTIVE);
     }
 }

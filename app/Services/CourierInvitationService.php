@@ -20,6 +20,21 @@ class CourierInvitationService
         ]);
     }
 
+    public function regenerate(CourierInvitation $invitation): CourierInvitation
+    {
+        $invitation->update(['status' => 'expired']);
+
+        return CourierInvitation::create([
+            'invited_by' => $invitation->invited_by,
+            'courier_user_id' => $invitation->courier_user_id,
+            'phone' => $invitation->phone,
+            'name' => $invitation->name,
+            'token' => CourierInvitation::generateToken(),
+            'status' => 'pending',
+            'expires_at' => now()->addDays(7),
+        ]);
+    }
+
     public function invitationUrl(CourierInvitation $invitation): string
     {
         return url("/courier/invite/{$invitation->token}");

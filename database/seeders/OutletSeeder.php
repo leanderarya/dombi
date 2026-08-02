@@ -87,7 +87,7 @@ class OutletSeeder extends Seeder
         ]);
 
         CourierProfile::updateOrCreate(['user_id' => $courierUser->id], [
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
             'invited_at' => now(),
             'accepted_at' => now(),
             'total_deliveries' => 0,

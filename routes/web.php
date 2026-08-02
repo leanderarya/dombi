@@ -408,6 +408,8 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('/reports/sales/export', [OutletReportController::class, 'export'])->name('reports.sales.export');
         Route::get('/my-couriers', [MyCourierController::class, 'index'])->name('my-couriers.index');
         Route::post('/my-couriers/nominate', [MyCourierController::class, 'nominate'])->name('my-couriers.nominate');
+        Route::put('/my-couriers/{profile}/resubmit', [MyCourierController::class, 'resubmit'])->name('my-couriers.resubmit');
+        Route::post('/my-couriers/{profile}/invitation/regenerate', [MyCourierController::class, 'regenerateInvitation'])->name('my-couriers.invitation.regenerate');
     });
 
     // Courier routes
