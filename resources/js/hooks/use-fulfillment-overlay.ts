@@ -9,11 +9,18 @@ function loadFulfillmentType(): 'pickup' | 'delivery' {
 
     const stored = localStorage.getItem(STORAGE_KEY);
 
+    if (stored === 'delivery_dombi') {
+        return 'delivery';
+    }
+
     return stored === 'delivery' ? 'delivery' : 'pickup';
 }
 
 function saveFulfillmentType(type: 'pickup' | 'delivery') {
-    localStorage.setItem(STORAGE_KEY, type);
+    localStorage.setItem(
+        STORAGE_KEY,
+        type === 'delivery' ? 'delivery_dombi' : type,
+    );
 }
 
 type OverlayState = 'hidden' | 'entering' | 'visible' | 'exiting';
