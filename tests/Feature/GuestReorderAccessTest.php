@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
+use App\Models\OutletOperatingHours;
 use App\Models\Product;
 use App\Models\ProductCategory;
 use App\Models\User;
@@ -229,6 +230,14 @@ class GuestReorderAccessTest extends TestCase
             'latitude' => -6.2088,
             'longitude' => 106.8456,
             'status' => 'active',
+        ]);
+
+        OutletOperatingHours::create([
+            'outlet_id' => $outlet->id,
+            'day_of_week' => (int) now('Asia/Jakarta')->format('w'),
+            'open_time' => '00:00',
+            'close_time' => '23:59',
+            'is_closed' => false,
         ]);
 
         $product = Product::create([
