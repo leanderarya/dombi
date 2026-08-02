@@ -7,7 +7,9 @@ use App\Models\CourierProfile;
 use App\Models\Outlet;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class CourierProfileTest extends TestCase
@@ -40,10 +42,15 @@ class CourierProfileTest extends TestCase
 
     public function test_outlet_can_nominate_courier(): void
     {
+        Storage::fake('public');
+
         $response = $this->actingAs($this->outletStaff)
             ->post('/outlet/my-couriers/nominate', [
                 'name' => 'Bambang',
                 'phone' => '081234567890',
+                'vehicle_plate' => 'AB 1234 CD',
+                'face_photo' => UploadedFile::fake()->image('face.jpg', 400, 400),
+                'vehicle_photo' => UploadedFile::fake()->image('vehicle.jpg', 400, 400),
             ]);
 
         $response->assertRedirect();
@@ -51,28 +58,36 @@ class CourierProfileTest extends TestCase
             'courier_source' => 'outlet',
             'outlet_id' => $this->outlet->id,
             'nominated_by' => $this->outletStaff->id,
-            'invitation_status' => 'pending',
+            'invitation_status' => CourierProfile::STATUS_SUBMITTED,
         ]);
     }
 
     public function test_duplicate_pending_nomination_is_blocked_for_same_outlet_and_phone(): void
     {
+        Storage::fake('public');
+
         $this->actingAs($this->outletStaff)
             ->post('/outlet/my-couriers/nominate', [
                 'name' => 'Bambang',
                 'phone' => '081234567890',
+                'vehicle_plate' => 'AB 1234 CD',
+                'face_photo' => UploadedFile::fake()->image('face.jpg', 400, 400),
+                'vehicle_photo' => UploadedFile::fake()->image('vehicle.jpg', 400, 400),
             ]);
 
         $response = $this->actingAs($this->outletStaff)
             ->post('/outlet/my-couriers/nominate', [
                 'name' => 'Bambang',
                 'phone' => '081234567890',
+                'vehicle_plate' => 'AB 1234 CD',
+                'face_photo' => UploadedFile::fake()->image('face.jpg', 400, 400),
+                'vehicle_photo' => UploadedFile::fake()->image('vehicle.jpg', 400, 400),
             ]);
 
-        $response->assertRedirect();
+        $response->assertStatus(409);
         $this->assertEquals(1, CourierProfile::where('outlet_id', $this->outlet->id)
             ->where('nominee_phone', '081234567890')
-            ->where('invitation_status', 'pending')
+            ->where('invitation_status', CourierProfile::STATUS_SUBMITTED)
             ->count());
     }
 
@@ -84,20 +99,25 @@ class CourierProfileTest extends TestCase
             'nominated_by' => $this->outletStaff->id,
             'nominee_name' => 'Bambang',
             'nominee_phone' => '081234567890',
-            'invitation_status' => 'rejected',
+            'nominee_vehicle_plate' => 'AB 1234 CD',
+            'nominee_face_photo' => 'faces/a.jpg',
+            'nominee_vehicle_photo' => 'vehicles/b.jpg',
+            'invitation_status' => CourierProfile::STATUS_REJECTED,
             'approved_by' => $this->owner->id,
             'approved_at' => now(),
+            'rejection_reason' => 'Foto kurang jelas',
         ]);
 
         $this->actingAs($this->outletStaff)
-            ->post('/outlet/my-couriers/nominate', [
+            ->put("/outlet/my-couriers/{$profile->id}/resubmit", [
                 'name' => 'Bambang Baru',
                 'phone' => '081234567890',
+                'vehicle_plate' => 'AB 1234 CD',
             ])
             ->assertRedirect();
 
         $profile->refresh();
-        $this->assertEquals('pending', $profile->invitation_status);
+        $this->assertEquals(CourierProfile::STATUS_SUBMITTED, $profile->invitation_status);
         $this->assertNull($profile->approved_at);
         $this->assertNull($profile->approved_by);
         $this->assertSame('Bambang Baru', $profile->nominee_name);
@@ -114,7 +134,10 @@ class CourierProfileTest extends TestCase
             'nominated_by' => $this->outletStaff->id,
             'nominee_name' => 'Bambang',
             'nominee_phone' => '081234567890',
-            'invitation_status' => 'pending',
+            'nominee_vehicle_plate' => 'AB 1234 CD',
+            'nominee_face_photo' => 'faces/a.jpg',
+            'nominee_vehicle_photo' => 'vehicles/b.jpg',
+            'invitation_status' => CourierProfile::STATUS_SUBMITTED,
         ]);
 
         $response = $this->actingAs($this->owner)
@@ -122,7 +145,7 @@ class CourierProfileTest extends TestCase
 
         $response->assertRedirect();
         $profile->refresh();
-        $this->assertEquals('pending', $profile->invitation_status);
+        $this->assertEquals(CourierProfile::STATUS_AWAITING_ACTIVATION, $profile->invitation_status);
         $this->assertEquals($this->owner->id, $profile->approved_by);
         $this->assertNotNull($profile->approved_at);
         $this->assertNotNull($profile->user_id);
@@ -136,25 +159,38 @@ class CourierProfileTest extends TestCase
             'courier_source' => 'outlet',
             'outlet_id' => $this->outlet->id,
             'nominated_by' => $this->outletStaff->id,
-            'invitation_status' => 'pending',
+            'invitation_status' => CourierProfile::STATUS_SUBMITTED,
         ]);
 
         $response = $this->actingAs($this->owner)
-            ->post("/owner/couriers/{$profile->id}/reject");
+            ->post("/owner/couriers/{$profile->id}/reject", [
+                'reason' => 'Foto tidak jelas',
+            ]);
 
         $response->assertRedirect();
         $profile->refresh();
-        $this->assertEquals('rejected', $profile->invitation_status);
+        $this->assertEquals(CourierProfile::STATUS_REJECTED, $profile->invitation_status);
         $this->assertEquals($this->owner->id, $profile->approved_by);
+        $this->assertSame('Foto tidak jelas', $profile->rejection_reason);
         $this->assertDatabaseHas('courier_profiles', ['id' => $profile->id]);
+        $this->assertDatabaseHas('courier_nomination_reviews', [
+            'courier_profile_id' => $profile->id,
+            'decision' => 'rejected',
+            'reason' => 'Foto tidak jelas',
+        ]);
     }
 
     public function test_outlet_nomination_persists_nominee_name_and_phone(): void
     {
+        Storage::fake('public');
+
         $response = $this->actingAs($this->outletStaff)
             ->post('/outlet/my-couriers/nominate', [
                 'name' => '  Bambang Outlet  ',
                 'phone' => '0812 3456 7890',
+                'vehicle_plate' => '  ab 1234 cd ',
+                'face_photo' => UploadedFile::fake()->image('face.jpg', 400, 400),
+                'vehicle_photo' => UploadedFile::fake()->image('vehicle.jpg', 400, 400),
             ]);
 
         $response->assertRedirect();
@@ -164,7 +200,8 @@ class CourierProfileTest extends TestCase
             'nominated_by' => $this->outletStaff->id,
             'nominee_name' => 'Bambang Outlet',
             'nominee_phone' => '081234567890',
-            'invitation_status' => 'pending',
+            'nominee_vehicle_plate' => 'AB1234CD',
+            'invitation_status' => CourierProfile::STATUS_SUBMITTED,
         ]);
     }
 
@@ -176,7 +213,10 @@ class CourierProfileTest extends TestCase
             'nominated_by' => $this->outletStaff->id,
             'nominee_name' => 'Bambang Outlet',
             'nominee_phone' => '081234567890',
-            'invitation_status' => 'pending',
+            'nominee_vehicle_plate' => 'AB 1234 CD',
+            'nominee_face_photo' => 'faces/a.jpg',
+            'nominee_vehicle_photo' => 'vehicles/b.jpg',
+            'invitation_status' => CourierProfile::STATUS_SUBMITTED,
         ]);
 
         $this->actingAs($this->owner)
@@ -190,7 +230,7 @@ class CourierProfileTest extends TestCase
         $this->assertSame('Bambang Outlet', $createdUser->name);
         $this->assertSame('081234567890', $createdUser->phone);
         $this->assertSame('courier', $createdUser->role);
-        $this->assertSame('pending', $profile->invitation_status);
+        $this->assertSame(CourierProfile::STATUS_AWAITING_ACTIVATION, $profile->invitation_status);
         $this->assertSame('Bambang Outlet', $invitation->name);
         $this->assertSame('081234567890', $invitation->phone);
         $this->assertSame('pending', $invitation->status);
@@ -204,7 +244,10 @@ class CourierProfileTest extends TestCase
             'nominated_by' => $this->outletStaff->id,
             'nominee_name' => 'Bambang Outlet',
             'nominee_phone' => '081234567890',
-            'invitation_status' => 'pending',
+            'nominee_vehicle_plate' => 'AB 1234 CD',
+            'nominee_face_photo' => 'faces/a.jpg',
+            'nominee_vehicle_photo' => 'vehicles/b.jpg',
+            'invitation_status' => CourierProfile::STATUS_SUBMITTED,
         ]);
 
         $this->actingAs($this->owner)
@@ -233,18 +276,23 @@ class CourierProfileTest extends TestCase
             'nominated_by' => $this->outletStaff->id,
             'nominee_name' => 'Bambang Outlet',
             'nominee_phone' => '081234567890',
-            'invitation_status' => 'pending',
+            'nominee_vehicle_plate' => 'AB 1234 CD',
+            'nominee_face_photo' => 'faces/a.jpg',
+            'nominee_vehicle_photo' => 'vehicles/b.jpg',
+            'invitation_status' => CourierProfile::STATUS_AWAITING_ACTIVATION,
             'approved_at' => now(),
             'user_id' => User::factory()->create(['role' => 'courier'])->id,
         ]);
 
         $this->actingAs($this->owner)
-            ->post("/owner/couriers/{$profile->id}/reject")
-            ->assertRedirect();
+            ->post("/owner/couriers/{$profile->id}/reject", [
+                'reason' => 'Sudah diproses',
+            ])
+            ->assertStatus(409);
 
         $this->assertDatabaseHas('courier_profiles', [
             'id' => $profile->id,
-            'invitation_status' => 'pending',
+            'invitation_status' => CourierProfile::STATUS_AWAITING_ACTIVATION,
         ]);
     }
 
@@ -254,7 +302,7 @@ class CourierProfileTest extends TestCase
         $profile = CourierProfile::create([
             'user_id' => $pusatUser->id,
             'courier_source' => 'pusat',
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $archivedOutlet = Outlet::create([
             'name' => 'Archived Plot Outlet',
@@ -280,7 +328,7 @@ class CourierProfileTest extends TestCase
         $profile = CourierProfile::create([
             'user_id' => $pusatUser->id,
             'courier_source' => 'pusat',
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $outletB = Outlet::create([
@@ -314,7 +362,7 @@ class CourierProfileTest extends TestCase
             'user_id' => $outletUser->id,
             'courier_source' => 'outlet',
             'outlet_id' => $this->outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $response = $this->actingAs($this->owner)
@@ -361,7 +409,7 @@ class CourierProfileTest extends TestCase
             'user_id' => $courier->id,
             'courier_source' => 'pusat',
             'outlet_id' => null,
-            'invitation_status' => 'pending',
+            'invitation_status' => CourierProfile::STATUS_AWAITING_ACTIVATION,
         ]);
     }
 
@@ -388,7 +436,7 @@ class CourierProfileTest extends TestCase
 
         $this->assertSame('accepted', $invitation->status);
         $this->assertNotNull($invitation->accepted_at);
-        $this->assertSame('accepted', $profile->invitation_status);
+        $this->assertSame(CourierProfile::STATUS_ACTIVE, $profile->invitation_status);
         $this->assertNotNull($profile->accepted_at);
         $this->assertEquals($invitation->accepted_at?->toDateTimeString(), $profile->accepted_at?->toDateTimeString());
         $this->assertSame('pusat', $profile->courier_source);
@@ -434,7 +482,7 @@ class CourierProfileTest extends TestCase
         $profile = CourierProfile::create([
             'user_id' => $courier->id,
             'courier_source' => null,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $response = $this->actingAs($this->owner)
@@ -456,7 +504,7 @@ class CourierProfileTest extends TestCase
         $profile = CourierProfile::create([
             'user_id' => $courier->id,
             'courier_source' => null,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $profile->assignedOutlets()->attach($this->outlet->id);
 
@@ -480,7 +528,7 @@ class CourierProfileTest extends TestCase
         $secondLegacyProfile = CourierProfile::create([
             'user_id' => User::factory()->create(['role' => 'courier'])->id,
             'courier_source' => null,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $invalidResponse = $this->from("/owner/couriers/{$courier->id}")
@@ -506,7 +554,7 @@ class CourierProfileTest extends TestCase
         $profile = CourierProfile::create([
             'user_id' => $courier->id,
             'courier_source' => null,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $response = $this->from("/owner/couriers/{$courier->id}")
@@ -526,7 +574,7 @@ class CourierProfileTest extends TestCase
         $profile = CourierProfile::create([
             'user_id' => $courier->id,
             'courier_source' => null,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $response = $this->from("/owner/couriers/{$courier->id}")
@@ -549,7 +597,7 @@ class CourierProfileTest extends TestCase
         $profile = CourierProfile::create([
             'user_id' => $courier->id,
             'courier_source' => 'pusat',
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $response = $this->actingAs($this->owner)
@@ -572,14 +620,14 @@ class CourierProfileTest extends TestCase
         $pusatProfile = CourierProfile::create([
             'user_id' => $pusatUser->id,
             'courier_source' => 'pusat',
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
         $pusatProfile->assignedOutlets()->attach($this->outlet->id);
 
         $outletProfile = CourierProfile::create([
             'courier_source' => 'outlet',
             'outlet_id' => $this->outlet->id,
-            'invitation_status' => 'accepted',
+            'invitation_status' => CourierProfile::STATUS_ACTIVE,
         ]);
 
         $available = CourierProfile::availableForOutlet($this->outlet->id)->get();

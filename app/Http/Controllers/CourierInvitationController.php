@@ -77,12 +77,12 @@ class CourierInvitationController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            if (! $lockedInvitation || ! $profile || $profile->invitation_status !== 'pending' || $lockedInvitation->status !== 'pending' || $lockedInvitation->isExpired()) {
+            if (! $lockedInvitation || ! $profile || ! $profile->isAwaitingActivation() || $lockedInvitation->status !== 'pending' || $lockedInvitation->isExpired()) {
                 abort(409, 'Undangan kurir tidak valid.');
             }
 
             $profile->update([
-                'invitation_status' => 'accepted',
+                'invitation_status' => CourierProfile::STATUS_ACTIVE,
                 'accepted_at' => $acceptedAt,
             ]);
 

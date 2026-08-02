@@ -243,7 +243,7 @@ class DeliveryAssignmentLaunchGuardTest extends TestCase
                 'user_id' => $courier->id,
                 'courier_source' => 'outlet',
                 'outlet_id' => $outlet->id,
-                'invitation_status' => 'accepted',
+                'invitation_status' => CourierProfile::STATUS_ACTIVE,
             ]);
         }
 

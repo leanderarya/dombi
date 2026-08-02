@@ -37,7 +37,7 @@ class CourierService
                 'user_id' => $courier->id,
                 'courier_source' => 'pusat',
                 'outlet_id' => null,
-                'invitation_status' => 'pending',
+                'invitation_status' => CourierProfile::STATUS_AWAITING_ACTIVATION,
                 'invited_at' => now(),
                 'accepted_at' => null,
             ]);

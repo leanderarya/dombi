@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+import { router, useForm, usePage } from '@inertiajs/react';
 import { MapPin, Truck, Users, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
@@ -19,10 +19,12 @@ import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
 
-interface CourierPusat {
+interface CourierRow {
     id: number;
-    name: string;
+    name: string | null;
     phone: string | null;
+    source: string;
+    status: string;
     assigned_outlets: number[];
     assigned_outlet_names: string[];
     total_deliveries: number;
@@ -32,6 +34,9 @@ interface Candidate {
     id: number;
     nominee_name: string;
     nominee_phone: string;
+    nominee_vehicle_plate: string;
+    nominee_face_photo: string | null;
+    nominee_vehicle_photo: string | null;
     outlet_name: string;
     nominated_by_name: string;
     created_at: string;
@@ -52,15 +57,18 @@ interface RevenueRow {
 
 interface RejectedCourier {
     id: number;
+    nominee_name: string;
     outlet_name: string;
+    rejection_reason: string | null;
+    rejected_at: string | null;
 }
 
-type Tab = 'pusat' | 'kandidat' | 'riwayat' | 'pendapatan';
+type Tab = 'kurir' | 'kandidat' | 'riwayat' | 'pendapatan';
 
 type Period = 'harian' | 'mingguan' | 'bulanan';
 
 const tabs: { key: Tab; label: string }[] = [
-    { key: 'pusat', label: 'Kurir Pusat' },
+    { key: 'kurir', label: 'Kurir' },
     { key: 'kandidat', label: 'Kandidat Outlet' },
     { key: 'riwayat', label: 'Riwayat' },
     { key: 'pendapatan', label: 'Pendapatan Ongkir' },
@@ -73,7 +81,7 @@ const PERIODS: { key: Period; label: string }[] = [
 ];
 
 interface PageProps {
-    pusat: CourierPusat[];
+    couriers: CourierRow[];
     candidates: Candidate[];
     rejected: RejectedCourier[];
     outlets: Outlet[];
@@ -89,7 +97,7 @@ interface PageProps {
 
 export default function CourierManagement() {
     const {
-        pusat,
+        couriers,
         candidates,
         rejected,
         outlets,
@@ -100,7 +108,7 @@ export default function CourierManagement() {
     const urlPeriod = new URLSearchParams(url.split('?')[1] ?? '').get(
         'period',
     );
-    const [activeTab, setActiveTab] = useState<Tab>('pusat');
+    const [activeTab, setActiveTab] = useState<Tab>('kurir');
     const [period, setPeriod] = useState<Period>(
         PERIODS.some((p) => p.key === urlPeriod)
             ? (urlPeriod as Period)
@@ -109,6 +117,11 @@ export default function CourierManagement() {
     const [plottingId, setPlottingId] = useState<number | null>(null);
     const [selectedOutlets, setSelectedOutlets] = useState<number[]>([]);
     const [detailOutlet, setDetailOutlet] = useState<RevenueRow | null>(null);
+    const [rejectTarget, setRejectTarget] = useState<Candidate | null>(null);
+    const rejectForm = useForm({ reason: '' });
+    const [candidateDetail, setCandidateDetail] = useState<Candidate | null>(
+        null,
+    );
 
     const changePeriod = (next: Period) => {
         setPeriod(next);
@@ -182,12 +195,14 @@ export default function CourierManagement() {
                     onChange={(key) => setActiveTab(key as Tab)}
                 />
 
-                {activeTab === 'pusat' && (
+                {activeTab === 'kurir' && (
                     <OwnerTable>
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
-                                    <th className="px-4 py-3">Nama</th>
+                                    <th className="px-4 py-3">Kurir</th>
+                                    <th className="px-4 py-3">Sumber</th>
+                                    <th className="px-4 py-3">Status</th>
                                     <th className="px-4 py-3">Delivery</th>
                                     <th className="px-4 py-3">Outlet</th>
                                     <th className="px-4 py-3 text-right">
@@ -196,13 +211,44 @@ export default function CourierManagement() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-border">
-                                {pusat.map((c: CourierPusat) => (
+                                {couriers.map((c: CourierRow) => (
                                     <tr
                                         key={c.id}
                                         className="hover:bg-surface-muted/60"
                                     >
-                                        <td className="px-4 py-3 font-medium text-text">
-                                            {c.name}
+                                        <td className="px-4 py-3">
+                                            <div className="font-medium text-text">
+                                                {c.name}
+                                            </div>
+                                            <div className="text-xs text-text-muted tabular-nums">
+                                                {c.phone}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <StatusBadge
+                                                variant={
+                                                    c.source === 'pusat'
+                                                        ? 'info'
+                                                        : 'success'
+                                                }
+                                            >
+                                                {c.source === 'pusat'
+                                                    ? 'Pusat'
+                                                    : 'Outlet'}
+                                            </StatusBadge>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <StatusBadge
+                                                variant={
+                                                    c.status === 'active'
+                                                        ? 'success'
+                                                        : 'warning'
+                                                }
+                                            >
+                                                {c.status === 'active'
+                                                    ? 'Aktif'
+                                                    : 'Menunggu Aktivasi'}
+                                            </StatusBadge>
                                         </td>
                                         <td className="px-4 py-3 text-text-muted tabular-nums">
                                             {c.total_deliveries} delivery
@@ -210,21 +256,23 @@ export default function CourierManagement() {
                                         <td className="px-4 py-3 text-xs text-text-muted">
                                             {c.assigned_outlet_names.join(
                                                 ', ',
-                                            ) || 'Belum diplot'}
+                                            ) || '—'}
                                         </td>
                                         <td className="px-4 py-3 text-right">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                onClick={() => {
-                                                    setPlottingId(c.id);
-                                                    setSelectedOutlets(
-                                                        c.assigned_outlets,
-                                                    );
-                                                }}
-                                            >
-                                                Plot Outlet
-                                            </Button>
+                                            {c.source === 'pusat' && (
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setPlottingId(c.id);
+                                                        setSelectedOutlets(
+                                                            c.assigned_outlets,
+                                                        );
+                                                    }}
+                                                >
+                                                    Plot Outlet
+                                                </Button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -239,6 +287,8 @@ export default function CourierManagement() {
                             <thead>
                                 <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
                                     <th className="px-4 py-3">Kandidat</th>
+                                    <th className="px-4 py-3">Plat</th>
+                                    <th className="px-4 py-3">Foto</th>
                                     <th className="px-4 py-3">Outlet</th>
                                     <th className="px-4 py-3">
                                         Dicalonkan oleh
@@ -252,7 +302,8 @@ export default function CourierManagement() {
                                 {candidates.map((c: Candidate) => (
                                     <tr
                                         key={c.id}
-                                        className="hover:bg-surface-muted/60"
+                                        onClick={() => setCandidateDetail(c)}
+                                        className="cursor-pointer hover:bg-surface-muted/60"
                                     >
                                         <td className="px-4 py-3">
                                             <div className="font-medium text-text">
@@ -260,6 +311,27 @@ export default function CourierManagement() {
                                             </div>
                                             <div className="text-xs text-text-muted tabular-nums">
                                                 {c.nominee_phone}
+                                            </div>
+                                        </td>
+                                        <td className="px-4 py-3 text-text-muted">
+                                            {c.nominee_vehicle_plate}
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <div className="flex gap-1">
+                                                {c.nominee_face_photo && (
+                                                    <img
+                                                        src={`/storage/${c.nominee_face_photo}`}
+                                                        alt="Wajah"
+                                                        className="h-8 w-8 rounded object-cover"
+                                                    />
+                                                )}
+                                                {c.nominee_vehicle_photo && (
+                                                    <img
+                                                        src={`/storage/${c.nominee_vehicle_photo}`}
+                                                        alt="Kendaraan"
+                                                        className="h-8 w-8 rounded object-cover"
+                                                    />
+                                                )}
                                             </div>
                                         </td>
                                         <td className="px-4 py-3 text-text-muted">
@@ -273,22 +345,23 @@ export default function CourierManagement() {
                                                 <Button
                                                     size="sm"
                                                     variant="primary"
-                                                    onClick={() =>
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
                                                         router.post(
                                                             `/owner/couriers/${c.id}/approve`,
-                                                        )
-                                                    }
+                                                        );
+                                                    }}
                                                 >
                                                     Setujui
                                                 </Button>
                                                 <Button
                                                     size="sm"
                                                     variant="danger"
-                                                    onClick={() =>
-                                                        router.post(
-                                                            `/owner/couriers/${c.id}/reject`,
-                                                        )
-                                                    }
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setRejectTarget(c);
+                                                        rejectForm.reset();
+                                                    }}
                                                 >
                                                     Tolak
                                                 </Button>
@@ -306,7 +379,9 @@ export default function CourierManagement() {
                         <table className="w-full">
                             <thead>
                                 <tr className="border-b border-border text-left text-xs font-semibold tracking-wider text-text-subtle uppercase">
+                                    <th className="px-4 py-3">Kandidat</th>
                                     <th className="px-4 py-3">Outlet</th>
+                                    <th className="px-4 py-3">Alasan</th>
                                     <th className="px-4 py-3">Status</th>
                                 </tr>
                             </thead>
@@ -317,7 +392,13 @@ export default function CourierManagement() {
                                         className="hover:bg-surface-muted/60"
                                     >
                                         <td className="px-4 py-3 font-medium text-text">
+                                            {r.nominee_name}
+                                        </td>
+                                        <td className="px-4 py-3 text-text-muted">
                                             {r.outlet_name}
+                                        </td>
+                                        <td className="px-4 py-3 text-xs text-text-muted">
+                                            {r.rejection_reason ?? '—'}
                                         </td>
                                         <td className="px-4 py-3">
                                             <StatusBadge variant="danger">
@@ -507,6 +588,173 @@ export default function CourierManagement() {
                             <Button
                                 variant="outline"
                                 onClick={() => setDetailOutlet(null)}
+                            >
+                                Tutup
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Reject Candidate Dialog */}
+                <Dialog
+                    open={rejectTarget !== null}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setRejectTarget(null);
+                        }
+                    }}
+                >
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>Tolak Kandidat</DialogTitle>
+                            <DialogDescription>
+                                Alasan wajib dan akan terlihat oleh Outlet.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <form
+                            onSubmit={(e) => {
+                                e.preventDefault();
+
+                                if (rejectTarget) {
+                                    rejectForm.post(
+                                        `/owner/couriers/${rejectTarget.id}/reject`,
+                                        {
+                                            onSuccess: () =>
+                                                setRejectTarget(null),
+                                        },
+                                    );
+                                }
+                            }}
+                            className="space-y-4"
+                        >
+                            <label className="block space-y-1">
+                                <span className="text-sm font-medium text-text">
+                                    Alasan Penolakan
+                                </span>
+                                <textarea
+                                    value={rejectForm.data.reason}
+                                    onChange={(e) =>
+                                        rejectForm.setData(
+                                            'reason',
+                                            e.target.value,
+                                        )
+                                    }
+                                    placeholder="Contoh: foto wajah tidak jelas"
+                                    className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                                    rows={3}
+                                />
+                                {rejectForm.errors.reason && (
+                                    <span className="text-xs text-red-600">
+                                        {rejectForm.errors.reason}
+                                    </span>
+                                )}
+                            </label>
+                            <DialogFooter className="mt-4">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => setRejectTarget(null)}
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    variant="danger"
+                                    loading={rejectForm.processing}
+                                    disabled={!rejectForm.data.reason}
+                                >
+                                    Tolak Kandidat
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    </DialogContent>
+                </Dialog>
+
+                {/* Candidate Detail Dialog */}
+                <Dialog
+                    open={candidateDetail !== null}
+                    onOpenChange={(open) => {
+                        if (!open) {
+                            setCandidateDetail(null);
+                        }
+                    }}
+                >
+                    <DialogContent className="max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>
+                                Detail Kandidat —{' '}
+                                {candidateDetail?.nominee_name}
+                            </DialogTitle>
+                            <DialogDescription>
+                                Dicalonkan oleh{' '}
+                                {candidateDetail?.nominated_by_name} dari{' '}
+                                {candidateDetail?.outlet_name}
+                            </DialogDescription>
+                        </DialogHeader>
+                        {candidateDetail && (
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <div className="text-xs text-text-subtle">
+                                            Foto Wajah
+                                        </div>
+                                        {candidateDetail.nominee_face_photo ? (
+                                            <img
+                                                src={`/storage/${candidateDetail.nominee_face_photo}`}
+                                                alt="Wajah"
+                                                className="mt-1 h-28 w-28 rounded-lg object-cover"
+                                            />
+                                        ) : (
+                                            <div className="mt-1 text-xs text-text-muted">
+                                                —
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div>
+                                        <div className="text-xs text-text-subtle">
+                                            Foto Kendaraan
+                                        </div>
+                                        {candidateDetail.nominee_vehicle_photo ? (
+                                            <img
+                                                src={`/storage/${candidateDetail.nominee_vehicle_photo}`}
+                                                alt="Kendaraan"
+                                                className="mt-1 h-28 w-28 rounded-lg object-cover"
+                                            />
+                                        ) : (
+                                            <div className="mt-1 text-xs text-text-muted">
+                                                —
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div>
+                                    <OwnerDetailRow
+                                        label="Nama"
+                                        value={candidateDetail.nominee_name}
+                                    />
+                                    <OwnerDetailRow
+                                        label="Nomor HP"
+                                        value={candidateDetail.nominee_phone}
+                                    />
+                                    <OwnerDetailRow
+                                        label="Plat Nomor"
+                                        value={
+                                            candidateDetail.nominee_vehicle_plate
+                                        }
+                                    />
+                                    <OwnerDetailRow
+                                        label="Diajukan"
+                                        value={new Date(
+                                            candidateDetail.created_at,
+                                        ).toLocaleString('id-ID')}
+                                    />
+                                </div>
+                            </div>
+                        )}
+                        <DialogFooter className="mt-4">
+                            <Button
+                                variant="outline"
+                                onClick={() => setCandidateDetail(null)}
                             >
                                 Tutup
                             </Button>
