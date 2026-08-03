@@ -114,6 +114,7 @@ export default function CheckoutCustomer({
         ),
     );
     const autoApplied = useRef(false);
+    const userChoseLocation = useRef(false);
 
     const form = useForm<CustomerForm>({
         customer_name: draft?.customer?.customer_name ?? authUser?.name ?? '',
@@ -142,6 +143,7 @@ export default function CheckoutCustomer({
 
     const applyLocation = useCallback(
         (loc: CustomerLocation) => {
+            userChoseLocation.current = true;
             const nextData = applyLocationToForm(
                 form.data,
                 loc,
@@ -156,6 +158,7 @@ export default function CheckoutCustomer({
 
     const applySavedAddress = useCallback(
         (addr: SavedAddress) => {
+            userChoseLocation.current = true;
             form.setData({
                 ...form.data,
                 address_id: addr.id,
@@ -178,6 +181,10 @@ export default function CheckoutCustomer({
     // Single auto-select effect with priority chain
     useEffect(() => {
         if (!isDelivery || autoApplied.current) {
+            return;
+        }
+
+        if (userChoseLocation.current) {
             return;
         }
 
