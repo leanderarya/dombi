@@ -306,14 +306,15 @@ export default function CheckoutCustomer({
         : null;
 
     const submit = () => {
-        if (!showRecipient) {
-            form.setData('recipient_name', '');
-            form.setData('recipient_phone', '');
-            form.setData('save_recipient', false);
-        } else {
-            form.setData('save_recipient', saveRecipient);
+        if (form.processing) {
+            return;
         }
 
+        const finalRecipient = !showRecipient
+            ? { recipient_name: '', recipient_phone: '', save_recipient: false }
+            : { save_recipient: saveRecipient };
+
+        form.setData((current) => ({ ...current, ...finalRecipient }));
         form.post('/customer/checkout/customer');
     };
 
