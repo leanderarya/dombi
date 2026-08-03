@@ -372,4 +372,33 @@ class DeliveryPricingTest extends TestCase
                 ->where('summary.delivery_fee', 8000)
             );
     }
+
+    public function test_selected_delivery_outlet_becomes_final_order_outlet_not_nearest(): void
+    {
+        $product = $this->createStockedProduct();
+        $near = $this->createOutlet(-7.0500, 110.4300);
+        $this->withStock($near, $product);
+        $far = $this->createOutlet(-7.0200, 110.4600);
+        $this->withStock($far, $product);
+        Outlet::where('id', $far->id)->update(['delivery_radius_km' => 20]);
+        Outlet::where('id', $near->id)->update(['delivery_radius_km' => 20]);
+
+        $this->withSession([
+            'checkout.cart' => [['product_id' => $product->id, 'quantity' => 1]],
+            'checkout.fulfillment' => [
+                'fulfillment_type' => 'delivery_dombi',
+                'selected_outlet_id' => $far->id,
+            ],
+            'checkout.selected_outlet_id' => $far->id,
+            'checkout.customer' => [
+                'customer_name' => 'Sarah Dombi',
+                'phone_number' => '6281234567890',
+            ],
+            'checkout.location' => $this->locationDraft(),
+        ])->post('/customer/checkout/payment', ['payment_method' => 'qris'])->assertRedirect();
+
+        $order = Order::latest()->firstOrFail();
+        $this->assertSame($far->id, $order->outlet_id);
+        $this->assertSame($far->id, $order->recommended_outlet_id);
+    }
 }
