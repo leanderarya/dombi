@@ -10,6 +10,7 @@ use App\Models\CustomerAddress;
 use App\Services\CustomerAddressService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -82,11 +83,15 @@ class AddressController extends Controller
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat berhasil diperbarui.');
     }
 
-    public function destroy(CustomerAddress $address): RedirectResponse
+    public function destroy(CustomerAddress $address, Request $request): JsonResponse|RedirectResponse
     {
         $this->authorizeAddress($address);
 
         $this->addressService->delete($address);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => true], 204);
+        }
 
         return redirect()->route('customer.addresses.index')->with('success', 'Alamat berhasil dihapus.');
     }
