@@ -192,7 +192,7 @@ class CheckoutController extends Controller
             )
             : ['recommended' => null, 'alternatives' => []];
         $deliveryQuote = $fulfillment === 'delivery_dombi'
-            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService, $this->selectedOutletId($request))
+            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService, $orderService, $this->selectedOutletId($request))
             : null;
 
         $user = $request->user();
@@ -431,7 +431,7 @@ class CheckoutController extends Controller
         return redirect()->route('customer.checkout.payment');
     }
 
-    public function payment(Request $request, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService): Response|RedirectResponse
+    public function payment(Request $request, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService, OrderService $orderService): Response|RedirectResponse
     {
         $cart = collect($request->session()->get('checkout.cart', []));
 
@@ -449,7 +449,7 @@ class CheckoutController extends Controller
             ? Outlet::query()->find($request->session()->get('checkout.fulfillment.selected_outlet_id'), ['id', 'name', 'address', 'kelurahan', 'kecamatan'])
             : null;
         $deliveryQuote = $fulfillmentType === 'delivery_dombi'
-            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService, $this->selectedOutletId($request))
+            ? $this->resolveDeliveryQuote($cart->all(), $location, $recommendOutletService, $deliveryPricingService, $orderService, $this->selectedOutletId($request))
             : null;
 
         // Payment via DOKU — 4 metode, threshold subtotal only, full absorb <500k except CC
@@ -547,14 +547,18 @@ class CheckoutController extends Controller
 
         $subtotal = $this->calculateSubtotal($cart);
         $deliveryQuote = $fulfillmentType === 'delivery_dombi'
-            ? $this->resolveDeliveryQuote($cart, $location, $recommendOutletService, $deliveryPricingService, $this->selectedOutletId($request))
+            ? $this->resolveDeliveryQuote($cart, $location, $recommendOutletService, $deliveryPricingService, $orderService, $this->selectedOutletId($request))
             : null;
 
         if ($fulfillmentType === 'delivery_dombi' && (! $deliveryQuote || ! ($deliveryQuote['is_serviceable'] ?? false))) {
-            return redirect()->route('customer.checkout.customer')->withErrors([
-                'latitude' => 'Maaf, lokasi Anda berada di luar area layanan Kurir Dombi.',
-            ]);
+            $reason = ($deliveryQuote['reason'] ?? null)
+                ?: 'Maaf, lokasi Anda berada di luar area layanan Kurir Dombi.';
+            $route = $deliveryQuote['reason'] ?? null ? 'customer.checkout.payment' : 'customer.checkout.customer';
+            $field = $deliveryQuote['reason'] ?? null ? 'selected_outlet_id' : 'latitude';
+
+            return redirect()->route($route)->withErrors([$field => $reason]);
         }
+        $selectedOutletIdForPayload = $this->selectedOutletId($request);
 
         $deliveryFee = $fulfillmentType === 'delivery_dombi' ? (float) ($deliveryQuote['delivery_fee'] ?? 0) : 0;
         $paymentFee = $this->calculatePaymentFee($validated['payment_method'], $subtotal);
@@ -567,7 +571,7 @@ class CheckoutController extends Controller
                 ...$customer,
                 'items' => $cart,
                 'fulfillment_type' => $fulfillmentType,
-                'selected_outlet_id' => $request->session()->get('checkout.fulfillment.selected_outlet_id'),
+                'selected_outlet_id' => $selectedOutletIdForPayload,
                 'payment_method' => $validated['payment_method'],
                 'delivery_fee' => $deliveryFee,
                 'delivery_distance_km' => $deliveryQuote['distance_km'] ?? 0,
@@ -967,8 +971,14 @@ class CheckoutController extends Controller
         return $id !== null ? (int) $id : null;
     }
 
-    private function resolveDeliveryQuote(array $cart, $location, RecommendOutletService $recommendOutletService, DeliveryPricingService $deliveryPricingService, ?int $selectedOutletId = null): ?array
-    {
+    private function resolveDeliveryQuote(
+        array $cart,
+        $location,
+        RecommendOutletService $recommendOutletService,
+        DeliveryPricingService $deliveryPricingService,
+        OrderService $orderService,
+        ?int $selectedOutletId = null,
+    ): ?array {
         if (! is_array($location) || ! isset($location['latitude'], $location['longitude'])) {
             return null;
         }
@@ -978,14 +988,15 @@ class CheckoutController extends Controller
         if ($selectedOutletId) {
             $outlet = Outlet::query()
                 ->active()
-                ->find($selectedOutletId, ['id', 'name', 'address', 'kelurahan', 'kecamatan', 'latitude', 'longitude']);
+                ->find($selectedOutletId, ['id', 'name', 'address', 'kelurahan', 'kecamatan', 'latitude', 'longitude', 'delivery_radius_km']);
         }
 
-        if (! $outlet || $outlet->latitude === null || $outlet->longitude === null) {
+        // Candidate quote
+        if (! $outlet) {
             $recommendedOutlet = $recommendOutletService->recommendForDelivery(
                 (float) $location['latitude'],
                 (float) $location['longitude'],
-                $cart
+                $cart,
             );
 
             if (! $recommendedOutlet) {
@@ -993,9 +1004,36 @@ class CheckoutController extends Controller
             }
 
             $outlet = Outlet::query()->find($recommendedOutlet['id'], ['id', 'name', 'address', 'kelurahan', 'kecamatan', 'latitude', 'longitude']);
+        }
 
-            if (! $outlet || $outlet->latitude === null || $outlet->longitude === null) {
-                return null;
+        if (! $outlet || $outlet->latitude === null || $outlet->longitude === null) {
+            return null;
+        }
+
+        // Selected outlet must be eligible BEFORE quoting: if it is not, do NOT fall back
+        // to a nearest outlet — surface the reason so the user can change outlet.
+        if ($selectedOutletId !== null) {
+            $eligibility = $orderService->resolveDeliveryOutletEligibility(
+                $outlet->id,
+                (float) $location['latitude'],
+                (float) $location['longitude'],
+                $this->cartToItemsForEligibility($cart),
+            );
+
+            if (! $eligibility['eligible']) {
+                return [
+                    'is_serviceable' => false,
+                    'delivery_fee' => 0,
+                    'distance_km' => 0,
+                    'outlet' => [
+                        'id' => $outlet->id,
+                        'name' => $outlet->name,
+                        'address' => $outlet->address,
+                        'kelurahan' => $outlet->kelurahan,
+                        'kecamatan' => $outlet->kecamatan,
+                    ],
+                    'reason' => $eligibility['reason'],
+                ];
             }
         }
 
@@ -1003,7 +1041,7 @@ class CheckoutController extends Controller
             (float) $location['latitude'],
             (float) $location['longitude'],
             (float) $outlet->latitude,
-            (float) $outlet->longitude
+            (float) $outlet->longitude,
         );
 
         return [
@@ -1015,7 +1053,25 @@ class CheckoutController extends Controller
                 'kelurahan' => $outlet->kelurahan,
                 'kecamatan' => $outlet->kecamatan,
             ],
+            'reason' => null,
         ];
+    }
+
+    private function cartToItemsForEligibility(array $cart): array
+    {
+        $variantIds = collect($cart)->pluck('product_id')->filter()->map(fn ($id) => (int) $id)->all();
+        $variants = $this->loadCartVariants($variantIds);
+
+        return collect($cart)->map(function (array $item) use ($variants) {
+            $variant = $variants->get((int) ($item['product_id'] ?? 0));
+            $price = $variant?->selling_price ?? 0;
+
+            return [
+                'product_id' => (int) ($item['product_id'] ?? 0),
+                'quantity' => (int) ($item['quantity'] ?? 1),
+                'price' => $price,
+            ];
+        })->values()->all();
     }
 
     private function haversineDistance(float $lat1, float $lon1, float $lat2, float $lon2): float

@@ -103,26 +103,18 @@ class OrderService
             $gatewayFee = (float) ($payload['gateway_fee'] ?? $paymentFee);
             $absorbedFee = (float) ($payload['absorbed_fee'] ?? 0);
 
-            // Try each outlet until reservation succeeds
-            $order = null;
-            foreach ($candidates as $outlet) {
-                try {
-                    $order = $this->createOrderWithReservation(
-                        $customer, $outlet, $items, $payload, $fulfillmentType, $address,
-                        $subtotal, $deliveryFee, $deliveryDistance, $paymentFee, $gatewayFee, $absorbedFee,
-                    );
-                    break;
-                } catch (ValidationException $e) {
-                    // Stock was taken between snapshot and reservation — try next outlet
-                    continue;
-                }
-            }
+            $candidate = $candidates->first();
 
-            if (! $order) {
+            if (! $candidate) {
                 throw ValidationException::withMessages([
                     'items' => 'Stok produk tidak tersedia di outlet terdekat maupun outlet lain.',
                 ]);
             }
+
+            $order = $this->createOrderWithReservation(
+                $customer, $candidate, $items, $payload, $fulfillmentType, $address,
+                $subtotal, $deliveryFee, $deliveryDistance, $paymentFee, $gatewayFee, $absorbedFee,
+            );
 
             return $order;
         });
@@ -195,6 +187,43 @@ class OrderService
 
     private function getCandidateOutlets(array $items, string $fulfillmentType, ?CustomerAddress $address, array $payload): Collection
     {
+        if ($this->isDelivery($fulfillmentType) && ! empty($payload['selected_outlet_id'])) {
+            $selectedOutletId = (int) $payload['selected_outlet_id'];
+
+            $latitude = $address?->latitude !== null ? (float) $address->latitude : 0.0;
+            $longitude = $address?->longitude !== null ? (float) $address->longitude : 0.0;
+
+            // Lock inventory rows during eligibility so concurrent checkouts can't both
+            // pass the stock check and over-reserve (delivery_ojol has no quote display
+            // path, but assignment below still enforces the selected outlet).
+            $selectedOutlet = Outlet::query()
+                ->where('status', 'active')
+                ->with(['inventories' => fn ($q) => $q->where('is_active', true)->lockForUpdate()])
+                ->find($selectedOutletId);
+
+            if (! $selectedOutlet) {
+                throw ValidationException::withMessages([
+                    'selected_outlet_id' => 'Outlet terpilih tidak tersedia.',
+                ]);
+            }
+
+            $eligibility = $this->resolveDeliveryOutletEligibility(
+                $selectedOutlet->id,
+                $latitude,
+                $longitude,
+                $items,
+                $selectedOutlet,
+            );
+
+            if (! $eligibility['eligible']) {
+                throw ValidationException::withMessages([
+                    'selected_outlet_id' => $eligibility['reason'] ?? 'Outlet terpilih tidak tersedia untuk pesanan ini.',
+                ]);
+            }
+
+            return collect([$selectedOutlet]);
+        }
+
         if ($fulfillmentType === 'pickup' && ! empty($payload['selected_outlet_id'])) {
             $selectedOutlet = Outlet::query()
                 ->where('status', 'active')
@@ -222,6 +251,11 @@ class OrderService
             $items,
             $this->shouldUseDeliveryAddress($fulfillmentType)
         );
+    }
+
+    private function isDelivery(string $fulfillmentType): bool
+    {
+        return in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
     }
 
     public function previewAvailableOutlet(array $items, ?string $fulfillmentType, ?array $location = null): ?Outlet
@@ -468,6 +502,53 @@ class OrderService
     private function shouldUseDeliveryAddress(?string $fulfillmentType): bool
     {
         return in_array($fulfillmentType, ['delivery_dombi', 'delivery_ojol'], true);
+    }
+
+    /**
+     * Validate that a selected outlet can fulfil a delivery order.
+     *
+     * @return array{eligible: bool, reason: string|null}
+     */
+    public function resolveDeliveryOutletEligibility(
+        int $outletId,
+        float $latitude,
+        float $longitude,
+        array $items,
+        ?Outlet $outlet = null,
+    ): array {
+        $outlet ??= Outlet::query()
+            ->with('inventories')
+            ->find($outletId);
+
+        if (! $outlet) {
+            return ['eligible' => false, 'reason' => 'Outlet tidak ditemukan. Silakan pilih ulang outlet Anda.'];
+        }
+
+        if ((string) $outlet->status !== 'active') {
+            return ['eligible' => false, 'reason' => 'Outlet tidak aktif. Silakan pilih outlet lain.'];
+        }
+
+        if (! $outlet->isOpen()) {
+            return ['eligible' => false, 'reason' => 'Outlet sedang tutup. Pesanan dapat dibuat pada jam operasional.'];
+        }
+
+        if ($outlet->latitude !== null && $outlet->longitude !== null && $outlet->delivery_radius_km) {
+            $distance = $this->outletAssignmentService->calculateDistance(
+                $latitude,
+                $longitude,
+                (float) $outlet->latitude,
+                (float) $outlet->longitude,
+            );
+            if ($distance > $outlet->delivery_radius_km) {
+                return ['eligible' => false, 'reason' => "Lokasi Anda di luar area pengiriman outlet ini (radius {$outlet->delivery_radius_km} km)."];
+            }
+        }
+
+        if (! $this->outletAssignmentService->outletHasEnoughStock($outlet, $items, false)) {
+            return ['eligible' => false, 'reason' => 'Stok produk tidak mencukupi di outlet terpilih.'];
+        }
+
+        return ['eligible' => true, 'reason' => null];
     }
 
     private function pickupAddressLabel(Outlet $outlet, string $fulfillmentType): string
