@@ -6,6 +6,7 @@ use App\Models\Delivery;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -65,6 +66,11 @@ class CourierManagementRevenueTest extends TestCase
 
     public function test_index_filters_by_period(): void
     {
+        // Pin to a date in the first 3 days of a month so relative periods are deterministic
+        // (harian=1, mingguan=2, bulanan=1 are only consistent when the 3-day-old order
+        // falls in the prior month but same week). Avoids the Monday/week-boundary flake.
+        Carbon::setTestNow('2026-07-02 10:00:00');
+
         Delivery::create(['order_id' => $this->completedOrder(10000)->id, 'courier_type' => 'dombi', 'courier_cost' => null, 'status' => 'completed']);
         Delivery::create(['order_id' => $this->completedOrder(4000, ['created_at' => now()->subDays(3)])->id, 'courier_type' => 'dombi', 'courier_cost' => null, 'status' => 'completed']);
         Delivery::create(['order_id' => $this->completedOrder(2000, ['created_at' => now()->subDays(45)])->id, 'courier_type' => 'dombi', 'courier_cost' => null, 'status' => 'completed']);
@@ -79,9 +85,16 @@ class CourierManagementRevenueTest extends TestCase
             $this->actingAs($this->owner)
                 ->get("/owner/couriers/management?period={$period}")
                 ->assertInertia(fn ($page) => $page
+                    ->component('owner/courier-management/index')
                     ->where('revenueSummary.deliveries', $count)
                     ->where('revenueSummary.delivery_fee', $fee)
                 );
         }
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 }
