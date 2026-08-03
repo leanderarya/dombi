@@ -308,6 +308,15 @@ export default function CheckoutPayment({ draft, summary }: any) {
                     </div>
                 )}
 
+                {isDelivery &&
+                    summary.delivery_quote &&
+                    !summary.delivery_quote.is_serviceable && (
+                        <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800">
+                            {summary.delivery_quote.reason ??
+                                'Delivery belum tersedia untuk outlet terpilih.'}
+                        </div>
+                    )}
+
                 {isDelivery && draft?.location && (
                     <div className="mt-2 text-xs text-text-muted">
                         <MapPin className="mr-1 inline h-3 w-3 align-text-bottom" />
