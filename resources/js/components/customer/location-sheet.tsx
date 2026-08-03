@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
 import LocationSearchPanel from '@/components/customer/location-search-panel';
 import {
     syncCustomerLocationDraft,
@@ -322,13 +323,29 @@ function LocationSheetContent({
             });
 
             if (res.ok) {
+                const data = await res.json().catch(() => null);
+                const saved = data?.address;
+
+                // Apply the returned saved address so the checkout selection uses it
+                // (prevents a duplicate row being created on order placement).
+                if (saved?.id) {
+                    onLocationSaved?.({
+                        ...toCustomerLocation(draft),
+                        address_id: saved.id,
+                        timestamp: Date.now(),
+                    });
+                }
+
+                toast.success('Alamat berhasil disimpan.');
                 onClose();
             } else {
                 const data = await res.json().catch(() => null);
-                setError(data?.error ?? 'Gagal menyimpan alamat.');
+                toast.error(
+                    data?.message ?? data?.error ?? 'Gagal menyimpan alamat.',
+                );
             }
         } catch {
-            setError('Gagal menyimpan alamat.');
+            toast.error('Gagal menyimpan alamat.');
         } finally {
             setSaving(false);
         }
@@ -358,7 +375,20 @@ function LocationSheetContent({
 
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-                setError(data?.error ?? 'Gagal menghapus alamat.');
+                const msg =
+                    data?.message ?? data?.error ?? 'Gagal menghapus alamat.';
+
+                // Ownership/auth/CSRF staleness: the list may be stale or the
+                // session expired. Refresh the address list to recover.
+                if (
+                    res.status === 401 ||
+                    res.status === 403 ||
+                    res.status === 404
+                ) {
+                    await fetchAddresses();
+                }
+
+                toast.error(msg);
                 setDeleteTarget(null);
 
                 return;
@@ -368,6 +398,7 @@ function LocationSheetContent({
                 prev.filter((a) => a.id !== deleteTarget.id),
             );
             setCanAdd(true);
+            toast.success('Alamat berhasil dihapus.');
 
             // If the deleted address is the active selection, clear it.
             if (location?.address_id === deleteTarget.id) {
@@ -389,7 +420,7 @@ function LocationSheetContent({
                 clearLocation();
             }
         } catch {
-            setError('Terjadi kesalahan. Coba lagi.');
+            toast.error('Terjadi kesalahan. Coba lagi.');
         } finally {
             setDeleting(false);
             setDeleteTarget(null);
