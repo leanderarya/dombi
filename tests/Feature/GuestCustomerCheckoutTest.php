@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Models\CustomerAddress;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
@@ -161,6 +162,40 @@ class GuestCustomerCheckoutTest extends TestCase
         $this->assertSame('Rumah cat hijau dekat mushola', $order->customer_landmark);
         $this->assertEquals(-7.0523456, (float) $order->latitude);
         $this->assertEquals(110.4345678, (float) $order->longitude);
+        $this->assertSame(
+            0,
+            CustomerAddress::where('customer_id', $order->customer_id)->count(),
+            'Manual delivery should not auto-create a saved address.',
+        );
+    }
+
+    public function test_repeated_manual_delivery_does_not_multiply_saved_addresses(): void
+    {
+        $product = $this->createStockedProduct();
+
+        $this->seedCheckoutDraft([
+            'checkout.cart' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+            'checkout.fulfillment' => [
+                'fulfillment_type' => 'delivery_dombi',
+            ],
+            'checkout.customer' => [
+                'customer_name' => 'Sarah Dombi',
+                'phone_number' => '6281234567890',
+            ],
+            'checkout.location' => $this->locationDraft(),
+        ])->post('/customer/checkout/payment', [
+            'payment_method' => 'qris',
+        ])->assertRedirect();
+
+        $order = Order::latest()->firstOrFail();
+
+        $this->assertSame(
+            0,
+            CustomerAddress::where('customer_id', $order->customer_id)->count(),
+            'Repeated manual delivery must not accumulate saved addresses.',
+        );
     }
 
     public function test_delivery_ojol_flow_creates_order_and_marks_manual_fulfillment(): void

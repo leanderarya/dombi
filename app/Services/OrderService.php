@@ -389,8 +389,9 @@ class OrderService
                 ->findOrFail($payload['address_id']);
         }
 
-        CustomerAddress::where('customer_id', $customer->id)->update(['is_default' => false]);
-
+        // Manual delivery: build a transient (non-persisted) address so the order
+        // snapshot is correct but no saved address is auto-created. Saved addresses
+        // are only created when the user explicitly saves them.
         $addressLine = trim((string) $payload['address_line']);
         $houseNumber = trim((string) ($payload['house_number'] ?? ''));
 
@@ -398,9 +399,8 @@ class OrderService
             $addressLine = trim($addressLine.' '.$houseNumber);
         }
 
-        $deliveryNotes = $payload['delivery_notes'] ?? null;
-
-        return $customer->addresses()->create([
+        return new CustomerAddress([
+            'customer_id' => $customer->id,
             'label' => 'Alamat Checkout',
             'recipient_name' => $payload['customer_name'] ?? $customer->name,
             'phone' => $payload['phone_number'] ?? $customer->phone,
@@ -417,8 +417,8 @@ class OrderService
             'latitude' => $payload['latitude'] ?? null,
             'longitude' => $payload['longitude'] ?? null,
             'landmark' => $payload['landmark'] ?? null,
-            'delivery_notes' => $deliveryNotes,
-            'is_default' => true,
+            'delivery_notes' => $payload['delivery_notes'] ?? null,
+            'is_default' => false,
         ]);
     }
 
