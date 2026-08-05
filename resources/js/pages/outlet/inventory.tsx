@@ -273,7 +273,7 @@ export default function OutletInventory({
                                             centerStocks={centerStocks}
                                             activeRestock={
                                                 activeRestocks[
-                                                    item.product_variant_id
+                                                    item.product_id
                                                 ]
                                             }
                                             onDetail={setDetailItem}
@@ -399,12 +399,12 @@ function VariantDetailSheet({
     }
 
     const available = item.current_stock - item.reserved_stock;
-    const center = centerStocks[item.product_variant_id] ?? 0;
-    const active = activeRestocks[item.product_variant_id];
+    const center = centerStocks[item.product_id] ?? 0;
+    const active = activeRestocks[item.product_id];
     const history = recentRestocks
         .filter((r: any) =>
             r.items?.some(
-                (i: any) => i.product_variant_id === item.product_variant_id,
+                (i: any) => i.product_id === item.product_id,
             ),
         )
         .slice(0, 3);
@@ -512,7 +512,7 @@ function FamilyGroup({
                         item={item}
                         compact
                         centerStocks={centerStocks}
-                        activeRestock={activeRestocks[item.product_variant_id]}
+                        activeRestock={activeRestocks[item.product_id]}
                         onDetail={onDetail}
                     />
                 ))}
@@ -600,18 +600,18 @@ function InventoryRow({
                         <span>
                             Tersedia: {available} · Min: {item.minimum_stock}
                         </span>
-                        {centerStocks[item.product_variant_id] !==
+                        {centerStocks[item.product_id] !==
                             undefined && (
                             <span
                                 className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                                    (centerStocks[item.product_variant_id] ??
+                                    (centerStocks[item.product_id] ??
                                         0) <= 0
                                         ? 'bg-red-50 text-red-600'
                                         : 'bg-surface-muted text-text-muted'
                                 }`}
                             >
                                 Pusat:{' '}
-                                {centerStocks[item.product_variant_id] ?? 0}
+                                {centerStocks[item.product_id] ?? 0}
                             </span>
                         )}
                         {activeRestock && (
@@ -661,7 +661,7 @@ function OpnameSheet({
     displayName: string;
 }) {
     const { data, setData, post, processing, errors, reset } = useForm({
-        product_variant_id: item.product_variant_id ?? item.variant_id ?? '',
+        product_id: item.product_id ?? item.variant_id ?? '',
         actual_count: '',
         notes: '',
     });
