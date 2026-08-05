@@ -56,6 +56,7 @@ function buildProductGroups(outletSections: any[]) {
         {
             variantId: number;
             variant: any;
+            product: any;
             outlets: any[];
             totalStock: number;
             criticalCount: number;
@@ -67,15 +68,16 @@ function buildProductGroups(outletSections: any[]) {
 
     for (const section of outletSections ?? []) {
         for (const item of section.inventories ?? []) {
-            const variantId = item.product_variant_id ?? item.variant?.id;
+            const productId = item.product_id ?? item.variant?.id ?? null;
 
-            if (!variantId) {
+            if (!productId) {
                 continue;
             }
 
-            const entry = map.get(variantId) ?? {
-                variantId,
+            const entry = map.get(productId) ?? {
+                variantId: productId,
                 variant: item.variant,
+                product: item.product ?? item.variant,
                 outlets: [] as any[],
                 totalStock: 0,
                 criticalCount: 0,
@@ -103,7 +105,7 @@ function buildProductGroups(outletSections: any[]) {
                 entry.healthyCount++;
             }
 
-            map.set(variantId, entry);
+            map.set(productId, entry);
         }
     }
 
@@ -206,11 +208,11 @@ export default function InventoriesIndex({
         if (search) {
             const q = search.toLowerCase();
             result = result.filter((g) => {
-                const name = displayProductName(g.variant).toLowerCase();
+                const name = displayProductName(g.variant ?? g.product).toLowerCase();
 
                 return (
                     name.includes(q) ||
-                    (g.variant?.sku ?? '').toLowerCase().includes(q) ||
+                    (g.variant ?? g.product)?.sku?.toLowerCase().includes(q) ||
                     g.outlets.some((o: any) =>
                         o.outlet_name.toLowerCase().includes(q),
                     )
@@ -236,8 +238,8 @@ export default function InventoriesIndex({
 
                 switch (sortKey) {
                     case 'name':
-                        av = displayProductName(a.variant);
-                        bv = displayProductName(b.variant);
+                        av = displayProductName(a.variant ?? a.product);
+                        bv = displayProductName(b.variant ?? b.product);
                         break;
                     case 'total_stock':
                         av = a.totalStock;
@@ -248,8 +250,8 @@ export default function InventoriesIndex({
                         bv = statusToNum(b.overallStatus);
                         break;
                     default:
-                        av = displayProductName(a.variant);
-                        bv = displayProductName(b.variant);
+                        av = displayProductName(a.variant ?? a.product);
+                        bv = displayProductName(b.variant ?? b.product);
                 }
 
                 const cmp =
@@ -293,7 +295,7 @@ export default function InventoriesIndex({
         isCritical: boolean,
     ) => {
         const outlet = outletList.find((o: any) => o.id === row.outlet_id);
-        const variantId = row.product_variant_id ?? row.variant?.id;
+        const variantId = row.product_id;
 
         fetch('/owner/inventories/remind-stock', {
             method: 'POST',
@@ -305,7 +307,7 @@ export default function InventoriesIndex({
             },
             body: JSON.stringify({
                 outlet_id: row.outlet_id,
-                product_variant_id: variantId,
+                product_id: variantId,
             }),
         })
             .then((r) => r.json())
@@ -448,7 +450,7 @@ export default function InventoriesIndex({
                                             group.variantId,
                                         );
                                         const productName = displayProductName(
-                                            group.variant,
+                                            group.variant ?? group.product,
                                         );
                                         const statusVariant =
                                             group.overallStatus === 'critical'
@@ -538,11 +540,12 @@ export default function InventoriesIndex({
                                                         <span className="font-bold text-text">
                                                             {productName}
                                                         </span>
-                                                        {group.variant?.sku && (
+                                                        {(group.variant ?? group.product)?.sku && (
                                                             <span className="ml-1 text-xs text-text-muted">
                                                                 {
-                                                                    group
-                                                                        .variant
+                                                                    (group.variant ??
+                                                                        group
+                                                                            .product)
                                                                         .sku
                                                                 }
                                                             </span>
@@ -725,11 +728,9 @@ export default function InventoriesIndex({
                                                                                     row.current_stock <=
                                                                                         (row.minimum_stock ??
                                                                                             0);
-                                                                                const variantName =
-                                                                                    displayProductName(
-                                                                                        row.variant,
-                                                                                    );
-                                                                                const remindKey = `${row.outlet_id}-${row.product_variant_id ?? row.variant?.id}`;
+                const variantName =
+                    displayProductName(row.product ?? row.variant);
+                                                                                const remindKey = `${row.outlet_id}-${row.product_id}`;
                                                                                 const reminded =
                                                                                     remindedIds.has(
                                                                                         remindKey,
@@ -866,7 +867,7 @@ export default function InventoriesIndex({
                     <DialogHeader>
                         <DialogTitle>Edit Stok</DialogTitle>
                         <DialogDescription>
-                            {displayProductName(editItem?.variant)} —{' '}
+                            {displayProductName(editItem?.product ?? editItem?.variant)} —{' '}
                             {editItem?.outlet_name}
                         </DialogDescription>
                     </DialogHeader>
