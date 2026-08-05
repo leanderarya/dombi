@@ -62,6 +62,7 @@ class InventoryController extends Controller
                 ->orderBy('product_id')
                 ->get(),
             'categories' => $categories,
+            'families' => $categories,
             'centerStocks' => $centerStocks,
             'activeRestocks' => $activeMap,
             'recentRestocks' => $recentRestocks,
