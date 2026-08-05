@@ -208,7 +208,9 @@ export default function InventoriesIndex({
         if (search) {
             const q = search.toLowerCase();
             result = result.filter((g) => {
-                const name = displayProductName(g.variant ?? g.product).toLowerCase();
+                const name = displayProductName(
+                    g.variant ?? g.product,
+                ).toLowerCase();
 
                 return (
                     name.includes(q) ||
@@ -540,13 +542,16 @@ export default function InventoriesIndex({
                                                         <span className="font-bold text-text">
                                                             {productName}
                                                         </span>
-                                                        {(group.variant ?? group.product)?.sku && (
+                                                        {(
+                                                            group.variant ??
+                                                            group.product
+                                                        )?.sku && (
                                                             <span className="ml-1 text-xs text-text-muted">
                                                                 {
-                                                                    (group.variant ??
-                                                                        group
-                                                                            .product)
-                                                                        .sku
+                                                                    (
+                                                                        group.variant ??
+                                                                        group.product
+                                                                    ).sku
                                                                 }
                                                             </span>
                                                         )}
@@ -728,8 +733,11 @@ export default function InventoriesIndex({
                                                                                     row.current_stock <=
                                                                                         (row.minimum_stock ??
                                                                                             0);
-                const variantName =
-                    displayProductName(row.product ?? row.variant);
+                                                                                const variantName =
+                                                                                    displayProductName(
+                                                                                        row.product ??
+                                                                                            row.variant,
+                                                                                    );
                                                                                 const remindKey = `${row.outlet_id}-${row.product_id}`;
                                                                                 const reminded =
                                                                                     remindedIds.has(
@@ -867,8 +875,10 @@ export default function InventoriesIndex({
                     <DialogHeader>
                         <DialogTitle>Edit Stok</DialogTitle>
                         <DialogDescription>
-                            {displayProductName(editItem?.product ?? editItem?.variant)} —{' '}
-                            {editItem?.outlet_name}
+                            {displayProductName(
+                                editItem?.product ?? editItem?.variant,
+                            )}{' '}
+                            — {editItem?.outlet_name}
                         </DialogDescription>
                     </DialogHeader>
                     <form onSubmit={handleEdit} className="space-y-4">
