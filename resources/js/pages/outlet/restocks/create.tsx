@@ -20,13 +20,13 @@ export default function CreateRestock({ families, inventories }: any) {
         notes: '',
         items: [
             {
-                product_variant_id: allVariants[0]?.id ?? '',
+                product_id: allVariants[0]?.id ?? '',
                 requested_quantity: 1,
             },
         ],
     });
-    const inventoryByVariant = new Map(
-        inventories.map((item: any) => [item.product_variant_id, item]),
+    const inventoryByProduct = new Map(
+        inventories.map((item: any) => [item.product_id, item]),
     );
 
     const setItem = (index: number, key: string, value: any) => {
@@ -39,7 +39,7 @@ export default function CreateRestock({ families, inventories }: any) {
         form.setData('items', [
             ...form.data.items,
             {
-                product_variant_id: allVariants[0]?.id ?? '',
+                product_id: allVariants[0]?.id ?? '',
                 requested_quantity: 1,
             },
         ] as any);
@@ -78,8 +78,8 @@ export default function CreateRestock({ families, inventories }: any) {
             {/* Items */}
             <div className="mt-4 space-y-3">
                 {form.data.items.map((item: any, index: number) => {
-                    const inventory: any = inventoryByVariant.get(
-                        Number(item.product_variant_id),
+                    const inventory: any = inventoryByProduct.get(
+                        Number(item.product_id),
                     );
 
                     return (
@@ -104,11 +104,11 @@ export default function CreateRestock({ families, inventories }: any) {
                                     Varian Produk
                                 </label>
                                 <select
-                                    value={item.product_variant_id}
+                                    value={item.product_id}
                                     onChange={(e) =>
                                         setItem(
                                             index,
-                                            'product_variant_id',
+                                            'product_id',
                                             e.target.value,
                                         )
                                     }
