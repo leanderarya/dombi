@@ -2,6 +2,7 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import { AlertTriangle, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import BottomSheet from '@/components/ui/bottom-sheet';
+import { Button } from '@/components/ui/button';
 import Dialog from '@/components/ui/dialog';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
@@ -506,24 +507,25 @@ export default function OutletOrderShow({
                         {STATUS_CONFIRM_LABELS[confirmAction]?.message ?? ''}
                     </p>
                     <div className="mt-4 flex gap-2">
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
+                            className="flex-1"
                             onClick={() => setConfirmAction(null)}
-                            className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
                         >
                             Batal
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="primary"
+                            className="flex-1"
                             onClick={() => updateStatus(confirmAction)}
                             disabled={statusForm.processing}
-                            className="flex h-12 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                            loading={statusForm.processing}
                         >
-                            {statusForm.processing
-                                ? 'Memproses...'
-                                : (STATUS_CONFIRM_LABELS[confirmAction]
-                                      ?.confirm ?? 'Ya')}
-                        </button>
+                            {STATUS_CONFIRM_LABELS[confirmAction]?.confirm ??
+                                'Ya'}
+                        </Button>
                     </div>
                 </Dialog>
             )}
@@ -539,23 +541,24 @@ export default function OutletOrderShow({
                         Pastikan customer sudah menerima pesanan.
                     </p>
                     <div className="mt-4 flex gap-2">
-                        <button
+                        <Button
                             type="button"
+                            variant="outline"
+                            className="flex-1"
                             onClick={() => setConfirmAction(null)}
-                            className="flex h-12 flex-1 items-center justify-center rounded-xl border border-border text-sm font-semibold text-text active:opacity-80"
                         >
                             Batal
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                             type="button"
+                            variant="primary"
+                            className="flex-1"
                             onClick={handleCompletePickup}
                             disabled={completeForm.processing}
-                            className="flex h-12 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                            loading={completeForm.processing}
                         >
-                            {completeForm.processing
-                                ? 'Memproses...'
-                                : 'Ya, Serahkan'}
-                        </button>
+                            Ya, Serahkan
+                        </Button>
                     </div>
                 </Dialog>
             )}
