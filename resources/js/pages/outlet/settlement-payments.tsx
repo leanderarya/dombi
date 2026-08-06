@@ -120,11 +120,15 @@ export default function OutletSettlementPayments({ payments }: Props) {
 
                         <div className="space-y-3">
                             <Input
-                                type="number"
+                                type="text"
+                                inputMode="numeric"
                                 label="Jumlah (Rp)"
                                 value={amount}
-                                onChange={(e) => setAmount(e.target.value)}
-                                min="1"
+                                onChange={(e) =>
+                                    setAmount(
+                                        e.target.value.replace(/[^0-9.]/g, ''),
+                                    )
+                                }
                                 required
                                 placeholder="1200000"
                                 error={errors.amount}
