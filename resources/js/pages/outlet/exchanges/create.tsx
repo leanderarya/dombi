@@ -6,23 +6,20 @@ import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
 interface PairedItem {
-    return_variant_id: number;
+    product_id: number;
     return_quantity: number;
-    replacement_variant_id: number;
+    replacement_product_id: number;
     replacement_quantity: number;
 }
 
 interface FormItem {
-    product_variant_id: number;
+    product_id: number;
     quantity: number;
-    replacement_variant_id: number;
+    replacement_product_id: number;
     replacement_quantity: number;
 }
 
-export default function OutletExchangesCreate({
-    variants,
-    exchangeEligibleReturns,
-}: any) {
+export default function OutletExchangesCreate({ variants, returnRequests }: any) {
     const form = useForm({
         return_request_id: null as number | null,
         notes: '',
@@ -35,22 +32,22 @@ export default function OutletExchangesCreate({
     const [pairs, setPairs] = useState<PairedItem[]>([]);
 
     const allVariants = variants ?? [];
-    const eligibleReturns = exchangeEligibleReturns ?? [];
+    const eligibleReturns = returnRequests ?? [];
 
     const selectedReturn = selectedReturnId
         ? eligibleReturns.find((r: any) => r.id === selectedReturnId)
         : null;
 
-    const getReturnItemName = (variantId: number): string => {
+    const getReturnItemName = (productId: number): string => {
         if (!selectedReturn) {
             return '-';
         }
 
         const item = selectedReturn.items.find(
-            (i: any) => i.product_variant_id === variantId,
+            (i: any) => i.product_id === productId,
         );
 
-        return item?.variant?.full_name ?? item?.variant?.name ?? '-';
+        return item?.product?.name ?? item?.product?.full_name ?? '-';
     };
 
     const handleReturnSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -63,9 +60,9 @@ export default function OutletExchangesCreate({
 
             if (ret) {
                 const newPairs: PairedItem[] = ret.items.map((item: any) => ({
-                    return_variant_id: item.product_variant_id,
+                    product_id: item.product_id,
                     return_quantity: item.quantity,
-                    replacement_variant_id: 0,
+                    replacement_product_id: 0,
                     replacement_quantity: 1,
                 }));
                 setPairs(newPairs);
@@ -79,7 +76,7 @@ export default function OutletExchangesCreate({
 
     const updatePair = (
         index: number,
-        field: 'replacement_variant_id' | 'replacement_quantity',
+        field: 'replacement_product_id' | 'replacement_quantity',
         value: number,
     ) => {
         const updated = [...pairs];
@@ -99,13 +96,12 @@ export default function OutletExchangesCreate({
             'items',
             items
                 .filter(
-                    (p) =>
-                        p.return_variant_id > 0 && p.replacement_variant_id > 0,
+                    (p) => p.product_id > 0 && p.replacement_product_id > 0,
                 )
                 .map((p) => ({
-                    product_variant_id: p.return_variant_id,
+                    product_id: p.product_id,
                     quantity: p.return_quantity,
-                    replacement_variant_id: p.replacement_variant_id,
+                    replacement_product_id: p.replacement_product_id,
                     replacement_quantity: p.replacement_quantity,
                 })),
         );
@@ -120,12 +116,11 @@ export default function OutletExchangesCreate({
     };
 
     const getVariantName = (id: number) =>
-        allVariants.find((v: any) => v.id === id)?.full_name ??
-        allVariants.find((v: any) => v.id === id)?.name ??
+        allVariants.find((v: any) => v.product_id === id)?.variant?.name ??
         '-';
 
     const validCount = pairs.filter(
-        (p) => p.return_variant_id > 0 && p.replacement_variant_id > 0,
+        (p) => p.product_id > 0 && p.replacement_product_id > 0,
     ).length;
 
     if (!eligibleReturns.length) {
@@ -202,9 +197,7 @@ export default function OutletExchangesCreate({
                                 </label>
                                 <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 px-3 py-2.5 text-sm">
                                     <span className="font-medium text-red-800">
-                                        {getReturnItemName(
-                                            pair.return_variant_id,
-                                        )}{' '}
+                                        {getReturnItemName(pair.product_id)}{' '}
                                         x{pair.return_quantity}
                                     </span>
                                 </div>
@@ -223,11 +216,11 @@ export default function OutletExchangesCreate({
                                     Diganti Dengan (Produk Baru)
                                 </label>
                                 <select
-                                    value={pair.replacement_variant_id || ''}
+                                    value={pair.replacement_product_id || ''}
                                     onChange={(e) =>
                                         updatePair(
                                             index,
-                                            'replacement_variant_id',
+                                            'replacement_product_id',
                                             Number(e.target.value),
                                         )
                                     }
@@ -237,9 +230,11 @@ export default function OutletExchangesCreate({
                                         Pilih produk pengganti...
                                     </option>
                                     {allVariants.map((v: any) => (
-                                        <option key={v.id} value={v.id}>
-                                            {v.full_name ?? v.name} -{' '}
-                                            {formatCurrency(v.selling_price)}
+                                        <option
+                                            key={v.product_id}
+                                            value={v.product_id}
+                                        >
+                                            {v.variant?.name}
                                         </option>
                                     ))}
                                 </select>
@@ -267,12 +262,10 @@ export default function OutletExchangesCreate({
                             </div>
 
                             {/* Summary */}
-                            {pair.replacement_variant_id > 0 && (
+                            {pair.replacement_product_id > 0 && (
                                 <div className="mt-3 rounded-lg bg-surface-muted p-2.5 text-xs">
                                     <span className="text-text-muted">
-                                        {getReturnItemName(
-                                            pair.return_variant_id,
-                                        )}{' '}
+                                        {getReturnItemName(pair.product_id)}{' '}
                                         x{pair.return_quantity}
                                     </span>
                                     <span className="mx-2 text-text-subtle">
@@ -280,7 +273,7 @@ export default function OutletExchangesCreate({
                                     </span>
                                     <span className="font-semibold text-text">
                                         {getVariantName(
-                                            pair.replacement_variant_id,
+                                            pair.replacement_product_id,
                                         )}{' '}
                                         x{pair.replacement_quantity}
                                     </span>

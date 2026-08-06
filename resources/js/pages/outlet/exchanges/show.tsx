@@ -64,8 +64,9 @@ export default function OutletExchangesShow({ exchange }: any) {
                             >
                                 <div>
                                     <div className="text-sm font-medium text-text">
-                                        {item.variant?.full_name ??
-                                            item.variant?.name}
+                                        {item.product?.name ??
+                                            item.product?.full_name ??
+                                            '-'}
                                     </div>
                                     <div className="text-xs text-text-muted">
                                         {item.quantity} x{' '}
