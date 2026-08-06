@@ -72,7 +72,7 @@ export default function OfflineSalesIndex({ sales, variants }: any) {
                                             onClick={() =>
                                                 setDeleteTarget(sale.id)
                                             }
-                                            className="flex h-8 w-8 items-center justify-center rounded-lg text-text-subtle active:bg-red-50 active:text-red-600"
+                                            className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle active:bg-red-50 active:text-red-600"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </button>
