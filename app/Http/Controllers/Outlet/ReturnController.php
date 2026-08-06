@@ -105,6 +105,16 @@ class ReturnController extends Controller
         $outlet = $request->user()->outlet;
         abort_unless($outlet, 403);
 
+        // Map legacy product_variant_id to product_id (client cache safety net)
+        $items = $request->input('items', []);
+        foreach ($items as &$item) {
+            if (isset($item['product_variant_id']) && !isset($item['product_id'])) {
+                $item['product_id'] = $item['product_variant_id'];
+            }
+        }
+        unset($item);
+        $request->merge(['items' => $items]);
+
         $validated = $request->validate([
             'reason' => 'required|string|in:'.implode(',', array_keys(ReturnRequest::REASONS)),
             'notes' => 'nullable|string|max:1000',
