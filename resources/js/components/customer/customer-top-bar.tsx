@@ -2,6 +2,8 @@ import { Link, usePage } from '@inertiajs/react';
 import { ChevronDown, LogIn, MapPin, User } from 'lucide-react';
 import { useState } from 'react';
 import LocationSheet from '@/components/customer/location-sheet';
+import NotificationBell from '@/components/shared/notification-bell';
+import NotificationSheet from '@/components/shared/notification-sheet';
 import { useCustomerLocation } from '@/lib/customer-location';
 import { useCart } from '@/lib/use-cart';
 
@@ -18,6 +20,7 @@ export default function CustomerTopBar({
     const { totalItems } = useCart();
     const { summary } = useCustomerLocation();
     const [sheetOpen, setSheetOpen] = useState(false);
+    const [notificationOpen, setNotificationOpen] = useState(false);
 
     const isLoggedIn = !!auth?.user;
     const addressText = addressOverride ?? summary;
@@ -50,6 +53,11 @@ export default function CustomerTopBar({
                     </div>
 
                     <div className="flex items-center gap-1">
+                        {isLoggedIn && (
+                            <NotificationBell
+                                onClick={() => setNotificationOpen(true)}
+                            />
+                        )}
                         {/* Login / Profile button */}
                         {isLoggedIn ? (
                             <Link
@@ -106,6 +114,10 @@ export default function CustomerTopBar({
             <LocationSheet
                 open={sheetOpen}
                 onClose={() => setSheetOpen(false)}
+            />
+            <NotificationSheet
+                open={notificationOpen}
+                onClose={() => setNotificationOpen(false)}
             />
         </>
     );
