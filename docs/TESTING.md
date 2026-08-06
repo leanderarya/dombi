@@ -150,8 +150,8 @@ Password: password
 - [OK] Order lifecycle: confirm → prepare → ready → complete
 - [OK] Assign courier ke order delivery
 - [OK] Inventory monitoring
-- [OK] Stock opname — [NO] broken: frontend `product_variant_id`, backend `product_id`; notes opsional (lihat Known Issues)
-- [OK] Restock request — [NO] broken: UI kirim `product_variant_id`, backend `product_id` (lihat Known Issues); tak bisa buat request
+- [OK] Stock opname — [FIXED batch1] update stok + guard reserve error jalan; note: notes opsional, error inline bukan toast
+- [OK] Restock request — [FIXED batch1] page + dialog bisa buat request; note: info stok hanya tampil kalo produk punya inventory outlet
 - [OK] Settlement + upload bukti bayar — [NO] input "323.000" tersimpan 323 (format ribuan)
 - [OK] Offline sale — [NO] belum ada metode pembayaran (hanya pilih produk + jumlah + catatan)
 - [OK] Return request — [NO] show page nama produk kosong (`items.variant` tak di-load); create button disabled selama belum pilih produk (expected)
@@ -182,7 +182,7 @@ Password: password
 - [OK] Dashboard KPI — [NO] grafik Tren Pendapatan 30 hari terputus di hari ke-25 (kemungkinan data gap / chart width)
 - [OK] CRUD product family & variant (hapus via deactivate saat ada riwayat transaksi)
 - [OK] Pricing: center + per-outlet
-- [OK] Inventory: central stock — [NO] tab Outlet selalu "Tidak ditemukan" (`product_variant_id/variant` vs loaded `product`; lihat Known Issues)
+- [OK] Inventory: central stock — [FIXED batch1] tab Outlet muncul produk + grouping + SKU; note: filter outlet belum fungsi, sort hanya nama
 - [OK] Restock approval workflow
 - [OK] Order management — [NO] assign courier owner broken (`courier_type` tak dikirim; lihat Known Issues); tidak ada mekanisme cancel order (perlu enhancement/konfirmasi kebutuhan)
 - [OK] Delivery monitoring (list + detail) — resolve belum diuji (belum ada delivery bermasalah)
@@ -263,7 +263,7 @@ Password: password
 | Form validasi alamat/penerima: error tidak jelas (tanpa toast / warna merah pada field) | Open | Tambah inline red + toast |
 | Outlet UI: semua halaman ada glitch visual tiap interval beberapa detik (detail belum diidentifikasi) | Open | Investigasi: refresh background / animation loop |
 | Stock opname: catatan (notes) opsional, padahal selisih stok butuh keterangan asal-usul | Open | Jadikan notes wajib saat ada selisih |
-| **Akar bug key mismatch:** UI outlet kirim `product_variant_id`, backend validasi `product_id` → semua form inventory/restock gagal validasi silent. Manifestasi: (a) stock opname tak pernah update stok, (b) restock create "Tidak ditemukan" & tak tersimpan | Open | Standarisasi key: frontend kirim `product_id` (atau backend terima `product_variant_id`) |
+| **Akar bug key mismatch:** UI outlet kirim `product_variant_id`, backend validasi `product_id` — stock opname & restock gagal silent → **FIXED batch 1** (renamed frontend key ke `product_id`, backend utuh) | Closed | Batch 1 ^ fix key `product_id` |
 | Settlement payment: input "323.000" tersimpan `323` (format titik ribuan dikirim sebagai desimal, bukan dikali 1000/parse). Backend validasi `amount` numeric rupiah | Open | Parse/format input rupiah frontend sebelum submit |
 | Return show page: nama produk kosong — controller `load('items.product')` tapi UI baca `item.variant.*` (relation `variant` tak di-load) | Open | Load `items.variant` atau render `item.product` |
 | Exchange create: selalu empty state "Tidak ada return" — controller kirim prop `returnRequests`, UI baca `exchangeEligibleReturns` (mismatch) | Open | Samakan nama prop |
@@ -272,7 +272,7 @@ Password: password
 | Owner menu Courier ngarah ke `/owner/couriers/management` (list+approve, tanpa CRUD), padahal tombol Buat/Edit ada di `/owner/couriers` (resource). `owner-layout.tsx:40` salah link | Open | Ubah menu link ke `/owner/couriers` |
 | Courier return-to-outlet: dialog "Ya, Kembalikan" tak auto-close setelah sukses (`router.post` tanpa `onSuccess`) | Open | Tambah `onSuccess` close sheet |
 | Courier resolve → re-assign kurir: error "courier type field required" (akar sama bug assign `courier_type` tak dikirim UI) | Open | Fix assign courier sheet + resolve re-assign |
-| Owner inventory tab Outlet: selalu "Tidak ditemukan" — `buildProductGroups` baca `product_variant_id ?? variant.id` tapi controller load `product` (bukan `variant`) → semua item di-skip | Open | Standarisasi relasi `variant`/`product_id` |
+| Owner inventory tab Outlet: `buildProductGroups` baca `product_variant_id/variant` tapi controller load `product` → semua di-skip → **FIXED batch 1** | Closed | Batch 1 ^ baca `product_id`/`product` |
 
 ---
 
