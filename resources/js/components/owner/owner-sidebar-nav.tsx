@@ -123,8 +123,8 @@ export default function OwnerSidebarNav({
                                     onClick={() => onNavClick?.()}
                                     className={`mt-0.5 flex h-9 w-full items-center justify-center rounded-lg transition-colors duration-150 ${
                                         isItemActive(group.items[0], url)
-                                            ? 'bg-mint-wash text-primary'
-                                            : 'hover:bg-mint-wash/60 text-text-muted hover:text-text'
+                                            ? 'border-l-2 border-primary bg-mint-wash text-primary'
+                                            : 'border-l-2 border-transparent text-text-muted hover:bg-mint-wash/60 hover:text-text'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -148,8 +148,8 @@ export default function OwnerSidebarNav({
                                     title={group.label}
                                     className={`flex h-9 w-full items-center justify-center rounded-lg transition-colors duration-150 ${
                                         hasActive
-                                            ? 'bg-mint-wash text-primary'
-                                            : 'hover:bg-mint-wash/60 text-text-muted hover:text-text'
+                                            ? 'border-l-2 border-primary bg-mint-wash text-primary'
+                                            : 'border-l-2 border-transparent text-text-muted hover:bg-mint-wash/60 hover:text-text'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -188,10 +188,10 @@ export default function OwnerSidebarNav({
                                         setFlyoutGroup(null);
                                         onNavClick?.();
                                     }}
-                                    className={`flex items-center justify-between px-3 py-2 text-sm transition-colors duration-150 ${
+                                    className={`flex items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 ${
                                         active
-                                            ? 'bg-mint-wash font-semibold text-primary'
-                                            : 'hover:bg-mint-wash/60 text-text-muted hover:text-text'
+                                            ? 'border-l-2 border-primary bg-mint-wash font-semibold text-primary'
+                                            : 'border-l-2 border-transparent text-text-muted hover:bg-mint-wash/60 hover:text-text'
                                     }`}
                                 >
                                     <span>{item.label}</span>
@@ -228,8 +228,8 @@ export default function OwnerSidebarNav({
                                 onClick={() => onNavClick?.()}
                                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                     isItemActive(group.items[0], url)
-                                        ? 'bg-mint-wash font-semibold text-primary'
-                                        : 'hover:bg-mint-wash/60 font-medium text-text-muted hover:text-text'
+                                        ? 'border-l-2 border-primary bg-mint-wash font-semibold text-primary'
+                                        : 'border-l-2 border-transparent font-medium text-text-muted hover:bg-mint-wash/60 hover:text-text'
                                 }`}
                             >
                                 <span className="h-4 w-4 shrink-0">
@@ -245,7 +245,7 @@ export default function OwnerSidebarNav({
                                     className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-colors duration-150 ${
                                         hasActive
                                             ? 'font-semibold text-text'
-                                            : 'hover:bg-mint-wash/60 font-medium text-text-muted hover:text-text'
+                                            : 'font-medium text-text-muted hover:bg-mint-wash/60 hover:text-text'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -276,10 +276,10 @@ export default function OwnerSidebarNav({
                                                     onClick={() =>
                                                         onNavClick?.()
                                                     }
-                                                    className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-sm transition-colors duration-150 ${
+                                                    className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                                         active
-                                                            ? 'bg-mint-wash font-semibold text-primary'
-                                                            : 'hover:bg-mint-wash/60 font-medium text-text-muted hover:text-text'
+                                                            ? 'border-l-2 border-primary bg-mint-wash font-semibold text-primary'
+                                                            : 'border-l-2 border-transparent font-medium text-text-muted hover:bg-mint-wash/60 hover:text-text'
                                                     }`}
                                                 >
                                                     <span>{item.label}</span>
