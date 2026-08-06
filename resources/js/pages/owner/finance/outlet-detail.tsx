@@ -227,6 +227,23 @@ export default function OutletAccountStatement({
                                                         </span>
                                                     </>
                                                 )}
+                                                {s.direction ===
+                                                    'owner_pays_outlet' && (
+                                                    <>
+                                                        <span className="text-text-subtle">
+                                                            &middot;
+                                                        </span>
+                                                        <span className="font-semibold text-emerald-600">
+                                                            Owner bayar:{' '}
+                                                            {formatCurrency(
+                                                                Math.abs(
+                                                                    s.net_amount ??
+                                                                        0,
+                                                                ),
+                                                            )}
+                                                        </span>
+                                                    </>
+                                                )}
                                                 <span className="text-text-subtle">
                                                     &middot;
                                                 </span>
@@ -360,15 +377,58 @@ export default function OutletAccountStatement({
                                     )
                                 }
                             />
-                            <OwnerDetailRow
-                                label="Sisa"
-                                value={
-                                    <span className="font-semibold text-red-600">
-                                        {formatCurrency(summary.outstanding)}
-                                    </span>
-                                }
-                                bold
-                            />
+                                    <OwnerDetailRow
+                                        label="Net Settlement"
+                                        value={
+                                            <span
+                                                className={`font-semibold ${(summary.net_amount ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
+                                            >
+                                                {(summary.net_amount ?? 0) >= 0
+                                                    ? 'Owner bayar '
+                                                    : 'Outlet bayar '}
+                                                {formatCurrency(
+                                                    Math.abs(
+                                                        summary.net_amount ?? 0,
+                                                    ),
+                                                )}
+                                            </span>
+                                        }
+                                        bold
+                                    />
+                                    {(() => {
+                                        const b = summary.breakdown ?? {};
+                                        return (
+                                            <div className="ml-3 space-y-1 border-l-2 border-border pl-3">
+                                                <OwnerDetailRow
+                                                    label="Online Share"
+                                                    value={formatCurrency(
+                                                        b.online_outlet_share ?? 0,
+                                                    )}
+                                                />
+                                                <OwnerDetailRow
+                                                    label="Biaya Kurir"
+                                                    value={`-${formatCurrency(b.delivery_cost ?? 0)}`}
+                                                />
+                                                <OwnerDetailRow
+                                                    label="Refund"
+                                                    value={`-${formatCurrency(b.refund ?? 0)}`}
+                                                />
+                                                <OwnerDetailRow
+                                                    label="Setoran Offline"
+                                                    value={`-${formatCurrency(b.offline_sales ?? 0)}`}
+                                                />
+                                            </div>
+                                        );
+                                    })()}
+                                    <OwnerDetailRow
+                                        label="Sisa"
+                                        value={
+                                            <span className="font-semibold text-red-600">
+                                                {formatCurrency(summary.outstanding)}
+                                            </span>
+                                        }
+                                        bold
+                                    />
                             {summary.overpaid > 0 && (
                                 <OwnerDetailRow
                                     label="Kelebihan"

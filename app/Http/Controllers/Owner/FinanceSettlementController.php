@@ -57,6 +57,11 @@ class FinanceSettlementController extends Controller
                     'total_due' => 0,
                     'total_paid' => 0,
                     'total_outstanding' => 0,
+                    'net_amount' => 0,
+                    'online_outlet_share' => 0,
+                    'delivery_cost' => 0,
+                    'refund' => 0,
+                    'offline_sales' => 0,
                     'nearest_due_date' => null,
                     'has_overdue' => false,
                     'settlement_count' => 0,
@@ -65,6 +70,11 @@ class FinanceSettlementController extends Controller
             $settlementMap[$oid]['total_due'] += (float) $s->amount_due;
             $settlementMap[$oid]['total_paid'] += (float) $s->paid_amount;
             $settlementMap[$oid]['total_outstanding'] += (float) $s->outstanding_amount;
+            $settlementMap[$oid]['net_amount'] += (float) $s->net_amount;
+            $settlementMap[$oid]['online_outlet_share'] += (float) $s->total_online_share;
+            $settlementMap[$oid]['delivery_cost'] += (float) $s->total_delivery_cost;
+            $settlementMap[$oid]['refund'] += (float) $s->total_refund;
+            $settlementMap[$oid]['offline_sales'] += (float) $s->total_offline_sales;
             $settlementMap[$oid]['settlement_count']++;
 
             $dueDate = $s->due_date->toDateString();
@@ -103,6 +113,14 @@ class FinanceSettlementController extends Controller
                     'total_due' => 0,
                     'total_paid' => 0,
                     'total_outstanding' => 0,
+                    'net_amount' => 0,
+                    'direction' => 'outlet_pays_owner',
+                    'breakdown' => [
+                        'online_outlet_share' => 0,
+                        'delivery_cost' => 0,
+                        'refund' => 0,
+                        'offline_sales' => 0,
+                    ],
                     'nearest_due_date' => null,
                     'display_status' => $displayStatus,
                     'sort_order' => $sortOrder,
@@ -134,6 +152,14 @@ class FinanceSettlementController extends Controller
                     'total_due' => (float) $data['total_due'],
                     'total_paid' => (float) $data['total_paid'],
                     'total_outstanding' => (float) $outstanding,
+                    'net_amount' => (float) $data['net_amount'],
+                    'direction' => (float) $data['net_amount'] >= 0 ? 'owner_pays_outlet' : 'outlet_pays_owner',
+                    'breakdown' => [
+                        'online_outlet_share' => (float) $data['online_outlet_share'],
+                        'delivery_cost' => (float) $data['delivery_cost'],
+                        'refund' => (float) $data['refund'],
+                        'offline_sales' => (float) $data['offline_sales'],
+                    ],
                     'nearest_due_date' => $data['nearest_due_date'],
                     'display_status' => $displayStatus,
                     'sort_order' => $sortOrder,
@@ -337,6 +363,14 @@ class FinanceSettlementController extends Controller
                 'paid_amount' => (float) $s->paid_amount,
                 'outstanding' => (float) $s->outstanding_amount,
                 'overpaid_amount' => (float) $s->overpaid_amount,
+                'net_amount' => (float) $s->net_amount,
+                'direction' => $s->direction,
+                'breakdown' => [
+                    'online_outlet_share' => (float) $s->total_online_share,
+                    'delivery_cost' => (float) $s->total_delivery_cost,
+                    'refund' => (float) $s->total_refund,
+                    'offline_sales' => (float) $s->total_offline_sales,
+                ],
                 'due_date' => $s->due_date->toDateString(),
                 'status' => $s->status,
             ]),
@@ -347,6 +381,13 @@ class FinanceSettlementController extends Controller
                 'paid_total' => (float) $paidTotal,
                 'outstanding' => (float) $outstanding,
                 'overpaid' => (float) $settlements->sum('overpaid_amount'),
+                'net_amount' => (float) $settlements->sum('net_amount'),
+                'breakdown' => [
+                    'online_outlet_share' => (float) $settlements->sum('total_online_share'),
+                    'delivery_cost' => (float) $settlements->sum('total_delivery_cost'),
+                    'refund' => (float) $settlements->sum('total_refund'),
+                    'offline_sales' => (float) $settlements->sum('total_offline_sales'),
+                ],
                 'oldest_due_date' => $oldestUnpaid?->due_date?->toDateString(),
                 'days_overdue' => $daysOverdue,
                 'display_status' => $displayStatus,
