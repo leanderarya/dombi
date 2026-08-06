@@ -190,7 +190,7 @@ Password: password
 - [OK] Finance: settlement, payment verification, reconcile
 - [OK] Refund management (manual transfer dari owner, bukan via DOKU)
 - [OK] Courier management (CRUD jalan di `/owner/couriers`) — [FIXED batch3] menu sidebar link ke `/owner/couriers`
-- [NO] Delivery tier configuration — edit simpan tapi nilai tak berubah (bug; lihat Known Issues)
+- [OK] Delivery tier configuration — [FIXED batch4] route parameter mismatch fixed
 - [OK] Analytics dashboard — [INFO] revenue analytics vs tagihan settlement beda by design (ongkir: analytics include, settlement exclude)
 - [OK] CSV export reports — [FIXED batch6] rupiah format, Indonesian status, consistent headers
 
@@ -252,7 +252,7 @@ Password: password
 
 | Issue | Status | Workaround |
 |-------|--------|------------|
-| Staging deploy manual (auto-deploy belum otomatis) | Open | SSH + git pull |
+| Staging deploy manual (auto-deploy belum otomatis) | **Closed** | Auto-deploy on push to develop (quality gate → deploy) |
 | `google-services.json` per-package (customer vs internal) | Open | Rename file saat build APK |
 | Biogoat image Unplash dead | Closed | Fallback ke emoji susu |
 | 5 TypeScript errors (pre-existing) | **Closed batch5** | Already 0 errors |
