@@ -468,14 +468,28 @@ function RevenueTrendChart({
                     </svg>
                 </div>
                 <div className="mt-3 flex justify-between px-0">
-                    {labels.map((d, i) => (
-                        <span
-                            key={`${d}-${i}`}
-                            className={`text-[11px] font-medium transition-colors duration-150 ${hoverIndex === i ? 'font-semibold text-primary' : 'text-text-muted'}`}
-                        >
-                            {d}
-                        </span>
-                    ))}
+                    {labels.map((d, i) => {
+                        const showLabel =
+                            labels.length <= 15 ||
+                            i === 0 ||
+                            i === labels.length - 1 ||
+                            (i + 1) % 5 === 0;
+
+                        return (
+                            <span
+                                key={`${d}-${i}`}
+                                className={`text-[11px] font-medium transition-colors duration-150 ${
+                                    hoverIndex === i
+                                        ? 'font-semibold text-primary'
+                                        : showLabel
+                                          ? 'text-text-muted'
+                                          : 'text-transparent'
+                                }`}
+                            >
+                                {showLabel ? d : '\u00A0'}
+                            </span>
+                        );
+                    })}
                 </div>
             </div>
         </div>

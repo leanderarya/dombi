@@ -1,6 +1,8 @@
 import { router } from '@inertiajs/react';
 import { useEffect, useRef, useCallback } from 'react';
 
+export const pollingReloadActive = { current: false };
+
 export function usePolling(
     intervalMs: number = 30000,
     only: string[] = [],
@@ -14,7 +16,11 @@ export function usePolling(
 
         // Reload immediately when coming back online
         if (enabled) {
+            pollingReloadActive.current = true;
             router.reload({ only: only.length > 0 ? only : undefined });
+            setTimeout(() => {
+                pollingReloadActive.current = false;
+            }, 500);
         }
     }, [only, enabled]);
 
@@ -30,7 +36,11 @@ export function usePolling(
         } else if (wasHidden.current && isOnline.current && enabled) {
             // Page just became visible after being hidden — reload immediately
             wasHidden.current = false;
+            pollingReloadActive.current = true;
             router.reload({ only: only.length > 0 ? only : undefined });
+            setTimeout(() => {
+                pollingReloadActive.current = false;
+            }, 500);
         }
     }, [only, enabled]);
 
@@ -56,7 +66,11 @@ export function usePolling(
 
         const interval = setInterval(() => {
             if (isOnline.current && !document.hidden) {
+                pollingReloadActive.current = true;
                 router.reload({ only: only.length > 0 ? only : undefined });
+                setTimeout(() => {
+                    pollingReloadActive.current = false;
+                }, 500);
             }
         }, intervalMs);
 
