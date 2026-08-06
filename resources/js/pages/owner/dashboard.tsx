@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     AlertTriangle,
     Package,
@@ -307,7 +307,7 @@ function RevenueTrendChart({
                         </span>
                     </p>
                 </div>
-                <div className="bg-mint-wash flex rounded-lg p-1">
+                <div className="flex rounded-lg bg-mint-wash p-1">
                     {[7, 30].map((d) => (
                         <button
                             key={d}
@@ -323,7 +323,11 @@ function RevenueTrendChart({
                     ))}
                 </div>
             </div>
-            <div className="p-6">
+            <div
+                className="p-6"
+                role="img"
+                aria-label="Grafik pendapatan 30 hari terakhir"
+            >
                 <div className="relative h-52 w-full overflow-visible">
                     <svg
                         ref={svgRef}
@@ -515,6 +519,8 @@ export default function Dashboard({
     ]);
     const { dismissed, dismiss } = useDismissedAlerts();
     const greeting = useMemo(() => getGreeting(), []);
+    const page = usePage<any>();
+    const userName = page.props.auth?.user?.name ?? 'Pemilik';
     const [period, setPeriod] = useState(7);
 
     // Refetch revenue trend when period changes
@@ -624,7 +630,7 @@ export default function Dashboard({
             {/* Greeting */}
             <div className="mb-10">
                 <h2 className="text-[32px] leading-tight font-bold tracking-tight text-primary">
-                    {greeting}, Pemilik
+                    {greeting}, {userName}
                 </h2>
                 <p className="mt-1 text-sm text-text-muted">
                     Berikut ringkasan kinerja bisnis Dombi Anda hari ini.
@@ -772,7 +778,7 @@ export default function Dashboard({
                             <div className="px-4 pb-4">
                                 <Link
                                     href="/owner/inventories?filter=critical"
-                                    className="hover:bg-mint-wash flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold text-primary transition-colors"
+                                    className="flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold text-primary transition-colors hover:bg-mint-wash"
                                 >
                                     Lihat semua {inventoryRisks.length} item
                                     <ArrowRight className="h-3.5 w-3.5" />
@@ -793,7 +799,7 @@ export default function Dashboard({
                                 <Link
                                     key={item.key}
                                     href={item.href}
-                                    className="hover:bg-mint-wash group flex w-full items-center justify-between rounded-lg border border-border/30 p-3 transition-all hover:border-primary active:scale-[0.98]"
+                                    className="group flex w-full items-center justify-between rounded-lg border border-border/30 p-3 transition-all hover:border-primary hover:bg-mint-wash active:scale-[0.98]"
                                 >
                                     <div className="flex items-center gap-3">
                                         <span
@@ -860,7 +866,7 @@ export default function Dashboard({
                                 {activeSettlementAlerts.map((alert) => (
                                     <tr
                                         key={alert.outlet.id}
-                                        className="hover:bg-mint-wash group cursor-pointer transition-colors"
+                                        className="group cursor-pointer transition-colors hover:bg-mint-wash"
                                     >
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
