@@ -24,7 +24,7 @@ export default function OwnerTable({
     }
 
     return (
-        <div className="overflow-x-auto rounded-xl bg-surface shadow-xs ring-1 ring-foreground/10">
+        <div className="overflow-x-auto rounded-xl bg-surface shadow-card ring-1 ring-foreground/10">
             {content}
         </div>
     );

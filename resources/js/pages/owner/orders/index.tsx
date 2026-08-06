@@ -84,13 +84,13 @@ export default function OwnerOrdersIndex({
                         value: stats?.pending ?? 0,
                         sublabel:
                             (stats?.pending ?? 0) > 0
-                                ? 'Perlu assign kurir'
+                                ? 'Perlu tugaskan kurir'
                                 : undefined,
                         sublabelColor: 'text-amber-600',
                     },
                     { label: 'Selesai', value: stats?.completed_today ?? 0 },
                     {
-                        label: 'Revenue',
+                        label: 'Pendapatan',
                         value: formatCurrency(stats?.revenue_today ?? 0),
                     },
                 ]}
@@ -124,7 +124,7 @@ export default function OwnerOrdersIndex({
                                 isActive
                                     ? (colorMap[sf.key] ??
                                       'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {sf.label}
@@ -168,22 +168,22 @@ export default function OwnerOrdersIndex({
                     <Table>
                         <TableHeader>
                             <tr className="bg-surface-muted/50">
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Kode
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
-                                    Customer
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
+                                    Pelanggan
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Outlet
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Status
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
                                     Total
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
                                     Aksi
                                 </TableHead>
                             </tr>
@@ -195,7 +195,7 @@ export default function OwnerOrdersIndex({
                                 return (
                                     <TableRow
                                         key={order.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                        className="border-t border-border/20 transition-colors hover:bg-mint-wash"
                                     >
                                         <TableCell className="px-4 py-3 font-bold text-text tabular-nums">
                                             {order.order_code}
@@ -230,7 +230,7 @@ export default function OwnerOrdersIndex({
                                                                 )
                                                             }
                                                         >
-                                                            Assign
+                                                            Tugaskan
                                                         </Button>
                                                     )}
                                                 <Button
