@@ -18,6 +18,7 @@ import {
 import { useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { usePushSubscription } from '@/hooks/use-push-subscription';
 
 interface Notification {
     id: number;
@@ -233,6 +234,8 @@ export default function NotificationSheet({
         }
     };
 
+    const { pushState, requestEnable } = usePushSubscription();
+
     if (!open) {
         return null;
     }
@@ -262,6 +265,39 @@ export default function NotificationSheet({
                             </button>
                         )}
                     </div>
+
+                    {/* Push notification status */}
+                    {pushState !== 'unsupported' && pushState !== 'active' && (
+                        <div className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-surface-muted/50 px-3 py-2.5">
+                            <Bell className="h-4 w-4 shrink-0 text-primary" />
+                            {pushState === 'denied' ? (
+                                <p className="min-w-0 flex-1 text-xs text-text-muted">
+                                    Notifikasi dimatikan. Aktifkan lewat
+                                    Settings browser.
+                                </p>
+                            ) : (
+                                <>
+                                    <p className="min-w-0 flex-1 text-xs text-text-muted">
+                                        Aktifkan notifikasi untuk info pesanan
+                                    </p>
+                                    <button
+                                        onClick={requestEnable}
+                                        className="shrink-0 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white active:opacity-80"
+                                    >
+                                        Aktifkan
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    )}
+                    {pushState === 'active' && (
+                        <div className="mt-3 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/50 px-3 py-2.5">
+                            <CircleCheck className="h-4 w-4 shrink-0 text-emerald-600" />
+                            <p className="text-xs font-medium text-emerald-700">
+                                Notifikasi aktif
+                            </p>
+                        </div>
+                    )}
 
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
