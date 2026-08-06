@@ -292,7 +292,7 @@ export default function OwnerRestocksIndex({
                                                         handleOpenApprove(r)
                                                     }
                                                 >
-                                                    Approve
+                                                    Setujui
                                                 </Button>
                                             ) : (
                                                 <Button
@@ -426,7 +426,7 @@ function RestockActionModal({
                 <DialogContent className="max-w-lg">
                     <DialogHeader>
                         <DialogTitle>
-                            {isRequested ? 'Approve Restock' : 'Detail Restock'}{' '}
+                            {isRequested ? 'Setujui Restock' : 'Detail Restock'}{' '}
                             #{restock.id}
                         </DialogTitle>
                         <DialogDescription>

@@ -122,7 +122,7 @@ export default function OwnerDeliveriesIndex({
                                 isActive
                                     ? (colorMap[opt.value] ??
                                       'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {opt.label}
@@ -169,22 +169,22 @@ export default function OwnerDeliveriesIndex({
                     >
                         <TableHeader>
                             <tr className="bg-surface-muted/50">
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Kode
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Outlet
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Kurir
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Status
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-left text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-left text-xs font-semibold text-text-muted">
                                     Tanggal
                                 </TableHead>
-                                <TableHead className="px-4 py-3 text-right text-xs font-medium text-text-muted">
+                                <TableHead className="px-4 py-3 text-right text-xs font-semibold text-text-muted">
                                     Aksi
                                 </TableHead>
                             </tr>
@@ -199,7 +199,7 @@ export default function OwnerDeliveriesIndex({
                                 return (
                                     <TableRow
                                         key={d.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                        className="border-t border-border/20 transition-colors hover:bg-mint-wash"
                                     >
                                         <TableCell className="px-4 py-3 font-bold text-text tabular-nums">
                                             {d.order?.order_code ?? '-'}
