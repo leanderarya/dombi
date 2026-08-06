@@ -190,8 +190,8 @@ export default function OwnerSidebarNav({
                                     }}
                                     className={`flex items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 ${
                                         active
-                                            ? 'border-l-2 border-primary bg-mint-wash font-semibold text-primary'
-                                            : 'border-l-2 border-transparent text-text-muted hover:bg-mint-wash/60 hover:text-text'
+                                            ? 'bg-mint-wash font-semibold text-primary'
+                                            : 'text-text-muted hover:bg-mint-wash/60 hover:text-text'
                                     }`}
                                 >
                                     <span>{item.label}</span>
@@ -278,8 +278,8 @@ export default function OwnerSidebarNav({
                                                     }
                                                     className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                                         active
-                                                            ? 'border-l-2 border-primary bg-mint-wash font-semibold text-primary'
-                                                            : 'border-l-2 border-transparent font-medium text-text-muted hover:bg-mint-wash/60 hover:text-text'
+                                                            ? 'bg-mint-wash font-semibold text-primary'
+                                                            : 'font-medium text-text-muted hover:bg-mint-wash/60 hover:text-text'
                                                     }`}
                                                 >
                                                     <span>{item.label}</span>
