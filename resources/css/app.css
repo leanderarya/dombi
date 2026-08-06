@@ -56,6 +56,15 @@
         0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
+/* ─── Role-Scoped Color Overrides ──────────────────────── */
+
+html[data-role='courier'] {
+    --color-primary: var(--color-blue-700);
+    --color-primary-hover: var(--color-blue-800);
+    --color-primary-light: var(--color-blue-50);
+    --color-ring: var(--color-blue-700);
+}
+
 /* ─── Native Feel Quick Wins ─────────────────────────────── */
 
 /* Smooth scroll for anchor links and scroll-into-view */
@@ -210,7 +219,8 @@ input:focus,
 textarea:focus,
 select:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1);
+    box-shadow: 0 0 0 3px
+        color-mix(in srgb, var(--color-primary) 15%, transparent);
     outline: none;
 }
 
