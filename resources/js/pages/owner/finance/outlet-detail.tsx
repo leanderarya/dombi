@@ -397,6 +397,7 @@ export default function OutletAccountStatement({
                                     />
                                     {(() => {
                                         const b = summary.breakdown ?? {};
+
                                         return (
                                             <div className="ml-3 space-y-1 border-l-2 border-border pl-3">
                                                 <OwnerDetailRow
