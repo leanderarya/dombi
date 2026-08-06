@@ -112,7 +112,7 @@ export default function OutletDeliveryShow({ delivery }: any) {
                                 onClick={() =>
                                     handleAction(action.status, action.label)
                                 }
-                                className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${
+                                className={`min-h-11 rounded-lg px-4 py-2 text-xs font-bold transition-all ${
                                     action.destructive
                                         ? 'bg-red-600 text-white hover:bg-red-700'
                                         : 'bg-emerald-700 text-white hover:bg-emerald-800'

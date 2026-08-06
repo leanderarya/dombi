@@ -132,7 +132,7 @@ export default function OutletOrdersIndex({
                                 onClick={() =>
                                     handleFilterChange('pending_confirmation')
                                 }
-                                className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-left text-sm transition-colors hover:bg-amber-100 active:bg-amber-200"
+                                className="w-full rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-left text-sm transition-colors hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:outline-none active:bg-amber-200"
                             >
                                 <span className="font-semibold text-amber-800">
                                     {count} pesanan menunggu konfirmasi
