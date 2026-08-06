@@ -7,7 +7,16 @@ import OwnerDetailRow from '@/components/owner/owner-detail-row';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import ResolveDeliverySheet from '@/components/owner/resolve-delivery-sheet';
 import { Button } from '@/components/ui/button';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import { formatCurrency } from '@/lib/format';
@@ -20,6 +29,8 @@ export default function OwnerOrderShow({ order, couriers }: any) {
         courier_type: 'dombi',
     });
     const [resolveOpen, setResolveOpen] = useState(false);
+    const [cancelOpen, setCancelOpen] = useState(false);
+    const cancelForm = useForm({ reason: '', notes: '' });
     const [showFullTimeline, setShowFullTimeline] = useState(false);
 
     if (!order) {
@@ -371,6 +382,22 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                             Selesaikan Masalah
                         </Button>
                     )}
+
+                    {/* Cancel */}
+                    {[
+                        'confirmed',
+                        'preparing',
+                        'ready_for_pickup',
+                        'failed_delivery',
+                    ].includes(order.status) && (
+                        <Button
+                            variant="destructive"
+                            className="w-full"
+                            onClick={() => setCancelOpen(true)}
+                        >
+                            Batalkan Pesanan
+                        </Button>
+                    )}
                 </div>
             </div>
             {order.delivery && (
@@ -380,6 +407,100 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                     onClose={() => setResolveOpen(false)}
                 />
             )}
+            <Dialog
+                open={cancelOpen}
+                onOpenChange={(open) => {
+                    if (!open) {
+                        setCancelOpen(false);
+                        cancelForm.reset();
+                    }
+                }}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Batalkan Pesanan</DialogTitle>
+                        <DialogDescription>
+                            Pilih alasan pembatalan pesanan ini.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                        <Select
+                            placeholder="Pilih alasan..."
+                            value={cancelForm.data.reason}
+                            onChange={(e) =>
+                                cancelForm.setData('reason', e.target.value)
+                            }
+                            options={[
+                                {
+                                    value: 'Stok Tidak Tersedia',
+                                    label: 'Stok Tidak Tersedia',
+                                },
+                                {
+                                    value: 'Produk Rusak',
+                                    label: 'Produk Rusak',
+                                },
+                                {
+                                    value: 'Outlet Tutup',
+                                    label: 'Outlet Tutup',
+                                },
+                                {
+                                    value: 'Gangguan Operasional',
+                                    label: 'Gangguan Operasional',
+                                },
+                                {
+                                    value: 'Permintaan Customer',
+                                    label: 'Permintaan Customer',
+                                },
+                                { value: 'Lainnya', label: 'Lainnya' },
+                            ]}
+                        />
+                        <Textarea
+                            placeholder="Catatan (opsional)"
+                            value={cancelForm.data.notes}
+                            onChange={(e) =>
+                                cancelForm.setData('notes', e.target.value)
+                            }
+                        />
+                    </div>
+                    <DialogFooter>
+                        <Button
+                            variant="outline"
+                            onClick={() => {
+                                setCancelOpen(false);
+                                cancelForm.reset();
+                            }}
+                        >
+                            Batal
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            disabled={!cancelForm.data.reason}
+                            loading={cancelForm.processing}
+                            onClick={() => {
+                                cancelForm.post(
+                                    `/owner/orders/${order.id}/cancel`,
+                                    {
+                                        preserveScroll: true,
+                                        onSuccess: () => {
+                                            setCancelOpen(false);
+                                            cancelForm.reset();
+                                            toast.success('Pesanan dibatalkan');
+                                        },
+                                        onError: (errors) =>
+                                            toast.error(
+                                                Object.values(errors)
+                                                    .flat()
+                                                    .join(', '),
+                                            ),
+                                    },
+                                );
+                            }}
+                        >
+                            Ya, Batalkan
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </OwnerPageShell>
     );
 }
