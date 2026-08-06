@@ -7,7 +7,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
     const form = useForm({
         reason: '',
         notes: '',
-        items: [] as { product_variant_id: number; quantity: number }[],
+        items: [] as { product_id: number; quantity: number }[],
         evidence_images: [] as File[],
     });
 
@@ -58,7 +58,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
         form.setData(
             'items',
             Array.from(next.entries()).map(([id, qty]) => ({
-                product_variant_id: id,
+                product_id: id,
                 quantity: qty,
             })),
         );
@@ -73,7 +73,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
         form.setData(
             'items',
             Array.from(next.entries()).map(([id, q]) => ({
-                product_variant_id: id,
+                product_id: id,
                 quantity: q,
             })),
         );
@@ -335,6 +335,13 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                             {form.errors.items}
                         </div>
                     )}
+                    {Object.keys(form.errors)
+                        .filter((k) => k !== 'items')
+                        .map((k) => (
+                            <div key={k} className="mt-1 text-xs text-red-600">
+                                {form.errors[k as keyof typeof form.errors]}
+                            </div>
+                        ))}
                 </div>
             </div>
 
