@@ -23,7 +23,10 @@ export default function AssignCourierSheet({
     open,
     onClose,
 }: Props) {
-    const form = useForm({ courier_id: couriers[0]?.id ?? '', courier_type: 'dombi' });
+    const form = useForm({
+        courier_id: couriers[0]?.id ?? '',
+        courier_type: 'dombi',
+    });
 
     if (!order) {
         return null;

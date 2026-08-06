@@ -23,10 +23,7 @@ const statusFilters = [
     { key: 'rejected', label: 'Ditolak' },
 ];
 
-export default function OutletExchangesIndex({
-    exchanges,
-    filters,
-}: any) {
+export default function OutletExchangesIndex({ exchanges, filters }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
     const { loading } = useInertiaLoading();
 
@@ -72,7 +69,9 @@ export default function OutletExchangesIndex({
                                     action={{
                                         label: 'Ajukan Tukar',
                                         onClick: () =>
-                                            router.visit('/outlet/exchanges/create'),
+                                            router.visit(
+                                                '/outlet/exchanges/create',
+                                            ),
                                     }}
                                 />
                             ) : (
