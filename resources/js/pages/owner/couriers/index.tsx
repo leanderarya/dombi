@@ -72,9 +72,12 @@ export default function CouriersIndex({
             subtitle="Kelola kurir pengiriman"
             headerRight={
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" asChild>
-                        <a href="/owner/delivery-tiers">Tier Ongkir</a>
-                    </Button>
+                    <a
+                        href="/owner/delivery-tiers"
+                        className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                        Tier Ongkir
+                    </a>
                     <Button onClick={() => setShowCreate(true)}>
                         + Tambah Kurir
                     </Button>
