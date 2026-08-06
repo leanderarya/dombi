@@ -108,7 +108,7 @@ class ReturnController extends Controller
         // Map legacy product_variant_id to product_id (client cache safety net)
         $items = $request->input('items', []);
         foreach ($items as &$item) {
-            if (isset($item['product_variant_id']) && !isset($item['product_id'])) {
+            if (isset($item['product_variant_id']) && ! isset($item['product_id'])) {
                 $item['product_id'] = $item['product_variant_id'];
             }
         }
