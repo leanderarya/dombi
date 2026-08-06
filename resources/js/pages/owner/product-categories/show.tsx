@@ -20,6 +20,7 @@ import ProductImage from '@/components/owner/product-image';
 import ProductSearchFilters from '@/components/owner/product-search-filters';
 import SetupCenterStockModal from '@/components/owner/setup-center-stock-modal';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -923,20 +924,16 @@ export default function ProductCategoryShow({ category }: Props) {
                             }
                             rows={2}
                         />
-                        <label className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={catForm.is_active}
-                                onChange={(e) =>
-                                    setCatForm((p) => ({
-                                        ...p,
-                                        is_active: e.target.checked,
-                                    }))
-                                }
-                                className="rounded"
-                            />
-                            <span className="text-sm">Aktif</span>
-                        </label>
+                        <Checkbox
+                            label="Aktif"
+                            checked={catForm.is_active}
+                            onChange={(e) =>
+                                setCatForm((p) => ({
+                                    ...p,
+                                    is_active: e.target.checked,
+                                }))
+                            }
+                        />
                         <DialogFooter>
                             <Button
                                 type="button"
@@ -1117,20 +1114,16 @@ export default function ProductCategoryShow({ category }: Props) {
                             }
                             label="Foto Produk"
                         />
-                        <label className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                checked={productForm.is_active}
-                                onChange={(e) =>
-                                    setProductForm((p) => ({
-                                        ...p,
-                                        is_active: e.target.checked,
-                                    }))
-                                }
-                                className="rounded"
-                            />
-                            <span className="text-sm">Aktif</span>
-                        </label>
+                        <Checkbox
+                            label="Aktif"
+                            checked={productForm.is_active}
+                            onChange={(e) =>
+                                setProductForm((p) => ({
+                                    ...p,
+                                    is_active: e.target.checked,
+                                }))
+                            }
+                        />
                         <DialogFooter>
                             <Button
                                 type="button"

@@ -2,7 +2,6 @@ import { DollarSign, Package, TrendingDown, TrendingUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { MarginBarInline } from '@/components/owner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
@@ -153,34 +152,54 @@ export function PusatTab({
         return <SkeletonList count={5} />;
     }
 
-    const kpiItems = [
-        {
-            label: 'Total Produk',
-            value: kpis.total_products ?? kpis.total_variants ?? 0,
-            icon: <Package className="h-5 w-5" />,
-        },
-        {
-            label: 'Rata-rata HPP',
-            value: formatCurrency(kpis.avg_hpp),
-            icon: <DollarSign className="h-5 w-5" />,
-        },
-        {
-            label: 'Rata-rata Margin',
-            value: formatCurrency(kpis.avg_margin),
-            icon: <TrendingUp className="h-5 w-5" />,
-        },
-        {
-            label: 'Margin Negatif',
-            value: kpis.negative_margin_count,
-            icon: <TrendingDown className="h-5 w-5" />,
-            valueClassName:
-                kpis.negative_margin_count > 0 ? 'text-red-600' : undefined,
-        },
-    ];
-
     return (
         <div>
-            <OwnerKpiStrip items={kpiItems} cols={4} />
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Total Produk</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                            <Package className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        {kpis.total_products ?? kpis.total_variants ?? 0}
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Rata-rata HPP</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <DollarSign className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        {formatCurrency(kpis.avg_hpp)}
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Rata-rata Margin</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+                            <TrendingUp className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        {formatCurrency(kpis.avg_margin)}
+                    </div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Margin Negatif</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                            <TrendingDown className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${kpis.negative_margin_count > 0 ? 'text-red-600' : 'text-text'}`}>
+                        {kpis.negative_margin_count}
+                    </div>
+                </div>
+            </div>
 
             <OwnerFilterCard
                 collapsible

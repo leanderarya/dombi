@@ -2,7 +2,6 @@ import { router, useForm, usePage } from '@inertiajs/react';
 import { MapPin, Truck, Users, Wallet } from 'lucide-react';
 import { useState } from 'react';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
 import OwnerTable from '@/components/owner/owner-table';
@@ -136,42 +135,50 @@ export default function CourierManagement() {
         );
     };
 
-    const kpiItems = [
-        {
-            label: 'Ongkir Masuk',
-            value: formatCurrency(revenueSummary?.delivery_fee ?? 0),
-            icon: <Wallet className="h-5 w-5" />,
-            accentColor: '#2563EB',
-        },
-        {
-            label: 'Cost Eksternal',
-            value: formatCurrency(revenueSummary?.external_cost ?? 0),
-            icon: <Truck className="h-5 w-5" />,
-            accentColor: '#D97706',
-        },
-        {
-            label: 'Net',
-            value: formatCurrency(revenueSummary?.net ?? 0),
-            icon: <Wallet className="h-5 w-5" />,
-            accentColor: '#16A34A',
-            valueClassName:
-                (revenueSummary?.net ?? 0) < 0 ? 'text-red-600' : 'text-text',
-        },
-        {
-            label: 'Jumlah Delivery',
-            value: String(revenueSummary?.deliveries ?? 0),
-            icon: <Users className="h-5 w-5" />,
-            accentColor: '#4F46E5',
-        },
-    ];
-
     return (
         <OwnerPageShell
             title="Kurir"
             subtitle="Kelola kurir, kandidat outlet, dan pendapatan ongkir"
         >
             <div className="space-y-6">
-                <OwnerKpiStrip cols={4} items={kpiItems} />
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">Ongkir Masuk</span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                                <Wallet className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{formatCurrency(revenueSummary?.delivery_fee ?? 0)}</div>
+                    </div>
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">Cost Eksternal</span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                                <Truck className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{formatCurrency(revenueSummary?.external_cost ?? 0)}</div>
+                    </div>
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">Net</span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                <Wallet className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${(revenueSummary?.net ?? 0) < 0 ? 'text-red-600' : 'text-text'}`}>{formatCurrency(revenueSummary?.net ?? 0)}</div>
+                    </div>
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-text-muted">Jumlah Delivery</span>
+                            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED]/10 text-[#7C3AED]">
+                                <Users className="h-5 w-5" />
+                            </span>
+                        </div>
+                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{revenueSummary?.deliveries ?? 0}</div>
+                    </div>
+                </div>
 
                 <div className="flex flex-wrap items-center gap-3">
                     <span className="text-xs font-semibold tracking-wider text-text-subtle uppercase">

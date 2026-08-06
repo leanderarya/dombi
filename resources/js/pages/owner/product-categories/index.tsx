@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -175,23 +176,26 @@ export default function ProductCategoriesIndex({ categories }: Props) {
             }
         >
             {/* Search + Filter Chips */}
-            <div className="mb-6 flex flex-wrap items-center gap-3">
-                <Input
-                    type="text"
-                    placeholder="Cari kategori..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="w-64"
-                />
-                <div className="flex flex-wrap items-center gap-2">
+            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="relative flex-1">
+                    <input
+                        type="text"
+                        placeholder="Cari kategori..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pl-10 text-sm outline-none transition-colors focus:border-primary focus:ring-1 focus:ring-primary/20"
+                    />
+                    <Package className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                </div>
+                <div className="flex flex-wrap gap-2">
                     {statusFilters.map((f) => (
                         <button
                             key={f.key}
                             onClick={() => setStatusFilter(f.key)}
-                            className={`rounded-full px-4 py-1.5 text-[12px] font-medium transition-all ${
+                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 statusFilter === f.key
-                                    ? 'bg-primary text-white'
-                                    : 'bg-surface-container hover:bg-mint-wash text-text-muted'
+                                    ? 'bg-primary/10 text-primary ring-primary/20'
+                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
                             }`}
                         >
                             {f.label}
@@ -363,22 +367,16 @@ export default function ProductCategoriesIndex({ categories }: Props) {
                                 rows={2}
                                 placeholder="Deskripsi kategori..."
                             />
-                            <label className="flex items-center gap-2 pt-1">
-                                <input
-                                    type="checkbox"
-                                    checked={form.is_active}
-                                    onChange={(e) =>
-                                        setForm((p) => ({
-                                            ...p,
-                                            is_active: e.target.checked,
-                                        }))
-                                    }
-                                    className="rounded border-zinc-300"
-                                />
-                                <span className="text-sm text-zinc-700">
-                                    Aktif
-                                </span>
-                            </label>
+                            <Checkbox
+                                label="Aktif"
+                                checked={form.is_active}
+                                onChange={(e) =>
+                                    setForm((p) => ({
+                                        ...p,
+                                        is_active: e.target.checked,
+                                    }))
+                                }
+                            />
                         </div>
                         <DialogFooter>
                             <Button

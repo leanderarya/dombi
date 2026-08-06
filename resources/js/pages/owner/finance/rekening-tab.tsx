@@ -1,8 +1,9 @@
 import { router, useForm } from '@inertiajs/react';
+import { Banknote, CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -112,12 +113,26 @@ export default function RekeningTab({
 
     return (
         <>
-            <OwnerKpiStrip
-                items={[
-                    { label: 'Total Rekening', value: accounts.length },
-                    { label: 'Aktif', value: activeCount },
-                ]}
-            />
+            <div className="mb-6 grid grid-cols-2 gap-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Total Rekening</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                            <Banknote className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{accounts.length}</div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Aktif</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <CheckCircle2 className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-emerald-600 sm:text-2xl">{activeCount}</div>
+                </div>
+            </div>
 
             <div
                 className="mb-4 flex items-center justify-between"
@@ -331,16 +346,12 @@ function AccountForm({
                 )}
             </div>
             <div className="flex items-center gap-2">
-                <input
-                    type="checkbox"
+                <Checkbox
+                    label="Aktif"
                     id="is_active"
                     checked={data.is_active}
                     onChange={(e) => setData('is_active', e.target.checked)}
-                    className="h-4 w-4 rounded border-border"
                 />
-                <label htmlFor="is_active" className="text-sm text-text">
-                    Aktif
-                </label>
             </div>
         </div>
     );
