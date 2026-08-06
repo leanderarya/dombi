@@ -178,7 +178,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
                                             e.target.files?.[0] || null,
                                         )
                                     }
-                                    className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                                    className="w-full rounded-[0.625rem] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                                 />
                                 {errors.proof_image && (
                                     <p className="mt-1 text-xs text-danger">

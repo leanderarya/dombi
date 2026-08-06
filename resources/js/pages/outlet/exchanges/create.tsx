@@ -281,32 +281,32 @@ export default function OutletExchangesCreate({
                             )}
                         </div>
                     ))}
-            </div>
 
-            {/* Notes */}
-            <div className="mx-auto mt-4 max-w-lg px-4">
-                <label className="mb-1 block text-xs font-medium text-text-muted">
-                    Catatan
-                </label>
-                <textarea
-                    value={form.data.notes}
-                    onChange={(e) => form.setData('notes', e.target.value)}
-                    placeholder="Opsional"
-                    rows={2}
-                    className="w-full rounded-lg border border-border px-3 py-2.5 text-sm placeholder:text-text-subtle"
-                />
-            </div>
-
-            {Object.keys(form.errors).length > 0 && (
-                <div className="mx-auto mt-2 max-w-lg px-4">
-                    <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700">
-                        {Object.values(form.errors).flat().join(', ')}
-                    </div>
+                {/* Notes */}
+                <div className="mt-4">
+                    <label className="mb-1 block text-xs font-medium text-text-muted">
+                        Catatan
+                    </label>
+                    <textarea
+                        value={form.data.notes}
+                        onChange={(e) => form.setData('notes', e.target.value)}
+                        placeholder="Opsional"
+                        rows={2}
+                        className="w-full rounded-lg border border-border px-3 py-2.5 text-sm placeholder:text-text-subtle"
+                    />
                 </div>
-            )}
+
+                {Object.keys(form.errors).length > 0 && (
+                    <div className="mt-2">
+                        <div className="rounded-lg bg-red-50 p-3 text-xs text-red-700">
+                            {Object.values(form.errors).flat().join(', ')}
+                        </div>
+                    </div>
+                )}
+            </div>
 
             {/* Sticky Submit */}
-            <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom,0))] z-30 border-t border-border bg-white/95 pt-3 pb-3 backdrop-blur">
+            <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 pt-3 pb-3 backdrop-blur">
                 <div className="mx-auto max-w-lg px-4">
                     <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-surface-muted px-3 py-2">
                         <div>
