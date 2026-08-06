@@ -27,7 +27,15 @@ const navGroups: NavGroup[] = [
     {
         label: 'Dasbor',
         icon: <DashboardIcon />,
-        items: [{ href: '/owner/dashboard', label: 'Dasbor' }],
+        items: [
+            { href: '/owner/dashboard', label: 'Dasbor' },
+            {
+                href: '/owner/analytics',
+                label: 'Analitik',
+                isActive: (url: string) =>
+                    url.split('?')[0] === '/owner/analytics',
+            },
+        ],
     },
     {
         label: 'Operasional',
@@ -48,12 +56,27 @@ const navGroups: NavGroup[] = [
                     );
                 },
             },
+        ],
+    },
+    {
+        label: 'Produk',
+        icon: <MasterDataIcon />,
+        items: [
             {
-                href: '/owner/returns',
-                label: 'Return & Tukar',
-                badgeKey: 'pendingReturns',
+                href: '/owner/product-categories',
+                label: 'Produk',
+                isActive: (url: string) =>
+                    url.startsWith('/owner/products') ||
+                    url.startsWith('/owner/product-families') ||
+                    url.startsWith('/owner/product-categories'),
             },
-            { href: '/owner/delivery-tiers', label: 'Tier Ongkir' },
+            {
+                href: '/owner/pricing',
+                label: 'Harga',
+                isActive: (url: string) => url.startsWith('/owner/pricing'),
+            },
+            { href: '/owner/inventories', label: 'Inventaris' },
+            { href: '/owner/restocks', label: 'Restock' },
         ],
     },
     {
@@ -85,44 +108,10 @@ const navGroups: NavGroup[] = [
                     );
                 },
             },
-        ],
-    },
-    {
-        label: 'Master Data',
-        icon: <MasterDataIcon />,
-        items: [
             {
-                href: '/owner/product-categories',
-                label: 'Produk',
-                isActive: (url: string) =>
-                    url.startsWith('/owner/products') ||
-                    url.startsWith('/owner/product-families') ||
-                    url.startsWith('/owner/product-categories'),
-            },
-            {
-                href: '/owner/pricing',
-                label: 'Harga',
-                isActive: (url: string) => url.startsWith('/owner/pricing'),
-            },
-        ],
-    },
-    {
-        label: 'Persediaan',
-        icon: <InventoryIcon />,
-        items: [
-            { href: '/owner/inventories', label: 'Inventaris' },
-            { href: '/owner/restocks', label: 'Restock' },
-        ],
-    },
-    {
-        label: 'Analitik',
-        icon: <AnalyticsIcon />,
-        items: [
-            {
-                href: '/owner/analytics',
-                label: 'Analitik',
-                isActive: (url: string) =>
-                    url.split('?')[0] === '/owner/analytics',
+                href: '/owner/returns',
+                label: 'Return & Tukar',
+                badgeKey: 'pendingReturns',
             },
         ],
     },
@@ -400,42 +389,6 @@ function MasterDataIcon() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-            />
-        </svg>
-    );
-}
-
-function InventoryIcon() {
-    return (
-        <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.8}
-        >
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-            />
-        </svg>
-    );
-}
-
-function AnalyticsIcon() {
-    return (
-        <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.8}
-        >
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             />
         </svg>
     );
