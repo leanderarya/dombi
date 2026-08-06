@@ -94,6 +94,10 @@ class InventoryController extends Controller
             return back()->with('success', 'Stok sesuai. Tidak ada perubahan.');
         }
 
+        if (empty($validated['notes'])) {
+            return back()->withErrors(['notes' => 'Catatan wajib diisi saat stok berubah.'])->withInput();
+        }
+
         app(InventoryService::class)->stockOpname(
             $outlet->id,
             $productId,
