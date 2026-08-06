@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import { Package } from 'lucide-react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
@@ -130,7 +131,7 @@ export default function OwnerExchangesIndex({
                                 isActive
                                     ? (colorMap[sf.key] ??
                                       'bg-primary/10 text-primary ring-primary/20')
-                                    : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'
+                                    : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
                             {sf.label}
@@ -169,7 +170,7 @@ export default function OwnerExchangesIndex({
             {/* Table */}
             {exchanges.data.length === 0 ? (
                 <EmptyState
-                    icon="package"
+                    icon={<Package className="h-8 w-8 text-text-subtle" />}
                     title="Tidak ada permintaan tukar produk"
                     description="Belum ada pengajuan penukaran dari outlet"
                 />
@@ -202,7 +203,7 @@ export default function OwnerExchangesIndex({
                                 return (
                                     <TableRow
                                         key={ex.id}
-                                        className="hover:bg-mint-wash border-t border-border/20 transition-colors last:border-b-0"
+                                        className="border-t border-border/20 transition-colors last:border-b-0 hover:bg-mint-wash"
                                     >
                                         <TableCell className="px-3 py-2.5 font-bold text-text tabular-nums">
                                             #{ex.id}

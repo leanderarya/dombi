@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { getInitialOwnerTab } from '../tab-state';
 import PembayaranTab from './pembayaran-tab';
@@ -67,29 +68,12 @@ export default function FinanceIndex(props: any) {
             title="Keuangan"
             subtitle="Pantau kewajiban seluruh outlet"
         >
-            <div
-                className="mb-5 inline-flex rounded-lg bg-surface-muted p-1"
-                role="tablist"
-                aria-label="Navigasi tab keuangan"
-            >
-                {TABS.map((tab) => (
-                    <button
-                        key={tab.key}
-                        type="button"
-                        role="tab"
-                        aria-selected={activeTab === tab.key}
-                        aria-describedby={`${tab.key}-desc`}
-                        onClick={() => handleTabChange(tab.key)}
-                        className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
-                            activeTab === tab.key
-                                ? 'bg-white text-text shadow-sm'
-                                : 'text-text-muted hover:text-text'
-                        }`}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+            <OwnerSegmentedTabs
+                tabs={TABS.map((t) => ({ key: t.key, label: t.label }))}
+                activeTab={activeTab}
+                onChange={(key) => handleTabChange(key as TabKey)}
+                className="mb-5"
+            />
             <p
                 id={`${TABS.find((t) => t.key === activeTab)?.key}-desc`}
                 className="mb-4 text-xs text-text-muted"
