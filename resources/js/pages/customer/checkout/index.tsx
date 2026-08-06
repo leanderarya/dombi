@@ -329,7 +329,12 @@ export default function CheckoutIndex({
 
                 <DeliveryLoginSheet
                     open={deliverySheetOpen}
-                    onClose={() => setDeliverySheetOpen(false)}
+                    onClose={() => {
+                        if (!isLoggedIn) {
+                            saveFulfillment('pickup');
+                        }
+                        setDeliverySheetOpen(false);
+                    }}
                     onSwitchToPickup={() => {
                         saveFulfillment('pickup');
                         setDeliverySheetOpen(false);
