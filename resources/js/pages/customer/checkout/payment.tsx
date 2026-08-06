@@ -173,12 +173,14 @@ export default function CheckoutPayment({ draft, summary }: any) {
         }
     };
 
-    const handleConfirmAdjusted = async () => {
+    const handleConfirmAdjusted = () => {
         setAdjustmentModal(null);
-        setProcessing(true);
-
-        // validateStock has already updated the session cart to adjusted quantities.
-        submit();
+        router.reload({
+            only: ['draft', 'summary'],
+            onFinish: () => {
+                setProcessing(false);
+            },
+        });
     };
 
     return (
