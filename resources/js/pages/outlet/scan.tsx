@@ -158,7 +158,7 @@ export default function OutletScanPage() {
             <Head title="Scan QR Code" />
             <OutletPageShell>
                 {/* Scanner Area */}
-                <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-black">
+                <div className="overflow-hidden rounded-2xl border border-border bg-black">
                     <div
                         ref={containerRef}
                         id="qr-reader"
