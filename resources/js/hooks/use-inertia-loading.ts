@@ -10,7 +10,10 @@ export function useInertiaLoading() {
 
     useEffect(() => {
         const removeStart = router.on('start', () => {
-            if (pollingReloadActive.current) return;
+            if (pollingReloadActive.current) {
+                return;
+            }
+
             debounceRef.current = setTimeout(() => setLoading(true), 200);
         });
         const removeFinish = router.on('finish', () => {

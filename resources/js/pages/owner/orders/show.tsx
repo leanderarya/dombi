@@ -16,9 +16,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { Select } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
+import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
 import { isDifferentRecipient } from '@/lib/recipient';
 import { getOrderStatus } from '@/lib/status-labels';
