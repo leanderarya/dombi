@@ -1,7 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import ExchangeCreateDialog from '@/components/outlet/exchange-create-dialog';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
@@ -27,11 +26,8 @@ const statusFilters = [
 export default function OutletExchangesIndex({
     exchanges,
     filters,
-    variants,
-    exchangeEligibleReturns,
 }: any) {
     const [activeFilter, setActiveFilter] = useState(filters.status ?? '');
-    const [showCreate, setShowCreate] = useState(false);
     const { loading } = useInertiaLoading();
 
     const handleFilterChange = (key: string) => {
@@ -61,12 +57,10 @@ export default function OutletExchangesIndex({
                     <>
                         {/* Action Bar */}
                         <div className="flex justify-end">
-                            <Button
-                                size="lg"
-                                onClick={() => setShowCreate(true)}
-                                icon={Plus}
-                            >
-                                Ajukan Tukar
+                            <Button size="lg" asChild icon={Plus}>
+                                <Link href="/outlet/exchanges/create">
+                                    Ajukan Tukar
+                                </Link>
                             </Button>
                         </div>
 
@@ -77,7 +71,8 @@ export default function OutletExchangesIndex({
                                     description="Ajukan tukar produk untuk produk pengganti."
                                     action={{
                                         label: 'Ajukan Tukar',
-                                        onClick: () => setShowCreate(true),
+                                        onClick: () =>
+                                            router.visit('/outlet/exchanges/create'),
                                     }}
                                 />
                             ) : (
@@ -116,14 +111,6 @@ export default function OutletExchangesIndex({
                     </>
                 )}
             </OutletPageShell>
-
-            {/* Create Exchange Dialog */}
-            <ExchangeCreateDialog
-                open={showCreate}
-                onClose={() => setShowCreate(false)}
-                variants={variants}
-                exchangeEligibleReturns={exchangeEligibleReturns}
-            />
         </OutletLayout>
     );
 }
