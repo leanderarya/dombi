@@ -135,13 +135,10 @@ class SettlementGeneratorService
 
         if ($settlement) {
             if ($wasRecentlyCreated) {
-                $settlement->status = Settlement::STATUS_GENERATED;
-                $settlement->save();
                 $this->notificationService->notifySettlementGenerated($settlement);
-            } else {
-                $settlement = Settlement::lockForUpdate()->find($settlement->id);
-                $settlement->recalculateStatus();
             }
+            $settlement = Settlement::lockForUpdate()->find($settlement->id);
+            $settlement->recalculateStatus();
         }
 
         return $settlement;
