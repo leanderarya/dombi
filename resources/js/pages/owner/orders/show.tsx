@@ -15,7 +15,10 @@ import { isDifferentRecipient } from '@/lib/recipient';
 import { getOrderStatus } from '@/lib/status-labels';
 
 export default function OwnerOrderShow({ order, couriers }: any) {
-    const form = useForm({ courier_id: couriers[0]?.id ?? '', courier_type: 'dombi' });
+    const form = useForm({
+        courier_id: couriers[0]?.id ?? '',
+        courier_type: 'dombi',
+    });
     const [resolveOpen, setResolveOpen] = useState(false);
     const [showFullTimeline, setShowFullTimeline] = useState(false);
 
