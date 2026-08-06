@@ -193,7 +193,7 @@ export default function OwnerRestocksIndex({
                             key={sf.key}
                             type="button"
                             onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${isActive ? (colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20') : 'hover:bg-mint-wash bg-surface text-text-muted ring-border'}`}
+                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${isActive ? (colorMap[sf.key] ?? 'bg-primary/10 text-primary ring-primary/20') : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'}`}
                         >
                             {sf.label}
                         </button>
@@ -263,7 +263,7 @@ export default function OwnerRestocksIndex({
                             {sorted.map((r: any) => (
                                 <TableRow
                                     key={r.id}
-                                    className="hover:bg-mint-wash border-t border-border/20 transition-colors"
+                                    className="border-t border-border/20 transition-colors hover:bg-mint-wash"
                                 >
                                     <TableCell className="px-3 py-3 font-bold text-text tabular-nums">
                                         #{r.id}
@@ -525,7 +525,7 @@ function RestockActionModal({
                                                                           items as any,
                                                                       );
                                                                   }}
-                                                                  className="h-7 w-16 rounded border border-border px-1.5 text-right text-xs font-semibold outline-none focus:border-primary"
+                                                                  className="h-11 w-20 rounded border border-border px-1.5 text-right text-xs font-semibold outline-none focus:border-primary"
                                                               />
                                                           </td>
                                                           <td
