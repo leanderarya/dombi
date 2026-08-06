@@ -6,8 +6,6 @@ import {
     Box,
     Truck,
     ShoppingBag,
-    BarChart3,
-    FileText,
     AlertTriangle,
     RotateCcw,
     Repeat2,
@@ -25,6 +23,7 @@ interface NavItem {
     label: string;
     icon: ReactNode;
     badgeKey?: keyof OutletBadgeCounts | 'orders';
+    activePaths?: string[];
 }
 
 interface NavGroup {
@@ -40,6 +39,7 @@ const navGroups: NavGroup[] = [
                 href: '/outlet/dashboard',
                 label: 'Dashboard',
                 icon: <LayoutDashboard className="h-5 w-5" />,
+                activePaths: ['/outlet/analytics', '/outlet/reports'],
             },
             {
                 href: '/outlet/orders',
@@ -53,9 +53,10 @@ const navGroups: NavGroup[] = [
                 icon: <QrCode className="h-5 w-5" />,
             },
             {
-                href: '/outlet/settlement',
-                label: 'Settlement',
-                icon: <DollarSign className="h-5 w-5" />,
+                href: '/outlet/deliveries',
+                label: 'Pengiriman',
+                icon: <Truck className="h-5 w-5" />,
+                badgeKey: 'deliveries',
             },
         ],
     },
@@ -68,42 +69,26 @@ const navGroups: NavGroup[] = [
                 icon: <Box className="h-5 w-5" />,
             },
             {
-                href: '/outlet/deliveries',
-                label: 'Pengiriman',
-                icon: <Truck className="h-5 w-5" />,
-                badgeKey: 'deliveries',
-            },
-            {
                 href: '/outlet/offline-sales',
                 label: 'Penjualan Offline',
                 icon: <ShoppingBag className="h-5 w-5" />,
             },
+            {
+                href: '/outlet/my-couriers',
+                label: 'Kurir Saya',
+                icon: <UserRound className="h-5 w-5" />,
+            },
         ],
     },
     {
-        label: 'Pelaporan',
+        label: 'Tindakan',
         items: [
-            {
-                href: '/outlet/analytics',
-                label: 'Analitik',
-                icon: <BarChart3 className="h-5 w-5" />,
-            },
-            {
-                href: '/outlet/reports',
-                label: 'Laporan Penjualan',
-                icon: <FileText className="h-5 w-5" />,
-            },
             {
                 href: '/outlet/order-reports',
                 label: 'Laporan Masalah',
                 icon: <AlertTriangle className="h-5 w-5" />,
                 badgeKey: 'reports',
             },
-        ],
-    },
-    {
-        label: 'Pengembalian',
-        items: [
             {
                 href: '/outlet/returns',
                 label: 'Return Produk',
@@ -119,18 +104,18 @@ const navGroups: NavGroup[] = [
         ],
     },
     {
-        label: 'Lainnya',
+        label: 'Keuangan',
         items: [
+            {
+                href: '/outlet/settlement',
+                label: 'Settlement',
+                icon: <DollarSign className="h-5 w-5" />,
+            },
             {
                 href: '/outlet/settlement-payments',
                 label: 'Riwayat Pembayaran',
                 icon: <Receipt className="h-5 w-5" />,
                 badgeKey: 'payments',
-            },
-            {
-                href: '/outlet/my-couriers',
-                label: 'Kurir Saya',
-                icon: <UserRound className="h-5 w-5" />,
             },
         ],
     },
@@ -157,8 +142,11 @@ export default function OutletNavigationSheet({
 
     const isItemActive = (item: NavItem): boolean => {
         const pathname = url.split('?')[0];
+        const paths = [item.href, ...(item.activePaths ?? [])];
 
-        return pathname === item.href || pathname.startsWith(item.href + '/');
+        return paths.some(
+            (path) => pathname === path || pathname.startsWith(`${path}/`),
+        );
     };
 
     const getBadgeCount = (item: NavItem): number => {
