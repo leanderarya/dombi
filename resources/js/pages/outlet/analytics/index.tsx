@@ -161,7 +161,7 @@ export default function OutletAnalytics({
                                     {kpis.total_orders}
                                 </div>
                             </div>
-                            <div className="col-span-2 rounded-xl border border-border bg-white p-4">
+                            <div className="rounded-xl border border-border bg-white p-4">
                                 <div className="text-[11px] font-medium text-text-muted">
                                     Rata-rata per Pesanan
                                 </div>
