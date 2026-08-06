@@ -80,7 +80,9 @@ export default function OutletReturnsShow({ return: ret }: any) {
                             >
                                 <div>
                                     <div className="text-sm font-medium text-text">
-                                        {item.product?.name ?? item.product?.full_name ?? '-'}
+                                        {item.product?.name ??
+                                            item.product?.full_name ??
+                                            '-'}
                                     </div>
                                     <div className="text-xs text-text-muted">
                                         {item.quantity} x{' '}

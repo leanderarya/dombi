@@ -19,7 +19,10 @@ interface FormItem {
     replacement_quantity: number;
 }
 
-export default function OutletExchangesCreate({ variants, returnRequests }: any) {
+export default function OutletExchangesCreate({
+    variants,
+    returnRequests,
+}: any) {
     const form = useForm({
         return_request_id: null as number | null,
         notes: '',
@@ -95,9 +98,7 @@ export default function OutletExchangesCreate({ variants, returnRequests }: any)
         form.setData(
             'items',
             items
-                .filter(
-                    (p) => p.product_id > 0 && p.replacement_product_id > 0,
-                )
+                .filter((p) => p.product_id > 0 && p.replacement_product_id > 0)
                 .map((p) => ({
                     product_id: p.product_id,
                     quantity: p.return_quantity,
@@ -116,8 +117,7 @@ export default function OutletExchangesCreate({ variants, returnRequests }: any)
     };
 
     const getVariantName = (id: number) =>
-        allVariants.find((v: any) => v.product_id === id)?.variant?.name ??
-        '-';
+        allVariants.find((v: any) => v.product_id === id)?.variant?.name ?? '-';
 
     const validCount = pairs.filter(
         (p) => p.product_id > 0 && p.replacement_product_id > 0,
@@ -197,8 +197,8 @@ export default function OutletExchangesCreate({ variants, returnRequests }: any)
                                 </label>
                                 <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50/50 px-3 py-2.5 text-sm">
                                     <span className="font-medium text-red-800">
-                                        {getReturnItemName(pair.product_id)}{' '}
-                                        x{pair.return_quantity}
+                                        {getReturnItemName(pair.product_id)} x
+                                        {pair.return_quantity}
                                     </span>
                                 </div>
                             </div>
@@ -265,8 +265,8 @@ export default function OutletExchangesCreate({ variants, returnRequests }: any)
                             {pair.replacement_product_id > 0 && (
                                 <div className="mt-3 rounded-lg bg-surface-muted p-2.5 text-xs">
                                     <span className="text-text-muted">
-                                        {getReturnItemName(pair.product_id)}{' '}
-                                        x{pair.return_quantity}
+                                        {getReturnItemName(pair.product_id)} x
+                                        {pair.return_quantity}
                                     </span>
                                     <span className="mx-2 text-text-subtle">
                                         &rarr;
