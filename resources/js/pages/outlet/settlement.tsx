@@ -177,10 +177,10 @@ export default function OutletSettlement({
                     <>
                         {/* ── 1. Hero: Outstanding + Rekening + Action ── */}
                         {isSettled ? (
-                            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                            <div className="rounded-xl border border-primary/20 bg-primary-light p-5">
                                 <div className="flex items-center gap-2">
                                     <svg
-                                        className="h-5 w-5 text-emerald-600"
+                                        className="h-5 w-5 text-primary"
                                         viewBox="0 0 20 20"
                                         fill="currentColor"
                                     >
@@ -748,13 +748,15 @@ function PaymentSheet({
                     />
                 </div>
 
-                <button
+                <Button
                     type="submit"
+                    variant="primary"
                     disabled={processing}
-                    className="flex min-h-12 w-full items-center justify-center rounded-lg bg-primary text-sm font-bold text-white active:opacity-80 disabled:opacity-50"
+                    loading={processing}
+                    className="w-full"
                 >
-                    {processing ? 'Mengirim...' : 'Kirim Bukti Pembayaran'}
-                </button>
+                    Kirim Bukti Pembayaran
+                </Button>
             </form>
         </BottomSheet>
     );

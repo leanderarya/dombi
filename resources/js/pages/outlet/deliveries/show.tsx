@@ -3,6 +3,8 @@ import { useState } from 'react';
 
 import DeliverySlaBadge from '@/components/operations/delivery-sla-badge';
 import DeliveryTimeline from '@/components/operations/delivery-timeline';
+import { Button } from '@/components/ui/button';
+import Dialog from '@/components/ui/dialog';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
 import OutletLayout from '@/layouts/outlet-layout';
@@ -126,42 +128,44 @@ export default function OutletDeliveryShow({ delivery }: any) {
             )}
 
             {/* Reason Modal */}
-            {showReasonInput && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                    <div className="mx-4 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-                        <h3 className="text-sm font-bold">
-                            {showReasonInput.label}
-                        </h3>
-                        <textarea
-                            value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                            placeholder="Alasan..."
-                            className="mt-3 w-full rounded-lg border border-slate-200 p-3 text-sm"
-                            rows={3}
-                        />
-                        <div className="mt-3 flex gap-2">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setShowReasonInput(null);
-                                    setReason('');
-                                }}
-                                className="flex-1 rounded-lg border border-slate-200 py-2 text-xs font-semibold"
-                            >
-                                Batal
-                            </button>
-                            <button
-                                type="button"
-                                onClick={submitWithReason}
-                                disabled={!reason.trim()}
-                                className="flex-1 rounded-lg bg-emerald-700 py-2 text-xs font-bold text-white disabled:bg-slate-300"
-                            >
-                                Konfirmasi
-                            </button>
-                        </div>
-                    </div>
+            <Dialog
+                open={!!showReasonInput}
+                onClose={() => {
+                    setShowReasonInput(null);
+                    setReason('');
+                }}
+                title={showReasonInput?.label ?? ''}
+            >
+                <textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Alasan..."
+                    className="w-full rounded-lg border border-border p-3 text-sm"
+                    rows={3}
+                />
+                <div className="mt-3 flex gap-2">
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                            setShowReasonInput(null);
+                            setReason('');
+                        }}
+                    >
+                        Batal
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="primary"
+                        className="flex-1"
+                        onClick={submitWithReason}
+                        disabled={!reason.trim()}
+                    >
+                        Konfirmasi
+                    </Button>
                 </div>
-            )}
+            </Dialog>
 
             {/* Customer Info */}
             <SectionCard label="Customer">
