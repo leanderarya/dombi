@@ -199,7 +199,7 @@ export default function OutletNavigationSheet({
                         key={group.label}
                         className={groupIndex > 0 ? 'mt-3' : ''}
                     >
-                        <div className="px-3 pb-1 text-[10px] font-semibold tracking-wider text-text-subtle uppercase">
+                        <div className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-text-subtle uppercase">
                             {group.label}
                         </div>
                         <div className="space-y-0.5">
@@ -214,12 +214,12 @@ export default function OutletNavigationSheet({
                                         onClick={onClose}
                                         className={`flex items-center gap-3 rounded-lg px-3 py-3 text-[13px] transition-all duration-150 ${
                                             active
-                                                ? 'bg-emerald-50 font-semibold text-emerald-700'
+                                                ? 'bg-primary-light font-semibold text-primary'
                                                 : 'font-medium text-text-muted active:bg-surface-muted'
                                         }`}
                                     >
                                         <span
-                                            className={`h-5 w-5 shrink-0 ${active ? 'text-emerald-600' : 'text-text-subtle'}`}
+                                            className={`h-5 w-5 shrink-0 ${active ? 'text-primary' : 'text-text-subtle'}`}
                                         >
                                             {item.icon}
                                         </span>

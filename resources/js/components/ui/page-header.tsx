@@ -20,7 +20,7 @@ interface Props {
 export default function PageHeader({ title, titleClassName, subtitle, backHref, right, below, transparent, onMenuClick }: Props) {
     return (
         <header className={`sticky top-0 z-30 pt-safe ${transparent ? '' : 'border-b border-border bg-surface/95 backdrop-blur'}`}>
-            <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
+            <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3 lg:max-w-4xl">
                 {/* Left side: back button, hamburger, or spacer */}
                 <div className="flex items-center gap-1">
                     {backHref && (
@@ -53,7 +53,7 @@ export default function PageHeader({ title, titleClassName, subtitle, backHref, 
                 {right ?? <div className="w-11" />}
             </div>
             {below && (
-                <div className="mx-auto max-w-lg px-4 pb-3">
+                <div className="mx-auto max-w-2xl px-4 pb-3 lg:max-w-4xl">
                     {below}
                 </div>
             )}
