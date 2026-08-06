@@ -1,6 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import { LogOut } from 'lucide-react';
-import { useState } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { PropsWithChildren } from 'react';
 import CourierBottomNav from '@/components/courier/bottom-nav';
@@ -34,6 +34,21 @@ export default function CourierLayout({
     const { auth } = page.props;
     const [notificationOpen, setNotificationOpen] = useState(false);
     const { visible } = useHideOnScroll();
+
+    useLayoutEffect(() => {
+        const root = document.documentElement;
+        const previousRole = root.dataset.role;
+
+        root.dataset.role = 'courier';
+
+        return () => {
+            if (previousRole) {
+                root.dataset.role = previousRole;
+            } else {
+                delete root.dataset.role;
+            }
+        };
+    }, []);
 
     const isOnline = auth?.user?.is_online;
     const onlineLabel =
