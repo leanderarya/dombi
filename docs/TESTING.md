@@ -153,7 +153,7 @@ Password: password
 - [OK] Stock opname — [FIXED batch1+batch3] update stok + guard reserve error + notes wajib saat selisih
 - [OK] Restock request — [FIXED batch1] page + dialog bisa buat request; note: info stok hanya tampil kalo produk punya inventory outlet
 - [OK] Settlement + upload bukti bayar — [FIXED batch3] input type=text + strip dots sebelum submit
-- [OK] Offline sale — [NO] belum ada metode pembayaran (hanya pilih produk + jumlah + catatan)
+- [OK] Offline sale — [FIXED batch6] metode bayar: Tunai/Transfer/QRIS/Lainnya
 - [OK] Return request — [FIXED batch2A] show page render `item.product`; create button disabled selama belum pilih produk (expected)
 - [OK] Exchange request — [FIXED batch2A] prop mismatch + dialog duplikat fixed
 - [OK] QR scan untuk lookup order
@@ -184,7 +184,7 @@ Password: password
 - [OK] Pricing: center + per-outlet
 - [OK] Inventory: central stock — [FIXED batch1] tab Outlet muncul produk + grouping + SKU; note: filter outlet belum fungsi, sort hanya nama
 - [OK] Restock approval workflow
-- [OK] Order management — [FIXED batch2A] assign courier (`courier_type` ditambah); tidak ada mekanisme cancel order (perlu enhancement/konfirmasi kebutuhan)
+- [OK] Order management — [FIXED batch2A] assign courier (`courier_type` ditambah); [FIXED batch6] cancel order (reason + notes dialog)
 - [OK] Delivery monitoring (list + detail) — resolve belum diuji (belum ada delivery bermasalah)
 - [OK] Return/Exchange management (approve/reject) — [FIXED batch2A] nama produk render `item.product`
 - [OK] Finance: settlement, payment verification, reconcile
@@ -192,7 +192,7 @@ Password: password
 - [OK] Courier management (CRUD jalan di `/owner/couriers`) — [FIXED batch3] menu sidebar link ke `/owner/couriers`
 - [NO] Delivery tier configuration — edit simpan tapi nilai tak berubah (bug; lihat Known Issues)
 - [OK] Analytics dashboard — [INFO] revenue analytics vs tagihan settlement beda by design (ongkir: analytics include, settlement exclude)
-- [OK] CSV export reports — [NO] format belum mudah dibaca owner (enhancement)
+- [OK] CSV export reports — [FIXED batch6] rupiah format, Indonesian status, consistent headers
 
 ### D. Courier
 
