@@ -22,7 +22,7 @@ export default function MobileRoleLayout({ children, footerSlot, actionBarSlot }
         <div className="min-h-dvh bg-surface text-text">
             <OfflineBanner />
 
-            <main className={`mx-auto max-w-lg px-4 ${bottomPad}`}>
+            <main className={`mx-auto max-w-2xl px-4 lg:max-w-4xl ${bottomPad}`}>
                 {children}
             </main>
 

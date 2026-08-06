@@ -19,12 +19,14 @@ interface Props {
     navGroups: NavGroup[];
     pendingCounts: Record<string, number>;
     collapsed?: boolean;
+    onNavClick?: () => void;
 }
 
 export default function OwnerSidebarNav({
     navGroups,
     pendingCounts,
     collapsed = false,
+    onNavClick,
 }: Props) {
     const { url } = usePage();
     const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
@@ -118,6 +120,7 @@ export default function OwnerSidebarNav({
                                     key={group.label}
                                     href={group.items[0].href}
                                     title={group.label}
+                                    onClick={() => onNavClick?.()}
                                     className={`mt-0.5 flex h-9 w-full items-center justify-center rounded-lg transition-colors duration-150 ${
                                         isItemActive(group.items[0], url)
                                             ? 'bg-mint-wash text-primary'
@@ -181,7 +184,10 @@ export default function OwnerSidebarNav({
                                 <Link
                                     key={item.href}
                                     href={item.href}
-                                    onClick={() => setFlyoutGroup(null)}
+                                    onClick={() => {
+                                        setFlyoutGroup(null);
+                                        onNavClick?.();
+                                    }}
                                     className={`flex items-center justify-between px-3 py-2 text-sm transition-colors duration-150 ${
                                         active
                                             ? 'bg-mint-wash font-semibold text-primary'
@@ -219,6 +225,7 @@ export default function OwnerSidebarNav({
                         {group.items.length === 1 ? (
                             <Link
                                 href={group.items[0].href}
+                                onClick={() => onNavClick?.()}
                                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                     isItemActive(group.items[0], url)
                                         ? 'bg-mint-wash font-semibold text-primary'
@@ -266,6 +273,9 @@ export default function OwnerSidebarNav({
                                                 <Link
                                                     key={item.href}
                                                     href={item.href}
+                                                    onClick={() =>
+                                                        onNavClick?.()
+                                                    }
                                                     className={`flex items-center justify-between rounded-lg px-3 py-1.5 text-sm transition-colors duration-150 ${
                                                         active
                                                             ? 'bg-mint-wash font-semibold text-primary'
