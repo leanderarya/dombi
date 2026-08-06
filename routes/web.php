@@ -304,7 +304,7 @@ Route::middleware(['internal.inertia', 'enforce.session'])->group(function (): v
         Route::get('deliveries', [OwnerDeliveryController::class, 'index'])->name('deliveries.index');
         Route::get('deliveries/{delivery}', [OwnerDeliveryController::class, 'show'])->name('deliveries.show');
         Route::post('deliveries/{delivery}/resolve', [OwnerDeliveryController::class, 'resolve'])->middleware('throttle:sensitive')->name('deliveries.resolve');
-        Route::resource('delivery-tiers', DeliveryTierController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::resource('delivery-tiers', DeliveryTierController::class)->parameters(['delivery-tiers' => 'tier'])->only(['index', 'store', 'update', 'destroy']);
         Route::patch('delivery-tiers/{tier}/toggle', [DeliveryTierController::class, 'toggle'])->name('delivery-tiers.toggle');
         Route::get('couriers/management', [CourierManagementController::class, 'index'])->name('couriers.management.index');
         Route::resource('couriers', CourierController::class)->only(['index', 'create', 'store', 'show', 'update', 'destroy']);

@@ -27,7 +27,7 @@ class StoreDeliveryTierRequest extends FormRequest
     {
         return [
             function ($validator): void {
-                $tierId = $this->route('delivery_tier');
+                $tierId = $this->route('tier');
                 $tierId = is_object($tierId) ? $tierId->getKey() : $tierId;
 
                 $overlap = DeliveryTier::query()

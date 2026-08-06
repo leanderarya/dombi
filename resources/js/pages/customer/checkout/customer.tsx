@@ -682,7 +682,7 @@ function CompactField({
                 onChange={(e) => onChange(e.target.value)}
                 inputMode={inputMode}
                 readOnly={readOnly}
-                className={`mt-1 min-h-10 w-full rounded-lg border border-border px-3 text-xs text-text placeholder:text-text-subtle focus:border-primary focus:ring-1 focus:ring-primary/20 ${readOnly ? 'bg-surface text-text-muted' : 'bg-white'}`}
+                className={`mt-1 min-h-10 w-full rounded-lg border px-3 text-xs text-text placeholder:text-text-subtle focus:ring-1 ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-border focus:border-primary focus:ring-primary/20'} ${readOnly ? 'bg-surface text-text-muted' : 'bg-white'}`}
                 placeholder={placeholder}
             />
             {hint && !error && (
