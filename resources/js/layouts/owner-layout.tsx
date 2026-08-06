@@ -255,7 +255,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                     <div className={`${collapsed ? 'px-2 py-3' : 'px-3 py-4'}`}>
                         {collapsed ? (
                             <div className="flex flex-col items-center gap-1">
-                                <div className="flex justify-center">
+                                <div className="flex justify-center overflow-hidden">
                                     <NotificationBell
                                         onClick={() =>
                                             setNotificationOpen(true)
