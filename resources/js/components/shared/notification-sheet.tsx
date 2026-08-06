@@ -256,7 +256,7 @@ export default function NotificationSheet({
                         {unreadCount > 0 && (
                             <button
                                 onClick={handleMarkAllAsRead}
-                                className="text-xs font-semibold text-emerald-600"
+                                className="text-xs font-semibold text-primary"
                             >
                                 Tandai semua dibaca
                             </button>
@@ -265,7 +265,7 @@ export default function NotificationSheet({
 
                     {loading ? (
                         <div className="flex items-center justify-center py-12">
-                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-emerald-600" />
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-primary" />
                         </div>
                     ) : notifications.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -289,7 +289,7 @@ export default function NotificationSheet({
                                     className={`w-full rounded-lg border p-3 text-left transition-colors ${
                                         notification.read_at
                                             ? 'border-slate-100 bg-white'
-                                            : 'border-emerald-100 bg-emerald-50/50'
+                                            : 'border-primary/10 bg-primary-light/50'
                                     }`}
                                 >
                                     <div className="flex items-start gap-3">
@@ -306,7 +306,7 @@ export default function NotificationSheet({
                                                 {!notification.read_at && (
                                                     <>
                                                         <span
-                                                            className="h-2 w-2 rounded-full bg-emerald-500"
+                                                            className="h-2 w-2 rounded-full bg-primary"
                                                             aria-hidden="true"
                                                         />
                                                         <span className="sr-only">
