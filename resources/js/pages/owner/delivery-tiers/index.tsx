@@ -165,7 +165,7 @@ export default function DeliveryTiersIndex({
                     className="overflow-x-auto rounded-xl bg-surface shadow-xs ring-1 ring-foreground/10"
                     aria-label="Daftar tier pengiriman"
                 >
-                    <OwnerTable minWidth="500px">
+                    <OwnerTable minWidth="600px">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-surface-muted text-xs font-medium text-text-muted">
@@ -188,7 +188,7 @@ export default function DeliveryTiersIndex({
                                 {tiers.map((tier) => (
                                     <TableRow
                                         key={tier.id}
-                                        className={`hover:bg-mint-wash border-t border-border/20 transition-colors ${!tier.is_active ? 'opacity-50' : ''}`}
+                                        className={`border-t border-border/20 transition-colors hover:bg-mint-wash ${!tier.is_active ? 'opacity-50' : ''}`}
                                     >
                                         <TableCell className="px-4 py-3">
                                             <GripVertical
@@ -458,7 +458,7 @@ export default function DeliveryTiersIndex({
                             onChange={(e) =>
                                 editForm.setData('is_active', e.target.checked)
                             }
-                            className="h-4 w-4 rounded border-border"
+                            className="toggle"
                         />
                         <span className="text-xs text-text-muted">Aktif</span>
                     </label>
