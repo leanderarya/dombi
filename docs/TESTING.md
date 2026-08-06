@@ -114,7 +114,7 @@ https://staging.dombicenter.com
 **Yang perlu dites:**
 - [OK] Login Google
 - [OK] Guest mode (tanpa login)
-- [NO] Browse produk + filter. Bug saat search rasa Stroberi, Coklat, Coffee, Vanilla jika search salah satu tetap muncul semua Domilk Premium Taste, mungkin karena didalamnya ada pilihan rasanya.
+- [FIXED batch4] Browse produk + filter. Search rasa (Stroberi, Coklat, dll) sekarang match flavor names.
 - [OK] Cart: tambah, ubah quantity, hapus
 - [OK] Checkout: pickup
 - [OK] Checkout: delivery
@@ -123,7 +123,7 @@ https://staging.dombicenter.com
 - [OK] Riwayat pesanan (guest: hanya order aktif, bukan riwayat penuh)
 - [OK] Repeat order (clear cart lama)
 - [OK] Favorit produk (guest: tersimpan session lokal, hilang jika app dihapus; tidak ada halaman favorit tersendiri)
-- [OK] Alamat pengiriman (CRUD + default + map) — [NO] validasi belum jelas, pakai toast / inline red color
+- [OK] Alamat pengiriman (CRUD + default + map) — [FIXED batch4] red border on validation errors
 - [OK] Penerima — belum ada halaman profil; saat ini input manual di checkout (deferred ke post-live)
 
 ### B. Outlet
@@ -150,12 +150,12 @@ Password: password
 - [OK] Order lifecycle: confirm → prepare → ready → complete
 - [OK] Assign courier ke order delivery
 - [OK] Inventory monitoring
-- [OK] Stock opname — [FIXED batch1] update stok + guard reserve error jalan; note: notes opsional, error inline bukan toast
+- [OK] Stock opname — [FIXED batch1+batch3] update stok + guard reserve error + notes wajib saat selisih
 - [OK] Restock request — [FIXED batch1] page + dialog bisa buat request; note: info stok hanya tampil kalo produk punya inventory outlet
-- [OK] Settlement + upload bukti bayar — [NO] input "323.000" tersimpan 323 (format ribuan)
+- [OK] Settlement + upload bukti bayar — [FIXED batch3] input type=text + strip dots sebelum submit
 - [OK] Offline sale — [NO] belum ada metode pembayaran (hanya pilih produk + jumlah + catatan)
-- [OK] Return request — [NO] show page nama produk kosong (`items.variant` tak di-load); create button disabled selama belum pilih produk (expected)
-- [OK] Exchange request — [NO] broken: selalu empty state "Tidak ada return" (prop `returnRequests` vs `exchangeEligibleReturns` mismatch)
+- [OK] Return request — [FIXED batch2A] show page render `item.product`; create button disabled selama belum pilih produk (expected)
+- [OK] Exchange request — [FIXED batch2A] prop mismatch + dialog duplikat fixed
 - [OK] QR scan untuk lookup order
 
 ### C. Owner
@@ -184,12 +184,12 @@ Password: password
 - [OK] Pricing: center + per-outlet
 - [OK] Inventory: central stock — [FIXED batch1] tab Outlet muncul produk + grouping + SKU; note: filter outlet belum fungsi, sort hanya nama
 - [OK] Restock approval workflow
-- [OK] Order management — [NO] assign courier owner broken (`courier_type` tak dikirim; lihat Known Issues); tidak ada mekanisme cancel order (perlu enhancement/konfirmasi kebutuhan)
+- [OK] Order management — [FIXED batch2A] assign courier (`courier_type` ditambah); tidak ada mekanisme cancel order (perlu enhancement/konfirmasi kebutuhan)
 - [OK] Delivery monitoring (list + detail) — resolve belum diuji (belum ada delivery bermasalah)
-- [OK] Return/Exchange management (approve/reject) — [NO] nama produk kosong (konsisten bug show page, berlaku juga owner)
+- [OK] Return/Exchange management (approve/reject) — [FIXED batch2A] nama produk render `item.product`
 - [OK] Finance: settlement, payment verification, reconcile
 - [OK] Refund management (manual transfer dari owner, bukan via DOKU)
-- [OK] Courier management (CRUD jalan di `/owner/couriers`) — [NO] menu sidebar ngarah ke `/owner/couriers/management` tanpa CRUD (lihat Known Issues)
+- [OK] Courier management (CRUD jalan di `/owner/couriers`) — [FIXED batch3] menu sidebar link ke `/owner/couriers`
 - [NO] Delivery tier configuration — edit simpan tapi nilai tak berubah (bug; lihat Known Issues)
 - [OK] Analytics dashboard — [INFO] revenue analytics vs tagihan settlement beda by design (ongkir: analytics include, settlement exclude)
 - [OK] CSV export reports — [NO] format belum mudah dibaca owner (enhancement)
@@ -216,7 +216,7 @@ Password: password
 - [OK] Pickup confirmation
 - [OK] Start delivery
 - [OK] Complete delivery
-- [ ] Fail/return to outlet — [NO] popup tak auto-close + resolve re-assign error (lihhat Known Issues)
+- [ ] Fail/return to outlet — [FIXED batch2A] popup auto-close fixed; resolve re-assign still blocked by `courier_type` bug (deferred)
 - [ ] GPS location update — tidak pakai GPS/map tracking saat ini (deferred)
 - [ ] GPS location update
 
@@ -256,23 +256,23 @@ Password: password
 | `google-services.json` per-package (customer vs internal) | Open | Rename file saat build APK |
 | Biogoat image Unplash dead | Closed | Fallback ke emoji susu |
 | 5 TypeScript errors (pre-existing) | Open | Tidak mempengaruhi runtime |
-| Delivery login sheet: guest click luar dialog → toggle tetap Delivery + bisa Lanjutkan (harus reset ke Pickup) | Open | Tap "Tetap Pickup" atau refresh |
-| Delivery login sheet: "Masuk dengan Google" tanpa redirect → habis login balik ke Home, bukan checkout (cart tetap ada) | Open | Ganti manual ke checkout |
-| Delivery step Info: ganti alamat via LocationSheet → quote radius/ongkir tidak re-fetch, tetap stale di props (alamat jauh bisa Lanjutkan, stop di step 3 blocker subscription; balik ganti alamat valid tetap quote lama) | Open | Refresh halaman setelah ganti alamat |
-| Checkout step 3 (Payment): stok berubah → subtotal di UI lama (3 item) tapi DOKU pakai harga benar (2 item). Saat stock 0, notif muncul tapi total UI tetap; DOKU benar | Open | Hitung ulang subtotal dari draft/adjustment yang di-confirm |
-| Form validasi alamat/penerima: error tidak jelas (tanpa toast / warna merah pada field) | Open | Tambah inline red + toast |
+| Delivery login sheet: "Masuk dengan Google" tanpa redirect → habis login balik ke Home, bukan checkout (cart tetap ada) | **Closed batch3** | Google redirect ke checkout |
+| Delivery step Info: ganti alamat via LocationSheet → quote radius/ongkir tidak re-fetch, tetap stale di props (alamat jauh bisa Lanjutkan, stop di step 3 blocker subscription; balik ganti alamat valid tetap quote lama) | **Closed batch3** | router.reload + await syncCustomerLocationDraft |
+| Form validasi alamat/penerima: error tidak jelas (tanpa toast / warna merah pada field) | **Closed batch4** | Red border on Field + CompactField when error |
 | Outlet UI: semua halaman ada glitch visual tiap interval beberapa detik (detail belum diidentifikasi) | Open | Investigasi: refresh background / animation loop |
-| Stock opname: catatan (notes) opsional, padahal selisih stok butuh keterangan asal-usul | Open | Jadikan notes wajib saat ada selisih |
+| Stock opname: catatan (notes) opsional, padahal selisih stok butuh keterangan asal-usul | **Closed batch3** | Notes wajib saat ada selisih |
 | **Akar bug key mismatch:** UI outlet kirim `product_variant_id`, backend validasi `product_id` — stock opname & restock gagal silent → **FIXED batch 1** (renamed frontend key ke `product_id`, backend utuh) | Closed | Batch 1 ^ fix key `product_id` |
-| Return create (outlet): submit silent — root: browser cache kirim `product_variant_id` (old JS), backend validasi `product_id` → 422 errors gak render (Inertia useForm tanpa onError). Fix: (1) frontend rename key, (2) backend mapping `product_variant_id`→`product_id` safety net | Fixed | Mapping di controller + rebuild assets |
-| Settlement payment: input "323.000" tersimpan `323` (format titik ribuan dikirim sebagai desimal, bukan dikali 1000/parse). Backend validasi `amount` numeric rupiah | Open | Parse/format input rupiah frontend sebelum submit |
-| Return show page: nama produk kosong — controller `load('items.product')` tapi UI baca `item.variant.*` (relation `variant` tak di-load) | Open | Load `items.variant` atau render `item.product` |
-| Exchange create: selalu empty state "Tidak ada return" — controller kirim prop `returnRequests`, UI baca `exchangeEligibleReturns` (mismatch) | Open | Samakan nama prop |
-| Delivery tier edit: simpan → toast sukses tapi nilai tak berubah (folder DB `updated_at` tetap lama). Route/controller/request/model/fillable/cast konsisten; perlu investigasi runtime staging (kode terdeploy / proxy cache) | Open | Cek deploy terbaru + cache server |
-| Owner assign courier: UI cuma kirim `courier_id`, backend `AssignCourierRequest` wajibkan `courier_type` → error "The courier type field is required." | Open | Tambah field `courier_type` (dombi/eksternal) di UI |
-| Owner menu Courier ngarah ke `/owner/couriers/management` (list+approve, tanpa CRUD), padahal tombol Buat/Edit ada di `/owner/couriers` (resource). `owner-layout.tsx:40` salah link | Open | Ubah menu link ke `/owner/couriers` |
-| Courier return-to-outlet: dialog "Ya, Kembalikan" tak auto-close setelah sukses (`router.post` tanpa `onSuccess`) | Open | Tambah `onSuccess` close sheet |
-| Courier resolve → re-assign kurir: error "courier type field required" (akar sama bug assign `courier_type` tak dikirim UI) | Open | Fix assign courier sheet + resolve re-assign |
+| Return create (outlet): submit silent — root: browser cache kirim `product_variant_id` (old JS), backend validasi `product_id` → 422 errors gak render (Inertia useForm tanpa onError). Fix: (1) frontend rename key, (2) backend mapping `product_variant_id`→`product_id` safety net | **Closed batch2A** | Mapping di controller + rebuild assets |
+| Settlement payment: input "323.000" tersimpan `323` (format titik ribuan dikirim sebagai desimal, bukan dikali 1000/parse). Backend validasi `amount` numeric rupiah | **Closed batch3** | input type=text + strip dots |
+| Return show page: nama produk kosong — controller `load('items.product')` tapi UI baca `item.variant.*` (relation `variant` tak di-load) | **Closed batch2A** | Render `item.product` |
+| Exchange create: selalu empty state "Tidak ada return" — controller kirim prop `returnRequests`, UI baca `exchangeEligibleReturns` (mismatch) | **Closed batch2A** | Samakan nama prop + hapus dialog duplikat |
+| Delivery tier edit: simpan → toast sukses tapi nilai tak berubah (folder DB `updated_at` tetap lama). Route/controller/request/model/fillable/cast konsisten; perlu investigasi runtime staging (kode terdeploy / proxy cache) | **Closed batch4** | Route parameter mismatch `{delivery_tier}` vs `$tier` |
+| Owner assign courier: UI cuma kirim `courier_id`, backend `AssignCourierRequest` wajibkan `courier_type` → error "The courier type field is required." | **Closed batch2A** | Tambah field `courier_type` (dombi/eksternal) di UI |
+| Owner menu Courier ngarah ke `/owner/couriers/management` (list+approve, tanpa CRUD), padahal tombol Buat/Edit ada di `/owner/couriers` (resource). `owner-layout.tsx:40` salah link | **Closed batch3** | Ubah menu link ke `/owner/couriers` |
+| Courier return-to-outlet: dialog "Ya, Kembalikan" tak auto-close setelah sukses (`router.post` tanpa `onSuccess`) | **Closed batch2A** | Tambah `onSuccess` close sheet |
+| Delivery login sheet: guest click luar dialog → toggle tetap Delivery + bisa Lanjutkan (harus reset ke Pickup) | **Closed batch3** | Dialog dismiss reset state + Google redirect |
+| Checkout step 3 (Payment): stok berubah → subtotal di UI lama (3 item) tapi DOKU pakai harga benar (2 item). Saat stock 0, notif muncul tapi total UI tetap; DOKU benar | **Closed batch3** | router.reload setelah stok adjust |
+| Courier resolve → re-assign kurir: error "courier type field required" (akar sama bug assign `courier_type` tak dikirim UI) | **Closed batch2A** | Already fixed — assign-courier-sheet has courier_type |
 | Owner inventory tab Outlet: `buildProductGroups` baca `product_variant_id/variant` tapi controller load `product` → semua di-skip → **FIXED batch 1** | Closed | Batch 1 ^ baca `product_id`/`product` |
 
 ---
