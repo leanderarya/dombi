@@ -54,10 +54,14 @@ export default function OutletExchangesIndex({ exchanges, filters }: any) {
                     <>
                         {/* Action Bar */}
                         <div className="flex justify-end">
-                            <Button size="lg" asChild icon={Plus}>
-                                <Link href="/outlet/exchanges/create">
-                                    Ajukan Tukar
-                                </Link>
+                            <Button
+                                size="lg"
+                                icon={Plus}
+                                onClick={() =>
+                                    router.visit('/outlet/exchanges/create')
+                                }
+                            >
+                                Ajukan Tukar
                             </Button>
                         </div>
 
