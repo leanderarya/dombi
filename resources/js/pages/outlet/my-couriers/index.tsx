@@ -1,4 +1,4 @@
-import { useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 import { MessageCircle, Plus, UserRound } from 'lucide-react';
 import { useState } from 'react';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
@@ -177,6 +177,7 @@ export default function MyCouriers({
                 </Button>
             }
         >
+            <Head title="Kurir Saya" />
             <OutletPageShell>
                 <FilterChips
                     options={TABS.map((t) => ({
@@ -276,7 +277,7 @@ export default function MyCouriers({
                                                     )}
                                                     target="_blank"
                                                     rel="noreferrer"
-                                                    className="inline-flex items-center gap-1.5 rounded-[--radius-control] bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                                                    className="inline-flex items-center gap-1.5 rounded-[0.625rem] bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
                                                 >
                                                     <MessageCircle className="h-3.5 w-3.5" />
                                                     Kirim Link Aktivasi via
@@ -360,7 +361,7 @@ export default function MyCouriers({
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             placeholder="Nama kurir"
-                            className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                            className="w-full rounded-[0.625rem] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                         />
                         {errors.name && (
                             <span className="text-xs text-red-600">
@@ -377,7 +378,7 @@ export default function MyCouriers({
                             value={data.phone}
                             onChange={(e) => setData('phone', e.target.value)}
                             placeholder="08xxxxxxxxxx"
-                            className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                            className="w-full rounded-[0.625rem] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                         />
                         {errors.phone && (
                             <span className="text-xs text-red-600">
@@ -396,7 +397,7 @@ export default function MyCouriers({
                                 setData('vehicle_plate', e.target.value)
                             }
                             placeholder="AB 1234 CD"
-                            className="w-full rounded-[--radius-control] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
+                            className="w-full rounded-[0.625rem] border border-border bg-surface px-3 py-2 text-sm text-text transition-colors focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none"
                         />
                         {errors.vehicle_plate && (
                             <span className="text-xs text-red-600">
