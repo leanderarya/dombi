@@ -43,8 +43,11 @@ export default function OutletLayout({
     const { badgeCounts } = useOutletBadges();
     usePushSubscription();
 
-    const rightSlot = headerRight ?? (
-        <NotificationBell onClick={() => setNotificationOpen(true)} />
+    const rightSlot = (
+        <div className="flex items-center gap-1">
+            {headerRight}
+            <NotificationBell onClick={() => setNotificationOpen(true)} />
+        </div>
     );
 
     return (
