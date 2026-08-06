@@ -3,14 +3,14 @@
 namespace Tests\Feature;
 
 use App\Models\Delivery;
+use App\Models\OfflineSale;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\OfflineSale;
 use App\Models\Outlet;
 use App\Models\Product;
 use App\Models\Settlement;
+use App\Models\User;
 use App\Services\SettlementGeneratorService;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,7 +19,9 @@ class NetSettlementTest extends TestCase
     use RefreshDatabase;
 
     private SettlementGeneratorService $service;
+
     private Outlet $outlet;
+
     private Product $product;
 
     protected function setUp(): void
@@ -81,7 +83,7 @@ class NetSettlementTest extends TestCase
 
     private function createOfflineSale(int $qty, float $centerPrice): void
     {
-        $user = \App\Models\User::factory()->create(['role' => 'outlet']);
+        $user = User::factory()->create(['role' => 'outlet']);
 
         OfflineSale::create([
             'outlet_id' => $this->outlet->id,
