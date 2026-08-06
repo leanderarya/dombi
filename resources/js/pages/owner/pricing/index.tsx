@@ -1,7 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
-import { Button } from '@/components/ui/button';
 import { getInitialOwnerTab } from '../tab-state';
 import { OutletTab } from './outlet-tab';
 import { PusatTab } from './pusat-tab';
@@ -67,17 +66,20 @@ export default function PricingIndex(props: Props) {
                 aria-label="Tab navigasi harga"
             >
                 {TABS.map((tab) => (
-                    <Button
+                    <button
                         key={tab.key}
                         type="button"
                         role="tab"
                         aria-selected={activeTab === tab.key}
-                        variant={activeTab === tab.key ? 'secondary' : 'ghost'}
-                        size="sm"
                         onClick={() => handleTabChange(tab.key)}
+                        className={`rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
+                            activeTab === tab.key
+                                ? 'bg-white text-text shadow-sm'
+                                : 'text-text-muted hover:text-text'
+                        }`}
                     >
                         {tab.label}
-                    </Button>
+                    </button>
                 ))}
             </div>
 

@@ -1,9 +1,14 @@
 import { router } from '@inertiajs/react';
-import { Package } from 'lucide-react';
+import {
+    CheckCircle,
+    Clock,
+    DollarSign,
+    Package,
+    ShoppingCart,
+} from 'lucide-react';
 import { useState } from 'react';
 import AssignCourierSheet from '@/components/owner/assign-courier-sheet';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
@@ -44,7 +49,7 @@ export default function OwnerOrdersIndex({
         return (
             <OwnerPageShell
                 title="Pesanan"
-                subtitle="Kelola semua pesanan dari semua outlet"
+                subtitle="Pantau seluruh pesanan pelanggan"
             >
                 <SkeletonPage />
             </OwnerPageShell>
@@ -64,66 +69,93 @@ export default function OwnerOrdersIndex({
     return (
         <OwnerPageShell
             title="Pesanan"
-            subtitle="Kelola semua pesanan dari semua outlet"
+            subtitle="Pantau seluruh pesanan pelanggan"
         >
-            {/* KPI Strip - Moved to top */}
-            <OwnerKpiStrip
-                cols={4}
-                items={[
-                    {
-                        label: 'Total',
-                        value: stats?.total_today ?? 0,
-                        sublabel:
-                            (stats?.total_today ?? 0) > 0
-                                ? 'Hari ini'
-                                : undefined,
-                        sublabelColor: 'text-blue-600',
-                    },
-                    {
-                        label: 'Tindakan',
-                        value: stats?.pending ?? 0,
-                        sublabel:
-                            (stats?.pending ?? 0) > 0
-                                ? 'Perlu tugaskan kurir'
-                                : undefined,
-                        sublabelColor: 'text-amber-600',
-                    },
-                    { label: 'Selesai', value: stats?.completed_today ?? 0 },
-                    {
-                        label: 'Pendapatan',
-                        value: formatCurrency(stats?.revenue_today ?? 0),
-                    },
-                ]}
-            />
+            {/* KPI Strip */}
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Pesanan Hari Ini
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                            <ShoppingCart className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        {stats?.total_today ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">Total hari ini</p>
+                </div>
 
-            {/* Status Pills */}
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Pendapatan
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <DollarSign className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        {formatCurrency(stats?.revenue_today ?? 0)}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Pendapatan hari ini
+                    </p>
+                </div>
+
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Butuh Tindakan
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <Clock className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        {stats?.pending ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Perlu tugaskan kurir
+                    </p>
+                </div>
+
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">
+                            Selesai
+                        </span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <CheckCircle className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">
+                        {stats?.completed_today ?? 0}
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                        Selesai hari ini
+                    </p>
+                </div>
+            </div>
+
+            {/* Status Filter Chips */}
             <div
                 aria-label="Filter status pesanan"
                 className="mb-4 flex flex-wrap items-center gap-2"
             >
                 {statusFilters.map((sf) => {
                     const isActive = currentStatus === sf.key;
-                    const colorMap: Record<string, string> = {
-                        '': 'text-text bg-surface-muted ring-border',
-                        needs_action:
-                            'text-amber-600 bg-amber-50 ring-amber-200',
-                        active: 'text-blue-600 bg-blue-50 ring-blue-200',
-                        completed:
-                            'text-emerald-600 bg-emerald-50 ring-emerald-200',
-                        cancelled:
-                            'text-text-muted bg-surface-muted ring-border',
-                        failed: 'text-red-600 bg-red-50 ring-red-200',
-                    };
 
                     return (
                         <button
                             key={sf.key}
                             type="button"
                             onClick={() => setFilter('status', sf.key)}
-                            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 transition-all ${
+                            className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold ring-1 transition-all ${
                                 isActive
-                                    ? (colorMap[sf.key] ??
-                                      'bg-primary/10 text-primary ring-primary/20')
+                                    ? 'bg-primary/10 text-primary ring-primary/20'
                                     : 'bg-surface text-text-muted ring-border hover:bg-mint-wash'
                             }`}
                         >
@@ -133,11 +165,11 @@ export default function OwnerOrdersIndex({
                 })}
             </div>
 
-            {/* Filter controls - Collapsible */}
+            {/* Filter controls */}
             <OwnerFilterCard
                 collapsible
                 defaultExpanded={false}
-                searchPlaceholder="Cari kode..."
+                searchPlaceholder="Cari kode atau pelanggan..."
                 searchValue={filters.search ?? ''}
                 onSearch={(val) => setFilter('search', val)}
                 outletOptions={outlets.map((o: any) => ({
@@ -156,7 +188,7 @@ export default function OwnerOrdersIndex({
                 onDateChange={(val) => setFilter('date', val)}
             />
 
-            {/* Table - Responsive with horizontal scroll */}
+            {/* Table */}
             {orders.data.length === 0 ? (
                 <EmptyState
                     icon={<Package aria-hidden="true" className="h-8 w-8" />}
@@ -195,13 +227,15 @@ export default function OwnerOrdersIndex({
                                 return (
                                     <TableRow
                                         key={order.id}
-                                        className="border-t border-border/20 transition-colors hover:bg-mint-wash"
+                                        className="border-t border-border/20 transition-colors hover:bg-emerald-50/40"
                                     >
-                                        <TableCell className="px-4 py-3 font-bold text-text tabular-nums">
+                                        <TableCell className="px-4 py-3 font-mono font-bold text-primary tabular-nums">
                                             {order.order_code}
                                         </TableCell>
-                                        <TableCell className="px-4 py-3 text-text-muted">
-                                            {order.customer_name ?? '—'}
+                                        <TableCell className="px-4 py-3">
+                                            <div className="font-medium text-text">
+                                                {order.customer_name ?? '—'}
+                                            </div>
                                         </TableCell>
                                         <TableCell className="px-4 py-3 text-text-muted">
                                             {order.outlet?.name ?? '—'}
@@ -214,7 +248,7 @@ export default function OwnerOrdersIndex({
                                                 {s.label}
                                             </StatusBadge>
                                         </TableCell>
-                                        <TableCell className="px-4 py-3 text-right font-semibold text-primary tabular-nums">
+                                        <TableCell className="px-4 py-3 text-right font-semibold tabular-nums text-text">
                                             {formatCurrency(order.total)}
                                         </TableCell>
                                         <TableCell className="px-4 py-3">

@@ -3,6 +3,7 @@ import { X, Plus, Package, Layers, Sparkles, TrendingUp } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import ImageUploadField from '@/components/owner/image-upload-field';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { formatCurrency } from '@/lib/format';
@@ -760,9 +761,9 @@ export default function ProductForm({
                         </p>
                     )}
 
-                    <label className="flex items-center gap-2 rounded-lg bg-surface-muted/40 px-3 py-2 ring-1 ring-border/20">
-                        <input
-                            type="checkbox"
+                    <div className="flex items-center gap-2 rounded-lg bg-surface-muted/40 px-3 py-2 ring-1 ring-border/20">
+                        <Checkbox
+                            label="Produk Aktif"
                             checked={singleForm.data.is_active}
                             onChange={(e) =>
                                 singleForm.setData(
@@ -770,15 +771,11 @@ export default function ProductForm({
                                     e.target.checked,
                                 )
                             }
-                            className="rounded border-zinc-300 text-primary focus:ring-primary"
                         />
-                        <span className="text-sm font-medium text-text">
-                            Produk Aktif
-                        </span>
                         <span className="ml-auto text-[11px] text-text-subtle">
                             Nonaktifkan untuk sembunyikan dari outlet
                         </span>
-                    </label>
+                    </div>
 
                     <div className="flex justify-end gap-2 pt-1">
                         <Button

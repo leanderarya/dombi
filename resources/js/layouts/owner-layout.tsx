@@ -1,4 +1,11 @@
 import { router, usePage } from '@inertiajs/react';
+import {
+    Database,
+    LayoutDashboard,
+    Settings,
+    Truck,
+    Wallet,
+} from 'lucide-react';
 import { useState } from 'react';
 import type { PropsWithChildren, ReactNode } from 'react';
 import OwnerCommandSheet from '@/components/owner/owner-command-sheet';
@@ -26,7 +33,7 @@ interface NavGroup {
 const navGroups: NavGroup[] = [
     {
         label: 'Dasbor',
-        icon: <DashboardIcon />,
+        icon: <LayoutDashboard className="h-4 w-4" />,
         items: [
             { href: '/owner/dashboard', label: 'Dasbor' },
             {
@@ -39,7 +46,7 @@ const navGroups: NavGroup[] = [
     },
     {
         label: 'Operasional',
-        icon: <OperationalIcon />,
+        icon: <Truck className="h-4 w-4" />,
         items: [
             { href: '/owner/outlets', label: 'Outlet' },
             { href: '/owner/orders', label: 'Pesanan' },
@@ -60,7 +67,7 @@ const navGroups: NavGroup[] = [
     },
     {
         label: 'Produk',
-        icon: <MasterDataIcon />,
+        icon: <Database className="h-4 w-4" />,
         items: [
             {
                 href: '/owner/product-categories',
@@ -81,7 +88,7 @@ const navGroups: NavGroup[] = [
     },
     {
         label: 'Keuangan',
-        icon: <FinanceIcon />,
+        icon: <Wallet className="h-4 w-4" />,
         items: [
             {
                 href: '/owner/finance',
@@ -190,53 +197,28 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
 
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 bg-surface transition-[width,transform] duration-200 ease-out ${collapsed ? 'w-16' : 'w-56'} ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
-                style={{ boxShadow: '1px 0 0 0 rgba(0,0,0,0.04)' }}
+                className={`fixed inset-y-0 left-0 z-50 bg-[#005D42] text-white transition-[width,transform] duration-200 ease-out ${collapsed ? 'w-16' : 'w-56'} ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
             >
-                <div className="flex h-full flex-col">
+                <div className="flex h-full flex-col justify-between">
                     {/* Brand */}
                     <div
                         className={`${collapsed ? 'px-3 py-5' : 'px-4 pt-6 pb-5'}`}
                     >
                         {collapsed ? (
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                                <svg
-                                    className="h-4 w-4 text-white"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                    strokeWidth={2}
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                    />
-                                </svg>
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-bold font-heading text-lg">
+                                D
                             </div>
                         ) : (
-                            <div className="flex items-center gap-2.5">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                                    <svg
-                                        className="h-4 w-4 text-white"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                        />
-                                    </svg>
+                            <div className="flex items-center gap-3 border-b border-emerald-800/60 pb-4">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-bold font-heading text-lg">
+                                    D
                                 </div>
                                 <div>
-                                    <div className="text-sm font-bold text-primary">
-                                        Dombi
+                                    <div className="text-sm font-bold font-heading tracking-wide">
+                                        DOMBI
                                     </div>
-                                    <div className="text-[10px] font-medium tracking-wider text-text-subtle uppercase">
-                                        Panel
+                                    <div className="text-[11px] text-emerald-200/70 font-medium">
+                                        Susu Kambing Direct
                                     </div>
                                 </div>
                             </div>
@@ -252,7 +234,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                     />
 
                     {/* Footer */}
-                    <div className={`${collapsed ? 'px-2 py-3' : 'px-3 py-4'}`}>
+                    <div className={`${collapsed ? 'px-2 py-3' : 'px-3 py-4'} space-y-3 pt-4 border-t border-emerald-800/60`}>
                         {collapsed ? (
                             <div className="flex flex-col items-center gap-1">
                                 <div className="flex justify-center overflow-hidden">
@@ -264,7 +246,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                 </div>
                                 <button
                                     onClick={() => router.post('/logout')}
-                                    className="hover:bg-mint-wash flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:text-red-600"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-emerald-200/70 transition-colors hover:text-white hover:bg-emerald-800/40"
                                     title="Logout"
                                 >
                                     <LogoutIcon />
@@ -272,6 +254,24 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                             </div>
                         ) : (
                             <>
+                                {/* Cold Chain Capacity */}
+                                <div className="bg-emerald-900/50 rounded-xl p-3 border border-emerald-700/30">
+                                    <div className="flex items-center justify-between text-xs mb-1">
+                                        <span className="text-emerald-200/80">
+                                            Kapasitas Cold Chain
+                                        </span>
+                                        <span className="font-semibold text-emerald-300">
+                                            78%
+                                        </span>
+                                    </div>
+                                    <div className="w-full bg-emerald-950 rounded-full h-1.5">
+                                        <div
+                                            className="bg-emerald-400 h-1.5 rounded-full"
+                                            style={{ width: '78%' }}
+                                        />
+                                    </div>
+                                </div>
+
                                 <div className="mb-2">
                                     <NotificationBell
                                         onClick={() =>
@@ -279,13 +279,22 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                                         }
                                     />
                                 </div>
+
+                                <a
+                                    href="/owner/profile"
+                                    className="flex items-center gap-3 px-3 py-2 rounded-xl text-emerald-200/70 hover:text-white text-xs font-medium transition-all hover:bg-emerald-800/40"
+                                >
+                                    <Settings className="h-4 w-4" />
+                                    <span>Pengaturan Sistem</span>
+                                </a>
+
                                 <button
                                     onClick={() => router.post('/logout')}
-                                    className="hover:bg-mint-wash w-full rounded-lg px-3 py-2 text-sm font-medium text-text-muted transition-colors hover:text-red-600"
+                                    className="hover:bg-emerald-800/40 w-full rounded-xl px-3 py-2 text-sm font-medium text-emerald-200/70 transition-colors hover:text-white"
                                 >
                                     Logout
                                 </button>
-                                <div className="mt-2 text-[10px] text-text-subtle">
+                                <div className="mt-2 text-[10px] text-emerald-200/50">
                                     v{page.props.appVersion ?? '1.0.0'}
                                 </div>
                             </>
@@ -299,7 +308,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                 id="main-content"
                 className={`pt-14 transition-[padding] duration-200 ease-out md:pt-0 ${collapsed ? 'md:pl-16' : 'md:pl-56'}`}
             >
-                <div className="px-6 py-6">
+                <div className="px-4 py-6 md:px-8 md:py-6">
                     {loading ? <OwnerPageSkeleton /> : children}
                 </div>
             </main>
@@ -321,78 +330,6 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
 }
 
 // ─── Icons ────────────────────────────────────────────────────
-
-function DashboardIcon() {
-    return (
-        <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.8}
-        >
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-            />
-        </svg>
-    );
-}
-
-function OperationalIcon() {
-    return (
-        <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.8}
-        >
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"
-            />
-        </svg>
-    );
-}
-
-function FinanceIcon() {
-    return (
-        <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.8}
-        >
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-        </svg>
-    );
-}
-
-function MasterDataIcon() {
-    return (
-        <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.8}
-        >
-            <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-            />
-        </svg>
-    );
-}
 
 function LogoutIcon() {
     return (

@@ -1,8 +1,14 @@
 import { router, useForm } from '@inertiajs/react';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import {
+    CheckCircle,
+    CheckCircle2,
+    Clock,
+    Package,
+    Truck,
+    XCircle,
+} from 'lucide-react';
 import { useEffect, useEffectEvent, useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
 import SortableTh from '@/components/owner/sortable-th';
@@ -165,21 +171,45 @@ export default function OwnerRestocksIndex({
             title="Restocks"
             subtitle="Kelola permintaan restock dari outlet"
         >
-            <OwnerKpiStrip
-                cols={4}
-                items={[
-                    {
-                        label: 'Menunggu',
-                        value: requestedCount,
-                        sublabel:
-                            requestedCount > 0 ? 'Perlu ditinjau' : undefined,
-                        sublabelColor: 'text-amber-600',
-                    },
-                    { label: 'Disiapkan', value: preparingCount },
-                    { label: 'Dikirim', value: shippedCount },
-                    { label: 'Selesai', value: completedCount },
-                ]}
-            />
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Menunggu</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                            <Clock className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${requestedCount > 0 ? 'text-amber-600' : 'text-text'}`}>{requestedCount}</div>
+                    {requestedCount > 0 && <p className="text-[11px] text-amber-500">Perlu ditinjau</p>}
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Disiapkan</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB]/10 text-[#2563EB]">
+                            <Package className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{preparingCount}</div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Dikirim</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                            <Truck className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{shippedCount}</div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-text-muted">Selesai</span>
+                        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                            <CheckCircle className="h-5 w-5" />
+                        </span>
+                    </div>
+                    <div className="font-heading text-xl font-bold tabular-nums text-emerald-600 sm:text-2xl">{completedCount}</div>
+                </div>
+            </div>
 
             <section
                 className="mb-4 flex flex-wrap items-center gap-2"
