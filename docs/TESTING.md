@@ -179,7 +179,7 @@ Password: password
 
 **Yang perlu dites:**
 - [OK] Login owner
-- [OK] Dashboard KPI — [NO] grafik Tren Pendapatan 30 hari terputus di hari ke-25 (kemungkinan data gap / chart width)
+- [OK] Dashboard KPI — [FIXED batch5] grafik Tren Pendapatan: x-axis labels sparse render (every 5th) untuk 30 hari
 - [OK] CRUD product family & variant (hapus via deactivate saat ada riwayat transaksi)
 - [OK] Pricing: center + per-outlet
 - [OK] Inventory: central stock — [FIXED batch1] tab Outlet muncul produk + grouping + SKU; note: filter outlet belum fungsi, sort hanya nama
@@ -255,11 +255,11 @@ Password: password
 | Staging deploy manual (auto-deploy belum otomatis) | Open | SSH + git pull |
 | `google-services.json` per-package (customer vs internal) | Open | Rename file saat build APK |
 | Biogoat image Unplash dead | Closed | Fallback ke emoji susu |
-| 5 TypeScript errors (pre-existing) | Open | Tidak mempengaruhi runtime |
+| 5 TypeScript errors (pre-existing) | **Closed batch5** | Already 0 errors |
 | Delivery login sheet: "Masuk dengan Google" tanpa redirect → habis login balik ke Home, bukan checkout (cart tetap ada) | **Closed batch3** | Google redirect ke checkout |
 | Delivery step Info: ganti alamat via LocationSheet → quote radius/ongkir tidak re-fetch, tetap stale di props (alamat jauh bisa Lanjutkan, stop di step 3 blocker subscription; balik ganti alamat valid tetap quote lama) | **Closed batch3** | router.reload + await syncCustomerLocationDraft |
 | Form validasi alamat/penerima: error tidak jelas (tanpa toast / warna merah pada field) | **Closed batch4** | Red border on Field + CompactField when error |
-| Outlet UI: semua halaman ada glitch visual tiap interval beberapa detik (detail belum diidentifikasi) | Open | Investigasi: refresh background / animation loop |
+| Outlet UI: semua halaman ada glitch visual tiap interval beberapa detik (detail belum diidentifikasi) | **Closed batch5** | useInertiaLoading skip polling reloads |
 | Stock opname: catatan (notes) opsional, padahal selisih stok butuh keterangan asal-usul | **Closed batch3** | Notes wajib saat ada selisih |
 | **Akar bug key mismatch:** UI outlet kirim `product_variant_id`, backend validasi `product_id` — stock opname & restock gagal silent → **FIXED batch 1** (renamed frontend key ke `product_id`, backend utuh) | Closed | Batch 1 ^ fix key `product_id` |
 | Return create (outlet): submit silent — root: browser cache kirim `product_variant_id` (old JS), backend validasi `product_id` → 422 errors gak render (Inertia useForm tanpa onError). Fix: (1) frontend rename key, (2) backend mapping `product_variant_id`→`product_id` safety net | **Closed batch2A** | Mapping di controller + rebuild assets |
