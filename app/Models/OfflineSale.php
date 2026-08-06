@@ -14,6 +14,7 @@ class OfflineSale extends Model
         'center_price',
         'total_amount',
         'notes',
+        'payment_method',
         'created_by',
     ];
 

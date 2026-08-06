@@ -451,12 +451,18 @@ class FinanceSettlementController extends Controller
                     $s->outlet->name,
                     $s->period_label,
                     $s->due_date->format('d/m/Y'),
-                    $s->sales_amount,
-                    $s->delivery_fee_amount,
-                    $s->amount_due,
-                    $s->paid_amount,
-                    $s->outstanding_amount,
-                    $s->status,
+                    'Rp '.number_format($s->sales_amount, 0, ',', '.'),
+                    'Rp '.number_format($s->delivery_fee_amount, 0, ',', '.'),
+                    'Rp '.number_format($s->amount_due, 0, ',', '.'),
+                    'Rp '.number_format($s->paid_amount, 0, ',', '.'),
+                    'Rp '.number_format($s->outstanding_amount, 0, ',', '.'),
+                    match ($s->status) {
+                        'pending' => 'Menunggu',
+                        'partial' => 'Sebagian',
+                        'paid' => 'Lunas',
+                        'overdue' => 'Jatuh Tempo',
+                        default => $s->status,
+                    },
                 ]);
             }
 

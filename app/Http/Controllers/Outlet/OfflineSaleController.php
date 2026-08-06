@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -63,6 +64,7 @@ class OfflineSaleController extends Controller
             'variant_id' => ['sometimes', 'required', 'integer', 'exists:products,id'],
             'quantity' => ['required', 'integer', 'min:1'],
             'notes' => ['nullable', 'string', 'max:500'],
+            'payment_method' => ['required', 'string', Rule::in(['cash', 'transfer', 'qris', 'other'])],
         ]);
 
         $productId = $validated['product_id'] ?? $validated['variant_id'];
@@ -93,6 +95,7 @@ class OfflineSaleController extends Controller
                 'quantity' => $validated['quantity'],
                 'center_price' => $centerPrice,
                 'total_amount' => $totalAmount,
+                'payment_method' => $validated['payment_method'],
                 'notes' => $validated['notes'] ?? null,
                 'created_by' => $request->user()->id,
             ]);

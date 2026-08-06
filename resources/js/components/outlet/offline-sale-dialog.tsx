@@ -24,6 +24,7 @@ export default function OfflineSaleDialog({
     const form = useForm({
         variant_id: '',
         quantity: 1,
+        payment_method: 'cash',
         notes: '',
     });
 
@@ -88,6 +89,20 @@ export default function OfflineSaleDialog({
                             }
                             placeholder="Pilih produk"
                             searchable
+                        />
+
+                        <CustomSelect
+                            label="Metode Bayar"
+                            options={[
+                                { value: 'cash', label: 'Tunai' },
+                                { value: 'transfer', label: 'Transfer' },
+                                { value: 'qris', label: 'QRIS' },
+                                { value: 'other', label: 'Lainnya' },
+                            ]}
+                            value={form.data.payment_method}
+                            onChange={(v: string) =>
+                                form.setData('payment_method', v)
+                            }
                         />
 
                         <div className="flex gap-2">
