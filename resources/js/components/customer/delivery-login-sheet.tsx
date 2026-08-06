@@ -39,7 +39,7 @@ export default function DeliveryLoginSheet({
             </div>
 
             <a
-                href="/oauth/google"
+                href="/oauth/google?redirect=/customer/checkout"
                 className="mt-6 flex min-h-11 w-full items-center justify-center gap-3 rounded-xl bg-primary text-sm font-bold text-white active:bg-primary-hover"
             >
                 <svg className="h-5 w-5" viewBox="0 0 24 24">
