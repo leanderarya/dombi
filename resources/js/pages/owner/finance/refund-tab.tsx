@@ -22,6 +22,7 @@ import {
     RefundRollbackDialog,
 } from '@/components/owner/finance/refund-operations-dialogs';
 import RefundRejectionModal from '@/components/owner/finance/refund-rejection-modal';
+import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/format';
 import type {
     OwnerRefundPayload,
@@ -214,48 +215,52 @@ export default function RefundTab({
                                     {/* Action buttons */}
                                     <div className="flex flex-wrap gap-1.5 px-4 pb-3">
                                         {can_enter_destination && (
-                                            <button
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
                                                 onClick={() =>
                                                     setDestinationOrder(refund)
                                                 }
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-border px-3 text-xs font-semibold text-text-muted hover:bg-muted"
                                             >
                                                 <Banknote className="h-3.5 w-3.5" />{' '}
                                                 Isi Tujuan
-                                            </button>
+                                            </Button>
                                         )}
                                         {(can_start || can_complete) && (
-                                            <button
+                                            <Button
+                                                variant="primary"
+                                                size="sm"
                                                 onClick={() =>
                                                     setCompletionOrder(refund)
                                                 }
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-xs font-bold text-white hover:bg-primary/90"
                                             >
                                                 <Check className="h-3.5 w-3.5" />
                                                 Selesai
-                                            </button>
+                                            </Button>
                                         )}
                                         {can_reject && (
-                                            <button
+                                            <Button
+                                                variant="danger"
+                                                size="sm"
                                                 onClick={() =>
                                                     setRejectionOrder(refund)
                                                 }
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-red-300 px-3 text-xs font-semibold text-red-600 hover:bg-red-50"
                                             >
                                                 <Ban className="h-3.5 w-3.5" />{' '}
                                                 Tolak
-                                            </button>
+                                            </Button>
                                         )}
                                         {can_rollback && (
-                                            <button
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
                                                 onClick={() =>
                                                     setRollbackOrder(refund)
                                                 }
-                                                className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-amber-300 px-3 text-xs font-semibold text-amber-600 hover:bg-amber-50"
                                             >
                                                 <Undo2 className="h-3.5 w-3.5" />{' '}
                                                 Rollback
-                                            </button>
+                                            </Button>
                                         )}
                                     </div>
 

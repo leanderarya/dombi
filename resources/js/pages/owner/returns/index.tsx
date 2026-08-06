@@ -1,6 +1,7 @@
 import { router } from '@inertiajs/react';
 import { useState } from 'react';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
 import { SkeletonPage } from '@/components/ui/skeleton';
 import { getInitialOwnerTab } from '../tab-state';
 import PengembalianTab from './pengembalian-tab';
@@ -48,28 +49,12 @@ export default function OwnerReturnsIndex(props: any) {
             title="Return & Tukar"
             subtitle="Kelola pengembalian dan penukaran barang"
         >
-            {/* Segmented Control */}
-            <div
-                className="mb-5 inline-flex rounded-lg bg-surface-muted p-1"
-                role="tablist"
-                aria-label="Jenis Return"
-            >
-                {TABS.map((t) => (
-                    <button
-                        key={t.key}
-                        role="tab"
-                        aria-selected={activeTab === t.key}
-                        onClick={() => handleTabChange(t.key)}
-                        className={`relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200 ${
-                            activeTab === t.key
-                                ? 'bg-white text-text shadow-sm'
-                                : 'text-text-muted hover:text-text'
-                        }`}
-                    >
-                        {t.label}
-                    </button>
-                ))}
-            </div>
+            <OwnerSegmentedTabs
+                tabs={TABS.map((t) => ({ key: t.key, label: t.label }))}
+                activeTab={activeTab}
+                onChange={(key) => handleTabChange(key as TabKey)}
+                className="mb-5"
+            />
 
             {activeTab === 'pengembalian' && (
                 <PengembalianTab

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
 import OwnerTable from '@/components/owner/owner-table';
 import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
@@ -332,28 +333,12 @@ export default function InventoriesIndex({
             title="Inventaris"
             subtitle="Pantau stok semua outlet dan pusat"
         >
-            <div
-                className="mb-5 inline-flex rounded-lg bg-surface-muted p-1"
-                role="tablist"
-            >
-                {TABS.map((t) => (
-                    <button
-                        key={t.key}
-                        type="button"
-                        role="tab"
-                        aria-selected={activeTab === t.key}
-                        onClick={() => handleTabChange(t.key)}
-                        className={cn(
-                            'relative rounded-lg px-5 py-2 text-sm font-semibold transition-all duration-200',
-                            activeTab === t.key
-                                ? 'bg-surface text-text'
-                                : 'text-text-muted hover:text-text',
-                        )}
-                    >
-                        {t.label}
-                    </button>
-                ))}
-            </div>
+            <OwnerSegmentedTabs
+                tabs={TABS.map((t) => ({ key: t.key, label: t.label }))}
+                activeTab={activeTab}
+                onChange={(key) => handleTabChange(key as TabKey)}
+                className="mb-5"
+            />
 
             {activeTab === 'pusat' && (
                 <CentralStockTab variants={centralStock} stats={centralStats} />
@@ -524,7 +509,7 @@ export default function InventoriesIndex({
                                             <>
                                                 <TableRow
                                                     key={group.variantId}
-                                                    className="hover:bg-mint-wash cursor-pointer border-t border-border/20 transition-colors"
+                                                    className="cursor-pointer border-t border-border/20 transition-colors hover:bg-mint-wash"
                                                     onClick={() =>
                                                         toggleExpand(
                                                             group.variantId,
@@ -749,7 +734,7 @@ export default function InventoriesIndex({
                                                                                         key={
                                                                                             row.id
                                                                                         }
-                                                                                        className="hover:bg-mint-wash border-t border-border/30 transition-colors"
+                                                                                        className="border-t border-border/30 transition-colors hover:bg-mint-wash"
                                                                                     >
                                                                                         <td className="px-3 py-2.5" />
                                                                                         <td className="px-3 py-2.5 text-sm font-medium text-text">
