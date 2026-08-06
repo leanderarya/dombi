@@ -333,6 +333,7 @@ export default function CheckoutIndex({
                         if (!isLoggedIn) {
                             saveFulfillment('pickup');
                         }
+
                         setDeliverySheetOpen(false);
                     }}
                     onSwitchToPickup={() => {
