@@ -1,7 +1,6 @@
 import { router } from '@inertiajs/react';
 import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
 import EmptyState from '@/components/ui/empty-state';
@@ -83,31 +82,23 @@ export default function PengembalianTab({
         <>
             {/* KPI Strip */}
             <div aria-label="Ringkasan Pengembalian">
-                <OwnerKpiStrip
-                    items={[
-                        {
-                            label: 'Return Tertunda',
-                            value: dashboard.pending_returns,
-                            sublabel:
-                                dashboard.pending_returns > 0
-                                    ? 'Perlu ditinjau'
-                                    : undefined,
-                            sublabelColor: 'text-amber-600',
-                        },
-                        {
-                            label: 'Nilai Return',
-                            value: formatCurrency(dashboard.returned_value),
-                        },
-                        ...(dashboard.total_returns !== undefined
-                            ? [
-                                  {
-                                      label: 'Total Return',
-                                      value: dashboard.total_returns,
-                                  },
-                              ]
-                            : []),
-                    ]}
-                />
+                <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <span className="text-xs font-medium text-text-muted">Return Tertunda</span>
+                        <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${dashboard.pending_returns > 0 ? 'text-amber-600' : 'text-text'}`}>{dashboard.pending_returns}</div>
+                        {dashboard.pending_returns > 0 && <p className="text-[11px] text-amber-500">Perlu ditinjau</p>}
+                    </div>
+                    <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                        <span className="text-xs font-medium text-text-muted">Nilai Return</span>
+                        <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{formatCurrency(dashboard.returned_value)}</div>
+                    </div>
+                    {dashboard.total_returns !== undefined && (
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <span className="text-xs font-medium text-text-muted">Total Return</span>
+                            <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{dashboard.total_returns}</div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Status Pills */}

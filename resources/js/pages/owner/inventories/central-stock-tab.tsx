@@ -1,7 +1,6 @@
 import { router } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerTable from '@/components/owner/owner-table';
 import SortableTh from '@/components/owner/sortable-th';
 import { Button } from '@/components/ui/button';
@@ -140,27 +139,26 @@ export default function CentralStockTab({
 
     return (
         <>
-            <OwnerKpiStrip
-                cols={4}
-                items={[
-                    { label: 'Total Variant', value: stats.total_variants },
-                    { label: 'Total Stok', value: `${stats.total_stock} pcs` },
-                    {
-                        label: 'Stok Habis',
-                        value: stats.zero_stock,
-                        sublabel:
-                            stats.zero_stock > 0 ? 'Perlu tindakan' : undefined,
-                        sublabelColor: 'text-red-500',
-                    },
-                    {
-                        label: 'Stok Rendah',
-                        value: stats.low_stock,
-                        sublabel:
-                            stats.low_stock > 0 ? 'Perlu tindakan' : undefined,
-                        sublabelColor: 'text-amber-500',
-                    },
-                ]}
-            />
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <span className="text-xs font-medium text-text-muted">Total Varian</span>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{stats.total_variants}</div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <span className="text-xs font-medium text-text-muted">Total Stok</span>
+                    <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{stats.total_stock} <span className="text-sm font-normal text-text-muted">pcs</span></div>
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <span className="text-xs font-medium text-text-muted">Stok Habis</span>
+                    <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.zero_stock > 0 ? 'text-red-600' : 'text-text'}`}>{stats.zero_stock}</div>
+                    {stats.zero_stock > 0 && <p className="text-[11px] text-red-500">Perlu tindakan</p>}
+                </div>
+                <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                    <span className="text-xs font-medium text-text-muted">Stok Rendah</span>
+                    <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.low_stock > 0 ? 'text-amber-600' : 'text-text'}`}>{stats.low_stock}</div>
+                    {stats.low_stock > 0 && <p className="text-[11px] text-amber-500">Perlu tindakan</p>}
+                </div>
+            </div>
 
             <OwnerFilterCard
                 collapsible

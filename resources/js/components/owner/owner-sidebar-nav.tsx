@@ -127,8 +127,8 @@ export default function OwnerSidebarNav({
                                     onClick={() => onNavClick?.()}
                                     className={`mt-0.5 flex h-9 w-full items-center justify-center rounded-lg transition-colors duration-150 ${
                                         isItemActive(group.items[0], url)
-                                            ? 'border-l-2 border-primary bg-mint-wash text-primary'
-                                            : 'border-l-2 border-transparent text-text-muted hover:bg-mint-wash/60 hover:text-text'
+                                            ? 'bg-emerald-800/80 text-white shadow-xs'
+                                            : 'text-emerald-100/80 hover:bg-emerald-800/40 hover:text-white'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -152,8 +152,8 @@ export default function OwnerSidebarNav({
                                     title={group.label}
                                     className={`flex h-9 w-full items-center justify-center rounded-lg transition-colors duration-150 ${
                                         hasActive
-                                            ? 'border-l-2 border-primary bg-mint-wash text-primary'
-                                            : 'border-l-2 border-transparent text-text-muted hover:bg-mint-wash/60 hover:text-text'
+                                            ? 'bg-emerald-800/80 text-white shadow-xs'
+                                            : 'text-emerald-100/80 hover:bg-emerald-800/40 hover:text-white'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -169,13 +169,13 @@ export default function OwnerSidebarNav({
                 {activeFlyoutGroup && (
                     <div
                         ref={flyoutRef}
-                        className="fixed z-[60] w-48 rounded-xl bg-surface py-1.5 shadow-card"
+                        className="fixed z-[60] w-48 rounded-xl bg-[#005D42] py-1.5 shadow-lg border border-emerald-700/30"
                         style={{
                             left: '4rem',
                             top: `${flyoutPosition}px`,
                         }}
                     >
-                        <div className="px-3 py-1.5 text-[10px] font-semibold tracking-widest text-text-subtle uppercase">
+                        <div className="px-3 py-1.5 text-[10px] font-semibold tracking-widest text-emerald-300/70 uppercase">
                             {activeFlyoutGroup.label}
                         </div>
                         {activeFlyoutGroup.items.map((item) => {
@@ -194,13 +194,13 @@ export default function OwnerSidebarNav({
                                     }}
                                     className={`flex items-center justify-between px-3 py-2.5 text-sm transition-colors duration-150 ${
                                         active
-                                            ? 'bg-mint-wash font-semibold text-primary'
-                                            : 'text-text-muted hover:bg-mint-wash/60 hover:text-text'
+                                            ? 'bg-emerald-800/80 font-semibold text-white'
+                                            : 'text-emerald-100/80 hover:bg-emerald-800/40 hover:text-white'
                                     }`}
                                 >
                                     <span>{item.label}</span>
                                     {badgeCount > 0 && (
-                                        <span className="min-w-[18px] rounded-full bg-amber-100 px-1.5 py-px text-center text-[10px] font-bold text-amber-700">
+                                        <span className="min-w-[18px] rounded-full bg-[#FF8A3D] px-1.5 py-px text-center text-[10px] font-bold text-white">
                                             {badgeCount}
                                         </span>
                                     )}
@@ -232,8 +232,8 @@ export default function OwnerSidebarNav({
                                 onClick={() => onNavClick?.()}
                                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                     isItemActive(group.items[0], url)
-                                        ? 'border-l-2 border-primary bg-mint-wash font-semibold text-primary'
-                                        : 'border-l-2 border-transparent font-medium text-text-muted hover:bg-mint-wash/60 hover:text-text'
+                                        ? 'bg-emerald-800/80 font-semibold text-white shadow-xs'
+                                        : 'font-medium text-emerald-100/80 hover:bg-emerald-800/40 hover:text-white'
                                 }`}
                             >
                                 <span className="h-4 w-4 shrink-0">
@@ -248,8 +248,8 @@ export default function OwnerSidebarNav({
                                     aria-expanded={isExpanded}
                                     className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] transition-colors duration-150 ${
                                         hasActive
-                                            ? 'font-semibold text-text'
-                                            : 'font-medium text-text-muted hover:bg-mint-wash/60 hover:text-text'
+                                            ? 'font-semibold text-white'
+                                            : 'font-medium text-emerald-100/80 hover:bg-emerald-800/40 hover:text-white'
                                     }`}
                                 >
                                     <span className="h-4 w-4 shrink-0">
@@ -282,13 +282,13 @@ export default function OwnerSidebarNav({
                                                     }
                                                     className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors duration-150 ${
                                                         active
-                                                            ? 'bg-mint-wash font-semibold text-primary'
-                                                            : 'font-medium text-text-muted hover:bg-mint-wash/60 hover:text-text'
+                                                            ? 'bg-emerald-800/80 font-semibold text-white'
+                                                            : 'font-medium text-emerald-100/80 hover:bg-emerald-800/40 hover:text-white'
                                                     }`}
                                                 >
                                                     <span>{item.label}</span>
                                                     {badgeCount > 0 && (
-                                                        <span className="min-w-[18px] rounded-full bg-amber-100 px-1.5 py-px text-center text-[10px] font-bold text-amber-700">
+                                                        <span className="min-w-[18px] rounded-full bg-[#FF8A3D] px-1.5 py-px text-center text-[10px] font-bold text-white">
                                                             {badgeCount}
                                                         </span>
                                                     )}

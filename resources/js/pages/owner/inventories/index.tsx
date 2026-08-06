@@ -1,9 +1,17 @@
 import { router, useForm } from '@inertiajs/react';
-import { Bell, Check, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+    AlertCircle,
+    AlertTriangle,
+    Bell,
+    Check,
+    CheckCircle,
+    ChevronDown,
+    ChevronRight,
+    Package,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import OwnerFilterCard from '@/components/owner/owner-filter-card';
-import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
 import OwnerTable from '@/components/owner/owner-table';
@@ -346,32 +354,46 @@ export default function InventoriesIndex({
 
             {activeTab === 'outlet' && (
                 <>
-                    <OwnerKpiStrip
-                        cols={4}
-                        items={[
-                            { label: 'Total SKU', value: stats.totalSku },
-                            {
-                                label: 'Stok Kritis',
-                                value: stats.critical,
-                                sublabel:
-                                    stats.critical > 0 ? '≤ 2 pcs' : undefined,
-                                sublabelColor: 'text-red-500',
-                            },
-                            {
-                                label: 'Stok Rendah',
-                                value: stats.lowStock,
-                                sublabel:
-                                    stats.lowStock > 0
-                                        ? '≤ minimum'
-                                        : undefined,
-                                sublabelColor: 'text-amber-500',
-                            },
-                            {
-                                label: 'Stok Sehat',
-                                value: stats.totalSku - stats.lowStock,
-                            },
-                        ]}
-                    />
+                    <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">Total SKU</span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0D9488]/10 text-[#0D9488]">
+                                    <Package className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div className="font-heading text-xl font-bold tabular-nums text-text sm:text-2xl">{stats.totalSku}</div>
+                        </div>
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">Stok Kritis</span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-red-600">
+                                    <AlertTriangle className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.critical > 0 ? 'text-red-600' : 'text-text'}`}>{stats.critical}</div>
+                            {stats.critical > 0 && <p className="text-[11px] text-red-500">≤ 2 pcs</p>}
+                        </div>
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">Stok Rendah</span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600">
+                                    <AlertCircle className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div className={`font-heading text-xl font-bold tabular-nums sm:text-2xl ${stats.lowStock > 0 ? 'text-amber-600' : 'text-text'}`}>{stats.lowStock}</div>
+                            {stats.lowStock > 0 && <p className="text-[11px] text-amber-500">≤ minimum</p>}
+                        </div>
+                        <div className="space-y-2 rounded-2xl border border-border bg-surface p-5">
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-text-muted">Stok Sehat</span>
+                                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
+                                    <CheckCircle className="h-5 w-5" />
+                                </span>
+                            </div>
+                            <div className="font-heading text-xl font-bold tabular-nums text-emerald-600 sm:text-2xl">{stats.totalSku - stats.lowStock}</div>
+                        </div>
+                    </div>
 
                     <OwnerFilterCard
                         collapsible

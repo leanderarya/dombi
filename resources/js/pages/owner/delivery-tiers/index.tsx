@@ -1,10 +1,19 @@
 import { router, useForm } from '@inertiajs/react';
-import { Edit2, GripVertical, Plus, Trash2, Truck } from 'lucide-react';
+import {
+    Edit2,
+    GripVertical,
+    Plus,
+    ToggleLeft,
+    ToggleRight,
+    Trash2,
+    Truck,
+} from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
 import OwnerTable from '@/components/owner/owner-table';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -16,7 +25,6 @@ import {
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import { SkeletonPage } from '@/components/ui/skeleton';
-import StatusBadge from '@/components/ui/status-badge';
 import {
     Table,
     TableBody,
@@ -208,20 +216,18 @@ export default function DeliveryTiersIndex({
                                                 onClick={() =>
                                                     handleToggle(tier.id)
                                                 }
-                                                className="inline-flex"
+                                                className="group inline-flex items-center"
+                                                title={
+                                                    tier.is_active
+                                                        ? 'Nonaktifkan'
+                                                        : 'Aktifkan'
+                                                }
                                             >
-                                                <StatusBadge
-                                                    variant={
-                                                        tier.is_active
-                                                            ? 'success'
-                                                            : 'neutral'
-                                                    }
-                                                    size="sm"
-                                                >
-                                                    {tier.is_active
-                                                        ? 'Aktif'
-                                                        : 'Nonaktif'}
-                                                </StatusBadge>
+                                                {tier.is_active ? (
+                                                    <ToggleRight className="h-5 w-5 text-primary" />
+                                                ) : (
+                                                    <ToggleLeft className="h-5 w-5 text-text-muted" />
+                                                )}
                                             </button>
                                         </TableCell>
                                         <TableCell className="px-4 py-3 text-right">
@@ -451,17 +457,13 @@ export default function DeliveryTiersIndex({
                             />
                         </div>
                     </div>
-                    <label className="mt-2 flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            checked={editForm.data.is_active}
-                            onChange={(e) =>
-                                editForm.setData('is_active', e.target.checked)
-                            }
-                            className="toggle"
-                        />
-                        <span className="text-xs text-text-muted">Aktif</span>
-                    </label>
+                    <Checkbox
+                        label="Aktif"
+                        checked={editForm.data.is_active}
+                        onChange={(e) =>
+                            editForm.setData('is_active', e.target.checked)
+                        }
+                    />
                     {Object.keys(editForm.errors).length > 0 && (
                         <div className="mt-2">
                             {Object.values(editForm.errors).map((err, i) => (
