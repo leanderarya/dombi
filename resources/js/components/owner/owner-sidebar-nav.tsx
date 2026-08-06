@@ -72,7 +72,7 @@ export default function OwnerSidebarNav({
             return;
         }
 
-        const handleClick = (e: MouseEvent) => {
+        const handleClick = (e: Event) => {
             if (
                 flyoutRef.current &&
                 !flyoutRef.current.contains(e.target as Node)
@@ -81,8 +81,12 @@ export default function OwnerSidebarNav({
             }
         };
         document.addEventListener('mousedown', handleClick);
+        document.addEventListener('touchstart', handleClick);
 
-        return () => document.removeEventListener('mousedown', handleClick);
+        return () => {
+            document.removeEventListener('mousedown', handleClick);
+            document.removeEventListener('touchstart', handleClick);
+        };
     }, [flyoutGroup]);
 
     const toggleGroup = (label: string) => {
