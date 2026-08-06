@@ -16,6 +16,7 @@ import {
 import EmptyState from '@/components/ui/empty-state';
 import { Input } from '@/components/ui/input';
 import Pagination from '@/components/ui/pagination';
+import { SkeletonPage } from '@/components/ui/skeleton';
 import StatusBadge from '@/components/ui/status-badge';
 import {
     Table,
@@ -47,6 +48,10 @@ export default function CouriersIndex({
         vehicle_type: '' as '' | 'motorcycle' | 'bicycle' | 'car',
         vehicle_plate: '',
     });
+
+    if (!couriers) {
+        return <SkeletonPage />;
+    }
 
     const filtered = search
         ? couriers.data.filter(
@@ -138,7 +143,7 @@ export default function CouriersIndex({
                         }
                     />
                 ) : (
-                    <OwnerTable minWidth="500px">
+                    <OwnerTable minWidth="600px">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-surface-muted/50">

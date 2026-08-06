@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import OwnerDashboardSkeleton from '@/components/owner/owner-dashboard-skeleton';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import OwnerSegmentedTabs from '@/components/owner/owner-segmented-tabs';
 import PushBanner from '@/components/shared/push-banner';
 import { displayProductName } from '@/lib/display';
 import { formatCurrency } from '@/lib/format';
@@ -307,21 +308,14 @@ function RevenueTrendChart({
                         </span>
                     </p>
                 </div>
-                <div className="flex rounded-lg bg-mint-wash p-1">
-                    {[7, 30].map((d) => (
-                        <button
-                            key={d}
-                            onClick={() => onPeriodChange(d)}
-                            className={`rounded px-4 py-1.5 text-[12px] font-semibold transition-all duration-200 ${
-                                period === d
-                                    ? 'bg-white text-primary shadow-sm'
-                                    : 'text-text-muted hover:text-primary'
-                            }`}
-                        >
-                            {d} Hari
-                        </button>
-                    ))}
-                </div>
+                <OwnerSegmentedTabs
+                    tabs={[7, 30].map((d) => ({
+                        key: String(d),
+                        label: `${d} Hari`,
+                    }))}
+                    activeTab={String(period)}
+                    onChange={(key) => onPeriodChange(Number(key))}
+                />
             </div>
             <div
                 className="p-6"
