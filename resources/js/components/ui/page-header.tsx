@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 
 interface Props {
     title?: string;
+    titleClassName?: string;
     subtitle?: string;
     backHref?: string;
     /** Rendered on the right side of the header */
@@ -16,7 +17,7 @@ interface Props {
     onMenuClick?: () => void;
 }
 
-export default function PageHeader({ title, subtitle, backHref, right, below, transparent, onMenuClick }: Props) {
+export default function PageHeader({ title, titleClassName, subtitle, backHref, right, below, transparent, onMenuClick }: Props) {
     return (
         <header className={`sticky top-0 z-30 pt-safe ${transparent ? '' : 'border-b border-border bg-surface/95 backdrop-blur'}`}>
             <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
@@ -42,7 +43,7 @@ export default function PageHeader({ title, subtitle, backHref, right, below, tr
 
                 {title ? (
                     <div className="text-center">
-                        <div className="text-sm font-semibold text-text">{title}</div>
+                        <div className={`text-sm font-semibold text-text ${titleClassName ?? ''}`}>{title}</div>
                         {subtitle && <div className="text-xs text-text-muted">{subtitle}</div>}
                     </div>
                 ) : (

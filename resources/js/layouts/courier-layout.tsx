@@ -81,6 +81,7 @@ export default function CourierLayout({
         >
             <PageHeader
                 title={headerTitle}
+                titleClassName={!title ? 'text-primary' : undefined}
                 subtitle={headerSubtitle}
                 backHref={backHref}
                 right={rightSlot}
