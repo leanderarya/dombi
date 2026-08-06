@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { BarChart3, DollarSign, FileText, Package, QrCode } from 'lucide-react';
 import OutletDashboardSkeleton from '@/components/outlet/outlet-dashboard-skeleton';
 import OutletPageShell from '@/components/outlet/outlet-page-shell';
+import PushBanner from '@/components/shared/push-banner';
 import EmptyState from '@/components/ui/empty-state';
 import StatusBadge from '@/components/ui/status-badge';
 import { useInertiaLoading } from '@/hooks/use-inertia-loading';
@@ -66,6 +67,7 @@ export default function OutletDashboard({
                 </div>
             ) : (
                 <OutletPageShell>
+                    <PushBanner variant="home" />
                     {/* Hero — stats + alerts */}
                     <div className="rounded-xl border border-primary/10 bg-primary-light p-4">
                         <div className="flex items-center justify-center">

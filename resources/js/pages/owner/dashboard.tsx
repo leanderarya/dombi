@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import OwnerDashboardSkeleton from '@/components/owner/owner-dashboard-skeleton';
 import OwnerKpiStrip from '@/components/owner/owner-kpi-strip';
 import OwnerPageShell from '@/components/owner/owner-page-shell';
+import PushBanner from '@/components/shared/push-banner';
 import { displayProductName } from '@/lib/display';
 import { formatCurrency } from '@/lib/format';
 import { usePolling } from '@/lib/use-polling';
@@ -618,6 +619,8 @@ export default function Dashboard({
             title="Dasbor"
             subtitle="Ringkasan operasional hari ini"
         >
+            <PushBanner variant="home" />
+
             {/* Greeting */}
             <div className="mb-10">
                 <h2 className="text-[32px] leading-tight font-bold tracking-tight text-primary">
