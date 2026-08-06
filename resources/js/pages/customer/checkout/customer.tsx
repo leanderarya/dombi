@@ -1,4 +1,4 @@
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router, useForm } from '@inertiajs/react';
 import {
     AlertCircle,
     ChevronRight,
@@ -152,6 +152,7 @@ export default function CheckoutCustomer({
                 ...nextData,
                 address_id: loc.address_id ?? null,
             });
+            router.reload({ only: ['draft', 'deliveryQuote', 'deliveryTiers'] });
         },
         [form],
     );
@@ -174,6 +175,7 @@ export default function CheckoutCustomer({
                 landmark: addr.landmark ?? '',
                 delivery_notes: addr.delivery_notes ?? '',
             });
+            router.reload({ only: ['draft', 'deliveryQuote', 'deliveryTiers'] });
         },
         [form],
     );
