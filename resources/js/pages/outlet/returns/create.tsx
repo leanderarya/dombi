@@ -1,4 +1,5 @@
 import { Head, useForm } from '@inertiajs/react';
+import { X } from 'lucide-react';
 import { useState, useRef, useMemo } from 'react';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
@@ -176,9 +177,9 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
                                 <button
                                     type="button"
                                     onClick={() => removeImage(index)}
-                                    className="absolute top-0 right-0 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white"
+                                    className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white"
                                 >
-                                    ×
+                                    <X className="h-3.5 w-3.5" />
                                 </button>
                             </div>
                         ))}

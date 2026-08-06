@@ -183,7 +183,7 @@ export default function OutletExchangesCreate({
                                 {pairs.length > 1 && (
                                     <button
                                         onClick={() => removePair(index)}
-                                        className="rounded-lg p-1.5 text-text-subtle hover:bg-red-50 hover:text-red-600"
+                                        className="flex h-11 w-11 items-center justify-center rounded-lg text-text-subtle hover:bg-red-50 hover:text-red-600"
                                     >
                                         <Trash2 className="h-4 w-4" />
                                     </button>

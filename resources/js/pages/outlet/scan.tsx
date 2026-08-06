@@ -173,7 +173,7 @@ export default function OutletScanPage() {
                                     <div className="text-sm font-semibold text-white">
                                         Arahkan kamera ke QR code
                                     </div>
-                                    <div className="mt-1 text-xs text-text-subtle">
+                                    <div className="mt-1 text-xs text-white/60">
                                         QR code akan ter-scan otomatis
                                     </div>
                                 </div>
