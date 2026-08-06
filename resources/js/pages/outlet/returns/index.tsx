@@ -52,7 +52,7 @@ export default function OutletReturnsIndex({
             }
         >
             <Head title="Return" />
-            <OutletPageShell hasStickyBar>
+            <OutletPageShell>
                 {loading ? (
                     <SkeletonList count={5} />
                 ) : (

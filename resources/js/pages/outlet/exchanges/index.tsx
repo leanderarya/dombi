@@ -47,7 +47,7 @@ export default function OutletExchangesIndex({ exchanges, filters }: any) {
             }
         >
             <Head title="Tukar Produk" />
-            <OutletPageShell hasStickyBar>
+            <OutletPageShell>
                 {loading ? (
                     <SkeletonList count={5} />
                 ) : (
