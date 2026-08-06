@@ -176,7 +176,10 @@ export default function CourierDeliveryShow({ delivery }: Props) {
         router.post(
             `/courier/deliveries/${delivery.id}/return-to-outlet`,
             {},
-            { preserveScroll: true },
+            {
+                preserveScroll: true,
+                onSuccess: () => setShowReturnSheet(false),
+            },
         );
     };
 
