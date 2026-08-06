@@ -91,6 +91,11 @@ export default function CourierLayout({
             <NotificationSheet
                 open={notificationOpen}
                 onClose={() => setNotificationOpen(false)}
+                onNavigate={(type) => {
+                    if (type.startsWith('delivery.')) {
+                        router.visit('/courier/deliveries');
+                    }
+                }}
             />
         </MobileRoleLayout>
     );
