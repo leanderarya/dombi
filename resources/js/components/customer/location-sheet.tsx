@@ -256,7 +256,7 @@ function LocationSheetContent({
         );
     }
 
-    function handleSelectSavedAddress(addr: SavedAddress, timestamp: number) {
+    async function handleSelectSavedAddress(addr: SavedAddress, timestamp: number) {
         const nextLocation: CustomerLocation = {
             address_id: addr.id,
             address_line: addr.address_line,
@@ -274,7 +274,7 @@ function LocationSheetContent({
         };
 
         saveLocation(nextLocation);
-        syncCustomerLocationDraft(nextLocation);
+        await syncCustomerLocationDraft(nextLocation);
         onLocationSaved?.(nextLocation);
         onClose();
     }
