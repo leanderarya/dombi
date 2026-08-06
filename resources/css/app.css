@@ -24,6 +24,10 @@
     --color-primary-hover: var(--color-emerald-800);
     --color-primary-light: var(--color-emerald-50);
 
+    /* Owner Panel — mint */
+    --color-mint-canvas: #f6fbf5;
+    --color-mint-wash: #ecfdf5;
+
     /* Semantic */
     --color-success: #16a34a;
     --color-warning: #d97706;
