@@ -1,6 +1,7 @@
 import { Head, useForm } from '@inertiajs/react';
 import { X } from 'lucide-react';
 import { useState, useRef, useMemo } from 'react';
+import { toast } from 'sonner';
 import OutletLayout from '@/layouts/outlet-layout';
 import { formatCurrency } from '@/lib/format';
 
@@ -84,7 +85,7 @@ export default function OutletReturnsCreate({ variants, reasons }: any) {
         const files = Array.from(e.target.files || []);
 
         if (files.length + form.data.evidence_images.length > 5) {
-            alert('Maksimal 5 foto');
+            toast.error('Maksimal 5 foto');
 
             return;
         }

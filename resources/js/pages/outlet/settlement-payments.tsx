@@ -57,7 +57,7 @@ export default function OutletSettlementPayments({ payments }: Props) {
         setErrors({});
 
         const formData = new FormData();
-        formData.append('amount', amount.replace(/\./g, ''));
+        formData.append('amount', amount.replace(/[.,]/g, ''));
         formData.append('reference_number', referenceNumber);
         formData.append('payment_date', paymentDate);
 
