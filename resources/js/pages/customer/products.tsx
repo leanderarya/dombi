@@ -111,7 +111,11 @@ function ProductsInner() {
             ? families.filter(
                   (f) =>
                       f.name.toLowerCase().includes(q) ||
-                      f.variants.some((v) => v.name.toLowerCase().includes(q)),
+                      f.variants.some(
+                          (v) =>
+                              v.name.toLowerCase().includes(q) ||
+                              (v.flavor ?? '').toLowerCase().includes(q),
+                      ),
               )
             : families;
 
