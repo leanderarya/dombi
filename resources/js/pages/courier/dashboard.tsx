@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { AlertCircle, ArrowRight, MapPin, Package } from 'lucide-react';
 import { useState } from 'react';
+import PushBanner from '@/components/shared/push-banner';
 import EmptyState from '@/components/ui/empty-state';
 import SectionCard from '@/components/ui/section-card';
 import StatusBadge from '@/components/ui/status-badge';
@@ -65,6 +66,8 @@ export default function CourierDashboard({ courier, stats, tasks }: Props) {
     return (
         <CourierLayout>
             <Head title="Tugas Saya" />
+
+            <PushBanner variant="home" />
 
             {/* Availability Card — large touch targets for outdoor */}
             <SectionCard>
