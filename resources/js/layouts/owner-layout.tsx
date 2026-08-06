@@ -37,7 +37,7 @@ const navGroups: NavGroup[] = [
             { href: '/owner/orders', label: 'Pesanan' },
             { href: '/owner/deliveries', label: 'Pengiriman' },
             {
-                href: '/owner/couriers/management',
+                href: '/owner/couriers',
                 label: 'Kurir',
                 isActive: (url: string) => {
                     const path = url.split('?')[0];
