@@ -102,8 +102,7 @@ const navGroups: NavGroup[] = [
             {
                 href: '/owner/pricing',
                 label: 'Harga',
-                isActive: (url: string) =>
-                    url.split('?')[0] === '/owner/pricing',
+                isActive: (url: string) => url.startsWith('/owner/pricing'),
             },
         ],
     },
@@ -149,6 +148,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
     };
     const [notificationOpen, setNotificationOpen] = useState(false);
     const [commandOpen, setCommandOpen] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const { collapsed } = useSidebar();
 
     return (
@@ -162,9 +162,46 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
             <OfflineBanner />
             <UpdateBanner />
 
+            {/* Mobile header */}
+            <div className="fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-surface px-4 md:hidden">
+                <button
+                    onClick={() => setMobileMenuOpen(true)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted"
+                    aria-label="Buka menu"
+                >
+                    <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M4 6h16M4 12h16M4 18h16"
+                        />
+                    </svg>
+                </button>
+                <div className="text-sm font-bold text-primary">Dombi</div>
+                <div className="ml-auto">
+                    <NotificationBell
+                        onClick={() => setNotificationOpen(true)}
+                    />
+                </div>
+            </div>
+
+            {/* Mobile overlay backdrop */}
+            {mobileMenuOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/40 md:hidden"
+                    onClick={() => setMobileMenuOpen(false)}
+                />
+            )}
+
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 left-0 z-50 bg-surface transition-[width] duration-200 ease-out ${collapsed ? 'w-16' : 'w-56'}`}
+                className={`fixed inset-y-0 left-0 z-50 bg-surface transition-[width,transform] duration-200 ease-out ${collapsed ? 'w-16' : 'w-56'} ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}
                 style={{ boxShadow: '1px 0 0 0 rgba(0,0,0,0.04)' }}
             >
                 <div className="flex h-full flex-col">
@@ -222,6 +259,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
                         navGroups={navGroups}
                         pendingCounts={pendingCounts}
                         collapsed={collapsed}
+                        onNavClick={() => setMobileMenuOpen(false)}
                     />
 
                     {/* Footer */}
@@ -270,7 +308,7 @@ function OwnerLayoutInner({ children }: PropsWithChildren) {
             {/* Main content */}
             <main
                 id="main-content"
-                className={`transition-[padding] duration-200 ease-out ${collapsed ? 'pl-16' : 'pl-56'}`}
+                className={`pt-14 transition-[padding] duration-200 ease-out md:pt-0 ${collapsed ? 'md:pl-16' : 'md:pl-56'}`}
             >
                 <div className="px-6 py-6">
                     {loading ? <OwnerPageSkeleton /> : children}
