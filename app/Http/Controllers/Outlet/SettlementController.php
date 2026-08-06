@@ -100,6 +100,7 @@ class SettlementController extends Controller
         }
 
         // Summary (no dead fields)
+        $netTotal = (float) $settlements->sum('net_amount');
         $summary = [
             'gross_revenue' => $totalSales + $totalDeliveryFee,
             'sales_amount' => $totalSales,
@@ -110,6 +111,14 @@ class SettlementController extends Controller
             'outstanding_amount' => $totalOutstanding,
             'units_sold' => $unitsSold,
             'orders_count' => $orderIds->count(),
+            'net_amount' => $netTotal,
+            'direction' => $netTotal >= 0 ? 'owner_pays_outlet' : 'outlet_pays_owner',
+            'breakdown' => [
+                'online_outlet_share' => (float) $settlements->sum('total_online_share'),
+                'delivery_cost' => (float) $settlements->sum('total_delivery_cost'),
+                'refund' => (float) $settlements->sum('total_refund'),
+                'offline_sales' => (float) $settlements->sum('total_offline_sales'),
+            ],
         ];
 
         $reconciliation = [
@@ -151,6 +160,14 @@ class SettlementController extends Controller
                 'due_date' => $s->due_date->toDateString(),
                 'status' => $s->status,
                 'outstanding' => (float) $s->outstanding_amount,
+                'net_amount' => (float) $s->net_amount,
+                'direction' => $s->direction,
+                'breakdown' => [
+                    'online_outlet_share' => (float) $s->total_online_share,
+                    'delivery_cost' => (float) $s->total_delivery_cost,
+                    'refund' => (float) $s->total_refund,
+                    'offline_sales' => (float) $s->total_offline_sales,
+                ],
                 'notes' => "Settlement {$s->period_label}",
                 'created_at' => $s->created_at->toISOString(),
             ];

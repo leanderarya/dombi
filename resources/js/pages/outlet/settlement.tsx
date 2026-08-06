@@ -25,6 +25,14 @@ interface SettlementSummary {
     outstanding_amount: number;
     units_sold: number;
     orders_count: number;
+    net_amount: number;
+    direction: 'owner_pays_outlet' | 'outlet_pays_owner';
+    breakdown: {
+        online_outlet_share: number;
+        delivery_cost: number;
+        refund: number;
+        offline_sales: number;
+    };
 }
 
 interface Reconciliation {
@@ -61,6 +69,14 @@ interface TimelineEntry {
     due_date: string;
     status: string;
     outstanding: number;
+    net_amount: number;
+    direction: string;
+    breakdown: {
+        online_outlet_share: number;
+        delivery_cost: number;
+        refund: number;
+        offline_sales: number;
+    };
     notes: string | null;
     created_at: string;
 }
@@ -444,6 +460,54 @@ export default function OutletSettlement({
                                         value={summary.outlet_margin}
                                         accent
                                     />
+                                    <div className="border-t border-border pt-2">
+                                        <div className="text-[11px] font-bold tracking-wider text-text-subtle uppercase">
+                                            Rincian Net Settlement
+                                        </div>
+                                    </div>
+                                    <BreakdownRow
+                                        label="Online Outlet Share"
+                                        value={summary.breakdown.online_outlet_share}
+                                    />
+                                    <BreakdownRow
+                                        label="Biaya Kurir"
+                                        value={summary.breakdown.delivery_cost}
+                                        negative={summary.breakdown.delivery_cost > 0}
+                                    />
+                                    <BreakdownRow
+                                        label="Refund"
+                                        value={summary.breakdown.refund}
+                                        negative={summary.breakdown.refund > 0}
+                                    />
+                                    <BreakdownRow
+                                        label="Setoran Offline"
+                                        value={summary.breakdown.offline_sales}
+                                        negative={summary.breakdown.offline_sales > 0}
+                                    />
+                                    <div className="border-t border-border pt-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-sm font-bold text-text">
+                                                Net Settlement
+                                            </span>
+                                            <span
+                                                className={`text-sm font-bold tabular-nums ${
+                                                    summary.net_amount >= 0
+                                                        ? 'text-emerald-700'
+                                                        : 'text-red-600'
+                                                }`}
+                                            >
+                                                {summary.direction ===
+                                                'owner_pays_outlet'
+                                                    ? 'Owner bayar '
+                                                    : 'Outlet bayar '}
+                                                {formatCurrency(
+                                                    Math.abs(
+                                                        summary.net_amount,
+                                                    ),
+                                                )}
+                                            </span>
+                                        </div>
+                                    </div>
                                     {reconciliation.adjustments !== 0 && (
                                         <BreakdownRow
                                             label="Penyesuaian Return/Exchange"
@@ -597,6 +661,11 @@ function TimelineItem({
                         <div className="text-sm font-bold text-text tabular-nums">
                             {formatCurrency(entry.amount)}
                         </div>
+                        {entry.direction === 'owner_pays_outlet' && (
+                            <div className="text-[11px] font-medium text-emerald-600 tabular-nums">
+                                Owner bayar
+                            </div>
+                        )}
                         {entry.outstanding > 0 && (
                             <div className="text-[11px] font-medium text-red-600 tabular-nums">
                                 Sisa: {formatCurrency(entry.outstanding)}
