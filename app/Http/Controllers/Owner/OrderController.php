@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Owner\CancelOrderRequest;
 use App\Models\Order;
 use App\Models\Outlet;
 use App\Models\OutletInventory;
 use App\Models\User;
+use App\Services\OrderStatusService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
@@ -86,5 +89,17 @@ class OrderController extends Controller
             'reservedStocks' => $reservedStocks,
             'couriers' => User::where('role', 'courier')->where('is_active', true)->orderBy('name')->get(['id', 'name']),
         ]);
+    }
+
+    public function cancel(CancelOrderRequest $request, Order $order, OrderStatusService $statusService): RedirectResponse
+    {
+        $statusService->transition($order, Order::STATUS_CANCELLED_BY_OUTLET, [
+            'reason' => $request->validated('reason'),
+            'notes' => $request->validated('notes'),
+            'actor_id' => $request->user()->id,
+            'actor_type' => 'owner',
+        ]);
+
+        return redirect()->route('owner.orders.show', $order)->with('success', 'Pesanan dibatalkan.');
     }
 }
