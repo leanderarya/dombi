@@ -1,4 +1,4 @@
-import { Send, DollarSign } from 'lucide-react';
+import { FileText, Send, DollarSign } from 'lucide-react';
 import { useState } from 'react';
 import InvoiceModal from '@/components/owner/invoice-modal';
 import OwnerDetailRow from '@/components/owner/owner-detail-row';
@@ -12,11 +12,11 @@ import { formatCurrency } from '@/lib/format';
 const STATUS_CONFIG: Record<string, { label: string; className: string }> = {
     generated: {
         label: 'Belum Bayar',
-        className: 'bg-slate-100 text-text-muted',
+        className: 'bg-surface-muted text-text-muted',
     },
     pending: {
         label: 'Belum Bayar',
-        className: 'bg-slate-100 text-text-muted',
+        className: 'bg-surface-muted text-text-muted',
     },
     due_today: {
         label: 'Jatuh Tempo',
@@ -80,12 +80,12 @@ export default function OutletAccountStatement({
             >
                 <div className="grid gap-4 lg:grid-cols-3">
                     <div className="space-y-4 lg:col-span-2">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-8 w-full" />
                         </div>
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-6 w-full" />
                             <Skeleton className="h-6 w-full" />
@@ -93,7 +93,7 @@ export default function OutletAccountStatement({
                         </div>
                     </div>
                     <div className="space-y-4">
-                        <div className="space-y-3 rounded-lg border border-border p-4">
+                        <div className="space-y-3 rounded-2xl border border-border bg-surface p-5">
                             <Skeleton className="h-4 w-24" />
                             <Skeleton className="h-8 w-full" />
                             <Skeleton className="h-6 w-3/4" />
@@ -130,7 +130,7 @@ export default function OutletAccountStatement({
                 <div className="space-y-4 lg:col-span-2">
                     {summary.outstanding > 0 && (
                         <div
-                            className="sticky top-0 z-20 flex gap-3 rounded-xl bg-surface p-3 shadow-card"
+                            className="sticky top-0 z-20 flex gap-3 rounded-2xl border border-border bg-surface p-4"
                             aria-label="Aksi tagihan"
                         >
                             <Button
@@ -155,12 +155,21 @@ export default function OutletAccountStatement({
                     )}
 
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Daftar Tagihan"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Daftar Tagihan
+                        <div className="mb-3 flex items-center gap-2">
+                            <FileText
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Daftar Tagihan
+                            </h3>
                         </div>
+                        <p className="mb-4 text-xs text-text-muted">
+                            Tagihan periodik outlet
+                        </p>
                         {settlements.length === 0 ? (
                             <p className="py-6 text-center text-sm text-text-muted">
                                 Tidak ada tagihan.
@@ -178,7 +187,7 @@ export default function OutletAccountStatement({
                                     return (
                                         <div
                                             key={s.id}
-                                            className="rounded-xl bg-surface p-4 shadow-card transition-all duration-200"
+                                            className="rounded-xl border border-border bg-surface p-4 transition-all duration-200"
                                         >
                                             <div className="flex items-start justify-between">
                                                 <div>
@@ -287,12 +296,21 @@ export default function OutletAccountStatement({
 
                 <div className="space-y-4">
                     <div
-                        className="rounded-lg border border-border p-4"
+                        className="rounded-2xl border border-border bg-surface p-5"
                         aria-label="Status tagihan"
                     >
-                        <div className="mb-3 text-xs font-semibold text-text-subtle">
-                            Status
+                        <div className="mb-3 flex items-center gap-2">
+                            <DollarSign
+                                className="h-4 w-4 text-primary"
+                                aria-hidden="true"
+                            />
+                            <h3 className="font-heading text-base font-bold text-text">
+                                Status
+                            </h3>
                         </div>
+                        <p className="mb-4 text-xs text-text-muted">
+                            Ringkasan status tagihan outlet
+                        </p>
                         <div className="flex items-center gap-2">
                             <StatusBadge variant={statusVariant} size="md">
                                 {statusLabel}
