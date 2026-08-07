@@ -1,4 +1,4 @@
-import { router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { ChevronLeft, LogOut } from 'lucide-react';
 import { useLayoutEffect, useState } from 'react';
 import type { ReactNode } from 'react';
@@ -7,7 +7,6 @@ import CourierBottomNav from '@/components/courier/bottom-nav';
 import NotificationBell from '@/components/shared/notification-bell';
 import NotificationSheet from '@/components/shared/notification-sheet';
 import MobileRoleLayout from '@/components/ui/mobile-role-layout';
-import PageHeader from '@/components/ui/page-header';
 import { useHideOnScroll } from '@/hooks/use-hide-on-scroll';
 
 interface Props extends PropsWithChildren {
@@ -84,48 +83,52 @@ export default function CourierLayout({
             }
             actionBarSlot={actionBarSlot}
         >
-            {title ? (
-                <PageHeader
-                    title={title}
-                    subtitle={subtitle}
-                    backHref={backHref}
-                    right={rightSlot}
-                    below={headerBelow}
-                />
-            ) : (
-                <header className="bg-primary text-white">
-                    <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3 lg:max-w-4xl">
-                        <div className="flex min-w-0 items-center gap-3">
-                            {auth?.user?.avatar?.trim() ? (
-                                <img
-                                    src={auth.user.avatar}
-                                    alt="Foto profil"
-                                    className="h-11 w-11 shrink-0 rounded-full border-2 border-white/50 object-cover"
-                                />
-                            ) : (
-                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold text-white">
-                                    {name.charAt(0).toUpperCase()}
-                                </div>
-                            )}
-                            <div className="min-w-0">
-                                <div className="truncate text-base font-bold">
-                                    Halo, {firstName}
-                                </div>
+            <header className="bg-primary text-white">
+                <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-4 py-3 lg:max-w-4xl">
+                    <div className="flex min-w-0 items-center gap-3">
+                        {backHref ? (
+                            <Link
+                                href={backHref}
+                                className="flex h-11 w-11 items-center justify-center rounded-lg text-white active:bg-white/20"
+                                aria-label="Kembali"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </Link>
+                        ) : (
+                            <>
+                                {auth?.user?.avatar?.trim() ? (
+                                    <img
+                                        src={auth.user.avatar}
+                                        alt="Foto profil"
+                                        className="h-11 w-11 shrink-0 rounded-full border-2 border-white/50 object-cover"
+                                    />
+                                ) : (
+                                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/20 text-lg font-bold text-white">
+                                        {name.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                            </>
+                        )}
+                        <div className="min-w-0">
+                            <div className="truncate text-base font-bold text-white">
+                                {title ?? `Halo, ${firstName}`}
+                            </div>
+                            {headerSubtitle && (
                                 <div className="truncate text-xs text-white/80">
                                     {headerSubtitle}
                                 </div>
-                            </div>
+                            )}
                         </div>
-                        {rightSlot}
                     </div>
-                    {headerBelow && (
-                        <div className="mx-auto max-w-2xl px-4 pb-3 lg:max-w-4xl">
-                            {headerBelow}
-                        </div>
-                    )}
-                </header>
-            )}
-            <div className={title ? '' : 'pt-4'}>{children}</div>
+                    {rightSlot}
+                </div>
+                {headerBelow && (
+                    <div className="mx-auto max-w-2xl px-4 pb-3 lg:max-w-4xl">
+                        {headerBelow}
+                    </div>
+                )}
+            </header>
+            <div className="pt-4">{children}</div>
             <NotificationSheet
                 open={notificationOpen}
                 onClose={() => setNotificationOpen(false)}
