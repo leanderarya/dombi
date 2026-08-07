@@ -109,15 +109,18 @@ export default function OutletsIndex({ outlets }: any) {
         >
             {/* Filter Bar */}
             <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <div className="relative flex-1">
-                    <input
-                        type="text"
-                        placeholder="Cari outlet..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="w-full rounded-xl border border-border bg-surface px-4 py-2.5 pl-10 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
-                    />
-                    <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                <div className="flex flex-1 items-center gap-0">
+                    <div className="relative w-full">
+                        <input
+                            type="text"
+                            placeholder="Cari outlet..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            style={{ paddingLeft: 40 }}
+                            className="w-full rounded-xl border border-border bg-surface py-2.5 pr-4 text-sm transition-colors outline-none focus:border-primary focus:ring-1 focus:ring-primary/20"
+                        />
+                        <Store className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
+                    </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                     {filters.map((f) => (
