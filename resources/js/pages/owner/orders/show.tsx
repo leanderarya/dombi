@@ -143,7 +143,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                 absorb), CC selalu customer.
                             </div>
                         </div>
-                        <div className="mt-2 rounded-xl border border-border bg-surface-muted/50 p-3 text-right text-lg font-bold tabular-nums">
+                        <div className="mt-2 rounded-xl border border-border bg-surface-muted/50 p-3 text-right font-heading text-base font-bold tabular-nums">
                             {formatCurrency(order.total)}
                         </div>
                     </div>
@@ -259,7 +259,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                             .label
                                     }
                                 </StatusBadge>
-                                <span className="text-xs text-text-subtle">
+                                <span className="text-xs text-text-subtle tabular-nums">
                                     {new Date(
                                         lastHistory.created_at,
                                     ).toLocaleString('id-ID')}
@@ -284,7 +284,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                         </>
                                     ) : (
                                         <>
-                                            Lihat Semua ({olderHistories.length}
+                                            Lihat Semua (<span className="tabular-nums">{olderHistories.length}</span>
                                             ){' '}
                                             <ChevronDown
                                                 aria-hidden="true"
@@ -316,7 +316,7 @@ export default function OwnerOrderShow({ order, couriers }: any) {
                                                         }
                                                     </StatusBadge>
                                                 </div>
-                                                <div className="text-xs text-text-subtle">
+                                                <div className="text-xs text-text-subtle tabular-nums">
                                                     {new Date(
                                                         h.created_at,
                                                     ).toLocaleString('id-ID')}
